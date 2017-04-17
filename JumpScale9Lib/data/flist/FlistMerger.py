@@ -4,6 +4,7 @@ from JumpScale.tools.flist import model_capnp as ModelCapnp
 
 logger = j.logger.get('j.tools.flist.merger')
 
+
 class FlistMerger:
     """
         Tool to merge multiple flist into one
@@ -71,6 +72,7 @@ def dest_parent_dir(dest_fs, src_dirobj):
     )
     return dest_fs.dirCollection.get(dest_parent_key)
 
+
 def dest_current_dir(dest_fs, src_dirobj):
     _, dest_parent_key = dest_fs.path2key(
         j.sal.fs.joinPaths(
@@ -79,6 +81,7 @@ def dest_current_dir(dest_fs, src_dirobj):
         )
     )
     return dest_fs.dirCollection.get(dest_parent_key)
+
 
 def dirFunction(dirobj, type, name, args, key):
     dest_fs = args['dest_fs']
@@ -202,6 +205,7 @@ def main():
     merger.merge()
 
     fdest.pprint()
+
 
 if __name__ == '__main__':
     main()

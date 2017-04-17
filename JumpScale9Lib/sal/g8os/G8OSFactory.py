@@ -36,6 +36,7 @@ if __name__ == '__main__':
     from JumpScale import j
     node1 = j.sal.g8os.get_node('172.20.0.91')
     node2 = j.sal.g8os.get_node('172.20.0.92')
-    cluster = j.sal.g8os.create_storagecluster('cluster1',[node1, node2],'hdd', 2, False)
+    cluster = j.sal.g8os.create_storagecluster('cluster1', [node1, node2], 'hdd', 2, False)
 
-    from IPython import embed;embed()
+    from IPython import embed
+    embed()

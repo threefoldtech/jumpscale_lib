@@ -244,7 +244,7 @@ class CodeTools:
         def toStr(obj, possibleList=True):
             if isinstance(obj, (str, int, float, bool)) or obj is None:
                 return str(obj)
-            elif possibleList == True and j.data.types.list.check(obj):
+            elif possibleList and j.data.types.list.check(obj):
                 r = ""
                 for item in obj:
                     rr = toStr(obj, possibleList=False)
@@ -318,7 +318,7 @@ class CodeTools:
                         "Can only convert object to dict with properties basic types or inherited of ClassBase")
                 try:
                     val = str(value)
-                except:
+                except BaseException:
                     val = "__UNKNOWN__"
                 return val
 

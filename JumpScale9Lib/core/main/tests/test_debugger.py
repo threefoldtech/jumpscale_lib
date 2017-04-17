@@ -19,5 +19,6 @@ class DebuggerTest(unittest.TestCase):
             'jspython', args=['embed_debugger.py', 'False'])
         p.wait(timeout=2)
 
+
 if __name__ == '__main__':
     unittest.main()

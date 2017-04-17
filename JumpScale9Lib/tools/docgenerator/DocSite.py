@@ -192,9 +192,13 @@ class DocSite:
 
         callbackFunctionDir(self.path, "")  # to make sure we use first data.yaml in root
 
-        j.sal.fs.walker.walkFunctional(self.path, callbackFunctionFile=callbackFunctionFile,
-                                       callbackFunctionDir=callbackFunctionDir, arg="",
-                                       callbackForMatchDir=callbackForMatchDir, callbackForMatchFile=callbackForMatchFile)
+        j.sal.fs.walker.walkFunctional(
+            self.path,
+            callbackFunctionFile=callbackFunctionFile,
+            callbackFunctionDir=callbackFunctionDir,
+            arg="",
+            callbackForMatchDir=callbackForMatchDir,
+            callbackForMatchFile=callbackForMatchFile)
 
     def addFile(self, path):
         if not j.sal.fs.exists(path, followlinks=True):
@@ -217,12 +221,12 @@ class DocSite:
         """
         is the generation code which is in directory of the template, is called generate.py and is in root of template dir
         """
-        if self._generator == None:
+        if self._generator is None:
             self._generator = loadmodule(self.name, self.generatorPath)
         return self._generator
 
     def raiseError(self, errormsg, doc=None):
-        if doc != None:
+        if doc is not None:
             errormsg2 = "## ERROR: %s\n\n- in doc: %s\n\n%s\n" % (j.data.time.getLocalTimeHR(), doc, errormsg)
             j.sal.fs.writeFile(filename=self.path + "errors.md", contents=errormsg2, append=True)
             print(errormsg2)

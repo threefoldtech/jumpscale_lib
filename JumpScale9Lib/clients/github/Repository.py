@@ -112,7 +112,7 @@ class GithubRepo:
                     color = self.getColor(name)
                     try:
                         item.edit(name, color)
-                    except:
+                    except BaseException:
                         item.delete()
                     self._labels = None
 

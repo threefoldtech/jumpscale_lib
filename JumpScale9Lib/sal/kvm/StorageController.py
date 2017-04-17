@@ -15,7 +15,7 @@ class StorageController(BaseKVMComponent):
         try:
             storagepool = self.controller.connection.storagePoolLookupByName(pool_name)
             return storagepool
-        except:
+        except BaseException:
             return None
 
     def create_pool(self, pool):
@@ -35,7 +35,7 @@ class StorageController(BaseKVMComponent):
         """
 
         pool = self.get_pool(pool_name)
-        if not pool is None:
+        if pool is not None:
             # destroy the pool
             pool.undefined()
 

@@ -61,7 +61,7 @@ class Tasklet:
         try:
             if not hasattr(self.module, 'match') or self.module.match(j, args, params, tags, self):
                 params = self.module.main(j, args, params, tags, self)
-        except:
+        except BaseException:
             print((self.module))
             import traceback
             traceback.print_exc()

@@ -16,8 +16,24 @@ from pygments.formatters import get_formatter_by_name
 
 class Action:
 
-    def __init__(self, action=None, runid=0, actionRecover=None, args=(), kwargs={}, die=True, stdOutput=True, errorOutput=True, retry=1,
-                 serviceObj=None, deps=[], key="", selfGeneratorCode="", force=False, actionshow=True, dynamicArguments={}):
+    def __init__(
+            self,
+            action=None,
+            runid=0,
+            actionRecover=None,
+            args=(),
+            kwargs={},
+            die=True,
+            stdOutput=True,
+            errorOutput=True,
+            retry=1,
+            serviceObj=None,
+            deps=[],
+            key="",
+            selfGeneratorCode="",
+            force=False,
+            actionshow=True,
+            dynamicArguments={}):
         '''
         self.doc is in doc string of method
         specify recover actions in the description
@@ -466,12 +482,12 @@ class Action:
     def _args1line(self):
         out = ""
         for arg in self.args:
-            if not arg in ["showout", "force", "replaceArgs"]:
+            if arg not in ["showout", "force", "replaceArgs"]:
                 out += "%s," % arg
         out = out.strip(",")
         out += "|"
         for key, arg in self.kwargs.items():
-            if not key in ["showout", "force", "replaceArgs"]:
+            if key not in ["showout", "force", "replaceArgs"]:
                 out += "%s!%s," % (key, arg)
         out = out.strip(",")
         args = out.strip()
@@ -483,13 +499,13 @@ class Action:
     def _args10line(self):
         out = ""
         for arg in self.args:
-            if not arg in ["showout", "force", "replaceArgs"]:
+            if arg not in ["showout", "force", "replaceArgs"]:
                 out += "%s," % arg
         out = out.strip(",")
         if len(self.kwargs.items()) > 0:
             out += " | "
             for key, arg in self.kwargs.items():
-                if not key in ["showout", "force", "replaceArgs"]:
+                if key not in ["showout", "force", "replaceArgs"]:
                     out += "%s:%s," % (key, str(arg).strip())
         out = out.strip()
         out = out.strip(",|")

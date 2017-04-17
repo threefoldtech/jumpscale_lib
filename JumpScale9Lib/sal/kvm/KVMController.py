@@ -40,7 +40,7 @@ class KVMController:
             if con:
                 try:
                     con.close()
-                except:
+                except BaseException:
                     pass
         close(self.connection)
         close(self.readonly)

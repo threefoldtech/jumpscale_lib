@@ -7,6 +7,7 @@ class DHCP:
 Configure DHCP on a certain network (interface) by giving a range of IP addresses
  which will be issued to clients booting up on the given network interface
     """
+
     def __init__(self):
         self.__jslocation__ = "j.sal.dhcp_ihc"
         self.configPath = j.tools.path.get(

@@ -42,7 +42,7 @@ class ClassDef:
             for c in self.inheritedClasses:
                 classDef = self.codeFile.codeStructure.getClass(c)
                 pd = classDef.getProp(propname, True)
-                if not pd is None:
+                if pd is not None:
                     return pd
         j.logger.log("Could not find the property [%s]" % propname, 3)
         return None

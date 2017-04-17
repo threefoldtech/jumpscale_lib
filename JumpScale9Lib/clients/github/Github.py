@@ -13,9 +13,10 @@ def githubtimetoint(t):
     #parsed = datetime.strptime(t, "%Y-%m-%d %I:%M:%S")
     return j.data.time.any2epoch(t)
 
+
 try:
     import github
-except:
+except BaseException:
     cmd = "pip3 install pygithub"
     j.sal.process.execute(cmd)
     import github
@@ -146,7 +147,7 @@ class GitHubClient:
             # if user_model.dbobj.iyoId != user.login:
             #     user_model.dbobj.iyoId = user.login
                 # user_model.changed = True
-            if user_model.dbobj.inGithub != True:
+            if not user_model.dbobj.inGithub:
                 user_model.dbobj.inGithub = True
                 user_model.changed = True
             user_model.save()

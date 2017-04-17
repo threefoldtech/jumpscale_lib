@@ -145,8 +145,21 @@ class MS1:
                     spacesecret, j.data.serializer.json.dumps(sizes))
         return sizes
 
-    def createMachine(self, spacesecret, name, memsize=1024, ssdsize=None, vsansize=0, description='',
-                      imagename="ubuntu.14.04.x64", delete=False, sshkey=None, hostname="", stackId=None, datadisks=None, **args):
+    def createMachine(
+            self,
+            spacesecret,
+            name,
+            memsize=1024,
+            ssdsize=None,
+            vsansize=0,
+            description='',
+            imagename="ubuntu.14.04.x64",
+            delete=False,
+            sshkey=None,
+            hostname="",
+            stackId=None,
+            datadisks=None,
+            **args):
         """
         memsize  # size is 512, 1024, 2048, 4096, 8192, 16384
         ssdsize  # if not passed along, will get the first size of the image's supported sizes
@@ -196,8 +209,7 @@ class MS1:
 
         try:
             memsize = int(memsize)
-        except:
-            # support for 0.5 memsize
+        except BaseException:            # support for 0.5 memsize
             memsize = float(memsize)
 
         if memsize not in memsizes:
@@ -248,15 +260,28 @@ class MS1:
 
             if valid():
                 try:
-                    machine_id = machine_cb_actor.createOnStack(cloudspaceId=cloudspace_id, name=name, description=description, sizeId=size_ids[
-                                                                0], imageId=templateid, disksize=int(ssdsize), stackid=stackId, datadisks=datadisks)
+                    machine_id = machine_cb_actor.createOnStack(
+                        cloudspaceId=cloudspace_id,
+                        name=name,
+                        description=description,
+                        sizeId=size_ids[0],
+                        imageId=templateid,
+                        disksize=int(ssdsize),
+                        stackid=stackId,
+                        datadisks=datadisks)
                 except Exception as e:
                     j.events.opserror_critical("Could not create machine on stack %s, unknown error : %s." % (
                         stackId, e.message), "ms1.createmachine.exists")
         else:
             try:
-                machine_id = api.cloudapi.machines.create(cloudspaceId=cloudspace_id, name=name, description=description,
-                                                          sizeId=size_id, imageId=templateid, disksize=int(ssdsize), datadisks=datadisks)
+                machine_id = api.cloudapi.machines.create(
+                    cloudspaceId=cloudspace_id,
+                    name=name,
+                    description=description,
+                    sizeId=size_id,
+                    imageId=templateid,
+                    disksize=int(ssdsize),
+                    datadisks=datadisks)
             except Exception as e:
                 if str(e).find("Selected name already exists") != -1:
                     raise j.exceptions.Input(
@@ -308,8 +333,22 @@ class MS1:
 
         api = self.getApiConnection(spacesecret)
         result = {}
-        imagetypes = ["ubuntu.jumpscale", "fedora", "windows", "ubuntu.13.10", "ubuntu.12.04", "windows.essentials", "ubuntu.14.04.x64", "ubuntu 14.04 x64",
-                      "zentyal", "debian.7", "arch", "fedora", "centos", "opensuse", "gitlab"]
+        imagetypes = [
+            "ubuntu.jumpscale",
+            "fedora",
+            "windows",
+            "ubuntu.13.10",
+            "ubuntu.12.04",
+            "windows.essentials",
+            "ubuntu.14.04.x64",
+            "ubuntu 14.04 x64",
+            "zentyal",
+            "debian.7",
+            "arch",
+            "fedora",
+            "centos",
+            "opensuse",
+            "gitlab"]
         for image in api.cloudapi.images.list():
             name = image["name"]
             namelower = name.lower()

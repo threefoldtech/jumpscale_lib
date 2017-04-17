@@ -9,7 +9,7 @@ class ApiError(Exception):
         msg = '%s %s' % (response.status_code, response.reason)
         try:
             message = response.json()
-        except:
+        except BaseException:
             message = response.content
         if isinstance(message, (str, bytes)):
             msg += '\n%s' % message

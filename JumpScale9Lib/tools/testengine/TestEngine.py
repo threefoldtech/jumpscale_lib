@@ -123,8 +123,8 @@ class Test:
                         self.db.state == 'FAILURE'
                 with j.logger.nostdout():
                     eco = j.errorconditionhandler.parsePythonExceptionObject(error[1], error[2])
-                    eco.tags = "testrunner testrun:%s org:%s testgroup:%s testname:%s testpath:%s" % (self.db.testrun,
-                                                                                                      self.db.organization, self.db.name, name, self.db.path)
+                    eco.tags = "testrunner testrun:%s org:%s testgroup:%s testname:%s testpath:%s" % (
+                        self.db.testrun, self.db.organization, self.db.name, name, self.db.path)
                     eco.process()
                     self.db.result[name] = eco.guid
                 print(("Fail in test %s" % name))

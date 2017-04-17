@@ -3,7 +3,7 @@ import JumpScale as jumpscale
 
 try:
     from configparser import ConfigParser
-except:
+except BaseException:
     from configparser import ConfigParser
 
 # TODO: UGLY, validation should not happen on object (file) where you read
@@ -242,8 +242,9 @@ class IniFile:
             self.write()
             return False
         except Exception as err:
-            raise j.exceptions.RuntimeError('Failed to add parameter with sectionName: %s, parameterName: %s, value: %s \nERROR: %s' % (
-                sectionName, paramName, newvalue, str(err)))
+            raise j.exceptions.RuntimeError(
+                'Failed to add parameter with sectionName: %s, parameterName: %s, value: %s \nERROR: %s' %
+                (sectionName, paramName, newvalue, str(err)))
 
     def setParam(self, sectionName, paramName, newvalue):
         """ Add name-value pair to section of IniFile

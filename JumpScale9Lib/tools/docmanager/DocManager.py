@@ -126,6 +126,6 @@ class DocManager:
 
     @property
     def indexDB(self):
-        if self._indexDB == None:
+        if self._indexDB is None:
             self._indexDB = SqliteExtDatabase(self.indexDBPath)
         return self._indexDB

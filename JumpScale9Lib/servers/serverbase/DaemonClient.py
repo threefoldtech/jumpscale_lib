@@ -100,8 +100,7 @@ class DaemonClient:
             self.keystor = j.sal.ssl.getSSLHandler()
             try:
                 publickey = self.keystor.getPubKey(self.org, self.user, returnAsString=True)
-            except:
-                # priv key now known yet
+            except BaseException:                # priv key now known yet
                 reset = True
 
             if reset:
@@ -169,8 +168,15 @@ class DaemonClient:
                 #print("session lost")
                 self.initSession()
                 retry += 1
-                return self.sendMsgOverCMDChannel(cmd, rawdata, sendformat=sendformat, returnformat=returnformat,
-                                                  retry=retry, maxretry=maxretry, category=category, transporttimeout=transporttimeout)
+                return self.sendMsgOverCMDChannel(
+                    cmd,
+                    rawdata,
+                    sendformat=sendformat,
+                    returnformat=returnformat,
+                    retry=retry,
+                    maxretry=maxretry,
+                    category=category,
+                    transporttimeout=transporttimeout)
             else:
                 msg = "Authentication error on server.\n"
                 raise AuthenticationError(msg)
@@ -196,8 +202,9 @@ class DaemonClient:
             if ecodict.get("errormessage").find("Authentication error") != -1:
                 raise AuthenticationError("Could not authenticate to %s for user:%s" %
                                           (self.transport, self.user), ecodict)
-            raise RemoteException("Cannot execute cmd:%s/%s on server:'%s:%s' error:'%s' ((ECOID:%s))" %
-                                  (category, cmd, ecodict["gid"], ecodict["nid"], ecodict["errormessage"], ecodict["guid"]), ecodict)
+            raise RemoteException(
+                "Cannot execute cmd:%s/%s on server:'%s:%s' error:'%s' ((ECOID:%s))" %
+                (category, cmd, ecodict["gid"], ecodict["nid"], ecodict["errormessage"], ecodict["guid"]), ecodict)
 
         if returnformat != "":
             # if isinstance(rreturnformat, bytes):

@@ -489,7 +489,7 @@ lxc.network.flags = up
 lxc.network.name = %s
 lxc.network.script.up = $BASEDIR/%s/ovsbr_%s
 lxc.network.script.down = $BASEDIR/%s/ovsbr_%s
-'''  % (machinename, netname, netname, machinename, bridge, machinename, bridge)
+''' % (machinename, netname, netname, machinename, bridge, machinename, bridge)
         config = config.replace("$BASEDIR", self.basepath)
 
         Covs = """

@@ -9,7 +9,7 @@ try:
     import urllib.request
     import urllib.parse
     import urllib.error
-except:
+except BaseException:
     import urllib.parse as urllib
 
 

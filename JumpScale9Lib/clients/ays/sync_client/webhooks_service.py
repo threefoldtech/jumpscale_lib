@@ -2,8 +2,6 @@ class WebhooksService:
     def __init__(self, client):
         self.client = client
 
-
-
     def webhooks_events_post(self, data, headers=None, query_params=None):
         """
         Endpoint that receives generic events
@@ -11,7 +9,6 @@ class WebhooksService:
         """
         uri = self.client.base_url + "/webhooks/events"
         return self.client.post(uri, data, headers=headers, params=query_params)
-
 
     def webhooks_github_post(self, data, headers=None, query_params=None):
         """

@@ -63,6 +63,7 @@ class TemplateEngine:
     def reset(self):
         self.replaceDict = {}
 
+
 if __name__ == '__main__':
     te = TemplateEngine()
     te.add("login", "kristof")

@@ -25,7 +25,8 @@ class CloudMachine(Machine):
         """
         self.pool = j.sal.kvm.Pool(controller, poolname)
         self.os = os
-        new_nics = list(map(lambda x: j.sal.kvm.Interface(controller, j.sal.kvm.Network(controller, x, x, []), x), nics))
+        new_nics = list(map(lambda x: j.sal.kvm.Interface(
+            controller, j.sal.kvm.Network(controller, x, x, []), x), nics))
         if disks:
             new_disks = [j.sal.kvm.Disk(controller, self.pool, "%s-base.qcow2" % name, disks[0], os)]
             for i, disk in enumerate(disks[1:]):

@@ -69,7 +69,6 @@ class Pool(BaseKVMComponent):
             return
         self.lvpool.destroy()
 
-
     def to_xml(self):
         """
         Export the pool to xml

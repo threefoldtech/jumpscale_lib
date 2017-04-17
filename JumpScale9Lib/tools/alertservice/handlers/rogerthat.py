@@ -53,7 +53,7 @@ class RogerThatAlerter(Handler):
         message = """An event has happend on the Mothership1 cloud please investigate.
 Level: %(level)s
 Message: %(errormessage)s
-"""  % alert
+""" % alert
         return message
 
 

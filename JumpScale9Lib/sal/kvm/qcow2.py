@@ -39,7 +39,7 @@ class Qcow2():
             data = f.read(size)
             f.close()
             return data
-        except:
+        except BaseException:
             f.close()
             raise 'A error occured during reading of the file'
 

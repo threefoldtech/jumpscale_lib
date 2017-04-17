@@ -58,7 +58,7 @@ class VXNet:
         ethpairs : left always to bridge, right to namespace
         """
         self.existing.load()
-        if self.innamespace == True:
+        if self.innamespace:
             # IP in Namespace
             vxlan = VXlan(self.netid, self.backend)
             if vxlan.name in self.existing.nicdetail:
@@ -86,9 +86,9 @@ class VXNet:
             bridge.connect(veth.left)
             namespace.connect(veth.right)
             addIPv4(veth.right, self.ipv4, namespace=namespace.name)
-            if not self.ipv6 is None:
+            if self.ipv6 is not None:
                 addIPv6(veth.right, self.ipv6, namespace=namespace.name)
-        elif self.inbridge == True:
+        elif self.inbridge:
             # IP on bridge
             vxlan = VXlan(self.netid, self.backend)
             vxlan.create()

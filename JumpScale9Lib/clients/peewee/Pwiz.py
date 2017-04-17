@@ -36,7 +36,15 @@ DATABASE_MAP = dict((value, key)
 
 class Pwiz():
 
-    def __init__(self, host="127.0.0.1", port=5432, user="postgres", passwd="", dbtype="postgres", dbname="x", schema=None):
+    def __init__(
+            self,
+            host="127.0.0.1",
+            port=5432,
+            user="postgres",
+            passwd="",
+            dbtype="postgres",
+            dbname="x",
+            schema=None):
         """
         @param type is mysql,postgres,sqlite
         """
@@ -51,7 +59,7 @@ class Pwiz():
 
     @property
     def introspector(self):
-        if self._introspector == None:
+        if self._introspector is None:
             if self.dbtype not in DATABASE_MAP:
                 err('Unrecognized database, must be one of: %s' %
                     ', '.join(DATABASE_MAP.keys()))
@@ -62,7 +70,7 @@ class Pwiz():
                 kwargs['host'] = self.host
                 kwargs['port'] = self.port
                 kwargs['user'] = self.user
-                if self.schema != None:
+                if self.schema is not None:
                     kwargs['schema'] = self.schema
                 kwargs['password'] = self.schema
                 db = DatabaseClass(self.dbname, **kwargs)

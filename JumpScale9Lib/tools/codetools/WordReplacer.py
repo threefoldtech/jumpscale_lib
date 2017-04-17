@@ -46,7 +46,10 @@ class Synonym:
             # Check for any def tag that contains name "e.g: [ Q-Layer ]", remove them and put markers in place
             text = self._replaceDefsWithMarkers(text)
         text = j.tools.code.regex.replace(
-            regexFind=self.regexFind, regexFindsubsetToReplace=self.regexFindForReplace, replaceWith=self.replaceWith, text=text)
+            regexFind=self.regexFind,
+            regexFindsubsetToReplace=self.regexFindForReplace,
+            replaceWith=self.replaceWith,
+            text=text)
         if self.replaceExclude:
             # Remove the markers and put the original def tags back
             text = self._replaceMarkersWithDefs(text)

@@ -21,7 +21,7 @@ def _dump2stor(store, bucketname, data, compress):
     if len(data) == 0:
         return ""
     key = j.data.hash.md5_string(data)
-    if not key in objects or not key in new_objects:
+    if key in objects or not key not in new_objects:
         if compress:
             data = lz4.compress(data)
         store.set_object(bucketname, key, data)
@@ -33,7 +33,7 @@ def store_metadata(store, mdbucketname, backupname, backupmetadata):
     mdbucketname = str(mdbucketname)
     backupname = str(backupname)
     pools = store.list_pools()
-    if not mdbucketname in pools:
+    if mdbucketname not in pools:
         store.create_pool(mdbucketname)
     store.set_object(mdbucketname, backupname, j.data.serializer.json.dumps(backupmetadata))
 
@@ -48,7 +48,7 @@ def backup(store, bucketname, f, compress=True):
     bucketname = str(bucketname)
     hashes = []
     pools = store.list_pools()
-    if not bucketname in pools:
+    if bucketname not in pools:
         store.create_pool(bucketname)
     objects = store.list_objects(bucketname)
     for data in _read_file(f, blocksize):

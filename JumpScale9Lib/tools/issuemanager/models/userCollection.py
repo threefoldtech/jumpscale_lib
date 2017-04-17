@@ -85,7 +85,12 @@ class UserCollection(base):
         obj.save()
 
     def getFromGitHostID(self, git_host_name, git_host_id, git_host_url, createNew=True):
-        return j.clients.gogs._getFromGitHostID(self, git_host_name=git_host_name, git_host_id=git_host_id, git_host_url=git_host_url, createNew=createNew)
+        return j.clients.gogs._getFromGitHostID(
+            self,
+            git_host_name=git_host_name,
+            git_host_id=git_host_id,
+            git_host_url=git_host_url,
+            createNew=createNew)
 
     def list(self, **kwargs):
         """
@@ -106,7 +111,12 @@ class UserCollection(base):
                 field = (getattr(self.index, key))
                 clauses.append(field.contains(val))
 
-            res = [item.key for item in self.index.select().where(peewee.reduce(operator.and_, clauses)).order_by(self.index.modTime.desc())]
+            res = [
+                item.key for item in self.index.select().where(
+                    peewee.reduce(
+                        operator.and_,
+                        clauses)).order_by(
+                    self.index.modTime.desc())]
         else:
             res = [item.key for item in self.index.select().order_by(self.index.modTime.desc())]
 

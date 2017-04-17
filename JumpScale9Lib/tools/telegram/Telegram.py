@@ -1,7 +1,7 @@
 from JumpScale import j
 try:
     import grequests as requests
-except:
+except BaseException:
     cmd = 'pip3 install grequests'
     j.sal.process.execute(cmd)
     import grequests as requests
@@ -203,7 +203,7 @@ class Telegram:
                     else:
                         try:
                             getattr(handler, v)(self, message)
-                        except:
+                        except BaseException:
                             print(("""Oops, there has been a problem
                                   with this handler : {}""".format(handler)))
                             print((sys.exc_info()))

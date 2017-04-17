@@ -24,7 +24,7 @@ class DNSMasq:
             self.config()
         if start:
             cmd = self._cuisine.bash.cmdGetPath("dnsmasq")
-            self._cuisine.processmanager.ensure("dnsmasq", "%s -d"%(cmd,))
+            self._cuisine.processmanager.ensure("dnsmasq", "%s -d" % (cmd,))
 
     def restart(self):
         """

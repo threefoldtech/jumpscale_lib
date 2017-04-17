@@ -33,7 +33,7 @@ if j.core.platformtype.myplatform.isUnix():
         j.core.platformtype.myplatform.isLinux()
         try:
             j.sal.ubuntu.apt_install("python-pexpect")
-        except:
+        except BaseException:
             pass
 
 
@@ -746,7 +746,7 @@ class Expect:
         try:
             result = self.pexpect.expect(outputToExpect, timeout=timeout)
             return result
-        except:
+        except BaseException:
             msg = 'Failed to expect \"%s\", found \"%s\" instead' % (outputToExpect, self.receive())
             # print msg
             j.logger.log(msg, 7)

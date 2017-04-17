@@ -29,7 +29,7 @@ class OrgModel(base):
         self.addSubItem("members", obj)
         self.changed = True
 
-    def memberAdd(self, userKey,access):
+    def memberAdd(self, userKey, access):
         """
         """
         obj = j.data.capnp.getMemoryObj(

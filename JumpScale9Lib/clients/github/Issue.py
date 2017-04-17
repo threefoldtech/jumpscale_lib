@@ -157,7 +157,7 @@ class Issue(Base):
 
     @property
     def isOpen(self):
-        return self._ddict['open'] == True
+        return self._ddict['open']
 
     @property
     def type(self):

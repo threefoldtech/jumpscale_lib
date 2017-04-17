@@ -7,7 +7,7 @@ try:
 
     def sleep(sec):
         gevent.sleep(sec)
-except:
+except BaseException:
     import time
 
     def sleep(sec):
@@ -50,7 +50,7 @@ class SocketServerClient:
     def initclient(self):
         self.dataleftover = ""
         for t in range(1000):
-            if self._initclient() == True:
+            if self._initclient():
                 self.socket.settimeout(self.timeout)
                 return True
         raise j.exceptions.RuntimeError("Connection timed out to server %s" % self.addr)
@@ -66,11 +66,11 @@ class SocketServerClient:
         except Exception as e:
             try:
                 print(("connection error to %s %s" % (self.addr, self.port)))
-            except:
+            except BaseException:
                 pass
             try:
                 self.socket.close()
-            except:
+            except BaseException:
                 pass
             print(("initclient error:%s, sleep 1 sec." % e))
             sleep(1)

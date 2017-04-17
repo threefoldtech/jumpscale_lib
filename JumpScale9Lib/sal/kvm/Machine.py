@@ -67,7 +67,6 @@ class Machine(BaseKVMComponent):
         """
         return bool(self.domain.isActive())
 
-
     def create(self, username="root", passwd="gig1234", sshkey=None):
         """
         Create and define the instanse of the machine xml onto libvirt.
@@ -219,12 +218,12 @@ class Machine(BaseKVMComponent):
         port = 22
         if self.cloud_init and not self._executor:
             for i in range(5):
-                rc = self.controller.executor.cuisine.core.run('echo | nc %s %s'%(self.ip, port))[0]
+                rc = self.controller.executor.cuisine.core.run('echo | nc %s %s' % (self.ip, port))[0]
                 if rc == 0:
                     break
                 sleep(5)
-            self._executor = self.controller.executor.jumpto(addr=self.ip,
-                login="cloudscalers", port=port, identityfile="/root/.ssh/libvirt")
+            self._executor = self.controller.executor.jumpto(
+                addr=self.ip, login="cloudscalers", port=port, identityfile="/root/.ssh/libvirt")
         return self._executor
 
     @property

@@ -2,7 +2,7 @@ from JumpScale import j
 import os
 try:
     import cson
-except:
+except BaseException:
     rc, out, err = j.do.execute("pip3 install cson")
     import cson
 

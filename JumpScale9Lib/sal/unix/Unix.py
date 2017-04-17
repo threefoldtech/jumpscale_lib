@@ -147,7 +147,7 @@ class UnixSystem:
         else:
             raise ValueError("This function only supports these interval units: minutes, hours, days and months.")
 
-        if not interval in allowedIntervals:
+        if interval not in allowedIntervals:
             raise ValueError("This function only supports following intervals: " + str(allowedIntervals))
 
         # Construct timing options

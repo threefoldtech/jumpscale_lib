@@ -161,8 +161,8 @@ class Sandboxer:
             # print ("C:%s"%dest2)
             j.sal.fs.copyFile(src, dest2, overwriteFile=True)
 
-        j.sal.fs.walker.walkFunctional(path, callbackFunctionFile=callbackFile, callbackFunctionDir=None, arg=(path, dest),
-                                       callbackForMatchDir=callbackForMatchDir, callbackForMatchFile=callbackForMatchFile)
+        j.sal.fs.walker.walkFunctional(path, callbackFunctionFile=callbackFile, callbackFunctionDir=None, arg=(
+            path, dest), callbackForMatchDir=callbackForMatchDir, callbackForMatchFile=callbackForMatchFile)
 
     def sandbox_python3(self):
         j.tools.cuisine.local.builder.sandbox_python()

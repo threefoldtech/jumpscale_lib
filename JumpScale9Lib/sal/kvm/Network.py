@@ -92,7 +92,6 @@ class Network(BaseKVMComponent):
         else:
             self.nw.setAutostart(0)
 
-
     def start(self, autostart=True):
         """
         start a (previously defined) inactive network

@@ -21,8 +21,9 @@ class GeventWSTransport(Transport):
         """
         self._id = sessionid
         if j.sal.nettools.tcpPortConnectionTest(self._addr, self._port) is False:
-            j.errorconditionhandler.raiseOperationalCritical("could not connect to server %s on port %s, is it running?" % (
-                self._addr, self._port), category="transport.ws.gevent.init")
+            j.errorconditionhandler.raiseOperationalCritical(
+                "could not connect to server %s on port %s, is it running?" %
+                (self._addr, self._port), category="transport.ws.gevent.init")
 
     def close(self):
         """
@@ -73,8 +74,9 @@ class GeventWSTransport(Transport):
             return "4", "m", j.data.serializer.serializers.msgpack.dumps(eco.__dict__)
 
         if rcv.ok is False:
-            eco = j.errorconditionhandler.getErrorConditionObject(msg='error 500 from webserver on %s' % self.url, msgpub='',
-                                                                  category='gevent.transport')
+            eco = j.errorconditionhandler.getErrorConditionObject(
+                msg='error 500 from webserver on %s' %
+                self.url, msgpub='', category='gevent.transport')
             return "6", "m", j.data.serializer.serializers.msgpack.dumps(eco.__dict__)
 
         return j.servers.base._unserializeBinReturn(rcv.content)

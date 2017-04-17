@@ -9,7 +9,7 @@ def retry(func):
             if j.sal.nettools.tcpPortConnectionTest(*self._connection[:2]):
                 clientfunc = getattr(self._client, func.__name__)
                 return clientfunc(*args, **kwargs)
-        except:
+        except BaseException:
             pass  # we will execute the reconnect
         self._connection[2] = time.time()
         self.connect(self._id)

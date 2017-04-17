@@ -42,6 +42,7 @@ class Functions:
         self.write = False
         self.default = ""
 
+
 functions = {}
 
 func = Functions()

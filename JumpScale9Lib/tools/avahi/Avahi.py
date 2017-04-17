@@ -91,10 +91,20 @@ class Avahi:
             pre = ""
         else:
             pre = "/usr"
-        self._cuisine.core.file_link(source="%s/lib/systemd/system/avahi-daemon.service",
-                                     destination="/etc/systemd/system/multi-user.target.wants/avahi-daemon.service", symbolic=True, mode=None, owner=None, group=None)
-        self._cuisine.core.file_link(source="%s/lib/systemd/system/docker.socket",
-                                     destination="/etc/systemd/system/sockets.target.wants/docker.socket", symbolic=True, mode=None, owner=None, group=None)
+        self._cuisine.core.file_link(
+            source="%s/lib/systemd/system/avahi-daemon.service",
+            destination="/etc/systemd/system/multi-user.target.wants/avahi-daemon.service",
+            symbolic=True,
+            mode=None,
+            owner=None,
+            group=None)
+        self._cuisine.core.file_link(
+            source="%s/lib/systemd/system/docker.socket",
+            destination="/etc/systemd/system/sockets.target.wants/docker.socket",
+            symbolic=True,
+            mode=None,
+            owner=None,
+            group=None)
 
         self._cuisine.systemd.start("avahi-daemon")
 
@@ -143,7 +153,8 @@ class Avahi:
         result, output, err = self._cuisine.core.run(cmd, die=False, force=True)
         if result > 0:
             raise j.exceptions.RuntimeError(
-                "cannot use avahi command line to find services, please check avahi is installed on system (ubunutu apt-get install avahi-utils)\nCmd Used:%s" % cmd)
+                "cannot use avahi command line to find services, please check avahi is installed on system (ubunutu apt-get install avahi-utils)\nCmd Used:%s" %
+                cmd)
         items = j.tools.code.regex.extractBlocks(output, ["^= .*"])
         avahiservices = AvahiServices()
         for item in items:

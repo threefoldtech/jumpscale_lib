@@ -93,8 +93,24 @@ class ActionController:
     def selectAction(self):
         return j.tools.console.askChoice(j.actions.actions)
 
-    def add(self, action, actionRecover=None, args=(), kwargs={}, die=True, stdOutput=False, errorOutput=True, retry=0, serviceObj=None,
-            deps=None, executeNow=True, selfGeneratorCode="", force=True, showout=None, actionshow=True, dynamicArguments={}):
+    def add(
+            self,
+            action,
+            actionRecover=None,
+            args=(),
+            kwargs={},
+            die=True,
+            stdOutput=False,
+            errorOutput=True,
+            retry=0,
+            serviceObj=None,
+            deps=None,
+            executeNow=True,
+            selfGeneratorCode="",
+            force=True,
+            showout=None,
+            actionshow=True,
+            dynamicArguments={}):
         '''
         self.doc is in doc string of method
         specify recover actions in the description
@@ -119,7 +135,7 @@ class ActionController:
 
         # from pudb import set_trace; set_trace()
 
-        if showout == True:
+        if showout:
             stdOutput = True
         if showout is False:
             stdOutput = False
@@ -133,8 +149,22 @@ class ActionController:
         if j.data.types.dict.check(args):
             raise j.exceptions.RuntimeError("cannot create action: args should be a list, kwargs a dict, input error")
 
-        action = Action(action, runid=self.runid, actionRecover=actionRecover, args=args, kwargs=kwargs, die=die, stdOutput=stdOutput, errorOutput=errorOutput,
-                        retry=retry, serviceObj=serviceObj, deps=deps, selfGeneratorCode=selfGeneratorCode, force=force, actionshow=actionshow, dynamicArguments=dynamicArguments)
+        action = Action(
+            action,
+            runid=self.runid,
+            actionRecover=actionRecover,
+            args=args,
+            kwargs=kwargs,
+            die=die,
+            stdOutput=stdOutput,
+            errorOutput=errorOutput,
+            retry=retry,
+            serviceObj=serviceObj,
+            deps=deps,
+            selfGeneratorCode=selfGeneratorCode,
+            force=force,
+            actionshow=actionshow,
+            dynamicArguments=dynamicArguments)
 
         action.calling_linenr = linenr
         action.calling_path = fpath

@@ -7,7 +7,7 @@ import io
 
 try:
     from apiclient import discovery
-except:
+except BaseException:
     j.do.execute("pip3 install google-api-python-client")
 from apiclient import discovery
 # from apiclient.http import *
@@ -44,7 +44,7 @@ class GDriveFactory:
 
     @property
     def credentials(self):
-        if self._credentials == None:
+        if self._credentials is None:
             self.initClientSecret()
         return self._credentials
 
@@ -107,10 +107,11 @@ class GDriveFactory:
             # q="mimeType='image/jpeg'"
             # q = "'0B0OKOpLF52GNSUttdGFvdlFmNUE' in parents"
             q = "name contains '<' AND name contains '>' "
-            response = self.files.list(q=q,
-                                       spaces='drive',
-                                       fields='nextPageToken, files(id, name, description, modifiedTime,version,parents,starred,webContentLink,webViewLink)',
-                                       pageToken=page_token).execute()
+            response = self.files.list(
+                q=q,
+                spaces='drive',
+                fields='nextPageToken, files(id, name, description, modifiedTime,version,parents,starred,webContentLink,webViewLink)',
+                pageToken=page_token).execute()
 
             for file in response.get('files', []):
                 # Process file & put metadata in file

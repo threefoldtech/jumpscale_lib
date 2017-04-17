@@ -2,7 +2,7 @@ from JumpScale import j
 
 try:
     import xonsh
-except:
+except BaseException:
     j.sal.process.executeInteractive("pip3 install colored-traceback")
     j.sal.process.executeInteractive("pip3 install xonsh")
     j.sal.process.executeInteractive("pip3 install pudb")

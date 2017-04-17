@@ -57,7 +57,7 @@ class FuseOperations(llfuse.Operations):
         try:
             inode_entry = self.getattr(inode, ctx)
         except UnboundLocalError:
-            raise(llfuse.FUSEError(errno.ENOENT))
+            raise llfuse
         return inode_entry
 
     def getattr(self, inode, ctx=None):
@@ -223,7 +223,7 @@ class FuseExample(llfuse.Operations):
         llfuse.init(ops, MOUNT_POINT, fuse_options)
         try:
             llfuse.main(workers=1)
-        except:
+        except BaseException:
             llfuse.close(unmount=False)
             raise
         llfuse.close()

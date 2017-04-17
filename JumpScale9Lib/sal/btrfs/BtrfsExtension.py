@@ -38,7 +38,7 @@ class BtrfsExtension:
 
     @property
     def disks(self):
-        if self._disks == None:
+        if self._disks is None:
             self._disks = self.cuisine.tools.diskmanager.getDisks()
         return self._disks
 
@@ -132,7 +132,7 @@ class BtrfsExtension:
                 print("delete:%s" % path2)
                 try:
                     self.subvolumeDelete(path2)
-                except:
+                except BaseException:
                     pass
 
     def storagePoolCreateOnAllNonRootDisks(self, path="/storage", redundant=False):
@@ -153,11 +153,15 @@ class BtrfsExtension:
                     foundRoot = True
                 else:
                     potentialPartitions.append(partition)
-            if found == False:
+            if not found:
                 res.append(disk)
-        if foundRoot == False:
+        if not foundRoot:
             raise j.exceptions.Input(
-                message="Did not find root disk, cannot create storage pool for btrfs on all other disks", level=1, source="", tags="", msgpub="")
+                message="Did not find root disk, cannot create storage pool for btrfs on all other disks",
+                level=1,
+                source="",
+                tags="",
+                msgpub="")
 
         # TODO: need to remove potential partitons, make sure they are erased,
         # TODO: for each disk found which has a partition (/), all remaining
@@ -176,7 +180,11 @@ class BtrfsExtension:
         if len(res) == 1:
             if redundant:
                 raise j.exceptions.Input(
-                    message="did only find 1 disk for btrfs and redundancy was asked for, cannot continue.", level=1, source="", tags="", msgpub="")
+                    message="did only find 1 disk for btrfs and redundancy was asked for, cannot continue.",
+                    level=1,
+                    source="",
+                    tags="",
+                    msgpub="")
             cmd = "mkfs.btrfs -f %s" % disksLine
         elif len(res) == 2:
             cmd = "mkfs.btrfs -f -m raid1 -d raid1 %s" % disksLine

@@ -11,7 +11,14 @@ import grp
 
 class FListMetadata:
     """Metadata layer on top of flist that enables flist manipulation"""
-    def __init__(self, namespace="main", rootpath="/", dirCollection=None, aciCollection=None, userGroupCollection=None):
+
+    def __init__(
+            self,
+            namespace="main",
+            rootpath="/",
+            dirCollection=None,
+            aciCollection=None,
+            userGroupCollection=None):
         self.namespace = namespace
         self.dirCollection = dirCollection
         self.aciCollection = aciCollection
@@ -187,7 +194,7 @@ class FListMetadata:
     def delete(self, ppath):
         fType, dirObj = self._search_db(ppath)
         if dirObj.dbobj.state != "":
-                raise RuntimeError("%s: No such file or directory" % ppath)
+            raise RuntimeError("%s: No such file or directory" % ppath)
 
         if fType == "D":
             dbobj = dirObj.dbobj
@@ -246,7 +253,9 @@ class FListMetadata:
 
         if oldFtype == "D":
             if "{}/".format(old_path) in new_parent_path:
-                raise RuntimeError("Cannot move '{}' to a subdirectory of itself, '{}'".format(old_path, new_parent_path))
+                raise RuntimeError(
+                    "Cannot move '{}' to a subdirectory of itself, '{}'".format(
+                        old_path, new_parent_path))
 
             if oldDirObj.dbobj.state != "":
                 raise RuntimeError("%s: No such file or directory" % old_path)
@@ -344,8 +353,7 @@ class FListMetadata:
         absolutePath = self._get_absolute_path(ppath)
         try:
             return "D", self._get_dir_from_db(absolutePath)
-        except:
-            # Means that ppath is a file or doesn't exist
+        except BaseException:            # Means that ppath is a file or doesn't exist
             baseName = j.sal.fs.getBaseName(absolutePath)
             parent_dir = j.sal.fs.getDirName(absolutePath)
             parent_dir_obj = self._get_dir_from_db(parent_dir)
@@ -392,7 +400,14 @@ class FListMetadata:
         return relPath, binascii.hexlify(binhash).decode()
 
     def _initialize_aci(self, mode, fileType):
-        valid_types = [stat.S_IFREG, stat.S_IFDIR, stat.S_IFCHR, stat.S_IFBLK, stat.S_IFIFO, stat.S_IFLNK, stat.S_IFSOCK]
+        valid_types = [
+            stat.S_IFREG,
+            stat.S_IFDIR,
+            stat.S_IFCHR,
+            stat.S_IFBLK,
+            stat.S_IFIFO,
+            stat.S_IFLNK,
+            stat.S_IFSOCK]
         if fileType not in valid_types:
             raise RuntimeError("Invalid file type.")
 

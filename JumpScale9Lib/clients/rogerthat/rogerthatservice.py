@@ -67,8 +67,19 @@ class GeventWSServer:
     def process_test(self, value):
         return value
 
-    def process_update(self, status=None, answer_id=None, received_timestamp=None, member=None, user_details=None,
-                       message_key=None, parent_message_key=None, tag=None, acked_timestamp=None, service_identity=None, result_key=None):
+    def process_update(
+            self,
+            status=None,
+            answer_id=None,
+            received_timestamp=None,
+            member=None,
+            user_details=None,
+            message_key=None,
+            parent_message_key=None,
+            tag=None,
+            acked_timestamp=None,
+            service_identity=None,
+            result_key=None):
         message_key = parent_message_key if parent_message_key else message_key
 
         # return
@@ -116,6 +127,7 @@ class GeventWSServer:
     def start(self):
         self.logger.info('started on %s' % self.port, 2, 'rogerthat')
         self.server.serve_forever()
+
 
 if __name__ == '__main__':
     GeventWSServer('0.0.0.0', 5005).start()

@@ -10,7 +10,7 @@ class ApiError(Exception):
         msg = '%s %s' % (response.status_code, response.reason)
         try:
             message = response.json()['error']
-        except:
+        except BaseException:
             message = response.content
         if isinstance(message, (str, bytes)):
             msg += '\n%s' % message
@@ -156,7 +156,15 @@ class Client:
         self._assert_response(resp)
         return resp.json()
 
-    def executeAction(self, repository, action, role='', instance='', producer_roles='*', headers=None, query_params=None):
+    def executeAction(
+            self,
+            repository,
+            action,
+            role='',
+            instance='',
+            producer_roles='*',
+            headers=None,
+            query_params=None):
         """
         simulate the execution of an action
         It is method for POST /ays/repository/{repository}/simulate
@@ -298,7 +306,7 @@ class Client:
         self._assert_response(resp)
         return resp.json()
 
-    def deleteServiceByName(self,repository, role, name, headers=None, query_params=None):
+    def deleteServiceByName(self, repository, role, name, headers=None, query_params=None):
         """
         uninstall and delete a service
         It is method for DELETE /ays/repository/{repository}/service/{role}/{name}
@@ -363,7 +371,7 @@ class Client:
         self._assert_response(resp)
         return resp.json()
 
-    def updateTemplate(self, repository, template=None,  headers=None, query_params=None):
+    def updateTemplate(self, repository, template=None, headers=None, query_params=None):
         """
         update template in repo
         It is method for GET /ays/repository/{repository}/template/{template}/update
@@ -413,7 +421,7 @@ class Client:
         self._assert_response(resp)
         return resp.json()
 
-    def createRun(self, repository, callback_url=None, simulate=False,  headers=None, query_params=None):
+    def createRun(self, repository, callback_url=None, simulate=False, headers=None, query_params=None):
         query = {
             'simulate': simulate,
             'callback_url': callback_url

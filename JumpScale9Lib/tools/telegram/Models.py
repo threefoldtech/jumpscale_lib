@@ -6,7 +6,7 @@ class User:
     def __init__(self, *args):
         try:
             self.__dict__ = args[0]
-        except:
+        except BaseException:
             pass
 
 
@@ -15,7 +15,7 @@ class GroupChat:
     def __init__(self, *args):
         try:
             self.__dict__ = args[0]
-        except:
+        except BaseException:
             pass
 
 

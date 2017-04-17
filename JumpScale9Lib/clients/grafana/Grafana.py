@@ -39,7 +39,7 @@ class GrafanaClient:
         try:
             self._session.get(url).json()
             return True
-        except:
+        except BaseException:
             return False
 
     def setAuth(self, username, password):

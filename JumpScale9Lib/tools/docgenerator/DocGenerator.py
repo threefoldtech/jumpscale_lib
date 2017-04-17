@@ -127,7 +127,7 @@ class DocGenerator:
         j.sal.fs.writeFile(filename=dest, contents=out2, append=False)
 
     def init(self):
-        if self._initOK == False:
+        if not self._initOK:
             self.installDeps()
             j.sal.fs.remove(self._macroCodepath)
             # load the default macro's
@@ -158,7 +158,7 @@ class DocGenerator:
             for path0 in j.sal.fs.listFilesInDir(path, recursive=True, filter="*.py", followSymlinks=True):
                 newdata = j.sal.fs.fileGetContents(path0)
                 md5 = j.data.hash.md5_string(newdata)
-                if not md5 in self._macrosLoaded:
+                if md5 not in self._macrosLoaded:
                     code += newdata
                     self._macrosLoaded.append(md5)
 
@@ -209,7 +209,7 @@ class DocGenerator:
         self.generate(start=start)
 
     def generate(self, url=None, start=True):
-        if url != None:
+        if url is not None:
             self.load(pathOrUrl=url)
         if self.docSites == {}:
             self.load()

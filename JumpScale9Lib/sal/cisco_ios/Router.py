@@ -329,5 +329,6 @@ def main():
         print((repr(R1.exec_cmd('show clock'))))
     R1.logout()
 
+
 if __name__ == '__main__':
     main()

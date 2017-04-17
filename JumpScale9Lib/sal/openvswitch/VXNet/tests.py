@@ -26,7 +26,7 @@ if __name__ == "__main__":
     vx1.apply()
 
     # vxbackend implied (check for it)
-    if not 'vxbackend' in get_all_ifaces():
+    if 'vxbackend' not in get_all_ifaces():
         print('Error: vxbackend doensn\'t exist')
         backend = Bridge('vxbackend')
         backend.create()

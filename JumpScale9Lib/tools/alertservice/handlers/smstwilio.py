@@ -36,5 +36,5 @@ class TwilioSMSHandler(Handler):
         message = """Level: %(level)s
 Details: %(url)s
 Message: %(errormessage)s
-"""  % alert
+""" % alert
         return message

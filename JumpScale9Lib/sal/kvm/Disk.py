@@ -40,7 +40,7 @@ class Disk(BaseKVMComponent):
         try:
             volume = pool.storageVolLookupByName(disk_name)
             return volume
-        except:
+        except BaseException:
             return None
 
     @property

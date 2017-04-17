@@ -89,8 +89,12 @@ class Interface(BaseKVMComponent):
         Return libvirt's xml string representation of the interface.
         """
         Interfacexml = self.controller.get_template('interface.xml').render(
-            macaddress=self.mac, bridge=self.bridge.name, qos=self.qos, rate=self.interface_rate, burst=self.burst, name=self.name
-        )
+            macaddress=self.mac,
+            bridge=self.bridge.name,
+            qos=self.qos,
+            rate=self.interface_rate,
+            burst=self.burst,
+            name=self.name)
         return Interfacexml
 
     @classmethod
@@ -117,7 +121,7 @@ class Interface(BaseKVMComponent):
         else:
             interface_rate = burst = None
         mac = interface.find('mac').get('address')
-        return cls(controller=controller, bridge=bridge, name=name, mac=mac,interface_rate=interface_rate, burst=burst)
+        return cls(controller=controller, bridge=bridge, name=name, mac=mac, interface_rate=interface_rate, burst=burst)
 
     @classmethod
     def get_by_name(cls, controller, name):
@@ -130,7 +134,8 @@ class Interface(BaseKVMComponent):
             bridge_name = self.bridge.name
             mac = self.mac
             rc, ip, err = self.controller.executor.cuisine.core.run(
-                "nmap -n -sn $(ip r | grep %s | grep -v default | awk '{print $1}') | grep -iB 2 '%s' | head -n 1 | awk '{print $NF}'" % (bridge_name, mac))
+                "nmap -n -sn $(ip r | grep %s | grep -v default | awk '{print $1}') | grep -iB 2 '%s' | head -n 1 | awk '{print $NF}'" %
+                (bridge_name, mac))
             ip_pat = re.compile(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}")
             m = ip_pat.search(ip)
             if m:

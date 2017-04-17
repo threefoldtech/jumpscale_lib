@@ -13,6 +13,7 @@ class DiskType(Enum):
 
 class Disks:
     """Subobject to list disks"""
+
     def __init__(self, node):
         self.node = node
         self._client = node.client

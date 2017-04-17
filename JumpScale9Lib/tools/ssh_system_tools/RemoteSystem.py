@@ -12,7 +12,7 @@ from JumpScale import j
 
 try:
     import socketserver as socketserver
-except:
+except BaseException:
     import socketserver
 
 import select
@@ -207,7 +207,8 @@ class RemoteSystemProcess(_remoteSystemObject):
         # the process went wrong because it may only be warnings!
         if die and exitcode != 0:
             raise j.exceptions.RuntimeError(
-                "Process terminated with non 0 exitcode, got exitcode %s.\nout:%s\nerror:%s" % (str(exitcode), myOut, myErr))
+                "Process terminated with non 0 exitcode, got exitcode %s.\nout:%s\nerror:%s" %
+                (str(exitcode), myOut, myErr))
 
         return exitcode, myOut, myErr
 
@@ -398,7 +399,7 @@ class RemoteSystemFS(_remoteSystemObject):
                 return False
             else:
                 raise
-        except:
+        except BaseException:
             raise
         finally:
             sf.close()
@@ -455,7 +456,7 @@ class RemoteSystemFS(_remoteSystemObject):
                     finally:
                         sf.close()
                 self.logger.info('Created the directory [%s]' % newdir.encode("utf-8"), 8)
-        except:
+        except BaseException:
             raise j.exceptions.RuntimeError("Failed to create the directory [%s]" % newdir.encode("utf-8"))
 
     def copyDirTree(self, src, dst, keepsymlinks=False):
@@ -560,7 +561,7 @@ class RemoteSystemFS(_remoteSystemObject):
             else:
                 raise j.exceptions.RuntimeError(
                     "The specified source path in system.fs.moveFile does not exist: %s" % source)
-        except:
+        except BaseException:
             raise j.exceptions.RuntimeError(
                 "File could not be moved...in remote.system.fs.moveFile: from %s to %s " % (source, destination))
 
@@ -608,7 +609,7 @@ class RemoteSystemFS(_remoteSystemObject):
                 try:
                     sf.remove(path)
                     self.logger.info('Done removing file with path: %s' % path)
-                except:
+                except BaseException:
                     raise j.exceptions.RuntimeError(
                         "File with path: %s could not be removed\nDetails: %s" % (path, sys.exc_info()[0]))
                 finally:
@@ -645,7 +646,7 @@ class RemoteSystemFS(_remoteSystemObject):
             else:
                 raise j.exceptions.RuntimeError(
                     "Cannot copy file, file: %s does not exist in system.fs.copyFile" % fileFrom)
-        except:
+        except BaseException:
             raise j.exceptions.RuntimeError("Failed to copy file from %s to %s" % (fileFrom, fileTo))
 
     def isEmptyDir(self, path):
@@ -842,8 +843,8 @@ class LocalPortForwardHandler(socketserver.BaseRequestHandler):
                               (self.chain_host, self.chain_port))
             return
 
-        self.logger.error('Connected!  Tunnel open %r -> %r -> %r' % (requestPeername,
-                                                                      chan.getpeername(), (self.chain_host, self.chain_port)))
+        self.logger.error('Connected!  Tunnel open %r -> %r -> %r' %
+                          (requestPeername, chan.getpeername(), (self.chain_host, self.chain_port)))
         while True:
             r, w, x = select.select([self.request, chan], [], [])
             if self.request in r:

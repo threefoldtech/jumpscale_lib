@@ -31,6 +31,7 @@ class ObjectStore:
     def set_object(self, poolname, key, contents):
         return self.conn.set_object(poolname, key, contents)
 
+
 import boto
 from boto.s3.key import Key
 from boto.s3 import connection
@@ -45,7 +46,10 @@ class S3ObjectStore:
         if callingformat == 'ORDINARY':
             calling_format = boto.s3.connection.OrdinaryCallingFormat()
             self.store_connection = boto.connect_s3(
-                aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, host=host, calling_format=calling_format)
+                aws_access_key_id=aws_access_key_id,
+                aws_secret_access_key=aws_secret_access_key,
+                host=host,
+                calling_format=calling_format)
         else:
             self.store_connection = boto.connect_s3(
                 aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, host=host)
@@ -118,7 +122,7 @@ class RadosObjectStore:
             object_iterator = ioctx.list_objects()
             for o in object_iterator:
                 objects.append(o.key)
-        except:
+        except BaseException:
             raise
         finally:
             ioctx.close()
@@ -128,7 +132,7 @@ class RadosObjectStore:
         ioctx = self.cluster.open_ioctx(poolname)
         try:
             ioctx.write_full(key, contents)
-        except:
+        except BaseException:
             raise
         finally:
             ioctx.close()
@@ -138,7 +142,7 @@ class RadosObjectStore:
         ioctx = self.cluster.open_ioctx(poolname)
         try:
             ioctx.remove_object(key)
-        except:
+        except BaseException:
             raise
         finally:
             ioctx.close()
@@ -148,7 +152,7 @@ class RadosObjectStore:
         ioctx = self.cluster.open_ioctx(poolname)
         try:
             content = ioctx.read(key)
-        except:
+        except BaseException:
             raise
         finally:
             ioctx.close()

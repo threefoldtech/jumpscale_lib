@@ -20,7 +20,7 @@ def extend(a, b):
     elif isinstance(a, dict):
         tmp = a.copy()
         for i in b:
-            if not i in tmp:
+            if i not in tmp:
                 tmp[i] = b[i]
             else:
                 tmp[i] = extend(tmp[i], b[i])
@@ -495,5 +495,6 @@ class SessionCache(ModelBase, Document):
         elif expire:
             j.core.db.expire(key, expire)
         return obj
+
 
 del EmbeddedDocument

@@ -2,7 +2,7 @@ from JumpScale import j
 
 try:
     import ovh
-except:
+except BaseException:
     j.do.execute("pip3 install ovh")
     import ovh
 

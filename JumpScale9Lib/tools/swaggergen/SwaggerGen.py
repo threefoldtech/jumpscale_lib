@@ -363,6 +363,7 @@ class SwaggerGen:
         output = tmpl.render(handlers=handlers, port=8080)
         return output
 
+
 if __name__ == '__main__':
     gen = SwaggerGen()
     gen.loadSpecFromFile("tests/spec2.json")

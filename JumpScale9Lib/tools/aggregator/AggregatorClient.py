@@ -104,8 +104,22 @@ class AggregatorClient:
             md5.update(p.encode())
 
         key = md5.hexdigest()
-        res = self.redis.evalsha(self._sha["eco"], 1, key, message, messagepub, str(level), type,
-                                 tags, code, funcname, funcfilepath, backtrace, str(timestamp), j.application.whoAmI.gid, j.application.whoAmI.nid)
+        res = self.redis.evalsha(
+            self._sha["eco"],
+            1,
+            key,
+            message,
+            messagepub,
+            str(level),
+            type,
+            tags,
+            code,
+            funcname,
+            funcfilepath,
+            backtrace,
+            str(timestamp),
+            j.application.whoAmI.gid,
+            j.application.whoAmI.nid)
 
     def statGet(self, key):
         """

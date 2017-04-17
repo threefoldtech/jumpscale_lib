@@ -385,7 +385,7 @@ class Row(j.tools.code.classGetBase()):
                 stop = int(j.tools.numtools.roundUp((float(maxpos) / 12)))
             if start is None:
                 start = 0
-            if interpolate == True or (interp and interpolate is None):
+            if interpolate or (interp and interpolate is None):
                 if len(datas) != 1:
                     self.interpolate(start, stop * 12 - 1)
                 else:
@@ -596,8 +596,19 @@ class Sheet(j.tools.code.classGetBase()):
             row = j.tools.code.dict2object(Row(), item)
             self.rows[row.name] = row
 
-    def addRow(self, name, ttype="float", aggregate="T", description="", groupname="", groupdescr="", nrcols=None, format="", values=[],
-               defval=None, nrfloat=None):
+    def addRow(
+            self,
+            name,
+            ttype="float",
+            aggregate="T",
+            description="",
+            groupname="",
+            groupdescr="",
+            nrcols=None,
+            format="",
+            values=[],
+            defval=None,
+            nrfloat=None):
         """
         @param ttype int,perc,float,empty,str
         @param aggregate= T,A,MIN,MAX
@@ -709,8 +720,16 @@ class Sheet(j.tools.code.classGetBase()):
         sheet2.period = period
         for row in rows:
             roworg = roworg = self.getRow(row[0])
-            rownew = sheet2.addRow(roworg.name, roworg.ttype, roworg.aggregateAction, roworg.description, roworg.groupname, roworg.groupdescr, lenx,
-                                   roworg.format, nrfloat=roworg.nrfloat)
+            rownew = sheet2.addRow(
+                roworg.name,
+                roworg.ttype,
+                roworg.aggregateAction,
+                roworg.description,
+                roworg.groupname,
+                roworg.groupdescr,
+                lenx,
+                roworg.format,
+                nrfloat=roworg.nrfloat)
             if roworg.ttype == "float":
                 rownew.ttype = "int"
                 rownew.nrfloat = 0

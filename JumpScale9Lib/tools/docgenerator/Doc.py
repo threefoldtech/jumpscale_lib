@@ -43,7 +43,8 @@ class Doc:
                 if j.data.types.list.check(val):
                     if not j.data.types.list.check(valUpdate):
                         raise j.exceptions.Input(
-                            message="(%s)\nerror in data structure, list should match list" % self, level=1, source="", tags="", msgpub="")
+                            message="(%s)\nerror in data structure, list should match list" %
+                            self, level=1, source="", tags="", msgpub="")
                     for item in valUpdate:
                         if item not in val and item != "":
                             val.append(item)
@@ -284,7 +285,7 @@ class Doc:
 
     @property
     def contentClean(self):
-        if self.processed == False:
+        if not self.processed:
             self.write()
         # remove the code blocks (comments are already gone)
         state = "start"

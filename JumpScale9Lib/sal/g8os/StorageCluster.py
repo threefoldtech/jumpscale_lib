@@ -69,7 +69,6 @@ class StorageCluster:
                 fs = self.filesystems[i % (nr_filesystems - 1)]
             return fs
 
-
         port = 2000
         for i in range(nr_server):
             fs = get_filesystem(i)
@@ -80,13 +79,19 @@ class StorageCluster:
             self.storage_servers.append(storage_server)
 
         if has_slave:
-            for i  in range(nr_server):
+            for i in range(nr_server):
                 storage_server = self.storage_servers[i]
                 fs = get_filesystem(i, storage_server.node)
                 bind = "0.0.0.0:{}".format(port)
                 port = port + 1
                 slave_server = StorageServer(cluster=self)
-                slave_server.create(filesystem=fs, name="{}_{}".format(self.name, (nr_server+i)), bind=bind, master=storage_server)
+                slave_server.create(
+                    filesystem=fs,
+                    name="{}_{}".format(
+                        self.name,
+                        (nr_server + i)),
+                    bind=bind,
+                    master=storage_server)
                 self.storage_servers.append(slave_server)
 
     def _find_available_disks(self):

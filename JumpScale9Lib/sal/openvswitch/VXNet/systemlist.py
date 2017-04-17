@@ -40,7 +40,7 @@ def get_nic_params():
 
     def populatenictypes(lines, namespace=None):
         for l in lines:
-            if not 'state' in l:
+            if 'state' not in l:
                 continue
             entry = l.strip().split()
             intf = entry[1].rstrip(':')
@@ -135,7 +135,7 @@ def get_nic_detail(interface):
             string = i.strip().split(':')
             if string[0] == 'Link detected':
                 carrier = True if string[1].strip() == 'yes' else False
-        if carrier == True:
+        if carrier:
             for i in out:
                 string = i.strip().split(':')
                 if string[0] == 'Speed':
@@ -186,7 +186,7 @@ def get_ip_addrs(onlypermanent=False, namespace=None):
     iplist = {}
     for l in lines:
         i = l.strip().split()
-        if not 'forever' in l and onlypermanent:
+        if 'forever' not in l and onlypermanent:
             continue
         iface = i[1].rstrip(':')
         ipstr = i[3]
@@ -225,7 +225,7 @@ def getnetworkstructure(onlypermanent=True, without_ip=False):
     s = {}
     for l in interfaces:
         i = l.split()
-        if not 'forever' in l and onlypermanent and not without_ip:
+        if 'forever' not in l and onlypermanent and not without_ip:
             continue
         id = re.match('\d+', i[0]).group()
         intf = i[1]

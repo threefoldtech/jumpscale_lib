@@ -29,7 +29,6 @@ class IssueManager:
         self.indexDBPath = "/tmp/index.db"
         self._indexDB = None
 
-
     def destroyData(self):
         userCollection = self.getUserCollectionFromDB()
         userCollection.destroy()
@@ -133,6 +132,6 @@ class IssueManager:
 
     @property
     def indexDB(self):
-        if self._indexDB == None:
+        if self._indexDB is None:
             self._indexDB = SqliteExtDatabase(self.indexDBPath)
         return self._indexDB

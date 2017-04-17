@@ -6,7 +6,7 @@ import inspect
 
 try:
     import mongoengine
-except:
+except BaseException:
     pass
 
 

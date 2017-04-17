@@ -38,7 +38,7 @@ class LibvirtUtil:
             if con:
                 try:
                     con.close()
-                except:
+                except BaseException:
                     pass
         close(self.connection)
         close(self.readonly)
@@ -93,7 +93,7 @@ class LibvirtUtil:
             if os.path.exists(diskfile):
                 try:
                     vol = self.connection.storageVolLookupByPath(diskfile)
-                except:
+                except BaseException:
                     continue
                 poolpath = os.path.join(self.basepath, domain.name())
                 if os.path.exists(poolpath):
@@ -120,7 +120,7 @@ class LibvirtUtil:
             for vol in diskpool.listAllVolumes():
                 vol.delete()
             diskpool.destroy()
-        except:
+        except BaseException:
             pass
         if os.path.exists(poolpath):
             shutil.rmtree(poolpath)
@@ -347,8 +347,13 @@ class LibvirtUtil:
         domainconfig = domain.XMLDesc()
         name = '%s_%s.qcow2' % (name, time.time())
         destination_path = os.path.join(self.templatepath, name)
-        if domain.state()[0] in [libvirt.VIR_DOMAIN_SHUTDOWN, libvirt.VIR_DOMAIN_SHUTOFF,
-                                 libvirt.VIR_DOMAIN_CRASHED, libvirt.VIR_DOMAIN_PAUSED] or not self._isRootVolume(domain, clonefrom):
+        if domain.state()[0] in [
+                libvirt.VIR_DOMAIN_SHUTDOWN,
+                libvirt.VIR_DOMAIN_SHUTOFF,
+                libvirt.VIR_DOMAIN_CRASHED,
+                libvirt.VIR_DOMAIN_PAUSED] or not self._isRootVolume(
+                domain,
+                clonefrom):
             if not self.isLocked(id):
                 lock = self._lockDomain(id)
                 if lock != LOCKCREATED:
@@ -370,7 +375,7 @@ class LibvirtUtil:
                 while not rebasedone:
                     rebasedone = self._block_job_info(domain, clonefrom)
                 domain.blockJobAbort(clonefrom, 0)
-            except:
+            except BaseException:
                 self.connection.defineXML(domainconfig)
                 raise
             self.connection.defineXML(domainconfig)
@@ -537,8 +542,13 @@ class LibvirtUtil:
         machinetemplate = self.env.get_template("machine.xml")
         macaddresses = [self._generateRandomMacAddress() for bridge in bridges]
         POOLPATH = '%s/%s' % (self.basepath, name)
-        machinexml = machinetemplate.render({'machinename': name, 'diskname': diskname, 'memory': memory, 'nrcpu': cpucount, 'poolpath': POOLPATH,
-                                             'macaddresses': macaddresses, 'bridges': bridges})
+        machinexml = machinetemplate.render({'machinename': name,
+                                             'diskname': diskname,
+                                             'memory': memory,
+                                             'nrcpu': cpucount,
+                                             'poolpath': POOLPATH,
+                                             'macaddresses': macaddresses,
+                                             'bridges': bridges})
         self.create_machine(machinexml)
         #dnsmasq = DNSMasq()
         #nsid = '%04d' % networkid

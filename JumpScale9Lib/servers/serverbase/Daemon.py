@@ -90,7 +90,8 @@ class DaemonCMDS:
                 session_index = args.args.index('session')
                 if session_index != len(args.args) - 1:
                     raise j.exceptions.RuntimeError(
-                        "session arg needs to be last argument of method. Cat:%s Method:%s \nArgs:%s" % (cat, name, args))
+                        "session arg needs to be last argument of method. Cat:%s Method:%s \nArgs:%s" %
+                        (cat, name, args))
                 del args.args[session_index]
                 if args.defaults:
                     session_default_index = session_index - len(args.args) - 1
@@ -212,8 +213,19 @@ class Daemon:
                         data.pop("_agentid")
                         category2 = category.replace("processmanager_", "")
                         scriptid = "%s_%s" % (category2, cmd)
-                        job = cmds.scheduleCmd(gid, nid, cmdcategory=category2, jscriptid=scriptid, cmdname=cmd,
-                                               args=data, queue="internal", log=False, timeout=60, roles=[], session=session, wait=True)
+                        job = cmds.scheduleCmd(
+                            gid,
+                            nid,
+                            cmdcategory=category2,
+                            jscriptid=scriptid,
+                            cmdname=cmd,
+                            args=data,
+                            queue="internal",
+                            log=False,
+                            timeout=60,
+                            roles=[],
+                            session=session,
+                            wait=True)
                         jobqueue = cmds._getJobQueue(job["guid"])
                         jobr = jobqueue.get(True, 60)
                         if not jobr:
@@ -307,7 +319,7 @@ class Daemon:
             if error == 1:
                 try:
                     data = self.encrypt(returnser.dumps(parts[2].__dict__), session)
-                except:
+                except BaseException:
                     eco = j.errorconditionhandler.getErrorConditionObject(
                         msg="could not serialize result from %s" % cmd)
                     return returnCodes.SERIALIZATIONERROROUT, "m", self.errorconditionserializer.dumps(eco.__dict__)

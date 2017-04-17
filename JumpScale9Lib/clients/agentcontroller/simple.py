@@ -652,8 +652,17 @@ class SchedulerClient:
         runargs = acclient.RunArgs(max_time=timeout)
         if domain is not None:
             runargs = runargs.update({'domain': domain, 'name': name})
-            return self._client.schedule_add(id, cron, gid=gid, nid=nid, cmd=acclient.CMD_EXECUTE_JUMPSCRIPT,
-                                             args=runargs, data=j.data.serializer.json.dumps(args), roles=roles, fanout=fanout, tags=tags)
+            return self._client.schedule_add(
+                id,
+                cron,
+                gid=gid,
+                nid=nid,
+                cmd=acclient.CMD_EXECUTE_JUMPSCRIPT,
+                args=runargs,
+                data=j.data.serializer.json.dumps(args),
+                roles=roles,
+                fanout=fanout,
+                tags=tags)
         else:
             # call the unexposed jumpscript_content extension manually
             if method:
@@ -666,8 +675,17 @@ class SchedulerClient:
                 'args': args,
             }
 
-            return self._client.schedule_add(id, cron, gid=gid, nid=nid, cmd=acclient.CMD_EXECUTE_JUMPSCRIPT_CONTENT,
-                                             args=runargs, data=j.data.serializer.json.dumps(data), roles=roles, fanout=fanout, tags=tags)
+            return self._client.schedule_add(
+                id,
+                cron,
+                gid=gid,
+                nid=nid,
+                cmd=acclient.CMD_EXECUTE_JUMPSCRIPT_CONTENT,
+                args=runargs,
+                data=j.data.serializer.json.dumps(data),
+                roles=roles,
+                fanout=fanout,
+                tags=tags)
 
     def unschedule(self, id):
         """

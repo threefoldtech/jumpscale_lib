@@ -221,7 +221,8 @@ class CodeManagerFile:
         text = text.lower()
         if len(items) > 1:
             raise j.exceptions.RuntimeError(
-                "Found to many users,groups items in string, needs to be one [ and one ] and users & groups inside, now %s" % text)
+                "Found to many users,groups items in string, needs to be one [ and one ] and users & groups inside, now %s" %
+                text)
         if len(items) == 0:
             return text, []
         usergroups = items[0]
@@ -270,7 +271,7 @@ class CodeManagerFile:
                     try:
                         int(item[1:])
                         infoitems += item + " "
-                    except:
+                    except BaseException:
                         descr += item + " "
                         state = "endofmeta"
                 elif item[0:2].lower() == "t:":
@@ -381,7 +382,7 @@ class CodeManagerFile:
         for item in items.split(","):
             try:
                 result.append(int(item))
-            except:
+            except BaseException:
                 raise j.exceptions.RuntimeError("Cannot convert str to array, item was %s" % item)
         return result
 
@@ -390,7 +391,7 @@ class CodeManagerFile:
             return 0
         try:
             result = int(item)
-        except:
+        except BaseException:
             raise j.exceptions.RuntimeError("Cannot convert str to int, item was %s" % item)
         return result
 

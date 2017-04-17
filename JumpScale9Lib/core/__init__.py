@@ -138,7 +138,7 @@ def _setup_stacktrace_hook():
                 import _thread
                 get_ident = _thread.get_ident
             except (ImportError, AttributeError):
-                get_ident = lambda: object()
+                def get_ident(): return object()
 
             ident = get_ident()
             if threadid == get_ident():
@@ -194,6 +194,7 @@ def _setup_stacktrace_hook():
 
     # Set up handler
     old = signal.signal(sig, handler)
+
 
 try:
     _setup_stacktrace_hook()

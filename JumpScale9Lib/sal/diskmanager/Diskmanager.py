@@ -73,7 +73,7 @@ class Diskmanager:
         if self._parted is None:
             try:
                 import parted
-            except:
+            except BaseException:
                 j.sal.ubuntu.apt_install("python3-parted")
                 import parted
 
@@ -191,7 +191,7 @@ class Diskmanager:
                         try:
                             fs = self.parted.probeFileSystem(
                                 partition.geometry)
-                        except:
+                        except BaseException:
                             fs = "unknown"
 
                         disko.fs = fs
@@ -298,7 +298,7 @@ class Diskmanager:
                                         print(("found disk:\n%s" % (disko)))
                                     cmd = "umount /mnt/tmp"
                                     j.sal.process.execute(cmd, die=False)
-                                    if os.path.ismount("/mnt/tmp") == True:
+                                    if os.path.ismount("/mnt/tmp"):
                                         raise j.exceptions.RuntimeError(
                                             "/mnt/tmp should not be mounted")
 

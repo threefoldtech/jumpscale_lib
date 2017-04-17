@@ -83,13 +83,13 @@ class ZDaemonTransport(Transport):
         try:
             self._cmdchannel.setsockopt(self.zmq.LINGER, 0)
             self._cmdchannel.close()
-        except:
+        except BaseException:
             print("error in close for cmdchannel")
             pass
 
         try:
             self._poll.unregister(self._cmdchannel)
-        except:
+        except BaseException:
             pass
 
         self._context.term()

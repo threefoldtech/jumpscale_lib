@@ -178,7 +178,7 @@ class GitlabInstance:
             if group:
                 return group
             j.clients.git.pullGitRepo(url=url, dest=None, login=self.login, passwd=self.passwd,
-                             depth=1, ignorelocalchanges=False, reset=False, branch=None, revision=None)
+                                      depth=1, ignorelocalchanges=False, reset=False, branch=None, revision=None)
 
         return proj, path
 

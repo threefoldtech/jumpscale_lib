@@ -38,12 +38,13 @@ class FileSystemAys(AYSable):
     def create(self, aysrepo):
         actor = aysrepo.actorGet(self.actor)
         args = {
-            'storagePool':self._obj.pool.name,
+            'storagePool': self._obj.pool.name,
             'name': self._obj.name,
             # 'readOnly': ,FIXME
             # 'quota': ,FIXME
         }
         return actor.serviceCreate(instance=self._obj.name, args=args)
+
 
 if __name__ == '__main__':
     from JumpScale import j
@@ -51,5 +52,6 @@ if __name__ == '__main__':
     repo = j.atyourservice.aysRepos.get('/opt/code/cockpit_repos/grid')
     node1 = j.sal.g8os.get_node('172.20.0.91')
     node2 = j.sal.g8os.get_node('172.20.0.92')
-    cluster = j.sal.g8os.create_storagecluster('cluster1',[node1,node2],'hdd', 8, True)
-    from IPython import embed;embed()
+    cluster = j.sal.g8os.create_storagecluster('cluster1', [node1, node2], 'hdd', 8, True)
+    from IPython import embed
+    embed()

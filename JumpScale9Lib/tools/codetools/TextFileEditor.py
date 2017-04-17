@@ -57,7 +57,8 @@ class TextFileEditor:
 
         if len(result) == 0:
             raise j.exceptions.RuntimeError(
-                "Could not find a line matching %s and not matching %s in file %s" % (includes, excludes, self.filepath))
+                "Could not find a line matching %s and not matching %s in file %s" %
+                (includes, excludes, self.filepath))
         if len(result) > 1:
             raise j.exceptions.RuntimeError("Found more than 1 line matching %s" % (includes, self.filepath))
         return [linenrfound, linefound]

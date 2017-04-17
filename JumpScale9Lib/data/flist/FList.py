@@ -20,6 +20,7 @@ from JumpScale.tools.flist.models import DirCollection
 
 from path import Path
 
+
 class FList(object):
     """
     FList (sometime "plist") files contains a plain/text representation of
@@ -223,7 +224,7 @@ class FList(object):
                 self._setMetadata(dbobj, stat, fname)
 
                 dbobj.attributes.file = dbobj.attributes.init('file')
-                dbobj.attributes.file.blockSize = 128 # FIXME ?
+                dbobj.attributes.file.blockSize = 128  # FIXME ?
 
                 counter += 1
 
@@ -315,7 +316,17 @@ class FList(object):
 
         dbobj.aclkey = aci.key
 
-    def walk(self, dirFunction=None, fileFunction=None, specialFunction=None, linkFunction=None, args={}, currentDirKey="", dirRegex=[], fileRegex=[], types="DFLS"):
+    def walk(
+            self,
+            dirFunction=None,
+            fileFunction=None,
+            specialFunction=None,
+            linkFunction=None,
+            args={},
+            currentDirKey="",
+            dirRegex=[],
+            fileRegex=[],
+            types="DFLS"):
         """
 
         @param types: D=Dir, F=File, L=Links, S=Special
@@ -536,13 +547,13 @@ class FList(object):
         def setDefault(dirobj, name, subobj):
             x = self.aciCollection.get(subobj.aclkey)
             item = [
-                "%s/%s" % (dirobj.dbobj.location, name), # Path
-                "", # To be filled later                 # Hash
+                "%s/%s" % (dirobj.dbobj.location, name),  # Path
+                "",  # To be filled later                 # Hash
                 "%d" % subobj.size,                      # Size
                 x.dbobj.uname,                           # User (permissions)
                 x.dbobj.gname,                           # Group (permissions)
                 x.modeInOctFormat,                       # Permission mode
-                "", # To be filled later                 # File type
+                "",  # To be filled later                 # File type
                 "%d" % subobj.creationTime,              # Creation Timestamp
                 "%d" % subobj.modificationTime,          # Modification Timestamp
                 ""  # To be filled later                 # Extended attributes
@@ -599,7 +610,6 @@ class FList(object):
 
             args.append("|".join(item))
 
-
         print("Building old flist format")
         result = []
         self.walk(
@@ -629,7 +639,7 @@ class FList(object):
             hashs = g8sc.upload(g8client, fullpath)
             # print(hashs)
 
-            if hashs == None:
+            if hashs is None:
                 return
 
             subobj.attributes.file.blocks = hashs
@@ -644,7 +654,6 @@ class FList(object):
         def procSpecial(dirobj, type, name, subobj, args):
             # print("Special: Ignore")
             pass
-
 
         print("Uploading")
         result = []
@@ -661,7 +670,6 @@ class FList(object):
         self.userGroupCollection.destroy()
         self.dirCollection.destroy()
         print("Special: Ignore")
-
 
         print("Uploading")
         result = []

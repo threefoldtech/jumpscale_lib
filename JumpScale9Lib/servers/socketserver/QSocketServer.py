@@ -7,7 +7,7 @@ try:
 
     def sleep(sec):
         gevent.sleep(sec)
-except:
+except BaseException:
     import time
 
     def sleep(sec):

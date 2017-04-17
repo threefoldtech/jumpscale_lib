@@ -12,6 +12,7 @@ class Stats(object):
         self.max = max
         self.total = total
 
+
 CHUNK_SIZE = 1000
 
 
@@ -70,7 +71,13 @@ class InfluxDumper(Dumper.BaseDumper):
         parts = line.split('|')
         if len(parts) != 7:
             raise Exception('Invalid stats line "%s"' % line)
-        return Stats(parts[0], parts[1], int(parts[2]), float(parts[3]), float(parts[4]), float(parts[5]), float(parts[6]))
+        return Stats(
+            parts[0], parts[1], int(
+                parts[2]), float(
+                parts[3]), float(
+                parts[4]), float(
+                    parts[5]), float(
+                        parts[6]))
 
     def _mk_point(self, key, epoch, value, max, tags):
         return {

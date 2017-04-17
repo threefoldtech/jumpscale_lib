@@ -22,7 +22,17 @@ class DocModel(base):
                 if label.startswith("type_"):
                     toremove.append(label)
                     label = label[5:]
-                    if label not in ['unknown', 'alert', 'bug', 'doc', 'feature', 'incident', 'question', 'request', 'story', 'task']:
+                    if label not in [
+                        'unknown',
+                        'alert',
+                        'bug',
+                        'doc',
+                        'feature',
+                        'incident',
+                        'question',
+                        'request',
+                        'story',
+                            'task']:
                         label = 'unknown'
                         toremove.pop()
                     self.dbobj.type = label
@@ -67,7 +77,7 @@ class DocModel(base):
         self.changed = True
 
     def commentSet(self, comment, owner="", modTime=None):
-        if owner == None:
+        if owner is None:
             owner = ""
         for item in self.dbobj.comments:
             if item.comment != comment:

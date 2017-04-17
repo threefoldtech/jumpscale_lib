@@ -158,7 +158,6 @@ class DevProcess:
 
         self.logger.info("Calling notify: {handle} {message}".format(**locals()))
 
-
     def _notify(self, service, message):
         # if service.model.data.repoType != "org":
         #     return
@@ -195,8 +194,7 @@ class DevProcess:
         #  first make sure issues get right labels
         try:
             r.labelsSet(labels, ignoreDelete=["p_"])
-        except:
-            # labels already exists (just ignore it for now)
+        except BaseException:            # labels already exists (just ignore it for now)
             pass
 
     def sync_milestones(self, service):
@@ -205,7 +203,7 @@ class DevProcess:
         service: github_repo service
 
         """
-        repo = self.get_github_repo(service=service) # GithubRepo
+        repo = self.get_github_repo(service=service)  # GithubRepo
         actor = service.aysrepo.actorGet('github_milestone')
         repomilestones = []
         for milestone in repo.milestones:
@@ -229,7 +227,7 @@ class DevProcess:
             msv = service.aysrepo.serviceGet("github_milestone", m)
             dueon = github.GithubObject.NotSet
             if msv.model.data.milestoneDeadline:
-                dueon = datetime.strptime(msv.model.data.milestoneDeadline, "%Y-%m-%d") ##FIXME NOTWORKING
+                dueon = datetime.strptime(msv.model.data.milestoneDeadline, "%Y-%m-%d")  # FIXME NOTWORKING
                 dueon = dueon.strftime("%Y-%m-%dT%H:%M:%SZ")
                 dueon = datetime.strptime(dueon, "%Y-%m-%dT%H:%M:%SZ")
             kwargs = {
@@ -237,9 +235,9 @@ class DevProcess:
                 'description': msv.model.data.milestoneDescription,
             }
             try:
-                milestone = repo.api.create_milestone(**kwargs) # repo.createMilestone doesn't work.
-                milestone.edit(kwargs['title'], due_on=dueon) ## error in PyGithub
-            except Exception as e: ## github.GithubException.GithubException, 422
+                milestone = repo.api.create_milestone(**kwargs)  # repo.createMilestone doesn't work.
+                milestone.edit(kwargs['title'], due_on=dueon)  # error in PyGithub
+            except Exception as e:  # github.GithubException.GithubException, 422
                 self.logger.error(e)
 
     def getGithubClient(self, service):
@@ -302,7 +300,8 @@ class DevProcess:
             deadline = None
             for story in stories:
                 if milestone is None:
-                    #note that milestones keys are in 'number:title' so we can only retrieve it via the issue reference.
+                    # note that milestones keys are in 'number:title' so we can only retrieve
+                    # it via the issue reference.
                     milestone = milestones[story.milestone]
                     deadline = j.data.time.any2epoch(milestone.deadline)
 
@@ -342,7 +341,7 @@ class DevProcess:
             # repos = all repos that consumes this specific org repo.
             repos = service.consumers.get('github_repo', [])
             for repo_service in repos:
-                rep = self.get_github_repo(repo_service)  #  DON'T MESS UP THE REPO local variable
+                rep = self.get_github_repo(repo_service)  # DON'T MESS UP THE REPO local variable
                 issues.extend(rep.issues)
 
             issues = sorted(issues, key=lambda i: i.number)
@@ -414,7 +413,6 @@ class DevProcess:
                 no_estimate_notification = "Tasks with no estimation:\n" + '\n'.join(no_estimate_tasks)
                 self._notify(service, no_estimate_notification)
 
-
     def _process_stories(self, service, issues):
         """
         Process stories
@@ -483,11 +481,11 @@ class DevProcess:
         eta, id = self._story_estimate(issue)
         try:
             return j.data.time.getEpochFuture(eta), id
-        except:
+        except BaseException:
             pass
         try:
             return j.data.time.any2epoch(eta), id
-        except:
+        except BaseException:
             pass
 
         return 0, id
@@ -615,7 +613,8 @@ class DevProcess:
 
         @param issue Issue: issue to render its URL.
         """
-        return 'https://github.com/{fullname}/issues/{issuenumber}'.format(fullname=issue.repo.fullname, issuenumber=issue.number)
+        return 'https://github.com/{fullname}/issues/{issuenumber}'.format(
+            fullname=issue.repo.fullname, issuenumber=issue.number)
 
     def _move_to_repo(self, issue, dest):
         """
@@ -670,10 +669,10 @@ class DevProcess:
 
         @param storycard_name string: Get kanban link.
         """
-        return "# Waffle: [kanban](https://waffle.io/gig-projects/org_development?search={storycard_name}:&label=type_task)".format(**locals())
+        return "# Waffle: [kanban](https://waffle.io/gig-projects/org_development?search={storycard_name}:&label=type_task)".format(
+            **locals())
 
     def _story_add_tasks(self, story, tasks):
-
         """
         If this issue is a story, add a link to a subtasks
 
@@ -723,8 +722,8 @@ class DevProcess:
         newdoc.addMDBlock("# Tasks")
         for task in tasks:
             # ADD EACH ISSUE AS A LIST ITEM RIGHT AFTER THE TASKS BLOCK
-            line = '- [{state}] {task_title} #[{task_num}]({task_url}) '.format(state=state(task.api.state), task_title=task.title,
-                                                                                task_num=task.number,task_url=self._issue_url(task))
+            line = '- [{state}] {task_title} #[{task_num}]({task_url}) '.format(state=state(
+                task.api.state), task_title=task.title, task_num=task.number, task_url=self._issue_url(task))
             newdoc.addMDListItem(0, line)
 
         progress, remaining_time = self.calculate_story_progress(story, tasks)
@@ -767,7 +766,7 @@ class DevProcess:
                 else:
                     remaining_time += int(estimation_time)
         if total_estimation:
-            progress = (done*100) / total_estimation
+            progress = (done * 100) / total_estimation
         return (int(progress), remaining_time)
 
     def _story_name(self, title):

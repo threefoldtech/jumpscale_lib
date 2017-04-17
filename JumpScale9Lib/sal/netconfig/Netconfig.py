@@ -296,7 +296,8 @@ class Netconfig:
         print("check can reach default gw:%s" % gw)
         if not j.sal.nettools.pingMachine(gw):
             j.events.opserror_critical(
-                "Cannot get to default gw, network configuration did not succeed for %s %s/%s -> %s" % (interface, ipaddr, mask, gw))
+                "Cannot get to default gw, network configuration did not succeed for %s %s/%s -> %s" %
+                (interface, ipaddr, mask, gw))
         print("gw reachable")
 
         self.resetDefaultGateway(gw)

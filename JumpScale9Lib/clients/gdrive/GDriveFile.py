@@ -61,7 +61,7 @@ class GDriveFile():
         try:
             self.__dict__.update(j.data.serializer.json.loads(json))
 
-        except:
+        except BaseException:
             j.clients.gdrive.logger.warning("description was wrong format, was not json, lets re-write")
             self.changed = True
             self.description = json  # the old description
@@ -83,7 +83,7 @@ class GDriveFile():
             self.sid = j.data.idgenerator.generateXCharID(4)
 
         modtime = self.gmd.get('modifiedTime')
-        if modtime != None:
+        if modtime is not None:
             modtime = parser.parse(modtime)
             self.modTime = int(j.data.time.any2epoch(modtime))
 
@@ -93,13 +93,13 @@ class GDriveFile():
 
     @property
     def gmd(self):
-        if self._gmd == None:
+        if self._gmd is None:
             self._gmd = j.clients.gdrive.files.get(fileId=self.id).execute()
         return self._gmd
 
     @property
     def mimetype(self):
-        if self._mime_type == None:
+        if self._mime_type is None:
             self._getMimeType()
         return self._mime_type
 

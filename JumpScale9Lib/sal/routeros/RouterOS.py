@@ -12,6 +12,7 @@ class RouterOSFactory:
     def get(self, host, login, password):
         return RouterOS(host, login, password)
 
+
 from hashlib import md5
 
 import sys
@@ -173,7 +174,7 @@ class RouterOS:
         self.login = login
         self.password = password
         self.ftp = None
-        if res != True:
+        if not res:
             raise j.exceptions.RuntimeError("Could not login into RouterOS: %s" % host)
         self.configpath = "%s/apps/routeros/configs/default/" % j.dirs.JSBASEDIR
         j.sal.fs.createDir(j.sal.fs.joinPaths(j.dirs.VARDIR, "routeros"))
@@ -270,7 +271,7 @@ class RouterOS:
             item["nr"] = nr
             nr += 1
             if staticOnly:
-                if item["static"] == True:
+                if item["static"]:
                     result.append(item)
             else:
                 result.append(item)
@@ -481,8 +482,14 @@ class RouterOS:
         """
         Delete portforward
         """
-        results = self._do_filtered('/ip/firewall/nat/print',
-                                    filters=['=.proplist=.id', '?dst-address=%s' % dstaddress, '?dst-port=%s' % dstport])
+        results = self._do_filtered(
+            '/ip/firewall/nat/print',
+            filters=[
+                '=.proplist=.id',
+                '?dst-address=%s' %
+                dstaddress,
+                '?dst-port=%s' %
+                dstport])
         for i in results:
             self.do('/ip/firewall/nat/remove', args=i)
         return True

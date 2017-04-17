@@ -2,13 +2,13 @@ from JumpScale import j
 import os
 try:
     import psycopg2
-except:
+except BaseException:
     os.system("pip3 install psycopg2")
     import psycopg2
 
 try:
     import peewee
-except:
+except BaseException:
     os.system("pip3 install peewee")
     import peewee
 
@@ -47,7 +47,16 @@ class PeeweeFactory:
         for item in j.core.db.keys("peewee.*"):
             j.core.db.delete(item)
 
-    def getModel(self, ipaddr="localhost", port=5432, login="postgres", passwd="rooter", dbname="template", dbtype="postgres", schema=None, cache=True):
+    def getModel(
+            self,
+            ipaddr="localhost",
+            port=5432,
+            login="postgres",
+            passwd="rooter",
+            dbname="template",
+            dbtype="postgres",
+            schema=None,
+            cache=True):
         """
         example usage:
             model=j.clients.peewee.getModel(login="gogs",passwd="something",dbname="gogs")
@@ -55,9 +64,9 @@ class PeeweeFactory:
         """
         key = "%s_%s_%s_%s_%s" % (ipaddr, port, login, dbname, dbtype)
 
-        if j.core.db.get("peewee.code.%s" % key) == None:
+        if j.core.db.get("peewee.code.%s" % key) is None:
             cmd = 'pwiz.py -H %s  -p %s -u "%s" -P -i %s' % (ipaddr, port, login, dbname)
-            rc, out,err = j.sal.process.execute(cmd, useShell=True, die=True, showout=False)
+            rc, out, err = j.sal.process.execute(cmd, useShell=True, die=True, showout=False)
             j.core.db.set("peewee.code.%s" % key, out)
         code = j.core.db.get("peewee.code.%s" % key).decode()
 

@@ -21,6 +21,7 @@ def has_key(x, y):
     else:
         return y in x
 
+
 try:
     import html.entities as htmlentitydefs
     import urllib as urlparse
@@ -32,7 +33,7 @@ except ImportError:  # Python3
 
 try:  # Python3
     import urllib.request as urllib
-except:
+except BaseException:
     import urllib.request
     import urllib.parse
     import urllib.error
@@ -45,7 +46,7 @@ import types
 
 try:
     from textwrap import wrap
-except:
+except BaseException:
     pass
 
 # Use Unicode characters instead of their ascii psuedo-replacements
@@ -87,6 +88,7 @@ def name2cp(k):
         if k.startswith("&#") and k.endswith(";"):
             return int(k[2:-1])  # not in latin-1
         return ord(codecs.latin_1_decode(k)[0])
+
 
 unifiable = {'rsquo': "'", 'lsquo': "'", 'rdquo': '"', 'ldquo': '"',
              'copy': '(C)', 'mdash': '--', 'nbsp': ' ', 'rarr': '->', 'larr': '<-', 'middot': '*',
@@ -352,8 +354,8 @@ class HTML2Text(html.parser.HTMLParser):
 
         # handle Google's text emphasis
         strikethrough = 'line-through' in tag_emphasis and self.hide_strikethrough
-        bold = 'bold' in tag_emphasis and not 'bold' in parent_emphasis
-        italic = 'italic' in tag_emphasis and not 'italic' in parent_emphasis
+        bold = 'bold' in tag_emphasis and 'bold' not in parent_emphasis
+        italic = 'italic' in tag_emphasis and 'italic' not in parent_emphasis
         fixed = google_fixed_width_font(tag_style) and not \
             google_fixed_width_font(parent_style) and not self.pre
 
@@ -724,7 +726,7 @@ class HTML2Text(html.parser.HTMLParser):
         if self.style:
             self.style_def.update(dumb_css_parser(data))
 
-        if not self.maybe_automatic_link is None:
+        if self.maybe_automatic_link is not None:
             href = self.maybe_automatic_link
             if href == data and self.absolute_url_matcher.match(href):
                 self.o("<" + data + ">")
@@ -813,6 +815,7 @@ class HTML2Text(html.parser.HTMLParser):
                     result += "\n"
                     newlines += 1
         return result
+
 
 ordered_list_matcher = re.compile(r'\d+\.\s')
 unordered_list_matcher = re.compile(r'[-\*\+]\s')
@@ -924,8 +927,8 @@ def main():
                  default=GOOGLE_LIST_INDENT, help="number of pixels Google indents nested lists")
     p.add_option("-s", "--hide-strikethrough", action="store_true", dest="hide_strikethrough",
                  default=False, help="hide strike-through text. only relevant when -g is specified as well")
-    p.add_option("--escape-all", action="store_true", dest="escape_snob",
-                 default=False, help="Escape all special characters.  Output is less readable, but avoids corner case formatting issues.")
+    p.add_option("--escape-all", action="store_true", dest="escape_snob", default=False,
+                 help="Escape all special characters.  Output is less readable, but avoids corner case formatting issues.")
     (options, args) = p.parse_args()
 
     # process input
@@ -945,7 +948,7 @@ def main():
                 try:
                     from feedparser import _getCharacterEncoding as enc
                 except ImportError:
-                    enc = lambda x, y: ('utf-8', 1)
+                    def enc(x, y): return ('utf-8', 1)
                 encoding = enc(doc.headers, data)[0]
                 if encoding == 'us-ascii':
                     encoding = 'utf-8'
@@ -955,7 +958,7 @@ def main():
                 try:
                     from chardet import detect
                 except ImportError:
-                    detect = lambda x: {'encoding': 'utf-8'}
+                    def detect(x): return {'encoding': 'utf-8'}
                 encoding = detect(data)['encoding']
     else:
         data = sys.stdin.read()

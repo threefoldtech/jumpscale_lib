@@ -5,6 +5,7 @@ import datetime
 import os
 import requests
 
+
 def refresh_jwt(jwt, payload):
     if payload['iss'] == 'itsyouonline':
         refreshurl = "https://itsyou.online/v1/oauth/jwt/refresh"
@@ -79,7 +80,6 @@ class Client:
         else:
             self.api.load_swagger(group='cloudapi')
 
-
     def __patch_portal_client(self, api):
         # try to relogin in the case the connection is dead because of
         # inactivity
@@ -149,7 +149,6 @@ class Client:
                                                 maxNetworkPeerTransfer=maxNetworkPeerTransfer,
                                                 maxNumPublicIP=maxNumPublicIP)
             return self.account_get(name, False)
-
 
     @property
     def login(self):
@@ -340,7 +339,16 @@ class Space(Authorizables):
         else:
             raise j.exceptions.RuntimeError("Cloudspace has been deleted")
 
-    def machine_create(self, name, memsize=2, vcpus=1, disksize=10, datadisks=[], image="Ubuntu 15.10 x64", sizeId=None, stackId=None):
+    def machine_create(
+            self,
+            name,
+            memsize=2,
+            vcpus=1,
+            disksize=10,
+            datadisks=[],
+            image="Ubuntu 15.10 x64",
+            sizeId=None,
+            stackId=None):
         """
         @param memsize in MB or GB
         for now vcpu's is ignored (waiting for openvcloud)
@@ -355,8 +363,14 @@ class Space(Authorizables):
         print("cloudspaceid:%s name:%s size:%s image:%s disksize:%s" %
               (self.id, name, sizeId, imageId, disksize))
         if stackId:
-            self.client.api.cloudbroker.machine.createOnStack(cloudspaceId=self.id, name=name,
-                sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks, stackid=stackId)
+            self.client.api.cloudbroker.machine.createOnStack(
+                cloudspaceId=self.id,
+                name=name,
+                sizeId=sizeId,
+                imageId=imageId,
+                disksize=disksize,
+                datadisks=datadisks,
+                stackid=stackId)
         else:
             self.client.api.cloudapi.machines.create(
                 cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks)
@@ -482,7 +496,6 @@ class Machine:
             raise j.exceptions.RuntimeError("Protocol for portforward should be tcp or udp not %s" % protocol)
 
         machineip, _ = self.get_machine_ip()
-
 
         publicAddress = self.space.model['publicipaddress']
         if not publicAddress:

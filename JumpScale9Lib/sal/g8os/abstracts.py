@@ -1,5 +1,6 @@
 from JumpScale import j
 
+
 class Mountable:
     """
     Abstract implementation for devices that are mountable.

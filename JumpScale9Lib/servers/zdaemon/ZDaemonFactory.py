@@ -41,8 +41,18 @@ class ZDaemonFactory:
                      sslorg=sslorg, ssluser=ssluser, sslkeyvaluestor=sslkeyvaluestor)
         return zd
 
-    def getZDaemonClient(self, addr="127.0.0.1", port=5651, org="myorg", user="root", passwd="1234", ssl=False, category="core",
-                         sendformat="m", returnformat="m", gevent=False):
+    def getZDaemonClient(
+            self,
+            addr="127.0.0.1",
+            port=5651,
+            org="myorg",
+            user="root",
+            passwd="1234",
+            ssl=False,
+            category="core",
+            sendformat="m",
+            returnformat="m",
+            gevent=False):
         """
         example usage, see example for server at self.getZDaemon
 

@@ -27,8 +27,14 @@ class TextLineEditor:
     def getBlockNames(self):
         return list(self._higestblocknr.keys())
 
-    def matchBlocks(self, blockname, blockStartPatterns=[
-                    '.*'], blockStartPatternsNegative=[], blockStopPatterns=[], blockStopPatternsNegative=[], blockfilter=""):
+    def matchBlocks(
+            self,
+            blockname,
+            blockStartPatterns=['.*'],
+            blockStartPatternsNegative=[],
+            blockStopPatterns=[],
+            blockStopPatternsNegative=[],
+            blockfilter=""):
         """
         walk over blocks which are marked as matched and split blocks in more blocks depending criteria
         can be usefull to do this multiple times (sort of iterative) e.g. find class and then in class remove comments
@@ -40,8 +46,8 @@ class TextLineEditor:
         """
 
         # check types of input
-        if type(blockStartPatterns).__name__ != 'list' or type(blockStartPatternsNegative).__name__ != 'list' or type(blockStopPatterns).__name__ != 'list' \
-                or type(blockStopPatternsNegative).__name__ != 'list':
+        if type(blockStartPatterns).__name__ != 'list' or type(blockStartPatternsNegative).__name__ != 'list' or type(
+                blockStopPatterns).__name__ != 'list' or type(blockStopPatternsNegative).__name__ != 'list':
             raise j.exceptions.RuntimeError(
                 "Blockstartpatterns,blockStartPatternsNegative,blockStopPatterns,blockStopPatternsNegative has to be of type list")
 
@@ -79,7 +85,8 @@ class TextLineEditor:
     def _processLine(self, lineObject, blockname, next=False):
         if lineObject.block == blockname:
             j.errorconditionhandler.raiseBug(
-                message="Cannot find block with name %s in block which has already same name" % blo, category="lineeditor")
+                message="Cannot find block with name %s in block which has already same name" %
+                blo, category="lineeditor")
         lineObject.block = blockname
         if next:
             lineObject.blocknr = self.getNextBlockNr(blockname)

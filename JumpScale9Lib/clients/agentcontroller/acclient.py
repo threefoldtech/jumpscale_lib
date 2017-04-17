@@ -353,8 +353,8 @@ class Job(Base):
         """
         if self.state != 'RUNNING':
             raise AgentException('Can only get stats on running jobs')
-        stats = self._client.cmd(self._gid, self._nid, 'get_process_stats',
-                                 RunArgs(), data=j.data.serializer.json.dumps({'id': self._id})).get_next_result(GET_INFO_TIMEOUT)
+        stats = self._client.cmd(self._gid, self._nid, 'get_process_stats', RunArgs(),
+                                 data=j.data.serializer.json.dumps({'id': self._id})).get_next_result(GET_INFO_TIMEOUT)
         if stats.state != 'SUCCESS':
             raise AgentException(stats.data)
 

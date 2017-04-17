@@ -94,7 +94,7 @@ class WindowsSystem:
             shell.CLSID_ShellLink, None, pythoncom.CLSCTX_INPROC_SERVER, shell.IID_IShellLink)
         shortcut_startmenu.SetPath(executable)
         shortcut_startmenu.SetDescription(description)
-        if not iconLocation is None:
+        if iconLocation is not None:
             shortcut_startmenu.SetIconLocation(iconLocation, 0)
         shortcut_startmenu.SetWorkingDirectory(workingDir)
         shortcut_startmenu.QueryInterface(pythoncom.IID_IPersistFile).Save(
@@ -108,7 +108,7 @@ class WindowsSystem:
                 shell.CLSID_ShellLink, None, pythoncom.CLSCTX_INPROC_SERVER, shell.IID_IShellLink)
             shortcut_startup.SetPath(executable)
             shortcut_startup.SetDescription(description)
-            if not iconLocation is None:
+            if iconLocation is not None:
                 shortcut_startup.SetIconLocation(iconLocation, 0)
             shortcut_startup.SetWorkingDirectory(workingDir)
             shortcut_startup.QueryInterface(pythoncom.IID_IPersistFile).Save(
@@ -120,7 +120,7 @@ class WindowsSystem:
                 shell.CLSID_ShellLink, None, pythoncom.CLSCTX_INPROC_SERVER, shell.IID_IShellLink)
             shortcut_desktop.SetPath(executable)
             shortcut_desktop.SetDescription(description)
-            if not iconLocation is None:
+            if iconLocation is not None:
                 shortcut_desktop.SetIconLocation(iconLocation, 0)
             shortcut_desktop.SetWorkingDirectory(workingDir)
             shortcut_desktop.QueryInterface(pythoncom.IID_IPersistFile).Save(
@@ -266,13 +266,19 @@ class WindowsSystem:
 
     def getStartMenuProgramsPath(self):
         """ Returns the windows "START MENU/PROGRAMS" folder in Unicode format. """
-        return shell.SHGetFolderPath(0, shellcon.CSIDL_PROGRAMS, 0, 0) + \
-            os.sep  # See http://msdn2.microsoft.com/en-us/library/bb762181(VS.85).aspx for information about this function.
+        return shell.SHGetFolderPath(
+            0,
+            shellcon.CSIDL_PROGRAMS,
+            0,
+            0) + os.sep  # See http://msdn2.microsoft.com/en-us/library/bb762181(VS.85).aspx for information about this function.
 
     def getStartupPath(self):
         """ Returns the windows "START MENU/STARTUP" folder in Unicode format. """
-        return shell.SHGetFolderPath(0, shellcon.CSIDL_STARTUP, 0, 0) + \
-            os.sep  # See http://msdn2.microsoft.com/en-us/library/bb762181(VS.85).aspx for information about this function.
+        return shell.SHGetFolderPath(
+            0,
+            shellcon.CSIDL_STARTUP,
+            0,
+            0) + os.sep  # See http://msdn2.microsoft.com/en-us/library/bb762181(VS.85).aspx for information about this function.
 
     def getDesktopPath(self):
         """ Returns the windows "DESKTOP" folder in Unicode format. """

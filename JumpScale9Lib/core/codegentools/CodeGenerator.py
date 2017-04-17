@@ -168,8 +168,21 @@ class CodeGenerator:
     def getCodeId(self, spec, type):
         return self._getCodeLocation(type, spec.appname, spec.type, spec.actorname, spec.name)
 
-    def generate(self, spec, type, typecheck=True, dieInGenCode=True, appserverclient=None, instance=0, redis=False, wsclient=None,
-                 codepath=None, classpath=None, returnClass=True, args={}, makeCopy=False):
+    def generate(
+            self,
+            spec,
+            type,
+            typecheck=True,
+            dieInGenCode=True,
+            appserverclient=None,
+            instance=0,
+            redis=False,
+            wsclient=None,
+            codepath=None,
+            classpath=None,
+            returnClass=True,
+            args={},
+            makeCopy=False):
         """
         param: spec is spec we want to generate from
         param: type JSModel,actormethodgreenlet,enumeration,actorlocal
@@ -191,8 +204,8 @@ class CodeGenerator:
             cg.generate()
             return {}
         else:
-            emsg = "Could not generate code of type %s (did not find) for spec appname:%s actorname:%s type:%s name:%s " % \
-                (type, spec.appname, spec.actorname, type, spec.name)
+            emsg = "Could not generate code of type %s (did not find) for spec appname:%s actorname:%s type:%s name:%s " % (
+                type, spec.appname, spec.actorname, type, spec.name)
             raise j.exceptions.RuntimeError(emsg + " {category:spec.generate}")
 
         code = cg.generate()

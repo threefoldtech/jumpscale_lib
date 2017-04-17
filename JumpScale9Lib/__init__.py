@@ -88,11 +88,12 @@ class Loader:
 
     __repr__ = __str__
 
+
 # For auto completion  #TODO: what is this, please tell Kristof
 # if not all(x for x in range(10)):
 locationbases = {}
 j = Loader("j")
-j.core.platformtype=j.do.platformtype
+j.core.platformtype = j.do.platformtype
 j.data = Loader("j.data")
 j.data.serializer = Loader("j.data.serializer")
 j.data.units = Loader('j.data.units')

@@ -1,6 +1,6 @@
 try:
     import g8core
-except:
+except BaseException:
     path = j.clients.git.getContentPathFromURLorPath("https://github.com/g8os/core0/tree/0.12.0/pyclient")
     j.do.execute("cd %s;python3 setup.py install" % path)
     import g8core

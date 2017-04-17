@@ -10,7 +10,8 @@ _formatters = {
     'ntfs': lambda name, fstype: 'mkfs.ntfs -f {name}'.format(name=name)
 }
 
-isValidFS = lambda v: v.startswith('ext') or v in ('btrfs', 'ntfs')
+
+def isValidFS(v): return v.startswith('ext') or v in ('btrfs', 'ntfs')
 
 
 def _default_formatter(name, fstype):

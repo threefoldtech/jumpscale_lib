@@ -97,7 +97,7 @@ class KeyStor:
                 key = m2c.RSA.load_pub_key(p1)
             else:
                 key = m2c.RSA.load_key(p1, empty_callback)
-        except:
+        except BaseException:
             raise j.exceptions.RuntimeError("Cannot load key:%s" % cachekey)
         p1.remove_p()
         self.keys[cachekey] = key

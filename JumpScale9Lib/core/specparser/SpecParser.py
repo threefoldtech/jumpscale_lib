@@ -86,7 +86,7 @@ class SpecactorMethod(Specbase):
                 errormsg = "Syntax error, right syntax var:$name $type,$defaultvalue,$description @tags #remarks"
                 try:
                     varname, line = line.split(":", 1)
-                except:
+                except BaseException:
                     return parser.raiseError(errormsg, line0, linenr)
                 if varname == "var":
 
@@ -96,7 +96,7 @@ class SpecactorMethod(Specbase):
                         varname, line = line.split(" ", 1)
                     try:
                         ttype, default, descr = line.split(",", 2)
-                    except:
+                    except BaseException:
                         return parser.raiseError(errormsg, line0, linenr)
 
                     default = self.getDefaultValue(ttype, default)
@@ -180,7 +180,7 @@ class SpecModelProperty(Specbase):
         try:
             self.type, self.default, self.description = line.split(",", 2)
             self.default = self.getDefaultValue(self.type, self.default)
-        except:
+        except BaseException:
             return parser.raiseError(errormsg, line0, self.linenr)
 
     def _parse(self, parser, content):
@@ -269,7 +269,8 @@ class SpecBlock:
             currentitemClass = SpecModelProperty
         else:
             return self.parser.raiseError(
-                "Invalid type '%s' could not find right type of spec doc, only supported model,actor,enum :" % self.type, self.content, self.startline)
+                "Invalid type '%s' could not find right type of spec doc, only supported model,actor,enum :" %
+                self.type, self.content, self.startline)
 
         # find the items in the block
         linenr = self.startline
@@ -770,9 +771,8 @@ class SpecParserFactory:
 
         if len(result) == 0:
             if spec is not None:
-                emsg = "Could not find spec with query:%s appname:%s actorname:%s name:%s (spec info: '%s'_'%s'_'%s')" % \
-                    (query, appname, actorname, specname,
-                     spec.name, spec.specpath, spec.linenr)
+                emsg = "Could not find spec with query:%s appname:%s actorname:%s name:%s (spec info: '%s'_'%s'_'%s')" % (
+                    query, appname, actorname, specname, spec.name, spec.specpath, spec.linenr)
             else:
                 emsg = "Could not find spec with query:'%s' appname:'%s' actorname:'%s' name:'%s' " % \
                     (query, appname, actorname, specname)
@@ -782,9 +782,8 @@ class SpecParserFactory:
         if findOnlyOne:
             if len(result) != 1:
                 if spec is not None:
-                    emsg = "Found more than 1 spec for search query:%s appname:%s actorname:%s name:%s (spec info: %s_%s_%s)" % \
-                        (query, appname, actorname, specname,
-                         spec.name, spec.specpath, spec.linenr)
+                    emsg = "Found more than 1 spec for search query:%s appname:%s actorname:%s name:%s (spec info: %s_%s_%s)" % (
+                        query, appname, actorname, specname, spec.name, spec.specpath, spec.linenr)
                 else:
                     emsg = "Found more than 1 spec for search query:%s appname:%s actorname:%s name:%s " % \
                         (query, appname, actorname, specname)

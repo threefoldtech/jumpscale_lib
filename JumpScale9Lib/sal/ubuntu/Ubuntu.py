@@ -26,7 +26,7 @@ class Ubuntu:
         try:
             cfg.set("APT::Install-Recommends", "0")
             cfg.set("APT::Install-Suggests", "0")
-        except:
+        except BaseException:
             pass
         self._cache = apt.Cache()
         self.aptCache = self._cache

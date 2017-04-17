@@ -42,7 +42,7 @@ class ServerBaseFactory:
             zd.keystor = j.sal.ssl.getSSLHandler(sslkeyvaluestor)
             try:
                 zd.keystor.getPrivKey(sslorg, ssluser)
-            except:
+            except BaseException:
                 zd.keystor.createKeyPair(sslorg, ssluser)
         else:
             zd.keystor = None
