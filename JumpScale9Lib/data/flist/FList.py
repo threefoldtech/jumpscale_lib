@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 
 import brotli
 import hashlib
@@ -13,10 +13,10 @@ import sys
 import re
 import pyblake2
 import capnp
-from JumpScale.tools.flist import model_capnp as ModelCapnp
+from JumpScale9Lib.tools.flist import model_capnp as ModelCapnp
 
-from JumpScale.tools.flist.models import DirModel
-from JumpScale.tools.flist.models import DirCollection
+from JumpScale9Lib.tools.flist.models import DirModel
+from JumpScale9Lib.tools.flist.models import DirCollection
 
 from path import Path
 

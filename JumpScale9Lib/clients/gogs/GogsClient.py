@@ -1,5 +1,5 @@
 
-from JumpScale import j
+from js9 import j
 # issues still not implemented
 
 # use gogs from 0-complexity and go-gogs-client from 0-complexity

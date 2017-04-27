@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 import requests
 from requests.auth import HTTPBasicAuth
 import os
@@ -8,6 +8,7 @@ class GrafanaFactory:
 
     def __init__(self):
         self.__jslocation__ = "j.clients.grafana"
+        self.__imports__ = "requests"
 
     def get(self, url="http://localhost:3000", username="admin", password="admin", verify_ssl=True):
         return GrafanaClient(url, username, password, verify_ssl=verify_ssl)

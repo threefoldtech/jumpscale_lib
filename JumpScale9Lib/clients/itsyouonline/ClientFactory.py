@@ -1,4 +1,4 @@
-from JumpScale.clients.itsyouonline import Client
+from JumpScale9Lib.clients.itsyouonline import Client
 
 
 class ClientFactory:

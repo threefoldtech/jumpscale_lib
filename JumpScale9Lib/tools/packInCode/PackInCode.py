@@ -1,7 +1,7 @@
 
-from JumpScale import j
+from js9 import j
 
-    as json
+import json as json
 
 
 class packInCodeFactory:
@@ -17,8 +17,8 @@ class packInCodePython:
 
     def __init__(self):
         self.code = """
-from JumpScale import j
-import JumpScale.tools.packInCode
+from js9 import j
+import JumpScale9Lib.tools.packInCode
 codegen=j.tools.packInCode.get4python()
 
 """

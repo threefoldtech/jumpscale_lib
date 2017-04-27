@@ -1,5 +1,5 @@
-from JumpScale import j
-from energyswitch.client import RackSal
+from js9 import j
+from .energyswitch.client import RackSal
 
 
 class RacktivityFactory:

@@ -7,7 +7,7 @@ import time
 import random
 
 
-from JumpScale import j
+from js9 import j
 
 
 class AuthError(Exception):

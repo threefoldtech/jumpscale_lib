@@ -1,8 +1,8 @@
-from JumpScale import j
+from js9 import j
 
-from InfluxDumper import InfluxDumper
-from MongoDumper import MongoDumper
-from ECODumper import ECODumper
+from .InfluxDumper import InfluxDumper
+from .MongoDumper import MongoDumper
+from .ECODumper import ECODumper
 
 
 class RealitProcess:

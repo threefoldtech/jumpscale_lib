@@ -1,8 +1,8 @@
-from JumpScale import j
+from js9 import j
 import libvirt
 from xml.etree import ElementTree
-from JumpScale.sal.kvm.BaseKVMComponent import BaseKVMComponent
-from JumpScale.sal.kvm.Disk import Disk
+from JumpScale9Lib.sal.kvm.BaseKVMComponent import BaseKVMComponent
+from JumpScale9Lib.sal.kvm.Disk import Disk
 
 
 class Pool(BaseKVMComponent):

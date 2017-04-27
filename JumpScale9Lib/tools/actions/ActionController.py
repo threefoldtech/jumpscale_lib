@@ -4,7 +4,7 @@
 # import textwrap
 # import operator
 
-from JumpScale import j
+from js9 import j
 from Action import *
 import traceback
 

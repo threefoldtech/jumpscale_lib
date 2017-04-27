@@ -1,7 +1,7 @@
-from JumpScale import j
-from handlers.DemoHandlerMS1 import *
+from js9 import j
+from .handlers.DemoHandlerMS1 import *
 
-from TelegramBot import *
+from .TelegramBot import *
 import os
 
 
@@ -9,6 +9,7 @@ class TelegramFactory:
 
     def __init__(self):
         self.__jslocation__ = "j.tools.telegrambot"
+        self.__imports__ = "grequests"
 
     def _getFactoryEnabledClasses(self):
         return ([("", "TelegramBot", TelegramBot())])

@@ -1,6 +1,6 @@
-from JumpScale import j
+from js9 import j
 
-from Daemon import Daemon
+from .Daemon import Daemon
 import time
 import struct
 

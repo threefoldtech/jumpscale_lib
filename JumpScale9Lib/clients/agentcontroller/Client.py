@@ -1,5 +1,5 @@
-import acclient
-import simple
+import JumpScale9Lib.clients.agentcontroller.acclient as acclient
+import JumpScale9Lib.clients.agentcontroller.simple as simple
 
 
 class ACFactory:

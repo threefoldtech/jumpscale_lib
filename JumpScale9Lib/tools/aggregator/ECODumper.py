@@ -1,5 +1,5 @@
-import Dumper
-from JumpScale import j
+import JumpScale9Lib.tools.aggregator.Dumper as Dumper
+from js9 import j
 
 
 class ECODumper(Dumper.BaseDumper):

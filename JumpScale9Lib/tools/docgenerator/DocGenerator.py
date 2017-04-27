@@ -1,5 +1,5 @@
-from JumpScale import j
-from DocSite import DocSite
+from js9 import j
+from .DocSite import DocSite
 
 
 import imp
@@ -58,6 +58,7 @@ class DocGenerator:
 
     def __init__(self):
         self.__jslocation__ = "j.tools.docgenerator"
+        self.__imports__ = "toml"
         self._macroPathsDone = []
         self._initOK = False
         self._macroCodepath = j.sal.fs.joinPaths(j.dirs.VARDIR, "docgenerator_internal", "macros.py")
@@ -162,8 +163,8 @@ class DocGenerator:
                     code += newdata
                     self._macrosLoaded.append(md5)
 
-            code = code.replace("from JumpScale import j", "")
-            code = "from JumpScale import j\n\n" + code
+            code = code.replace("from js9 import j", "")
+            code = "from js9 import j\n\n" + code
 
             j.sal.fs.writeFile(self._macroCodepath, code)
             self.macros = loadmodule("macros", self._macroCodepath)

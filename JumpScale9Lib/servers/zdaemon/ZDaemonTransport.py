@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 import zmq
 from servers.serverbase.DaemonClient import Transport
 from servers.serverbase.TCPHATransport import TCPHATransport
@@ -68,7 +68,7 @@ class ZDaemonTransport(Transport):
 
         self._cmdchannel.setsockopt(self.zmq.IDENTITY, str(self._id))
 
-        # if self.port == 4444 and j.core.platformtype.myplatform.isLinux():
+        # if self.port == 4444 and j.core.platformtype.myplatform.isLinux:
         #     self.cmdchannel.connect("ipc:///tmp/cmdchannel_clientdaemon")
         #     print "IPC channel opened to client daemon"
         # else:

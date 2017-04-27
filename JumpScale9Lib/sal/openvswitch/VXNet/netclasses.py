@@ -1,6 +1,6 @@
 __author__ = 'delandtj'
 
-from VXNet.utils import *
+from .utils import *
 
 
 class VXlan:

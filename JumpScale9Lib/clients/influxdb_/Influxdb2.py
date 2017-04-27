@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 
 from influxdb import client as influxdb
 import requests
@@ -12,6 +12,7 @@ class InfluxdbFactory:
 
     def __init__(self):
         self.__jslocation__ = "j.clients.influxdb"
+        self.__imports__ = "influxdb"
         pass
 
     def get(self, host='localhost', port=8086, username='root', password='root', database=None,

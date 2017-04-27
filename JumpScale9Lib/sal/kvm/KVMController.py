@@ -1,7 +1,7 @@
 from jinja2 import Environment, FileSystemLoader
 import libvirt
 import atexit
-from JumpScale import j
+from js9 import j
 
 
 class KVMController:

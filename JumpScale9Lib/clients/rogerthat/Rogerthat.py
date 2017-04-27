@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 
 import urllib.request
 import urllib.error
@@ -15,7 +15,7 @@ class RogerthatFactory:
 
 
 class Rogerthat:
-    self.logger = j.logger.get("j.clients.rogerthat")
+
     STATUS_RECEIVED = 1
     STATUS_ACKED = 2
 
@@ -41,6 +41,7 @@ class Rogerthat:
 
     def __init__(self, api_key):
         self._api_key = api_key
+        self.logger = j.logger.get("j.clients.rogerthat")
         self._url = 'https://rogerth.at/api/1'
 
     def _raw_request(self, method, params):

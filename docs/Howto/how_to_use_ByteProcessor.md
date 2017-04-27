@@ -4,7 +4,7 @@
 To compress a simple string using blosc compression:
 
 ```python
-from JumpScale.ExtraTools import ByteProcessor
+from JumpScale9Lib.ExtraTools import ByteProcessor
 input = bytearray()
 input.extend(map(ord, 'hello jumpscale'))
 output = ByteProcessor.compress(input)
@@ -14,7 +14,7 @@ ByteProcessor.decompress(output)
 Other compression algorithms are also available:
 
 ```python
-from JumpScale.ExtraTools import ByteProcessor
+from JumpScale9Lib.ExtraTools import ByteProcessor
 ByteProcessor.compress                 
 ByteProcessor.disperse                 
 ByteProcessor.hashMd5                  

@@ -5,8 +5,8 @@ import re
 import sys
 import zipfile
 
-from JumpScale.clients.racktivity.energyswitch.common import convert
-from JumpScale.clients.racktivity.energyswitch.common.GUIDTable import Value
+from JumpScale9Lib.clients.racktivity.energyswitch.common import convert
+from JumpScale9Lib.clients.racktivity.energyswitch.common.GUIDTable import Value
 
 
 class ModelFactory:
@@ -38,7 +38,7 @@ class ModelFactory:
     def _get_module_model(self, module_id, class_name, module_version=None):
         if self._client.basicAuth:
             # we need to use the pre 1.0 API
-            from JumpScale.clients.racktivity.energyswitch.modelfactory import Model_pre_1_0  # pylint: disable=W0404
+            from JumpScale9Lib.clients.racktivity.energyswitch.modelfactory import Model_pre_1_0  # pylint: disable=W0404
             return getattr(Model_pre_1_0, class_name)
 
         if not module_version:
@@ -57,7 +57,7 @@ class ModelFactory:
 
                 version = str(version)
                 if version.startswith("1.0"):
-                    from JumpScale.clients.racktivity.energyswitch.modelfactory import Model_firmware_1_0  # pylint: disable=W0404
+                    from JumpScale9Lib.clients.racktivity.energyswitch.modelfactory import Model_firmware_1_0  # pylint: disable=W0404
                     return getattr(Model_firmware_1_0, class_name)
                 else:
                     raise j.exceptions.RuntimeError(

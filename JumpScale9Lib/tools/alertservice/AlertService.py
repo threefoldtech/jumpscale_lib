@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 
 import time
 import sys
@@ -27,6 +27,7 @@ class AlertService:
 
     def __init__(self):
         self.__jslocation__ = "j.tools.alertservice"
+        self.__imports__ = "gevent"
         self.logger = j.logger.get('j.tools.alertservice')
         # self.rediscl = j.clients.redis.getByInstance('system')
         self.rediscl = j.core.db
@@ -50,7 +51,7 @@ class AlertService:
         return useremails
 
     def loadHandlers(self):
-        from JumpScale.tools.alertservice import handlers
+        from JumpScale9Lib.tools.alertservice import handlers
         for name, module in inspect.getmembers(handlers, inspect.ismodule):
             for name, klass in inspect.getmembers(module, inspect.isclass):
                 if issubclass(klass, Handler) and klass is not Handler:

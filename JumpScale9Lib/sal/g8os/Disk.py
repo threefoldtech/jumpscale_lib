@@ -1,6 +1,6 @@
 from enum import Enum
-from JumpScale.sal.g8os.Partition import Partition
-from JumpScale.sal.g8os.abstracts import Mountable
+from JumpScale9Lib.sal.g8os.Partition import Partition
+from JumpScale9Lib.sal.g8os.abstracts import Mountable
 
 
 class DiskType(Enum):

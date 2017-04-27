@@ -1,7 +1,7 @@
 
 
-from JumpScale import j
-from TemplateEngine import TemplateEngine
+from js9 import j
+from .TemplateEngine import TemplateEngine
 
 
 class TemplateEngineWrapper:

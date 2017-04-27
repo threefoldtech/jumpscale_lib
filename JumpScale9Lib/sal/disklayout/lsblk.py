@@ -1,5 +1,5 @@
 import re
-from JumpScale import j
+from js9 import j
 
 
 COMMAND = 'lsblk -bnP -o NAME,TYPE,UUID,FSTYPE,SIZE,MOUNTPOINT,PARTLABEL -e 7,1'

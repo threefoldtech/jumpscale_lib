@@ -2,7 +2,7 @@
 # import socket
 import re
 
-from JumpScale import j
+from js9 import j
 
 
 class HostFileFactory:

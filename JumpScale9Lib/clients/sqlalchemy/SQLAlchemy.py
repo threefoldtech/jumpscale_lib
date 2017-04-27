@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 
 from sqlalchemy.orm import relationship, backref, sessionmaker, class_mapper
 from sqlalchemy import *
@@ -92,6 +92,7 @@ class SQLAlchemyFactory:
 
     def __init__(self):
         self.__jslocation__ = "j.clients.sqlalchemy"
+        self.__imports__ = "sqlalchemy"
 
     def get(self, connectionstring="", sqlitepath="", tomlpath="../data"):
         return SQLAlchemy(connectionstring, sqlitepath, tomlpath)

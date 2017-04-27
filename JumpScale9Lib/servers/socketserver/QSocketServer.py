@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 import struct
 import socketserver
 import socket
@@ -15,7 +15,7 @@ except BaseException:
 
 import select
 
-from QSocketServerClient import *
+from .QSocketServerClient import *
 
 
 class QSocketServerHandler(socketserver.BaseRequestHandler):

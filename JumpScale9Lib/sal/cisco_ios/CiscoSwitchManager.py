@@ -1,5 +1,5 @@
-from JumpScale import j
-# import JumpScale.baselib.remote
+from js9 import j
+# import JumpScale9Lib.baselib.remote
 
 
 class CiscoSwitchManager:
@@ -12,7 +12,7 @@ class CiscoSwitchManager:
 #!/usr/bin/python
 
 
-from Router import Router
+from .Router import Router
 
 
 class CiscoSwitch:

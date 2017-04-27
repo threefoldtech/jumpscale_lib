@@ -1,16 +1,16 @@
 
-from JumpScale import j
+from js9 import j
 
-from JumpScale.tools.issuemanager.models.IssueModel import IssueModel
-from JumpScale.tools.issuemanager.models.IssueCollection import IssueCollection
-from JumpScale.tools.issuemanager.models.userModel import UserModel
-from JumpScale.tools.issuemanager.models.userCollection import UserCollection
-from JumpScale.tools.issuemanager.models.repoModel import RepoModel
-from JumpScale.tools.issuemanager.models.repoCollection import RepoCollection
-from JumpScale.tools.issuemanager.models.orgModel import OrgModel
-from JumpScale.tools.issuemanager.models.orgCollection import OrgCollection
+from JumpScale9Lib.tools.issuemanager.models.IssueModel import IssueModel
+from JumpScale9Lib.tools.issuemanager.models.IssueCollection import IssueCollection
+from JumpScale9Lib.tools.issuemanager.models.userModel import UserModel
+from JumpScale9Lib.tools.issuemanager.models.userCollection import UserCollection
+from JumpScale9Lib.tools.issuemanager.models.repoModel import RepoModel
+from JumpScale9Lib.tools.issuemanager.models.repoCollection import RepoCollection
+from JumpScale9Lib.tools.issuemanager.models.orgModel import OrgModel
+from JumpScale9Lib.tools.issuemanager.models.orgCollection import OrgCollection
 import capnp
-from JumpScale.tools.issuemanager import model_capnp as ModelCapnp
+from JumpScale9Lib.tools.issuemanager import model_capnp as ModelCapnp
 from peewee import *
 from playhouse.sqlite_ext import SqliteExtDatabase
 
@@ -23,6 +23,7 @@ class IssueManager:
 
     def __init__(self):
         self.__jslocation__ = "j.tools.issuemanager"
+        self.__imports__ = "capnp"
         self.namespace = "gogs"
         self.store = "gogs"
         # self.indexDBPath = ":memory:"

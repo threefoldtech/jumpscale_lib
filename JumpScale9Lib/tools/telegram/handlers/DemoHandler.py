@@ -1,7 +1,7 @@
 from datetime import datetime
 
 
-from JumpScale import j
+from js9 import j
 
 AUDIOFILE = "https://ia802508.us.archive.org/5/items/testmp3testfile/mpthreetest.mp3"
 STICKERFILE = "https://telegram-stickers.github.io/public/stickers/flags/8.png"

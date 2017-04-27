@@ -1,14 +1,15 @@
-from JumpScale import j
+from js9 import j
 
 
 class DomainManager:
     def __init__(self):
         self.__jslocation__ = "j.clients.domainmanager"
-        self.cuisine = j.tools.cuisine.local
+        # self.cuisine = j.tools.cuisine.local
+        self.executor = j.tools.executorLocal
 
-    def get(self, cuisine):
-        self.cuisine = cuisine
-        return self
+    # def get(self, cuisine):
+    #     self.cuisine = cuisine
+    #     return self
 
     @property
     def domains(self):

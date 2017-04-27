@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 import psycopg2
 import time
 import datetime
@@ -12,7 +12,7 @@ import copy
 # from htmllib import HTMLParser
 # from formatter import AbstractFormatter, DumbWriter
 # from io import StringIO
-# import JumpScale.lib.html
+# import JumpScale9Lib.lib.html
 
 
 class PostgresqlFactory:
@@ -21,6 +21,7 @@ class PostgresqlFactory:
 
     def __init__(self):
         self.__jslocation__ = "j.clients.postgres"
+        self.__imports__ = "sqlalchemy"
         self.clients = {}
 
     def getClient(self, ipaddr="localhost", port=5432, login="postgres", passwd="rooter", dbname="template"):

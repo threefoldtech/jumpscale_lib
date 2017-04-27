@@ -1,9 +1,9 @@
-from JumpScale import j
-from JumpScale.tools.zip.ZipFile import ZipFile
+from js9 import j
+from JumpScale9.data.zip.ZipFile import ZipFile
 from multiprocessing.pool import ThreadPool as Pool
-from Repository import GithubRepo
-from User import User
-from Issue import Issue
+from .Repository import GithubRepo
+from .User import User
+from .Issue import Issue
 from datetime import datetime
 import itertools
 
@@ -56,6 +56,7 @@ class GitHubFactory:
 
     def __init__(self):
         self.__jslocation__ = "j.clients.github"
+        self.__imports__ = "github"
         self._clients = {}
 
     # def getRepoClient(self, account, reponame):

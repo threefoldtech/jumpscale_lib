@@ -5,8 +5,8 @@ import inspect
 import textwrap
 from io import StringIO
 import collections
-from JumpScale import j
-import acclient
+from js9 import j
+import JumpScale9Lib.clients.agentcontroller.acclient as acclient
 
 
 STATE_UNKNOWN = 'UNKNOWN'

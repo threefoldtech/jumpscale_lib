@@ -1,7 +1,7 @@
 from datetime import datetime
 import gevent
 
-from JumpScale import j
+from js9 import j
 
 
 import imp

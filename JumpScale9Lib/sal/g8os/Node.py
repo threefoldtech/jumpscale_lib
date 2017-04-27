@@ -1,6 +1,6 @@
-from JumpScale import j
-from JumpScale.sal.g8os.Disk import Disks, DiskType
-from JumpScale.sal.g8os.StoragePool import StoragePools
+from js9 import j
+from JumpScale9Lib.sal.g8os.Disk import Disks, DiskType
+from JumpScale9Lib.sal.g8os.StoragePool import StoragePools
 from collections import namedtuple
 
 

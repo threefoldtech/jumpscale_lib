@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 
 
 class GeventWSFactory:
@@ -65,8 +65,8 @@ class GeventWSFactory:
         if False and key in self.cache:
             cl = self.cache[key]
         else:
-            from JumpScale.servers.geventws.GeventWSTransport import GeventWSHATransport
-            from JumpScale.servers.serverbase.DaemonClient import DaemonClient
+            from JumpScale9Lib.servers.geventws.GeventWSTransport import GeventWSHATransport
+            from JumpScale9Lib.servers.serverbase.DaemonClient import DaemonClient
             trans = GeventWSHATransport(connections, timeout)
             cl = DaemonClient(org=org, user=user, passwd=passwd, ssl=ssl, transport=trans, id=id)
             self.cache[key] = cl

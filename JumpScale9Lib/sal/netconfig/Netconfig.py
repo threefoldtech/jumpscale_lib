@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 import netaddr
 import time
 
@@ -230,7 +230,7 @@ class Netconfig:
                     params += ":%s" % proxypassword
                 params += "@"
             params += proxyserver
-            if j.core.platformtype.myplatform.isUnix():
+            if j.core.platformtype.myplatform.isunix:
                 os.environ['http_proxy'] = proxyserver
             proxy_support = urllib.request.ProxyHandler()
             opener = urllib.request.build_opener(proxy_support)
@@ -307,8 +307,8 @@ class Netconfig:
         """
         this will bring all bridges down and set specified interface on dhcp (dangerous)
         """
-        @TODO:
-            QUESTION why 2 functions almost the same, very confusing
+        # @TODO:
+        #     QUESTION why 2 functions almost the same, very confusing
         import pynetlinux
 
         self.reset(True)

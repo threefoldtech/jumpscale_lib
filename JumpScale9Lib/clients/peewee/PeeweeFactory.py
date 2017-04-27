@@ -1,16 +1,7 @@
-from JumpScale import j
+from js9 import j
 import os
-try:
-    import psycopg2
-except BaseException:
-    os.system("pip3 install psycopg2")
-    import psycopg2
-
-try:
-    import peewee
-except BaseException:
-    os.system("pip3 install peewee")
-    import peewee
+import psycopg2
+import peewee
 
 from Pwiz import Pwiz
 
@@ -23,6 +14,7 @@ class PeeweeFactory:
 
     def __init__(self):
         self.__jslocation__ = "j.clients.peewee"
+        self.__imports__ = "psycopg2,peewee"
         self.clients = {}
 
     # def getClient(self, ipaddr="localhost", port=5432, login="postgres", passwd="rooter", dbname="template"):

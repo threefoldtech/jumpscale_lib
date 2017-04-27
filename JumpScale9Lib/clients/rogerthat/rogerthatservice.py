@@ -1,6 +1,6 @@
 
 #! /usr/bin/python
-from JumpScale import j
+from js9 import j
 from gevent.pywsgi import WSGIServer
 import time
 

@@ -15,7 +15,7 @@
 4- Edit hello.py You have to set an alias for you tool
 
 ```python
-from JumpScale import j
+from js9 import j
 
 class HelloTool(object):
 

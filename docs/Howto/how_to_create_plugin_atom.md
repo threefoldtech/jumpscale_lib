@@ -84,7 +84,7 @@ module.exports = Execjs =
     filePath = target.dataset.path
     return unless filePath
     console.log filePath
-    cmd = "jspython -c 'from JumpScale import j; j.tools.markdown.tidy(\"#{filePath}\")'"
+    cmd = "jspython -c 'from js9 import j; j.tools.markdown.tidy(\"#{filePath}\")'"
     console.log "CMD #{cmd}"
     subproc.exec cmd, (err, stdout, sdterr) -> console.log stdout
     if @modalPanel.isVisible()

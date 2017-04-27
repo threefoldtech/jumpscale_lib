@@ -1,10 +1,10 @@
-from JumpScale import j
+from js9 import j
 
 import os
 import re
 
 
-EXPORTS_FILE = j.tools.path.get('/etc/exports')
+# EXPORTS_FILE = j.tools.path.get('/etc/exports')
 
 EXPORT_OPT_REGEXT = re.compile('^(?:([\w/]+)|"([\w\s/]+)")\s+(.+)$')
 CLIENT_OPT_REGEXT = re.compile('\s*([^\(]+)\(([^\)]+)\)')

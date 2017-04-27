@@ -1,5 +1,5 @@
-from AggregatorClient import AggregatorClient
-from AggregatorClientTest import AggregatorClientTest
+from .AggregatorClient import AggregatorClient
+from .AggregatorClientTest import AggregatorClientTest
 
 
 class Aggregator:

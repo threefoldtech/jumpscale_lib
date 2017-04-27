@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 from functools import reduce
 
 base = j.data.capnp.getModelBaseClassCollection()

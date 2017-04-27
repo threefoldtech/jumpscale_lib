@@ -1,5 +1,5 @@
-from JumpScale import j
-# import JumpScale.grid
+from js9 import j
+# import JumpScale9Lib.grid
 # import zmq
 import gevent
 import gevent.monkey

@@ -1,10 +1,10 @@
 
-from JumpScale import j
+from js9 import j
 
-from JumpScale.tools.docmanager.models.IssueModel import IssueModel
-from JumpScale.tools.docmanager.models.IssueCollection import IssueCollection
+# from JumpScale9Lib.tools.docmanager.models.IssueModel import IssueModel
+# from JumpScale9Lib.tools.docmanager.models.IssueCollection import IssueCollection
 import capnp
-from JumpScale.tools.docmanager import model_capnp as ModelCapnp
+# from JumpScale9Lib.tools.docmanager import model_capnp as ModelCapnp
 # from peewee import *
 # from playhouse.sqlite_ext import SqliteExtDatabase
 
@@ -17,6 +17,7 @@ class DocManager:
 
     def __init__(self):
         self.__jslocation__ = "j.tools.docmanager"
+        self.__imports__ = "capnp"
         self.namespace = "gogs"
         self.store = "gogs"
         # self.indexDBPath = ":memory:"

@@ -1,7 +1,7 @@
-from JumpScale import j
-import JumpScale.sal.disklayout.mount as mount
-import JumpScale.sal.disklayout.lsblk as lsblk
-import JumpScale.sal.disklayout.disks as disks
+from js9 import j
+import JumpScale9Lib.sal.disklayout.mount as mount
+import JumpScale9Lib.sal.disklayout.lsblk as lsblk
+import JumpScale9Lib.sal.disklayout.disks as disks
 
 
 class DiskManager:

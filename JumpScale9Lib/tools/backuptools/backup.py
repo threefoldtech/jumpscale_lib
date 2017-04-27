@@ -1,5 +1,5 @@
 
-from JumpScale import j
+from js9 import j
 import lz4
 
 blocksize = 20 * 1024 * 1024

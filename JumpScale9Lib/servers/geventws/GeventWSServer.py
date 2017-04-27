@@ -4,9 +4,9 @@ monkey.patch_socket()
 monkey.patch_thread()
 monkey.patch_time()
 monkey.patch_ssl()
-from JumpScale import j
+from js9 import j
 from gevent.pywsgi import WSGIServer
-from JumpScale.servers.serverbase import returnCodes
+from JumpScale9Lib.servers.serverbase import returnCodes
 import time
 
 import gevent

@@ -1,6 +1,6 @@
-from JumpScale import j
-from TextLineEditor import TextLineEditor
-from TextCharEditor import TextCharEditor
+from js9 import j
+from .TextLineEditor import TextLineEditor
+from .TextCharEditor import TextCharEditor
 
 
 class TextFileEditor:

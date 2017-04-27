@@ -1,7 +1,7 @@
 import requests
-from JumpScale.clients.cockpit.client_utils import build_query_string
-from JumpScale.clients.cockpit import client_lower
-from JumpScale import j
+from JumpScale9Lib.clients.cockpit.client_utils import build_query_string
+from JumpScale9Lib.clients.cockpit import client_lower
+from js9 import j
 
 
 class ApiError(Exception):

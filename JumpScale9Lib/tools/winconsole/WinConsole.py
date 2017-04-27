@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 
 
 class WinConsoleFactory:
@@ -16,7 +16,7 @@ class WinConsole:
         """
         """
         self.__jslocation__ = "j.tools.winconsole"
-        if not j.core.platformtype.myplatform.isWindows():
+        if not j.core.platformtype.myplatform.isWindows:
             raise j.exceptions.RuntimeError("Only supported on windows.")
         self.configpath = j.sal.fs.joinPaths(j.dirs.TMPDIR, "consolecfg", str(
             j.data.idgenerator.generateRandomInt(1, 1000)) + ".xml")

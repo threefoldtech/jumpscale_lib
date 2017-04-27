@@ -7,9 +7,9 @@ import subprocess
 import sys
 import math
 
-from JumpScale import j
-from JumpScale.data.time.TimeInterval import TimeInterval as TimeIntervalUnit
-#from JumpScale.core.decorators import deprecated
+from js9 import j
+from JumpScale9.data.time.TimeInterval import TimeInterval as TimeIntervalUnit
+#from JumpScale9Lib.core.decorators import deprecated
 
 # TODO: *3 fix, move to other sal's
 
@@ -76,7 +76,7 @@ class UnixSystem:
         mem = 0
         cpumhz = 0
         nrcpu = 0
-        if j.core.platformtype.myplatform.isLinux() or j.core.platformtype.myplatform.isESX():
+        if j.core.platformtype.myplatform.isLinux or j.core.platformtype.myplatform.isESX():
             memcontent = j.sal.fs.fileGetContents("/proc/meminfo")
             match = re.search("^MemTotal\:\s+(\d+)\s+kB$", memcontent, re.MULTILINE)
             if match:
@@ -151,7 +151,7 @@ class UnixSystem:
             raise ValueError("This function only supports following intervals: " + str(allowedIntervals))
 
         # Construct timing options
-        if j.core.platformtype.myplatform.isLinux() or j.core.platformtype.myplatform.isESX():
+        if j.core.platformtype.myplatform.isLinux or j.core.platformtype.myplatform.isESX():
             crontabFilePath = "/etc/crontab"
             crontabItem = "*/" + str(interval)
         elif j.core.platformtype.myplatform.isSolaris():
@@ -174,7 +174,7 @@ class UnixSystem:
             crontabOptions = crontabOptions + " "
         crontabOptions = crontabOptions + crontabItem + " "
         crontabOptions = crontabOptions + "* " * (5 - unitPlace)
-        if j.core.platformtype.myplatform.isLinux():
+        if j.core.platformtype.myplatform.isLinux:
             # The Vixie cron (for Linux) has an extra option: username of running process.
             crontabOptions = crontabOptions + "root    "
 
@@ -208,7 +208,7 @@ class UnixSystem:
             # On Solaris, we need to call the crontab command to activate the changes.
             self.execute("crontab " + crontabFilePath + "_new")
             self.removeFile(crontabFilePath + "_new")
-        elif j.core.platformtype.myplatform.isLinux() or j.core.platformtype.myplatform.isESX():
+        elif j.core.platformtype.myplatform.isLinux or j.core.platformtype.myplatform.isESX():
             # On Linux, we edit the system-wide crontab of Vixie Cron, so don't have
             # to run the "crontab" command to be sure changes have effect.
             j.sal.fs.writeFile(crontabFilePath, "\n".join(crontabLines) + "\n")
@@ -290,7 +290,7 @@ class UnixSystem:
         @raises RuntimeError: If /bin/su is not available on the system
         @raises ValueError: When the provided username can't be resolved
 
-        @see: jumpscale.system.process.SystemProcess.execute
+        @see: JumpScale9Lib.system.process.SystemProcess.execute
         '''
         command = self._prepareCommand(command, username)
 
@@ -323,7 +323,7 @@ class UnixSystem:
         @raises RuntimeError: If /bin/su is not available on the system
         @raises ValueError: When the provided username can't be resolved
 
-        @see: jumpscale.system.process.runDaemon
+        @see: JumpScale9Lib.system.process.runDaemon
         '''
 
         command = self._prepareCommand(command, username)

@@ -2,7 +2,7 @@
 from PropertyDef import PropertyDef
 from MethodDef import MethodDef
 from ClassDef import ClassDef
-from JumpScale import j
+from js9 import j
 
 
 class CodeElements:

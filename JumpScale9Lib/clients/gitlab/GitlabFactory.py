@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 
 # import urllib
 # import requests
@@ -6,7 +6,7 @@ from JumpScale import j
 # from . import gitlab
 import os
 
-from GitlabInstance import *
+from .GitlabInstance import *
 
 # INFOCACHE = dict()
 
@@ -18,6 +18,7 @@ class GitlabFactory:
 
     def __init__(self):
         self.__jslocation__ = "j.clients.gitlab"
+        self.__imports__ = "pyapi-gitlab"
         self.logger = j.logger.get('j.clients.gitlab')
         self.connections = {}
 

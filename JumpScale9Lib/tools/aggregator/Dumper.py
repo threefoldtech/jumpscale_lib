@@ -1,5 +1,5 @@
-from JumpScale import j
-from NetworkScanner import NetworkScanner
+from js9 import j
+from .NetworkScanner import NetworkScanner
 import multiprocessing
 import time
 import logging

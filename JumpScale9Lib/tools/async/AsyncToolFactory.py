@@ -1,4 +1,4 @@
-from JumpScale.tools.async.Wrappers import Wrappers
+from JumpScale9Lib.tools.async.Wrappers import Wrappers
 
 
 class AsyncTool:

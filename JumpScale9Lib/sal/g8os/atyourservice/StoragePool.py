@@ -1,7 +1,7 @@
-from JumpScale.sal.g8os.abstracts import AYSable
-from JumpScale.sal.g8os.StoragePool import StoragePool
-from JumpScale.sal.g8os.StoragePool import FileSystem
-from JumpScale.sal.g8os.StoragePool import Snapshot
+from JumpScale9Lib.sal.g8os.abstracts import AYSable
+from JumpScale9Lib.sal.g8os.StoragePool import StoragePool
+from JumpScale9Lib.sal.g8os.StoragePool import FileSystem
+from JumpScale9Lib.sal.g8os.StoragePool import Snapshot
 
 
 class StoragePoolAys(AYSable):
@@ -47,7 +47,7 @@ class FileSystemAys(AYSable):
 
 
 if __name__ == '__main__':
-    from JumpScale import j
+    from js9 import j
     j.atyourservice._start()
     repo = j.atyourservice.aysRepos.get('/opt/code/cockpit_repos/grid')
     node1 = j.sal.g8os.get_node('172.20.0.91')

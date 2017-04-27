@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 import io
 import time
 
@@ -20,7 +20,7 @@ class ARDB:
 
     @classmethod
     def from_ays(cls, service):
-        from JumpScale.sal.g8os.Container import Container
+        from JumpScale9Lib.sal.g8os.Container import Container
 
         container = Container.from_ays(service.parent)
         if service.model.data.master != '':
@@ -116,6 +116,6 @@ class ARDB:
     @property
     def ays(self):
         if self._ays is None:
-            from JumpScale.sal.g8os.atyourservice.StorageCluster import ARDBAys
+            from JumpScale9Lib.sal.g8os.atyourservice.StorageCluster import ARDBAys
             self._ays = ARDBAys(self)
         return self._ays

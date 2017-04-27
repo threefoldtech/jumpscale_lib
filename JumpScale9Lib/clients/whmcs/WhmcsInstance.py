@@ -1,9 +1,9 @@
 
-from JumpScale import j
+from js9 import j
 
-from JumpScale.clients.whmcs.whmcsusers import whmcsusers
-from JumpScale.clients.whmcs.whmcstickets import whmcstickets
-from JumpScale.clients.whmcs.whmcsorders import whmcsorders
+from JumpScale9Lib.clients.whmcs.whmcsusers import whmcsusers
+from JumpScale9Lib.clients.whmcs.whmcstickets import whmcstickets
+from JumpScale9Lib.clients.whmcs.whmcsorders import whmcsorders
 
 
 class WhmcsInstance:

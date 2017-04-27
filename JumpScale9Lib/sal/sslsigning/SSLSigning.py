@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 from OpenSSL import crypto
 import OpenSSL
 from socket import gethostname
@@ -8,6 +8,7 @@ class SSLSigning:
 
     def __init__(self):
         self.__jslocation__ = "j.sal.ssl_signing"
+        self.__imports__ = "openssl"
 
     def create_self_signed_ca_cert(self, cert_dir):
         """

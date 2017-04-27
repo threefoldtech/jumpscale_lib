@@ -25,7 +25,7 @@ Each SAL object is required to extend the base SALObject class.
 SAL modules must have a name that starts with capital letter to be loaded (for instance `Hello.py` instead of `hello.py`)
 
 ```python
-from JumpScale import j
+from js9 import j
 
 class Hello:
 

@@ -1,5 +1,5 @@
-from JumpScale import j
-from JumpScale.clients.portal.PortalClient import Resource
+from js9 import j
+from .PortalClient import Resource
 
 
 class PortalClientFactory:

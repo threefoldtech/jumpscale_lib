@@ -1,10 +1,6 @@
-from JumpScale import j
+from js9 import j
 import os
-try:
-    import cson
-except BaseException:
-    rc, out, err = j.do.execute("pip3 install cson")
-    import cson
+import cson
 
 import inspect
 
@@ -13,6 +9,7 @@ class AtomEditor:
 
     def __init__(self):
         self.__jslocation__ = "j.tools.atom"
+        self.__imports__ == "cson"
         self._packages = []
 
     @property

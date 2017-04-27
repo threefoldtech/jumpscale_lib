@@ -5,47 +5,50 @@ import threading
 import time
 import os.path
 import ctypes
-from JumpScale import j
+from js9 import j
 
-if not j.core.platformtype.myplatform.isWindows():
-    raise j.exceptions.RuntimeError("WindowsSystem module only supported on Windows operating system")
-import win32pdh
-import win32api
-import win32process
-import win32file
-import win32security
-import win32netcon
-import win32net
-import win32service
-import win32serviceutil
+if j.core.platformtype.myplatform.isWindows:
+    # raise j.exceptions.RuntimeError("WindowsSystem module only supported on Windows operating system")
+    import win32pdh
+    import win32api
+    import win32process
+    import win32file
+    import win32security
+    import win32netcon
+    import win32net
+    import win32service
+    import win32serviceutil
 
-from win32com.client import GetObject
-#import ntsecuritycon as con
-try:
-    from io import StringIO
-except ImportError:
-    from io import StringIO
+    from win32com.client import GetObject
+    #import ntsecuritycon as con
+    try:
+        from io import StringIO
+    except ImportError:
+        from io import StringIO
 
-# from win32shell import shell
-from win32com.shell import shellcon
-import winreg as reg
-from JumpScale.core.enumerators.WinRegHiveType import WinRegHiveType
-from JumpScale.core.enumerators.WinRegValueType import WinRegValueType
+    # from win32shell import shell
+    from win32com.shell import shellcon
+    import winreg as reg
+    from JumpScale9Lib.core.enumerators.WinRegHiveType import WinRegHiveType
+    from JumpScale9Lib.core.enumerators.WinRegValueType import WinRegValueType
 
-from JumpScale import j
-# from JumpScale.core.inifile.IniFile import IniFile
-import shutil
+    from js9 import j
+    # from JumpScale9Lib.core.inifile.IniFile import IniFile
+    import shutil
 
 
 class WindowsSystem:
 
-    mythreads = []
-    _userEveryone = None
+    try:
+        mythreads = []
+        _userEveryone = None
 
-    # Singleton pattern
-    __shared_state = {}
+        # Singleton pattern
+        __shared_state = {}
 
-    _wmi = GetObject('winmgmts:')
+        _wmi = GetObject('winmgmts:')
+    except:
+        pass
 
     def __init__(self):
         self.__jslocation__ = "j.sal.windows"
@@ -53,7 +56,7 @@ class WindowsSystem:
         self.__dict__ = self.__shared_state
 
     def checkFileToIgnore(self, path):
-        if j.core.platformtype.myplatform.isWindows():
+        if j.core.platformtype.myplatform.isWindows:
             ignore = False
             filename = j.sal.fs.getBaseName(path)
             if filename[0:2] == "~$":

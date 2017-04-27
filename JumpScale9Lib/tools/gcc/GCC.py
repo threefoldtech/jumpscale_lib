@@ -1,6 +1,6 @@
 
-from JumpScale import j
-from JumpScale.tools.develop.DevelopTools import DebugSSHNode
+from js9 import j
+# from JumpScale9Lib.tools.develop.DevelopTools import DebugSSHNode
 
 
 class GCC:
@@ -52,7 +52,7 @@ class GCC_Mgmt():
             nodesObjs.append(DebugSSHNode(addr, sshport))
         return nodesObjs
 
-    def init(self, nodes=[], domain, login=None, passwd=None):
+    def init(self, nodes=[], domain="", login=None, passwd=None):
         """
         nodes : define which nodes to init,
             format = ["localhost", "ovh4", "anode:2222", "192.168.6.5:23"]

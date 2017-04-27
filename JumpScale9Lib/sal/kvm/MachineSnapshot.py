@@ -1,5 +1,5 @@
 from xml.etree import ElementTree
-from JumpScale import j
+from js9 import j
 from BaseKVMComponent import BaseKVMComponent
 
 

@@ -1,5 +1,5 @@
 import re
-from JumpScale import j
+from js9 import j
 
 # 30605 /usr/sbin/vblade 0 1 eth0 /storage/storage1.img
 CMD_PS_PATTERN = re.compile(

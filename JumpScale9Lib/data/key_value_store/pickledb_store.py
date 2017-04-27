@@ -1,5 +1,5 @@
 from servers.key_value_store.store import KeyValueStoreBase
-from JumpScale import j
+from js9 import j
 import pickledb
 import re
 

@@ -1,5 +1,5 @@
-from JumpScale import j
-import Dumper
+from js9 import j
+import JumpScale9Lib.tools.aggregator.Dumper as Dumper
 
 
 class Stats(object):

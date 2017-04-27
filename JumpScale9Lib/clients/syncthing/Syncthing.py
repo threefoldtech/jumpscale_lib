@@ -6,7 +6,7 @@ import requests
 
 import time
 import pprint
-from JumpScale import j
+from js9 import j
 
 
 class Syncthing:

@@ -1,7 +1,7 @@
 import base64
 
 
-from JumpScale import j
+from js9 import j
 
 # import gitlab3
 try:

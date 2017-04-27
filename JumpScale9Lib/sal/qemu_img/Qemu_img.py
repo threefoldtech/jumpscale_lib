@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 import re
 
 percentrec = re.compile("^\s+\((?P<per>\d+\.\d+)/100%\).*$")
@@ -192,11 +192,11 @@ class QemuImg:
                 key = match.group('key')
                 if key == 'virtual size':
                     value = virtualsizerec.search(value).group('size')
-                    value = j.data.units.bytes.toSize(int(value), '', unit)
+                    value = j.data_units.bytes.toSize(int(value), '', unit)
                 else:
                     sizematch = sizerec.match(value)
                     if sizematch:
-                        value = j.data.units.bytes.toSize(float(sizematch.group('size')), sizematch.group('unit'), unit)
+                        value = j.data_units.bytes.toSize(float(sizematch.group('size')), sizematch.group('unit'), unit)
                 result[match.group('key')] = value
             return result
 

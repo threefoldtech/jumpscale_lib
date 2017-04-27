@@ -1,5 +1,5 @@
 
-# from JumpScale.baselib.codeexecutor.CodeExecutor import CodeExecutor
+# from JumpScale9Lib.baselib.codeexecutor.CodeExecutor import CodeExecutor
 import inspect
 from JumpScale9 import j
 
@@ -310,7 +310,7 @@ class CodeTools:
                         data[key] = todict(value, {}, ignoreKeys)
                 return data
             else:
-                #from JumpScale.core.Shell import ipshellDebug,ipshell
+                #from JumpScale9Lib.core.Shell import ipshellDebug,ipshell
                 # print "DEBUG NOW Can only convert object to dict with properties basic types or inherited of ClassBase"
                 # ipshell()
                 if dieOnUnknown:

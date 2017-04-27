@@ -3,7 +3,7 @@ import inspect
 import types
 from collections import OrderedDict
 import json
-from JumpScale import j
+from js9 import j
 
 # api codes
 # 4 function with params
@@ -190,7 +190,7 @@ class ObjectInspector:
 
     def __init__(self):
         self.__jslocation__ = "j.tools.objectinspector"
-        self.apiFileLocation = j.sal.fs.joinPaths(j.dirs.JSCFGDIR, "codecompletionapi", "jumpscale.api")
+        self.apiFileLocation = j.sal.fs.joinPaths(j.dirs.JSCFGDIR, "codecompletionapi", "JumpScale9Lib.api")
         # j.sal.fs.createDir(j.sal.fs.joinPaths(j.dirs.JSCFGDIR, "codecompletionapi"))
         self.classDocs = {}
         self.visited = []
@@ -200,7 +200,7 @@ class ObjectInspector:
 
         self.jstree = OrderedDict()  # jstree['j.sal']={'unix': unixobject, 'fs': fsobject}
 
-    def importAllLibs(self, ignore=[], base="%s/lib/JumpScale/" % j.dirs.JSBASEDIR):
+    def importAllLibs(self, ignore=[], base="%s/lib/JumpScale/" % j.dirs.BASEDIR):
         self.base = os.path.normpath(base)
         towalk = j.sal.fs.listDirsInDir(base, recursive=False, dirNameOnly=True, findDirectorySymlinks=True)
         errors = "### errors while trying to import libraries\n\n"
@@ -209,7 +209,7 @@ class ObjectInspector:
             path = "%s/%s" % (base, item)
             for modname in j.sal.fs.listDirsInDir(path, False, True, True):
                 if modname not in ignore:
-                    toexec = "import JumpScale.%s.%s" % (item, modname)
+                    toexec = "import JumpScale9Lib.%s.%s" % (item, modname)
                     try:
                         exec(toexec)
                     except Exception as e:
@@ -236,7 +236,7 @@ class ObjectInspector:
 
         """
         self.dest = dest
-        self.apiFileLocation = "%s/jumpscale.api" % self.dest
+        self.apiFileLocation = "%s/JumpScale9Lib.api" % self.dest
         j.sal.fs.writeFile("%s/errors.md" % dest, "")
         j.sal.fs.createDir(self.dest)
         self.errors = self.importAllLibs(ignore=ignore)

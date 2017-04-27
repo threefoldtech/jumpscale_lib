@@ -1,5 +1,5 @@
-from JumpScale import j
-from Base import Base
+from js9 import j
+from .Base import Base
 
 
 class RepoMilestone(Base):

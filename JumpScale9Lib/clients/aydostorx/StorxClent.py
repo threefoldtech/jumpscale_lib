@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 import requests
 from urllib.parse import urljoin, urlparse
 
@@ -8,6 +8,7 @@ class StorxFactory:
     def __init__(self,):
         super(StorxFactory, self).__init__()
         self.__jslocation__ = "j.clients.storx"
+        self.__imports__ = "requests"
 
     def get(self, base_url):
         """

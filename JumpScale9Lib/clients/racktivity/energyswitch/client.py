@@ -1,9 +1,9 @@
 import time
 
-from JumpScale.clients.racktivity.energyswitch.proxy import connection
-from JumpScale.clients.racktivity.energyswitch.common import convert
-from JumpScale.clients.racktivity.energyswitch.common.GUIDTable import Value
-from JumpScale.clients.racktivity.energyswitch.modelfactory.modelfactory import ModelFactory
+from JumpScale9Lib.clients.racktivity.energyswitch.proxy import connection
+from JumpScale9Lib.clients.racktivity.energyswitch.common import convert
+from JumpScale9Lib.clients.racktivity.energyswitch.common.GUIDTable import Value
+from JumpScale9Lib.clients.racktivity.energyswitch.modelfactory.modelfactory import ModelFactory
 
 
 class RackSal:

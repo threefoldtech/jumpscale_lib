@@ -1,5 +1,5 @@
-from JumpScale.sal.g8os.abstracts import Mountable
-from JumpScale.sal.g8os.abstracts import AYSable
+from JumpScale9Lib.sal.g8os.abstracts import Mountable
+from JumpScale9Lib.sal.g8os.abstracts import AYSable
 import os
 
 
@@ -169,7 +169,7 @@ class StoragePool(Mountable):
     @property
     def ays(self):
         if self._ays is None:
-            from JumpScale.sal.g8os.atyourservice.StoragePool import StoragePoolAys
+            from JumpScale9Lib.sal.g8os.atyourservice.StoragePool import StoragePoolAys
             self._ays = StoragePoolAys(self)
         return self._ays
 
@@ -236,7 +236,7 @@ class FileSystem:
     @property
     def ays(self):
         if self._ays is None:
-            from JumpScale.sal.g8os.atyourservice.StoragePool import FileSystemAys
+            from JumpScale9Lib.sal.g8os.atyourservice.StoragePool import FileSystemAys
             self._ays = FileSystemAys(self)
         return self._ays
 

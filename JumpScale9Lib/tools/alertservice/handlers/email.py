@@ -1,5 +1,5 @@
-from JumpScale import j
-from JumpScale.tools.alertservice.AlertService import Handler
+from js9 import j
+from JumpScale9Lib.tools.alertservice.AlertService import Handler
 
 
 class EmailAlerter(Handler):

@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 import netifaces
 
 
@@ -10,6 +10,7 @@ Configure DHCP on a certain network (interface) by giving a range of IP addresse
 
     def __init__(self):
         self.__jslocation__ = "j.sal.dhcp_ihc"
+        self.__imports__ = "netifaces"
         self.configPath = j.tools.path.get(
             '/etc').joinpath('dhcp3', 'dhcpd.conf')
         self._executor = j.tools.executorLocal

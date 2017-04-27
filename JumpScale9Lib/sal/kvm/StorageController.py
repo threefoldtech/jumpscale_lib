@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 from BaseKVMComponent import BaseKVMComponent
 
 
@@ -61,7 +61,7 @@ class StorageController(BaseKVMComponent):
         """
         List all pools
         """
-        from JumpScale.sal.kvm.Pool import Pool
+        from JumpScale9Lib.sal.kvm.Pool import Pool
         pools = []
         for pool_kvm in self.controller.connection.listAllStoragePools():
             pools.append(Pool.from_xml(controller=self.controller, source=pool_kvm.XMLDesc()))

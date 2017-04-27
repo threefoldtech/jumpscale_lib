@@ -1,5 +1,5 @@
-from JumpScale import j
-from InfluxDumper import InfluxDumper
+from js9 import j
+from .InfluxDumper import InfluxDumper
 import time
 import random
 import io

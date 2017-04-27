@@ -1,10 +1,6 @@
-from JumpScale import j
-try:
-    import grequests as requests
-except BaseException:
-    cmd = 'pip3 install grequests'
-    j.sal.process.execute(cmd)
-    import grequests as requests
+from js9 import j
+
+import grequests as requests
 
 # import requests
 

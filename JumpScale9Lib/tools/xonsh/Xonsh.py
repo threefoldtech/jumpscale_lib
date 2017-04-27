@@ -1,22 +1,13 @@
-from JumpScale import j
+from js9 import j
 
-try:
-    import xonsh
-except BaseException:
-    j.sal.process.executeInteractive("pip3 install colored-traceback")
-    j.sal.process.executeInteractive("pip3 install xonsh")
-    j.sal.process.executeInteractive("pip3 install pudb")
-    j.sal.process.executeInteractive("pip3 install tmuxp")
-    import xonsh
-
-
-#from pudb import set_trace; set_trace()
+import xonsh
 
 
 class Xonsh:
 
     def __init__(self):
         self.__jslocation__ = "j.tools.xonsh"
+        self.__imports__ = "colored-traceback,xonsh,pudb,tmuxp"
         self.executor = j.tools.executorLocal
         self._cuisine = self.executor.cuisine
 
@@ -26,7 +17,7 @@ class Xonsh:
 
     def config(self):
         C = """
-        from JumpScale import j
+        from js9 import j
         $XONSH_SHOW_TRACEBACK = True
         $XONSH_STORE_STDOUT = True
         $XONSH_LOGIN = True

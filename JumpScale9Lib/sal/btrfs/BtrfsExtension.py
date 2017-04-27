@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 import re
 
 BASECMD = "btrfs"
@@ -227,8 +227,8 @@ class BtrfsExtension:
             cons = m.groupdict()
             key = cons['key'].lower()
             key = key.replace(", ", "-")
-            values = {'total': j.data.units.bytes.toSize(value=int(cons['total']), output='M'),
-                      'used': j.data.units.bytes.toSize(value=int(cons['used']), output='M')}
+            values = {'total': j.data_units.bytes.toSize(value=int(cons['total']), output='M'),
+                      'used': j.data_units.bytes.toSize(value=int(cons['used']), output='M')}
             result[key] = values
 
         return result

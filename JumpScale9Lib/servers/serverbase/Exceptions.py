@@ -1,5 +1,5 @@
-from JumpScale import j
-from JumpScale.core.errorhandling.JSExceptions import BaseJSException
+from js9 import j
+from JumpScale9.core.errorhandling.JSExceptions import BaseJSException
 import traceback
 
 

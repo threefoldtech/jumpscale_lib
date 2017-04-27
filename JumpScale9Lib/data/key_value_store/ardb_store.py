@@ -1,6 +1,6 @@
 from servers.key_value_store.redis_store import RedisKeyValueStore
 from servers.key_value_store.store import KeyValueStoreBase
-from JumpScale import j
+from js9 import j
 
 
 class ARDBKeyValueStore(RedisKeyValueStore):

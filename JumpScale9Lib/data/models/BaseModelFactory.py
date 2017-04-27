@@ -1,7 +1,7 @@
-from JumpScale import j
+from js9 import j
 
-import Models
-import CockpitEventModels
+import JumpScale9Lib.data.models.Models as Models
+import JumpScale9Lib.data.models.CockpitEventModels as CockpitEventModels
 import inspect
 
 try:
@@ -45,6 +45,7 @@ class System(NameSpaceLoader):
 
     def __init__(self):
         self.__jslocation__ = "j.data.models.system"
+        self.__imports__ = "mongoengine"
         super(System, self).__init__(Models)
 
 
@@ -52,4 +53,5 @@ class CockpitEvent(NameSpaceLoader):
 
     def __init__(self):
         self.__jslocation__ = "j.data.models.cockpit_event"
+        self.__imports__ = "mongoengine"
         super(CockpitEvent, self).__init__(CockpitEventModels)

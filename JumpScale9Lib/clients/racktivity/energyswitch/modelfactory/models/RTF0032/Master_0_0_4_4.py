@@ -1,4 +1,4 @@
-from JumpScale.clients.racktivity.energyswitch.modelfactory.models.common.Master_0_0_4_4 import Model as ModelClass
+from JumpScale9Lib.clients.racktivity.energyswitch.modelfactory.models.common.Master_0_0_4_4 import Model as ModelClass
 
 
 class Model(ModelClass):

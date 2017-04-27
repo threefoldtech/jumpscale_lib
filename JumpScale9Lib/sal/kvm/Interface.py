@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 import libvirt
 from xml.etree import ElementTree
 from BaseKVMComponent import BaseKVMComponent

@@ -1,5 +1,5 @@
 __author__ = 'delandtj'
-from JumpScale import j
+from js9 import j
 import os
 import os.path
 import subprocess

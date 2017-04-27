@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from .Container import Container
 
-from JumpScale import j
+from js9 import j
 import os
 import docker
 import time

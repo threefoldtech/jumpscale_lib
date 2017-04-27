@@ -1,6 +1,6 @@
 import uuid
 
-from JumpScale import j
+from js9 import j
 
 
 GENERIC_TIMEOUT = 5

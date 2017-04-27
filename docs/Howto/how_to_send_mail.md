@@ -30,7 +30,7 @@ Docstring:
 ## Example
 
 ```
-import JumpScale.baselib.mailclient
+import JumpScale9Lib.baselib.mailclient
 j.clients.email.send("kristof@incubaid.com","kristof@incubaid.com","test","test")
 ```
 

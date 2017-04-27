@@ -1,6 +1,6 @@
-from JumpScale import j
-from JumpScale.clients.rogerthat.rogerthatservice import GeventWSServer
-from JumpScale.tools.alertservice.AlertService import Handler
+from js9 import j
+from JumpScale9Lib.clients.rogerthat.rogerthatservice import GeventWSServer
+from JumpScale9Lib.tools.alertservice.AlertService import Handler
 import gevent
 
 

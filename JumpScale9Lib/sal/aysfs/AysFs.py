@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from JumpScale import j
+from js9 import j
 import os
 
 
@@ -18,7 +18,7 @@ class AysFsFactory:
         flist = '/aysfs/flist/%s.flist' % name
         if not j.sal.fs.exists(flist):
             print('[+] downloading flist: %s' % name)
-            storx = j.clients.storx.get('https://stor.jumpscale.org/storx')
+            storx = j.clients.storx.get('https://stor.JumpScale9Lib.org/storx')
             storx.getStaticFile('%s.flist' % name, flist)
 
     def getJumpscale(self, cuisine=None):
@@ -59,7 +59,7 @@ class AysFs:
         self.unique = False
         self.tmux = self._cuisine.tmux
 
-        self.defstor = 'https://stor.jumpscale.org/storx'
+        self.defstor = 'https://stor.JumpScale9Lib.org/storx'
 
     def setRoot(self, root):
         self.root = root
@@ -206,7 +206,7 @@ class AysFs:
 
         if not j.sal.fs.exists(binary):
             print('[+] downloading aysfs binary')
-            storx = j.clients.storx.get('https://stor.jumpscale.org/storx')
+            storx = j.clients.storx.get('https://stor.JumpScale9Lib.org/storx')
             storx.getStaticFile('aysfs', binary)
             j.sal.fs.chmod(binary, 0o755)
 

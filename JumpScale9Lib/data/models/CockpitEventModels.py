@@ -1,7 +1,7 @@
 
 from mongoengine.fields import IntField, StringField, ListField, BooleanField, DictField, EmbeddedDocumentField, FloatField
 from mongoengine import DoesNotExist, EmbeddedDocument, Document
-from JumpScale import j
+from js9 import j
 from Models import ModelBase
 
 DB = 'jumpscale_cockpitevent'

@@ -1,9 +1,11 @@
 
-from JumpScale import j
-from Sheet import *
+from js9 import j
+from .Sheet import *
+
+# BASE CLASS WAS j.tools.code.classGetBase()
 
 
-class Sheets(j.tools.code.classGetBase()):
+class Sheets():
 
     def __init__(self):
         self.__jslocation__ = "j.tools.worksheets"

@@ -1,5 +1,5 @@
-from JumpScale import j
-# import JumpScale.baselib.remote
+from js9 import j
+# import JumpScale9Lib.baselib.remote
 import time
 from netaddr import EUI
 

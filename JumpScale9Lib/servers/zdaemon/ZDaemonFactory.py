@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 
 
 import time
@@ -85,7 +85,7 @@ class ZDaemonFactory:
     def getZDaemonTransportClass(self):
         """
         #example usage:
-        import JumpScale.grid.zdaemon
+        import JumpScale9Lib.grid.zdaemon
         class BlobStorTransport(j.servers.zdaemon.getZDaemonTransportClass()):
             def sendMsg(self,timeout=0, *args):
                 self._cmdchannel.send_multipart(args)

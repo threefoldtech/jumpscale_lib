@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 from servers.serverbase.Exceptions import AuthenticationError, MethodNotFoundException, RemoteException
 from servers.serverbase import returnCodes
 import time

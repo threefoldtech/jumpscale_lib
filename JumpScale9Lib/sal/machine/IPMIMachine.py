@@ -1,5 +1,5 @@
-from JumpScale import j
-from Machine import Machine
+from js9 import j
+from .Machine import Machine
 
 
 class IPMIMachine(Machine):

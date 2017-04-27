@@ -3,8 +3,8 @@
 Here is an example cuisine module. Read the comments to see what is expected in the module.
 
 ```python
-from JumpScale import j
-from JumpScale.tools.cuisine.CuisineFactory import CuisineApp
+from js9 import j
+from JumpScale9Lib.tools.cuisine.CuisineFactory import CuisineApp
 
 
 class CuisineExample(CuisineApp):

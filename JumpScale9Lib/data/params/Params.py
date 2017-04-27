@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 """
 Provides the Params object and the ParamsFactory that is used in the Q-Tree
 """

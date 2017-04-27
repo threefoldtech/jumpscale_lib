@@ -1,8 +1,8 @@
-from JumpScale import j
-from JumpScale.sal.g8os.Disk import DiskType
-from JumpScale.sal.g8os.Container import Container
-from JumpScale.sal.g8os.ARDB import ARDB
-from JumpScale.sal.g8os.Node import Node
+from js9 import j
+from JumpScale9Lib.sal.g8os.Disk import DiskType
+from JumpScale9Lib.sal.g8os.Container import Container
+from JumpScale9Lib.sal.g8os.ARDB import ARDB
+from JumpScale9Lib.sal.g8os.Node import Node
 import io
 import time
 
@@ -180,7 +180,7 @@ class StorageCluster:
     @property
     def ays(self):
         if self._ays is None:
-            from JumpScale.sal.g8os.atyourservice.StorageCluster import StorageClusterAys
+            from JumpScale9Lib.sal.g8os.atyourservice.StorageCluster import StorageClusterAys
             self._ays = StorageClusterAys(self)
         return self._ays
 

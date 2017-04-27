@@ -1,6 +1,6 @@
 import re
 from xml.etree import ElementTree
-from JumpScale import j
+from js9 import j
 
 
 class NetworkScanner:

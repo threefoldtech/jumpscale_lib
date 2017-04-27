@@ -1,6 +1,6 @@
-from JumpScale import j
-from JumpScale.sal.g8os.abstracts import AYSable
-from JumpScale.sal.g8os.StorageCluster import StorageCluster
+from js9 import j
+from JumpScale9Lib.sal.g8os.abstracts import AYSable
+from JumpScale9Lib.sal.g8os.StorageCluster import StorageCluster
 
 
 def _node_name(node):

@@ -1,5 +1,5 @@
-# from JumpScale.core.System import System
-from JumpScale import j
+# from JumpScale9Lib.core.System import System
+from js9 import j
 from urllib import parse as urllib_parse
 
 

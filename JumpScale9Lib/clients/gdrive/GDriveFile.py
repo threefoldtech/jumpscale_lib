@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 from dateutil import parser
 import copy
 from apiclient.http import *

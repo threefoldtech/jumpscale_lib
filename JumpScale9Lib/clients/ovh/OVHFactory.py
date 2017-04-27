@@ -1,10 +1,6 @@
-from JumpScale import j
+from js9 import j
 
-try:
-    import ovh
-except BaseException:
-    j.do.execute("pip3 install ovh")
-    import ovh
+import ovh
 
 import time
 
@@ -223,6 +219,7 @@ class OVHFactory:
 
     def __init__(self):
         self.__jslocation__ = "j.clients.ovh"
+        self.__imports__ = "ovh"
         self.logger = j.logger.get('j.clients.ovh')
         self.connections = {}
 

@@ -1,5 +1,5 @@
 
-from JumpScale import j
+from js9 import j
 import re
 
 #@review [kristof,incubaid] name:codereviewtools tools for codereview, check all new code

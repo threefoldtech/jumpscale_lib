@@ -82,7 +82,7 @@ def name2cp(k):
     if k == 'apos':
         return ord("'")
     if hasattr(htmlentitydefs, "name2codepoint"):  # requires Python 2.3
-        return html.entities.name2codepoint[k]
+        return htmlentitydefs.name2codepoint[k]
     else:
         k = html.entities.entitydefs[k]
         if k.startswith("&#") and k.endswith(";"):
@@ -209,10 +209,10 @@ def list_numbering_start(attrs):
         return 0
 
 
-class HTML2Text(html.parser.HTMLParser):
+class HTML2Text(HTMLParser.HTMLParser):
 
     def __init__(self, out=None, baseurl=''):
-        html.parser.HTMLParser.__init__(self)
+        HTMLParser.HTMLParser.__init__(self)
 
         # Config options
         self.unicode_snob = UNICODE_SNOB

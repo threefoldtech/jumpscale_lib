@@ -1,6 +1,6 @@
-from JumpScale import j
+from js9 import j
 
-# from JumpScale.data.markdown.mistune import *
+# from JumpScale9Lib.data.markdown.mistune import *
 
 # from pygments import highlight
 # from pygments.lexers import get_lexer_by_name

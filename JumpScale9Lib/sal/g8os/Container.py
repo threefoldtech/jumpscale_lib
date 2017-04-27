@@ -32,7 +32,7 @@ class Container:
 
     @classmethod
     def from_ays(cls, service):
-        from JumpScale.sal.g8os.Node import Node
+        from JumpScale9Lib.sal.g8os.Node import Node
         node = Node.from_ays(service.parent)
         ports = {}
         for portmap in service.model.data.ports:
@@ -98,6 +98,6 @@ class Container:
     @property
     def ays(self):
         if self._ays is None:
-            from JumpScale.sal.g8os.atyourservice.StorageCluster import ContainerAYS
+            from JumpScale9Lib.sal.g8os.atyourservice.StorageCluster import ContainerAYS
             self._ays = ContainerAYS(self)
         return self._ays

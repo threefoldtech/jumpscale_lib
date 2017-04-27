@@ -3,11 +3,11 @@ import unittest
 
 from servers.key_value_store.fs_store import FileSystemKeyValueStore
 from servers.key_value_store.memory_store import MemoryKeyValueStore
-from JumpScale import j
+from js9 import j
 from servers.key_value_store.store import KeyValueStoreType
 
 if not q._init_called:
-    from JumpScale.core.InitBase import q
+    from JumpScale9Lib.core.InitBase import q
 
 
 class PatchedTimeContext:

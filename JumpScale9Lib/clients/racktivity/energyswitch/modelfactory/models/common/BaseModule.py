@@ -1,4 +1,4 @@
-from JumpScale.clients.racktivity.energyswitch.common import convert
+from JumpScale9Lib.clients.racktivity.energyswitch.common import convert
 
 
 class BaseModule:

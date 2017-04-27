@@ -1,5 +1,5 @@
-from JumpScale import j
-from JumpScale.clients.whmcs.WhmcsInstance import WhmcsInstance
+from js9 import j
+from JumpScale9Lib.clients.whmcs.WhmcsInstance import WhmcsInstance
 
 
 class Dummy:

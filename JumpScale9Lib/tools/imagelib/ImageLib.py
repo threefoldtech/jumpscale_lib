@@ -1,5 +1,5 @@
 
-from JumpScale import j
+from js9 import j
 
 from PIL import Image
 print("IMAGELIB LOAD")
@@ -9,6 +9,7 @@ class ImageLib:
 
     def __init__(self):
         self.__jslocation__ = "j.tools.imagelib"
+        self.__imports__ = "PIL"
 
     #     self._initted=False
 

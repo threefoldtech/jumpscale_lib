@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 from stat import *
 import brotli
 import hashlib
@@ -11,23 +11,24 @@ import sys
 import re
 
 import capnp
-from JumpScale.tools.flist import model_capnp as ModelCapnp
+from JumpScale9Lib.tools.flist import model_capnp as ModelCapnp
 
-from JumpScale.tools.flist.models import DirModel
-from JumpScale.tools.flist.models import DirCollection
-from JumpScale.tools.flist.models import ACIModel
-from JumpScale.tools.flist.models import ACICollection
+from JumpScale9Lib.tools.flist.models import DirModel
+from JumpScale9Lib.tools.flist.models import DirCollection
+from JumpScale9Lib.tools.flist.models import ACIModel
+from JumpScale9Lib.tools.flist.models import ACICollection
 
-from JumpScale.tools.flist.FList import FList
-from JumpScale.tools.flist.FListMetadata import FListMetadata
-from JumpScale.tools.flist.FlistMerger import FlistMerger
-# from JumpScale.tools.flist.FuseExample import FuseExample
+from JumpScale9Lib.tools.flist.FList import FList
+from JumpScale9Lib.tools.flist.FListMetadata import FListMetadata
+from JumpScale9Lib.tools.flist.FlistMerger import FlistMerger
+# from JumpScale9Lib.tools.flist.FuseExample import FuseExample
 
 
 class FListFactory(object):
 
     def __init__(self):
         self.__jslocation__ = "j.tools.flist"
+        self.__imports__ = "brotli,capnp"
 
     def getCapnpSchema(self):
         return ModelCapnp

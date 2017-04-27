@@ -2,7 +2,7 @@
 from mongoengine.fields import IntField, StringField, ListField, BooleanField, DictField, EmbeddedDocumentField, FloatField
 from mongoengine import DoesNotExist, EmbeddedDocument, Document
 import hmac
-from JumpScale import j
+from js9 import j
 
 try:
     import fcrypt as crypt

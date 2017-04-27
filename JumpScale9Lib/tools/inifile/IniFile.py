@@ -1,5 +1,5 @@
-from JumpScale import j
-import JumpScale as jumpscale
+from js9 import j
+# import JumpScale as jumpscale
 
 try:
     from configparser import ConfigParser
@@ -25,7 +25,7 @@ class InifileTool:
         @raises RuntimeError: When the provided filename doesn't exist
 
         @returns: Opened INI file object
-        @rtype: jumpscale.inifile.IniFile.IniFile
+        @rtype: JumpScale9Lib.inifile.IniFile.IniFile
         '''
         if isinstance(filename, str) and not j.sal.fs.exists(filename):
             if createIfNonExisting:
@@ -44,7 +44,7 @@ class InifileTool:
         @raises RuntimeError: When the provided filename exists
 
         @returns: New INI file object
-        @rtype: jumpscale.inifile.IniFile.IniFile
+        @rtype: JumpScale9Lib.inifile.IniFile.IniFile
         '''
         if isinstance(filename, str) and j.sal.fs.exists(filename):
             raise j.exceptions.RuntimeError('Attempt to create existing INI file %s as a new file' % filename)

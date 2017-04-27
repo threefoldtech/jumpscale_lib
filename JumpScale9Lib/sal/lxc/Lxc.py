@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from JumpScale import j
+from js9 import j
 import time
 import os
 import netaddr

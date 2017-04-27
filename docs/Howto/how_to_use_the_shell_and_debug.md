@@ -22,7 +22,7 @@ In [1]:
 e.g. try using ipython.
 
 ```python
-from JumpScale import j
+from js9 import j
 j.[tab]
 ```
 
@@ -33,7 +33,7 @@ There are tons of extensions available which can be installed using jspackages (
 ## From an existing Python script start JumpScale and go to the debug shell
 
 ```python
-from JumpScale import j
+from js9 import j
 
 #your python code here ... optionally using jumpscale
 

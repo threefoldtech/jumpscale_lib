@@ -1,5 +1,5 @@
-from IPMIMachine import IPMIMachine
-from JumpScale import j
+from .IPMIMachine import IPMIMachine
+from js9 import j
 
 
 class MachineFactory:

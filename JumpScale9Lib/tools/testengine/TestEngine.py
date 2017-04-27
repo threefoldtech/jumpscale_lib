@@ -1,9 +1,9 @@
 import sys
-from JumpScale import j
+from js9 import j
 import imp
 import time
 import unittest
-import new
+# import new
 from io import BytesIO
 
 

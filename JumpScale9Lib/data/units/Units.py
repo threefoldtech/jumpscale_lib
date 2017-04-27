@@ -5,7 +5,7 @@ class Sizes:
     _BASE = 1000.
 
     def __init__(self):
-        self.__jslocation__ = "j.data.units.sizes"
+        self.__jslocation__ = "j.data_units.sizes"
 
     def toSize(self, value, input='', output='K'):
         """
@@ -32,4 +32,4 @@ class Bytes(Sizes):
     _BASE = 1024.
 
     def __init__(self):
-        self.__jslocation__ = "j.data.units.bytes"
+        self.__jslocation__ = "j.data_units.bytes"

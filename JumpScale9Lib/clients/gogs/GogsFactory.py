@@ -1,5 +1,5 @@
 from .GogsClient import GogsClient
-from JumpScale import j
+from js9 import j
 import psycopg2
 import sys
 

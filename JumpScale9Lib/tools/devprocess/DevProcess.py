@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 import sys
 import re
 import collections
@@ -131,6 +131,7 @@ class DevProcess:
 
     def __init__(self):
         self.__jslocation__ = "j.tools.devprocess"
+        self.__imports__ = "jinja2,json,github,telegram"
         self.logger = j.logger.get("j.tools.devprocess")
         self.lock = threading.RLock()
 

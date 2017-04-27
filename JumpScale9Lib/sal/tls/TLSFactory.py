@@ -1,5 +1,5 @@
-from JumpScale import j
-from TLS import TLS
+from js9 import j
+from .TLS import TLS
 
 
 class TLSFactory:

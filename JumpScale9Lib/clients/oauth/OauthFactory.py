@@ -1,8 +1,8 @@
 import os
 
 
-from JumpScale import j
-from OauthInstance import OauthInstance, ItsYouOnline
+from js9 import j
+from .OauthInstance import OauthInstance, ItsYouOnline
 
 
 class OauthFactory:

@@ -1,4 +1,4 @@
-from JumpScale.sal.g8os.abstracts import Mountable
+from JumpScale9Lib.sal.g8os.abstracts import Mountable
 
 
 class Partition(Mountable):

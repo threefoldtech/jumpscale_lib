@@ -1,5 +1,5 @@
 # from __future__ import print_function
-from JumpScale import j
+from js9 import j
 
 
 class CeleryFactory:

@@ -1,5 +1,5 @@
-from JumpScale import j
-from Doc import Doc
+from js9 import j
+from .Doc import Doc
 import copy
 
 import imp

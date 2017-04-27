@@ -9,7 +9,7 @@ from pureftp import PureFTP
 from network import Network
 from firewall import Firewall
 
-from JumpScale import j
+from js9 import j
 
 
 WRITE_CHUNK_SIZE = 512

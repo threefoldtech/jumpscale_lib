@@ -1,4 +1,4 @@
-from JumpScale import j
+from js9 import j
 
 # from OpenSSL import crypto
 import os
@@ -17,11 +17,12 @@ class SSL:
 
     def __init__(self):
         self.__jslocation__ = "j.sal.ssl"
+        self.__imports__ = "M2Crypto"
 
     def getSSLHandler(self, keyvaluestor=None):
         """
         default keyvaluestor=j.servers.kvs.getFSStore("sslkeys", serializers=[])  #make sure to use no serializers
-        pass another keyvaluestor if required (first do 'import JumpScale.servers.key_value_store')
+        pass another keyvaluestor if required (first do 'import JumpScale9Lib.servers.key_value_store')
         """
         if keyvaluestor is None:
             keyvaluestor = j.servers.kvs.getFSStore("sslkeys", serializers=[])

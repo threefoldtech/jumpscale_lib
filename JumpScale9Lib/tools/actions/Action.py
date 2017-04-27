@@ -1,5 +1,5 @@
 
-from JumpScale import j
+from js9 import j
 import time
 import inspect
 import traceback
@@ -327,7 +327,7 @@ class Action:
     def sourceToExecute(self):
         s = """
         $imports
-        from JumpScale import j
+        from js9 import j
         args=\"\"\"
         $args
         \"\"\"

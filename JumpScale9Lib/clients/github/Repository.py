@@ -1,13 +1,13 @@
-from JumpScale import j
-from Issue import Issue
-from Base import replacelabels
+from js9 import j
+from .Issue import Issue
+from .Base import replacelabels
 import copy
 import base64
 import threading
-import collections
+# import collections
 import urllib
-from Milestone import RepoMilestone
-from JumpScale.core.errorhandling.JSExceptions import Input
+from .Milestone import RepoMilestone
+from JumpScale9.errorhandling.JSExceptions import Input
 from github.GithubException import UnknownObjectException
 
 

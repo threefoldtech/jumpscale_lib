@@ -1,8 +1,8 @@
 import threading
-from JumpScale import j
-from Base import Base
-from Base import replacelabels
-from Milestone import RepoMilestone
+from js9 import j
+from .Base import Base
+from .Base import replacelabels
+from .Milestone import RepoMilestone
 
 
 class Issue(Base):

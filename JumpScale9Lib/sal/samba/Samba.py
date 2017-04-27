@@ -2,9 +2,9 @@ import signal
 import sys
 from io import StringIO
 
-from JumpScale import j
+from js9 import j
 # from samba.netcmd.main import cmd_sambatool
-from sambaparser import SambaConfigParser
+from .sambaparser import SambaConfigParser
 
 CONFIG_FILE = '/etc/samba/smb.conf'
 EXCEPT_SHARES = ['global', 'printers', 'homes']

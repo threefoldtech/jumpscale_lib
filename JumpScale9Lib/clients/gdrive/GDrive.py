@@ -1,5 +1,5 @@
 
-from JumpScale import j
+from js9 import j
 from dateutil import parser
 import os
 import httplib2
@@ -14,7 +14,7 @@ from apiclient import discovery
 from oauth2client import client
 from oauth2client import tools
 from oauth2client.file import Storage
-from GDriveFile import *
+from .GDriveFile import *
 import os
 
 SCOPES = ['https://www.googleapis.com/auth/drive',
@@ -30,6 +30,7 @@ class GDriveFactory:
 
     def __init__(self):
         self.__jslocation__ = "j.clients.gdrive"
+        self.__imports__ = "google-api-python-client"
         self.logger = j.logger.get('j.clients.gdrive')
 
         self.secretsFilePath = 'gdrive_client_secrets.json'

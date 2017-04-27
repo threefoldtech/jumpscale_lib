@@ -1,7 +1,7 @@
 import mongoengine
 import inspect
-from JumpScale.data.models import Models
-from JumpScale import j
+from JumpScale9Lib.data.models import Models
+from js9 import j
 
 
 def create(outputpath='/optvar/var/populate.json'):

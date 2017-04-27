@@ -1,8 +1,8 @@
 
 
-# from JumpScale.core.System import System
+# from JumpScale9Lib.core.System import System
 import re
-from JumpScale import j
+from js9 import j
 
 
 class RegexTemplates_FindLines:
