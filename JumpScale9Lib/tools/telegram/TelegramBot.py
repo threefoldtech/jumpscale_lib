@@ -1,10 +1,8 @@
 from js9 import j
 
-from .Telegram import Telegram
-
-from handlers.loggerHandler import LoggerHandler
-from handlers.DemoHandler import DemoHandler
-from handlers.InteractiveHandler import InteractiveHandler
+from JumpScale9Lib.tools.telegram.Telegram import Telegram
+from JumpScale9Lib.tools.telegram.handlers.DemoHandler import DemoHandler
+from JumpScale9Lib.tools.telegram.handlers.InteractiveHandler import InteractiveHandler
 
 import gevent
 

@@ -1,13 +1,12 @@
-from js9 import j
-from .Network import Network
-from .Interface import Interface
-from .Disk import Disk
-from .Pool import Pool
-from .StorageController import StorageController
-from .KVMController import KVMController
-from .Machine import Machine
-from .CloudMachine import CloudMachine
-from .MachineSnapshot import MachineSnapshot
+from JumpScale9Lib.sal.kvm.Network import Network
+from JumpScale9Lib.sal.kvm.Interface import Interface
+from JumpScale9Lib.sal.kvm.Disk import Disk
+from JumpScale9Lib.sal.kvm.Pool import Pool
+from JumpScale9Lib.sal.kvm.StorageController import StorageController
+from JumpScale9Lib.sal.kvm.KVMController import KVMController
+from JumpScale9Lib.sal.kvm.Machine import Machine
+from JumpScale9Lib.sal.kvm.CloudMachine import CloudMachine
+from JumpScale9Lib.sal.kvm.MachineSnapshot import MachineSnapshot
 
 
 class KVM:
@@ -15,7 +14,7 @@ class KVM:
     def __init__(self):
 
         self.__jslocation__ = "j.sal.kvm"
-        self.__imports__ = "libvirt"
+        self.__imports__ = "libvirt-python"
         self.KVMController = KVMController
         self.Machine = Machine
         self.MachineSnapshot = MachineSnapshot

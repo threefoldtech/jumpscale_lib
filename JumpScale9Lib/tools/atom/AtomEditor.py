@@ -9,7 +9,7 @@ class AtomEditor:
 
     def __init__(self):
         self.__jslocation__ = "j.tools.atom"
-        self.__imports__ == "cson"
+        self.__imports__ = "cson"
         self._packages = []
 
     @property

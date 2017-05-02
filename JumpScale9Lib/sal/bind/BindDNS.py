@@ -2,10 +2,9 @@ import os
 import re
 import dns.zone
 from dns.zone import NoSOA
-from dns.name import Name
 import dns.rdatatype
 from dns.rdtypes.IN.A import A
-from base import DNS
+from JumpScale9Lib.sal.bind.base import DNS
 from js9 import j
 
 
@@ -24,7 +23,6 @@ class Zone:
 
     @staticmethod
     def getZones():
-        self.logger.info('GETTING ZONES INFO')
         configs = []
         zonesfiles = []
         for configfile in ['named.conf.local', 'named.conf']:
@@ -92,7 +90,7 @@ class BindDNS(DNS):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.bind"
-        self.__imports__ = "dns"
+        self.__imports__ = "dnspython3"
         self.logger = j.logger.get("j.sal.bind")
 
     @property

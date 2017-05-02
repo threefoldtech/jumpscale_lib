@@ -5,13 +5,13 @@ import grequests as requests
 # import requests
 
 # import requests as requests
-from gevent import monkey
+# from gevent import monkey
 # monkey.patch_socket()
 # monkey.patch_time()
 # monkey.patch_all()
 # monkey.patch_all(socket=True, dns=True, time=False, select=True, thread=False, os=True, ssl=False, httplib=False, subprocess=False, sys=False, aggressive=False, Event=False)
 
-from Models import Message
+from JumpScale9Lib.tools.telegram.Models import Message
 import os
 import sys
 try:

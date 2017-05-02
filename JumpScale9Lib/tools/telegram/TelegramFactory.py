@@ -1,7 +1,6 @@
 from js9 import j
-from .handlers.DemoHandlerMS1 import *
-
-from .TelegramBot import *
+from JumpScale9Lib.tools.telegram.handlers.DemoHandlerMS1 import DemoHandlerMS1
+from JumpScale9Lib.tools.telegram.TelegramBot import TelegramBot
 import os
 
 

@@ -9,7 +9,7 @@ class ImageLib:
 
     def __init__(self):
         self.__jslocation__ = "j.tools.imagelib"
-        self.__imports__ = "PIL"
+        self.__imports__ = "Pillow"
 
     #     self._initted=False
 

@@ -1,8 +1,11 @@
-
-from mongoengine.fields import IntField, StringField, ListField, BooleanField, DictField, EmbeddedDocumentField, FloatField
-from mongoengine import DoesNotExist, EmbeddedDocument, Document
 from js9 import j
-from Models import ModelBase
+from mongoengine import Document
+from mongoengine.fields import IntField
+from mongoengine.fields import StringField
+from mongoengine.fields import ListField
+from mongoengine.fields import DictField
+from JumpScale9Lib.data.models.Models import ModelBase
+
 
 DB = 'jumpscale_cockpitevent'
 

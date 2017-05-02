@@ -56,7 +56,7 @@ class GitHubFactory:
 
     def __init__(self):
         self.__jslocation__ = "j.clients.github"
-        self.__imports__ = "github"
+        self.__imports__ = "PyGithub"
         self._clients = {}
 
     # def getRepoClient(self, account, reponame):

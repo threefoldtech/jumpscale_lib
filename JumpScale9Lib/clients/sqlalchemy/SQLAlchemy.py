@@ -1,13 +1,12 @@
 from js9 import j
 
-from sqlalchemy.orm import relationship, backref, sessionmaker, class_mapper
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import class_mapper
 from sqlalchemy import *
-from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.event import listen
 
 from sqlalchemy.ext.declarative import declarative_base
 from copy import copy
-import contoml
 import collections
 
 Base0 = declarative_base()
@@ -168,7 +167,7 @@ class SQLAlchemy:
     def data2toml(self, mapper, connection, target):
         if target._totoml and self.tomlpath != "":
             data = target.getDataAsDict()
-            out = contoml.dumps(data)
+            out = j.data.serializer.toml.dumps(data)
             path = target._tomlpath(self)
             j.sal.fs.createDir(j.sal.fs.getDirName(path))
             j.sal.fs.writeFile(filename=path, contents=out)

@@ -1,9 +1,4 @@
 from js9 import j
-import os
-import psycopg2
-import peewee
-
-from Pwiz import Pwiz
 
 import importlib
 

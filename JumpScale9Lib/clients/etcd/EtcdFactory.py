@@ -1,4 +1,3 @@
-from js9 import j
 import etcd
 
 
@@ -6,7 +5,7 @@ class EtcdFactory():
 
     def __init__(self):
         self.__jslocation__ = "j.clients.etcd"
-        self.__imports__ = "etcd"
+        self.__imports__ = "python-etcd"
 
     def get(self, **kwargs):
         """
