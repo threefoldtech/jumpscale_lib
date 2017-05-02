@@ -1,6 +1,6 @@
 from js9 import j
 import capnp
-from JumpScale9Lib.tools.flist import model_capnp as ModelCapnp
+from JumpScale9Lib.data.flist import model_capnp as ModelCapnp
 
 logger = j.logger.get('j.tools.flist.merger')
 

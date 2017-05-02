@@ -1,7 +1,7 @@
 from js9 import j
 import libvirt
 from xml.etree import ElementTree
-from BaseKVMComponent import BaseKVMComponent
+from JumpScale9Lib.sal.kvm.BaseKVMComponent import BaseKVMComponent
 import random
 import re
 

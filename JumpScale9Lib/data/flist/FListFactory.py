@@ -16,7 +16,7 @@ from JumpScale9Lib.data.flist.models import ACICollection
 from JumpScale9Lib.data.flist.FList import FList
 from JumpScale9Lib.data.flist.FListMetadata import FListMetadata
 from JumpScale9Lib.data.flist.FlistMerger import FlistMerger
-# from JumpScale9Lib.tools.flist.FuseExample import FuseExample
+# from JumpScale9Lib.data.flist.FuseExample import FuseExample
 
 
 class FListFactory(object):

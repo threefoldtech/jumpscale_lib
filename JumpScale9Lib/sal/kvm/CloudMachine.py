@@ -1,5 +1,5 @@
 from js9 import j
-from Machine import Machine
+from JumpScale9Lib.sal.kvm.Machine import Machine
 
 
 class CloudMachine(Machine):

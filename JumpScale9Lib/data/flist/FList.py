@@ -13,10 +13,10 @@ import sys
 import re
 import pyblake2
 import capnp
-from JumpScale9Lib.tools.flist import model_capnp as ModelCapnp
+from JumpScale9Lib.data.flist import model_capnp as ModelCapnp
 
-from JumpScale9Lib.tools.flist.models import DirModel
-from JumpScale9Lib.tools.flist.models import DirCollection
+from JumpScale9Lib.data.flist.models import DirModel
+from JumpScale9Lib.data.flist.models import DirCollection
 
 from path import Path
 
