@@ -20,7 +20,7 @@ else:
 
 if j.core.platformtype.myplatform.isLinux:
     try:
-        import pxssh
+        from pexpect import pxssh
     except ImportError as e:
         # We want this to go to stderr, otherwise applications relying on stdout
         # output (build command generator scripts) are pretty busted.

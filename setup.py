@@ -18,6 +18,7 @@ setup(
         'pystache',
         'libtmux',
         'httplib2',
-        'netaddr'
+        'netaddr',
+        'peewee'
     ]
 )
