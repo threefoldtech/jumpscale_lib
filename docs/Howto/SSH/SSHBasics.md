@@ -1,4 +1,4 @@
-# SSH Basic Connection Tool using Cuisine
+# SSH Basic Connection Tool using Prefab
 
 ## Connect using an SSH agent
 

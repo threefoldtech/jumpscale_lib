@@ -24,7 +24,7 @@ docker run --rm -i -t -p 2022:22 --name="js" jumpscale/ubuntu1604_golang /sbin/m
 
 ## With JumpScale already installed (recommended way)
 
-### Install the Docker container with Cuisine
+### Install the Docker container with Prefab
 
 From your local machine with JumpScale pre-installed we will connect over SSH to a remote Ubuntu 16.04 server (here called myhost), and install Docker host and JumpScale on it.
 

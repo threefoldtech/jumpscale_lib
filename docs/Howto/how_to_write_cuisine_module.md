@@ -1,13 +1,13 @@
-# Cuisine module
+# Prefab module
 
 Here is an example prefab module. Read the comments to see what is expected in the module.
 
 ```python
 from js9 import j
-from JumpScale9Lib.tools.prefab.CuisineFactory import CuisineApp
+from JumpScale9Lib.tools.prefab.PrefabFactory import PrefabApp
 
 
-class CuisineExample(CuisineApp):
+class PrefabExample(PrefabApp):
 
     """
     always define the name of you module, it's used in
@@ -101,7 +101,7 @@ class CuisineExample(CuisineApp):
 
 ```
 !!!
-title = "How To Write Cuisine Module"
+title = "How To Write Prefab Module"
 date = "2017-04-08"
 tags = ["howto"]
 ```
