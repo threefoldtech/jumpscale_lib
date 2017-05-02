@@ -8,7 +8,7 @@ class DNSMasq:
         self._configured = False
         self.logger = j.logger.get("DNSMasq")
         self.executor = j.tools.executorLocal
-        self._cuisine = self.executor.cuisine
+        self._prefab = self.executor.prefab
         self._configdir = ""
 
     def install(self, start=True):
@@ -17,21 +17,21 @@ class DNSMasq:
 
         @param start=True: start dnsmasq
         """
-        self._cuisine.processmanager.remove("dnsmasq")
-        self._cuisine.process.kill("dnsmasq")
-        self._cuisine.package.install("dnsmasq")
-        if not self._cuisine.core.file_exists("/etc/dnsmasq.conf"):
+        self._prefab.processmanager.remove("dnsmasq")
+        self._prefab.process.kill("dnsmasq")
+        self._prefab.package.install("dnsmasq")
+        if not self._prefab.core.file_exists("/etc/dnsmasq.conf"):
             self.config()
         if start:
-            cmd = self._cuisine.bash.cmdGetPath("dnsmasq")
-            self._cuisine.processmanager.ensure("dnsmasq", "%s -d" % (cmd,))
+            cmd = self._prefab.bash.cmdGetPath("dnsmasq")
+            self._prefab.processmanager.ensure("dnsmasq", "%s -d" % (cmd,))
 
     def restart(self):
         """
         Restarts Dnsmasq.
 
         """
-        self._cuisine.processmanager.restart("dnsmasq")
+        self._prefab.processmanager.restart("dnsmasq")
 
     def setConfigPath(self, config_path=None):
         """
@@ -94,7 +94,7 @@ class DNSMasq:
         if rangefrom & rangeto not specified then will serve full local range minus bottomn 10 & top 10 addr
         """
         if rangefrom == "" or rangeto == "":
-            rangefrom, rangeto = self._cuisine.net.getNetRange(device)
+            rangefrom, rangeto = self._prefab.net.getNetRange(device)
 
         C = """
 
@@ -760,6 +760,6 @@ class DNSMasq:
         if deviceonly:
             C = C.replace("#interface=", "interface=%s" % device)
         C = C.replace("$dhcprange", "%s,%s" % (rangefrom, rangeto))
-        self._cuisine.core.dir_ensure("/etc/dnsmasq.d/")
-        self._cuisine.core.dir_ensure("$VARDIR/dnsmasq")
-        self._cuisine.core.file_write("/etc/dnsmasq.conf", C, replaceArgs=True)
+        self._prefab.core.dir_ensure("/etc/dnsmasq.d/")
+        self._prefab.core.dir_ensure("$VARDIR/dnsmasq")
+        self._prefab.core.file_write("/etc/dnsmasq.conf", C, replaceArgs=True)

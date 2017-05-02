@@ -8,8 +8,8 @@ class AysFsFactory:
     def __init__(self):
         self.__jslocation__ = "j.sal.aysfs"
 
-    def get(self, name, cuisine=None):
-        return AysFs(name=name, cuisine=cuisine)
+    def get(self, name, prefab=None):
+        return AysFs(name=name, prefab=prefab)
 
     def _getFlist(self, name):
         if not j.sal.fs.exists('/aysfs/flist/'):
@@ -21,10 +21,10 @@ class AysFsFactory:
             storx = j.clients.storx.get('https://stor.JumpScale9Lib.org/storx')
             storx.getStaticFile('%s.flist' % name, flist)
 
-    def getJumpscale(self, cuisine=None):
+    def getJumpscale(self, prefab=None):
         self._getFlist('js8_opt')
 
-        js8opt = AysFs('jumpscale', cuisine)
+        js8opt = AysFs('jumpscale', prefab)
         js8opt.setUnique()
         js8opt.addMount('/aysfs/docker/jumpscale', 'RO',
                         '/aysfs/flist/js8_opt.flist', prefix='/opt')
@@ -32,10 +32,10 @@ class AysFsFactory:
         js8opt.addStor()
         return js8opt
 
-    def getOptvar(self, cuisine=None):
+    def getOptvar(self, prefab=None):
         self._getFlist('js8_optvar')
 
-        js8optvar = AysFs('optvar', cuisine)
+        js8optvar = AysFs('optvar', prefab)
         js8optvar.addMount('/aysfs/docker/$NAME', 'OL',
                            '/aysfs/flist/js8_optvar.flist', prefix='/optvar')
         js8optvar.addBackend('/ays/backend/$NAME', 'js8_optvar')
@@ -45,10 +45,10 @@ class AysFsFactory:
 
 class AysFs:
 
-    def __init__(self, name, cuisine=None):
-        self._cuisine = cuisine
-        if self._cuisine is None:
-            self._cuisine = j.tools.cuisine.local
+    def __init__(self, name, prefab=None):
+        self._prefab = prefab
+        if self._prefab is None:
+            self._prefab = j.tools.prefab.local
 
         self.mounts = []
         self.backends = []
@@ -57,7 +57,7 @@ class AysFs:
         self.root = '/aysfs'
         self.name = name.replace('/', '-')
         self.unique = False
-        self.tmux = self._cuisine.tmux
+        self.tmux = self._prefab.tmux
 
         self.defstor = 'https://stor.JumpScale9Lib.org/storx'
 
@@ -191,7 +191,7 @@ class AysFs:
         return j.data.serializer.toml.dumps(config)
 
     def unmount(self, path):
-        self._cuisine.core.run('umount %s; exit 0' % path)
+        self._prefab.core.run('umount %s; exit 0' % path)
 
     def _ensure_path(self, path):
         if not j.sal.fs.exists(path):

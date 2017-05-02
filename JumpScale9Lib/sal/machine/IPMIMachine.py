@@ -5,26 +5,26 @@ from .Machine import Machine
 class IPMIMachine(Machine):
     """IPMI Machine."""
 
-    def __init__(self, ip, login, passwd, cuisine):
+    def __init__(self, ip, login, passwd, prefab):
         """
         IPMI Machine.
 
         @param ip str: ip of the ipmi interface.
         @param login str: the username to login to ipmi.
         @param passwd str: the password to login to ipmi.
-        @param cuisine cuisine: cuisine object to where the ipmi command will be executed.
+        @param prefab prefab: prefab object to where the ipmi command will be executed.
         """
         self.ip = ip
         self.login = login
         self.passwd = passwd
         self.logger = j.logger.get('j.sal.machine.ipmi')
 
-        self._cuisine = cuisine
-        self._executor = self._cuisine._executor
+        self._prefab = prefab
+        self._executor = self._prefab._executor
 
     def ipmi(self, commands):
         """Send an ipmi command to the machine."""
-        return self._cuisine.core.run('ipmitool -I lanplus -H %s -U %s -P %s %s'
+        return self._prefab.core.run('ipmitool -I lanplus -H %s -U %s -P %s %s'
                                       % (self.ip, self.login, self.passwd, commands))
 
     def poweron(self):

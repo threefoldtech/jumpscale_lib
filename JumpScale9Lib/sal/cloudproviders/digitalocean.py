@@ -53,7 +53,7 @@ class DigitalOcean:
         if not host:
             raise j.exceptions.RuntimeError(
                 'Could not find machine: %s' % machine_name)
-        rapi = j.tools.cuisine.get(j.tools.executor.get(host))
+        rapi = j.tools.prefab.get(j.tools.executor.get(host))
         if sudo:
             return rapi.core.sudo(command)
         return rapi.core.run(command)

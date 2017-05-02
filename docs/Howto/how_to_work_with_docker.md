@@ -36,13 +36,13 @@ js
 Using the interactive shell we establish a connection to the remote server:
 
 ```
-c = j.tools.cuisine.get("myhost") #can also use ipaddress
+c = j.tools.prefab.get("myhost") #can also use ipaddress
 ```
 
 Alternatively use following command if SSH is listening on another port:
 
 ```
-c = j.tools.cuisine.get("192.168.4.4:2200")`
+c = j.tools.prefab.get("192.168.4.4:2200")`
 ```
 
 For the next step make sure the your SSK public key is know on the remote server and that your private key is loaded in ssh-agent.

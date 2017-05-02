@@ -101,10 +101,10 @@ class OVHClient:
             res.append((item, self.serverGetDetail(item)))
         return res
 
-    def cuisineGet(self, name):
+    def prefabGet(self, name):
         details = self.serverGetDetail(name)
         e = j.tools.executor.get(details["ip"])
-        return e.cuisine
+        return e.prefab
 
     def backupInit(self, name):
         try:
@@ -130,17 +130,17 @@ class OVHClient:
                 raise e
         return res
 
-    def cuisinesGet(self):
+    def prefabsGet(self):
         """
-        return all cuisine connections to all known servers
+        return all prefab connections to all known servers
 
-        returns [(name,cuisine),]
+        returns [(name,prefab),]
         """
         res = []
         for name in self.serversList:
             details = self.serverGetDetail(name)
             e = j.tools.executor.get(details["ip"])
-            res.append((name, e.cuisine))
+            res.append((name, e.prefab))
         return res
 
     def serversWaitInstall(self):

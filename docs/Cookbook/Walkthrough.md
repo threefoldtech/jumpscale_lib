@@ -6,8 +6,8 @@ Complete walkthrough (maybe rethink the name)
     - SALs
         j.sal.docker
     - Cuisine (it's a tool, but it adds remote management)
-        cuisine.systemservices.weave
-        cuisine.systemservices.docker ---> remote one
+        prefab.systemservices.weave
+        prefab.systemservices.docker ---> remote one
     - AtYourService
         do the same thing through bps
         do through j client

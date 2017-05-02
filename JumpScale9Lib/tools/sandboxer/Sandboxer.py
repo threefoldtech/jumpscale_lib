@@ -165,7 +165,7 @@ class Sandboxer:
             path, dest), callbackForMatchDir=callbackForMatchDir, callbackForMatchFile=callbackForMatchFile)
 
     def sandbox_python3(self):
-        j.tools.cuisine.local.builder.sandbox_python()
+        j.tools.prefab.local.builder.sandbox_python()
 
     def dedupe(self, path, storpath, name, excludeFiltersExt=[
                "pyc", "bak"], append=False, reset=False, removePrefix="", compress=True, delete=False, excludeDirs=[]):

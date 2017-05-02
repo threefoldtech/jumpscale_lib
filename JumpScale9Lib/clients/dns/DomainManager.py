@@ -4,18 +4,18 @@ from js9 import j
 class DomainManager:
     def __init__(self):
         self.__jslocation__ = "j.clients.domainmanager"
-        # self.cuisine = j.tools.cuisine.local
+        # self.prefab = j.tools.prefab.local
         self.executor = j.tools.executorLocal
 
-    # def get(self, cuisine):
-    #     self.cuisine = cuisine
+    # def get(self, prefab):
+    #     self.prefab = prefab
     #     return self
 
     @property
     def domains(self):
         domains = []
-        if self.cuisine.core.file_exists('$JSCFGDIR/geodns/dns'):
-            for path in self.cuisine.core.find('$JSCFGDIR/geodns/dns/', type='f', pattern='*.json', recursive=False):
+        if self.prefab.core.file_exists('$JSCFGDIR/geodns/dns'):
+            for path in self.prefab.core.find('$JSCFGDIR/geodns/dns/', type='f', pattern='*.json', recursive=False):
                 basename = j.sal.fs.getBaseName(path)
                 domains.append(basename.rstrip('.json'))
         return domains
@@ -32,9 +32,9 @@ class DomainManager:
         @serial = int, used as a uniques key, need to be incretented after every change of the domain.
         @ns = list of name servers
         """
-        if self.cuisine.core.file_exists("$JSCFGDIR/geodns/dns/%s.json" % domain_name):
-            content = self.cuisine.core.file_read("$JSCFGDIR/geodns/dns/%s.json" % domain_name)
-        domain_instance = Domain(domain_name, self.cuisine, serial, ttl, content,
+        if self.prefab.core.file_exists("$JSCFGDIR/geodns/dns/%s.json" % domain_name):
+            content = self.prefab.core.file_read("$JSCFGDIR/geodns/dns/%s.json" % domain_name)
+        domain_instance = Domain(domain_name, self.prefab, serial, ttl, content,
                                  max_hosts, a_records, cname_records, ns)
         domain_instance.save()
         return domain_instance
@@ -43,7 +43,7 @@ class DomainManager:
         """
         get domain object with dict of relevant records
         """
-        if not self.cuisine.core.file_exists("$JSCFGDIR/geodns/dns/%s.json" % domain_name):
+        if not self.prefab.core.file_exists("$JSCFGDIR/geodns/dns/%s.json" % domain_name):
             raise Exception("domain_name not created")
         return self.ensure_domain(domain_name)
 
@@ -51,7 +51,7 @@ class DomainManager:
         """
         delete domain object
         """
-        self.cuisine.core.file_unlink("$JSCFGDIR/geodns/dns/%s.json" % domain_name)
+        self.prefab.core.file_unlink("$JSCFGDIR/geodns/dns/%s.json" % domain_name)
 
     def add_record(self, domain_name, subdomain, record_type, value, weight=100):
         """
@@ -93,7 +93,7 @@ class DomainManager:
 
 class Domain:
 
-    def __init__(self, name, cuisine, serial=1, ttl=None, content="",
+    def __init__(self, name, prefab, serial=1, ttl=None, content="",
                  max_hosts=2, a_records={}, cname_records={}, ns=[]):
         """
         @name = full domain name to be created or to edit
@@ -104,7 +104,7 @@ class Domain:
         @serial = used as a uniques key
         @ns = list of name servers
         """
-        self.cuisine = cuisine
+        self.prefab = prefab
         self.name = name
         if content:
             self.content = j.data.serializer.json.loads(content)
@@ -198,5 +198,5 @@ class Domain:
         self.content["max_hosts"] = self.max_hosts
         self.content["data"][""]["ns"] = self.ns
         config = j.data.serializer.json.dumps(self.content)
-        self.cuisine.core.file_write("$JSCFGDIR/geodns/dns/%s.json" % self.name, config)
+        self.prefab.core.file_write("$JSCFGDIR/geodns/dns/%s.json" % self.name, config)
         return config

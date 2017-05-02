@@ -24,8 +24,8 @@ class BtrfsExtension:
         self.logger = j.logger.get("btrfs.extension")
 
     @property
-    def cuisine(self):
-        return self._executor.cuisine
+    def prefab(self):
+        return self._executor.prefab
 
     def __btrfs(self, command, action, *args):
         cmd = "%s %s %s %s" % (BASECMD, command, action, " ".join(['"%s"' % a for a in args]))
@@ -39,7 +39,7 @@ class BtrfsExtension:
     @property
     def disks(self):
         if self._disks is None:
-            self._disks = self.cuisine.tools.diskmanager.getDisks()
+            self._disks = self.prefab.tools.diskmanager.getDisks()
         return self._disks
 
     def _snapshotCreate(self, path, dest, readonly=True):
@@ -81,15 +81,15 @@ class BtrfsExtension:
             self.__btrfs("subvolume", "delete", path)
 
     def subvolumeExists(self, path):
-        if not self._executor.cuisine.core.dir_exists(path):
+        if not self._executor.prefab.core.dir_exists(path):
             return False
 
-        rc, res, err = self._executor.cuisine.core.run(
+        rc, res, err = self._executor.prefab.core.run(
             "btrfs subvolume list %s" % path, checkok=False, die=False, showout=False)
 
         if rc > 0:
             if res.find("can't access") != -1:
-                if self._executor.cuisine.core.dir_exists(path):
+                if self._executor.prefab.core.dir_exists(path):
                     raise j.exceptions.RuntimeError(
                         "Path %s exists put is not btrfs subvolume, cannot continue." % path)
                 else:

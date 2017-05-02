@@ -9,7 +9,7 @@ class Xonsh:
         self.__jslocation__ = "j.tools.xonsh"
         self.__imports__ = "colored-traceback,xonsh,pudb,tmuxp"
         self.executor = j.tools.executorLocal
-        self._cuisine = self.executor.cuisine
+        self._prefab = self.executor.prefab
 
     def configAll(self):
         self.config()
@@ -37,7 +37,7 @@ class Xonsh:
 
 
         """
-        self._cuisine.core.file_write("$HOMEDIR/.xonshrc", C)
+        self._prefab.core.file_write("$HOMEDIR/.xonshrc", C)
 
     def configTmux(self, restart=True):
-        self._cuisine.tmux.configure(restart, True)
+        self._prefab.tmux.configure(restart, True)

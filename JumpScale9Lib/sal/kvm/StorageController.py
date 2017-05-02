@@ -24,7 +24,7 @@ class StorageController(BaseKVMComponent):
         Create pool in libvirt
         """
 
-        self.controller.executor.cuisine.core.dir_ensure(pool.poolpath)
+        self.controller.executor.prefab.core.dir_ensure(pool.poolpath)
         cmd = 'chattr +C %s ' % pool.poolpath
         self.controller.executor.execute(cmd)
         self.controller.connection.storagePoolCreateXML(pool.to_xml(), 0)
@@ -45,9 +45,9 @@ class StorageController(BaseKVMComponent):
         """
 
         if pool_name not in self.controller.connection.listStoragePools():
-            poolpath = self.controller.executor.cuisine.core.joinpaths(self.controller.base_path, pool_name)
-            if not self.controller.executor.cuisine.core.dir_exists(poolpath):
-                self.controller.executor.cuisine.core.dir_ensure(poolpath)
+            poolpath = self.controller.executor.prefab.core.joinpaths(self.controller.base_path, pool_name)
+            if not self.controller.executor.prefab.core.dir_exists(poolpath):
+                self.controller.executor.prefab.core.dir_ensure(poolpath)
                 cmd = 'chattr +C %s ' % poolpath
                 self.controller.executor.execute(cmd)
             pool = self.controller.get_template('pool.xml').render(

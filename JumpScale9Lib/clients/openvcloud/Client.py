@@ -570,7 +570,7 @@ class Machine:
 
     def get_ssh_connection(self, requested_sshport=None):
         """
-        Will get a cuisine executor for the machine.
+        Will get a prefab executor for the machine.
         Will attempt to create a portforwarding
         :return:
         """

@@ -1,10 +1,10 @@
 # Cuisine module
 
-Here is an example cuisine module. Read the comments to see what is expected in the module.
+Here is an example prefab module. Read the comments to see what is expected in the module.
 
 ```python
 from js9 import j
-from JumpScale9Lib.tools.cuisine.CuisineFactory import CuisineApp
+from JumpScale9Lib.tools.prefab.CuisineFactory import CuisineApp
 
 
 class CuisineExample(CuisineApp):
@@ -27,7 +27,7 @@ class CuisineExample(CuisineApp):
         super().reset()
         self.core.dir_remove(self.BUILDDIR)
         self.core.dir_remove(self.CODEDIR)
-        self.cuisine.development.pip.reset()
+        self.prefab.development.pip.reset()
 
     def _run(self, command):
         """
@@ -38,9 +38,9 @@ class CuisineExample(CuisineApp):
           self._run("cd $CODEDIR; make")
 
         and not:
-          self.cuisine.core.run(self.replace("cd $CODEDIR; make"))
+          self.prefab.core.run(self.replace("cd $CODEDIR; make"))
         """"
-        return self.cuisine.core.run(self.replace(command))
+        return self.prefab.core.run(self.replace(command))
 
     def build(self,  reset=False):
         """
@@ -51,50 +51,50 @@ class CuisineExample(CuisineApp):
         Make sure your build supports all supported architecture. (linux, OSX, ...)
 
         if your app requires some dependencies, you can if the dependency is installed or not and try to installed it from here.
-        The dependent cuisine module should have the isInstalled method to prevent installing twice the same app on the system.
+        The dependent prefab module should have the isInstalled method to prevent installing twice the same app on the system.
 
         reset is a boolean used to reset before trying to build. If reset is true, we start clean and start the build from scratch
         """
         if reset is False and (self.isInstalled() or self.doneGet('build')):
             return
 
-        self.cuisine.development.git.pullRepo("https://github.com/example/myapp")
-        self.cuisine.core.run("cd $CODEDIR; ./configure --prefix=$BUILDDIR")
-        self.cuisine.core.run("cd $CODEDIR; make")
-        self.cuisine.core.run("cd $CODEDIR; make install")
+        self.prefab.development.git.pullRepo("https://github.com/example/myapp")
+        self.prefab.core.run("cd $CODEDIR; ./configure --prefix=$BUILDDIR")
+        self.prefab.core.run("cd $CODEDIR; make")
+        self.prefab.core.run("cd $CODEDIR; make install")
 
         self.doneSet('build')
 
     def install(self, reset=False):
         """
         install method: copies the result of the build at the correct location in the jumpscale tree.
-        use predefined folder: BINDIR, APPDIR, JSLIBDIR, JSAPPSDIR, ... for complete list check cuisine.core.dir_paths
+        use predefined folder: BINDIR, APPDIR, JSLIBDIR, JSAPPSDIR, ... for complete list check prefab.core.dir_paths
         """
         # copy binaries, shared librairies, configuration templates,...
-        self.cuisine.core.file_copy("$BUILDDIR/bin/myapp", '$BINDIR')
+        self.prefab.core.file_copy("$BUILDDIR/bin/myapp", '$BINDIR')
 
     def start(self, name):
         """
-        start method: if you cuisine module is a starable application, the start method should start the app with some default configuration
+        start method: if you prefab module is a starable application, the start method should start the app with some default configuration
 
-        It can happens you app has two different star method. for example for a mongodb cuisine module, we could have
+        It can happens you app has two different star method. for example for a mongodb prefab module, we could have
         a single instance start and a cluster start.
 
         Make sure to always specify a name/instance for the app, so we can start multiple time the same app on the system.
         for configuration use the $CFGDIR/myapp/name
         """
-        self.cuisine.core.file_write('$TEMPLATEDIR/myapp/config', '$CFGDIR/myapp/name/config')
-        self.cuisine.processmanager.ensure(name='myapp_' % name, cmd='$BINDIR/myapp --config $CFGDIR/myapp/name/config')
+        self.prefab.core.file_write('$TEMPLATEDIR/myapp/config', '$CFGDIR/myapp/name/config')
+        self.prefab.processmanager.ensure(name='myapp_' % name, cmd='$BINDIR/myapp --config $CFGDIR/myapp/name/config')
 
     def stop(self, name):
         """
         stop method, if you have a start method, you need a stop method wich stop the application stared with the start method.
         """
-        self.cuisine.processmanager.stop(name='myapp_' % name)
+        self.prefab.processmanager.stop(name='myapp_' % name)
 
     def getClient(self, name):
         """
-        If your cuisine module is also a SAL over SSH, you can have some specific method discribed in it.
+        If your prefab module is also a SAL over SSH, you can have some specific method discribed in it.
         """
         pass
 ```

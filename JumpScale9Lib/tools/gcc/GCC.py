@@ -105,12 +105,12 @@ class GCC_Mgmt():
 
             print("Create docker container on %s" % node.addr)
             name = 'gcc-%s' % (i + 1)
-            ssh_port = node.cuisine.docker.ubuntu(name, ports="80:80 443:443 53/udp:54", pubkey=pubkey, force=force)
+            ssh_port = node.prefab.docker.ubuntu(name, ports="80:80 443:443 53/udp:54", pubkey=pubkey, force=force)
             containers.append("%s:%s" % (node.addr, ssh_port))
 
             # needed cause weave already listen on port 53 on the host
-            _, ip, _ = node.cuisine.core.run("jsdocker getip -n %s" % name)
-            node.cuisine.core.run(
+            _, ip, _ = node.prefab.core.run("jsdocker getip -n %s" % name)
+            node.prefab.core.run(
                 "iptables -t nat -A PREROUTING -i eth0 -p udp --dport 53 -j DNAT --to-destination %s:53" %
                 ip, action=True)
 
@@ -122,24 +122,24 @@ class GCC_Mgmt():
             self._installDockerApps(node, force=force)
 
     def _installHostApp(self, node, weave_peer, force=False):
-        node.cuisine.development.js8.install()
-        node.cuisine.installer.docker(force=force)
-        node.cuisine.apps.weave.build(start=True, peer=weave_peer, force=force)
+        node.prefab.development.js8.install()
+        node.prefab.installer.docker(force=force)
+        node.prefab.apps.weave.build(start=True, peer=weave_peer, force=force)
 
     def _installDockerApps(self, node, force=False):
-        node.cuisine.development.js8.install()
+        node.prefab.development.js8.install()
 
         peers = ["http://%s" % node.addr for node in self.docker_nodes]
-        node.cuisine.apps.etcd.build(start=True, host="http://%s" % node.addr, peers=peers, force=force)
-        node.cuisine.apps.skydns.build(start=True, force=force)
-        node.cuisine.apps.aydostore(start=True, addr='127.0.0.1:8090', backend="$VARDIR/aydostor", force=force)
-        # node.cuisine.apps.agentcontroller(start=True, force=force)
-        node.cuisine.apps.caddy.build(ssl=True, start=True, dns=node.addr, force=force)
+        node.prefab.apps.etcd.build(start=True, host="http://%s" % node.addr, peers=peers, force=force)
+        node.prefab.apps.skydns.build(start=True, force=force)
+        node.prefab.apps.aydostore(start=True, addr='127.0.0.1:8090', backend="$VARDIR/aydostor", force=force)
+        # node.prefab.apps.agentcontroller(start=True, force=force)
+        node.prefab.apps.caddy.build(ssl=True, start=True, dns=node.addr, force=force)
         self._configCaddy(node)
         self._configSkydns(node)
 
     def _configCaddy(self, node):
-        cfg = node.cuisine.core.file_read("$JSCFGDIR/caddy/caddyfile.conf")
+        cfg = node.prefab.core.file_read("$JSCFGDIR/caddy/caddyfile.conf")
         cfg += """
         proxy /etcd localhost:2379 localhost:4001 {
         without /etcd
@@ -152,8 +152,8 @@ class GCC_Mgmt():
 
         if self._basicAuth:
             cfg += "\nbasicauth /etcd %s %s\n" % (self._basicAuth['login'], self._basicAuth['passwd'])
-        cfg = node.cuisine.core.file_write("$JSCFGDIR/caddy/caddyfile.conf", cfg)
-        node.cuisine.processmanager.ensure('caddy')
+        cfg = node.prefab.core.file_write("$JSCFGDIR/caddy/caddyfile.conf", cfg)
+        node.prefab.processmanager.ensure('caddy')
 
     def _configSkydns(self, node):
         if self._basicAuth:
@@ -161,7 +161,7 @@ class GCC_Mgmt():
         else:
             skydnsCl = j.clients.skydns.get(node.addr)
         print(skydnsCl.setConfig({'dns_addr': '0.0.0.0:53', 'domain': self.domain}))
-        node.cuisine.processmanager.ensure('skydns')
+        node.prefab.processmanager.ensure('skydns')
 
     def healthcheck(self):
         """

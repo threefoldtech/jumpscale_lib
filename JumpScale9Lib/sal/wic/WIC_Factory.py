@@ -96,11 +96,11 @@ class WIC:
         """
         """
         from IPython import embed
-        print("DEBUG NOW get cuisine")
+        print("DEBUG NOW get prefab")
         embed()
         p
 
-        self._cuisine
+        self._prefab
 
     def update(self):
         '''

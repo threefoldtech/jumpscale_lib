@@ -32,7 +32,7 @@ class GCC_Mgmt():
     def install(self):
         """
         """
-        # TODO: use cuisine which is on each node to do all required actions
+        # TODO: use prefab which is on each node to do all required actions
 
     def healthcheck(self):
         """

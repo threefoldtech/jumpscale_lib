@@ -55,7 +55,7 @@ class Docker:
     @property
     def weavesocket(self):
         if self._weaveSocket is None:
-            if not j.tools.cuisine.local.core.command_check('weave'):
+            if not j.tools.prefab.local.core.command_check('weave'):
                 self.logger.warning("weave not found, do not forget to start if installed.")
                 self._weaveSocket = ""
             else:
@@ -76,10 +76,10 @@ class Docker:
         return self._weaveSocket
 
     def weaveInstall(self, ufw=False):
-        j.tools.cuisine.local.systemservices.weave.install(start=True)
+        j.tools.prefab.local.systemservices.weave.install(start=True)
         if ufw:
-            j.tools.cuisine.local.systemservices.ufw.allowIncoming(6783)
-            j.tools.cuisine.local.systemservices.ufw.allowIncoming(6783, protocol="udp")
+            j.tools.prefab.local.systemservices.ufw.allowIncoming(6783)
+            j.tools.prefab.local.systemservices.ufw.allowIncoming(6783, protocol="udp")
 
     # def connectRemoteTCP(self, base_url):
     #     self.base_url = base_url
@@ -668,7 +668,7 @@ class Docker:
         """
         self.removeDocker()
 
-        j.tools.cuisine.local.docker.install(force=True)
+        j.tools.prefab.local.docker.install(force=True)
 
         self.init()
 
@@ -738,4 +738,4 @@ class Docker:
             self.id = "docker:%s" % name
 
         def execute(self, cmds, die=True, checkok=None, async=False, showout=True, timeout=0, env={}):
-            return self._cuisineDockerHost.core.run("docker exec %s  %s" % (self.name, cmds))
+            return self._prefabDockerHost.core.run("docker exec %s  %s" % (self.name, cmds))

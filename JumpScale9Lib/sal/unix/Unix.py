@@ -14,9 +14,9 @@ from JumpScale9.data.time.TimeInterval import TimeInterval as TimeIntervalUnit
 # TODO: *3 fix, move to other sal's
 
 # TODO: cron needs to be moved into SAL
-# TODO: move many of these methods to cuisine2 (our cuisine) or to system if more appropriate
+# TODO: move many of these methods to prefab2 (our prefab) or to system if more appropriate
 # TODO: this file needs to go away
-# TODO: make sure we use proper names & add to right cuisine module
+# TODO: make sure we use proper names & add to right prefab module
 
 
 def user_in_group(username, groupname):

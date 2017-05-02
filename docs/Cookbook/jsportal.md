@@ -1,15 +1,15 @@
 ## jsportal
 
 - open js schell ```js```
-- to install through cuisine
+- to install through prefab
 
 ```
-j.tools.cuisine.local.apps.mongodb.install()
+j.tools.prefab.local.apps.mongodb.install()
 #will install deps & start from branch
-j.tools.cuisine.local.apps.portal.install(True,True,"8.1.0")
+j.tools.prefab.local.apps.portal.install(True,True,"8.1.0")
 
-j.tools.cuisine.local.solutions.cockpit.install_deps()
-j.tools.cuisine.local.solutions.cockpit.install(True,"8.1.0")
+j.tools.prefab.local.solutions.cockpit.install_deps()
+j.tools.prefab.local.solutions.cockpit.install(True,"8.1.0")
 ```
 
 ## login

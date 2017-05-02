@@ -1,10 +1,10 @@
 ## ipfs
 
 - ipfs is a a distributed filesystem using peer2peer techniques
-- to install through cuisine
+- to install through prefab
 
 ```
-j.tools.cuisine.local.apps.ipfs.install()
+j.tools.prefab.local.apps.ipfs.install()
 ```
 
 ```

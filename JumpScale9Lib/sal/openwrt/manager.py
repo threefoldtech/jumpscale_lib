@@ -135,7 +135,7 @@ class OpenWRTFactory:
 
     def get(self, connection=None):
         """
-        Return disk manager for that cuisine connection.
+        Return disk manager for that prefab connection.
         """
         if connection is None:
             connection = j.ssh.connection

@@ -75,15 +75,15 @@ class Machine(BaseKVMComponent):
         @param passwd str: set the passwd to be set in the machine on boot.
         @param sshkey str: public sshkey to authorize in the vm
         """
-        cuisine = self.controller.executor.cuisine
-        cuisine.core.dir_ensure("%s/metadata/%s" % (self.controller.base_path, self.name))
+        prefab = self.controller.executor.prefab
+        prefab.core.dir_ensure("%s/metadata/%s" % (self.controller.base_path, self.name))
         if self.cloud_init:
 
             sshkeys_to_authorize = [self.controller.pubkey]
             if sshkey:
                 sshkeys_to_authorize.append(sshkey)
 
-            cuisine.core.dir_ensure("%s/metadata/%s" % (self.controller.base_path, self.name))
+            prefab.core.dir_ensure("%s/metadata/%s" % (self.controller.base_path, self.name))
             userdata = "#cloud-config\n"
             userdata += yaml.dump({'chpasswd': {'expire': False},
                                    'ssh_pwauth': True,
@@ -97,15 +97,15 @@ class Machine(BaseKVMComponent):
             metadata = '{"local-hostname":"vm-%s"}' % self.name
             userdata_path = "%s/metadata/%s/user-data" % (self.controller.base_path, self.name)
             metadata_path = "%s/metadata/%s/meta-data" % (self.controller.base_path, self.name)
-            cuisine.core.file_write(userdata_path, userdata)
-            cuisine.core.file_write(metadata_path, metadata)
+            prefab.core.file_write(userdata_path, userdata)
+            prefab.core.file_write(metadata_path, metadata)
             cmd = "genisoimage -o {base}/{name}_ci.iso -V cidata -r -J {metadata_path} {userdata_path}".format(
                 base=self.controller.base_path,
                 name=self.name,
                 metadata_path=metadata_path,
                 userdata_path=userdata_path)
-            cuisine.core.run(cmd)
-            cuisine.core.dir_remove("%s/images/%s " % (self.controller.base_path, self.name))
+            prefab.core.run(cmd)
+            prefab.core.dir_remove("%s/images/%s " % (self.controller.base_path, self.name))
         self.domain = self.controller.connection.defineXML(self.to_xml())
 
     def start(self):
@@ -218,7 +218,7 @@ class Machine(BaseKVMComponent):
         port = 22
         if self.cloud_init and not self._executor:
             for i in range(5):
-                rc = self.controller.executor.cuisine.core.run('echo | nc %s %s' % (self.ip, port))[0]
+                rc = self.controller.executor.prefab.core.run('echo | nc %s %s' % (self.ip, port))[0]
                 if rc == 0:
                     break
                 sleep(5)
@@ -227,11 +227,11 @@ class Machine(BaseKVMComponent):
         return self._executor
 
     @property
-    def cuisine(self):
+    def prefab(self):
         """
-        Return cuisine object connected to this instance of the machine.
+        Return prefab object connected to this instance of the machine.
         """
-        return self.executor.cuisine
+        return self.executor.prefab
 
     @property
     def state(self):

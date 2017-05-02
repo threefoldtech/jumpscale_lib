@@ -82,19 +82,19 @@ class DocGenerator:
     def installDeps(self, reset=False):
         if int(j.core.db.get("docgenerator:installed")) == 1 and reset == False:
             return
-        cuisine = j.tools.cuisine.local
-        cuisine.apps.nodejs.install()
-        cuisine.core.run("sudo npm install -g phantomjs-prebuilt", profile=True)
-        cuisine.core.run("sudo npm install -g mermaid", profile=True)
-        cuisine.apps.caddy.build()
+        prefab = j.tools.prefab.local
+        prefab.apps.nodejs.install()
+        prefab.core.run("sudo npm install -g phantomjs-prebuilt", profile=True)
+        prefab.core.run("sudo npm install -g mermaid", profile=True)
+        prefab.apps.caddy.build()
         if "darwin" in str(j.core.platformtype.myplatform):
-            cuisine.core.run("brew install graphviz")
-            cuisine.core.run("brew install hugo")
+            prefab.core.run("brew install graphviz")
+            prefab.core.run("brew install hugo")
         elif "ubuntu" in str(j.core.platformtype.myplatform):
-            cuisine.package.install('graphviz')
-            cuisine.package.install('hugo')
-        j.tools.cuisine.local.development.golang.install()
-        j.tools.cuisine.local.apps.caddy.build()
+            prefab.package.install('graphviz')
+            prefab.package.install('hugo')
+        j.tools.prefab.local.development.golang.install()
+        j.tools.prefab.local.apps.caddy.build()
         j.core.db.set("docgenerator:installed", 1)
 
     def startWebserver(self, generateCaddyFile=False):
@@ -106,7 +106,7 @@ class DocGenerator:
         dest = "%s/docgenerator/caddyfile" % j.dirs.VARDIR
         if not j.sal.fs.exists(dest, followlinks=True):
             self.generateCaddyFile()
-        j.tools.cuisine.local.apps.caddy.start(ssl=False, agree=True, cfg_path=dest)
+        j.tools.prefab.local.apps.caddy.start(ssl=False, agree=True, cfg_path=dest)
         self.logger.info("go to %a" % self.webserver)
 
     def generateCaddyFile(self):

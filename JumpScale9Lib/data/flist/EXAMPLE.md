@@ -1,8 +1,8 @@
 ## Installation
 Make sure you have the required dependencies
 ```python
-j.tools.cuisine.local.development.rocksdb.install()
-j.tools.cuisine.local.development.g8storeclient.install()
+j.tools.prefab.local.development.rocksdb.install()
+j.tools.prefab.local.development.g8storeclient.install()
 ```
 
 ## Creating a plist

@@ -133,7 +133,7 @@ class Interface(BaseKVMComponent):
         if not self._ip:
             bridge_name = self.bridge.name
             mac = self.mac
-            rc, ip, err = self.controller.executor.cuisine.core.run(
+            rc, ip, err = self.controller.executor.prefab.core.run(
                 "nmap -n -sn $(ip r | grep %s | grep -v default | awk '{print $1}') | grep -iB 2 '%s' | head -n 1 | awk '{print $NF}'" %
                 (bridge_name, mac))
             ip_pat = re.compile(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}")

@@ -143,10 +143,10 @@ Get machine by name passing the controller to search with.
 Get the ip of the machine
 ```
 
-#### cuisine
+#### prefab
 
 ```
-Get a cuisine object to the machine (only if created using cloud_init=True)
+Get a prefab object to the machine (only if created using cloud_init=True)
 ```
 
 #### state

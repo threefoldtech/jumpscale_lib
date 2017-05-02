@@ -18,13 +18,13 @@ class DiskManager:
         #                                    unixsocket=j.sal.fs.joinPaths(j.dirs.TMPDIR, 'redis.sock')))
 
     @property
-    def cuisine(self):
-        return self._executor.cuisine
+    def prefab(self):
+        return self._executor.prefab
 
     def _loadconfig(self, path):
         path = path + '/.partition_config.yaml'
-        if self.cuisine.core.file_exists(path):
-            yaml = self.cuisine.core.file_read(path)
+        if self.prefab.core.file_exists(path):
+            yaml = self.prefab.core.file_read(path)
             return j.data.serializer.yaml.loads(yaml)
         return {}
 

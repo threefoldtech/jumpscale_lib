@@ -82,7 +82,7 @@ class BlkInfo:
         """
         remote partition from fstab
         """
-        fstab = self._executor.cuisine.core.file_read('/etc/fstab').splitlines()
+        fstab = self._executor.prefab.core.file_read('/etc/fstab').splitlines()
         dirty = False
 
         for i in range(len(fstab) - 1, -1, -1):
@@ -94,7 +94,7 @@ class BlkInfo:
         if not dirty:
             return
 
-        self._executor.cuisine.core.file_write('/etc/fstab', '\n'.join(fstab), mode='0644')
+        self._executor.prefab.core.file_write('/etc/fstab', '\n'.join(fstab), mode='0644')
 
     def setAutoMount(self, options='defaults', _dump=0, _pass=0):
         """
@@ -107,9 +107,9 @@ class BlkInfo:
                 raise RuntimeError("path cannot be empty")
         else:
             path = self.hrd.get('mountpath')
-        self._executor.cuisine.core.dir_ensure(path)
+        self._executor.prefab.core.dir_ensure(path)
 
-        fstab = self._executor.cuisine.core.file_read('/etc/fstab').splitlines()
+        fstab = self._executor.prefab.core.file_read('/etc/fstab').splitlines()
 
         for i in range(len(fstab) - 1, -1, -1):
             line = fstab[i]
@@ -133,7 +133,7 @@ class BlkInfo:
 
         fstab.append(entry)
 
-        self._executor.cuisine.core.file_write('/etc/fstab', '\n'.join(fstab), mode='0644')
+        self._executor.prefab.core.file_write('/etc/fstab', '\n'.join(fstab), mode='0644')
 
     def _validateHRD(self, hrd):
         for field in ['filesystem', 'mountpath', 'protected', 'type']:

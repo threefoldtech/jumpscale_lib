@@ -598,7 +598,7 @@ class Action:
 
                 try:
                     if self.selfobj != "**NOTHING**":
-                        # here we try to reconstruct the cuisine object@ or other self objects
+                        # here we try to reconstruct the prefab object@ or other self objects
                         self.result = self.method(self.selfobj, *self.args, **kwargs)
                     else:
                         self.result = self.method(*self.args, **kwargs)

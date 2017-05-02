@@ -14,7 +14,7 @@
 - [Use the Shell & Debug](how_to_use_the_shell_and_debug.md)
 - [Use FS Walker](how_to_use_walker.md)
 - [Add a New SAL](how_to_add_a_new_SAL.md)
-- [Write a cuisine module](how_to_write_cuisine_module.md)
+- [Write a prefab module](how_to_write_prefab_module.md)
 
 ```
 !!!

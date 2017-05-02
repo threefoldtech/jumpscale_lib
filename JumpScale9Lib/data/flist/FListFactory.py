@@ -152,7 +152,7 @@ class FListArchiver:
     # currently, this in-memory way is used
 
     def __init__(self, ipfs_cfgdir=None):
-        cl = j.tools.cuisine.local
+        cl = j.tools.prefab.local
         self._ipfs = cl.core.command_location('ipfs')
         if not ipfs_cfgdir:
             self._env = 'IPFS_PATH=%s' % cl.core.replace('$JSCFGDIR/ipfs/main')

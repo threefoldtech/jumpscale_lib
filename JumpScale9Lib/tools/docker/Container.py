@@ -29,7 +29,7 @@ class Container:
         self._ssh_port = None
 
         self._sshclient = None
-        self._cuisine = None
+        self._prefab = None
         self._executor = None
 
     @property
@@ -60,10 +60,10 @@ class Container:
         return self._executor
 
     @property
-    def cuisine(self):
-        if self._cuisine is None:
-            self._cuisine = j.tools.cuisine.get(self.executor, usecache=False)
-        return self._cuisine
+    def prefab(self):
+        if self._prefab is None:
+            self._prefab = j.tools.prefab.get(self.executor, usecache=False)
+        return self._prefab
 
     def run(self, cmd):
         """
@@ -154,8 +154,8 @@ class Container:
 
         @param hostname str: name of hostname.
         """
-        self.cuisine.core.sudo("echo '%s' > /etc/hostname" % hostname)
-        self.cuisine.core.sudo("echo %s >> /etc/hosts" % hostname)
+        self.prefab.core.sudo("echo '%s' > /etc/hostname" % hostname)
+        self.prefab.core.sudo("echo %s >> /etc/hosts" % hostname)
 
     def getPubPortForInternalPort(self, port):
         """
@@ -191,8 +191,8 @@ class Container:
         """
         keys = set()
 
-        home = j.tools.cuisine.local.bash.home
-        user_info = [j.tools.cuisine.local.user.check(user) for user in j.tools.cuisine.local.user.list()]
+        home = j.tools.prefab.local.bash.home
+        user_info = [j.tools.prefab.local.user.check(user) for user in j.tools.prefab.local.user.list()]
         user = [i['name'] for i in user_info if i['home'] == home]
         user = user[0] if user else 'root'
 
@@ -210,11 +210,11 @@ class Container:
                     dir = j.tools.path.get('%s/.ssh' % home)
                     if dir.listdir("docker_default.pub") == []:
                         # key does not exist, lets create one
-                        j.tools.cuisine.local.ssh.keygen(user=user, name="docker_default")
+                        j.tools.prefab.local.ssh.keygen(user=user, name="docker_default")
                     key = j.sal.fs.readFile(
                         filename="%s/.ssh/docker_default.pub" % home)
                     # load the key
-                    j.tools.cuisine.local.core.run(
+                    j.tools.executorLocal.execute(
                         "ssh-add %s/.ssh/docker_default" % home)
 
         j.sal.fs.writeFile(filename="%s/.ssh/known_hosts" % home, contents="")
@@ -222,7 +222,7 @@ class Container:
         if key is None or key.strip() == "":
             raise j.exceptions.Input("ssh key cannot be empty (None)")
 
-        self.cuisine.ssh.authorize("root", key)
+        self.prefab.ssh.authorize("root", key)
 
         # IS THERE A REASON TO DO IT THE LONG WAY BELOW?
         # key_tarstream = BytesIO()
@@ -315,11 +315,11 @@ class Container:
         get a file located at source in the host to dest on the host
 
         """
-        if not self._cuisine.core.file_exists(source):
+        if not self._prefab.core.file_exists(source):
             raise j.exceptions.Input(msg="%s not found in container" % source)
         ddir = j.sal.fs.getDirName(dest)
         j.sal.fs.createDir(ddir)
-        content = self._cuisine.core.file_read(source)
+        content = self._prefab.core.file_read(source)
         j.sal.fs.writeFile(dest, content)
 
     def __str__(self):

@@ -39,11 +39,11 @@ class SyncthingClient:
         print("execute cmd on %s" % self.addr)
         print(cmds)
         if self.addr == "localhost":
-            return j.tools.cuisine.local.core.execute_bash(content=cmds, die=die)
+            return j.tools.prefab.local.core.execute_bash(content=cmds, die=die)
         else:
-            executor = j.tools.cuisine.get(
+            executor = j.tools.prefab.get(
                 j.tools.executor.getSSHBased(addr=self.addr, port=self.sshport))
-            return executor.cuisine.core.execute_bash(content=cmds, die=die)
+            return executor.prefab.core.execute_bash(content=cmds, die=die)
 
     def install(self, name=""):
         C = """

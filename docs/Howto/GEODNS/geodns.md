@@ -2,18 +2,18 @@
 
 ## install geodns
 ```python
-cuisine = j.tools.cuisine.local
-cuisine.apps.geodns.install()
+prefab = j.tools.prefab.local
+prefab.apps.geodns.install()
 ```
 ## start geodns
 ```python
-cuisine.apps.geodns.start()
+prefab.apps.geodns.start()
 ```
 
 ## create a domain
 
 ```python
-domain_manager = j.sal.domainmanager.get(cuisine)
+domain_manager = j.sal.domainmanager.get(prefab)
 domain = domain_manager.ensure_domain("gig.com", serial=3, ttl=600)
 ```
 ## adding **A** record
