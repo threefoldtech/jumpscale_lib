@@ -160,10 +160,10 @@ class FileSystemKeyValueStoreTestCase(unittest.TestCase,
         j.sal.fs.removeDirTree(self._storeDir)
 
     def testFactory(self):
-        storeA = j.servers.kvs.getStore(KeyValueStoreType.FS,
+        storeA = j.data.kvs.getStore(KeyValueStoreType.FS,
                                         self.STORE_NAME, self.STORE_NAMESPACE)
 
-        storeB = j.servers.kvs.getFSStore(self.STORE_NAME,
+        storeB = j.data.kvs.getFSStore(self.STORE_NAME,
                                           self.STORE_NAMESPACE)
 
         self.assertEquals(storeA, storeB)
@@ -175,10 +175,10 @@ class MemoryKeyValueStoreTestCase(unittest.TestCase, KeyValueStoreTestCaseBase):
         self._store = MemoryKeyValueStore()
 
     def testFactory(self):
-        storeA = j.servers.kvs.getStore(KeyValueStoreType.MEMORY,
+        storeA = j.data.kvs.getStore(KeyValueStoreType.MEMORY,
                                         self.STORE_NAME, self.STORE_NAMESPACE)
 
-        storeB = j.servers.kvs.getMemoryStore(self.STORE_NAME,
+        storeB = j.data.kvs.getMemoryStore(self.STORE_NAME,
                                               self.STORE_NAMESPACE)
 
         self.assertEquals(storeA, storeB)

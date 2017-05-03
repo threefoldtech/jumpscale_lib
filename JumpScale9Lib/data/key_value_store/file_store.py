@@ -20,7 +20,7 @@ class FileKeyValueStore(KeyValueStoreBase):
         self.serializers = serializers
         self._indexkey = "index:%s" % namespace
         self.type = "file"
-        self.logger = j.logger.get("j.servers.kvs.file")
+        self.logger = j.logger.get("j.data.kvs.file")
 
     def _getKey(self, key):
         return '%s:%s' % (self.namespace, key)

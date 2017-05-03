@@ -44,7 +44,7 @@ class NameSpaceLoader:
 class System(NameSpaceLoader):
 
     def __init__(self):
-        self.__jslocation__ = "j.data.models.system"
+        self.__jslocation__ = "j.data.models_system"
         self.__imports__ = "mongoengine"
         super(System, self).__init__(Models)
 
@@ -52,6 +52,6 @@ class System(NameSpaceLoader):
 class CockpitEvent(NameSpaceLoader):
 
     def __init__(self):
-        self.__jslocation__ = "j.data.models.cockpit_event"
+        self.__jslocation__ = "j.data.models_cockpit_event"
         self.__imports__ = "mongoengine"
         super(CockpitEvent, self).__init__(CockpitEventModels)

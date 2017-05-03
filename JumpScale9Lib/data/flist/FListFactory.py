@@ -37,7 +37,7 @@ class FListFactory(object):
 
         # now default is mem, if we want redis as default store uncomment next, but leave for now, think mem here ok
         if kvs is None:
-            kvs = j.servers.kvs.getRedisStore(name="flist",
+            kvs = j.data.kvs.getRedisStore(name="flist",
                                               namespace=name,
                                               unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
 
@@ -57,7 +57,7 @@ class FListFactory(object):
         schema = self.getCapnpSchema()
 
         if kvs is None:
-            kvs = j.servers.kvs.getRedisStore(name="flist",
+            kvs = j.data.kvs.getRedisStore(name="flist",
                                               namespace=name,
                                               unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
 
@@ -76,7 +76,7 @@ class FListFactory(object):
         schema = self.getCapnpSchema()
 
         if kvs is None:
-            kvs = j.servers.kvs.getRedisStore(name="flist", namespace=name, unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
+            kvs = j.data.kvs.getRedisStore(name="flist", namespace=name, unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
 
         collection = j.data.capnp.getModelCollection(
             schema.UserGroup, category="ug_%s" % name, modelBaseClass=ACIModel.ACIModel,

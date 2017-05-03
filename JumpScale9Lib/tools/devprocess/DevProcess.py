@@ -144,7 +144,7 @@ class DevProcess:
         """
 
         redis_config = j.core.atyourservice.config['redis']
-        command_queue = j.servers.kvs.getRedisStore("ays_server", namespace='db', **redis_config)
+        command_queue = j.data.kvs.getRedisStore("ays_server", namespace='db', **redis_config)
         payload = {"command": "event", "event": event_name, "args": args}
         self.logger.info("payload: ", payload)
         command_queue.queuePut("command", j.data.serializer.json.dumps(payload))

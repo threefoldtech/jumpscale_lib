@@ -40,7 +40,7 @@ class ECODumper(Dumper.BaseDumper):
 
             obj = j.data.serializer.json.loads(data)
 
-            eco = j.data.models.system.Errorcondition()
+            eco = j.data.models_system.Errorcondition()
             eco.guid = obj['key']
             for key in ('errormessage', 'errormessagepub', 'code', 'funcname', 'funcfilename', 'closetime',
                         'occurrences', 'lasttime', 'backtrace', 'level', 'type', 'tags', 'gid', 'nid'):

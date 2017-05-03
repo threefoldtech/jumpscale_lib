@@ -90,7 +90,7 @@ class IssueManager:
         """
         schema = self.getIssueSchema()
         if not kvs:
-            kvs = j.servers.kvs.getRedisStore(name=self.store, namespace=self.namespace + ":issue",
+            kvs = j.data.kvs.getRedisStore(name=self.store, namespace=self.namespace + ":issue",
                                               unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
 
         collection = j.data.capnp.getModelCollection(
@@ -101,7 +101,7 @@ class IssueManager:
     def getUserCollectionFromDB(self, kvs=None):
         schema = self.getUserSchema()
         if not kvs:
-            kvs = j.servers.kvs.getRedisStore(name=self.store, namespace=self.namespace + ":user",
+            kvs = j.data.kvs.getRedisStore(name=self.store, namespace=self.namespace + ":user",
                                               unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
 
         collection = j.data.capnp.getModelCollection(
@@ -112,7 +112,7 @@ class IssueManager:
     def getRepoCollectionFromDB(self, kvs=None):
         schema = self.getRepoSchema()
         if not kvs:
-            kvs = j.servers.kvs.getRedisStore(name=self.store, namespace=self.namespace + ":repo",
+            kvs = j.data.kvs.getRedisStore(name=self.store, namespace=self.namespace + ":repo",
                                               unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
 
         collection = j.data.capnp.getModelCollection(
@@ -123,7 +123,7 @@ class IssueManager:
     def getOrgCollectionFromDB(self, kvs=None):
         schema = self.getOrgSchema()
         if not kvs:
-            kvs = j.servers.kvs.getRedisStore(name=self.store, namespace=self.namespace + ":org",
+            kvs = j.data.kvs.getRedisStore(name=self.store, namespace=self.namespace + ":org",
                                               unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
 
         collection = j.data.capnp.getModelCollection(

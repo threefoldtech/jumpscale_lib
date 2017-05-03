@@ -14,7 +14,7 @@ class DiskManager:
         self.disks = []
         self._executor = j.tools.executorLocal
         # self.cache = j.data.cache.get(
-        #     db=j.servers.kvs.getRedisStore(name="cache",
+        #     db=j.data.kvs.getRedisStore(name="cache",
         #                                    unixsocket=j.sal.fs.joinPaths(j.dirs.TMPDIR, 'redis.sock')))
 
     @property

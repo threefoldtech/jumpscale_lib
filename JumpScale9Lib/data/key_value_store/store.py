@@ -23,7 +23,7 @@ class KeyValueStoreBase:  # , metaclass=ABCMeta):
     def __init__(self, namespace, name="", serializers=[], masterdb=None, cache=None, changelog=None):
         self.namespace = namespace
         self.name = name
-        self.logger = j.logger.get('j.servers.kvs')
+        self.logger = j.logger.get('j.data.kvs')
         self.serializers = serializers or list()
         self.unserializers = list(reversed(self.serializers))
         self.cache = cache
@@ -145,7 +145,7 @@ class KeyValueStoreBase:  # , metaclass=ABCMeta):
 
         typeb = ttype.to_bytes(1, byteorder='big', signed=False)
 
-        aclb = j.servers.kvs._aclSerialze(acl)
+        aclb = j.data.kvs._aclSerialze(acl)
 
         # val = snappy.compress(val)
 
@@ -203,7 +203,7 @@ class KeyValueStoreBase:  # , metaclass=ABCMeta):
         aclbin = data[counter:counter + 17 * nrsecrets + 1]
         counter += 17 * nrsecrets + 1
 
-        acl = j.servers.kvs._aclUnserialze(aclbin)
+        acl = j.data.kvs._aclUnserialze(aclbin)
 
         val = data[counter:-4]
 
@@ -311,7 +311,7 @@ class KeyValueStoreBase:  # , metaclass=ABCMeta):
 
         (val, owner, schema, expire, acl) = self._decode(data)
 
-        if j.servers.kvs._aclCheck(acl, owner, secret, modecheck) is False:
+        if j.data.kvs._aclCheck(acl, owner, secret, modecheck) is False:
             raise j.exceptions.Input(message="cannot get obj with key '%s' because mode '%s' is not allowed." % (
                 key, modecheck), level=1, source="", tags="", msgpub="")
 

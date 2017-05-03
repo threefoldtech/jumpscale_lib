@@ -34,7 +34,7 @@ class StoreFactory:
 
     def test(self):
 
-        for db in [j.servers.kvs.getRedisStore(name="kvs", namespace="testdb"), j.servers.kvs.getMemoryStore()]:
+        for db in [j.data.kvs.getRedisStore(name="kvs", namespace="testdb"), j.data.kvs.getMemoryStore()]:
 
             print(db)
             db.destroy()
@@ -72,11 +72,11 @@ class StoreFactory:
 
             db.destroy()
 
-        # cache = j.servers.kvs.getRedisCacheLocal()
+        # cache = j.data.kvs.getRedisCacheLocal()
         cache = None  # NOT IMPLEMENTED YET
 
         serializer = j.data.serializer.json
-        db = j.servers.kvs.getRedisStore(name="kvs", namespace="testdb", serializers=[serializer], cache=cache)
+        db = j.data.kvs.getRedisStore(name="kvs", namespace="testdb", serializers=[serializer], cache=cache)
         db.destroy()
         obj = [1, 2, 3, 4]
         secret = j.data.hash.md5_string("a")  # generate whatever secret (needs to be 32 hex byte str eg result of md5)
@@ -127,9 +127,9 @@ class StoreFactory:
     def getRedisCacheLocal(self):
         """
         example:
-        cache=j.servers.kvs.getRedisCacheLocal()
+        cache=j.data.kvs.getRedisCacheLocal()
         serializer=j.data.serializer.json
-        db=j.servers.kvs.getRedisStore(namespace="cache",serializers=[serializer],cache=cache)
+        db=j.data.kvs.getRedisStore(namespace="cache",serializers=[serializer],cache=cache)
 
         """
         # for now just local to test

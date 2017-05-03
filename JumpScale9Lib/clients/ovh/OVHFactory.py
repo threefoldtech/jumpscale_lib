@@ -33,7 +33,7 @@ class OVHClient:
         id = "ovhclient_%s" % consumerkey
         self.cache = j.data.cache.get(
             id=id,
-            db=j.servers.kvs.getRedisStore(name="cache",
+            db=j.data.kvs.getRedisStore(name="cache",
                                            namespace=id,
                                            unixsocket=j.sal.fs.joinPaths(j.dirs.TMPDIR, 'redis.sock')))
 

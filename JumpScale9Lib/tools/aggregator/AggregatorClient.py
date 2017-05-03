@@ -207,12 +207,12 @@ class AggregatorClient:
         an easy way to structure the objects well is to use our model layer see:
 
         objects worth filling in:
-        - j.data.models.system.Node()
-        - j.data.models.system.Machine()
-        - j.data.models.system.Nic()
-        - j.data.models.system.Process()
-        - j.data.models.system.VDisk()
-        - disk=j.data.models.system.Disk()
+        - j.data.models_system.Node()
+        - j.data.models_system.Machine()
+        - j.data.models_system.Nic()
+        - j.data.models_system.Process()
+        - j.data.models_system.VDisk()
+        - disk=j.data.models_system.Disk()
 
         to then get the json do:
             disk.to_json()

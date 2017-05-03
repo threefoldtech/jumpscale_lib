@@ -48,7 +48,7 @@ class GitlabInstance:
 
         # will be default 5 min
         self.cache = j.tools.cache.get(
-            j.servers.kvs.getRedisStore(namespace="cache"))
+            j.data.kvs.getRedisStore(namespace="cache"))
 
     def getFile(self, group, project, path):
         """

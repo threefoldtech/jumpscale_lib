@@ -270,9 +270,9 @@ class Diskmanager:
                                         # TODO (*4*) ---> get connection from
                                         # AYS, lets discuss this does not seem
                                         # right any longer
-                                        j.data.models.system.connect2mongo()
+                                        j.data.models_system.connect2mongo()
 
-                                        disk = j.data.models.system.Disk()
+                                        disk = j.data.models_system.Disk()
                                         for key, val in list(disko.__dict__.items()):
                                             disk.__dict__[key] = val
 

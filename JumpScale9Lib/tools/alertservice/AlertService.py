@@ -37,11 +37,11 @@ class AlertService:
         self.timers = dict()
         self.loadHandlers()
         # TODO *3 ---> get mongoengine connection from AYS
-        j.data.models.system.connect2mongo()
+        j.data.models_system.connect2mongo()
 
     def getUsersForLevel(self, level):
         groupname = "level%s" % level
-        users = j.data.models.system.User.find({'groups': {'$all': [groupname, 'alert']}, 'active': True})
+        users = j.data.models_system.User.find({'groups': {'$all': [groupname, 'alert']}, 'active': True})
         return users
 
     def getUserEmails(self, user):
@@ -74,7 +74,7 @@ class AlertService:
             handler.updateState(alert)
 
     def getAlert(self, id):
-        return j.data.models.system.Alert.get(id)
+        return j.data.models_system.Alert.get(id)
 
     def escalateHigher(self, alert):
         self.timers.pop(alert['guid'], None)

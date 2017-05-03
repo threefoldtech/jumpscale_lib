@@ -14,7 +14,7 @@ import zernoNetConfigModel_capnp as ZeroNetConfigModel
 class ZeroNetConfigDB():
 
     def __init__(self, category):
-        self.db = j.servers.kvs.getRedisStore("0netconfig", changelog=False)
+        self.db = j.data.kvs.getRedisStore("0netconfig", changelog=False)
 
     def set(self, key, obj):
         from IPython import embed

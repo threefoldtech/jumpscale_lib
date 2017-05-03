@@ -11,15 +11,15 @@ class FlistMerger:
 
         How to use:
 
-        kvs = j.servers.kvs.getRocksDBStore(name='flist', namespace=None, dbpath="/tmp/jumpcale.db")
+        kvs = j.data.kvs.getRocksDBStore(name='flist', namespace=None, dbpath="/tmp/jumpcale.db")
         fjs = j.tools.flist.getFlist(rootpath='/tmp/rootB', kvs=kvs)
         fjs.add('/tmp/rootB')
 
-        kvs = j.servers.kvs.getRocksDBStore(name='flist', namespace=None, dbpath="/tmp/ardb.db")
+        kvs = j.data.kvs.getRocksDBStore(name='flist', namespace=None, dbpath="/tmp/ardb.db")
         fardb = j.tools.flist.getFlist(rootpath='/tmp/rootA', kvs=kvs)
         fardb.add('/tmp/rootA')
 
-        kvs = j.servers.kvs.getRocksDBStore(name='flist', namespace=None, dbpath="/tmp/merge.db")
+        kvs = j.data.kvs.getRocksDBStore(name='flist', namespace=None, dbpath="/tmp/merge.db")
         fdest = j.tools.flist.getFlist(rootpath='/', kvs=kvs)
 
         merger = j.tools.flist.get_merger()
@@ -187,15 +187,15 @@ def specialFunction(dirobj, type, name, args, subobj):
 
 
 def main():
-    kvs = j.servers.kvs.getRocksDBStore(name='flist', namespace=None, dbpath="/tmp/jumpcale.db")
+    kvs = j.data.kvs.getRocksDBStore(name='flist', namespace=None, dbpath="/tmp/jumpcale.db")
     fjs = j.tools.flist.getFlist(rootpath='/tmp/rootB', kvs=kvs)
     fjs.add('/tmp/rootB')
 
-    kvs = j.servers.kvs.getRocksDBStore(name='flist', namespace=None, dbpath="/tmp/ardb.db")
+    kvs = j.data.kvs.getRocksDBStore(name='flist', namespace=None, dbpath="/tmp/ardb.db")
     fardb = j.tools.flist.getFlist(rootpath='/tmp/rootA', kvs=kvs)
     fardb.add('/tmp/rootA')
 
-    kvs = j.servers.kvs.getRocksDBStore(name='flist', namespace=None, dbpath="/tmp/merge.db")
+    kvs = j.data.kvs.getRocksDBStore(name='flist', namespace=None, dbpath="/tmp/merge.db")
     fdest = j.tools.flist.getFlist(rootpath='/', kvs=kvs)
 
     merger = FlistMerger()
