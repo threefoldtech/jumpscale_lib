@@ -75,7 +75,7 @@ class DaemonCMDS:
         log eco object (as dict)
         """
         eco["epoch"] = self.daemon.now
-        eco = j.errorconditionhandler.getErrorConditionObject(ddict=eco)
+        eco = j.errorhandler.getErrorConditionObject(ddict=eco)
         self.daemon.eventhandlingTE.executeV2(eco=eco, history=self.daemon.eventsMemLog)
 
     def introspect(self, cat, session=None):
@@ -229,7 +229,7 @@ class Daemon:
                         jobqueue = cmds._getJobQueue(job["guid"])
                         jobr = jobqueue.get(True, 60)
                         if not jobr:
-                            eco = j.errorconditionhandler.getErrorConditionObject(
+                            eco = j.errorhandler.getErrorConditionObject(
                                 msg="Command %s.%s with args: %s timeout" % (category2, cmd, data))
                             return returnCodes.ERROR, returnformat, eco.__dict__
                         jobr = j.data.serializer.json.loads(jobr)
@@ -247,7 +247,7 @@ class Daemon:
         except Exception as e:
             if isinstance(e, BaseJSException):
                 return returnCodes.ERROR, returnformat, e.eco
-            eco = j.errorconditionhandler.parsePythonExceptionObject(e)
+            eco = j.errorhandler.parsePythonExceptionObject(e)
             eco.level = 2
             eco.data = data
             # print eco
@@ -277,7 +277,7 @@ class Daemon:
                 session = None
             else:
                 error = "Authentication  or Session error, session not known with id:%s" % sessionid
-                eco = j.errorconditionhandler.getErrorConditionObject(msg=error)
+                eco = j.errorhandler.getErrorConditionObject(msg=error)
                 return returnCodes.AUTHERROR, "m", self.errorconditionserializer.dumps(eco.__dict__)
         return session
 
@@ -301,7 +301,7 @@ class Daemon:
                 ser = j.data.serializer.serializers.get(informat, key=self.key)
                 data = ser.loads(data)
         except Exception as e:
-            eco = j.errorconditionhandler.parsePythonExceptionObject(e)
+            eco = j.errorhandler.parsePythonExceptionObject(e)
             eco.tb = ""
             return returnCodes.SERIALIZATIONERRORIN, "m", self.errorconditionserializer.dumps(eco.__dict__)
 
@@ -320,7 +320,7 @@ class Daemon:
                 try:
                     data = self.encrypt(returnser.dumps(parts[2].__dict__), session)
                 except BaseException:
-                    eco = j.errorconditionhandler.getErrorConditionObject(
+                    eco = j.errorhandler.getErrorConditionObject(
                         msg="could not serialize result from %s" % cmd)
                     return returnCodes.SERIALIZATIONERROROUT, "m", self.errorconditionserializer.dumps(eco.__dict__)
         else:

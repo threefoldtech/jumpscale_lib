@@ -149,7 +149,7 @@ class ZDaemon(GeventLoop):
     #             return found
     #         gevent.sleep(0.01)
 
-    #     j.errorconditionhandler.raiseOperationalCritical(msgpub="Cannot open port nr %s for client daemon."%found,
+    #     j.errorhandler.raiseOperationalCritical(msgpub="Cannot open port nr %s for client daemon."%found,
     #                                                      message="", category="grid.startup", die=False, tags="")
     #     return 0
 

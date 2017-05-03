@@ -1,4 +1,4 @@
-from servers.key_value_store.store import KeyValueStoreBase
+from JumpScale9Lib.data.key_value_store.store import KeyValueStoreBase
 from js9 import j
 
 import re

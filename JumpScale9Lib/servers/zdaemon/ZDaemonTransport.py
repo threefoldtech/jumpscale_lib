@@ -57,7 +57,7 @@ class ZDaemonTransport(Transport):
         if res is False:
             msg = "Could not find a running server instance on %s:%s" % (self._addr, self._port)
             raise j.exceptions.RuntimeError(msg)
-            j.errorconditionhandler.raiseOperationalCritical(
+            j.errorhandler.raiseOperationalCritical(
                 msgpub=msg, message="", category="zdaemonclient.init", die=True)
         j.logger.log("server is reachable on %s on port %s" %
                      (self._addr, self._port), level=4, category='zdaemon.client.init')

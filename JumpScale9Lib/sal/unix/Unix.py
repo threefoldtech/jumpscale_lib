@@ -624,7 +624,7 @@ class UnixSystem:
 
         import threading
         if threading.activeCount() > 1:
-            j.errorconditionhandler.raiseWarning(
+            j.errorhandler.raiseWarning(
                 'You application got running threads, this can cause issues when using fork')
 
         pid = os.fork()

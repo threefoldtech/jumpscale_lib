@@ -69,7 +69,7 @@ class TestResult(unittest.result.TestResult):
         if self._debug:
             if test in self.tests:
                 print((self.tests[test].getvalue()))
-                print((j.errorconditionhandler.parsePythonExceptionObject(err[1], err[2])))
+                print((j.errorhandler.parsePythonExceptionObject(err[1], err[2])))
             j.application.stop(1)
 
     def addError(self, test, err):
@@ -122,7 +122,7 @@ class Test:
                     if self.db.state != 'ERROR':
                         self.db.state == 'FAILURE'
                 with j.logger.nostdout():
-                    eco = j.errorconditionhandler.parsePythonExceptionObject(error[1], error[2])
+                    eco = j.errorhandler.parsePythonExceptionObject(error[1], error[2])
                     eco.tags = "testrunner testrun:%s org:%s testgroup:%s testname:%s testpath:%s" % (
                         self.db.testrun, self.db.organization, self.db.name, name, self.db.path)
                     eco.process()

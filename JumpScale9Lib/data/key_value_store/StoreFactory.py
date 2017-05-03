@@ -184,11 +184,11 @@ class StoreFactory:
     #     return self._cache[name]
     #
     def getFileStore(self, name="core", namespace='db', baseDir='/tmp', serializers=[]):
-        from servers.key_value_store.file_store import FileKeyValueStore
+        from JumpScale9Lib.data.key_value_store.file_store import FileKeyValueStore
         return FileKeyValueStore(name=name, namespace=namespace, baseDir=baseDir, serializers=serializers)
 
     def getPickleDBStore(self, name="core", namespace='db', baseDir='/tmp', serializers=[]):
-        from servers.key_value_store.pickledb_store import PickleDBStore
+        from JumpScale9Lib.data.key_value_store.pickledb_store import PickleDBStore
         return PickleDBStore(name=name, namespace=namespace, baseDir=baseDir, serializers=serializers)
 
     def getMemoryStore(self, name="core", namespace=None, changelog=None):
@@ -198,7 +198,7 @@ class StoreFactory:
         @return: key value store
         @rtype: MemoryKeyValueStore
         '''
-        from servers.key_value_store.memory_store import MemoryKeyValueStore
+        from JumpScale9Lib.data.key_value_store.memory_store import MemoryKeyValueStore
         return MemoryKeyValueStore(name=name, namespace=namespace)
 
     def getRedisStore(
@@ -230,7 +230,7 @@ class StoreFactory:
             port = j.core.db.config_get().get('port', port)
         if not unixsocket:
             unixsocket = j.core.db.config_get().get('unixsocket', unixsocket)
-        from servers.key_value_store.redis_store import RedisKeyValueStore
+        from JumpScale9Lib.data.key_value_store.redis_store import RedisKeyValueStore
         res = RedisKeyValueStore(
             name=name,
             namespace=namespace,
@@ -272,7 +272,7 @@ class StoreFactory:
         @return: key value store
         @rtype: MemoryKeyValueStore
         '''
-        from servers.key_value_store.ardb_store import ARDBKeyValueStore
+        from JumpScale9Lib.data.key_value_store.ardb_store import ARDBKeyValueStore
         res = ARDBKeyValueStore(
             name=name,
             namespace=namespace,
@@ -303,7 +303,7 @@ class StoreFactory:
         @return: key value store
         @rtype: RocksDBKeyValueStore
         '''
-        from servers.key_value_store.rocksdb_store import RocksDBKeyValueStore
+        from JumpScale9Lib.data.key_value_store.rocksdb_store import RocksDBKeyValueStore
         res = RocksDBKeyValueStore(
             name=name,
             namespace=namespace,
@@ -441,7 +441,7 @@ class StoreFactory:
     #
     #     @return: key value store
     #     '''
-    #     from servers.key_value_store.leveldb_store import LevelDBKeyValueStore
+    #     from JumpScale9Lib.data.key_value_store.leveldb_store import LevelDBKeyValueStore
     #     if name not in self._cache:
     #         self._cache[name] = LevelDBKeyValueStore(
     #             name=name, namespace=namespace, basedir=basedir, serializers=serializers, cache=cache, masterdb=masterdb, changelog=changelog)
@@ -459,7 +459,7 @@ class StoreFactory:
     #
     #     @return: key value store
     #     '''
-    #     from servers.key_value_store.tarantool_store import TarantoolStore
+    #     from JumpScale9Lib.data.key_value_store.tarantool_store import TarantoolStore
     #     if name not in self._cache:
     #         self._cache[name] = TarantoolStore(namespace=namespace, host='localhost',
     #                                            port=6379, db=0, password='', serializers=serializers, cache=cache, masterdb=masterdb, changelog=changelog)

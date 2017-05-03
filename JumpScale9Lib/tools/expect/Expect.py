@@ -377,7 +377,7 @@ class Expect:
 
             return str(self._pxssh).before, ""
 
-        o.errorconditionhandler.raiseBug(
+        o.errorhandler.raiseBug(
             message="should never come here, unsupported platform", category="expect.receive")
 
     def receivePrint(self):

@@ -84,7 +84,7 @@ class TextLineEditor:
 
     def _processLine(self, lineObject, blockname, next=False):
         if lineObject.block == blockname:
-            j.errorconditionhandler.raiseBug(
+            j.errorhandler.raiseBug(
                 message="Cannot find block with name %s in block which has already same name" %
                 blo, category="lineeditor")
         lineObject.block = blockname

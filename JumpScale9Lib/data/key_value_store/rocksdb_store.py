@@ -1,5 +1,5 @@
 from js9 import j
-from servers.key_value_store.store import KeyValueStoreBase
+from JumpScale9Lib.data.key_value_store.store import KeyValueStoreBase
 import rocksdb
 import re
 

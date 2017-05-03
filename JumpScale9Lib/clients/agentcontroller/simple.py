@@ -201,12 +201,12 @@ class Result:
 
         if critical:
             d = acclient.jsonLoads(critical)
-            eco = j.errorconditionhandler.getErrorConditionObject(d)
+            eco = j.errorhandler.getErrorConditionObject(d)
         elif self.state == STATE_TIMEDOUT:
-            eco = j.errorconditionhandler.getErrorConditionObject(
+            eco = j.errorhandler.getErrorConditionObject(
                 msg='Timedout waiting for job')
         elif self.state != STATE_SUCCESS:
-            eco = j.errorconditionhandler.getErrorConditionObject(
+            eco = j.errorhandler.getErrorConditionObject(
                 msg=self._error)
 
         if eco is not None:

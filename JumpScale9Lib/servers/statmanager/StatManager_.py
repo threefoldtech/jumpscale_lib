@@ -209,7 +209,7 @@ class StatManager:
                 id, value = splitted
                 epoch = now
             else:
-                j.errorconditionhandler.raiseMonitoringError(
+                j.errorhandler.raiseMonitoringError(
                     "Line '%s' not well constructed, cannot process monitoring stat info", id)
                 continue
             id = str(id.lower())

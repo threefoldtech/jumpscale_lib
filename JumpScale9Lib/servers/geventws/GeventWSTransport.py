@@ -21,7 +21,7 @@ class GeventWSTransport(Transport):
         """
         self._id = sessionid
         if j.sal.nettools.tcpPortConnectionTest(self._addr, self._port) is False:
-            j.errorconditionhandler.raiseOperationalCritical(
+            j.errorhandler.raiseOperationalCritical(
                 "could not connect to server %s on port %s, is it running?" %
                 (self._addr, self._port), category="transport.ws.gevent.init")
 
@@ -69,12 +69,12 @@ class GeventWSTransport(Transport):
             rcv = requests.post(self.url, data=data2, headers=headers, timeout=timeout)
 
         if rcv is None:
-            eco = j.errorconditionhandler.getErrorConditionObject(msg='timeout on request to %s' % self.url, msgpub='',
+            eco = j.errorhandler.getErrorConditionObject(msg='timeout on request to %s' % self.url, msgpub='',
                                                                   category='gevent.transport')
             return "4", "m", j.data.serializer.serializers.msgpack.dumps(eco.__dict__)
 
         if rcv.ok is False:
-            eco = j.errorconditionhandler.getErrorConditionObject(
+            eco = j.errorhandler.getErrorConditionObject(
                 msg='error 500 from webserver on %s' %
                 self.url, msgpub='', category='gevent.transport')
             return "6", "m", j.data.serializer.serializers.msgpack.dumps(eco.__dict__)
