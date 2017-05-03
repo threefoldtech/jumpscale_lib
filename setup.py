@@ -56,7 +56,7 @@ setup(
         'pygithub',
         'grequests',
         'Pillow',
-        'grequests,
+        'grequests',
         'ovh'
     ]
 )
