@@ -1,7 +1,8 @@
 from js9 import j
 from functools import reduce
 
-base = j.data.capnp.getModelBaseClassCollection()
+from JumpScale9Lib.data.capnp.Capnp import Capnp
+base = Capnp().getModelBaseClassCollection()
 
 from peewee import *
 import peewee

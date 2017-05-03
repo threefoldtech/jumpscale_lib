@@ -6,7 +6,7 @@ from jinja2 import Template
 import threading
 import itertools
 from json import loads, dumps
-import telegram  # python-telegram-bot
+# import telegram  # python-telegram-bot
 from datetime import datetime
 import github
 

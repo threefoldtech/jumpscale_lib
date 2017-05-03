@@ -2,7 +2,8 @@
 from js9 import j
 # import html
 
-base = j.data.capnp.getModelBaseClass()
+from JumpScale9Lib.data.capnp.Capnp import Capnp
+base = Capnp().getModelBaseClass()
 
 
 class DocModel(base):

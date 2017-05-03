@@ -3,9 +3,9 @@ import sys
 import capnp
 from collections import OrderedDict
 import capnp
-from JumpScale9Lib.data.capnp.ModelBase import ModelBase
-from JumpScale9Lib.data.capnp.ModelBase import ModelBaseWithData
-from JumpScale9Lib.data.capnp.ModelBase import ModelBaseCollection
+from .ModelBase import ModelBase
+from .ModelBase import ModelBaseWithData
+from .ModelBase import ModelBaseCollection
 
 
 class Tools():

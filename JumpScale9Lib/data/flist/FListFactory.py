@@ -6,20 +6,20 @@ import os
 import re
 
 import capnp
-from JumpScale9Lib.data.flist import model_capnp as ModelCapnp
+from . import model_capnp as ModelCapnp
 
-from JumpScale9Lib.data.flist.models import DirModel
-from JumpScale9Lib.data.flist.models import DirCollection
-from JumpScale9Lib.data.flist.models import ACIModel
-from JumpScale9Lib.data.flist.models import ACICollection
+from .FList import FList
+from .FListMetadata import FListMetadata
+from .FlistMerger import FlistMerger
 
-from JumpScale9Lib.data.flist.FList import FList
-from JumpScale9Lib.data.flist.FListMetadata import FListMetadata
-from JumpScale9Lib.data.flist.FlistMerger import FlistMerger
-# from JumpScale9Lib.data.flist.FuseExample import FuseExample
+from .models import DirModel
+from .models import DirCollection
+from .models import ACIModel
+from .models import ACICollection
+# from .FuseExample import FuseExample
 
 
-class FListFactory(object):
+class FListFactory:
 
     def __init__(self):
         self.__jslocation__ = "j.tools.flist"

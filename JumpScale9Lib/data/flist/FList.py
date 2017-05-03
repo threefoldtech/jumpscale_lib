@@ -13,15 +13,15 @@ import sys
 import re
 import pyblake2
 import capnp
-from JumpScale9Lib.data.flist import model_capnp as ModelCapnp
+from . import model_capnp as ModelCapnp
 
-from JumpScale9Lib.data.flist.models import DirModel
-from JumpScale9Lib.data.flist.models import DirCollection
+from .models import DirModel
+from .models import DirCollection
 
 from path import Path
 
 
-class FList(object):
+class FList:
     """
     FList (sometime "plist") files contains a plain/text representation of
     a complete file system tree

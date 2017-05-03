@@ -1,7 +1,8 @@
 
 from js9 import j
 
-base = j.data.capnp.getModelBaseClass()
+from JumpScale9Lib.data.capnp.Capnp import Capnp
+base = Capnp().getModelBaseClass()
 
 
 class UserGroupModel(base):
