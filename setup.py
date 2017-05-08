@@ -1,4 +1,77 @@
-from distutils.core import setup
+from setuptools import setup
+from setuptools.command.install import install as _install
+from setuptools.command.develop import develop as _develop
+import os
+
+
+# zlib1g-dev/zesty
+# libjpeg-dev/zesty
+
+def _post_install(libname, libpath):
+    from JumpScale9 import j
+    import os
+    j.tools.jsloader.copyPyLibs()
+
+    # ensure plugins section in config
+    if 'plugins' not in j.application.config:
+        j.application.config['plugins'] = {}
+
+    # add this plugin to the config
+    j.application.config['plugins'][libname] = libpath
+
+    moduleList = {}
+    gigdir = os.environ.get('GIGDIR', '/root/gig')
+    mounted_lib_path = os.path.join(gigdir, 'python_libs')
+
+    for name, path in j.application.config['plugins'].items():
+        if j.sal.fs.exists(path, followlinks=True):
+            moduleList = j.tools.jsloader.findModules(path=path, moduleList=moduleList)
+            # link libs to location for hostos
+            j.do.copyTree(path,
+                          os.path.join(mounted_lib_path, libname),
+                          overwriteFiles=True,
+                          ignoredir=['*.egg-info',
+                                     '*.dist-info',
+                                     "*JumpScale*",
+                                     "*Tests*",
+                                     "*tests*"],
+
+                          ignorefiles=['*.egg-info',
+                                       "*.pyc",
+                                       "*.so",
+                                       ],
+                          rsync=True,
+                          recursive=True,
+                          rsyncdelete=True,
+                          createdir=True)
+
+    # DO NOT AUTOPIP the deps are now installed while installing the libs
+    j.application.config["system"]["autopip"] = False
+    j.application.config["system"]["debug"] = True
+
+    j.tools.jsloader.generate(path=path, moduleList=moduleList)
+    j.tools.jsloader.generate(path=path, moduleList=moduleList, codecompleteOnly=True)
+
+    j.do.initEnv()
+
+
+class install(_install):
+
+    def run(self):
+        _install.run(self)
+        libname = self.config_vars['dist_name']
+        libpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), libname)
+        self.execute(_post_install, (libname, libpath), msg="Running post install task")
+
+
+class develop(_develop):
+
+    def run(self):
+        _develop.run(self)
+        libname = self.config_vars['dist_name']
+        libpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), libname)
+        self.execute(_post_install, (libname, libpath), msg="Running post install task")
+
 
 setup(
     name='JumpScale9Lib',
@@ -10,53 +83,47 @@ setup(
     license='Apache',
     packages=['JumpScale9Lib'],
     install_requires=[
-        'redis',
-        'colorlog',
-        'pytoml',
-        'ipython',
-        'colored_traceback',
-        'pystache',
-        'libtmux',
-        'httplib2',
-        'netaddr',
-        'peewee',
-        'uvloop',
-        'redis',
-        'paramiko',
-        'watchdog',
-        'pymux',
-        'uvloop',
-        'pyyaml',
-        'ipdb',
-        'requests',
-        'netaddr',
-        'cython',
-        'pycapnp',
-        'path.py',
-        'colored-traceback',
-        'pudb',
-        'colorlog',
-        'msgpack-python',
-        'pyblake2',
-        'toml',
-        'numpy',
-        'tarantool',
-        'psutil ',
-        'asyncssh',
-        'psycopg2',
-        'gevent',
-        'netifaces',
-        'docker',
-        'pyopenssl',
-        'jinja2',
-        'cson',
-        'brotli',
-        'sqlalchemy',
-        'influxdb',
-        'pygithub',
-        'grequests',
-        'Pillow',
-        'grequests',
-        'ovh'
-    ]
+        'Brotli>=0.6.0',
+        'Cython>=0.25.2',
+        'Jinja2>=2.9.6',
+        'JumpScale9>=9.0.0',
+        'Pillow>=4.1.1',
+        'PyGithub>=1.34',
+        'PyYAML>=3.12',
+        'SQLAlchemy>=1.1.9',
+        'asyncssh>=1.9.0',
+        'colored-traceback>=0.2.2',
+        'colorlog>=2.10.0',
+        'cson>=0.7',
+        'docker>=2.2.1',
+        'gevent>=1.2.1',
+        'grequests>=0.3.0',
+        'influxdb>=4.1.0',
+        'msgpack-python>=0.4.8',
+        'netaddr>=0.7.19',
+        'netifaces>=0.10.5',
+        'numpy>=1.12.1',
+        'ovh>=0.4.7',
+        'paramiko>=2.1.2',
+        'path.py>=10.3.1',
+        'peewee>=2.9.2',
+        'psutil>=5.2.2 ',
+        'psycopg2>=2.7.1',
+        'pudb>=2017.1.2',
+        'pyOpenSSL>=17.0.0',
+        'pyblake2>=0.9.3',
+        'pycapnp>=0.5.12',
+        'pymux>=0.13',
+        'redis>=2.10.5',
+        'requests>=2.13.0',
+        'tarantool>=0.5.4',
+        'toml>=0.9.2',
+        'uvloop>=0.8.0',
+        'watchdog>=0.8.3'
+    ],
+    cmdclass={
+        'install': install,
+        'develop': develop,
+        'developement': develop
+    },
 )
