@@ -1,5 +1,6 @@
 from gevent import monkey
 # monkey.patch_all(aggressive=False)
+monkey.patch_subprocess()
 monkey.patch_socket()
 monkey.patch_thread()
 monkey.patch_time()
