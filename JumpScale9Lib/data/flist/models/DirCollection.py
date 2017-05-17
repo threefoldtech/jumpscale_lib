@@ -1,10 +1,9 @@
 from js9 import j
 
-from JumpScale9Lib.data.capnp.Capnp import Capnp
-base = Capnp().getModelBaseClassCollection()
+from JumpScale9Lib.data.capnp.Capnp.ModelBase import ModelBaseCollection
 
 
-class DirCollection(base):
+class DirCollection(ModelBaseCollection):
     """
     It's used to list/find/create new Instance of Dir Model object
     """

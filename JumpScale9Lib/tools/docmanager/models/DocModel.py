@@ -1,12 +1,9 @@
 
 from js9 import j
 # import html
+from JumpScale9Lib.data.capnp.Capnp.ModelBase import ModelBase
 
-from JumpScale9Lib.data.capnp.Capnp import Capnp
-base = Capnp().getModelBaseClass()
-
-
-class DocModel(base):
+class DocModel(ModelBase):
     """
     Model Class for an Doc object
     """

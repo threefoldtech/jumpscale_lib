@@ -1,8 +1,7 @@
 from js9 import j
 from functools import reduce
 
-from JumpScale9Lib.data.capnp.Capnp import Capnp
-base = Capnp().getModelBaseClassCollection()
+from JumpScale9Lib.data.capnp.Capnp.ModelBase import ModelBaseCollection
 
 from peewee import *
 import peewee
@@ -13,7 +12,7 @@ from playhouse.sqlite_ext import Model
 # db = Database(':memory:')
 
 
-class RepoCollection(base):
+class RepoCollection(ModelBaseCollection):
     """
     This class represent a collection of Repos
     """

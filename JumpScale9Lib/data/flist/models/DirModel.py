@@ -1,11 +1,10 @@
 
 from js9 import j
 
-from JumpScale9Lib.data.capnp.Capnp import Capnp
-base = Capnp().getModelBaseClass()
+from JumpScale9Lib.data.capnp.Capnp.ModelBase import ModelBase
 
 
-class DirModel(base):
+class DirModel(ModelBase):
     """
     Model Class for an Issue object
     """

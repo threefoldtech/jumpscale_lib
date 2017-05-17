@@ -1,11 +1,10 @@
 
 from js9 import j
 
-from JumpScale9Lib.data.capnp.Capnp import Capnp
-base = Capnp().getModelBaseClass()
+from JumpScale9Lib.data.capnp.Capnp.ModelBase import ModelBase
 
 
-class UserGroupModel(base):
+class UserGroupModel(ModelBase):
     """
     usergroup model, needs unique key as uint16, all to get as dense as possible solution in mem & on disk
     """

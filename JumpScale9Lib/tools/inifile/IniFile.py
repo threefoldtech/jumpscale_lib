@@ -302,13 +302,13 @@ class IniFile:
 
         try:
             if not fp:
-                j.sal.fs.lock(filePath)
+                j.tools.lock.lock(filePath)
                 fp = open(filePath, 'w')  # Completely overwrite the file.
             self.__configParser.write(fp)
             fp.flush()
             if closeFileHandler:
                 fp.close()
-                j.sal.fs.unlock_(filePath)
+                j.tools.lock.unlock(filePath)
 
         except Exception as err:
             if fp and closeFileHandler and not fp.closed:

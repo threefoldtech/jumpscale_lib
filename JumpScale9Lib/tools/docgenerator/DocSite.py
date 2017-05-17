@@ -192,7 +192,7 @@ class DocSite:
 
         callbackFunctionDir(self.path, "")  # to make sure we use first data.yaml in root
 
-        j.sal.fs.walker.walkFunctional(
+        j.sal.fswalker.walkFunctional(
             self.path,
             callbackFunctionFile=callbackFunctionFile,
             callbackFunctionDir=callbackFunctionDir,
