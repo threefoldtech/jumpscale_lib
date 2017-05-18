@@ -1,6 +1,6 @@
 from js9 import j
 
-from .HTML2Text import *
+# from .HTML2Text import *
 
 
 class HTMLFactory:
