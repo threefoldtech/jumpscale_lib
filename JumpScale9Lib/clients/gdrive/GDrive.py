@@ -29,7 +29,6 @@ APPLICATION_NAME = 'Google Drive Exporter'
 class GDriveFactory:
 
     def __init__(self):
-        self.__jslocation__ = "j.clients.gdrive"
         self.__imports__ = "google-api-python-client"
         self.logger = j.logger.get('j.clients.gdrive')
 
