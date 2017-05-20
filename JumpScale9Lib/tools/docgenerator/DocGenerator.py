@@ -80,22 +80,21 @@ class DocGenerator:
         return self.gitRepos[path]
 
     def installDeps(self, reset=False):
-        if int(j.core.db.get("docgenerator:installed")) == 1 and reset == False:
-            return
         prefab = j.tools.prefab.local
-        prefab.apps.nodejs.install()
-        prefab.core.run("sudo npm install -g phantomjs-prebuilt", profile=True)
-        prefab.core.run("sudo npm install -g mermaid", profile=True)
-        prefab.apps.caddy.build()
-        if "darwin" in str(j.core.platformtype.myplatform):
-            prefab.core.run("brew install graphviz")
-            prefab.core.run("brew install hugo")
-        elif "ubuntu" in str(j.core.platformtype.myplatform):
-            prefab.package.install('graphviz')
-            prefab.package.install('hugo')
-        j.tools.prefab.local.development.golang.install()
-        j.tools.prefab.local.apps.caddy.build()
-        j.core.db.set("docgenerator:installed", 1)
+        if prefab.core.doneGet("docgenerator:installed") == False:
+            prefab.apps.nodejs.install()
+            prefab.core.run("sudo npm install -g phantomjs-prebuilt", profile=True)
+            prefab.core.run("sudo npm install -g mermaid", profile=True)
+            prefab.apps.caddy.build()
+            if "darwin" in str(j.core.platformtype.myplatform):
+                prefab.core.run("brew install graphviz")
+                prefab.core.run("brew install hugo")
+            elif "ubuntu" in str(j.core.platformtype.myplatform):
+                prefab.package.install('graphviz')
+                prefab.package.install('hugo')
+            j.tools.prefab.local.development.golang.install()
+            j.tools.prefab.local.apps.caddy.build()
+            prefab.core.doneSet("docgenerator:installed")
 
     def startWebserver(self, generateCaddyFile=False):
         """
@@ -204,9 +203,10 @@ class DocGenerator:
         self.generate(start=start)
 
     def generateJSDoc(self, start=True):
-        self.load(pathOrUrl="https://github.com/Jumpscale/docgenerator/tree/master/examples")
-        self.load(pathOrUrl="https://github.com/Jumpscale/jumpscale_core9/tree/8.2.0")
-        self.load(pathOrUrl="https://github.com/Jumpscale/jumpscale_portal8/tree/8.2.0")
+        self.load(pathOrUrl="https://github.com/Jumpscale/ays9")
+        self.load(pathOrUrl="https://github.com/Jumpscale/core9/")
+        self.load(pathOrUrl="https://github.com/Jumpscale/lib9")
+        self.load(pathOrUrl="https://github.com/Jumpscale/prefab9")
         self.generate(start=start)
 
     def generate(self, url=None, start=True):
