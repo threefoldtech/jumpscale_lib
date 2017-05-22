@@ -83,8 +83,8 @@ class DocGenerator:
         prefab = j.tools.prefab.local
         if prefab.core.doneGet("docgenerator:installed") == False:
             prefab.apps.nodejs.install()
-            prefab.core.run("sudo npm install -g phantomjs-prebuilt", profile=True)
-            prefab.core.run("sudo npm install -g mermaid", profile=True)
+            prefab.core.run("npm install -g phantomjs-prebuilt", profile=True)
+            prefab.core.run("npm install -g mermaid", profile=True)
             prefab.apps.caddy.build()
             if "darwin" in str(j.core.platformtype.myplatform):
                 prefab.core.run("brew install graphviz")
