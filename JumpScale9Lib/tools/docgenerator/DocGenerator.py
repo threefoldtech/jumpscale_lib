@@ -203,6 +203,7 @@ class DocGenerator:
         self.generate(start=start)
 
     def generateJSDoc(self, start=True):
+        self.load(pathOrUrl="https://github.com/Jumpscale/portal9")
         self.load(pathOrUrl="https://github.com/Jumpscale/ays9")
         self.load(pathOrUrl="https://github.com/Jumpscale/core9/")
         self.load(pathOrUrl="https://github.com/Jumpscale/lib9")
