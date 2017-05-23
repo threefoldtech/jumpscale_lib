@@ -141,7 +141,7 @@ class Ubuntu:
         """
         rc, out, err = self._local.execute("dpkg -L %s" % pkgname)
         if regex != "":
-            return j.tools.code.regex.findAll(regex, out)
+            return j.data.regex.findAll(regex, out)
         else:
             return out.split("\n")
 

@@ -59,7 +59,7 @@ class CodeManager:
         for item in self.ignoreDirs:
             item = item.replace(".", "\\.")
             item = item.replace("*", ".*")
-            if j.tools.code.regex.match(item, path):
+            if j.data.regex.match(item, path):
                 return True
         return False
 
@@ -122,7 +122,7 @@ class CodeManagerFile:
                 line = line.split("(")[0].strip()
             result.append(line)
             return ""
-        text2 = j.tools.code.regex.replaceLines(process, arg="", text=self.code, includes=["%s.*" % item], excludes='')
+        text2 = j.data.regex.replaceLines(process, arg="", text=self.code, includes=["%s.*" % item], excludes='')
         if len(result) > maxitems:
             self.errorTrap("Error in text to parse, found more entities:%s than %s" % (item, maxitems))
         if maxitems == 1:
@@ -139,7 +139,7 @@ class CodeManagerFile:
         return ""
 
     def findId(self, text, path):
-        result = j.tools.code.regex.findAll("\(\(.*: *\d* *\)\)", text)
+        result = j.data.regex.findAll("\(\(.*: *\d* *\)\)", text)
 
         if len(result) > 1:
             raise j.exceptions.RuntimeError("Found 2 id's in %s" % path)
@@ -216,8 +216,8 @@ class CodeManagerFile:
         """
         return [$text,$users] with unique id and the usergroup construct is taken out of text, all groups are resolved to users
         """
-        #items=j.tools.code.regex.findAll("[a-z]*:[a-z]*","s: d:d")
-        items = j.tools.code.regex.findAll("\[[a-z, ]*\]", text)
+        #items=j.data.regex.findAll("[a-z]*:[a-z]*","s: d:d")
+        items = j.data.regex.findAll("\[[a-z, ]*\]", text)
         text = text.lower()
         if len(items) > 1:
             raise j.exceptions.RuntimeError(
@@ -296,7 +296,7 @@ class CodeManagerFile:
         return out.strip()
 
     def _findStories(self, text, path, fullPath):
-        found = j.tools.code.regex.extractBlocks(text, includeMatchingLine=False, blockStartPatterns=["\"\"\""])
+        found = j.data.regex.extractBlocks(text, includeMatchingLine=False, blockStartPatterns=["\"\"\""])
         for item in found:
             if item.lower().find("@storydef") != -1:
                 # found a story
@@ -332,7 +332,7 @@ class CodeManagerFile:
                 obj.model.roadmapid = self._strToInt(roadmap)
 
     def _findScrumteams(self, text, path, fullPath):
-        found = j.tools.code.regex.extractBlocks(text, includeMatchingLine=False, blockStartPatterns=["\"\"\""])
+        found = j.data.regex.extractBlocks(text, includeMatchingLine=False, blockStartPatterns=["\"\"\""])
         for item in found:
             if item.lower().find("@scrumteamdef") != -1:
                 # found a story
@@ -350,7 +350,7 @@ class CodeManagerFile:
                 obj.model.id = id1
 
     def _findSprints(self, text, path, fullPath):
-        found = j.tools.code.regex.extractBlocks(text, includeMatchingLine=False, blockStartPatterns=["\"\"\""])
+        found = j.data.regex.extractBlocks(text, includeMatchingLine=False, blockStartPatterns=["\"\"\""])
         for item in found:
             if item.lower().find("@sprintdef") != -1:
                 # found a story
@@ -396,7 +396,7 @@ class CodeManagerFile:
         return result
 
     def _findRoadmapitems(self, text, path, fullPath):
-        found = j.tools.code.regex.extractBlocks(text, includeMatchingLine=False, blockStartPatterns=["\"\"\""])
+        found = j.data.regex.extractBlocks(text, includeMatchingLine=False, blockStartPatterns=["\"\"\""])
         for item in found:
             if item.lower().find("@roadmapdef") != -1:
                 # found a story
@@ -441,7 +441,7 @@ class CodeManagerFile:
                 # obj.model.sprintids=self._strToArrayInt(sprintids)
 
     def _findUsers(self, text, path, fullPath):
-        found = j.tools.code.regex.extractBlocks(text, includeMatchingLine=False, blockStartPatterns=["\"\"\""])
+        found = j.data.regex.extractBlocks(text, includeMatchingLine=False, blockStartPatterns=["\"\"\""])
         for item in found:
             if item.lower().find("@userdef") != -1:
                 lineFull = self.findLine(item, "@userdef")
@@ -460,7 +460,7 @@ class CodeManagerFile:
                 obj.model.email = email
 
     def _findGroups(self, text, path, fullPath):
-        found = j.tools.code.regex.extractBlocks(text, includeMatchingLine=False, blockStartPatterns=["\"\"\""])
+        found = j.data.regex.extractBlocks(text, includeMatchingLine=False, blockStartPatterns=["\"\"\""])
         for item in found:
             if item.lower().find("@groupdef") != -1:
                 lineFull = self.findLine(item, "@groupdef")
@@ -550,7 +550,7 @@ class CodeManagerFile:
                 if line.strip().find(variant) == 0:
                     return variant
         if text.lower().find("@todo") != -1:
-            lines = j.tools.code.regex.findAll("@todo.*", text)
+            lines = j.data.regex.findAll("@todo.*", text)
             for line in lines:
                 self.addUniqueId(line, fullPath, ttype="todo")
                 line, id1 = self.findId(line, fullPath)

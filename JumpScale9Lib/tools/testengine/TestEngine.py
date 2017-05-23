@@ -244,7 +244,7 @@ class TestEngine:
         test.db.id = 0
 
         C = j.sal.fs.fileGetContents(filepath)
-        methods = j.tools.code.regex.extractBlocks(C, ["def test"])
+        methods = j.data.regex.extractBlocks(C, ["def test"])
         for method in methods:
             methodname = method.split("\n")[0][len("    def test_"):].split("(")[0]
             methodsource = "\n".join([item.strip() for item in method.split("\n")[1:] if item.strip() != ""])

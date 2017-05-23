@@ -45,7 +45,7 @@ class Synonym:
         if self.replaceExclude:
             # Check for any def tag that contains name "e.g: [ Q-Layer ]", remove them and put markers in place
             text = self._replaceDefsWithMarkers(text)
-        text = j.tools.code.regex.replace(
+        text = j.data.regex.replace(
             regexFind=self.regexFind,
             regexFindsubsetToReplace=self.regexFindForReplace,
             replaceWith=self.replaceWith,
@@ -62,13 +62,13 @@ class Synonym:
         # patterns you don't want to be replaced
         pat = self.replaceExclude
 
-        matches = j.tools.code.regex.findAll(pat, text)
+        matches = j.data.regex.findAll(pat, text)
 
         for match in matches:
             mark = "$$MARKER$$%s$$" % random.randint(0, 1000)
             self._markers[mark] = match
             match = re.escape(match)
-            text = j.tools.code.regex.replace(
+            text = j.data.regex.replace(
                 regexFind=match, regexFindsubsetToReplace=match, replaceWith=mark, text=text)
         return text
 
@@ -78,7 +78,7 @@ class Synonym:
         """
         for marker, replacement in list(self._markers.items()):
             marker = re.escape(marker)
-            text = j.tools.code.regex.replace(
+            text = j.data.regex.replace(
                 regexFind=marker, regexFindsubsetToReplace=marker, replaceWith=replacement, text=text)
         return text
 
@@ -138,7 +138,7 @@ class WordReplacer:
         for line in txt.split("\n"):
             line = line.strip()
             if line != "" and line.find(":") != -1:
-                if j.tools.code.regex.match("^'", line):
+                if j.data.regex.match("^'", line):
                     # found line which is regex format
                     splitted = line.split("'")
                     if len(splitted) != 4:

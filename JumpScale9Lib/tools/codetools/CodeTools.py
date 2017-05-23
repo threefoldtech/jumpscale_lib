@@ -5,7 +5,6 @@ from JumpScale9 import j
 
 from .ClassBase import ClassBase, JSModelBase, JSRootModelBase
 from .TemplateEngineWrapper import TemplateEngineWrapper
-from JumpScale9.data.regex.RegexTools import RegexTools
 from .TextFileEditor import TextFileEditor
 from .WordReplacer import WordReplacer
 
@@ -33,7 +32,6 @@ class CodeTools:
         self.__jslocation__ = "j.tools.code"
         self._templateengine = None
         # self.executor = CodeExecutor()
-        self._regex = None
         self._wordreplacer = None
         self._codemanager = None
         self._texteditor = None
@@ -44,12 +42,6 @@ class CodeTools:
             from CodeManager import CodeManager
             self._codemanager = CodeManager()
         return self._codemanager
-
-    @property
-    def regex(self):
-        if self._regex is None:
-            self._regex = RegexTools()
-        return self._regex
 
     @property
     def templateengine(self):
