@@ -1,4 +1,4 @@
-from JumpScale9 import j
+from js9 import j
 import sys
 import capnp
 from collections import OrderedDict

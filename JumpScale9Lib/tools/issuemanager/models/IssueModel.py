@@ -2,7 +2,7 @@
 from js9 import j
 # import html
 
-from JumpScale9Lib.data.capnp.Capnp.ModelBase import ModelBase
+from JumpScale9Lib.data.capnp.ModelBase import ModelBase
 
 
 

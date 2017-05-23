@@ -1,7 +1,7 @@
 
 from js9 import j
 
-from JumpScale9Lib.data.capnp.Capnp.ModelBase import ModelBase
+from JumpScale9Lib.data.capnp.ModelBase import ModelBase
 
 
 class UserModel(ModelBase):
