@@ -15,10 +15,10 @@ class GrafanaFactory:
 
     def getByInstance(self, instance=None):
         if instance is None or instance == '':
-            service = j.core.atyourservice.findServices(
+            service = j.atyourservice.findServices(
                 role="grafana_client", first=True)
         else:
-            service = j.core.atyourservice.findServices(
+            service = j.atyourservice.findServices(
                 role="grafana_client", instance=instance, first=True)
         hrd = service.hrd
 

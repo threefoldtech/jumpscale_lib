@@ -70,7 +70,7 @@ from js9 import j
 
 
 def docker_create_machine(name, reinstall=False, image='despiegk/mc'):
-    docker = j.core.atyourservice.findTemplates(name='node.docker')[0]
+    docker = j.atyourservice.findTemplates(name='node.docker')[0]
     ports = "8086:8086 8083:8083 28017:28017 27017:27017 5544:5544 82:82"
     vols = "/opt/jumpscale/var/influxdb:/var/mydocker/influxdb # /opt/jumpscale/var/mongodb:/var/mydocker/mongodb"
     args = {
@@ -86,9 +86,9 @@ def docker_create_machine(name, reinstall=False, image='despiegk/mc'):
 if __name__ == '__main__':
     name = 'master'
     docker_create_machine(name=name, reinstall=True)
-    instance = j.core.atyourservice.findServices(name='node.docker', instance=name)[0]
+    instance = j.atyourservice.findServices(name='node.docker', instance=name)[0]
 
-    portal = j.core.atyourservice.findTemplates(name='singlenode_portal')[0]
+    portal = j.atyourservice.findTemplates(name='singlenode_portal')[0]
     portal.install(parent=instance)
 
     info = j.tools.docker.inspect(name)
