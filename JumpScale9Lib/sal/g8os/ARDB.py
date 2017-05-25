@@ -20,6 +20,7 @@ class ARDB:
 
     @classmethod
     def from_ays(cls, service):
+        j.sal.g8os.logger.debug("create ardb from service (%s)", service)
         from JumpScale9Lib.sal.g8os.Container import Container
 
         container = Container.from_ays(service.parent)
@@ -38,6 +39,7 @@ class ARDB:
         )
 
     def _configure(self):
+        j.sal.g8os.logger.debug("configure ardb")
         buff = io.BytesIO()
         self.container.client.filesystem.download('/etc/ardb.conf', buff)
         content = buff.getvalue().decode()
@@ -65,6 +67,7 @@ class ARDB:
         running, _ = self.is_running()
         if running:
             return
+        j.sal.g8os.logger.debug('start %s', self)
 
         self._configure()
 
@@ -85,11 +88,12 @@ class ARDB:
         if not self.container.is_running():
             return
 
-        is_running, process = self.is_running()
+        is_running, job = self.is_running()
         if not is_running:
             return
 
-        self.container.client.process.kill(process['cmd']['id'])
+        j.sal.g8os.logger.debug('stop %s', self)
+        self.container.client.job.kill(job['cmd']['id'])
 
         # wait for ardb to stop
         start = time.time()
@@ -104,9 +108,9 @@ class ARDB:
 
     def is_running(self):
         try:
-            for process in self.container.client.job.list():
-                if 'name' in process['cmd']['arguments'] and process['cmd']['arguments']['name'] == '/bin/ardb-server':
-                    return (True, process)
+            for job in self.container.client.job.list():
+                if 'name' in job['cmd']['arguments'] and job['cmd']['arguments']['name'] == '/bin/ardb-server':
+                    return (True, job)
             return (False, None)
         except Exception as err:
             if str(err).find("invalid container id"):
@@ -119,3 +123,9 @@ class ARDB:
             from JumpScale9Lib.sal.g8os.atyourservice.StorageCluster import ARDBAys
             self._ays = ARDBAys(self)
         return self._ays
+
+    def __str__(self):
+        return "ARDB <{}>".format(self.name)
+
+    def __repr__(self):
+        return str(self)

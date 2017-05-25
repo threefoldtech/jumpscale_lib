@@ -428,8 +428,8 @@ class FList:
         ddir = self.dirCollection.get(currentDirKey)
 
         for item in ddir.dbobj.contents:
-            type = item.attributes.which()
-            if type != "dir":
+            type_ = item.attributes.which()
+            if type_ != "dir":
                 continue
 
             key = item.attributes.dir.key

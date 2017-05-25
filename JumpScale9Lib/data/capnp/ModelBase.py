@@ -385,12 +385,14 @@ class ModelBaseCollection:
             http://docs.peewee-orm.com/en/latest/peewee/querying.html
             the query is the statement in the where
         """
-
+        res = []
         if query is not None:
             res = [item.key for item in query]
+        elif hasattr(self._index, 'select'):
+            res = [item.key for item in self._index.select().order_by(self._index.modTime.desc())]
         else:
             res = [item.key for item in self.index.select().order_by(self.index.modTime.desc())]
-
+            return self._index.list('*')
         return res
 
     def find(self, **kwargs):
