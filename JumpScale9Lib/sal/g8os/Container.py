@@ -1,5 +1,5 @@
 import json
-from JumpScale import j
+from js9 import j
 
 
 class Containers:
