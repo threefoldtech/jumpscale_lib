@@ -146,7 +146,7 @@ struct Schema {
         # . are removed from . to Uppercase
         args = args.copy()  # to not change the args passed in argument
         for key in list(args.keys()):
-            sanitize_key = j.data.hrd.sanitize_key(key)
+            sanitize_key = j.data.text.sanitize_key(key)
             if key != sanitize_key:
                 args[sanitize_key] = args[key]
                 args.pop(key)

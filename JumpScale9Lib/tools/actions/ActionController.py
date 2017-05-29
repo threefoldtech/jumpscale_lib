@@ -130,7 +130,7 @@ class ActionController:
 
         @param dynamicArguments are arguments which will be executed before calling the method e.g.
            dargs={}
-           dargs["service"]="j.atyourservice.getService(\"%s\")"%kwargs["service"]
+           dargs["service"]="j.atyourservice.server.getService(\"%s\")"%kwargs["service"]
         '''
 
         # from pudb import set_trace; set_trace()

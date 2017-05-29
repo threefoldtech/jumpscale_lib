@@ -48,8 +48,8 @@ class FileSystemAys(AYSable):
 
 if __name__ == '__main__':
     from js9 import j
-    j.atyourservice._start()
-    repo = j.atyourservice.aysRepos.get('/opt/code/cockpit_repos/grid')
+    j.atyourservice.server._start()
+    repo = j.atyourservice.server.aysRepos.get('/opt/code/cockpit_repos/grid')
     node1 = j.sal.g8os.get_node('172.20.0.91')
     node2 = j.sal.g8os.get_node('172.20.0.92')
     cluster = j.sal.g8os.create_storagecluster('cluster1', [node1, node2], 'hdd', 8, True)
