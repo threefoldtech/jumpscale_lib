@@ -83,7 +83,12 @@ setup(
         'tarantool>=0.5.4',
         'toml>=0.9.2',
         'uvloop>=0.8.0',
-        'watchdog>=0.8.3'
+        'watchdog>=0.8.3',
+        'xonsh>=0.5.9',
+        'dnspython>=1.15.0',
+        'libvirt>=3.3.0',
+        'apache_libcloud>=2.0.0',
+        'python-etcd>=0.4.5'
     ],
     cmdclass={
         'install': install,
