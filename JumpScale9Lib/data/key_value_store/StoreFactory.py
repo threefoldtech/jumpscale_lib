@@ -227,9 +227,9 @@ class StoreFactory:
         @rtype: MemoryKeyValueStore
         '''
         if not port:
-            port = j.core.db.config_get().get('port', port)
+            port = j.core.db.config_get('port').get('port', port)
         if not unixsocket:
-            unixsocket = j.core.db.config_get().get('unixsocket', unixsocket)
+            unixsocket = j.core.db.config_get('unixsocket').get('unixsocket', unixsocket) or None
         from JumpScale9Lib.data.key_value_store.redis_store import RedisKeyValueStore
         res = RedisKeyValueStore(
             name=name,
