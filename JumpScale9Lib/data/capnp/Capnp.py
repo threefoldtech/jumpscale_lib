@@ -94,6 +94,16 @@ class Capnp:
         id = [item for item in schemaInText.split("\n") if item.strip() != ""][0][3:-1]
         return id
 
+    def removeFromCache(self, schemaId):
+        self._cache.pop(schemaId, None)
+
+    def resetSchema(self, schemaId):
+        self._cache.pop(schemaId, None)
+        nameOnFS = "schema_%s.capnp" % (schemaId)
+        path = j.sal.fs.joinPaths(self._capnpVarDir, nameOnFS)
+        if j.sal.fs.exists(path):
+            j.sal.fs.remove(path)
+
     def _getSchemas(self, schemaInText):
         schemaInText = j.data.text.strip(schemaInText)
         schemaInText = schemaInText.strip() + "\n"
