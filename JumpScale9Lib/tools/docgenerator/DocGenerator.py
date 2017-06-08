@@ -4,8 +4,8 @@ from .DocSite import DocSite
 
 import imp
 import sys
-import inspect
-import copy
+# import inspect
+# import copy
 
 
 def loadmodule(name, path):
@@ -17,7 +17,7 @@ def loadmodule(name, path):
 
 if not sys.platform.startswith("darwin"):
     caddyconfig = '''
-
+    #tcpport:8080
     $ws/ {
         root $outpath
         browse
@@ -67,7 +67,7 @@ class DocGenerator:
         self.docSites = {}  # location in the outpath per site
         self.outpath = j.sal.fs.joinPaths(j.dirs.VARDIR, "docgenerator")
         self.gitRepos = {}
-        self.webserver = "http://localhost:1313/"
+        self.webserver = "http://localhost:8080/"
         self.ws = self.webserver.replace("http://", "").replace("https://", "").replace("/", "")
         self.logger = j.logger.get('docgenerator')
         self._loaded = []
@@ -93,23 +93,20 @@ class DocGenerator:
                 prefab.package.install('graphviz')
                 prefab.package.install('hugo')
             j.tools.prefab.local.development.golang.install()
-            j.tools.prefab.local.apps.caddy.build()
+            j.tools.prefab.local.apps.caddy.start()
             prefab.core.doneSet("docgenerator:installed")
 
-    def startWebserver(self, generateCaddyFile=False):
+    def startWebserver(self):
         """
-        start caddy on localhost:1313
+        start caddy on localhost:8080
         """
-        if generateCaddyFile:
-            self.generateCaddyFile()
-        dest = "%s/docgenerator/caddyfile" % j.dirs.VARDIR
-        if not j.sal.fs.exists(dest, followlinks=True):
-            self.generateCaddyFile()
-        j.tools.prefab.local.apps.caddy.start(ssl=False, agree=True, cfg_path=dest)
+        configpath = self.generateCaddyFile()
+        j.tools.prefab.local.apps.caddy.start(configpath=configpath)
         self.logger.info("go to %a" % self.webserver)
 
     def generateCaddyFile(self):
         dest = "%s/docgenerator/caddyfile" % j.dirs.VARDIR
+        j.sal.fs.createDir("%s/docgenerator" % j.dirs.VARDIR)
         out2 = caddyconfig
 
         C2 = """
@@ -125,6 +122,7 @@ class DocGenerator:
         out2 = out2.replace("$outpath", self.outpath)
         out2 = out2.replace("$ws", self.ws)
         j.sal.fs.writeFile(filename=dest, contents=out2, append=False)
+        return dest
 
     def init(self):
         if not self._initOK:
@@ -180,6 +178,7 @@ class DocGenerator:
             this can also be a git url e.g. https://github.com/Jumpscale/docgenerator/tree/master/examples
 
         """
+        self.logger.info("load:%s" % pathOrUrl)
         if pathOrUrl in self._loaded:
             return
         self._loaded.append(pathOrUrl)
@@ -203,24 +202,31 @@ class DocGenerator:
         self.generate(start=start)
 
     def generateJSDoc(self, start=True):
-        self.load(pathOrUrl="https://github.com/Jumpscale/portal9")
+        # self.load(pathOrUrl="https://github.com/Jumpscale/portal9")
         self.load(pathOrUrl="https://github.com/Jumpscale/ays9")
         self.load(pathOrUrl="https://github.com/Jumpscale/core9/")
         self.load(pathOrUrl="https://github.com/Jumpscale/lib9")
         self.load(pathOrUrl="https://github.com/Jumpscale/prefab9")
+        from IPython import embed
+        print("DEBUG NOW sdd")
+        embed()
+        raise RuntimeError("stop debug here")
         self.generate(start=start)
 
     def generate(self, url=None, start=True):
+        from IPython import embed
+        print("DEBUG NOW 87")
+        embed()
+        raise RuntimeError("stop debug here")
         if url is not None:
             self.load(pathOrUrl=url)
         if self.docSites == {}:
             self.load()
         for path, ds in self.docSites.items():
             ds.write()
-        self.generateCaddyFile()
         if start:
             self.startWebserver()
-        print("TO CHECK GO TO: http://localhost:1313/")
+        print("TO CHECK GO TO: http://localhost:8080/")
 
     def gitUpdate(self):
         if self.docSites == {}:

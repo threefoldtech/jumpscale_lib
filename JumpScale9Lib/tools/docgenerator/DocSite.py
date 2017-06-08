@@ -4,9 +4,16 @@ import copy
 
 import imp
 import sys
-import inspect
-import copy
+# import inspect
+# import copy
 import pystache
+
+DEFCONFIG = """
+name = "{{NAME}}"
+description = ""
+depends = []
+theme = "hugo-future-imperfect"
+"""
 
 
 def loadmodule(name, path):
@@ -31,10 +38,15 @@ class DocSite:
 
         data = {}
         data["webserver"] = j.tools.docgenerator.webserver
-        c = j.sal.fs.fileGetContents(self.path + "config.toml")
+        data["NAME"] = self.git.name
+        cfgpath = self.path + "config.toml"
+        if not j.sal.fs.exists(cfgpath, followlinks=True):
+            c = DEFCONFIG
+            j.sal.fs.writeFile(cfgpath, contents=c)
+        else:
+            c = j.sal.fs.fileGetContents(cfgpath)
         c2 = pystache.render(c, data)
         self.config = j.data.serializer.toml.loads(c2)
-
         self.name = self.config["name"].strip().lower()
 
         # in caddy config specify the baseurl
