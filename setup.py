@@ -15,7 +15,7 @@ def _post_install(libname, libpath):
     c[libname] = libpath
     j.core.state.configSet('plugins', c)
 
-    j.tools.jsloader.generatePlugins()
+    j.tools.jsloader.generateJumpscalePlugins()
     j.tools.jsloader.copyPyLibs()
 
 
@@ -77,10 +77,10 @@ setup(
         'pyOpenSSL>=17.0.0',
         'pyblake2>=0.9.3',
         'pycapnp>=0.5.12',
+        'tarantool>=0.5.5',
         'pymux>=0.13',
         'redis>=2.10.5',
         'requests>=2.13.0',
-        'tarantool>=0.5.4',
         'toml>=0.9.2',
         'uvloop>=0.8.0',
         'watchdog>=0.8.3',
@@ -88,7 +88,13 @@ setup(
         'dnspython>=1.15.0',
         'libvirt-python>=3.3.0',
         'apache_libcloud>=2.0.0',
-        'python-etcd>=0.4.5'
+        'python-etcd>=0.4.5',
+        'numpy>=1.12.1',
+        'tarantool>=0.5.5',
+        'watchdog>=0.8.3',
+        'pymongo>=3.4.0',
+        'Cython>=0.25.2',
+        'asyncssh>=1.10.1'
     ],
     cmdclass={
         'install': install,
