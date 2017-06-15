@@ -34,8 +34,8 @@ class OVHClient:
         self.cache = j.data.cache.get(
             id=id,
             db=j.data.kvs.getRedisStore(name="cache",
-                                           namespace=id,
-                                           unixsocket=j.sal.fs.joinPaths(j.dirs.TMPDIR, 'redis.sock')))
+                                        namespace=id,
+                                        unixsocket=j.sal.fs.joinPaths(j.dirs.TMPDIR, 'redis.sock')))
 
     def reset(self):
         self.cache.reset()
