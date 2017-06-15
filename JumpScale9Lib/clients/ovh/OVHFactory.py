@@ -1,7 +1,7 @@
 from js9 import j
 
 import ovh
-
+import requests
 import time
 
 # class OVHServer:
@@ -30,6 +30,7 @@ class OVHClient:
             application_secret=appsecret,
             consumer_key=consumerkey,
         )
+
         id = "ovhclient_%s" % consumerkey
         self.cache = j.data.cache.get(
             id=id,
@@ -213,6 +214,135 @@ class OVHClient:
                 self.details.pop(name)
 
 
+    def listNetworkBootloader(self):
+        """
+        Lists iPXE scripts installed on the account
+        """
+        return self.client.get("/me/ipxeScript")
+
+    def inspectNetworkBootloader(self, name):
+        """
+        Returns contents of the iPXE script name given in parameter
+        """
+        return self.client.delete("/me/ipxeScript/%s" % name)
+
+    def deleteNetworkBootloader(self, name):
+        """
+        Delete a iPXE script boot entry
+        Note: this require DELETE account capability
+        """
+        return self.client.delete("/me/ipxeScript/%s" % name)
+
+    def installNetworkBootloader(self, ipxe):
+        """
+        Set a new iPXE boot script bootloader
+        ipxe: should contains a dictionary with:
+          - description: a description which will be displayed on the summary page
+          - name: a name which will identify the iPXE script entry
+          - script: the iPXE script which will be executed during the boot
+        """
+        return self.client.post("/me/ipxeScript", **ipxe)
+
+    def isBootAvailable(self, name):
+        """
+        Checkk if an iPXE boot script name already exists
+        """
+        existing = self.listNetworkBootloader()
+
+        for item in existing:
+            if item == name:
+                return True
+
+        return None
+
+    def _setBootloader(self, target, bootid):
+        print("[+] bootloader selected: %s" % bootid)
+
+        payload = {"bootId": int(bootid)}
+        self.client.put("/dedicated/server/%s" % target, **payload)
+
+        return True
+
+    def setBootloader(self, target, name):
+        """
+        Set andn apply an iPXE boot script to a remote server
+        - target: need to be a OVH server hostname
+        - name: need to be an existing iPXE script name
+        """
+        bootlist = self.client.get("/dedicated/server/%s/boot?bootType=ipxeCustomerScript" % target)
+        checked = None
+
+        for bootid in bootlist:
+            data = self.client.get("/dedicated/server/%s/boot/%s" % (target, bootid))
+            if data['kernel'] == name:
+                return self._setBootloader(target, bootid)
+
+        return False
+
+    def reboot(self, target):
+        """
+        Reboot a server
+        - target: need to be a OVH server hostname
+        """
+        return self.client.post("/dedicated/server/%s/reboot" % target)
+
+    #
+    # custom builder
+    #
+    def _zos_build(self, url):
+        """
+        Internal use.
+        This build an OVH adapted iPXE script based on an officiel bootstrap URL
+        """
+        # strip trailing flash
+        url = url.rstrip('/')
+
+        # downloading original ipxe script
+        script = requests.get(url)
+        if script.status_code != 200:
+            raise RuntimeError("Invalid script URL")
+
+        # going unsecure, because ovh
+        fixed = script.text.replace('https://bootstrap.', 'http://unsecure.bootstrap.')
+
+        # setting name and description according to the url
+        fields = url.split('/')
+
+        if len(fields) == 7:
+            # branch name, zerotier network, arguments
+            description = "Zero-OS: %s (%s, %s)" % (fields[4], fields[5], fields[6])
+            name = "zero-os-%s-%s,%s" % (fields[4], fields[5], fields[6])
+
+        elif len(fields) == 6:
+            # branch name, zerotier network, no arguments
+            description = "Zero-OS: %s (%s, no arguments)" % (fields[4], fields[5])
+            name = "zero-os-%s-%s" % (fields[4], fields[5])
+
+        else:
+            # branch name, no zerotier, no arguments
+            description = "Zero-OS: %s (no zerotier, no arguments)" % fields[4]
+            name = "zero-os-%s" % fields[4]
+
+        return {'description': description, 'name': name, 'script': fixed}
+
+    def setZeroOS(self, target, url):
+        """
+        Configure a node to use Zero-OS iPXE kernel
+        - target: need to be an OVH server hostname
+        - url: need to be a bootstrap.gig.tech url to boot
+        """
+        ipxe = self._zos_build(url)
+
+        print("[+] description: %s" % ipxe['description'])
+        print("[+] boot loader: %s" % ipxe['name'])
+
+        if not self.isBootAvailable(ipxe['name']):
+            print("[+] installing the bootloader")
+            self.installNetworkBootloader(ipxe)
+
+        self.setBootloader(target, ipxe['name'])
+
+
 class OVHFactory:
     """
     """
@@ -245,3 +375,4 @@ class OVHFactory:
 
         """
         return OVHClient(appkey=appkey, appsecret=appsecret, consumerkey=consumerkey, endpoint=endpoint)
+
