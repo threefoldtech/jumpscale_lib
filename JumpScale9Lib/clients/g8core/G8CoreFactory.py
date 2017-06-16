@@ -8,5 +8,5 @@ class G8CoreFactory():
         self.__jslocation__ = "j.clients.g8core"
         self.__imports__ = g8core
 
-    def get(self, host, port=6379, password='', timeout=10):
-        return g8core.Client(host=host, port=port, password=password, timeout=timeout)
+    def get(self, host, port=6379, password=''):
+        return g8core.Client(host=host, port=port, password=password)
