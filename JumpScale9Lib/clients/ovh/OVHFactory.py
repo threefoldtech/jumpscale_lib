@@ -24,6 +24,7 @@ class OVHClient:
         #     client = ovh.Client(endpoint=endpoint)
         #     ck = client.new_consumer_key_request()
         #     ck.add_recursive_rules(ovh.API_READ_WRITE, '/')
+        print("OVH INIT")
         self.client = ovh.Client(
             endpoint=endpoint,
             application_key=appkey,
@@ -34,22 +35,22 @@ class OVHClient:
         id = "ovhclient_%s" % consumerkey
         self.cache = j.data.cache.get(
             id=id,
-            db=j.data.kvs.getRedisStore(name="cache",
-                                        namespace=id,
-                                        unixsocket=j.sal.fs.joinPaths(j.dirs.TMPDIR, 'redis.sock')))
+            db=j.data.kvs.getRedisStore())
+
+    def nameCheck(self, name):
+        if "ns302912" in name:
+            raise RuntimeError("Cannot use server:%s" % name)
 
     def reset(self):
         self.cache.reset()
 
-    @property
     def installationTemplates(self):
         def getData():
             print("get installationTemplates")
             return self.client.get('/dedicated/installationTemplate')
         return self.cache.get("installationTemplates", getData, expire=3600)
 
-    @property
-    def sshKeys(self):
+    def sshKeysGet(self):
         def getData():
             print("get sshkeys")
             return self.client.get('/me/sshKey')
@@ -62,14 +63,16 @@ class OVHClient:
         """
         return self.client.post('/me/sshkey', keyName=name, key=key)
 
-    @property
-    def serversList(self):
+    def serversGetList(self):
         def getData():
             print("get serversList")
-            return self.client.get("/dedicated/server")
+            llist = self.client.get("/dedicated/server")
+            llist = [item for item in llist if item.find("ns302912") == -1]
+            return llist
         return self.cache.get("serversList", getData)
 
     def serverGetDetail(self, name, reload=False):
+        self.nameCheck(name)
         key = "serverGetDetail_%s" % name
         if reload:
             self.cache.delete(key)
@@ -77,9 +80,10 @@ class OVHClient:
         def getData(name):
             print("get %s" % key)
             return self.client.get("/dedicated/server/%s" % name)
-        return self.cache.get(key, getData, name=name)
+        return self.cache.get(key, getData, name=name, expire=120)
 
     def serverGetInstallStatus(self, name, reload=False):
+        self.nameCheck(name)
         key = "serverGetInstallStatus%s" % name
         if reload:
             self.cache.delete(key)
@@ -93,43 +97,43 @@ class OVHClient:
                     return "active"
                 else:
                     raise e
-        return self.cache.get(key, getData, name=name)
+        return self.cache.get(key, getData, name=name, expire=120)
 
-    @property
-    def servers(self):
+    def serversGet(self):
         res = []
-        for item in self.serversList:
+        for item in self.serversGetList():
             res.append((item, self.serverGetDetail(item)))
         return res
 
     def prefabGet(self, name):
+        self.nameCheck(name)
         details = self.serverGetDetail(name)
         e = j.tools.executor.get(details["ip"])
         return e.prefab
 
-    def backupInit(self, name):
-        try:
-            self.client.post("/dedicated/server/%s/features/backupFTP" % name)
-        except Exception as e:
-            if "You already have a backupFTP" in str(e):
-                print("backup init already done for %s" % name)
-                return "ALREADYOK"
-            else:
-                raise e
-        print("backup init ok for %s" % name)
-        return "OK"
-
-    def backupGet(self, name):
-        try:
-            res = self.client.get("/dedicated/server/%s/features/backupFTP" % name)
-        except Exception as e:
-            if "The requested object (backupFTP) does not exist" in str(e):
-                print("backup was not inited yet for %s" % name)
-                self.backupInit(name)
-                res = self.client.get("/dedicated/server/%s/features/backupFTP" % name)
-            else:
-                raise e
-        return res
+    # def backupInit(self, name):
+    #     try:
+    #         self.client.post("/dedicated/server/%s/features/backupFTP" % name)
+    #     except Exception as e:
+    #         if "You already have a backupFTP" in str(e):
+    #             print("backup init already done for %s" % name)
+    #             return "ALREADYOK"
+    #         else:
+    #             raise e
+    #     print("backup init ok for %s" % name)
+    #     return "OK"
+    #
+    # def backupGet(self, name):
+    #     try:
+    #         res = self.client.get("/dedicated/server/%s/features/backupFTP" % name)
+    #     except Exception as e:
+    #         if "The requested object (backupFTP) does not exist" in str(e):
+    #             print("backup was not inited yet for %s" % name)
+    #             self.backupInit(name)
+    #             res = self.client.get("/dedicated/server/%s/features/backupFTP" % name)
+    #         else:
+    #             raise e
+    #     return res
 
     def prefabsGet(self):
         """
@@ -167,6 +171,7 @@ class OVHClient:
         if name == * then will install on all and names will be the name given by ovh
 
         """
+        self.nameCheck(name)
         if installationTemplate not in self.installationTemplates:
             raise j.exceptions.Input(message="could not find install template:%s" %
                                      templateName, level=1, source="", tags="", msgpub="")
@@ -212,7 +217,6 @@ class OVHClient:
         else:
             if name in self.details:
                 self.details.pop(name)
-
 
     def listNetworkBootloader(self):
         """
@@ -265,7 +269,7 @@ class OVHClient:
 
     def setBootloader(self, target, name):
         """
-        Set andn apply an iPXE boot script to a remote server
+        Set and apply an iPXE boot script to a remote server
         - target: need to be a OVH server hostname
         - name: need to be an existing iPXE script name
         """
@@ -279,12 +283,13 @@ class OVHClient:
 
         return False
 
-    def reboot(self, target):
+    def reboot(self, name):
         """
         Reboot a server
         - target: need to be a OVH server hostname
         """
-        return self.client.post("/dedicated/server/%s/reboot" % target)
+        self.nameCheck(name)
+        return self.client.post("/dedicated/server/%s/reboot" % name)
 
     #
     # custom builder
@@ -296,9 +301,13 @@ class OVHClient:
         """
         # strip trailing flash
         url = url.rstrip('/')
-
+        print("zero hub url:%s" % url)
         # downloading original ipxe script
-        script = requests.get(url)
+        try:
+            script = requests.get(url)
+        except Exception as e:
+            msg = "ERROR: zerohub server does not respond\nError:\n%s\n" % e
+            raise(msg)
         if script.status_code != 200:
             raise RuntimeError("Invalid script URL")
 
@@ -325,12 +334,13 @@ class OVHClient:
 
         return {'description': description, 'name': name, 'script': fixed}
 
-    def setZeroOS(self, target, url):
+    def zeroOSBoot(self, target, url):
         """
         Configure a node to use Zero-OS iPXE kernel
         - target: need to be an OVH server hostname
         - url: need to be a bootstrap.gig.tech url to boot
         """
+        self.nameCheck(target)
         ipxe = self._zos_build(url)
 
         print("[+] description: %s" % ipxe['description'])
@@ -339,8 +349,8 @@ class OVHClient:
         if not self.isBootAvailable(ipxe['name']):
             print("[+] installing the bootloader")
             self.installNetworkBootloader(ipxe)
-
         self.setBootloader(target, ipxe['name'])
+        self.reboot(target)
 
 
 class OVHFactory:
@@ -375,4 +385,3 @@ class OVHFactory:
 
         """
         return OVHClient(appkey=appkey, appsecret=appsecret, consumerkey=consumerkey, endpoint=endpoint)
-

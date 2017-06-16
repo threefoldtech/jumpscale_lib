@@ -46,6 +46,9 @@ class Cache:
             def return2():
                 return 2
 
+            def return3():
+                return 3
+
             assert c.get("somethingElse", return1) == 1
             assert c.get("somethingElse") == 1
 
@@ -60,7 +63,10 @@ class Cache:
             print("expiration test")
             time.sleep(2)
 
-            assert c.get("somethingElse", return2) == 2
+            assert c.get("somethingElse", return2, expire=1) == 2
+            assert c.get("somethingElse", return3, expire=1) == 2  # still needs to be 2
+            time.sleep(2)
+            assert c.get("somethingElse", return3, expire=1) == 3  # now needs to be 3
 
         c = self.get("test", j.data.kvs.getRedisStore(name='cache', namespace="mycachetest"), expiration=1)
         testAll(c)
@@ -71,7 +77,7 @@ class Cache:
 
 class CacheCategory():
 
-    def __init__(self, id, db, expiration=60):
+    def __init__(self, id, db, expiration=3):
         self.id = id
 
         self.db = db
@@ -101,7 +107,7 @@ class CacheCategory():
             # print(val)
             if val is None or val == "":
                 raise j.exceptions.RuntimeError("cache method cannot return None or empty string.")
-            self.set(key, val)
+            self.set(key, val, expire=expire)
             return val
         else:
             if res == None:
