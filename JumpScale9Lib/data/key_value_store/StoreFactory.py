@@ -227,10 +227,19 @@ class StoreFactory:
         @rtype: MemoryKeyValueStore
         '''
         if not port:
-            port = j.core.db.config_get('port').get('port', port)
+            port = 6379
+            if "port" in j.core.state.config["redis"]:
+                port = j.core.state.config["redis"]["port"]
         if not unixsocket:
-            unixsocket = j.core.db.config_get('unixsocket').get('unixsocket', unixsocket) or None
+            unixsocket = None
+            if "unixsocket" in j.core.state.config["redis"]:
+                unixsocket = j.core.state.config["redis"]["unixsocket"]
+
         from JumpScale9Lib.data.key_value_store.redis_store import RedisKeyValueStore
+
+        if j.clients.redis.get4core() is None:
+            j.clients.redis.start4core()
+
         res = RedisKeyValueStore(
             name=name,
             namespace=namespace,
