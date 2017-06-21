@@ -89,7 +89,8 @@ setup(
         'libvirt-python>=3.3.0',
         'apache_libcloud>=2.0.0',
         'python-etcd>=0.4.5',
-        'zerotier>=1.1.2'
+        'zerotier>=1.1.2',
+        'packet-python>=1.33'
     ],
     dependency_links=[
         'git+https://github.com/zero-os/0-core#egg=0-core-client&subdirectory=client/py-client'
