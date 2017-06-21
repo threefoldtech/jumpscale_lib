@@ -35,7 +35,7 @@ class ZerotierClient:
             res2["lastOnlineHR"] = j.data.time.epoch2HRDateTime(item["lastOnline"] / 1000)
             res2["lastOnline"] = item["lastOnline"]
             res2["ipaddr_priv"] = item["config"]["ipAssignments"]
-            res2["ipaddr_pub"] = item["physicalAddress"].split("/")[0]
+            res2["ipaddr_pub"] = item["physicalAddress"].split("/")[0] if item["physicalAddress"] else None
             result.append(res2)
         return result
 
