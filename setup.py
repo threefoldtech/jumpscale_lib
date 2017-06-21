@@ -46,6 +46,7 @@ setup(
     license='Apache',
     packages=['JumpScale9Lib'],
     install_requires=[
+        '0-core-client',
         'Brotli>=0.6.0',
         'Cython>=0.25.2',
         'Jinja2>=2.9.6',
@@ -88,6 +89,9 @@ setup(
         'libvirt-python>=3.3.0',
         'apache_libcloud>=2.0.0',
         'python-etcd>=0.4.5'
+    ],
+    dependency_links=[
+        'git+https://github.com/zero-os/0-core#egg=0-core-client&subdirectory=client/py-client'
     ],
     cmdclass={
         'install': install,

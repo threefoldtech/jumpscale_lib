@@ -2,7 +2,6 @@ from js9 import j
 import smtplib
 import mimetypes
 from email import encoders
-from email.message import Message
 from email.mime.audio import MIMEAudio
 from email.mime.base import MIMEBase
 from email.mime.image import MIMEImage
@@ -14,13 +13,15 @@ class EmailClient:
 
     def __init__(self):
         self.__jslocation__ = "j.clients.email"
-        hrd = j.application.getAppInstanceHRD("mailclient", "main")
-        self._server = hrd.getStr("instance.smtp.server", None)
-        self._port = hrd.getInt("instance.smtp.port", None)
-        self._ssl = False
-        self._username = hrd.getStr("instance.smtp.login", None)
-        self._password = hrd.getStr("instance.smtp.passwd", None)
-        self._sender = hrd.getStr("instance.smtp.sender", '')
+        if 'email' not in j.application.config:
+            raise RuntimeError("Email is not in config")
+        config = j.application.config['email']
+        self._server = config['smtp_server']
+        self._port = config['smtp_port']
+        self._ssl = self._port in [465, 587]
+        self._username = config.get('login')
+        self._password = config.get('password')
+        self._sender = config.get('from')
 
     def __str__(self):
         out = "server=%s\n" % (self._server)
@@ -45,7 +46,7 @@ class EmailClient:
         @param mimetype: Type of the body plain, html or None for autodetection
         @type mimetype: string
         """
-        if sender == "":
+        if not sender:
             sender = self._sender
         if isinstance(recipients, str):
             recipients = [recipients]

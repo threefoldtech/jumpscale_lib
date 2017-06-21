@@ -1,5 +1,5 @@
 # from JumpScale9 import j
-import g8core
+from zeroos.core0 import client as g8core
 
 
 class G8CoreFactory():
