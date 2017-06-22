@@ -49,7 +49,7 @@ setup(
         'Brotli>=0.6.0',
         'Cython>=0.25.2',
         'Jinja2>=2.9.6',
-        'JumpScale9>=9.0.1',
+        'JumpScale9>=9.0.2',
         'Pillow>=4.1.1',
         'PyGithub>=1.34',
         'PyYAML>=3.12',
