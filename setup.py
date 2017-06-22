@@ -14,7 +14,7 @@ def _post_install(libname, libpath):
     c = j.core.state.configGet('plugins', defval={})
     c[libname] = libpath
     j.core.state.configSet('plugins', c)
-
+    j.do.execute("pip3 install 'git+https://github.com/zero-os/0-core#egg=0-core-client&subdirectory=client/py-client'")
     j.tools.jsloader.generatePlugins()
 
 
@@ -90,9 +90,6 @@ setup(
         'python-etcd>=0.4.5',
         'zerotier>=1.1.2',
         'packet-python>=1.33'
-    ],
-    dependency_links=[
-        'git+https://github.com/zero-os/0-core#egg=0-core-client&subdirectory=client/py-client'
     ],
     cmdclass={
         'install': install,
