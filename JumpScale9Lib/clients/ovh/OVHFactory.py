@@ -78,7 +78,7 @@ class OVHClient:
             self.cache.delete(key)
 
         def getData(name):
-            print("get %s" % key)
+            # print("get %s" % key)
             return self.client.get("/dedicated/server/%s" % name)
         return self.cache.get(key, getData, name=name, expire=120)
 
@@ -350,7 +350,25 @@ class OVHClient:
             print("[+] installing the bootloader")
             self.installNetworkBootloader(ipxe)
         self.setBootloader(target, ipxe['name'])
-        self.reboot(target)
+        return self.reboot(target)
+
+    def getTask(self, target, taskId):
+        return self.client.get("/dedicated/server/%s/task/%s" % (target, taskId))
+
+    def waitServerReboot(self, target, taskId):
+        current = ""
+
+        while True:
+            status = self.getTask(target, taskId)
+
+            if status['status'] != current:
+                current = status['status']
+                print("[+] rebooting %s: %s" % (target, current))
+
+            if status['status'] == 'done':
+                return True
+
+            time.sleep(1)
 
 
 class OVHFactory:
