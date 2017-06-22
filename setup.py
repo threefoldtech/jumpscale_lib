@@ -46,7 +46,6 @@ setup(
     license='Apache',
     packages=['JumpScale9Lib'],
     install_requires=[
-        '0-core-client',
         'Brotli>=0.6.0',
         'Cython>=0.25.2',
         'Jinja2>=2.9.6',
