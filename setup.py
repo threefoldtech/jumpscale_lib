@@ -38,7 +38,7 @@ class develop(_develop):
 
 setup(
     name='JumpScale9Lib',
-    version='9.0.0',
+    version='9.0.3',
     description='Automation framework for cloud workloads library',
     url='https://github.com/Jumpscale/lib9',
     author='GreenItGlobe',
@@ -49,7 +49,7 @@ setup(
         'Brotli>=0.6.0',
         'Cython>=0.25.2',
         'Jinja2>=2.9.6',
-        'JumpScale9>=9.0.2',
+        'JumpScale9>=9.0.3',
         'Pillow>=4.1.1',
         'PyGithub>=1.34',
         'PyYAML>=3.12',
