@@ -110,7 +110,7 @@ class Sandboxer:
         default dest = '%s/bin/'%j.dirs.JSBASEDIR
         """
         if dest is None:
-            dest = "%s/bin/" % j.dirs.JSBASEDIR
+            dest = "%s/bin/" % j.dirs.BASEDIR
         if j.sal.fs.isDir(path):
             # do all files in dir
             for item in j.sal.fs.listFilesInDir(path, recursive=recursive, followSymlinks=True, listSymlinks=False):
