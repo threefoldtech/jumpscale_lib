@@ -4,25 +4,23 @@
 To compress a simple string using blosc compression:
 
 ```python
-from JumpScale9Lib.ExtraTools import ByteProcessor
 input = bytearray()
 input.extend(map(ord, 'hello jumpscale'))
-output = ByteProcessor.compress(input)
-ByteProcessor.decompress(output)
+output = j.tools.byteprocessor.compress(input)
+j.tools.byteprocessor.decompress(output)
 ```
 
 Other compression algorithms are also available:
 
 ```python
-from JumpScale9Lib.ExtraTools import ByteProcessor
-ByteProcessor.compress                 
-ByteProcessor.disperse                 
-ByteProcessor.hashMd5                  
-ByteProcessor.hashTiger192             
-ByteProcessor.decompress               
-ByteProcessor.getDispersedBlockObject  
-ByteProcessor.hashTiger160             
-ByteProcessor.undisperse
+j.tools.byteprocessor.compress                 
+j.tools.byteprocessor.disperse                 
+j.tools.byteprocessor.hashMd5                  
+j.tools.byteprocessor.hashTiger192             
+j.tools.byteprocessor.decompress               
+j.tools.byteprocessor.getDispersedBlockObject  
+j.tools.byteprocessor.hashTiger160             
+j.tools.byteprocessor.undisperse
 ```
 
 - compress/decompess: blosc compression (ultra fast,+ 250MB/sec)
