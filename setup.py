@@ -89,7 +89,8 @@ setup(
         'apache_libcloud>=2.0.0',
         'python-etcd>=0.4.5',
         'zerotier>=1.1.2',
-        'packet-python>=1.33'
+        'packet-python>=1.33',
+        'blosc>=1.5.1'
     ],
     cmdclass={
         'install': install,
