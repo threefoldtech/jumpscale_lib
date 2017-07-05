@@ -637,10 +637,12 @@ class FList:
             fullpath = "%s/%s/%s" % (self.rootpath, dirobj.dbobj.location, name)
             print("[+] populating: %s" % fullpath)
             hashs = g8storclient.encrypt(fullpath)
-            # print(hashs)
 
             if hashs is None:
                 return
+
+            for index, value in enumerate(hashs):
+                hashs[index].pop('data', None)
 
             subobj.attributes.file.blocks = hashs
             dirobj.save()
@@ -655,7 +657,7 @@ class FList:
             # print("Special: Ignore")
             pass
 
-        print("Uploading")
+        print("Populating")
         result = []
         self.walk(
             dirFunction=procDir,
