@@ -58,6 +58,11 @@ class GrafanaClient:
         result = self._session.post(url, json=data, verify=self._verify_ssl)
         return result.json()
 
+    def deleteDashboard(self, slug):
+        url = os.path.join(self._url, 'api/dashboards/db/{}'.format(slug))
+        result = self._session.delete(url, verify=self._verify_ssl)
+        return result.json()
+
     def listDashBoards(self):
         url = os.path.join(self._url, 'api/search/')
         return self._session.get(url, verify=self._verify_ssl).json()
