@@ -624,9 +624,10 @@ class FList:
         return "\n".join(result) + "\n"
 
     def upload(self, host="127.0.0.1", port=16379):
-        from g8storclient import g8storclient as g8sc
-        # g8client = g8sc.getClientId0(host, port)
-        g8client = g8sc.connect(host, port)
+        raise RuntimeError("Upload is not supported anymore, please check 'populate' method")
+
+    def populate(self):
+        import g8storclient
 
         def procDir(dirobj, type, name, args, key):
             # print("Dir: Ignore")
@@ -634,13 +635,14 @@ class FList:
 
         def procFile(dirobj, type, name, subobj, args):
             fullpath = "%s/%s/%s" % (self.rootpath, dirobj.dbobj.location, name)
-            print("[+] uploading: %s" % fullpath)
-            # hash = g8sc.uploadFile0(g8client, fullpath, 1)
-            hashs = g8sc.upload(g8client, fullpath)
-            # print(hashs)
+            print("[+] populating: %s" % fullpath)
+            hashs = g8storclient.encrypt(fullpath)
 
             if hashs is None:
                 return
+
+            for index, value in enumerate(hashs):
+                hashs[index].pop('data', None)
 
             subobj.attributes.file.blocks = hashs
             dirobj.save()
@@ -655,7 +657,7 @@ class FList:
             # print("Special: Ignore")
             pass
 
-        print("Uploading")
+        print("Populating")
         result = []
         self.walk(
             dirFunction=procDir,
