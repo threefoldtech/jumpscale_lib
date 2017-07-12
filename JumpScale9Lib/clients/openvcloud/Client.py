@@ -239,13 +239,31 @@ class Account(Authorizables):
                 raise j.exceptions.RuntimeError(
                     "Could not find space with name %s" % name)
 
-    def create_disk(self, name, gid, description, size=0, type="B"):
+    @property
+    def disks(self):
+        """
+        Wrapper to list all disks related to an account
+        :return:dict list of disks details
+        """
+        return self.client.api.cloudapi.disks.list(accountId=self.id)
+
+    def delete_disk(self, disk_id, detach=True):
+        """
+        Wrapper to delete disk by its id. I think there should be a class for disks to list all its wrappers
+        :param disk_id: integer: The disk id need to be removed
+        :param detach: boolean: detach the disk from the machine first
+        :return:
+        """
+        return self.client.api.cloudapi.disks.delete(diskId=disk_id, detach=detach)
+
+    def create_disk(self, name, gid, description, size=0, type="B", ssd_size=0):
         res = self.client.api.cloudapi.disks.create(accountId=self.id,
                                                     name=name,
                                                     gid=gid,
                                                     description=description,
                                                     size=size,
-                                                    type=type)
+                                                    type=type,
+                                                    ssdSize=ssd_size)
         return res
 
     def _addUser(self, username, right):
