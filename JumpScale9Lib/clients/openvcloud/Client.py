@@ -1,5 +1,4 @@
 from js9 import j
-from JumpScale9Lib.clients.portal.PortalClient import ApiError
 import time
 import datetime
 import os
@@ -86,6 +85,7 @@ class Client:
         origcall = api.__call__
 
         def patch_call(that, *args, **kwargs):
+            from JumpScale9Lib.clients.portal.PortalClient import ApiError
             try:
                 return origcall(that, *args, **kwargs)
             except ApiError:
