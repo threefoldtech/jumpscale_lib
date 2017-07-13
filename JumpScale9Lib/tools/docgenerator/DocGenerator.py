@@ -81,8 +81,14 @@ class DocGenerator:
 
     def installDeps(self, reset=False):
         prefab = j.tools.prefab.local
-        if prefab.core.doneGet("docgenerator:installed") == False:
+        if prefab.core.doneGet("docgenerator:installed") == False or reset:
+            def hugoInstall():
+                # Using package install will result in an old version on some machines
+                prefab.core.file_download('https://github.com/spf13/hugo/releases/download/v0.20.7/hugo_0.20.7_Linux-64bit.tar.gz')
+                prefab.core.file_expand('$TMPDIR/hugo_0.20.7_Linux-64bit.tar.gz')
+                prefab.core.file_copy('$TMPDIR/hugo_0.20.7_Linux-64bit/hugo', '/usr/local/bin')
             prefab.apps.nodejs.install()
+
             prefab.core.run("npm install -g phantomjs-prebuilt", profile=True)
             prefab.core.run("npm install -g mermaid", profile=True)
             prefab.apps.caddy.build()
@@ -91,7 +97,7 @@ class DocGenerator:
                 prefab.core.run("brew install hugo")
             elif "ubuntu" in str(j.core.platformtype.myplatform):
                 prefab.package.install('graphviz')
-                prefab.package.install('hugo')
+                hugoInstall()
             j.tools.prefab.local.development.golang.install()
             j.tools.prefab.local.apps.caddy.start()
             prefab.core.doneSet("docgenerator:installed")
@@ -189,7 +195,7 @@ class DocGenerator:
         else:
             path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
 
-        for docDir in j.sal.fs.listFilesInDir(path, True, filter=".docs"):
+        for docDir in j.sal.fs.listFilesInDir(path, recursive=True, filter=".docs"):
             if docDir not in self.docSites:
                 print("found doc dir:%s" % docDir)
                 ds = DocSite(path=docDir)
@@ -203,21 +209,13 @@ class DocGenerator:
 
     def generateJSDoc(self, start=True):
         # self.load(pathOrUrl="https://github.com/Jumpscale/portal9")
-        self.load(pathOrUrl="https://github.com/Jumpscale/ays9")
+        self.load(pathOrUrl="https://github.com/Jumpscale/ays9/tree/master/docs")
         self.load(pathOrUrl="https://github.com/Jumpscale/core9/")
         self.load(pathOrUrl="https://github.com/Jumpscale/lib9")
         self.load(pathOrUrl="https://github.com/Jumpscale/prefab9")
-        from IPython import embed
-        print("DEBUG NOW sdd")
-        embed()
-        raise RuntimeError("stop debug here")
         self.generate(start=start)
 
     def generate(self, url=None, start=True):
-        from IPython import embed
-        print("DEBUG NOW 87")
-        embed()
-        raise RuntimeError("stop debug here")
         if url is not None:
             self.load(pathOrUrl=url)
         if self.docSites == {}:
@@ -226,7 +224,7 @@ class DocGenerator:
             ds.write()
         if start:
             self.startWebserver()
-        print("TO CHECK GO TO: http://localhost:8080/")
+        print("TO CHECK GO TO: %s" % self.webserver)
 
     def gitUpdate(self):
         if self.docSites == {}:
