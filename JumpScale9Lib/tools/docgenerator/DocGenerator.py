@@ -203,8 +203,7 @@ class DocGenerator:
 
     def generateExamples(self, start=True):
         self.load(pathOrUrl="https://github.com/Jumpscale/docgenerator/tree/master/examples")
-        # self.load(pathOrUrl="https://github.com/Jumpscale/jumpscale_core9/tree/8.2.0")
-        # self.load(pathOrUrl="https://github.com/Jumpscale/jumpscale_portal8/tree/8.2.0")
+        #self.load(pathOrUrl="https://github.com/Jumpscale/ays9/tree/master/docs")
         self.generate(start=start)
 
     def generateJSDoc(self, start=True):
