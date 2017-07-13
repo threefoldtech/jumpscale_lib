@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 from setuptools.command.install import install as _install
 from setuptools.command.develop import develop as _develop
 import os
@@ -36,15 +36,24 @@ class develop(_develop):
         self.execute(_post_install, (libname, libpath), msg="Running post install task")
 
 
+long_description = ""
+try:
+    from pypandoc import convert
+    long_description = convert('README.md', 'rst')
+except ImportError:
+    long_description = ""
+
+
 setup(
     name='JumpScale9Lib',
     version='9.0.3',
     description='Automation framework for cloud workloads library',
+    long_description=long_description,
     url='https://github.com/Jumpscale/lib9',
     author='GreenItGlobe',
     author_email='info@gig.tech',
     license='Apache',
-    packages=['JumpScale9Lib'],
+    packages=find_packages(),
     install_requires=[
         'Brotli>=0.6.0',
         'Jinja2>=2.9.6',
@@ -86,11 +95,11 @@ setup(
         'python-etcd>=0.4.5',
         'zerotier>=1.1.2',
         'packet-python>=1.33',
-        'blosc>=1.5.1'
+        'blosc>=1.5.1',
     ],
     cmdclass={
         'install': install,
         'develop': develop,
-        'developement': develop
+        'developement': develop,
     },
 )
