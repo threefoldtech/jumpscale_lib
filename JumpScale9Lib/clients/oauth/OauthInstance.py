@@ -25,6 +25,7 @@ class UserInfo(object):
 class OauthInstance:
 
     def __init__(self, addr, accesstokenaddr, id, secret, scope, redirect_url, user_info_url, logout_url, instance):
+        self.logger = j.logger.get('j.clients.oauth')
         if not addr:
             hrd = j.application.getAppInstanceHRD('oauth_client', instance)
             self.addr = hrd.get('instance.oauth.client.url')
@@ -64,7 +65,7 @@ class OauthInstance:
 
         if not result.ok or 'error' in result.json():
             msg = result.json()['error']
-            j.logger.log(msg)
+            self.logger.error(msg)
             raise AuthError(msg)
         return result.json()
 
@@ -73,7 +74,7 @@ class OauthInstance:
         userinforesp = requests.get(self.user_info_url, params=params)
         if not userinforesp.ok:
             msg = 'Failed to get user details'
-            j.logger.log(msg)
+            self.logger.error(msg)
             raise AuthError(msg)
 
         userinfo = userinforesp.json()
@@ -95,7 +96,7 @@ class ItsYouOnline(OauthInstance):
 
         if not result.ok:
             msg = result.text
-            j.logger.log(msg)
+            self.logger.error(msg)
             raise AuthError(msg)
         token = result.json()
         # convert jwt expire time to oauth2 token expire time
