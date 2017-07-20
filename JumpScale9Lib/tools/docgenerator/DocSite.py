@@ -186,6 +186,7 @@ class DocSite:
                 rdirpath = j.sal.fs.pathRemoveDirPart(path, self.path)
                 rdirpath = rdirpath.strip("/").strip().strip("/")
                 self.defaultContent[rdirpath] = C
+            return True
 
         def callbackFunctionFile(path, arg):
             ext = j.sal.fs.getFileExtension(path)
