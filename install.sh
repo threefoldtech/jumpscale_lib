@@ -5,3 +5,5 @@ apt-get install python3-pip libffi-dev libpython3-dev libssh-dev libsnappy-dev b
 pip3 install -U cryptography
 #for development mode
 pip3 install -e .
+
+python3 -c "from js9 import j;j.tools.jsloader.generate()"
