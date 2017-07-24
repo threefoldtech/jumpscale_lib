@@ -6,7 +6,7 @@ from .User import User
 from .Issue import Issue
 from datetime import datetime
 import itertools
-
+from issuemanagerlib import issuemanager
 
 # please note you need to use ModelBase1 for now.
 def githubtimetoint(t):
@@ -71,6 +71,7 @@ class GitHubFactory:
         # return Issue
         return
 
+git_host_name = "github"
 
 class GitHubClient:
 
@@ -82,12 +83,12 @@ class GitHubClient:
         self.pool = Pool()
 
         self.model = None
-        # j.tools.issuemanager.set_namespaceandstore("github", "github")
+        # issuemanager.set_namespaceandstore("github", "github")
 
-        self.userCollection = j.tools.issuemanager.getUserCollectionFromDB()
-        self.orgCollection = j.tools.issuemanager.getOrgCollectionFromDB()
-        self.issueCollection = j.tools.issuemanager.getIssueCollectionFromDB()
-        self.repoCollection = j.tools.issuemanager.getRepoCollectionFromDB()
+        self.userCollection = issuemanager.getUserCollectionFromDB()
+        self.orgCollection = issuemanager.getOrgCollectionFromDB()
+        self.issueCollection = issuemanager.getIssueCollectionFromDB()
+        self.repoCollection = issuemanager.getRepoCollectionFromDB()
         self.logger = j.logger.get('j.clients.github')
 
     # def getRepo(self, fullname):
@@ -125,7 +126,6 @@ class GitHubClient:
 
         """
         self.logger.info("get users from github org:%s" % org)
-        git_host_name = "github"
         org = self.api.get_organization(org)
         members_pagedlist = org.get_members()
 
@@ -162,7 +162,6 @@ class GitHubClient:
 
         @param orgname str: organization name.
         """
-        git_host_name = "github"
         if not self.users:
             self._getUsersFromGithubOrg(git_host_name, orgname)
 
@@ -221,14 +220,13 @@ class GitHubClient:
         @param orgs list: list of organizations names.
 
         """
-        git_host_name = "github"
         for org in orgs:
             self.getUsersFromGithubOrg(org)
-        # self.pool.starmap(self.getUsersFromGithubOrg, zip(orgs))
-        from IPython import embed
-        print("DEBUG NOW oi")
-        embed()
-        raise RuntimeError("stop debug here")
+        # self.pool.map(self.getUsersFromGithubOrg, zip(orgs))
+        # from IPython import embed
+        # print("DEBUG NOW oi")
+        # embed()
+        # raise RuntimeError("stop debug here")
 
     def getOrgsFromGithub(self, *orgs):
         """
@@ -236,8 +234,7 @@ class GitHubClient:
 
         @param orgs list: list of organizations names.
         """
-        git_host_name = "github"
-        self.pool.starmap(self._getOrganizationFromGithub, zip(itertools.repeat(git_host_name), orgs))
+        self.pool.map(self._getOrganizationFromGithub, orgs)
 
     def getIssuesFromGithubRepo(self, repo):
         """
@@ -246,7 +243,6 @@ class GitHubClient:
         @param repo str: github repository name.
 
         """
-        git_host_name = "github"
         if not self.repos:
             self.getReposFromGithubOrgs(git_host_name)
 
@@ -293,11 +289,10 @@ class GitHubClient:
 
         @param org str: organization name.
         """
-        git_host_name = "github"
         org = self.api.get_organization(org)
         repos = fetchall_from_paginated_list(org.get_repos())
         repos = [rep.full_name for rep in repos]
-        self.pool.starmap(self.getIssuesFromGithubRepo, zip(itertools.repeat(git_host_name), repos))
+        self.pool.map(self.getIssuesFromGithubRepo, repos)
 
     def getIssuesFromGithubOrganizations(self, *orgs):
         """
@@ -305,8 +300,7 @@ class GitHubClient:
 
         @param orgs list[str]: list of organizations names.
         """
-        git_host_name = "github"
-        self.pool.starmap(self.getIssuesFromGithubOrganization, zip(itertools.repeat(git_host_name), orgs))
+        self.pool.map(self.getIssuesFromGithubOrganization, orgs)
 
     def getReposFromGithubOrgs(self, *orgs):
         """
@@ -315,8 +309,7 @@ class GitHubClient:
         @param orgs list[str]: list of organizations names.
 
         """
-        git_host_name = "github"
-        self.pool.starmap(self.getReposFromGithubOrg, zip(itertools.repeat(git_host_name), orgs))
+        self.pool.map(self.getReposFromGithubOrg, orgs)
 
     def getReposFromGithubOrg(self, org):
         """
@@ -325,7 +318,6 @@ class GitHubClient:
         @param org str: organization names.
 
         """
-        git_host_name = "github"
         org = self.api.get_organization(org)
         repos = fetchall_from_paginated_list(org.get_repos())
 
