@@ -46,7 +46,7 @@ except ImportError:
 
 setup(
     name='JumpScale9Lib',
-    version='9.0.3',
+    version='9.1.0',
     description='Automation framework for cloud workloads library',
     long_description=long_description,
     url='https://github.com/Jumpscale/lib9',
