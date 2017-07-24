@@ -2,7 +2,7 @@ from .GogsClient import GogsClient
 from js9 import j
 import psycopg2
 import sys
-
+from issuemanagerlib import issuemanager
 
 class GogsFactory:
 
@@ -23,14 +23,13 @@ class GogsFactory:
         self._repos_table = {}
         self.userId2userKey = {}
         self.repoId2repoKey = {}
-        self.userCollection = j.tools.issuemanager.getUserCollectionFromDB()
-        self.orgCollection = j.tools.issuemanager.getOrgCollectionFromDB()
-        self.issueCollection = j.tools.issuemanager.getIssueCollectionFromDB()
-        self.repoCollection = j.tools.issuemanager.getRepoCollectionFromDB()
+        self.userCollection = issuemanager.getUserCollectionFromDB()
+        self.orgCollection = issuemanager.getOrgCollectionFromDB()
+        self.issueCollection = issuemanager.getIssueCollectionFromDB()
+        self.repoCollection = issuemanager.getRepoCollectionFromDB()
 
     def createViews(self):
         self.logger.info("createviews")
-
         self.model.User.raw("DROP VIEW IF EXISTS issue_labels CASCADE; ").execute()
         self.model.User.raw("DROP VIEW IF EXISTS issue_labels_grouped CASCADE ;").execute()
         self.model.User.raw("DROP VIEW IF EXISTS issue_comments CASCADE ;").execute()
