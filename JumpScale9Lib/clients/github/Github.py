@@ -220,13 +220,7 @@ class GitHubClient:
         @param orgs list: list of organizations names.
 
         """
-        for org in orgs:
-            self.getUsersFromGithubOrg(org)
-        # self.pool.map(self.getUsersFromGithubOrg, zip(orgs))
-        # from IPython import embed
-        # print("DEBUG NOW oi")
-        # embed()
-        # raise RuntimeError("stop debug here")
+        self.pool.map(self.getUsersFromGithubOrg, orgs)
 
     def getOrgsFromGithub(self, *orgs):
         """
