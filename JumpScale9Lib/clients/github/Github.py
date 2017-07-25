@@ -221,10 +221,6 @@ class GitHubClient:
 
         """
         self.pool.map(self.getUsersFromGithubOrg, orgs)
-        # from IPython import embed
-        # print("DEBUG NOW oi")
-        # embed()
-        # raise RuntimeError("stop debug here")
 
     def getOrgsFromGithub(self, *orgs):
         """
