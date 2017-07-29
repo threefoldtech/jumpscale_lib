@@ -461,7 +461,16 @@ class Machine:
         self.client.api.cloudapi.machines.stop(machineId=self.id)
 
     def restart(self):
-        self.client.api.cloudapi.machines.restart(machineId=self.id)
+        self.client.api.cloudapi.machines.reboot(machineId=self.id)
+
+    def pause(self):
+        self.client.api.cloudapi.machines.pause(machineId=self.id)
+
+    def resume(self):
+        self.client.api.cloudapi.machines.resume(machineId=self.id)
+
+    def reset(self):
+        self.client.api.cloudapi.machines.reset(machineId=self.id)
 
     def delete(self):
         self.client.api.cloudapi.machines.delete(machineId=self.id)
