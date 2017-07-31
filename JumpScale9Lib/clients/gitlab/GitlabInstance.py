@@ -4,13 +4,8 @@ import base64
 from js9 import j
 
 # import gitlab3
-try:
-    import gitlab
-except Exception as e:
-    cmd = "pip install pyapi-gitlab"
-    if str(e).find("No module named 'gitlab'") != -1:
-        j.sal.process.executeWithoutPipe(cmd)
-    import gitlab
+
+import gitlab
 
 
 class GitlabInstance:
