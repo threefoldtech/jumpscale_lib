@@ -82,24 +82,22 @@ class DocGenerator:
     def installDeps(self, reset=False):
         prefab = j.tools.prefab.local
         if prefab.core.doneGet("docgenerator:installed") == False or reset:
-            def hugoInstall():
+            prefab.apps.nodejs.install()
+            if "darwin" in str(j.core.platformtype.myplatform):
+                prefab.core.run("brew install graphviz")
+                prefab.core.run("brew install hugo")
+                prefab.core.run("brew install caddy")
+            elif "ubuntu" in str(j.core.platformtype.myplatform):
+                prefab.package.install('graphviz')
                 # Using package install will result in an old version on some machines
                 prefab.core.file_download('https://github.com/spf13/hugo/releases/download/v0.20.7/hugo_0.20.7_Linux-64bit.tar.gz')
                 prefab.core.file_expand('$TMPDIR/hugo_0.20.7_Linux-64bit.tar.gz')
                 prefab.core.file_copy('$TMPDIR/hugo_0.20.7_Linux-64bit/hugo', '/usr/local/bin')
-            prefab.apps.nodejs.install()
-
+                prefab.local.development.golang.install()
+                prefab.apps.caddy.build()
             prefab.core.run("npm install -g phantomjs-prebuilt", profile=True)
-            prefab.core.run("npm install -g mermaid", profile=True)
-            prefab.apps.caddy.build()
-            if "darwin" in str(j.core.platformtype.myplatform):
-                prefab.core.run("brew install graphviz")
-                prefab.core.run("brew install hugo")
-            elif "ubuntu" in str(j.core.platformtype.myplatform):
-                prefab.package.install('graphviz')
-                hugoInstall()
-            j.tools.prefab.local.development.golang.install()
-            j.tools.prefab.local.apps.caddy.start()
+            prefab.core.run("npm install -g mermaid", profile=True)            
+            prefab.local.apps.caddy.start()
             prefab.core.doneSet("docgenerator:installed")
 
     def startWebserver(self):
