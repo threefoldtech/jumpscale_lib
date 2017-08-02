@@ -71,6 +71,23 @@ class OVHClient:
             return llist
         return self.cache.get("serversList", getData)
 
+    def getETCDConnectionFromCluster(self):
+        """
+        will check ssh on each server, when ssh found then check if there is an ETCD server installed
+        if not will install
+        if yes will return
+        """
+        l = []
+        for item in self.serversGetList():
+            try:
+                l.append(self.prefabGet(item))
+            except:
+                pass
+        from IPython import embed
+        print("DEBUG NOW sdsd")
+        embed()
+        raise RuntimeError("stop debug here")
+
     def serverGetDetail(self, name, reload=False):
         self.nameCheck(name)
         key = "serverGetDetail_%s" % name
@@ -152,7 +169,7 @@ class OVHClient:
         nrInstalling = 1
         while nrInstalling > 0:
             nrInstalling = 0
-            for item in self.serversList:
+            for item in self.serversGetList():
                 status = self.serverGetInstallStatus(name=item, reload=True)
                 key = "serverGetDetail_%s" % item  # lets make sure server is out of cache too
                 self.cache.delete(key)
@@ -165,22 +182,22 @@ class OVHClient:
         self.details = {}
         print("INSTALL DONE")
 
-    def serverInstall(self, name="", installationTemplate="ubuntu1604-server_64", sshKeyName="ovh",
+    def serverInstall(self, name="", installationTemplate="ubuntu1704-server_64", sshKeyName="ovh",
                       useDistribKernel=True, noRaid=True, hostname="", wait=True):
         """
         if name == * then will install on all and names will be the name given by ovh
 
         """
         self.nameCheck(name)
-        if installationTemplate not in self.installationTemplates:
+        if installationTemplate not in self.installationTemplates():
             raise j.exceptions.Input(message="could not find install template:%s" %
                                      templateName, level=1, source="", tags="", msgpub="")
-        if sshKeyName not in self.sshKeys:
+        if sshKeyName not in self.sshKeysGet():
             raise j.exceptions.Input(message="could not find sshKeyName:%s" %
                                      sshKeyName, level=1, source="", tags="", msgpub="")
 
         if name == "*":
-            for item in self.serversList():
+            for item in self.serversGetList():
                 self.serverInstall(name=item, wait=False)
             wait = True
         elif name == "":
@@ -403,3 +420,19 @@ class OVHFactory:
 
         """
         return OVHClient(appkey=appkey, appsecret=appsecret, consumerkey=consumerkey, endpoint=endpoint)
+
+    def getByName(self, name):
+        """
+        name is in j.core.config[$name] and can be set with something listNetworkBootloader
+
+        js9 'j.core.state.configSetInDict("ovh_gig","appsecret","xxx")'
+        js9 'j.core.state.configSetInDict("ovh_gig","appkey","xxx")'
+        js9 'j.core.state.configSetInDict("ovh_gig","consumerkey","xxx")'
+        js9 'j.core.state.configSetInDict("ovh_gig","endpoint","soyoustart-eu")'
+
+        """
+        cl = j.clients.ovh.get(appkey=j.core.state.configGetFromDict(name, "appkey"),
+                               appsecret=j.core.state.configGetFromDict(name, "appsecret"),
+                               consumerkey=j.core.state.configGetFromDict(name, "consumerkey"))
+
+        return cl

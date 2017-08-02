@@ -1,6 +1,6 @@
 
 from js9 import j
-# import html
+import html
 from JumpScale9Lib.data.capnp.ModelBase import ModelBase
 
 class DocModel(ModelBase):

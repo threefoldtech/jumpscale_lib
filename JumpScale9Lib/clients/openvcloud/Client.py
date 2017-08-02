@@ -187,6 +187,12 @@ class Authorizables:
             self.refresh()
         return True
 
+    def update_access(self, username, right):
+        if username in self.authorized_users:
+            self._updateUser(username, right)
+            self.refresh()
+        return True
+
 
 class Account(Authorizables):
 
@@ -330,6 +336,9 @@ class Space(Authorizables):
     def _deleteUser(self, username):
         self.client.api.cloudapi.cloudspaces.deleteUser(cloudspaceId=self.id, userId=username, recursivedelete=True)
 
+    def _updateUser(self, username, right):
+        self.client.api.cloudapi.cloudspaces.updateUser(cloudspaceId=self.id, userId=username, accesstype=right)
+
     def refresh(self):
         cloudspaces = self.client.api.cloudapi.cloudspaces.list()
         for cloudspace in cloudspaces:
@@ -461,7 +470,16 @@ class Machine:
         self.client.api.cloudapi.machines.stop(machineId=self.id)
 
     def restart(self):
-        self.client.api.cloudapi.machines.restart(machineId=self.id)
+        self.client.api.cloudapi.machines.reboot(machineId=self.id)
+
+    def pause(self):
+        self.client.api.cloudapi.machines.pause(machineId=self.id)
+
+    def resume(self):
+        self.client.api.cloudapi.machines.resume(machineId=self.id)
+
+    def reset(self):
+        self.client.api.cloudapi.machines.reset(machineId=self.id)
 
     def delete(self):
         self.client.api.cloudapi.machines.delete(machineId=self.id)
