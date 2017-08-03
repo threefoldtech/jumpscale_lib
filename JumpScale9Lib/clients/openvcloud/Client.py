@@ -581,26 +581,25 @@ class Machine:
 
             realpublicport = candidate
 
-        if not self.space.isPortforwardExists(publicAddress, realpublicport, protocol):
-            try:
-                self.client.api.cloudapi.portforwarding.create(
-                    cloudspaceId=self.space.id,
-                    protocol=protocol,
-                    localPort=localport,
-                    machineId=self.id,
-                    publicIp=publicAddress,
-                    publicPort=realpublicport
-                )
+        try:
+            self.client.api.cloudapi.portforwarding.create(
+                cloudspaceId=self.space.id,
+                protocol=protocol,
+                localPort=localport,
+                machineId=self.id,
+                publicIp=publicAddress,
+                publicPort=realpublicport
+            )
 
-            except Exception as e:
-                # if we have a conflict response, let's check something:
-                # - if it's an auto-generated port, we probably hit a concurrence issue
-                #   let's try again with a new port
-                if str(e).startswith("409 Conflict") and publicport is None:
-                    return self.create_portforwarding(None, localport, protocol)
+        except Exception as e:
+            # if we have a conflict response, let's check something:
+            # - if it's an auto-generated port, we probably hit a concurrence issue
+            #   let's try again with a new port
+            if str(e).startswith("409 Conflict") and publicport is None:
+                return self.create_portforwarding(None, localport, protocol)
 
-                # - if the port was choose excplicitly, then it's not the lib's fault
-                raise
+            # - if the port was choose excplicitly, then it's not the lib's fault
+            raise j.exceptions.RuntimeError("Port forward already exists. Please specify another port forwarding")
 
         return (realpublicport, localport)
 
