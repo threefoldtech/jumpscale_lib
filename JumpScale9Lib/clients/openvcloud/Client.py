@@ -528,6 +528,9 @@ class Machine:
     def delete_snapshot(self, epoch):
         self.client.api.cloudapi.machines.deleteSnapshot(machineId=self.id, epoch=epoch)
 
+    def getHistory(self, size):
+        return self.client.api.cloudapi.machines.getHistory(machineId=self.id, size=size)
+
     def add_disk(self, name, description, size=10, type='D', ssdSize=0):
         disk_id = self.client.api.cloudapi.machines.addDisk(machineId=self.id,
                                                             diskName=name,
