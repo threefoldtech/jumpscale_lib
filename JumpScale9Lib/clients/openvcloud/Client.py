@@ -293,6 +293,9 @@ class Account(Authorizables):
         self.client.api.cloudapi.accounts.addUser(
             accountId=self.id, userId=username, accesstype=right)
 
+    def _updateUser(self, username, right):
+        self.client.api.cloudapi.accounts.updateUser(accountId=self.id, userId=username, accesstype=right)
+
     def _deleteUser(self, username):
         self.client.api.cloudapi.accounts.deleteUser(accountId=self.id, userId=username, recursivedelete=True)
 
