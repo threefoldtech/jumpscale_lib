@@ -538,6 +538,12 @@ class Machine:
     def getHistory(self, size):
         return self.client.api.cloudapi.machines.getHistory(machineId=self.id, size=size)
 
+    def attach_external_network(self):
+        self.client.api.cloudapi.machines.attachExternalNetwork(machineId=self.id)
+
+    def detach_external_network(self):
+        self.client.api.cloudapi.machines.detachExternalNetwork(machineId=self.id)
+
     def add_disk(self, name, description, size=10, type='D', ssdSize=0):
         disk_id = self.client.api.cloudapi.machines.addDisk(machineId=self.id,
                                                             diskName=name,
