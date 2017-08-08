@@ -174,7 +174,7 @@ class Authorizables:
     def authorized_users(self):
         return [u['userGroupId'] for u in self.model['acl']]
 
-    def authorize_user(self, username, right="ACDRUX"):
+    def authorize_user(self, username, right=""):
         if not right:
             right = 'ACDRUX'
         if username not in self.authorized_users:
@@ -189,7 +189,7 @@ class Authorizables:
             self.refresh()
         return True
 
-    def update_access(self, username, right="ACDRUX"):
+    def update_access(self, username, right=""):
         if not right:
             right = 'ACDRUX'
         if username in self.authorized_users:
@@ -537,6 +537,12 @@ class Machine:
 
     def getHistory(self, size):
         return self.client.api.cloudapi.machines.getHistory(machineId=self.id, size=size)
+
+    def attach_external_network(self):
+        self.client.api.cloudapi.machines.attachExternalNetwork(machineId=self.id)
+
+    def detach_external_network(self):
+        self.client.api.cloudapi.machines.detachExternalNetwork(machineId=self.id)
 
     def add_disk(self, name, description, size=10, type='D', ssdSize=0):
         disk_id = self.client.api.cloudapi.machines.addDisk(machineId=self.id,
