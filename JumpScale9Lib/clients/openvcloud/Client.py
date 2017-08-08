@@ -174,7 +174,7 @@ class Authorizables:
     def authorized_users(self):
         return [u['userGroupId'] for u in self.model['acl']]
 
-    def authorize_user(self, username, right="ACDRUX"):
+    def authorize_user(self, username, right=""):
         if not right:
             right = 'ACDRUX'
         if username not in self.authorized_users:
@@ -189,7 +189,7 @@ class Authorizables:
             self.refresh()
         return True
 
-    def update_access(self, username, right="ACDRUX"):
+    def update_access(self, username, right=""):
         if not right:
             right = 'ACDRUX'
         if username in self.authorized_users:
