@@ -526,6 +526,18 @@ class Machine:
     def delete(self):
         self.client.api.cloudapi.machines.delete(machineId=self.id)
 
+    def clone(self, name, cloudspaceId=None, snapshotTimestamp=None):
+        """
+        Will create a new machine that is a clone of this one.
+        :param name: the name of the clone that will be created.
+        :param cloudspaceId: optional id of the cloudspace in which the machine should be put.
+        :param snapshotTimestamp: optional snapshot to base the clone upon.
+        :return: the id of the created machine
+        """
+        return self.client.api.cloudapi.machines.clone(machineId=self.id, name=name,
+                                                cloudspaceId=cloudspaceId,
+                                                snapshotTimestamp=snapshotTimestamp)
+
     def create_snapshot(self, name=str(datetime.datetime.now())):
         self.client.api.cloudapi.machines.snapshot(machineId=self.id, name=name)
 
