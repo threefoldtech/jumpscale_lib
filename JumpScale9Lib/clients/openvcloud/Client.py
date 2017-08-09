@@ -381,6 +381,20 @@ class Space(Authorizables):
     def _updateUser(self, username, right):
         self.client.api.cloudapi.cloudspaces.updateUser(cloudspaceId=self.id, userId=username, accesstype=right)
 
+    def enable(self, reason):
+        """
+        Will enable the cloudspace.
+        :param reason: string: The reason why the cloudspace should be enabled.
+        """
+        self.client.api.cloudapi.cloudspaces.enable(cloudspaceId=self.id, reason=reason)
+
+    def disable(self, reason):
+        """
+        Will disable the cloudspace.
+        :param reason: string: The reason why the cloudspace should be disabled.
+        """
+        self.client.api.cloudapi.cloudspaces.disable(cloudspaceId=self.id, reason=reason)
+
     def refresh(self):
         cloudspaces = self.client.api.cloudapi.cloudspaces.list()
         for cloudspace in cloudspaces:
