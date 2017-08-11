@@ -553,13 +553,32 @@ class Machine:
                                                 snapshotTimestamp=snapshotTimestamp)
 
     def create_snapshot(self, name=str(datetime.datetime.now())):
+        """
+        Will create a snapshot of the machine.
+        :param name: the name of the snapshot that will be created. Default: creation time
+        """
         self.client.api.cloudapi.machines.snapshot(machineId=self.id, name=name)
 
     def list_snapshots(self):
+        """
+        Will return a list of snapshots of the machine.
+        :return: the list of snapshots
+        """
         return self.client.api.cloudapi.machines.listSnapshots(machineId=self.id)
 
     def delete_snapshot(self, epoch):
+        """
+        Will delete a snapshot of the machine.
+        :param epoch: the epoch of the snapshot to be deleted.
+        """
         self.client.api.cloudapi.machines.deleteSnapshot(machineId=self.id, epoch=epoch)
+
+    def rollback_snapshot(self, epoch):
+        """
+        Will rollback a snapshot of the machine.
+        :param epoch: the epoch of the snapshot to be rollbacked.
+        """
+        self.client.api.cloudapi.machines.rollbackSnapshot(machineId=self.id, epoch=epoch)
 
     def getHistory(self, size):
         return self.client.api.cloudapi.machines.getHistory(machineId=self.id, size=size)
