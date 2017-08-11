@@ -548,9 +548,10 @@ class Machine:
         :param snapshotTimestamp: optional snapshot to base the clone upon.
         :return: the id of the created machine
         """
-        return self.client.api.cloudapi.machines.clone(machineId=self.id, name=name,
-                                                cloudspaceId=cloudspaceId,
-                                                snapshotTimestamp=snapshotTimestamp)
+        return self.client.api.cloudapi.machines.clone(machineId=self.id,
+                                                       name=name,
+                                                       cloudspaceId=cloudspaceId,
+                                                       snapshotTimestamp=snapshotTimestamp)
 
     def create_snapshot(self, name=str(datetime.datetime.now())):
         """
