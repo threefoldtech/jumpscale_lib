@@ -553,11 +553,13 @@ class Machine:
                                                        cloudspaceId=cloudspaceId,
                                                        snapshotTimestamp=snapshotTimestamp)
 
-    def create_snapshot(self, name=str(datetime.datetime.now())):
+    def create_snapshot(self, name=None):
         """
         Will create a snapshot of the machine.
         :param name: the name of the snapshot that will be created. Default: creation time
         """
+        if name is None:
+            name = str(datetime.datetime.now())
         self.client.api.cloudapi.machines.snapshot(machineId=self.id, name=name)
 
     def list_snapshots(self):
