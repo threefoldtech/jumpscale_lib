@@ -79,10 +79,10 @@ class DocGenerator:
             self.gitRepos[path] = gc
         return self.gitRepos[path]
 
-    def installDeps(self, reset=False):
+    def install(self, reset=False):
         prefab = j.tools.prefab.local
         if prefab.core.doneGet("docgenerator:installed") == False or reset:
-            prefab.apps.nodejs.install()
+            prefab.development.nodejs.install()
             if "darwin" in str(j.core.platformtype.myplatform):
                 prefab.core.run("brew install graphviz")
                 prefab.core.run("brew install hugo")
