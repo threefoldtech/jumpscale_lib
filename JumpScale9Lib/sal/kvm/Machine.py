@@ -218,7 +218,7 @@ class Machine(BaseKVMComponent):
         port = 22
         if self.cloud_init and not self._executor:
             for i in range(5):
-                rc = self.controller.executor.execute('echo | nc %s %s' % (self.ip, port))[0]
+                rc = self.controller.executor.prefab.core.run('echo | nc %s %s' % (self.ip, port))[0]
                 if rc == 0:
                     break
                 sleep(5)
