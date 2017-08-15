@@ -89,3 +89,7 @@ class GrafanaClient:
     def addDataSource(self, data):
         url = os.path.join(self._url, 'api/datasources/')
         return self._session.post(url, json=data, verify=self._verify_ssl).json()
+
+    def deleteDataSource(self, name):
+        url = os.path.join(self._url, 'api/datasources/name/{}'.format(name))
+        return self._session.delete(url, verify=self._verify_ssl).json()
