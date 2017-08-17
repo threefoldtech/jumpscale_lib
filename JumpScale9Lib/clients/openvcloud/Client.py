@@ -174,7 +174,7 @@ class Authorizables:
     def authorized_users(self):
         return [u['userGroupId'] for u in self.model['acl']]
 
-    def authorize_user(self, username, right="ACDRUX"):
+    def authorize_user(self, username, right=""):
         if not right:
             right = 'ACDRUX'
         if username not in self.authorized_users:
@@ -189,7 +189,7 @@ class Authorizables:
             self.refresh()
         return True
 
-    def update_access(self, username, right="ACDRUX"):
+    def update_access(self, username, right=""):
         if not right:
             right = 'ACDRUX'
         if username in self.authorized_users:
@@ -381,6 +381,20 @@ class Space(Authorizables):
     def _updateUser(self, username, right):
         self.client.api.cloudapi.cloudspaces.updateUser(cloudspaceId=self.id, userId=username, accesstype=right)
 
+    def enable(self, reason):
+        """
+        Will enable the cloudspace.
+        :param reason: string: The reason why the cloudspace should be enabled.
+        """
+        self.client.api.cloudapi.cloudspaces.enable(cloudspaceId=self.id, reason=reason)
+
+    def disable(self, reason):
+        """
+        Will disable the cloudspace.
+        :param reason: string: The reason why the cloudspace should be disabled.
+        """
+        self.client.api.cloudapi.cloudspaces.disable(cloudspaceId=self.id, reason=reason)
+
     def refresh(self):
         cloudspaces = self.client.api.cloudapi.cloudspaces.list()
         for cloudspace in cloudspaces:
@@ -526,17 +540,57 @@ class Machine:
     def delete(self):
         self.client.api.cloudapi.machines.delete(machineId=self.id)
 
-    def create_snapshot(self, name=str(datetime.datetime.now())):
+    def clone(self, name, cloudspaceId=None, snapshotTimestamp=None):
+        """
+        Will create a new machine that is a clone of this one.
+        :param name: the name of the clone that will be created.
+        :param cloudspaceId: optional id of the cloudspace in which the machine should be put.
+        :param snapshotTimestamp: optional snapshot to base the clone upon.
+        :return: the id of the created machine
+        """
+        return self.client.api.cloudapi.machines.clone(machineId=self.id,
+                                                       name=name,
+                                                       cloudspaceId=cloudspaceId,
+                                                       snapshotTimestamp=snapshotTimestamp)
+
+    def create_snapshot(self, name=None):
+        """
+        Will create a snapshot of the machine.
+        :param name: the name of the snapshot that will be created. Default: creation time
+        """
+        if name is None:
+            name = str(datetime.datetime.now())
         self.client.api.cloudapi.machines.snapshot(machineId=self.id, name=name)
 
     def list_snapshots(self):
+        """
+        Will return a list of snapshots of the machine.
+        :return: the list of snapshots
+        """
         return self.client.api.cloudapi.machines.listSnapshots(machineId=self.id)
 
     def delete_snapshot(self, epoch):
+        """
+        Will delete a snapshot of the machine.
+        :param epoch: the epoch of the snapshot to be deleted.
+        """
         self.client.api.cloudapi.machines.deleteSnapshot(machineId=self.id, epoch=epoch)
+
+    def rollback_snapshot(self, epoch):
+        """
+        Will rollback a snapshot of the machine.
+        :param epoch: the epoch of the snapshot to be rollbacked.
+        """
+        self.client.api.cloudapi.machines.rollbackSnapshot(machineId=self.id, epoch=epoch)
 
     def getHistory(self, size):
         return self.client.api.cloudapi.machines.getHistory(machineId=self.id, size=size)
+
+    def attach_external_network(self):
+        self.client.api.cloudapi.machines.attachExternalNetwork(machineId=self.id)
+
+    def detach_external_network(self):
+        self.client.api.cloudapi.machines.detachExternalNetwork(machineId=self.id)
 
     def add_disk(self, name, description, size=10, type='D', ssdSize=0):
         disk_id = self.client.api.cloudapi.machines.addDisk(machineId=self.id,
