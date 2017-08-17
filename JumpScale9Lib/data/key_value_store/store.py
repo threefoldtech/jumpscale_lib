@@ -217,7 +217,7 @@ class KeyValueStoreBase:  # , metaclass=ABCMeta):
 
         return (val, owner, schema, expire, acl)
 
-    def set(self, key, value=None, expire=0, acl={}, secret=""):
+    def set(self, key, value=None, expire=None, acl={}, secret=""):
         """
         @param secret, when not specified the owner will be used, allows to specify different secret than youw own owner key
         @param expire is seconds from now, when obj will expire
