@@ -199,13 +199,13 @@ class Container:
         if sshpubkey != "" and sshpubkey is not None:
             key = sshpubkey
         else:
-            if not j.do.SSHAgentAvailable():
-                j.do._loadSSHAgent()
+            if not j.clients.ssh.SSHAgentAvailable():
+                j.clients.ssh.loadSSHAgent()
 
             if keyname != "" and keyname is not None:
-                key = j.do.SSHKeyGetFromAgentPub(keyname)
+                key = j.clients.ssh.SSHKeyGetFromAgentPub(keyname)
             else:
-                key = j.do.SSHKeyGetFromAgentPub("docker_default", die=False)
+                key = j.clients.ssh.SSHKeyGetFromAgentPub("docker_default", die=False)
                 if key is None:
                     dir = j.tools.path.get('%s/.ssh' % home)
                     if dir.listdir("docker_default.pub") == []:
