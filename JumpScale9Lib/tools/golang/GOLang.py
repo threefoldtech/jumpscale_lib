@@ -47,7 +47,7 @@ class GOLang:
         self.check()
         dest = j.data.text.stripItems(url, ["git@", ".git"])
         dest = dest.replace(":", "/")
-        dest = j.do.pullGitRepo(url, dest=j.sal.fs.joinPaths(os.environ['GOPATH'], 'src', dest))
+        dest = j.clients.git.pullGitRepo(url, dest=j.sal.fs.joinPaths(os.environ['GOPATH'], 'src', dest))
 
         executor = j.tools.executorLocal
         executor.execute('cd %s && godep restore' % dest)
