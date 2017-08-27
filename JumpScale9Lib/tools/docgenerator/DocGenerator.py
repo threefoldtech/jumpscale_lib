@@ -93,11 +93,11 @@ class DocGenerator:
                 prefab.core.file_download('https://github.com/spf13/hugo/releases/download/v0.20.7/hugo_0.20.7_Linux-64bit.tar.gz')
                 prefab.core.file_expand('$TMPDIR/hugo_0.20.7_Linux-64bit.tar.gz')
                 prefab.core.file_copy('$TMPDIR/hugo_0.20.7_Linux-64bit/hugo', '/usr/local/bin')
-                prefab.local.development.golang.install()
+                prefab.development.golang.install()
                 prefab.apps.caddy.build()
             prefab.core.run("npm install -g phantomjs-prebuilt", profile=True)
             prefab.core.run("npm install -g mermaid", profile=True)            
-            prefab.local.apps.caddy.start()
+            prefab.apps.caddy.start()
             prefab.core.doneSet("docgenerator:installed")
 
     def startWebserver(self):
