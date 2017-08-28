@@ -29,6 +29,7 @@ class BaseResource:
     def __init__(self, session, url):
         self._session = session
         self._url = url
+        self._method = 'POST'
 
     def __getattr__(self, item):
         url = os.path.join(self._url, item)
@@ -37,7 +38,7 @@ class BaseResource:
         return resource
 
     def __call__(self, **kwargs):
-        response = self._session.post(self._url, kwargs)
+        response = self._session.request(self._method, self._url, kwargs)
 
         if not response.ok:
             raise ApiError(response)
@@ -72,10 +73,12 @@ class Resource(BaseResource):
             api = self
             for path in methodpath.split('/')[1:]:
                 api = getattr(api, path)
-            if 'post' not in methodspec:
-                continue
-            docstring = methodspec['post']['description']
-            for param in methodspec['post'].get('parameters', list()):
+            method = 'post'
+            if 'post' not in methodspec and methodspec:
+                method = list(methodspec.keys())[0]
+            api._method = method
+            docstring = methodspec[method]['description']
+            for param in methodspec[method].get('parameters', list()):
                 param['type'] = param['type'] if 'type' in param else str(
                     param.get('$ref', 'unknown'))
                 docstring += """
