@@ -303,6 +303,10 @@ class Account(Authorizables):
     def _deleteUser(self, username):
         self.client.api.cloudapi.accounts.deleteUser(accountId=self.id, userId=username, recursivedelete=True)
 
+    def get_consumption(self, start, end):
+        return self.client.api.cloudapi.accounts.getConsumption(accountId=self.id, start=start, end=end)
+
+
     def save(self):
         self.client.api.cloudapi.accounts.update(accountId=self.model['id'],
                                                  name=self.model['name'],
