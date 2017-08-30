@@ -16,7 +16,13 @@ class ZerotierClient:
         returns [(id,name,onlinecount)]
         """
         res0 = self.client.network.listNetworks().json()
-        return [(item["id"], item["name"], item["onlineMemberCount"]) for item in res0]
+        res = []
+        for item in res0:
+            if "name" in item:
+                res.append((item["id"], item["name"],
+                            item["onlineMemberCount"]))
+
+        return res
 
     def getNetworkMembers(self, networkId, online=True):
 
@@ -46,7 +52,8 @@ class ZerotierClient:
         res = [item for item in res if item['ipaddr_pub'] == ip_pub]
 
         if len(res) is 0:
-            raise RuntimeError("Did not find network member with ipaddr:%s" % ip_pub)
+            raise RuntimeError(
+                "Did not find network member with ipaddr:%s" % ip_pub)
 
         return res[0]
 
