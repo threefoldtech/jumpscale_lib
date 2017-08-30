@@ -12,15 +12,14 @@ class ZerotierClient:
         self.client.set_auth_header("Bearer " + token)
 
     def getNetworks(self):
-        res = self.client.network.listNetworks().json()
-        from IPython import embed
-        print("DEBUG NOW getNetworks")
-        embed()
-        raise RuntimeError("stop debug here")
+        """
+        returns [(id,name,onlinecount)]
+        """
+        res0 = self.client.network.listNetworks().json()
+        return [(item["id"], item["name"], item["onlineMemberCount"]) for item in res0]
 
-    def getNetworkMembers(self, networkId="", online=True):
-        if networkId is "":
-            networkId = j.core.state.config["zerotier"]["networkid"]
+    def getNetworkMembers(self, networkId, online=True):
+
         res = self.client.network.listMembers(id=networkId).json()
         result = []
         for item in res:
@@ -32,20 +31,23 @@ class ZerotierClient:
             if online and item["online"] is False:
                 continue
             res2["online"] = item["online"]
-            res2["lastOnlineHR"] = j.data.time.epoch2HRDateTime(item["lastOnline"] / 1000)
+            res2["lastOnlineHR"] = j.data.time.epoch2HRDateTime(
+                item["lastOnline"] / 1000)
             res2["lastOnline"] = item["lastOnline"]
             res2["ipaddr_priv"] = item["config"]["ipAssignments"]
-            res2["ipaddr_pub"] = item["physicalAddress"].split("/")[0] if item["physicalAddress"] else None
+            res2["ipaddr_pub"] = item["physicalAddress"].split(
+                "/")[0] if item["physicalAddress"] else None
             result.append(res2)
         return result
 
-    def getNetworkMemberFromIPPub(self, ip_pub, networkId="", online=True):
+    def getNetworkMemberFromIPPub(self, ip_pub, networkId, online=True):
         res = self.getNetworkMembers(networkId, online)
 
         res = [item for item in res if item['ipaddr_pub'] == ip_pub]
 
         if len(res) is 0:
-            raise RuntimeError("Did not find network member with ipaddr:%s" % ip_pub)
+            raise RuntimeError(
+                "Did not find network member with ipaddr:%s" % ip_pub)
 
         return res[0]
 
