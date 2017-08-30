@@ -2,13 +2,8 @@ from js9 import j
 from .User import User
 from .Issue import Issue
 
-
-try:
-    import github
-except BaseException:
-    cmd = "pip3 install pygithub"
-    j.sal.process.execute(cmd)
-    import github
+# pygithub is for pip3
+import github
 
 
 class GitHubFactory:
@@ -23,7 +18,8 @@ class GitHubFactory:
 
     def getClient(self, login_or_token, password=None):
         if login_or_token not in self._clients:
-            self._clients[login_or_token] = GitHubClient(login_or_token, password)
+            self._clients[login_or_token] = GitHubClient(
+                login_or_token, password)
         return self._clients[login_or_token]
 
     def getIssueClass(self):
