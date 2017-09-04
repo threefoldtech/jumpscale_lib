@@ -12,7 +12,8 @@ class RWCache:
 
     def __init__(self, nrItemsReadCache, maxNrItemsWriteCache=50, maxTimeWriteCache=2000, writermethod=None):
         self.cacheR = j.tools.cachelru.getRCache(nrItemsReadCache)
-        self.cacheW = WCache(maxNrItemsWriteCache, writermethod, maxTimeWriteCache)
+        self.cacheW = WCache(maxNrItemsWriteCache,
+                             writermethod, maxTimeWriteCache)
 
     def set(self, key, obj):
         self.cacheW[key] = obj

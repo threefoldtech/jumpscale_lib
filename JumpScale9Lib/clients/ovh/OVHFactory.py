@@ -19,7 +19,7 @@ import time
 
 class OVHClient:
 
-    def __init__(self, appkey, appsecret, consumerkey="", endpoint='soyoustart-eu'):
+    def __init__(self, appkey, appsecret, consumerkey="", endpoint='soyoustart-eu', ipxeBase="https://bootstrap.gig.tech/ipxe/master"):
         # if consumerkey=="":
         #     client = ovh.Client(endpoint=endpoint)
         #     ck = client.new_consumer_key_request()
@@ -36,6 +36,7 @@ class OVHClient:
         self.cache = j.data.cache.get(
             id=id,
             db=j.data.kvs.getRedisStore())
+        self.ipxeBase = ipxeBase.rstrip("/")
 
     def nameCheck(self, name):
         if "ns302912" in name:
@@ -201,7 +202,8 @@ class OVHClient:
                 self.serverInstall(name=item, wait=False)
             wait = True
         elif name == "":
-            raise j.exceptions.Input(message="please specify name", level=1, source="", tags="", msgpub="")
+            raise j.exceptions.Input(
+                message="please specify name", level=1, source="", tags="", msgpub="")
         else:
             if hostname == "":
                 hostname = name
@@ -290,11 +292,13 @@ class OVHClient:
         - target: need to be a OVH server hostname
         - name: need to be an existing iPXE script name
         """
-        bootlist = self.client.get("/dedicated/server/%s/boot?bootType=ipxeCustomerScript" % target)
+        bootlist = self.client.get(
+            "/dedicated/server/%s/boot?bootType=ipxeCustomerScript" % target)
         checked = None
 
         for bootid in bootlist:
-            data = self.client.get("/dedicated/server/%s/boot/%s" % (target, bootid))
+            data = self.client.get(
+                "/dedicated/server/%s/boot/%s" % (target, bootid))
             if data['kernel'] == name:
                 return self._setBootloader(target, bootid)
 
@@ -329,19 +333,22 @@ class OVHClient:
             raise RuntimeError("Invalid script URL")
 
         # going unsecure, because ovh
-        fixed = script.text.replace('https://bootstrap.', 'http://unsecure.bootstrap.')
+        fixed = script.text.replace(
+            'https://bootstrap.', 'http://unsecure.bootstrap.')
 
         # setting name and description according to the url
         fields = url.split('/')
 
         if len(fields) == 7:
             # branch name, zerotier network, arguments
-            description = "Zero-OS: %s (%s, %s)" % (fields[4], fields[5], fields[6])
+            description = "Zero-OS: %s (%s, %s)" % (
+                fields[4], fields[5], fields[6])
             name = "zero-os-%s-%s,%s" % (fields[4], fields[5], fields[6])
 
         elif len(fields) == 6:
             # branch name, zerotier network, no arguments
-            description = "Zero-OS: %s (%s, no arguments)" % (fields[4], fields[5])
+            description = "Zero-OS: %s (%s, no arguments)" % (
+                fields[4], fields[5])
             name = "zero-os-%s-%s" % (fields[4], fields[5])
 
         else:
@@ -351,13 +358,14 @@ class OVHClient:
 
         return {'description': description, 'name': name, 'script': fixed}
 
-    def zeroOSBoot(self, target, url):
+    def zeroOSBoot(self, target, zerotierNetworkID):
         """
         Configure a node to use Zero-OS iPXE kernel
         - target: need to be an OVH server hostname
-        - url: need to be a bootstrap.gig.tech url to boot
+        - zerotierNetworkID: network to be used in zerotier
         """
         self.nameCheck(target)
+        url = "%s/%s" % (self.ipxeBase, zerotierNetworkID)
         ipxe = self._zos_build(url)
 
         print("[+] description: %s" % ipxe['description'])
@@ -432,7 +440,8 @@ class OVHFactory:
 
         """
         cl = j.clients.ovh.get(appkey=j.core.state.configGetFromDict(name, "appkey"),
-                               appsecret=j.core.state.configGetFromDict(name, "appsecret"),
+                               appsecret=j.core.state.configGetFromDict(
+                                   name, "appsecret"),
                                consumerkey=j.core.state.configGetFromDict(name, "consumerkey"))
 
         return cl
