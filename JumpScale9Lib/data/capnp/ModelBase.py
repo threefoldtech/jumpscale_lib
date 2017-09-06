@@ -101,7 +101,6 @@ class ModelBase():
     #     return propnames + self._propnames
 
     def reSerialize(self):
-        toRemove = []
         for key in list(self._subobjects.keys()):
             prop = self.__dict__["list_%s" % key]
             dbobjprop = eval("self.dbobj.%s" % key)
@@ -178,6 +177,7 @@ class ModelBase():
         """
         self._listAddRemoveItem(name=name)
         self.__dict__["list_%s" % name].pop(pos)
+        self.reSerialize()
 
     def _listAddRemoveItem(self, name):
         """
