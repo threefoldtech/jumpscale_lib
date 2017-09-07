@@ -783,10 +783,13 @@ class GogsClient:
     def milestoneCreate(self, reponame, milestone, owner=None):
         if not owner:
             owner = self.login
-        if milestone in self.milestonesList(reponame, owner):
+        milestones = [milestone['title'] for milestone in self.milestonesList(reponame, owner)]
+        if milestone in milestones:
+            return {}
+        if not milestone:
             return {}
         body = {
-            "name": milestone,
+            "title": milestone,
         }
 
         response_create = self.session.post(
@@ -798,3 +801,17 @@ class GogsClient:
             raise AdminRequiredException("user does not have access to repo")
         else:
             raise NotFoundException("User or repo does not exist")
+
+
+    def milestoneDelete(self, reponame, milestone, owner=None):
+        if not owner:
+            owner = self.login
+
+        milestones = [m for m in self.milestonesList(reponame, owner) if m['title'] == milestone]
+        if not milestones:
+            return {}
+        
+        for milestone in milestones: 
+            url = self.build_url("repos", owner, reponame, "milestones", str(milestone['id']))
+            response = self.session.delete(url)
+        return response.status_code == 204
