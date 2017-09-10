@@ -617,8 +617,18 @@ class Machine:
     def detach_disk(self, disk_id):
         return self.client.api.cloudapi.machines.detachDisk(machineId=self.id, diskId=disk_id)
 
-    def disk_limit_io(self, disk_id, iops=50):
-        self.client.api.cloudapi.disks.limitIO(diskId=disk_id, iops=iops)
+    def disk_limit_io(self, disk_id, total_bytes_sec, read_bytes_sec, write_bytes_sec, total_iops_sec,
+                      read_iops_sec, write_iops_sec, total_bytes_sec_max, read_bytes_sec_max,
+                      write_bytes_sec_max, total_iops_sec_max, read_iops_sec_max,
+                      write_iops_sec_max, size_iops_sec, iops=50):
+        self.client.api.cloudapi.disks.limitIO(diskId=disk_id, iops=iops, total_bytes_sec=total_bytes_sec,
+                                               read_bytes_sec=read_bytes_sec,
+                                               write_bytes_sec=write_bytes_sec, total_iops_sec=total_iops_sec,
+                                               read_iops_sec=read_iops_sec, write_iops_sec=write_iops_sec,
+                                               total_bytes_sec_max=total_bytes_sec_max, read_bytes_sec_max=read_bytes_sec_max,
+                                               write_bytes_sec_max=write_bytes_sec_max, total_iops_sec_max=total_iops_sec_max,
+                                               read_iops_sec_max=read_iops_sec_max, write_iops_sec_max=write_iops_sec_max,
+                                               size_iops_sec=size_iops_sec)
 
     @property
     def portforwardings(self):
