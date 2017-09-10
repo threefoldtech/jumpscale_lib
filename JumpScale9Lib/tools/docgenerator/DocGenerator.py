@@ -91,9 +91,18 @@ class DocGenerator:
             elif "ubuntu" in str(j.core.platformtype.myplatform):
                 prefab.package.install('graphviz')
                 # Using package install will result in an old version on some machines
-                prefab.core.file_download('https://github.com/gohugoio/hugo/releases/download/v0.26/hugo_0.26_Linux-64bit.tar.gz')
-                prefab.core.file_expand('$TMPDIR/hugo_0.26_Linux-64bit.tar.gz')
-                prefab.core.file_copy('$TMPDIR/hugo_0.26_Linux-64bit/hugo', '/usr/bin/')
+                # prefab.core.file_download('https://github.com/gohugoio/hugo/releases/download/v0.26/hugo_0.26_Linux-64bit.tar.gz')
+                # prefab.core.file_expand('$TMPDIR/hugo_0.26_Linux-64bit.tar.gz')
+                # prefab.core.file_copy('$TMPDIR/hugo_0.26_Linux-64bit/hugo', '/usr/bin/')
+                # prefab.core.run("go get -v github.com/gohugoio/hugo")
+
+                prefab.core.run("go get -u -v github.com/gohugoio/hugo")      
+
+                #IF FROM SOURCE
+                # go get github.com/kardianos/govendor
+                # govendor get github.com/gohugoio/hugo
+                # go install github.com/gohugoio/hugo                
+
             prefab.development.golang.install()
             prefab.apps.caddy.build()
             prefab.core.run("npm install -g mermaid", profile=True)            
