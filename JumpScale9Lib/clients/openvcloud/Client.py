@@ -490,6 +490,9 @@ class Space(Authorizables):
     def delete(self):
         self.client.api.cloudapi.cloudspaces.delete(cloudspaceId=self.id)
 
+    def execute_routeros_script(self, script):
+        self.client.api.cloudapi.cloudspaces.executeRouterOSScript(cloudspaceId=self.id, script=script)
+
     def get_space_ip(self):
         space = self.client.api.cloudapi.cloudspaces.get(cloudspaceId=self.id)
 
