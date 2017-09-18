@@ -386,11 +386,13 @@ class Account(Authorizables):
 
     def refresh(self):
         accounts = self.client.api.cloudapi.accounts.list()
+        found = False
         for account in accounts:
             if account['id'] == self.id:
                 self.model = account
+                found = True
                 break
-        else:
+        if not found:
             raise j.exceptions.RuntimeError("Account has been deleted")
 
     def delete(self):
