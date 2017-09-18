@@ -393,7 +393,7 @@ class Account(Authorizables):
                 found = True
                 break
         if not found:
-            raise j.exceptions.RuntimeError("Account has been deleted")
+            raise j.exceptions.RuntimeError("No account found with name %s. The user doesn't have access to the account or it is been deleted." % self.model['name'])
 
     def delete(self):
         self.client.api.cloudbroker.account.delete(
