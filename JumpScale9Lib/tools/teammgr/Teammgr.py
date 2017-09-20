@@ -155,8 +155,11 @@ class Teammgr:
 
         dpath="%s/fixed.yaml"%(personPath)
         j.sal.fs.remove(dpath)
-
         dpath="%s/fixed.toml"%(personPath)
+        j.sal.fs.remove(dpath)
+
+        # dpath="%s/fixed.toml"%(personPath)
+        dpath="%s/fixed_donotchange.toml"%(personPath)
         if j.sal.fs.exists(dpath):
             newtoml=j.data.serializer.toml.load(dpath)
         else:
