@@ -95,6 +95,7 @@ setup(
         'zerotier>=1.1.2',
         'packet-python>=1.33',
         'blosc>=1.5.1',
+        'dnspython'
     ],
     cmdclass={
         'install': install,
