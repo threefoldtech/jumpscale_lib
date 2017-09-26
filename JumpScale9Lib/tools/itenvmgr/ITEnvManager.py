@@ -1,23 +1,160 @@
 from js9 import j
 
 
+
+
 class TODO():
 
-    def __init__(self,itenv,path,todo):
-        path=path.replace("//","/")
-        self.itenv=itenv
-        self.path=path
+    def __init__(self,obj,todo):
+        self.obj=obj
+        self.path=obj.path
         self.todo=todo
 
-    @property
-    def person(self):
-        return j.sal.fs.getBaseName(self.path)
-
-
     def __repr__(self):
-        return "Todo %s:%s:%s:%s   "%(self.itenv.company,self.itenv.name,self.path,self.todo)
+        return "Todo %s:%s:%s:%s   "%(self.obj.type,self.obj.name,self.path,self.todo)
 
     __str__=__repr__        
+
+
+class Device():
+    def __init__(self,tomlpath):
+        tomlpath=tomlpath.replace("//","/")
+        self.path=tomlpath
+        self.todo = []
+        self.type="device"
+        self.status="OK"
+        self.name="unknown"
+
+        try:
+            data=j.data.serializer.toml.load(tomlpath)
+        except Exception as e:
+            self.todo.append(TODO(self,"cannot parse toml file\n```\n%s```\n\n"%e))
+            self.status="ERROR"
+            return
+
+        self.data = data
+        self.ipaddr=[]
+        try:
+            self.ipaddr = j.data.serializer.fixType(data["ssh_ipaddr"],[])
+        except:
+            self.todo.append(TODO(self,"cannot find ipaddr: ssh_ipaddr in toml"))
+
+        try:
+            self.name = j.data.serializer.fixType(data["name"],"")
+        except:
+            self.todo.append(TODO(self,"cannot find name in toml"))
+
+        try:
+            self.status = j.data.serializer.fixType(data["status"],"")
+        except:
+            self.todo.append(TODO(self,"cannot find status in toml"))
+
+        try:
+            self.location = j.data.serializer.fixType(data["location"],"")
+        except:
+            self.todo.append(TODO(self,"cannot find location in toml"))
+
+        try:
+            self.id = j.data.serializer.fixType(data["id"],"")
+        except:
+            self.todo.append(TODO(self,"cannot find id in toml"))            
+
+    def ip_exists(self,ipaddr):
+        ipaddr=ipaddr.lower()
+        for ipaddr0 in self.ipaddr:
+            if ipaddr in ipaddr0:
+                return True
+        return False
+
+    @property
+    def is_free(self):
+        if self.status.lower()=="free":
+            return True
+        return False
+
+    @property
+    def ssd_size(self):
+        gb=float(self.data["ssd"]["nr"])*float(self.data["ssd"]["size"])
+        return gb
+
+    def has_ssd(self):
+        return self.ssd_size>0
+
+    @property
+    def todo_md(self):
+        if self.todo==[]:
+            return ""
+        md="# TODO FOR : device %s\n\n"%(self.name)
+        md +="\npath: %s\n\n"%self.path
+        for todo in self.todo:
+            md+="- %s\n"%(todo.todo)
+        md+="\n"
+
+        return md    
+
+    def save(self):
+        j.data.serializer.toml.dump(self.path,self.data)
+
+    def __repr__(self):
+        ipaddr = ",".join(self.ipaddr)
+        return "Device %-30s %-14s %-50s:%s   "%(self.name,self.status,ipaddr,self.path)
+
+    __str__=__repr__             
+
+class Client():
+    def __init__(self,tomlpath):
+        tomlpath=tomlpath.replace("//","/")
+        self.path=tomlpath
+        self.todo = []
+        self.type="client"
+        self.status="OK"
+        self.name="unknown"
+
+        try:
+            data=j.data.serializer.toml.load(tomlpath)
+        except Exception as e:
+            self.todo.append(TODO(self,"cannot parse toml file\n```\n%s```\n\n"%e))
+            self.status="ERROR"
+            return
+
+        self.config = data
+
+        try:
+            self.name = data["name"]
+        except:
+            self.todo.append(TODO(self,"cannot find name in toml"))
+
+        try:
+            self.schema_type = data["schema_type"]
+        except:
+            self.todo.append(TODO(self,"cannot find schema_type in toml"))
+
+        try:
+            self.cpath = data["path"]
+        except:
+            self.todo.append(TODO(self,"cannot find config: path in toml"))
+
+        try:
+            self.description = data["description"]
+        except:
+            self.todo.append(TODO(self,"cannot find description in toml"))
+
+    @property
+    def todo_md(self):
+        if self.todo==[]:
+            return ""
+        md="# TODO FOR : client %s\n\n"%(self.name)
+        md +="\npath: %s\n\n"%self.path
+        for todo in self.todo:
+            md+="- %s\n"%(todo.todo)
+        md+="\n"
+
+        return md    
+
+    def __repr__(self):
+        return "%-25s:%-20s:%s   "%(self.schema_type,self.name,self.path)
+
+    __str__=__repr__   
 
 class itenv():
     def __init__(self,company,name,path):
@@ -25,6 +162,7 @@ class itenv():
         self.path=path
         self.name=name
         self.todo = []
+        self.type="itenv"
 
     def addTodo(self,path,todo):
         todo=todo.replace("_","-")
@@ -64,38 +202,101 @@ class ITEnvManager:
     def __init__(self):
         self.__jslocation__ = "j.tools.itenv_manager"
         self.itenvs = {}
+        self.devices = []
+        self.clients = []
 
-    def _additenv(self,path,company,name):
-        key="%s_%s"%(company,name)
-        if not key in self.itenvs.keys():
-            self.itenvs[key]=itenv(company,name,path)
-        return self.itenvs[key]
-            
+    def ip_exists(self,ipaddr):
+        for key,device in self.devices.items():
+            if device.ip_exists(ipaddr):
+                return True
+        return False
 
     def process(self,path):
 
-        raise RuntimeError("not implemented yet")
+        path0=path+"/data"
 
-        # def processStrList(newtoml,key):
-        #     out=[]
-        #     for item in newtoml[key]:
-        #         item=item.lower().strip()
-        #         out.append(item)
-        #     newtoml[key]=out
-        #     return newtoml
+        if not j.sal.fs.exists(path0):
+            raise RuntimeError("Cannot find teampath:%s"%path0)
+
+        for tomlpath in j.sal.fs.listFilesInDir(path0, recursive=True, filter="device_*",followSymlinks=True, listSymlinks=False):
+            d=Device(tomlpath)
+            self.devices.append(d)
+
+        for tomlpath in j.sal.fs.listFilesInDir(path0, recursive=True, filter="client_*",followSymlinks=True, listSymlinks=False):
+            d=Client(tomlpath)
+            self.clients.append(d)
+
+        j.sal.fs.createDir("%s/todo"%path)
+
+        out=""
+        for device in self.devices:
+            out+=device.todo_md
+        path1="%s/todo/devices.md"%path
+        if out=="":
+            j.sal.fs.remove(path1)
+        else:
+            j.sal.fs.writeFile(path1,out)
+
+        out=""
+        for client in self.clients:
+            out+=client.todo_md
+        path1="%s/todo/clients.md"%path
+        if out=="":
+            j.sal.fs.remove(path1)
+        else:
+            j.sal.fs.writeFile(path1,out)
+
+
+    def getDeviceFromName(self,name,die=False):
+        for device in self.devices:
+            if device.name==name.lower():
+                return device
+        if die:
+            raise RuntimeError("Could not find device:%s"%name)
+        return None
         
-        # for item in ["locations","departments","companies","departments"]:
-        #     newtoml=processStrList(newtoml,item)
+    def getDeviceFromIpAddr(self,ipaddr):
+        for device in self.devices:
+            if device.ip_exists(ipaddr):
+                return device
+        return None
 
-        # def processStr(newtoml,key):
-        #     val=newtoml[key]
-        #     val=val.lower().strip()
-        #     newtoml[key]=val
-        #     return newtoml
+    def getDevicesFree(self):
+        res=[]
+        for device in self.devices:
+            if device.is_free:
+                res.append(device)
+        return res
 
-        # for item in ["login","first_name","last_name","telegram","skype"]:
-        #     newtoml=processStr(newtoml,item)
+    def getDevicesFreeLocation(self,location):
+        res=[]
+        for device in self.devices:
+            if device.is_free:
+                res.append(device)
+        res=[item for item in res if location in item.location]
+        return res
+            
 
+    def getClientConfigFromName(self,name):
+        for client in self.clients:
+            if client.name==name.lower():
+                return client
+        return None
 
-        # j.data.serializer.toml.dump(dpath,newtoml)
+    def getClientConfigsFromTypePart(self,ttype):
+        """
+        part from schema_type e.g. dnsapi
+        """
+        res=[]
+        for client in self.clients:
+            if ttype in client.schema_type:
+                res.append(client)
+        return res
 
+    def getClientConfig(self,ttype,name,die=True):
+        for client in self.getClientConfigsFromTypePart(ttype):
+            if client.name==name.lower():
+                return client
+        if die:
+            raise RuntimeError("Could not find client config with type:%s and name:%s"%(ttype,name))
+        return None    

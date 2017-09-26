@@ -72,22 +72,22 @@ class OVHClient:
             return llist
         return self.cache.get("serversList", getData)
 
-    def getETCDConnectionFromCluster(self):
-        """
-        will check ssh on each server, when ssh found then check if there is an ETCD server installed
-        if not will install
-        if yes will return
-        """
-        l = []
-        for item in self.serversGetList():
-            try:
-                l.append(self.prefabGet(item))
-            except:
-                pass
-        from IPython import embed
-        print("DEBUG NOW sdsd")
-        embed()
-        raise RuntimeError("stop debug here")
+    # def getETCDConnectionFromCluster(self):
+    #     """
+    #     will check ssh on each server, when ssh found then check if there is an ETCD server installed
+    #     if not will install
+    #     if yes will return
+    #     """
+    #     l = []
+    #     for item in self.serversGetList():
+    #         try:
+    #             l.append(self.prefabGet(item))
+    #         except:
+    #             pass
+    #     from IPython import embed
+    #     print("DEBUG NOW sdsd")
+    #     embed()
+    #     raise RuntimeError("stop debug here")
 
     def serverGetDetail(self, name, reload=False):
         self.nameCheck(name)
