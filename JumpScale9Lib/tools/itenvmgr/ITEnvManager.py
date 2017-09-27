@@ -94,6 +94,36 @@ class Device():
 
     def save(self):
         j.data.serializer.toml.dump(self.path,self.data)
+        self.saveToMeConfig()
+
+    @property
+    def ipAddrPort(self):
+        ipaddr=self.ipaddr[0]
+        if ":" in ipaddr:
+            ipaddr,port=ipaddr.split(":")
+            port=int(port)
+            ipaddr=ipaddr.strip()
+        else:
+            port=22
+        return ipaddr,port
+            
+    @property
+    def ipAddr(self):
+        return self.ipAddrPort[0]
+
+    @property
+    def ipPort(self):
+        return self.ipAddrPort[1]
+
+
+    def saveToMeConfig(self):
+        """
+        if in container write: /hostcfg/nodes.cfg
+        if in host write: ~/js9host/cfg/nodes.cfg
+        """
+        # 
+        j.tools.develop.nodes.nodeSet(self.name, self.ipAddr, port=self.ipPort, cat='', description='', selected=None)
+        j.tools.develop.nodes.save()
 
     def __repr__(self):
         ipaddr = ",".join(self.ipaddr)
