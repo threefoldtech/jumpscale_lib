@@ -129,6 +129,13 @@ class OVHClient:
         e = j.tools.executor.get(details["ip"])
         return e.prefab
 
+    def prefabGetSSH(self, name, sshkey, passphrase=None):
+        self.nameCheck(name)
+        details = self.serverGetDetail(name)
+        e = j.tools.executor.getSSHBased(addr=details['ip'], key_filename=sshkey, passphrase=passphrase)
+        return e.prefab
+
+
     # def backupInit(self, name):
     #     try:
     #         self.client.post("/dedicated/server/%s/features/backupFTP" % name)
