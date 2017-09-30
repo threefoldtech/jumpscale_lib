@@ -6,6 +6,7 @@ import os
 import docker
 import time
 from urllib import parse
+import copy
 
 
 class Docker:
@@ -15,127 +16,29 @@ class Docker:
         self.__imports__ = "docker"
         self.logger = j.logger.get('j.sal.docker')
         self._basepath = "/storage/docker"
-        self._weaveSocket = None
         self._prefix = ""
         self._containers = {}
         self._names = []
 
-        if 'DOCKER_HOST' not in os.environ or os.environ['DOCKER_HOST'] == "":
-            self.base_url = 'unix://var/run/docker.sock'
-        elif self.weaveIsActive:
-            self.base_url = self.weavesocket
-        else:
-            self.base_url = os.environ['DOCKER_HOST']
-        self.client = docker.Client(base_url=self.base_url, timeout=120)
-
-    def init(self):
-
-        j.sal.process.execute("systemctl stop docker")
-
-        d = j.sal.disklayout.findDisk(mountpoint="/storage")
-        if d is not None:
-            # we found a disk, lets make sure its in fstab
-            d.setAutoMount()
-            dockerpath = "%s/docker" % d.mountpoint
-            dockerpath = dockerpath.replace("//", '/')
-            if dockerpath not in j.sal.btrfs.subvolumeList(d.mountpoint):
-                # have to create the dockerpath
-                j.sal.btrfs.subvolumeCreate(dockerpath)
-        # j.sal.fs.createDir("/storage/docker")
-        j.sal.fs.copyDirTree("/var/lib/docker", dockerpath)
-        j.sal.fs.symlink("/storage/docker", "/var/lib/docker",
-                         overwriteTarget=True)
-
-        j.sal.process.execute("systemctl start docker")
-
-    @property
-    def weaveIsActive(self):
-        return bool(self.weavesocket)
-
-    @property
-    def weavesocket(self):
-        if self._weaveSocket is None:
-            if not j.tools.prefab.local.core.command_check('weave'):
-                self.logger.warning("weave not found, do not forget to start if installed.")
-                self._weaveSocket = ""
-            else:
-
-                # rc, self._weaveSocket = j.sal.process.__execute("eval $(weave env) &&
-                # echo $DOCKER_HOST", die=False)                rc, self._weaveSocket =
-                # j.sal.process.__execute("eval $(weave env) && echo $DOCKER_HOST",
-                # die=False) echo $DOCKER_HOST", die=False)
-                # FIXME : j.sal.process execute treats eval $(weave en) as a single executable
-                # WILL SET IT TO j.sal.process.execute for now.
-                rc, self._weaveSocket, _ = j.sal.process.execute("eval $(weave env)")
-                if rc > 0:
-                    self.logger.warning("weave not found, do not forget to start if installed.")
-                    self._weaveSocket = ""
-
-                self._weaveSocket = self._weaveSocket.strip()
-
-        return self._weaveSocket
-
-    def weaveInstall(self, ufw=False):
-        j.tools.prefab.local.systemservices.weave.install(start=True)
-        if ufw:
-            j.tools.prefab.local.systemservices.ufw.allowIncoming(6783)
-            j.tools.prefab.local.systemservices.ufw.allowIncoming(6783, protocol="udp")
-
-    # def connectRemoteTCP(self, base_url):
-    #     self.base_url = base_url
-    #     self.client = docker.Client(base_url=weavesocket)
-
-    @property
-    def docker_host(self):
-        """
-        Get the docker hostname.
-        """
-
-        u = parse.urlparse(self.base_url)
-        if u.scheme == 'unix':
-            return 'localhost'
-        else:
-            return u.hostname
-
-    def _execute(self, command):
-        env = os.environ.copy()
-        env.pop('PYTHONPATH', None)
-        (exitcode, stdout, stderr) = j.sal.process.run(
-            command, showOutput=False, captureOutput=True, stopOnError=False, env=env)
-        if exitcode != 0:
-            raise j.exceptions.RuntimeError(
-                "Failed to execute %s: Error: %s, %s" % (command, stdout, stderr))
-        return stdout
-
-    #
-    # def copy(self, name, src, dest):
-    #     rndd = j.data.idgenerator.generateRandomInt(10, 1000000)
-    #     temp = "/var/docker/%s/%s" % (name, rndd)
-    #     j.sal.fs.createDir(temp)
-    #     source_name = j.sal.fs.getBaseName(src)
-    #     if j.sal.fs.isDir(src):
-    #         j.sal.fs.copyDirTree(src, j.sal.fs.joinPaths(temp, source_name))
-    #     else:
-    #         j.sal.fs.copyFile(src, j.sal.fs.joinPaths(temp, source_name))
-    #
-    #     ddir = j.sal.fs.getDirName(dest)
-    #     cmd = "mkdir -p %s" % (ddir)
-    #     self.run(name, cmd)
-    #
-    #     cmd = "cp -r /var/jumpscale/%s/%s %s" % (rndd, source_name, dest)
-    #     self.run(name, cmd)
-    #     j.sal.fs.remove(temp)
+        # if 'DOCKER_HOST' not in os.environ or os.environ['DOCKER_HOST'] == "":
+        #     self.base_url = 'unix://var/run/docker.sock'
+        # else:
+        #     self.base_url = os.environ['DOCKER_HOST']
+        # self.client = docker.Client(base_url=self.base_url, timeout=120)
+        self.client=docker.from_env()
 
     @property
     def containers(self):
-        if self._containers == {}:
-            for item in self.client.containers(all=all):
-                try:
-                    name = str(item["Names"][0].strip("/").strip())
-                except BaseException:
-                    continue
-                id = str(item["Id"].strip())
-                self._containers[id] = Container(name, id, self.client)
+        todel=[str(item) for item in self._containers.keys()] #are the id's
+        for item in self.client.containers.list():
+            id = item.id
+            if id in todel:
+                todel.pop(id)
+            if id not in self._containers:
+                self._containers[id] = Container(item, self.client)
+        for item in todel:
+            #this to make sure that id's in mem not in docker any more get removed
+            self._containers.pop(id)
         return list(self._containers.values())
 
     @property
@@ -208,24 +111,14 @@ class Docker:
     def status(self):
         """
         return list docker with some info
-
-        @return list of dicts
+        returns [[name, image, sshport, status]]
 
         """
-        self.weavesocket
+        
         res = []
-        for item in self.client.containers():
-            name = item["Names"][0].strip(" /")
-            sshport = ""
-
-            for port in item["Ports"]:
-                if port["PrivatePort"] == 22:
-                    if "PublicPort" in port:
-                        sshport = port["PublicPort"]
-                    else:
-                        sshport = None
-            res.append([name, item["Image"], self.docker_host,
-                        sshport, item["Status"]])
+        for item in self.containers:
+            res.append([item.name,item.image ,
+                        item.ssh_port,item.status])
 
         return res
 
@@ -233,7 +126,7 @@ class Docker:
         """
         return detailed info
         """
-        self.weavesocket
+        
         return self.client.containers()
 
     def get(self, name, die=True):
@@ -374,8 +267,7 @@ class Docker:
             aysfs=[],
             detach=False,
             privileged=False,
-            getIfExists=True,
-            weavenet=False):
+            getIfExists=True):
         """
         Creates a new container.
 
@@ -386,7 +278,7 @@ class Docker:
         if ssh is True and myinit is False:
             raise ValueError("SSH can't be enabled without myinit.")
         # check there is weave
-        self.weavesocket
+        # 
 
         name = name.lower().strip()
         self.logger.info(("create:%s" % name))
@@ -604,7 +496,7 @@ class Docker:
                 self.client.remove_image(item["Id"])
 
     def ping(self):
-        self.weavesocket
+        
         try:
             self.client.ping()
         except Exception as e:
@@ -731,11 +623,112 @@ class Docker:
 
         return "\n".join(out)
 
-    class DockerExecObj:
+    # class DockerExecObj:
 
-        def __init__(self, name):
-            self.name = name
-            self.id = "docker:%s" % name
+    #     def __init__(self, name):
+    #         self.name = name
+    #         self.id = "docker:%s" % name
 
-        def execute(self, cmds, die=True, checkok=None, async=False, showout=True, timeout=0, env={}):
-            return self._prefabDockerHost.core.run("docker exec %s  %s" % (self.name, cmds))
+    #     def execute(self, cmds, die=True, checkok=None, async=False, showout=True, timeout=0, env={}):
+    #         return self._prefabDockerHost.core.run("docker exec %s  %s" % (self.name, cmds))
+
+
+    # def init(self):
+
+    #     j.sal.process.execute("systemctl stop docker")
+
+    #     d = j.sal.disklayout.findDisk(mountpoint="/storage")
+    #     if d is not None:
+    #         # we found a disk, lets make sure its in fstab
+    #         d.setAutoMount()
+    #         dockerpath = "%s/docker" % d.mountpoint
+    #         dockerpath = dockerpath.replace("//", '/')
+    #         if dockerpath not in j.sal.btrfs.subvolumeList(d.mountpoint):
+    #             # have to create the dockerpath
+    #             j.sal.btrfs.subvolumeCreate(dockerpath)
+    #     # j.sal.fs.createDir("/storage/docker")
+    #     j.sal.fs.copyDirTree("/var/lib/docker", dockerpath)
+    #     j.sal.fs.symlink("/storage/docker", "/var/lib/docker",
+    #                      overwriteTarget=True)
+
+    #     j.sal.process.execute("systemctl start docker")
+
+    # @property
+    # def weaveIsActive(self):
+    #     return bool()
+
+    # @property
+    # def weavesocket(self):
+    #     if self._weaveSocket is None:
+    #         if not j.tools.prefab.local.core.command_check('weave'):
+    #             self.logger.warning("weave not found, do not forget to start if installed.")
+    #             self._weaveSocket = ""
+    #         else:
+
+    #             # rc, self._weaveSocket = j.sal.process.__execute("eval $(weave env) &&
+    #             # echo $DOCKER_HOST", die=False)                rc, self._weaveSocket =
+    #             # j.sal.process.__execute("eval $(weave env) && echo $DOCKER_HOST",
+    #             # die=False) echo $DOCKER_HOST", die=False)
+    #             # FIXME : j.sal.process execute treats eval $(weave en) as a single executable
+    #             # WILL SET IT TO j.sal.process.execute for now.
+    #             rc, self._weaveSocket, _ = j.sal.process.execute("eval $(weave env)")
+    #             if rc > 0:
+    #                 self.logger.warning("weave not found, do not forget to start if installed.")
+    #                 self._weaveSocket = ""
+
+    #             self._weaveSocket = self._weaveSocket.strip()
+
+    #     return self._weaveSocket
+
+    # def weaveInstall(self, ufw=False):
+    #     j.tools.prefab.local.systemservices.weave.install(start=True)
+    #     if ufw:
+    #         j.tools.prefab.local.systemservices.ufw.allowIncoming(6783)
+    #         j.tools.prefab.local.systemservices.ufw.allowIncoming(6783, protocol="udp")
+
+    # def connectRemoteTCP(self, base_url):
+    #     self.base_url = base_url
+    #     self.client = docker.Client(base_url=weavesocket)
+
+
+
+    # @property
+    # def docker_host(self):
+    #     """
+    #     Get the docker hostname.
+    #     """
+
+    #     u = parse.urlparse(self.base_url)
+    #     if u.scheme == 'unix':
+    #         return 'localhost'
+    #     else:
+    #         return u.hostname
+
+    # def _execute(self, command):
+    #     env = os.environ.copy()
+    #     env.pop('PYTHONPATH', None)
+    #     (exitcode, stdout, stderr) = j.sal.process.run(
+    #         command, showOutput=False, captureOutput=True, stopOnError=False, env=env)
+    #     if exitcode != 0:
+    #         raise j.exceptions.RuntimeError(
+    #             "Failed to execute %s: Error: %s, %s" % (command, stdout, stderr))
+    #     return stdout
+
+    #
+    # def copy(self, name, src, dest):
+    #     rndd = j.data.idgenerator.generateRandomInt(10, 1000000)
+    #     temp = "/var/docker/%s/%s" % (name, rndd)
+    #     j.sal.fs.createDir(temp)
+    #     source_name = j.sal.fs.getBaseName(src)
+    #     if j.sal.fs.isDir(src):
+    #         j.sal.fs.copyDirTree(src, j.sal.fs.joinPaths(temp, source_name))
+    #     else:
+    #         j.sal.fs.copyFile(src, j.sal.fs.joinPaths(temp, source_name))
+    #
+    #     ddir = j.sal.fs.getDirName(dest)
+    #     cmd = "mkdir -p %s" % (ddir)
+    #     self.run(name, cmd)
+    #
+    #     cmd = "cp -r /var/jumpscale/%s/%s %s" % (rndd, source_name, dest)
+    #     self.run(name, cmd)
+    #     j.sal.fs.remove(temp)    

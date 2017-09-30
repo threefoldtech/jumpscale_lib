@@ -5,7 +5,7 @@ from .RWCache import RWCache
 class LRUCacheFactory:
 
     def __init__(self):
-        self.__jslocation__ = "j.tools.cachelru"
+        self.__jslocation__ = "j.data.cachelru"
 
     def getRWCache(self, nrItemsReadCache, nrItemsWriteCache=50, maxTimeWriteCache=2000, writermethod=None):
         return RWCache(nrItemsReadCache, nrItemsWriteCache, maxTimeWriteCache, writermethod=writermethod)

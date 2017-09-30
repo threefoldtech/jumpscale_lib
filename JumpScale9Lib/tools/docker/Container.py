@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 from js9 import j
 import copy
 import tarfile
@@ -9,25 +8,23 @@ from io import BytesIO
 class Container:
     """Docker Container"""
 
-    def __init__(self, name, id, client, host="localhost"):
+    def __init__(self, obj, client):
         """
         Container object instance.
 
         @param name str: name of conainter.
         @param id  int: id of container.
         @param client obj(docker.Client()): client object from docker library.
-        @param host str: host running the docker deamon , usually an ip.
         """
 
         self.client = client
-        self.logger = j.logger.get('j.sal.docker.container')
+        self.logger = j.logger.get('docker_container')
 
-        self.host = copy.copy(host)
-        self.name = name
-        self.id = copy.copy(id)
+        self.obj=obj
+        self.name = obj.name
+        self.id = obj.id
 
         self._ssh_port = None
-
         self._sshclient = None
         self._prefab = None
         self._executor = None
@@ -37,6 +34,10 @@ class Container:
         if self._ssh_port is None:
             self._ssh_port = self.getPubPortForInternalPort(22)
         return self._ssh_port
+
+    @property
+    def image(self):
+        return self.info["Config"]["Image"]
 
     @property
     def sshclient(self):
@@ -60,6 +61,24 @@ class Container:
         return self._executor
 
     @property
+    def mounts(self):
+        res=[]
+        mountinfo=self.info["Mounts"]
+        for item in mountinfo:
+            res.append((item["Source"],item["Destination"]))
+        return res
+
+    @property
+    def status(self):
+        return self.info["State"]["Status"]
+        # if self.info["State"]["Running"]:
+        #     return "running"
+        # if self.info["State"]["Restarting"]:
+        #     return "restarting"
+        # if self.info["State"]["Paused"]:
+        #     return "paused"
+        # return "error"
+
     def prefab(self):
         if self._prefab is None:
             self._prefab = j.tools.prefab.get(self.executor, usecache=False)
@@ -80,29 +99,9 @@ class Container:
         self.copy(path, path)
         self.run("chmod 770 %s;%s" % (path, path))
 
-    # def copy(self, src, dest):
-    #     rndd = j.data.idgenerator.generateRandomInt(10, 1000000)
-    #     temp = "/var/docker/%s/%s" % (self.name, rndd)
-    #     j.sal.fs.createDir(temp)
-    #     source_name = j.sal.fs.getBaseName(src)
-    #     if j.sal.fs.isDir(src):
-    #         j.sal.fs.copyDirTree(src, j.sal.fs.joinPaths(temp, source_name))
-    #     else:
-    #         j.sal.fs.copyFile(src, j.sal.fs.joinPaths(temp, source_name))
-
-    #     ddir = j.sal.fs.getDirName(dest)
-    #     cmd = "mkdir -p %s" % (ddir)
-    #     self.run(cmd)
-
-    #     cmd = "cp -r /var/jumpscale/%s/%s %s" % (rndd, source_name, dest)
-    #     self.run(cmd)
-    #     j.sal.fs.remove(temp)
-
     @property
     def info(self):
-        self.logger.info('read info of container %s:%s' % (self.name, self.id))
-        info = self.client.inspect_container(self.id)
-        return info
+        return self.obj.attrs
 
     def isRunning(self):
         """
@@ -115,47 +114,6 @@ class Container:
         Return ip of docker on hostmachine.
         """
         return self.info['NetworkSettings']['IPAddress']
-
-    # def getProcessList(self, stdout=True):
-    #     """
-    #     @return [["$name",$pid,$mem,$parent],....,[$mem,$cpu]]
-    #     last one is sum of mem & cpu
-    #     """
-    #     raise j.exceptions.RuntimeError("not implemented")
-    #     pid = self.getPid()
-    #     children = list()
-    #     children = self._getChildren(pid, children)
-    #     result = list()
-    #     pre = ""
-    #     mem = 0.0
-    #     cpu = 0.0
-    #     cpu0 = 0.0
-    #     prevparent = ""
-    #     for child in children:
-    #         if child.parent.name != prevparent:
-    #             pre += ".."
-    #             prevparent = child.parent.name
-    #         # cpu0=child.get_cpu_percent()
-    #         mem0 = int(round(child.get_memory_info().rss / 1024, 0))
-    #         mem += mem0
-    #         cpu += cpu0
-    #         if stdout:
-    #             self.logger.info(("%s%-35s %-5s mem:%-8s" % (pre, child.name, child.pid, mem0)))
-    #         result.append([child.name, child.pid, mem0, child.parent.name])
-    #     cpu = children[0].get_cpu_percent()
-    #     result.append([mem, cpu])
-    #     if stdout:
-    #         self.logger.info(("TOTAL: mem:%-8s cpu:%-8s" % (mem, cpu)))
-    #     return result
-
-    def setHostName(self, hostname):
-        """
-        Set host name of docker conatainer.
-
-        @param hostname str: name of hostname.
-        """
-        self.prefab.core.sudo("echo '%s' > /etc/hostname" % hostname)
-        self.prefab.core.sudo("echo %s >> /etc/hosts" % hostname)
 
     def getPubPortForInternalPort(self, port):
         """
@@ -241,19 +199,6 @@ class Container:
 
         return list(keys)
 
-    def cleanAysfs(self):
-        """
-        Cleans ays file system in the container.
-        """
-        # clean default /optvar aysfs if any
-        aysfs = j.sal.aysfs.get('%s-optvar' % self.name, None)
-
-        # if load config return True, config exists
-        if aysfs.loadConfig():
-            # stopping any running aysfs linked
-            if aysfs.isRunning():
-                aysfs.stop()
-                self.logger.info("[+] aysfs stopped")
 
     def destroy(self):
         """
@@ -304,23 +249,7 @@ class Container:
         if push:
             j.sal.docker.push(imagename)
 
-    def uploadFile(self, source, dest):
-        """
-        put a file located at source on the host to dest into the container
-        """
-        self.copy(self.name, source, dest)
 
-    def downloadFile(self, source, dest):
-        """
-        get a file located at source in the host to dest on the host
-
-        """
-        if not self._prefab.core.file_exists(source):
-            raise j.exceptions.Input(msg="%s not found in container" % source)
-        ddir = j.sal.fs.getDirName(dest)
-        j.sal.fs.createDir(ddir)
-        content = self._prefab.core.file_read(source)
-        j.sal.fs.writeFile(dest, content)
 
     def __str__(self):
         return "docker:%s" % self.name
@@ -333,43 +262,6 @@ class Container:
     #     # TODO:
     #     # c.run("echo '%s' > /etc/hostname;hostname %s"%(hostname,hostname))
     #
-
-    # def installJumpscale(self,name,branch="master"):
-    #     print("Install jumpscale9")
-    #     # c=self.getSSH(name)
-    #     # hrdf="/opt/jumpscale9/hrd/system/whoami.hrd"
-    #     # if j.sal.fs.exists(path=hrdf):
-    #     #     c.dir_ensure("/opt/jumpscale9/hrd/system",True)
-    #     #     c.file_upload(hrdf,hrdf)
-    #     # c.fabric.state.output["running"]=True
-    #     # c.fabric.state.output["stdout"]=True
-    #     # c.run("cd /opt/code/github/jumpscale/jumpscale_core9/install/ && bash install.sh")
-    #     c=self.getSSH(name)
-    #
-    #     c.fabric.state.output["running"]=True
-    #     c.fabric.state.output["stdout"]=True
-    #     c.fabric.api.env['shell_env']={"JSBRANCH":branch,"AYSBRANCH":branch}
-    #     c.run("cd /tmp;rm -f install.sh;curl -k https://raw.githubusercontent.com/Jumpscale/jumpscale_core9/master/install/install.sh > install.sh;bash install.sh")
-    #     c.run("cd /opt/code/github/jumpscale/jumpscale_core9;git remote set-url origin git@github.com:Jumpscale/jumpscale_core9.git")
-    #     c.run("cd /opt/code/github/jumpscale/ays_jumpscale9;git remote set-url origin git@github.com:Jumpscale/ays_jumpscale9.git")
-    #     c.fabric.state.output["running"]=False
-    #     c.fabric.state.output["stdout"]=False
-    #
-    #     C="""
-    #     Host *
-    #         StrictHostKeyChecking no
-    #     """
-    #     c.file_write("/root/.ssh/config",C)
-    #     if not j.sal.fs.exists(path="/root/.ssh/config"):
-    #         j.sal.fs.writeFile("/root/.ssh/config",C)
-    #     C2="""
-    #     apt-get install language-pack-en
-    #     # apt-get install make
-    #     locale-gen
-    #     echo "installation done" > /tmp/ok
-    #     """
-    #     ssh_port=self.getPubPortForInternalPort(name,22)
-    #     j.sal.process.executeBashScript(content=C2, remote="localhost", sshport=ssh_port)
 
     # def _btrfsExecute(self,cmd):
     #     cmd="btrfs %s"%cmd
@@ -421,3 +313,35 @@ class Container:
     #         j.sal.fs.removeDirTree(path)
     #     if self.btrfsSubvolExists(name):
     #         raise j.exceptions.RuntimeError("vol cannot exist:%s"%name)
+
+    # def getProcessList(self, stdout=True):
+    #     """
+    #     @return [["$name",$pid,$mem,$parent],....,[$mem,$cpu]]
+    #     last one is sum of mem & cpu
+    #     """
+    #     raise j.exceptions.RuntimeError("not implemented")
+    #     pid = self.getPid()
+    #     children = list()
+    #     children = self._getChildren(pid, children)
+    #     result = list()
+    #     pre = ""
+    #     mem = 0.0
+    #     cpu = 0.0
+    #     cpu0 = 0.0
+    #     prevparent = ""
+    #     for child in children:
+    #         if child.parent.name != prevparent:
+    #             pre += ".."
+    #             prevparent = child.parent.name
+    #         # cpu0=child.get_cpu_percent()
+    #         mem0 = int(round(child.get_memory_info().rss / 1024, 0))
+    #         mem += mem0
+    #         cpu += cpu0
+    #         if stdout:
+    #             self.logger.info(("%s%-35s %-5s mem:%-8s" % (pre, child.name, child.pid, mem0)))
+    #         result.append([child.name, child.pid, mem0, child.parent.name])
+    #     cpu = children[0].get_cpu_percent()
+    #     result.append([mem, cpu])
+    #     if stdout:
+    #         self.logger.info(("TOTAL: mem:%-8s cpu:%-8s" % (mem, cpu)))
+    #     return result

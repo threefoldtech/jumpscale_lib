@@ -57,7 +57,12 @@ class Device():
         try:
             self.id = j.data.serializer.fixType(data["id"],"")
         except:
-            self.todo.append(TODO(self,"cannot find id in toml"))            
+            self.todo.append(TODO(self,"cannot find id in toml"))
+
+        #walk over ipaddresses & fix
+        if len (self.ipaddr)>1:
+            print("ipaddr")
+            from IPython import embed;embed(colors='Linux')          
 
     def ip_exists(self,ipaddr):
         ipaddr=ipaddr.lower()
@@ -241,7 +246,7 @@ class ITEnvManager:
                 return True
         return False
 
-    def process(self,path):
+    def process(self,path="."):
 
         path0=path+"/data"
 
@@ -330,3 +335,10 @@ class ITEnvManager:
         if die:
             raise RuntimeError("Could not find client config with type:%s and name:%s"%(ttype,name))
         return None    
+
+    def saveToMeConfig(self):
+        """
+        will remeber the nodes found in local host file as well as in your own config for js9_config tool (where you can select nodes)
+        """
+        for device in self.devices:
+            device.saveToMeConfig()
