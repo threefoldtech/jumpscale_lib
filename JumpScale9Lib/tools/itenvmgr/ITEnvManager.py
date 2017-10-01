@@ -114,6 +114,8 @@ class Device():
             
     @property
     def ipAddr(self):
+        print("ipaddr")
+        from IPython import embed;embed(colors='Linux')
         return self.ipAddrPort[0]
 
     @property
