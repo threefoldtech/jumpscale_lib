@@ -2,7 +2,7 @@ from js9 import j
 class Blueprints:
     def __init__(self, repository):
         self._repository = repository
-        self._api = repository._api
+        self._ayscl = repository._ayscl
 
     def list(self):
         """
@@ -13,7 +13,7 @@ class Blueprints:
         Returns:
             list of blueprints
         """
-        ays_blueprints = self._api.listBlueprints(self._repository.model.get('name')).json()
+        ays_blueprints = self._ayscl.listBlueprints(self._repository.model.get('name')).json()
         blueprints = list()
         for blueprint in ays_blueprints:
             blueprints.append(Blueprint(self._repository, blueprint))
@@ -50,7 +50,7 @@ class Blueprints:
         """
         data = j.data.serializer.json.dumps({'name': name, 'content': blueprint})
 
-        resp = self._api.createBlueprint(data, self._repository.model["name"], headers=None)
+        resp = self._ayscl.createBlueprint(data, self._repository.model["name"], headers=None)
 
         return self.get(name)
 
@@ -68,7 +68,7 @@ class Blueprints:
 class Blueprint:
     def __init__(self, repository, model):
         self._repository = repository
-        self._api = repository._api
+        self._ayscl = repository._ayscl
         self.model = model
 
     def execute(self):
@@ -79,7 +79,7 @@ class Blueprint:
 
         Returns: HTTP response object
         """
-        resp = self._api.executeBlueprint('', self.model['name'], self._repository.model['name'], headers=None)
+        resp = self._ayscl.executeBlueprint('', self.model['name'], self._repository.model['name'], headers=None)
         return resp
 
     def delete(self):
@@ -90,7 +90,7 @@ class Blueprint:
 
         Returns: HTTP response object
         """
-        resp = self._api.deleteBlueprint(blueprint=self.model['name'], repository=self._repository.model['name'], headers=None)
+        resp = self._ayscl.deleteBlueprint(blueprint=self.model['name'], repository=self._repository.model['name'], headers=None)
         return resp
 
     def get(self):
@@ -101,7 +101,7 @@ class Blueprint:
 
         Returns: blueprint content
         """
-        resp = self._api.getBlueprint(blueprint=self.model['name'], repository=self._repository.model['name'], headers=None)
+        resp = self._ayscl.getBlueprint(blueprint=self.model['name'], repository=self._repository.model['name'], headers=None)
         data=resp.json()
         return data['content']
 
@@ -113,7 +113,7 @@ class Blueprint:
 
         Returns: HTTP response object
         """
-        resp = self._api.archiveBlueprint(data='', blueprint=self.model['name'], repository=self._repository.model['name'], headers=None)
+        resp = self._ayscl.archiveBlueprint(data='', blueprint=self.model['name'], repository=self._repository.model['name'], headers=None)
         return resp
 
     def restore(self):
@@ -124,7 +124,7 @@ class Blueprint:
 
         Returns: HTTP response object
         """
-        resp = self._api.restoreBlueprint(data='', blueprint=self.model['name'], repository=self._repository.model['name'], headers=None)
+        resp = self._ayscl.restoreBlueprint(data='', blueprint=self.model['name'], repository=self._repository.model['name'], headers=None)
         return resp
 
     def __repr__(self):

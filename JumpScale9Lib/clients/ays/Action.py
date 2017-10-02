@@ -2,7 +2,7 @@ class Actions:
     def __init__(self, service):
         self._service = service
         self._repository = service._repository
-        self._api = service._repository._api
+        self._ayscl = service._repository._ayscl
 
     def list(self, state=None):
         """
@@ -47,7 +47,7 @@ class Action:
     def __init__(self, service, model):
         self._service = service
         self._repository = service._repository
-        self._api = service._repository._api
+        self._ayscl = service._repository._ayscl
         self.model = model
 
     def __repr__(self):

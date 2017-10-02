@@ -13,7 +13,7 @@ def _extract_error(resp):
 class Services:
     def __init__(self, repository):
         self._repository = repository
-        self._api = repository._api
+        self._ayscl = repository._ayscl
 
     def list(self, role=None, name=None):
         """
@@ -26,7 +26,7 @@ class Services:
         Returns: list of services
         """
         try:
-            resp = self._api.listServices(self._repository.model.get('name'))
+            resp = self._ayscl.listServices(self._repository.model.get('name'))
 
             ays_services = resp.json()
             services = list()
@@ -35,7 +35,7 @@ class Services:
                     continue
                 if name and service['name'] != name:
                     continue
-                ays_service = self._api.getServiceByName(service['name'], service['role'], self._repository.model['name'])
+                ays_service = self._ayscl.getServiceByName(service['name'], service['role'], self._repository.model['name'])
                 services.append(Service(self._repository, ays_service.json()))
             return services
 
@@ -71,14 +71,14 @@ class Services:
         """
         try:
             for service in sorted(self.list(role, name), key=lambda service: service['role']):
-                self._api.deleteServiceByName(name=service['name'], role=service['role'], repository=self._repository.mode['name'])
+                self._ayscl.deleteServiceByName(name=service['name'], role=service['role'], repository=self._repository.mode['name'])
         except Exception as e:
             return _extract_error(e)
 
 class Service:
     def __init__(self, repository, model):
         self._repository = repository
-        self._api = repository._api
+        self._ayscl = repository._ayscl
         self.model = model
         self.actions = Actions(self)
         self.eventHandlers = EventHandlers(self)
@@ -216,7 +216,7 @@ class Service:
 
         Returns: HTTP response object
         """
-        resp = self._api.deleteServiceByName(name=self.model['name'], role=self.model['role'], repository=self._repository.model['name'])
+        resp = self._ayscl.deleteServiceByName(name=self.model['name'], role=self.model['role'], repository=self._repository.model['name'])
         return resp
 
     def __repr__(self):

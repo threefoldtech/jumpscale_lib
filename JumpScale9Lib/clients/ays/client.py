@@ -3,8 +3,6 @@ from js9 import j
 from .ays_service import AysService 
 from .Repository import Repositories
 
-BASE_URI = "https://localhost:5000"
-
 class Client:
     def __init__(self, base_uri=BASE_URI, jwt=None):
         self._base_url = base_uri
@@ -18,6 +16,15 @@ class Client:
     def _set_auth_header(self, val):
         ''' set authorization header value'''
         self._session.headers.update({"Authorization": val})
+
+    def _get_headers(self, headers, content_type):
+        if content_type:
+            contentheader = {"Content-Type": content_type}
+            if headers is None:
+                headers = contentheader
+            else:
+                headers.update(contentheader)
+        return headers
 
     def _get(self, uri, headers, params, content_type):
         headers = self._get_headers(headers, content_type)

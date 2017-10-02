@@ -15,10 +15,10 @@ def _extract_error(resp):
 class Repositories:
     def __init__(self, client):
         self._client = client
-        self._api = client._ayscl.api.ays
+        self._ayscl = client._ayscl
 
     def list(self):
-        ays_repositories = self._api.listRepositories().json()
+        ays_repositories = self._ayscl.listRepositories().json()
         repositories = list()
         for repository in ays_repositories:
             repositories.append(Repository(self._client, repository))
@@ -32,14 +32,14 @@ class Repositories:
 
     def create(self, name, git):
         data = j.data.serializer.json.dumps({'name': name, 'git_url': git})
-        self._api.createRepository(data)
+        self._ayscl.createRepository(data)
         return self.get(name)
 
 
 class Repository:
     def __init__(self, client, model):
         self._client = client
-        self._api = client._ayscl.api.ays
+        self._ayscl = client._ayscl
         self.model = model
         self.blueprints = Blueprints(self)
         self.services = Services(self)
@@ -51,7 +51,7 @@ class Repository:
         Make sure to do a commit before you do a distroy, this will give you a chance to roll back.
         """
         try:
-            resp = self._api.destroyRepository(data=None, repository=self.model["name"])
+            resp = self._ayscl.destroyRepository(data=None, repository=self.model["name"])
         except Exception as e:
             print("Error while destroying repository: {}".format(_extract_error(e)))
 
@@ -61,7 +61,7 @@ class Repository:
         Make sure to do a commit before you do a delete, this will give you a chance to roll back.
         """
         try:
-            resp = self._api.deleteRepository(repository=self.model["name"])
+            resp = self._ayscl.deleteRepository(repository=self.model["name"])
         except Exception as e:
             print("Error while deleting repository: {}".format(_extract_error(e)))
 
