@@ -3,11 +3,11 @@
 ## install geodns
 ```python
 prefab = j.tools.prefab.local
-prefab.apps.geodns.install()
+prefab.network.geodns.install()
 ```
 ## start geodns
 ```python
-prefab.apps.geodns.start()
+prefab.network.geodns.start()
 ```
 
 ## create a domain

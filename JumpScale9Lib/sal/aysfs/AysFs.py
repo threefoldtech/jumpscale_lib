@@ -57,7 +57,7 @@ class AysFs:
         self.root = '/aysfs'
         self.name = name.replace('/', '-')
         self.unique = False
-        self.tmux = self._prefab.tmux
+        self.tmux = self._prefab.system.tmux
 
         self.defstor = 'https://stor.JumpScale9Lib.org/storx'
 

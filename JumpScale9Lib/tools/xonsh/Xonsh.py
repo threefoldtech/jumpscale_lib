@@ -40,4 +40,4 @@ class Xonsh:
         self._prefab.core.file_write("$HOMEDIR/.xonshrc", C)
 
     def configTmux(self, restart=True):
-        self._prefab.tmux.configure(restart, True)
+        self._prefab.system.tmux.configure(restart, True)
