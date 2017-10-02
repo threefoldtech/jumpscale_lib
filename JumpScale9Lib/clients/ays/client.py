@@ -3,6 +3,8 @@ from js9 import j
 from .ays_service import AysService 
 from .Repository import Repositories
 
+BASE_URI = "https://localhost:5000"
+
 class Client:
     def __init__(self, base_uri=BASE_URI, jwt=None):
         self._base_url = base_uri
