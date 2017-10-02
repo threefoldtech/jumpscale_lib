@@ -12,7 +12,7 @@ Connect to you AYS server:
 ```python
 base_uri="http://172.25.0.238:5000"
 jwt="..."
-cl=j.clients.atyourservice.get2(base_uri, jwt)
+cl=j.clients.ays.get(base_uri, jwt)
 ```
 
 List all repositories:

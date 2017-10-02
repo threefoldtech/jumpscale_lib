@@ -1,4 +1,4 @@
-from JumpScale9Lib.clients.ays import Client
+from .client import Client
 
 BASE_URI = "https://localhost:5000"
 
@@ -8,4 +8,4 @@ class ClientFactory:
         self.__jslocation__ = 'j.clients.ays'
 
     def get(self, base_uri=BASE_URI, jwt=None):
-        return Client(self, base_uri, jwt)
+        return Client(base_uri, jwt)

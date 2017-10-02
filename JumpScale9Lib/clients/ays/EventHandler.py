@@ -2,7 +2,7 @@ class EventHandlers:
     def __init__(self, service):
         self._service = service
         self._repository = service._repository
-        self._api = service._repository._api
+        self._ayscl = service._repository._ayscl
 
     def list(self, command=None, channel=None, tag=None):
         """
@@ -54,7 +54,7 @@ class EventHandlers:
 class EventHandler:
     def __init__(self, service, model):
         self._repository = service
-        self._api = repository._api
+        self._ayscl = repository._ayscl
         self.model = model
 
 def __repr__(self):

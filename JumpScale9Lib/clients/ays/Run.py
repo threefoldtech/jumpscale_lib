@@ -12,14 +12,14 @@ def _extract_error(resp):
 class Runs:
     def __init__(self, repository):
         self._repository = repository
-        self._api = repository._api
+        self._ayscl = repository._ayscl
 
     def list(self):
         """
         List all runs (keys) sorted by creation date.
         """
         try:
-            resp = self._api.listRuns(self._repository.model['name'])
+            resp = self._ayscl.listRuns(self._repository.model['name'])
         except Exception as e:
             print("Error during listing of the runs: {}".format(_extract_error(e)))
             return
@@ -38,7 +38,7 @@ class Runs:
         A run is an collection of actions that will be run on the repository.
         """
         try:
-            resp = self._api.createRun(data=None, repository=self._repository.model["name"], query_params={'simulate': True, 'callback_url': callback})
+            resp = self._ayscl.createRun(data=None, repository=self._repository.model["name"], query_params={'simulate': True, 'callback_url': callback})
         except Exception as e:
             print("error during execution of the run: {}".format(_extract_error(e)))
             return
@@ -52,11 +52,11 @@ class Runs:
             resp = j.tools.console.askYesNo('Do you want to execute this run ?', True)
             if resp is False:
                 runid = run['key']
-                self._api.deleteRun(runid=runid, repository=self._repository.model["name"])
+                self._ayscl.deleteRun(runid=runid, repository=self._repository.model["name"])
                 return
 
         try:
-            resp = self._api.executeRun(data=None, runid=run['key'], repository=self._repository.model["name"])
+            resp = self._ayscl.executeRun(data=None, runid=run['key'], repository=self._repository.model["name"])
         except Exception as e:
             print("error during execution of the run: {}".format(_extract_error(e)))
             return
@@ -84,9 +84,8 @@ class Run:
         If logs is true, also show the logs of each job.
         """
         try:
-            resp = ayscl.api.ays.getRun(runid=self.model["key"], repository=self._repository.model["name"])
+            resp = self._ayscl.getRun(runid=self.model["key"], repository=self._repository.model["name"])
         except Exception as e:
-            print("Error during retreive of the run {}: {}".format(key, _extract_error(e)))
             return
 
         #TODO: what about the logs

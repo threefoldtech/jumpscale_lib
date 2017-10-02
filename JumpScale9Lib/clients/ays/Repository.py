@@ -1,5 +1,7 @@
 from js9 import j
 from requests.exceptions import HTTPError
+from .ActorTemplate import ActorTemplates
+from .Actor import Actors
 from .Blueprint import Blueprints
 from .Service import Services
 from .Run import Runs
@@ -41,6 +43,8 @@ class Repository:
         self._client = client
         self._ayscl = client._ayscl
         self.model = model
+        self.actorTemplates = ActorTemplates(self)
+        self.actors = Actors(self)
         self.blueprints = Blueprints(self)
         self.services = Services(self)
         self.runs = Runs(self)
