@@ -160,6 +160,29 @@ class ModelBase():
         msg = "Error in dbobj:%s (%s)\n%s" % (self._category, self.key, msg)
         raise j.exceptions.Input(message=msg, level=1, source="", tags="", msgpub="")
 
+    def updateSubItem(self, name, keys, data):
+        keys = keys or []
+        if not isinstance(keys, list):
+            keys = [keys]
+        self._listAddRemoveItem(name)
+        existing = self.__dict__['list_%s' % name]
+        for idx, item in enumerate(existing):
+            match = True
+            for key in keys:
+                if item.to_dict()[key] != data.to_dict()[key]:
+                    match = False
+            if keys and match:
+                existing.pop(idx)
+                break
+        self.addSubItem(name, data)
+
+    def addDistinctSubItem(self, name, data):
+        self._listAddRemoveItem(name=name)
+        for item in self.__dict__["list_%s" % name]:
+            if item.to_dict() == data.to_dict():
+                return
+        self.__dict__["list_%s" % name].append(data)
+
     def addSubItem(self, name, data):
         """
         @param data is string or object first retrieved by self.collection.list_$name_constructor(**args)
