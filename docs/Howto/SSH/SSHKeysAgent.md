@@ -2,7 +2,7 @@
 
 ```bash
 #load ssh-agent & all known keys
-js 'j.do._.loadSSHAgent()'
+js 'j.clients.ssh.loadSSHAgent()'
 
 #if it's the first time you need to tell current session path to ssh-agent
 export SSH_AUTH_SOCK=~/sshagent_socket
@@ -40,7 +40,7 @@ This will allow youme from yiur local server to login as root on the remote mach
 Using JumpScale:
 
 ```python
-j.do.SSHAuthorizeKey(remoteipaddr,login="root",passwd=None)
+j.clients.ssh.SSHAuthorizeKey(remoteipaddr,login="root",passwd=None)
 ```
 
 If `psswd=None` you will be asked for the password.

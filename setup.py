@@ -15,7 +15,7 @@ def _post_install(libname, libpath):
     c[libname] = libpath
     j.core.state.configSet('plugins', c)
     j.do.execute("pip3 install 'git+https://github.com/zero-os/0-core#egg=0-core-client&subdirectory=client/py-client'")
-    j.tools.jsloader.generateJumpscalePlugins()
+    j.tools.jsloader.generate()
 
 
 class install(_install):
@@ -46,7 +46,7 @@ except ImportError:
 
 setup(
     name='JumpScale9Lib',
-    version='9.1.1',
+    version='9.1.2',
     description='Automation framework for cloud workloads library',
     long_description=long_description,
     url='https://github.com/Jumpscale/lib9',
@@ -57,7 +57,7 @@ setup(
     install_requires=[
         'Brotli>=0.6.0',
         'Jinja2>=2.9.6',
-        'JumpScale9>=9.1.1',
+        'JumpScale9>=9.1.2',
         'Pillow>=4.1.1',
         'PyGithub>=1.34',
         'PyYAML>=3.12',
@@ -95,6 +95,7 @@ setup(
         'zerotier>=1.1.2',
         'packet-python>=1.33',
         'blosc>=1.5.1',
+        'dnspython'
     ],
     cmdclass={
         'install': install,

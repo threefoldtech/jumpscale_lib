@@ -773,3 +773,45 @@ class GogsClient:
                 labelname, labelcolor = "priority_{}".format(prio), prio_color_code
                 result.append(self.labelCreate(reponame, labelname, labelcolor, owner))
         return result
+
+    def milestonesList(self, reponame, owner):
+        response_milestones = self.session.get(
+            self.build_url("repos", owner, reponame, 'milestones'))
+        if response_milestones.status_code == 200:
+            return response_milestones.json()
+    
+    def milestoneCreate(self, reponame, milestone, owner=None):
+        if not owner:
+            owner = self.login
+        milestones = [milestone['title'] for milestone in self.milestonesList(reponame, owner)]
+        if milestone in milestones:
+            return {}
+        if not milestone:
+            return {}
+        body = {
+            "title": milestone,
+        }
+
+        response_create = self.session.post(
+            self.build_url("repos", owner, reponame, "milestones"), json=body)
+
+        if response_create.status_code == 201:
+            return response_create.json()
+        elif response_create.status_code == 403:
+            raise AdminRequiredException("user does not have access to repo")
+        else:
+            raise NotFoundException("User or repo does not exist")
+
+
+    def milestoneDelete(self, reponame, milestone, owner=None):
+        if not owner:
+            owner = self.login
+
+        milestones = [m for m in self.milestonesList(reponame, owner) if m['title'] == milestone]
+        if not milestones:
+            return {}
+        
+        for milestone in milestones: 
+            url = self.build_url("repos", owner, reponame, "milestones", str(milestone['id']))
+            response = self.session.delete(url)
+        return response.status_code == 204

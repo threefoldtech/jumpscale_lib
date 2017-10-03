@@ -83,21 +83,30 @@ class DocGenerator:
         prefab = j.tools.prefab.local
         if prefab.core.doneGet("docgenerator:installed") == False or reset:
             prefab.development.nodejs.install()
+            prefab.development.nodejs.phantomjs()
             if "darwin" in str(j.core.platformtype.myplatform):
                 prefab.core.run("brew install graphviz")
                 prefab.core.run("brew install hugo")
-                prefab.core.run("brew install caddy")
+                # prefab.core.run("brew install caddy")
             elif "ubuntu" in str(j.core.platformtype.myplatform):
                 prefab.package.install('graphviz')
                 # Using package install will result in an old version on some machines
-                prefab.core.file_download('https://github.com/spf13/hugo/releases/download/v0.20.7/hugo_0.20.7_Linux-64bit.tar.gz')
-                prefab.core.file_expand('$TMPDIR/hugo_0.20.7_Linux-64bit.tar.gz')
-                prefab.core.file_copy('$TMPDIR/hugo_0.20.7_Linux-64bit/hugo', '/usr/local/bin')
-                prefab.local.development.golang.install()
-                prefab.apps.caddy.build()
-            prefab.core.run("npm install -g phantomjs-prebuilt", profile=True)
+                # prefab.core.file_download('https://github.com/gohugoio/hugo/releases/download/v0.26/hugo_0.26_Linux-64bit.tar.gz')
+                # prefab.core.file_expand('$TMPDIR/hugo_0.26_Linux-64bit.tar.gz')
+                # prefab.core.file_copy('$TMPDIR/hugo_0.26_Linux-64bit/hugo', '/usr/bin/')
+                # prefab.core.run("go get -v github.com/gohugoio/hugo")
+
+                prefab.core.run("go get -u -v github.com/gohugoio/hugo")      
+
+                #IF FROM SOURCE
+                # go get github.com/kardianos/govendor
+                # govendor get github.com/gohugoio/hugo
+                # go install github.com/gohugoio/hugo                
+
+            prefab.development.golang.install()
+            prefab.apps.caddy.build()
             prefab.core.run("npm install -g mermaid", profile=True)            
-            prefab.local.apps.caddy.start()
+            prefab.apps.caddy.configure()
             prefab.core.doneSet("docgenerator:installed")
 
     def startWebserver(self):
@@ -130,7 +139,7 @@ class DocGenerator:
 
     def init(self):
         if not self._initOK:
-            self.installDeps()
+            self.install()
             j.sal.fs.remove(self._macroCodepath)
             # load the default macro's
             self.loadMacros("https://github.com/Jumpscale/docgenerator/tree/master/macros")

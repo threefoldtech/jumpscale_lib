@@ -303,6 +303,10 @@ class Account(Authorizables):
     def _deleteUser(self, username):
         self.client.api.cloudapi.accounts.deleteUser(accountId=self.id, userId=username, recursivedelete=True)
 
+    def get_consumption(self, start, end):
+        return self.client.api.cloudapi.accounts.getConsumption(accountId=self.id, start=start, end=end)
+
+
     def save(self):
         self.client.api.cloudapi.accounts.update(accountId=self.model['id'],
                                                  name=self.model['name'],
@@ -486,6 +490,9 @@ class Space(Authorizables):
     def delete(self):
         self.client.api.cloudapi.cloudspaces.delete(cloudspaceId=self.id)
 
+    def execute_routeros_script(self, script):
+        self.client.api.cloudapi.cloudspaces.executeRouterOSScript(cloudspaceId=self.id, script=script)
+
     def get_space_ip(self):
         space = self.client.api.cloudapi.cloudspaces.get(cloudspaceId=self.id)
 
@@ -613,8 +620,18 @@ class Machine:
     def detach_disk(self, disk_id):
         return self.client.api.cloudapi.machines.detachDisk(machineId=self.id, diskId=disk_id)
 
-    def disk_limit_io(self, disk_id, iops=50):
-        self.client.api.cloudapi.disks.limitIO(diskId=disk_id, iops=iops)
+    def disk_limit_io(self, disk_id, total_bytes_sec, read_bytes_sec, write_bytes_sec, total_iops_sec,
+                      read_iops_sec, write_iops_sec, total_bytes_sec_max, read_bytes_sec_max,
+                      write_bytes_sec_max, total_iops_sec_max, read_iops_sec_max,
+                      write_iops_sec_max, size_iops_sec, iops=50):
+        self.client.api.cloudapi.disks.limitIO(diskId=disk_id, iops=iops, total_bytes_sec=total_bytes_sec,
+                                               read_bytes_sec=read_bytes_sec,
+                                               write_bytes_sec=write_bytes_sec, total_iops_sec=total_iops_sec,
+                                               read_iops_sec=read_iops_sec, write_iops_sec=write_iops_sec,
+                                               total_bytes_sec_max=total_bytes_sec_max, read_bytes_sec_max=read_bytes_sec_max,
+                                               write_bytes_sec_max=write_bytes_sec_max, total_iops_sec_max=total_iops_sec_max,
+                                               read_iops_sec_max=read_iops_sec_max, write_iops_sec_max=write_iops_sec_max,
+                                               size_iops_sec=size_iops_sec)
 
     @property
     def portforwardings(self):

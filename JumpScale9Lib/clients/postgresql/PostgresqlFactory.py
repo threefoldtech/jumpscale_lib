@@ -25,6 +25,10 @@ class PostgresqlFactory:
         self.clients = {}
 
     def getClient(self, ipaddr="localhost", port=5432, login="postgres", passwd="rooter", dbname="template"):
+        """
+        if used without arguments it connects to local postgresql installed with prefab without modifications
+        #TODO
+        """
         key = "%s_%s_%s_%s_%s" % (ipaddr, port, login, passwd, dbname)
         if key not in self.clients:
             self.clients[key] = PostgresClient(
@@ -79,7 +83,7 @@ class PostgresClient:
             self.getcursor()
         return self.cursor.execute(sql)
 
-    def initsqlalchemy(self):
+    def getSQLAlchemyClient(self):
         """
         usage
 
@@ -100,6 +104,12 @@ class PostgresClient:
         session = Session(engine)
 
         return Base, session
+
+    def getPeeweeClient(self):
+        """
+        # TODO
+        """
+        pass
 
     def dump(self, path, tablesIgnore=[]):
         args = copy.copy(self.__dict__)
@@ -148,82 +158,103 @@ class PostgresClient:
                     args)
                 j.sal.process.execute(cmd, showout=False)
 
-    def dumpall2hrd(self, path, tablesIgnore=[], fieldsIgnore={}, fieldsId={}, fieldRewriteRules={}, fieldsBinary={}):
+    def exportToYAML(self,path):
         """
-        @param fieldsIgnore is dict, with key the table & field the field to ignore
-        @param fieldsId is dict, with key the table & field which needs to be the id (will become name of hrd)
-        @param fieldRewriteRules is dict, with key the table & value is a function which converts the name of the field (when key=* then for all tables)
+        TODO: export
+
+        export to $path/$objectType/$id_$name.yaml (if id & name exists)
+        else: export to $path/$objectType/$id_$dest[1:20].yaml (if id & descr exists)
+        else: export to $path/$objectType/$id.yaml (if id & descr exists)
+        if id does not exist but guid or uid does, use that one in stead of id
+
+        check for deletes
 
         """
-        j.sal.fs.createDir(path)
-        base, session = self.initsqlalchemy()
-        for name, obj in list(base.classes.items()):
-            out = ""
-            if name in tablesIgnore:
-                continue
-            print("process table:%s" % name)
-            j.sal.fs.createDir("%s/%s" % (path, name))
-            for record in session.query(obj):
-                r = record.__dict__
-                idfound = None
-                for name2, val in list(r.items()):
-                    if name in fieldsIgnore:
-                        if name2 in fieldsIgnore[name]:
-                            continue
-                    if name2[0] == "_":
-                        continue
+        pass
 
-                    if name in fieldsId:
-                        if name2 == fieldsId[name]:
-                            idfound = name2
-                        else:
-                            if isinstance(fieldsId[name], list):
-                                j.application.break_into_jshell(
-                                    "DEBUG NOW complete code, we need to aggregate key from 2 fields ")
-                    elif name2.lower() == "name":
-                        idfound = name2
-                    elif name2.lower() == "id":
-                        idfound = name2
-                    elif name2.lower() == "uuid":
-                        idfound = name2
-                    elif name2.lower() == "guid":
-                        idfound = name2
-                    elif name2.lower() == "oid":
-                        idfound = name2
+    def importFromYAML(self,path):
+        """
+        TODO:
+        """
+        pass
 
-                    if name in fieldRewriteRules:
-                        name2 = fieldRewriteRules[name](name2)
-                    elif "*" in fieldRewriteRules:
-                        name2 = fieldRewriteRules["*"](name2)
 
-                    if name in fieldsBinary and name2 in fieldsBinary[name]:
-                        val2 = binascii.b2a_qp(val)  # .decode("utf8")
-                        out += "%s =bqp\n%s\n#BINARYEND#########\n" % (
-                            name2, val2)
-                    elif isinstance(val, int) or isinstance(val, int):
-                        out += "%s = %s\n" % (name2, val)
-                    elif isinstance(val, float):
-                        out += "%s = %s\n" % (name2, val)
-                    elif isinstance(val, str):
-                        out += "%s = '%s'\n" % (name2, val)
-                    elif isinstance(val, str):
-                        out += "%s = '%s'\n" % (name2,
-                                                val.decode("utf8", "strict"))
-                    elif isinstance(val, datetime.date):
-                        out += "%s = %s #%s\n" % (name2,
-                                                  int(time.mktime(val.timetuple())), str(val))
-                    else:
-                        j.application.break_into_jshell(
-                            "DEBUG NOW psycopg2dumpall2hrd")
+    # def dumpall2hrd(self, path, tablesIgnore=[], fieldsIgnore={}, fieldsId={}, fieldRewriteRules={}, fieldsBinary={}):
+    #     """
+    #     @param fieldsIgnore is dict, with key the table & field the field to ignore
+    #     @param fieldsId is dict, with key the table & field which needs to be the id (will become name of hrd)
+    #     @param fieldRewriteRules is dict, with key the table & value is a function which converts the name of the field (when key=* then for all tables)
 
-                if idfound is None:
-                    j.application.break_into_jshell(
-                        "DEBUG NOW could not find id for %s in psycopg2dumpall2hrd" % r)
+    #     """
+    #     j.sal.fs.createDir(path)
+    #     base, session = self.initsqlalchemy()
+    #     for name, obj in list(base.classes.items()):
+    #         out = ""
+    #         if name in tablesIgnore:
+    #             continue
+    #         print("process table:%s" % name)
+    #         j.sal.fs.createDir("%s/%s" % (path, name))
+    #         for record in session.query(obj):
+    #             r = record.__dict__
+    #             idfound = None
+    #             for name2, val in list(r.items()):
+    #                 if name in fieldsIgnore:
+    #                     if name2 in fieldsIgnore[name]:
+    #                         continue
+    #                 if name2[0] == "_":
+    #                     continue
 
-                print("process record:%s" % r[idfound])
-                hrd = j.data.hrd.get(content=out, path="%s/%s/%s.hrd" %
-                                     (path, name, str(r[idfound]).replace("/", "==")))
-                hrd.save()
+    #                 if name in fieldsId:
+    #                     if name2 == fieldsId[name]:
+    #                         idfound = name2
+    #                     else:
+    #                         if isinstance(fieldsId[name], list):
+    #                             j.application.break_into_jshell(
+    #                                 "DEBUG NOW complete code, we need to aggregate key from 2 fields ")
+    #                 elif name2.lower() == "name":
+    #                     idfound = name2
+    #                 elif name2.lower() == "id":
+    #                     idfound = name2
+    #                 elif name2.lower() == "uuid":
+    #                     idfound = name2
+    #                 elif name2.lower() == "guid":
+    #                     idfound = name2
+    #                 elif name2.lower() == "oid":
+    #                     idfound = name2
+
+    #                 if name in fieldRewriteRules:
+    #                     name2 = fieldRewriteRules[name](name2)
+    #                 elif "*" in fieldRewriteRules:
+    #                     name2 = fieldRewriteRules["*"](name2)
+
+    #                 if name in fieldsBinary and name2 in fieldsBinary[name]:
+    #                     val2 = binascii.b2a_qp(val)  # .decode("utf8")
+    #                     out += "%s =bqp\n%s\n#BINARYEND#########\n" % (
+    #                         name2, val2)
+    #                 elif isinstance(val, int) or isinstance(val, int):
+    #                     out += "%s = %s\n" % (name2, val)
+    #                 elif isinstance(val, float):
+    #                     out += "%s = %s\n" % (name2, val)
+    #                 elif isinstance(val, str):
+    #                     out += "%s = '%s'\n" % (name2, val)
+    #                 elif isinstance(val, str):
+    #                     out += "%s = '%s'\n" % (name2,
+    #                                             val.decode("utf8", "strict"))
+    #                 elif isinstance(val, datetime.date):
+    #                     out += "%s = %s #%s\n" % (name2,
+    #                                               int(time.mktime(val.timetuple())), str(val))
+    #                 else:
+    #                     j.application.break_into_jshell(
+    #                         "DEBUG NOW psycopg2dumpall2hrd")
+
+    #             if idfound is None:
+    #                 j.application.break_into_jshell(
+    #                     "DEBUG NOW could not find id for %s in psycopg2dumpall2hrd" % r)
+
+    #             print("process record:%s" % r[idfound])
+    #             hrd = j.data.hrd.get(content=out, path="%s/%s/%s.hrd" %
+    #                                  (path, name, str(r[idfound]).replace("/", "==")))
+    #             hrd.save()
 
     # def _html2text(self, html):
     #     return j.tools.html.html2text(html)

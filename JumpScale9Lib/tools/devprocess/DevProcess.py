@@ -562,7 +562,7 @@ class DevProcess:
 
         @param service Service: github_repo service object.
         """
-        j.do.pullGitRepo(url=service.model.data.repoUrl,
+        j.clients.git.pullGitRepo(url=service.model.data.repoUrl,
                          dest=service.model.data.codePath,
                          login=None, passwd=None, depth=1,
                          ignorelocalchanges=False, reset=False, branch=None,
