@@ -1,14 +1,13 @@
-# AYS Wrapper Client
+# AYS Client
 
-This AYS client is an easier to use alternative to the auto-generated AYS client, as available from `j.clients.atyourservice.get()`.
+The AYS client makes interacting with the RESTful API of a local or remote AYS Server easy.
 
-The AYS "Wrapper" Client is available from `j.clients.atyourservice.get2()`.
+The AYS client is avaialble from `j.clients.ays.get()`. Underneath it uses the auto-generated AYS client, which is available from the private attribute `_ayscl` of the AYS client. 
 
-For its implementation it uses the auto-generated AYS client, hence its name: it "wraps" the auto-generated AYS client.
 
 ## Usage
 
-Connect to you AYS server:
+Connect to your AYS server:
 ```python
 base_uri="http://172.25.0.238:5000"
 jwt="..."
@@ -32,15 +31,17 @@ Or use an existing repository:
 repo=cl.repositories.get(repo_name)
 ```
 
-Read blueprint from a file:
+Create a blueprint from a file:
+```python
+path="vdc.bp"
+bp=repo.blueprints.createFromFile(path)
+```
+
+Alternativelly:
 ```python
 file_name="vdc.bp"
 blueprint_file = open(file_name,'r')
 blueprint = blueprint_file.read()
-```
-
-Create a blueprint:
-```python
 bp_name="myvdc.yaml"
 bp=repo.blueprints.create(bp_name, blueprint)
 ```

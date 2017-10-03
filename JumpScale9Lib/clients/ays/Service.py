@@ -107,6 +107,7 @@ class Service:
                 if name and child['name'] != name:
                     continue
                 children.append(Service(self._repository, child))
+        return children
 
     def getParent(self):
         """
@@ -161,54 +162,6 @@ class Service:
                 producers.append(Service(self._repository, producer))
         return producers
 
-    def getActions(state=None, recurring=None, name=None):
-        """
-        Get all actions with a specified name and/or role
-
-        Args:
-            state: (optional) role of the producers
-            recurring: (True/False) for only listing recurring/non-recurring actions
-            name: (optional) name of the producers
-
-        Returns: list of actions
-        """
-        actions = list()
-        if self.model['actions']:
-           for action in self.model['actions']:
-                if state and action['state'] != state:
-                   continue
-                if recurring and action['recurring'] is None:
-                   continue
-                if name and action['name'] != name:
-                   continue 
-                actions.append(Action(self, action))
-        return actions
-
-    def getRecurringActions(self):
-        """
-        Get all recurring actions of the service
-
-        Args: none
-
-        Returns: list of recurring actions
-        """
-        recurringActions = self.getRecurringActions(recurring=True)
-        return recurringActions
-
-    def getEventHandlers(self):
-        """
-        Get all event handlers of the service
-
-        Args: none
-
-        Returns: list of event handlers
-        """
-        eventHandlers = list()
-        if self.model['events']:
-           for eventHandler in self.model['events']:
-               eventHandlers.append(EventHandler(self, eventHandler))
-        return eventHandlers
-
     def delete(self):
         """
         Delete a service and all its children.
@@ -220,6 +173,6 @@ class Service:
         return resp
 
     def __repr__(self):
-        return "service: %s" % (self.model["name"])
+        return "service: %s!%s" % (self.model["role"], self.model["name"])
 
     __str__ = __repr__

@@ -1,5 +1,6 @@
 from js9 import j
 from requests.exceptions import HTTPError
+from .Step import Steps
 
 def _extract_error(resp):
     if isinstance(resp, HTTPError):
@@ -17,66 +18,91 @@ class Runs:
     def list(self):
         """
         List all runs (keys) sorted by creation date.
+
+        Return: list of runs
         """
         try:
             resp = self._ayscl.listRuns(self._repository.model['name'])
         except Exception as e:
-            print("Error during listing of the runs: {}".format(_extract_error(e)))
-            return
+            return _extract_error(e)
 
         ays_runs = resp.json()
         ays_runs = sorted(ays_runs, key=lambda x: x['epoch'])
 
         runs = list()
         for run in ays_runs:
-            runs.append(Run(self._repository, run))
+            try:
+                ays_run = self._ayscl.getRun(run['key'], self._repository.model['name'])
+            except Exception as e:
+                return _extract_error(e)   
+            runs.append(Run(self._repository, ays_run.json()))
         return runs
 
-    def create(self, callback=None, yes=False):
+    def create(self, execute=False, callback=None):
         """
-        Look for all actions with a state 'scheduled', 'changed' or 'error' and create a run.
+        Look for all actions with a state 'scheduled', 'changed' or 'error' and creates a run.
         A run is an collection of actions that will be run on the repository.
+
+        Args:
+            execute (True/False): (optional) If true the run will immediatelly be executed once created; default is False
+            callback: (optional) url that will used when finished
+
+        Returns:
+            key: run id
         """
         try:
             resp = self._ayscl.createRun(data=None, repository=self._repository.model["name"], query_params={'simulate': True, 'callback_url': callback})
         except Exception as e:
-            print("error during execution of the run: {}".format(_extract_error(e)))
-            return
+            return _extract_error(e)
 
         run = resp.json()
         if len(run['steps']) <= 0:
-            print("Nothing to do.")
-            return
+            return resp
 
-        if yes == False:
-            resp = j.tools.console.askYesNo('Do you want to execute this run ?', True)
-            if resp is False:
-                runid = run['key']
-                self._ayscl.deleteRun(runid=runid, repository=self._repository.model["name"])
-                return
+        if execute == True:
+            try:
+                resp = self._ayscl.executeRun(data=None, runid=run['key'], repository=self._repository.model["name"])
+            except Exception as e:
+                return _extract_error(e)
 
-        try:
-            resp = self._ayscl.executeRun(data=None, runid=run['key'], repository=self._repository.model["name"])
-        except Exception as e:
-            print("error during execution of the run: {}".format(_extract_error(e)))
-            return
-
-        print("execution of the run started: {}".format(run['key']))
         return run['key']
 
-    def get(self, key):
+    def get(self, key=None):
         """
-        Get a run.
+        Get a run by its key.
+
+        Args:
+            key: (optional) id of the run, if no key specified the last run will be returned
+
+        Raises: ValueError if no run with given key could be found
+
+        Returns: run with given key, or last run if no key specified  
         """
         for run in self.list():
-            if run.model.get('key') == key:
+            if key == None:
+                return run
+            if run.model['key'] == key:
                 return run
         raise ValueError("Could not find run with key {}".format(key))
 
 class Run:
     def __init__(self, repository, model):
         self._repository = repository
+        self._ayscl = repository._ayscl
         self.model = model
+        self.steps = Steps(self)
+
+    def execute(self):
+        """
+        Execute the run.
+        Returns: HTTP response object
+        """
+        try:
+            resp = self._ayscl.executeRun(data=None, runid=self.model['key'], repository=self._repository.model["name"])
+        except Exception as e:
+             return _extract_error(e)
+        return resp
+
 
     def show(self, logs=False):
         """
@@ -86,7 +112,7 @@ class Run:
         try:
             resp = self._ayscl.getRun(runid=self.model["key"], repository=self._repository.model["name"])
         except Exception as e:
-            return
+            return _extract_error(e)
 
         #TODO: what about the logs
 

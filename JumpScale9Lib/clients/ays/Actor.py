@@ -1,3 +1,13 @@
+from requests.exceptions import HTTPError
+
+def _extract_error(resp):
+    if isinstance(resp, HTTPError):
+        if resp.response.headers['Content-type'] == 'application/json':
+            content = resp.response.json()
+            return content.get('error', resp.response.text)
+        return resp.response.text
+    raise resp
+
 class Actors:
     def __init__(self, repository):
         self._repository = repository
@@ -12,10 +22,18 @@ class Actors:
         Returns:
             list of actors
         """
-        ays_actors = self._ayscl.listActors(self._repository.model['name']).json()
+        try:
+            ays_actors = self._ayscl.listActors(self._repository.model['name']).json()
+        except Exception as e:
+            return _extract_error(e)
+        
         actors = list()
         for actor in sorted(ays_actors, key=lambda actor: actor['name']):
-            actors.append(Actor(self._repository, actor))
+            try:
+                ays_actor = self._ayscl.getActorByName(actor.model['name'], self._repository.model['name'])
+            except Exception as e:
+                return _extract_error(e) 
+            actors.append(Actor(self._repository, ays_actor))
         return actors
 
     def get(self, name):
@@ -78,7 +96,10 @@ class Actor:
         Returns: HTTP response object
         """
         query_params = {'reschedule': reschedule}
-        resp = self._ayscl.updateActor(data='', actor=self.model['name'], repository=self._repository.model['name'], query_params=query_params)
+        try:
+            resp = self._ayscl.updateActor(data='', actor=self.model['name'], repository=self._repository.model['name'], query_params=query_params)
+        except Exception as e:
+            return _extract_error(e)
         return resp
 
     def __repr__(self):

@@ -4,7 +4,7 @@ class Actions:
         self._repository = service._repository
         self._ayscl = service._repository._ayscl
 
-    def list(self, state=None):
+    def list(self, state=None, recurring=None):
         """
         List all actions.
 
@@ -20,6 +20,8 @@ class Actions:
             for action in self._service.model['actions']:
                 if state and action['state'] != state:
                     continue
+                if recurring and action['recurring'] is None:
+                   continue
                 actions.append(Action(self._service, action))
 
         return actions
