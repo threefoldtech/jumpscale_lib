@@ -7,7 +7,7 @@ import capnp
 # from JumpScale9Lib.tools.docmanager import model_capnp as ModelCapnp
 # from peewee import *
 # from playhouse.sqlite_ext import SqliteExtDatabase
-
+from issuemanagerlib.hostref import *
 
 class DocManager:
 
