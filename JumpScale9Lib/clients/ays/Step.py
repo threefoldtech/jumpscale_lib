@@ -36,9 +36,9 @@ class Step:
     def __init__(self, run, model):
         self._run = run
         self.model = model
-        self.jobs = Jobs(self)
+        self.jobs = Jobs(step=self)
 
     def __repr__(self):
-        return "step number %s" % (self.model["number"])
+        return "step number %s (%s): %s jobs" % (self.model["number"], self.model["state"], len(self.model['jobs']))
 
     __str__ = __repr__

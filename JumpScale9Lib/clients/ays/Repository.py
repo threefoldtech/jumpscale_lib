@@ -6,6 +6,7 @@ from .Blueprint import Blueprints
 from .Service import Services
 from .Scheduler import Scheduler
 from .Run import Runs
+from .Job import Jobs
 
 def _extract_error(resp):
     if isinstance(resp, HTTPError):
@@ -50,6 +51,7 @@ class Repository:
         self.services = Services(self)
         self.scheduler = Scheduler(self)
         self.runs = Runs(self)
+        self.jobs = Jobs(repository=self)
 
     def destroy(self):
         """

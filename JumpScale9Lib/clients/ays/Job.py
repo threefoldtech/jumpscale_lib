@@ -10,10 +10,14 @@ def _extract_error(resp):
     raise resp
     
 class Jobs:
-    def __init__(self, step):
+    def __init__(self, step=None, repository=None):
         self._step = step
-        self._repository = step._run._repository
-        self._ayscl = step._run._ayscl
+        if step:
+            self._repository = step._run._repository
+            self._ayscl = step._run._ayscl
+        if repository:
+            self._repository = repository
+            self._ayscl = repository._ayscl
 
         # TODO
         # Allow step=None and add filters for showing jobs per actor, repo, service, action, ...
@@ -25,13 +29,30 @@ class Jobs:
         Returns: list of jobs
         """
         jobs = list()
-        for job in self._step.model['jobs']:
+        if self._step:
+            for job in self._step.model['jobs']:
+                try:
+                    ays_job = self._ayscl.getJob(job['key'], self._repository.model['name'])
+                except Exception as e:
+                    return _extract_error(e)   
+                jobs.append(Job(self._step, job))
+            return jobs
+                
+        if self._repository:
             try:
-                ays_job = self._ayscl.getJob(job['key'], self._repository.model['name'])
+                resp = self._ayscl.listJobs(self._repository.model['name'])
             except Exception as e:
-                return _extract_error(e)   
-            jobs.append(Job(self._step, job))
-        return jobs
+                return _extract_error(e)
+        
+            ays_jobs = resp.json()
+
+            for job in ays_jobs:
+                try:
+                    ays_job = self._ayscl.getJob(job['key'], self._repository.model['name'])
+                except Exception as e:
+                    return _extract_error(e)
+                jobs.append(Job(self._repository, ays_job.json()))
+            return jobs
 
     def get(self, key):
         """

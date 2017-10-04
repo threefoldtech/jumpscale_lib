@@ -103,6 +103,16 @@ class Run:
              return _extract_error(e)
         return resp
 
+    def delete(self):
+        """
+        Delete the run.
+        Returns: HTTP response object
+        """
+        try:
+            resp = self._ayscl.deleteRun(runid=self.model['key'], repository=self._repository.model["name"])
+        except Exception as e:
+             return _extract_error(e)
+        return resp
 
     def __repr__(self):
         return "run (%s): %s steps (%s)" % (self.model["key"], len(self.model['steps']), self.model["state"])
