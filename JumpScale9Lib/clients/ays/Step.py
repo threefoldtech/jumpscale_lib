@@ -11,6 +11,7 @@ class Steps:
         Returns: list of steps
         """
         steps = list()
+
         for step in self._run.model['steps']:
             steps.append(Step(self._run, step))
         return steps

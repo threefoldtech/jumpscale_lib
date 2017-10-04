@@ -11,36 +11,63 @@ def _extract_error(resp):
     raise resp
 
 class Services:
-    def __init__(self, repository):
+    def __init__(self, repository, relatedService=None, relationship=None):
         self._repository = repository
         self._ayscl = repository._ayscl
+        self._relatedService=relatedService
+        self._relationship=relationship
 
     def list(self, role=None, name=None):
         """
-        List all AYS services with specific role and instance name.
+        List all AYS services with specific role and instance name, and/or relationship to other services
 
         Args:
             role: role of the service
             name: name of the service
+            service: other service with which the service has relationship (default: None)
+            relationship: relationship (children/consumers/producers) to given reference service (default:None)
 
         Returns: list of services
         """
-        try:
-            resp = self._ayscl.listServices(self._repository.model.get('name'))
 
-            ays_services = resp.json()
-            services = list()
-            for service in sorted(ays_services, key=lambda service: '{role}!{name}'.format(**service)):
-                if role and service['role'] != role:
-                    continue
-                if name and service['name'] != name:
-                    continue
+        def AppendIfMatch(services, service, role=None, name=None):
+            if role and service['role'] != role:
+                return
+            if name and service['name'] != name:
+                return False
+            try:
                 ays_service = self._ayscl.getServiceByName(service['name'], service['role'], self._repository.model['name'])
-                services.append(Service(self._repository, ays_service.json()))
-            return services
+            except Exception as e:
+                return _extract_error(e)
+            services.append(Service(self._repository, ays_service.json()))
 
-        except Exception as e:
-            print("Error while listing services: {}".format(_extract_error(e)))
+        services = list()          
+        
+        if self._relationship == None:
+            try:
+                resp = self._ayscl.listServices(self._repository.model.get('name'))
+            except Exception as e:
+                return _extract_error(e)
+            ays_services = resp.json()
+    
+            for service in sorted(ays_services, key=lambda service: '{role}!{name}'.format(**service)):
+                AppendIfMatch(services, service, role, name)
+                 
+        else:
+            if self._relationship == 'children':
+                if self._relatedService and self._relatedService.model['children']:
+                    for child in self._relatedService.model['children']:
+                        AppendIfMatch(services, child, role, name)
+            if self._relationship == 'consumers':
+                if self._relatedService and self._relatedService.model['consumers']:
+                    for consumer in self._relatedService.model['consumers']:
+                        AppendIfMatch(services, consumer, role, name)
+            if self._relationship == 'producers':
+                if self._relatedService and self._relatedService.model['producers']:
+                    for producer in self._relatedService.model['producers']:
+                        AppendIfMatch(services, producer, role, name)  
+        
+        return services
 
     def get(self, role, name):
         """
@@ -82,32 +109,15 @@ class Service:
         self.model = model
         self.actions = Actions(self)
         self.eventHandlers = EventHandlers(self)
+        self.children = Services(self._repository, self, 'children')
+        self.consumers = Services(self._repository, self, 'consumers')
+        self.producers = Services(self._repository,self, 'producers')
 
     def show(self):
         return
 
     def state(self):
         return
-
-    def getChildren(self, role=None, name=None):
-        """
-        Get all children with a specified name and/or role
-
-        Args:
-            role: (optional) role of the children
-            name: (optional) name of the children
-
-        Returns: list of children
-        """
-        children = list()
-        if self.model['children']:
-            for child in self.model['children']:
-                if role and child['role'] != role:
-                    continue
-                if name and child['name'] != name:
-                    continue
-                children.append(Service(self._repository, child))
-        return children
 
     def getParent(self):
         """
@@ -121,46 +131,6 @@ class Service:
             return Service(self._repository, self.model['parent'])
         else:
             return None
-
-    def getConsumers(self, role=None, name=None):
-        """
-        Get all consumers with a specified name and/or role
-
-        Args:
-            role: (optional) role of the consumers
-            name: (optional) name of the consumers
-
-        Returns: list of consumers
-        """
-        consumers = list()
-        if self.model['consumers']:
-            for consumer in self.model['consumers']:
-                if role and consumer['role'] != role:
-                    continue
-                if name and consumer['name'] != name:
-                    continue
-                consumers.append(Service(self._repository, consumer))
-        return consumers
-
-    def getProducers(self, role=None, name=None):
-        """
-        Get all producers with a specified name and/or role
-
-        Args:
-            role: (optional) role of the producers
-            name: (optional) name of the producers
-
-        Returns: list of producers
-        """
-        producers = list()
-        if self.model['producers']:
-            for producer in self.model['producers']:
-                if role and producer['role'] != role:
-                    continue
-                if name and producer['name'] != name:
-                    continue
-                producers.append(Service(self._repository, producer))
-        return producers
 
     def delete(self):
         """

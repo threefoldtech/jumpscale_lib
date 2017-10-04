@@ -4,6 +4,7 @@ from .ActorTemplate import ActorTemplates
 from .Actor import Actors
 from .Blueprint import Blueprints
 from .Service import Services
+from .Scheduler import Scheduler
 from .Run import Runs
 
 def _extract_error(resp):
@@ -47,6 +48,7 @@ class Repository:
         self.actors = Actors(self)
         self.blueprints = Blueprints(self)
         self.services = Services(self)
+        self.scheduler = Scheduler(self)
         self.runs = Runs(self)
 
     def destroy(self):

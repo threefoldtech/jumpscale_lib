@@ -104,22 +104,7 @@ class Run:
         return resp
 
 
-    def show(self, logs=False):
-        """
-        Show details of a run.
-        If logs is true, also show the logs of each job.
-        """
-        try:
-            resp = self._ayscl.getRun(runid=self.model["key"], repository=self._repository.model["name"])
-        except Exception as e:
-            return _extract_error(e)
-
-        #TODO: what about the logs
-
-        run = resp.json()
-        return run
-
     def __repr__(self):
-        return "run: %s" % (self.model["key"])
+        return "run (%s): %s steps (%s)" % (self.model["key"], len(self.model['steps']), self.model["state"])
 
     __str__ = __repr__

@@ -1,4 +1,5 @@
 from requests.exceptions import HTTPError
+from .Log import Logs
 
 def _extract_error(resp):
     if isinstance(resp, HTTPError):
@@ -21,11 +22,10 @@ class Jobs:
         """
         List all jobs of a step.
 
-        Return: list of jobs
+        Returns: list of jobs
         """
         jobs = list()
         for job in self._step.model['jobs']:
-            import ipdb;ipdb.set_trace()
             try:
                 ays_job = self._ayscl.getJob(job['key'], self._repository.model['name'])
             except Exception as e:
@@ -53,8 +53,9 @@ class Job:
     def __init__(self, step, model):
         self._step = step
         self.model = model
+        self.logs = Logs(self)
 
     def __repr__(self):
-        return "Actor: %s, Service: %s, Action %s" % (self.model["actor_name"], self.model["service_name"], self.model["action_name"])
+        return "job (%s): %s!%s.%s() (%s)" % (self.model["key"], self.model["actor_name"], self.model["service_name"], self.model["action_name"], self.model["state"])
 
     __str__ = __repr__
