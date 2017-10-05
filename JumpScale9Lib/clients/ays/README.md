@@ -100,18 +100,36 @@ service.model
 
 Check for its producers:
 ```python
-producers=service.getProducers()
+producers=service.producers.list()
 ```
 
 List the producers of role account:
 ```python
-service.getProducers("account")
+service.producers.list("account")
 ```
 
 Show its parent:
 ```python
 parent=service.getParent()
 parent
+```
+
+VDC exmaple:
+```python
+repo=cl.repositories.get("demo3")
+vdc=repo.services.get("vdc", "ydc")
+
+vdc.children.list()
+vdc.children.list(role="node")
+
+vdc.consumers.list()
+vm=vdc.consumers.get("node","yves_vm_1")
+vm.model
+
+vdc.producers.list()
+vdc.producers.list("vdcfarm")
+cl2=vdc.producers.get("g8client", "cl")
+cl2.model
 ```
 
 List the actions:
@@ -130,6 +148,48 @@ action=service.actions.get("install")
 action.model
 ```
 
+Some more fun with runs:
+```python
+key=repo.runs.create()
+runs=repo.runs.list()
+run=repo.runs.get()
 
+run.steps.list()
+step2=run.steps.get(2)
+step2.model
+
+step2.jobs.list()
+job=step2.jobs.get()
+job.logs.list()
+```
+
+One more:
+```
+repo=cl.repositories.get('demo1')
+repo.actorTemplates.list()
+t1=repo.actorTemplates.get("vdc")
+
+
+repo=cl.repositories.get('demo1')
+repo.blueprints.list()
+repo.blueprints.list(True)
+repo.blueprints.execute()
+repo.services.list()
+repo.runs.create()
+repo.runs.list()
+run=repo.runs.get("d0067c57e6343108ad7923399bd01e6e")
+run
+```
+
+Actors:
+```python
+repo=cl.repositories.get('demo1')
+repo.actors.list()
+repo.actors.update()
+repo.actors.update("account")
+repo.actors.update("account", True)
+actor=repo.actors.get("account")
+actor.update()
+```
 
 
