@@ -1,4 +1,4 @@
-from json
+import json
 from requests.exceptions import HTTPError
 from .ActorTemplate import ActorTemplates
 from .Actor import Actors
@@ -22,6 +22,11 @@ class Repositories:
         self._ayscl = client._ayscl
 
     def list(self):
+        """
+        List all repositories.
+
+        Returns: list of repositories
+        """
         ays_repositories = self._ayscl.listRepositories().json()
         repositories = list()
         for repository in ays_repositories:
@@ -29,12 +34,29 @@ class Repositories:
         return repositories
 
     def get(self, name):
+        """
+        Gets a repsotirory with a give name.
+
+        Args:
+            name: name of the repository to retrieve
+
+        Returns: repository
+        """
         for repository in self.list():
             if repository.model.get('name') == name:
                 return repository
         raise ValueError("Could not find repository with name {}".format(name))
 
     def create(self, name, git):
+        """
+        Creates a new repositoy with given name and git repository address.
+
+        Args:
+            name: name of the repository to create
+            git: url of the Git repository
+
+        Return: list of runs
+        """
         data = {
             'name' : name,
             'git_url' : git
