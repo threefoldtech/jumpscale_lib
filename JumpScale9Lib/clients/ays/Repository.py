@@ -1,4 +1,4 @@
-from js9 import j
+from json
 from requests.exceptions import HTTPError
 from .ActorTemplate import ActorTemplates
 from .Actor import Actors
@@ -35,8 +35,13 @@ class Repositories:
         raise ValueError("Could not find repository with name {}".format(name))
 
     def create(self, name, git):
-        data = j.data.serializer.json.dumps({'name': name, 'git_url': git})
-        self._ayscl.createRepository(data)
+        data = {
+            'name' : name,
+            'git_url' : git
+        }
+
+        json_str = json.dumps(data)
+        self._ayscl.createRepository(json_str)
         return self.get(name)
 
 

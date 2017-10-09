@@ -1,5 +1,4 @@
 import requests
-from js9 import j
 from .ays_service import AysService 
 from .Repository import Repositories
 
@@ -8,7 +7,7 @@ BASE_URI = "https://localhost:5000"
 class Client:
     def __init__(self, base_uri=BASE_URI, jwt=None):
         self._base_url = base_uri
-        self._session = requests.Session() 
+        self._session = requests.Session()
         self._session.headers.update({"Content-Type": "application/json"})
         self._ayscl = AysService(self)
         self.repositories = Repositories(self)
@@ -27,7 +26,7 @@ class Client:
             else:
                 headers.update(contentheader)
         return headers
-    
+
     def _handle_data(self, uri, data, headers, params, content_type, method):
         headers = self._get_headers(headers, content_type)
         if self._is_goraml_class(data):

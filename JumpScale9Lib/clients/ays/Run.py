@@ -1,4 +1,3 @@
-from js9 import j
 from requests.exceptions import HTTPError
 from .Step import Steps
 
@@ -34,7 +33,7 @@ class Runs:
             try:
                 ays_run = self._ayscl.getRun(run['key'], self._repository.model['name'])
             except Exception as e:
-                return _extract_error(e)   
+                return _extract_error(e)
             runs.append(Run(self._repository, ays_run.json()))
         return runs
 
@@ -76,7 +75,7 @@ class Runs:
 
         Raises: ValueError if no run with given key could be found
 
-        Returns: run with given key, or last run if no key specified  
+        Returns: run with given key, or last run if no key specified
         """
         for run in self.list():
             if key == None:

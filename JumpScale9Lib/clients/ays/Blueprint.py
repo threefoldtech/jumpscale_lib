@@ -1,4 +1,4 @@
-from js9 import j
+import json
 import os
 
 class Blueprints:
@@ -52,10 +52,14 @@ class Blueprints:
         Returns:
             blueprint instance
         """
+        data = {
+            'name': name,
+            'content': blueprint
+        }
 
-        data = j.data.serializer.json.dumps({'name': name, 'content': blueprint})
+        json_str = json.dumps(data)
 
-        resp = self._ayscl.createBlueprint(data, self._repository.model["name"],)
+        resp = self._ayscl.createBlueprint(json_str, self._repository.model["name"],)
 
         return self.get(name)
 
