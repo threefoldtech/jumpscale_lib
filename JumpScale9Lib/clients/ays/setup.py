@@ -10,7 +10,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup (
-    name='ays-client',
+    name='ays',
     version='0.9',
     description='Python client for the AYS RESTful API',
     long_description=long_description,
