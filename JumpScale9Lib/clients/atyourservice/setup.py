@@ -14,11 +14,10 @@ setup (
     version='0.9',
     description='Python client for the AYS RESTful API',
     long_description=long_description,
-    url='https://github.com/jumpscale/ays9',
+    url='https://github.com/jumpscale/lib9',
     author='Yves Kerwyn',
     author_email='yves@gig.tech',
     license='Apache 2.0',
-    namespaces=['ays'],
     packages=find_packages(),
     install_requires=[],
 )
