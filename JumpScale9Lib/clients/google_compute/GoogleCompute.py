@@ -139,10 +139,9 @@ class GoogleCompute:
             }
         }
 
-        config = j.data.serializer.json.dumps(config, True, True)
         print(config)
 
-        res = self.service.instances().insert(project=self.project,
+        res = self.service.instances().insert(project=self.project.get('name'),
                                               zone=self.zone, body=config).execute()
         return res
 
