@@ -3,19 +3,23 @@ import time
 import datetime
 import os
 import requests
+import jose
 
 
 def refresh_jwt(jwt, payload):
     if payload['iss'] == 'itsyouonline':
         refreshurl = "https://itsyou.online/v1/oauth/jwt/refresh"
-        response = requests.get(refreshurl, headers={'Authorization': 'bearer {}'.format(jwt)})
+        response = requests.get(refreshurl, headers={
+                                'Authorization': 'bearer {}'.format(jwt)})
         if response.ok:
             return response.text
         else:
-            raise RuntimeError("Failed to refresh JWT eror: {}:{}".format(response.status_code, response.text))
+            raise RuntimeError("Failed to refresh JWT eror: {}:{}".format(
+                response.status_code, response.text))
         pass
     else:
-        raise RuntimeError('Refresh JWT with issuers {} not support'.format(payload['iss']))
+        raise RuntimeError(
+            'Refresh JWT with issuers {} not support'.format(payload['iss']))
 
 
 class Factory:
@@ -23,7 +27,21 @@ class Factory:
     def __init__(self):
         self.__jslocation__ = "j.clients.openvcloud"
 
+    def _urlClean(self, url):
+        url = url.lower()
+        if url.startswith("http"):
+            url = url.split("//")[1].rstrip("/")
+        print("get openvcloud client on url:%s" % url)
+        return url
+
     def get(self, url, login=None, password=None, secret=None, port=443, jwt=None):
+        """
+        url e.g. https://se-gen-1.demo.greenitglobe.com/  (is the base url of the environment)
+
+        if you want to use secret or jwt, DO not use this method use .getFromApiSecret(...)
+
+        """
+        url = self._urlClean(url)
         cl = Client(url, login, password, secret, port, jwt)
         return cl
 
@@ -34,6 +52,41 @@ class Factory:
             password=service.model.data.password,
             jwt=service.model.data.jwt,
             port=service.model.data.port)
+
+    def getFromApiSecret(self, applicationId, secret, url):
+        """
+        url e.g. https://se-gen-1.demo.greenitglobe.com/  (is the base url of the environment)        
+        """
+        url = self._urlClean(url)
+        jwt = self.getJWTTokenFromItsYouOnline(applicationId, secret)
+        login = None
+        password = None
+        port = 443
+        cl = Client(url, login, password, secret, port, jwt)
+        return cl
+
+    def getJWTTokenFromItsYouOnline(self, applicationId, secret, validity=3600):
+        """
+        this method will return jwt token starting from applicationId & secret
+
+        go to https: // itsyou.online/  # /settings add api key (label is not important)
+
+        get the appid & secret from there
+
+        """
+
+        params = {
+            'grant_type': 'client_credentials',
+            'response_type': 'id_token',
+            'client_id': applicationId,
+            'client_secret': secret,
+            'validity': validity
+        }
+        url = 'https://itsyou.online/v1/oauth/access_token'
+        resp = requests.post(url, params=params)
+        resp.raise_for_status()
+        jwt = resp.content.decode('utf8')
+        return jwt
 
 
 def patchMS1(api):
@@ -60,7 +113,8 @@ class Client:
 
     def __init__(self, url, login, password=None, secret=None, port=443, jwt=None):
         if not password and not secret and not jwt:
-            raise ValueError("Can not connect to openvcloud without either password, secret or jwt")
+            raise ValueError(
+                "Can not connect to openvcloud without either password, secret or jwt")
         self._url = url
         self._login = login
         self._password = password
@@ -98,13 +152,15 @@ class Client:
 
     def __login(self, password, secret, jwt):
         if not password and not secret and not jwt:
-            raise RuntimeError("Can not connect to openvcloud without either password, secret or jwt")
+            raise RuntimeError(
+                "Can not connect to openvcloud without either password, secret or jwt")
         if jwt:
             import jose.jwt
             payload = jose.jwt.get_unverified_claims(jwt)
             if payload['exp'] < time.time():
                 jwt = refresh_jwt(jwt, payload)
-            self.api._session.headers['Authorization'] = 'bearer {}'.format(jwt)
+            self.api._session.headers['Authorization'] = 'bearer {}'.format(
+                jwt)
             self._login = payload['username']
         else:
             if password:
@@ -183,7 +239,8 @@ class Authorizables:
         return True
 
     def unauthorize_user(self, username):
-        canBeDeleted = [u['userGroupId'] for u in self.model['acl'] if u.get('canBeDeleted', True) is True]
+        canBeDeleted = [u['userGroupId']
+                        for u in self.model['acl'] if u.get('canBeDeleted', True) is True]
         if username in self.authorized_users and username in canBeDeleted:
             self._deleteUser(username)
             self.refresh()
@@ -218,16 +275,16 @@ class Account(Authorizables):
     def disks(self):
         """
         Wrapper to list all disks related to an account
-        :return: list of disks details
+        : return: list of disks details
         """
         return self.client.api.cloudapi.disks.list(accountId=self.id)
 
     def delete_disk(self, disk_id, detach=True):
         """
         Wrapper to delete disk by its id. I think there should be a class for disks to list all its wrappers
-        :param disk_id: integer: The disk id need to be removed
-        :param detach: boolean: detach the disk from the machine first
-        :return:
+        : param disk_id: integer: The disk id need to be removed
+        : param detach: boolean: detach the disk from the machine first
+        : return:
         """
         return self.client.api.cloudapi.disks.delete(diskId=disk_id, detach=detach)
 
@@ -236,10 +293,10 @@ class Account(Authorizables):
                   maxNetworkOptTransfer=-1, maxNetworkPeerTransfer=-1, maxNumPublicIP=-1,
                   externalnetworkId=None):
         """
-        will get space if it exists,if not will create it
+        will get space if it exists, if not will create it
         to retrieve existing one location does not have to be specified
 
-        example: for ms1 possible locations: ca1, eu1 (uk), eu2 (be)
+        example: for ms1 possible locations: ca1, eu1(uk), eu2(be)
 
         """
         if not location:
@@ -270,16 +327,16 @@ class Account(Authorizables):
     def disks(self):
         """
         Wrapper to list all disks related to an account
-        :return:dict list of disks details
+        : return: dict list of disks details
         """
         return self.client.api.cloudapi.disks.list(accountId=self.id)
 
     def delete_disk(self, disk_id, detach=True):
         """
         Wrapper to delete disk by its id. I think there should be a class for disks to list all its wrappers
-        :param disk_id: integer: The disk id need to be removed
-        :param detach: boolean: detach the disk from the machine first
-        :return:
+        : param disk_id: integer: The disk id need to be removed
+        : param detach: boolean: detach the disk from the machine first
+        : return:
         """
         return self.client.api.cloudapi.disks.delete(diskId=disk_id, detach=detach)
 
@@ -298,25 +355,33 @@ class Account(Authorizables):
             accountId=self.id, userId=username, accesstype=right)
 
     def _updateUser(self, username, right):
-        self.client.api.cloudapi.accounts.updateUser(accountId=self.id, userId=username, accesstype=right)
+        self.client.api.cloudapi.accounts.updateUser(
+            accountId=self.id, userId=username, accesstype=right)
 
     def _deleteUser(self, username):
-        self.client.api.cloudapi.accounts.deleteUser(accountId=self.id, userId=username, recursivedelete=True)
+        self.client.api.cloudapi.accounts.deleteUser(
+            accountId=self.id, userId=username, recursivedelete=True)
 
     def get_consumption(self, start, end):
         return self.client.api.cloudapi.accounts.getConsumption(accountId=self.id, start=start, end=end)
 
-
     def save(self):
         self.client.api.cloudapi.accounts.update(accountId=self.model['id'],
                                                  name=self.model['name'],
-                                                 maxMemoryCapacity=self.model.get('maxMemoryCapacity'),
-                                                 maxVDiskCapacity=self.model.get('maxVDiskCapacity'),
-                                                 maxCPUCapacity=self.model.get('maxCPUCapacity'),
-                                                 maxNASCapacity=self.model.get('maxNASCapacity'),
-                                                 maxNetworkOptTransfer=self.model.get('maxNetworkOptTransfer'),
-                                                 maxNetworkPeerTransfer=self.model.get('maxNetworkPeerTransfer'),
-                                                 maxNumPublicIP=self.model.get('maxNumPublicIP')
+                                                 maxMemoryCapacity=self.model.get(
+                                                     'maxMemoryCapacity'),
+                                                 maxVDiskCapacity=self.model.get(
+                                                     'maxVDiskCapacity'),
+                                                 maxCPUCapacity=self.model.get(
+                                                     'maxCPUCapacity'),
+                                                 maxNASCapacity=self.model.get(
+                                                     'maxNASCapacity'),
+                                                 maxNetworkOptTransfer=self.model.get(
+                                                     'maxNetworkOptTransfer'),
+                                                 maxNetworkPeerTransfer=self.model.get(
+                                                     'maxNetworkPeerTransfer'),
+                                                 maxNumPublicIP=self.model.get(
+                                                     'maxNumPublicIP')
                                                  )
 
     def refresh(self):
@@ -329,7 +394,8 @@ class Account(Authorizables):
             raise j.exceptions.RuntimeError("Account has been deleted")
 
     def delete(self):
-        self.client.api.cloudbroker.account.delete(accountId=self.id, reason='API request')
+        self.client.api.cloudbroker.account.delete(
+            accountId=self.id, reason='API request')
 
     def __str__(self):
         return "openvcloud client account: %(name)s" % (self.model)
@@ -358,18 +424,26 @@ class Space(Authorizables):
     def save(self):
         self.client.api.cloudapi.cloudspaces.update(cloudspaceId=self.model['id'],
                                                     name=self.model['name'],
-                                                    maxMemoryCapacity=self.model.get('maxMemoryCapacity'),
-                                                    maxVDiskCapacity=self.model.get('maxVDiskCapacity'),
-                                                    maxCPUCapacity=self.model.get('maxCPUCapacity'),
-                                                    maxNASCapacity=self.model.get('maxNASCapacity'),
-                                                    maxNetworkOptTransfer=self.model.get('maxNetworkOptTransfer'),
-                                                    maxNetworkPeerTransfer=self.model.get('maxNetworkPeerTransfer'),
-                                                    maxNumPublicIP=self.model.get('maxNumPublicIP')
+                                                    maxMemoryCapacity=self.model.get(
+                                                        'maxMemoryCapacity'),
+                                                    maxVDiskCapacity=self.model.get(
+                                                        'maxVDiskCapacity'),
+                                                    maxCPUCapacity=self.model.get(
+                                                        'maxCPUCapacity'),
+                                                    maxNASCapacity=self.model.get(
+                                                        'maxNASCapacity'),
+                                                    maxNetworkOptTransfer=self.model.get(
+                                                        'maxNetworkOptTransfer'),
+                                                    maxNetworkPeerTransfer=self.model.get(
+                                                        'maxNetworkPeerTransfer'),
+                                                    maxNumPublicIP=self.model.get(
+                                                        'maxNumPublicIP')
                                                     )
 
     @property
     def machines(self):
-        ovc_machines = self.client.api.cloudapi.machines.list(cloudspaceId=self.id)
+        ovc_machines = self.client.api.cloudapi.machines.list(
+            cloudspaceId=self.id)
         machines = dict()
         for machine in ovc_machines:
             machines[machine['name']] = Machine(self, machine)
@@ -380,24 +454,28 @@ class Space(Authorizables):
             cloudspaceId=self.id, userId=username, accesstype=right)
 
     def _deleteUser(self, username):
-        self.client.api.cloudapi.cloudspaces.deleteUser(cloudspaceId=self.id, userId=username, recursivedelete=True)
+        self.client.api.cloudapi.cloudspaces.deleteUser(
+            cloudspaceId=self.id, userId=username, recursivedelete=True)
 
     def _updateUser(self, username, right):
-        self.client.api.cloudapi.cloudspaces.updateUser(cloudspaceId=self.id, userId=username, accesstype=right)
+        self.client.api.cloudapi.cloudspaces.updateUser(
+            cloudspaceId=self.id, userId=username, accesstype=right)
 
     def enable(self, reason):
         """
         Will enable the cloudspace.
-        :param reason: string: The reason why the cloudspace should be enabled.
+        : param reason: string: The reason why the cloudspace should be enabled.
         """
-        self.client.api.cloudapi.cloudspaces.enable(cloudspaceId=self.id, reason=reason)
+        self.client.api.cloudapi.cloudspaces.enable(
+            cloudspaceId=self.id, reason=reason)
 
     def disable(self, reason):
         """
         Will disable the cloudspace.
-        :param reason: string: The reason why the cloudspace should be disabled.
+        : param reason: string: The reason why the cloudspace should be disabled.
         """
-        self.client.api.cloudapi.cloudspaces.disable(cloudspaceId=self.id, reason=reason)
+        self.client.api.cloudapi.cloudspaces.disable(
+            cloudspaceId=self.id, reason=reason)
 
     def refresh(self):
         cloudspaces = self.client.api.cloudapi.cloudspaces.list()
@@ -420,7 +498,7 @@ class Space(Authorizables):
             stackId=None):
         """
         @param memsize in MB or GB
-        for now vcpu's is ignored (waiting for openvcloud)
+        for now vcpu's is ignored(waiting for openvcloud)
 
         """
         imageId = self.image_find_id(image)
@@ -491,14 +569,16 @@ class Space(Authorizables):
         self.client.api.cloudapi.cloudspaces.delete(cloudspaceId=self.id)
 
     def execute_routeros_script(self, script):
-        self.client.api.cloudapi.cloudspaces.executeRouterOSScript(cloudspaceId=self.id, script=script)
+        self.client.api.cloudapi.cloudspaces.executeRouterOSScript(
+            cloudspaceId=self.id, script=script)
 
     def get_space_ip(self):
         space = self.client.api.cloudapi.cloudspaces.get(cloudspaceId=self.id)
 
         def getSpaceIP(space):
             if space['publicipaddress'] == '':
-                space = self.client.api.cloudapi.cloudspaces.get(cloudspaceId=self.id)
+                space = self.client.api.cloudapi.cloudspaces.get(
+                    cloudspaceId=self.id)
             return space['publicipaddress']
 
         space_ip = getSpaceIP(space)
@@ -508,7 +588,8 @@ class Space(Authorizables):
             time.sleep(5)
             space_ip = getSpaceIP(space)
         if space_ip == '':
-            raise j.exceptions.RuntimeError("Could not get IP Address for space %(name)s" % space)
+            raise j.exceptions.RuntimeError(
+                "Could not get IP Address for space %(name)s" % space)
         return space_ip
 
     def __repr__(self):
@@ -550,10 +631,10 @@ class Machine:
     def clone(self, name, cloudspaceId=None, snapshotTimestamp=None):
         """
         Will create a new machine that is a clone of this one.
-        :param name: the name of the clone that will be created.
-        :param cloudspaceId: optional id of the cloudspace in which the machine should be put.
-        :param snapshotTimestamp: optional snapshot to base the clone upon.
-        :return: the id of the created machine
+        : param name: the name of the clone that will be created.
+        : param cloudspaceId: optional id of the cloudspace in which the machine should be put.
+        : param snapshotTimestamp: optional snapshot to base the clone upon.
+        : return: the id of the created machine
         """
         return self.client.api.cloudapi.machines.clone(machineId=self.id,
                                                        name=name,
@@ -563,41 +644,46 @@ class Machine:
     def create_snapshot(self, name=None):
         """
         Will create a snapshot of the machine.
-        :param name: the name of the snapshot that will be created. Default: creation time
+        : param name: the name of the snapshot that will be created. Default: creation time
         """
         if name is None:
             name = str(datetime.datetime.now())
-        self.client.api.cloudapi.machines.snapshot(machineId=self.id, name=name)
+        self.client.api.cloudapi.machines.snapshot(
+            machineId=self.id, name=name)
 
     def list_snapshots(self):
         """
         Will return a list of snapshots of the machine.
-        :return: the list of snapshots
+        : return: the list of snapshots
         """
         return self.client.api.cloudapi.machines.listSnapshots(machineId=self.id)
 
     def delete_snapshot(self, epoch):
         """
         Will delete a snapshot of the machine.
-        :param epoch: the epoch of the snapshot to be deleted.
+        : param epoch: the epoch of the snapshot to be deleted.
         """
-        self.client.api.cloudapi.machines.deleteSnapshot(machineId=self.id, epoch=epoch)
+        self.client.api.cloudapi.machines.deleteSnapshot(
+            machineId=self.id, epoch=epoch)
 
     def rollback_snapshot(self, epoch):
         """
         Will rollback a snapshot of the machine.
-        :param epoch: the epoch of the snapshot to be rollbacked.
+        : param epoch: the epoch of the snapshot to be rollbacked.
         """
-        self.client.api.cloudapi.machines.rollbackSnapshot(machineId=self.id, epoch=epoch)
+        self.client.api.cloudapi.machines.rollbackSnapshot(
+            machineId=self.id, epoch=epoch)
 
     def getHistory(self, size):
         return self.client.api.cloudapi.machines.getHistory(machineId=self.id, size=size)
 
     def attach_external_network(self):
-        self.client.api.cloudapi.machines.attachExternalNetwork(machineId=self.id)
+        self.client.api.cloudapi.machines.attachExternalNetwork(
+            machineId=self.id)
 
     def detach_external_network(self):
-        self.client.api.cloudapi.machines.detachExternalNetwork(machineId=self.id)
+        self.client.api.cloudapi.machines.detachExternalNetwork(
+            machineId=self.id)
 
     def add_disk(self, name, description, size=10, type='D', ssdSize=0):
         disk_id = self.client.api.cloudapi.machines.addDisk(machineId=self.id,
@@ -612,7 +698,7 @@ class Machine:
     def disks(self):
         """
         Wrapper to list all disks related to a machine
-        :return: list of disks details
+        : return: list of disks details
         """
         machine_data = self.client.api.cloudapi.machines.get(machineId=self.id)
         return machine_data['disks']
@@ -639,19 +725,22 @@ class Machine:
 
     def create_portforwarding(self, publicport, localport, protocol='tcp'):
         if protocol not in ['tcp', 'udp']:
-            raise j.exceptions.RuntimeError("Protocol for portforward should be tcp or udp not %s" % protocol)
+            raise j.exceptions.RuntimeError(
+                "Protocol for portforward should be tcp or udp not %s" % protocol)
 
         machineip, _ = self.get_machine_ip()
 
         publicAddress = self.space.model['publicipaddress']
         if not publicAddress:
-            raise j.exceptions.RuntimeError("No public address found, cannot create port forward")
+            raise j.exceptions.RuntimeError(
+                "No public address found, cannot create port forward")
 
         # define real publicport, override it by a generated one if needed
         realpublicport = publicport
 
         if publicport is None:
-            unavailable_ports = [int(portinfo['publicPort']) for portinfo in self.space.portforwardings]
+            unavailable_ports = [int(portinfo['publicPort'])
+                                 for portinfo in self.space.portforwardings]
             candidate = 2200
 
             while candidate in unavailable_ports:
@@ -677,7 +766,8 @@ class Machine:
                 return self.create_portforwarding(None, localport, protocol)
 
             # - if the port was choose excplicitly, then it's not the lib's fault
-            raise j.exceptions.RuntimeError("Port forward already exists. Please specify another port forwarding")
+            raise j.exceptions.RuntimeError(
+                "Port forward already exists. Please specify another port forwarding")
 
         return (realpublicport, localport)
 
@@ -717,7 +807,7 @@ class Machine:
         """
         Will get a prefab executor for the machine.
         Will attempt to create a portforwarding
-        :return:
+        : return:
         """
         machineip, machine = self.get_machine_ip()
         publicip = self.space.model['publicipaddress']
