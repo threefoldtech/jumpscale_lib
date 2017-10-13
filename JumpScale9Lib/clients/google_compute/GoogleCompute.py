@@ -134,7 +134,7 @@ class GoogleCompute:
                     'key': 'ssh-keys',
                     'value': sshkeys
                 },
-                {
+                    {
                     # Startup script is automatically executed by the
                     # instance upon startup.
                     'key': 'startup-script',
@@ -152,28 +152,42 @@ class GoogleCompute:
                                               zone=self.zone, body=config).execute()
         return res
 
-    def add_sshkey(self, instance, username, key):
+    def add_sshkey(self, instance, username, keyname):
         """
         instance: instance name
         username: a username for that key
-        key: the pub key you want to allow
+        key: the pub key you want to allow (is name of key on your system, needs to be loaded in ssh-agent)
+
+        @TODO: *1 I am sure a key can be loaded for all vmachines which will be created, not just for this 1
+        @TODO: *1 what does instance mean? is that the name?
+
         """
+        # get pub key from local FS
+        keypath = j.clients.ssh.SSHKeyGetPathFromAgent("kds")
+        key = j.sal.fs.readFile(keypath + ".pub")
+
         # get old instance metadata
-        request = self.service.instances().get(zone=self.zone, project=self.projectName, instance=instance)
+        request = self.service.instances().get(
+            zone=self.zone, project=self.projectName, instance=instance)
         res = request.execute()
         metadata = res.get('metadata', {})
         # add the key
         items = metadata.get('items', [])
         for item in items:
             if item['key'] == 'ssh-keys':
-                item['value'] = '{} \n{}:{}'.format(item['value'], username, key)
+                item['value'] = '{} \n{}:{}'.format(
+                    item['value'], username, key)
                 break
-        else:
-            items.append({'key': 'ssh-keys', 'value': '{}:{}'.format(username, key)})
+            else:
+                items.append(
+                    {'key': 'ssh-keys', 'value': '{}:{}'.format(username, key)})
         # Set instance metadata
-        request = self.service.instances().setMetadata(zone=self.zone, project=self.projectName, instance=instance, body=metadata)
+        metadata["items"] = items
+        request = self.service.instances().setMetadata(
+            zone=self.zone, project=self.projectName, instance=instance, body=metadata)
         request.execute()
 
+        # TODO:*1 we need to check for duplicates
 
     def machinetypes_list(self):
         request = self.service.machineTypes().list(

@@ -19,3 +19,34 @@ machine = space.machine_create(name='My VM',
 executor = machine.get_ssh_connection()
 
 ```
+
+## other example
+
+```python
+from js9 import j
+
+#get config from local config file
+config = j.data.serializer.yaml.load("config.yaml")
+applicationId = config["iyo"]["appid"]
+secret = config["iyo"]["secret"]
+url = config["openvcloud"]["url"]
+sshkeyname = j.application.config["ssh"]["sshkeyname"]
+
+jwt = j.clients.openvcloud.getJWTTokenFromItsYouOnline(applicationId, secret)
+
+c = j.clients.openvcloud.get(applicationId, secret, url)
+
+account = c.account_get("despiegk")
+
+print(account.spaces)
+
+space = account.spaces[0]
+
+print("images")
+print([item["name"] for item in space.images])
+
+machine = space.machine_create_ifnotexist("kds_test", sshkeyname=sshkeyname)
+# default arguments are ubuntu1604 and 2GB mem & 10 GB disk
+
+p = machine.prefab
+```

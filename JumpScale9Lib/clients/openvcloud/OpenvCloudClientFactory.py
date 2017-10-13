@@ -3,7 +3,8 @@ import time
 import datetime
 import os
 import requests
-import jose
+
+# NEED: pip3 install python-jose
 
 
 def refresh_jwt(jwt, payload):
@@ -22,10 +23,13 @@ def refresh_jwt(jwt, payload):
             'Refresh JWT with issuers {} not support'.format(payload['iss']))
 
 
-class Factory:
+class OpenvCloudClientFactory:
 
     def __init__(self):
         self.__jslocation__ = "j.clients.openvcloud"
+
+    def install(self):
+        j.do.execute("pip3 install python-jose")
 
     def _urlClean(self, url):
         url = url.lower()
@@ -34,18 +38,25 @@ class Factory:
         print("get openvcloud client on url:%s" % url)
         return url
 
-    def get(self, url, login=None, password=None, secret=None, port=443, jwt=None):
+    def getLegacy(self, url, login=None, password=None):
         """
-        url e.g. https://se-gen-1.demo.greenitglobe.com/  (is the base url of the environment)
+
+        only use this for legacy reasons or private deployments where there is no itsyou.online used
 
         if you want to use secret or jwt, DO not use this method use .getFromApiSecret(...)
 
+        url e.g. https://se-gen-1.demo.greenitglobe.com/  (is the base url of the environment)
+
+
         """
         url = self._urlClean(url)
-        cl = Client(url, login, password, secret, port, jwt)
+        cl = Client(url, login, password, secret=None, port=443, jwt=None)
         return cl
 
-    def getFromService(self, service):
+    def getFromAYSService(self, service):
+        """
+        start from an atyourservice service
+        """
         return self.get(
             url=service.model.data.url,
             login=service.model.data.login,
@@ -53,8 +64,12 @@ class Factory:
             jwt=service.model.data.jwt,
             port=service.model.data.port)
 
-    def getFromApiSecret(self, applicationId, secret, url):
+    def get(self, applicationId, secret, url):
         """
+        this is the default way how to do this, create a secret/app key on ityou.online
+
+        instructions see: 
+
         url e.g. https://se-gen-1.demo.greenitglobe.com/  (is the base url of the environment)        
         """
         url = self._urlClean(url)
@@ -87,26 +102,6 @@ class Factory:
         resp.raise_for_status()
         jwt = resp.content.decode('utf8')
         return jwt
-
-
-def patchMS1(api):
-
-    def patchmethod(method, argmap):
-        def wrapper(**kwargs):
-            for oldkey, newkey in argmap.items():
-                if oldkey in kwargs:
-                    value = kwargs.pop(oldkey)
-                    kwargs[newkey] = value
-            return method(**kwargs)
-        wrapper.__doc__ = method.__doc__
-        return wrapper
-
-    api.cloudapi.portforwarding.list = patchmethod(
-        api.cloudapi.portforwarding.list, {'cloudspaceId': 'cloudspaceid'})
-    api.cloudapi.portforwarding.delete = patchmethod(
-        api.cloudapi.portforwarding.delete, {'cloudspaceId': 'cloudspaceid'})
-    api.cloudapi.portforwarding.create = patchmethod(api.cloudapi.portforwarding.create,
-                                                     {'cloudspaceId': 'cloudspaceid', 'machineId': 'vmid'})
 
 
 class Client:
@@ -486,17 +481,63 @@ class Space(Authorizables):
         else:
             raise j.exceptions.RuntimeError("Cloudspace has been deleted")
 
-    def machine_create(
+    def machine_create_ifnotexist(
             self,
             name,
+            sshkeyname,
             memsize=2,
             vcpus=1,
             disksize=10,
             datadisks=[],
-            image="Ubuntu 15.10 x64",
+            image="Ubuntu 16.04 x64",
             sizeId=None,
             stackId=None):
         """
+        @param memsize in MB or GB
+        for now vcpu's is ignored(waiting for openvcloud)
+
+
+        """
+        machines = self.machines
+        if name not in machines:
+            return self.machine_create(name=name,
+                                       sshkeyname=sshkeyname,
+                                       memsize=memsize,
+                                       vcpus=vcpus,
+                                       disksize=disksize,
+                                       datadisks=datadisks,
+                                       image=image,
+                                       sizeId=sizeId,
+                                       stackId=stackId)
+        else:
+            return machines[name]
+
+    def machine_get(self, name):
+        machines = self.machines
+        if name not in machines:
+            raise RuntimeError("Cannot find machine:%s" % name)
+        else:
+            return machines[name]
+
+    def machines_delete(self):
+        for key, machine in self.machines.items():
+            machine.delete()
+
+    def machine_create(
+            self,
+            name,
+            sshkeyname,
+            memsize=2,
+            vcpus=1,
+            disksize=10,
+            datadisks=[],
+            image="Ubuntu 16.04 x64",
+            sizeId=None,
+            stackId=None,
+    ):
+        """
+        @param sshkeyname is obliged will get key from ssh-agent and needs to be loaded !!!
+
         @param memsize in MB or GB
         for now vcpu's is ignored(waiting for openvcloud)
 
@@ -519,9 +560,55 @@ class Space(Authorizables):
                 datadisks=datadisks,
                 stackid=stackId)
         else:
-            self.client.api.cloudapi.machines.create(
+            res = self.client.api.cloudapi.machines.create(
                 cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks)
-        return self.machines[name]
+            print("created machine")
+            machine = self.machines[name]
+            self._authorizeSSH(machine, sshkeyname=sshkeyname)
+
+        m = self.machines[name]
+        p = m.prefab
+        p.core.hostname = name  # make sure hostname is set
+
+        # remember the node in the local node configuration
+        j.tools.develop.nodes.nodeSet(name, addr=p.executor.sshclient.addr, port=p.executor.sshclient.port,
+                                      cat=self.client._url, description="deployment in openvcloud")
+
+        return m
+
+    def _authorizeSSH(self, machine, sshkeyname):
+        print("authorize ssh")
+        machineip, machinedict = machine.get_machine_ip()
+        publicip = machine.space.model['publicipaddress']
+        while not publicip:
+            print(
+                "machine openvcloud:%s not ready yet with public ip, wait 1 sec, try again" % self)
+            time.sleep(1)
+            machine.space.refresh()
+            publicip = machine.space.model['publicipaddress']
+
+        sshport = None
+        usedports = set()
+        for portforward in machine.space.portforwardings:
+            if portforward['localIp'] == machineip and int(portforward['localPort']) == 22:
+                sshport = int(portforward['publicPort'])
+                break
+            usedports.add(int(portforward['publicPort']))
+
+        if sshport is None:
+            requested_sshport = 2200
+            while requested_sshport in usedports:
+                requested_sshport += 1
+            machine.create_portforwarding(requested_sshport, 22)
+
+            sshport = requested_sshport
+
+        login = machinedict['accounts'][0]['login']
+        password = machinedict['accounts'][0]['password']
+
+        sshclient = j.clients.ssh.get(
+            addr=publicip, port=sshport, login=login, passwd=password, look_for_keys=False, timeout=5)
+        sshclient.SSHAuthorizeKey(sshkeyname)
 
     @property
     def portforwardings(self):
@@ -604,6 +691,7 @@ class Machine:
         self.space = space
         self.client = space.client
         self.model = model
+        self._prefab = None
         self.id = self.model["id"]
         self.name = self.model["name"]
 
@@ -626,6 +714,7 @@ class Machine:
         self.client.api.cloudapi.machines.reset(machineId=self.id)
 
     def delete(self):
+        print("Machine delete:%s" % self)
         self.client.api.cloudapi.machines.delete(machineId=self.id)
 
     def clone(self, name, cloudspaceId=None, snapshotTimestamp=None):
@@ -803,37 +892,44 @@ class Machine:
                 "Could not get IP Address for machine %(name)s" % machine)
         return machineip, machine
 
-    def get_ssh_connection(self, requested_sshport=None):
+    @property
+    def prefab(self):
         """
         Will get a prefab executor for the machine.
         Will attempt to create a portforwarding
-        : return:
-        """
-        machineip, machine = self.get_machine_ip()
-        publicip = self.space.model['publicipaddress']
-        while not publicip:
-            time.sleep(5)
-            self.space.refresh()
-            publicip = self.space.model['publicipaddress']
 
-        sshport = None
-        usedports = set()
-        for portforward in self.space.portforwardings:
-            if portforward['localIp'] == machineip and int(portforward['localPort']) == 22:
-                sshport = int(portforward['publicPort'])
-                break
-            usedports.add(int(portforward['publicPort']))
-        if not requested_sshport:
-            requested_sshport = 2200
-            while requested_sshport in usedports:
-                requested_sshport += 1
-        if not sshport:
-            self.create_portforwarding(requested_sshport, 22)
-            sshport = requested_sshport
-        login = machine['accounts'][0]['login']
-        password = machine['accounts'][0]['password']
-        # TODO: we need tow work with keys *2
-        return j.tools.executor.getSSHBased(publicip, sshport, login, password)
+        the sshkeyname needs to be loaded in local ssh-agent (this is the only supported method!)
+
+        login/passwd has been made obsolete, its too dangerous
+
+        """
+        if self._prefab is None:
+            machineip, machine = self.get_machine_ip()
+            publicip = self.space.model['publicipaddress']
+            while not publicip:
+                time.sleep(5)
+                self.space.refresh()
+                publicip = self.space.model['publicipaddress']
+
+            sshport = None
+            usedports = set()
+            for portforward in self.space.portforwardings:
+                if portforward['localIp'] == machineip and int(portforward['localPort']) == 22:
+                    sshport = int(portforward['publicPort'])
+                    break
+                usedports.add(int(portforward['publicPort']))
+
+            if sshport == None:
+                raise RuntimeError(
+                    "Cannot find sshport at public side to access this machine")
+
+            sshclient = j.clients.ssh.get(addr=publicip, port=sshport)
+
+            executor = j.tools.executor.getFromSSHClient(sshclient)
+
+            self._prefab = j.tools.prefab.get(executor)
+
+        return self._prefab
 
     def __repr__(self):
         return "machine: %s (%s)" % (self.model["name"], self.id)
