@@ -18,6 +18,6 @@ setup (
     author='Yves Kerwyn',
     author_email='yves@gig.tech',
     license='Apache 2.0',
-    packages=find_packages(),
+    packages=[ays],
     install_requires=[],
 )
