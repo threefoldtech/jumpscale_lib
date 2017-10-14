@@ -87,9 +87,9 @@ class GoogleCompute:
                 return item
         raise RuntimeError("did not find image: %s" % name)
 
-    def instance_create(self, name="builder", machineType="n1-standard-1", osType="ubuntu-1604", startupScript="", storageBucket="", sshkeys=''):
+    def instance_create(self, name="builder", machineType="n1-standard-1", osType="ubuntu-1604", startupScript="", storageBucket="", sshkeyname=''):
         """
-        sshkeys: str, sshkeys in this format 'username: key \n username: key'
+        @param sshkeyname is your name for your ssh key, if not specified will use your preferred key from j.application.config["ssh"]["sshkeyname"]
         """
         source_disk_image = self.imageurl_get()
         # Configure the machine
@@ -152,7 +152,7 @@ class GoogleCompute:
                                               zone=self.zone, body=config).execute()
         return res
 
-    def add_sshkey(self, instance, username, keyname):
+    def add_sshkey(self, machinename, username, keyname):
         """
         instance: instance name
         username: a username for that key
