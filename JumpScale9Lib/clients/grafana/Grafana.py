@@ -38,7 +38,7 @@ class GrafanaClient:
     def ping(self):
         url = os.path.join(self._url, 'api/org/')
         try:
-            self._session.get(url).json()
+            self._session.get(url, timeout=5)
             return True
         except BaseException:
             return False
