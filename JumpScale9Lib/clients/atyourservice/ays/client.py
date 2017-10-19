@@ -2,10 +2,10 @@ import requests
 from .ays_service import AysService 
 from .Repository import Repositories
 
-BASE_URI = "https://localhost:5000"
+DEFAULT_URL = "https://localhost:5000"
 
 class Client:
-    def __init__(self, url=BASE_URI, jwt=None, clientID=None, secret=None, validity=None):
+    def __init__(self, url=DEFAULT_URL, jwt=None, clientID=None, secret=None, validity=None):
         self._base_url = url
         self._session = requests.Session()
         self._session.headers.update({"Content-Type": "application/json"})
@@ -17,13 +17,14 @@ class Client:
             jwt = self._getJWT(clientID, secret, validity)
             self._set_auth_header('Bearer {}'.format(jwt))
 
-    def _getJWT(self, clientID, secret, validity):
+    def _getJWT(self, clientID, secret, validity=3600):
         params = {
             'grant_type': 'client_credentials',
             'response_type': 'id_token',
             'client_id': clientID,
             'client_secret': secret,
-            'validity': validity
+            'validity': validity,
+            'scope': 'offline_access'
         }
         url = 'https://itsyou.online/v1/oauth/access_token'
         resp = requests.post(url, params=params)
