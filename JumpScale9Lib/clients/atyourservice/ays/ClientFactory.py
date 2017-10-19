@@ -17,7 +17,7 @@ class ClientFactory:
         """
         return Client(url, jwt, None, None)
 
-    def getWithClientID(self, url=DEFAULT_URL, clientID, secret, validity=None):
+    def getWithClientID(self, url=DEFAULT_URL, clientID, secret, validity=3600):
         """
         Get an AYS client to interact with a local or remote AYS server.
 
@@ -25,6 +25,6 @@ class ClientFactory:
             url: url of the AYS RESTful API, e.g. `http://172.25.0.238:5000`; defaults to https://localhost:5000
             clientID: client ID of the API access key of the ItsYou.online organization protecting the AYS RESTful API; defaults to None
             secret: secret of the API access key of the ItsYou.online organization protecting the AYS RESTful API; defaults to None
-            validity: validity of the JWT that will be created based on the given client ID and secret, should be less then 3600 (seconds)
+            validity: validity of the JWT that will be created based on the given client ID and secret, defaults to 3600 (seconds)
         """
         return Client(url, None, clientID, secret)
