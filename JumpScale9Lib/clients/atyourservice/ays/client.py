@@ -23,7 +23,7 @@ class Client:
             'response_type': 'id_token',
             'client_id': clientID,
             'client_secret': secret,
-            'validity': validity,
+            #'validity': validity,
             'scope': 'offline_access'
         }
         url = 'https://itsyou.online/v1/oauth/access_token'
