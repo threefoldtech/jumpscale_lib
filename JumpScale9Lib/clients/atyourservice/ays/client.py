@@ -5,14 +5,31 @@ from .Repository import Repositories
 BASE_URI = "https://localhost:5000"
 
 class Client:
-    def __init__(self, base_uri=BASE_URI, jwt=None):
-        self._base_url = base_uri
+    def __init__(self, url=BASE_URI, jwt=None, clientID=None, secret=None, validity=None):
+        self._base_url = url
         self._session = requests.Session()
         self._session.headers.update({"Content-Type": "application/json"})
         self._ayscl = AysService(self)
         self.repositories = Repositories(self)
         if jwt:
             self._set_auth_header('Bearer {}'.format(jwt))
+        if clientID and secret:
+            jwt = self._getJWT(clientID, secret, validity)
+            self._set_auth_header('Bearer {}'.format(jwt))
+
+    def _getJWT(self, clientID, secret, validity):
+        params = {
+            'grant_type': 'client_credentials',
+            'response_type': 'id_token',
+            'client_id': clientID,
+            'client_secret': secret,
+            'validity': validity
+        }
+        url = 'https://itsyou.online/v1/oauth/access_token'
+        resp = requests.post(url, params=params)
+        resp.raise_for_status()
+        jwt = resp.content.decode('utf8')
+        return jwt
 
     def _set_auth_header(self, val):
         ''' set authorization header value'''
