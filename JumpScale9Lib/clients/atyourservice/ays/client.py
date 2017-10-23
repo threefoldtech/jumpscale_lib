@@ -11,6 +11,7 @@ class Client:
         self._session.headers.update({"Content-Type": "application/json"})
         self._ayscl = AysService(self)
         self.repositories = Repositories(self)
+        import ipdb;ipdb.set_trace()
         if jwt:
             self._set_auth_header('Bearer {}'.format(jwt))
         if clientID and secret:
@@ -23,7 +24,7 @@ class Client:
             'response_type': 'id_token',
             'client_id': clientID,
             'client_secret': secret,
-            #'validity': validity,
+            'validity': validity,
             'scope': 'offline_access'
         }
         url = 'https://itsyou.online/v1/oauth/access_token'
