@@ -17,7 +17,7 @@ class ClientFactory:
         """
         return Client(url, jwt, None, None)
 
-    def getWithClientID(self, url=DEFAULT_URL, clientID, secret, validity=3600):
+    def getWithClientID(self, clientID, secret, url=DEFAULT_URL, validity=3600):
         """
         Get an AYS client to interact with a local or remote AYS server.
 
