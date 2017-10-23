@@ -63,3 +63,193 @@ Get a repository by name:
 repo_name = "<here the name of the repository>"
 repo = cl.repositories.get("repo_name")
 ```
+
+## Working with blueprints
+
+Read a blueprint from a file:
+```python
+file_name="vdc.yaml"
+blueprint_file = open(file_name,'r')
+blueprint = blueprint_file.read()
+```
+
+Add a blueprint to the AYS repository:
+```python
+bp_name = "vdc.yaml"
+bp = repo.blueprints.create(bp_name, blueprint)
+```
+
+Close the file:
+```python
+blueprint_file.close()
+```
+
+Or use an existing blueprint:
+```python
+bp = repo.blueprints.get(bp_name)
+```
+
+Execute the blueprint:
+```python
+bp.execute()
+```
+
+Check created AYS services:
+```python
+repo.services.list()
+```
+
+## Working with runs
+
+Create a run:
+```python
+key = repo.runs.create()
+```
+
+List all runs:
+```python
+repo.runs.list()
+```
+
+Check run:
+```python
+run = repo.runs.get(key)
+run.model
+```
+
+Get the last run:
+```python
+run = repo.runs.get()
+```
+
+List all steps of a run:
+```python
+run.steps.list()
+```
+
+Closer look to the second step of a run:
+```python
+step2=run.steps.get(2)
+step2.model
+```
+
+List all jobs of a step:
+```python
+step2.jobs.list()
+```
+
+Closer look to a job:
+```python
+job = step2.jobs.get(<key>)
+```
+
+List all logs of a job:
+```python
+job.logs.list()
+```
+
+## Working with services
+
+Closer look at the AYS service for the VDC:
+```python
+vdc = repo.services.get("vdc", "testvdc10")
+```
+
+Check the full model of the VDC service:
+```python
+vdc.model
+```
+
+List its producers:
+```python
+producers = vdc.producers.list()
+```
+
+List all producers:
+```python
+vdc.consumers.list()
+```
+
+List the producers of role account:
+```python
+vdc.producers.list("account")
+```
+
+Get a specific producer, here the g8client:
+```python
+cl2 = vdc.producers.get("g8client", "cl")
+cl2.model
+```
+
+Show its parent:
+```python
+vdc = service.getParent()
+parent
+```
+
+List its children:
+```python
+vdc.children.list()
+```
+
+List only the children of role node (VM):
+```python
+vdc.children.list(role="node")
+```
+
+List all consumers:
+```python
+vdc.consumers.list()
+```
+
+Get a specific consuming node (VM) and check the state (model):
+```python
+vm = vdc.consumers.get("node","yves_vm_1")
+vm.model
+```
+
+## Working with actions
+
+List the actions of a service:
+```python
+service.actions.list()
+```
+
+Only show the actions that have state="OK":
+```python
+service.actions.list("OK")
+```
+
+Get a closer look to an action:
+```python
+action=service.actions.get("install")
+action.model
+```
+
+## Working with actors
+
+List all actors:
+```python
+repo.actors.list()
+```
+
+Update all actors:
+```python
+repo.actors.update()
+```
+
+Update only the account actors: 
+```python
+repo.actors.update("account")
+```
+
+Or alternatively:
+```python
+actor=repo.actors.get("account")
+actor.update()
+```
+
+Update the account actors and reschedule all actions which are in error state:
+```python
+repo.actors.update("account", True)
+```
