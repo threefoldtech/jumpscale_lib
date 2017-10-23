@@ -8,7 +8,7 @@ APP_ID="..."
 SECRET2="..."
 ```
 
-In order to make the environement variables available from the Python interactive shell, export them:
+In order to make the environment variables available from the Python interactive shell, export them:
 ```bash
 export APP_ID
 export SECRET2
