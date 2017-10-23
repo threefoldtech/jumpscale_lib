@@ -19,7 +19,7 @@ class DNSMasq:
         """
         self._prefab.processmanager.remove("dnsmasq")
         self._prefab.process.kill("dnsmasq")
-        self._prefab.package.install("dnsmasq")
+        self._prefab.system.package.install("dnsmasq")
         if not self._prefab.core.file_exists("/etc/dnsmasq.conf"):
             self.config()
         if start:
@@ -94,7 +94,7 @@ class DNSMasq:
         if rangefrom & rangeto not specified then will serve full local range minus bottomn 10 & top 10 addr
         """
         if rangefrom == "" or rangeto == "":
-            rangefrom, rangeto = self._prefab.net.getNetRange(device)
+            rangefrom, rangeto = self._prefab.system.net.getNetRange(device)
 
         C = """
 
