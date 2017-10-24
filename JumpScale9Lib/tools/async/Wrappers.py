@@ -1,12 +1,8 @@
-import asyncio
+from js9 import j
 
 
 class Wrappers:
 
     def sync(self, coro):
-        try:
-            loop = asyncio.get_event_loop()
-        except BaseException:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-        return loop.run_until_complete(coro)
+        j.logger.get('j.tools.async').warning("j.tools.async.wrappers.sync is deprecated")
+        return coro
