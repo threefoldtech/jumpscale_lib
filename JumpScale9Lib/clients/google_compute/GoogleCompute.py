@@ -87,7 +87,10 @@ class GoogleCompute:
                 return item
         raise RuntimeError("did not find image: %s" % name)
 
-    def instance_create(self, name="builder", machineType="n1-standard-1", osType="ubuntu-1604", startupScript="", storageBucket=""):
+    def instance_create(self, name="builder", machineType="n1-standard-1", osType="ubuntu-1604", startupScript="", storageBucket="", sshkeys=''):
+        """
+        sshkeys: str, sshkeys in this format 'username: key \n username: key'
+        """
         source_disk_image = self.imageurl_get()
         # Configure the machine
         machine_type = "zones/%s/machineTypes/%s" % (self.zone, machineType)
@@ -128,6 +131,10 @@ class GoogleCompute:
             # pass configuration from deployment scripts to instances.
             'metadata': {
                 'items': [{
+                    'key': 'ssh-keys',
+                    'value': sshkeys
+                },
+                {
                     # Startup script is automatically executed by the
                     # instance upon startup.
                     'key': 'startup-script',
@@ -139,12 +146,34 @@ class GoogleCompute:
             }
         }
 
-        config = j.data.serializer.json.dumps(config, True, True)
         print(config)
 
-        res = self.service.instances().insert(project=self.project,
+        res = self.service.instances().insert(project=self.projectName,
                                               zone=self.zone, body=config).execute()
         return res
+
+    def add_sshkey(self, instance, username, key):
+        """
+        instance: instance name
+        username: a username for that key
+        key: the pub key you want to allow
+        """
+        # get old instance metadata
+        request = self.service.instances().get(zone=self.zone, project=self.projectName, instance=instance)
+        res = request.execute()
+        metadata = res.get('metadata', {})
+        # add the key
+        items = metadata.get('items', [])
+        for item in items:
+            if item['key'] == 'ssh-keys':
+                item['value'] = '{} \n{}:{}'.format(item['value'], username, key)
+                break
+        else:
+            items.append({'key': 'ssh-keys', 'value': '{}:{}'.format(username, key)})
+        # Set instance metadata
+        request = self.service.instances().setMetadata(zone=self.zone, project=self.projectName, instance=instance, body=metadata)
+        request.execute()
+
 
     def machinetypes_list(self):
         request = self.service.machineTypes().list(
