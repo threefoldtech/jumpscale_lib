@@ -386,12 +386,14 @@ class Account(Authorizables):
 
     def refresh(self):
         accounts = self.client.api.cloudapi.accounts.list()
+        found = False
         for account in accounts:
             if account['id'] == self.id:
                 self.model = account
+                found = True
                 break
-        else:
-            raise j.exceptions.RuntimeError("Account has been deleted")
+        if not found:
+            raise j.exceptions.RuntimeError("No account found with name %s. The user doesn't have access to the account or it is been deleted." % self.model['name'])
 
     def delete(self):
         self.client.api.cloudbroker.account.delete(
