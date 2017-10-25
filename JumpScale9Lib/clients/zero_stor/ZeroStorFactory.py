@@ -6,8 +6,8 @@ class ZeroStorFactory:
 
     def __init__(self):
         self.__jslocation__ = "j.clients.zerostor"
-        self.__imports__ = "requests,psycopg2"
-        self.logger = j.logger.get("j.clients.gogs")
+        self.__imports__ = "requests"
+        self.logger = j.logger.get("j.clients.zerostor")
 
     def getClient(self, ...):
         """
