@@ -3,7 +3,7 @@
 ## First create your application ID and secret on ItsYou.online
 
 Prerequirements:
-- Registrated user on ItsYou.online
+- Registered user on ItsYou.online
 
 ![](images/iyo_jwt.png)
 
