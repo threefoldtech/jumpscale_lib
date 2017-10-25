@@ -79,6 +79,10 @@ All next examples will use the AYS client.
 <a id="ays-templates"></a>
 ## Listing and adding AYS Templates
 
+List all global AYS templates:
+```python
+cl.listTemplate()
+```
 
 
 <a id="repositories"></a>
