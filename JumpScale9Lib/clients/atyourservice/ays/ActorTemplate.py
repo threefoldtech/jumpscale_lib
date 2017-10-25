@@ -17,6 +17,15 @@ class ActorTemplates:
             self._ayscl = client._ayscl
 
     def list(self, role=None, name=None):
+        """
+        List all actor templates.
+
+        Args:
+            role: in order to only return the templates with a specific rol, e.g. "node" will return all node templates
+            name: name of the actor templates to return, e.g. "node.ovc" will only return the node templates for OpenvCloud
+
+        Returns: list of actor templates
+        """
         if self._repository:
             return self._listLocalTemplates(role, name)
         else:
