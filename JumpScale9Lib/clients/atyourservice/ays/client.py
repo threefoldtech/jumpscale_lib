@@ -17,7 +17,7 @@ class Client:
             jwt = self._getJWT(clientID, secret, validity)
             self._set_auth_header('Bearer {}'.format(jwt))
 
-    def addTemplates(repo_url, branch):
+    def addTemplates(self, repo_url, branch):
         """
         Adds AYS template from a give Git repository
         Args:
@@ -27,7 +27,7 @@ class Client:
         data = {'url': '{repo_url}','branch': '{branch}'}
         self._ayscl.addTemplateRepo(data)
 
-    def listTemplates():
+    def listTemplates(self):
         """
         Returns a list of all (global) AYS templates.
         """
