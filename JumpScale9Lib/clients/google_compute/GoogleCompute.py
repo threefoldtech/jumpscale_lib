@@ -87,7 +87,10 @@ class GoogleCompute:
                 return item
         raise RuntimeError("did not find image: %s" % name)
 
-    def instance_create(self, name="builder", machineType="n1-standard-1", osType="ubuntu-1604", startupScript="", storageBucket=""):
+    def instance_create(self, name="builder", machineType="n1-standard-1", osType="ubuntu-1604", startupScript="", storageBucket="", sshkeyname=''):
+        """
+        @param sshkeyname is your name for your ssh key, if not specified will use your preferred key from j.application.config["ssh"]["sshkeyname"]
+        """
         source_disk_image = self.imageurl_get()
         # Configure the machine
         machine_type = "zones/%s/machineTypes/%s" % (self.zone, machineType)
@@ -128,6 +131,10 @@ class GoogleCompute:
             # pass configuration from deployment scripts to instances.
             'metadata': {
                 'items': [{
+                    'key': 'ssh-keys',
+                    'value': sshkeys
+                },
+                    {
                     # Startup script is automatically executed by the
                     # instance upon startup.
                     'key': 'startup-script',
@@ -139,12 +146,48 @@ class GoogleCompute:
             }
         }
 
-        config = j.data.serializer.json.dumps(config, True, True)
         print(config)
 
-        res = self.service.instances().insert(project=self.project,
+        res = self.service.instances().insert(project=self.projectName,
                                               zone=self.zone, body=config).execute()
         return res
+
+    def add_sshkey(self, machinename, username, keyname):
+        """
+        instance: instance name
+        username: a username for that key
+        key: the pub key you want to allow (is name of key on your system, needs to be loaded in ssh-agent)
+
+        @TODO: *1 I am sure a key can be loaded for all vmachines which will be created, not just for this 1
+        @TODO: *1 what does instance mean? is that the name?
+
+        """
+        # get pub key from local FS
+        keypath = j.clients.ssh.SSHKeyGetPathFromAgent("kds")
+        key = j.sal.fs.readFile(keypath + ".pub")
+
+        # get old instance metadata
+        request = self.service.instances().get(
+            zone=self.zone, project=self.projectName, instance=instance)
+        res = request.execute()
+        metadata = res.get('metadata', {})
+        # add the key
+        items = metadata.get('items', [])
+        for item in items:
+            if item['key'] == 'ssh-keys':
+                item['value'] = '{} \n{}:{}'.format(
+                    item['value'], username, key)
+                break
+            else:
+                items.append(
+                    {'key': 'ssh-keys', 'value': '{}:{}'.format(username, key)})
+        # Set instance metadata
+        metadata["items"] = items
+        request = self.service.instances().setMetadata(
+            zone=self.zone, project=self.projectName, instance=instance, body=metadata)
+        request.execute()
+
+        # TODO:*1 we need to check for duplicates
 
     def machinetypes_list(self):
         request = self.service.machineTypes().list(

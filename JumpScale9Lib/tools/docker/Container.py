@@ -150,7 +150,7 @@ class Container:
         keys = set()
 
         home = j.tools.prefab.local.bash.home
-        user_info = [j.tools.prefab.local.user.check(user) for user in j.tools.prefab.local.user.list()]
+        user_info = [j.tools.prefab.local.system.user.check(user) for user in j.tools.prefab.local.system.user.list()]
         user = [i['name'] for i in user_info if i['home'] == home]
         user = user[0] if user else 'root'
 
@@ -168,7 +168,7 @@ class Container:
                     dir = j.tools.path.get('%s/.ssh' % home)
                     if dir.listdir("docker_default.pub") == []:
                         # key does not exist, lets create one
-                        j.tools.prefab.local.ssh.keygen(user=user, name="docker_default")
+                        j.tools.prefab.local.system.ssh.keygen(user=user, name="docker_default")
                     key = j.sal.fs.readFile(
                         filename="%s/.ssh/docker_default.pub" % home)
                     # load the key
@@ -180,7 +180,7 @@ class Container:
         if key is None or key.strip() == "":
             raise j.exceptions.Input("ssh key cannot be empty (None)")
 
-        self.prefab.ssh.authorize("root", key)
+        self.prefab.system.ssh.authorize("root", key)
 
         # IS THERE A REASON TO DO IT THE LONG WAY BELOW?
         # key_tarstream = BytesIO()

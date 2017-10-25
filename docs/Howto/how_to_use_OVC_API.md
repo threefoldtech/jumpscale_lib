@@ -29,35 +29,6 @@ requests.post(base_url + "cloudapi/cloudspaces/list", headers=headers).json()
 ```
 
 
-<a id="legacy"></a>
-### Authenticate with an OpenvCloud username and password
-
-It is recommeded to rather use a JWT, as described above.
-
-First get an OAuth key:
-```python
-import requests
-
-base_url = "https://be-gen-1.demo.greenitglobe.com/restmachine/"
-
-# Note empty authkey
-# Fill in your username and password
-params = {'username': {username}, 'password': {password}, 'authkey': ''}
-
-auth_key = requests.post(base_url + 'cloudapi/users/authenticate', params).json()
-```
-
-With this auth_key you can then do all subsequest API call, here for listing all OpenvCloud account accesible to the specified user:
-```python
-requests.post(base_url + "cloudapi/cloudspaces/list", params).json()
-```
-
-Using cURL:
-```shell
-BASE_URL="https://be-gen-1.demo.greenitglobe.com/restmachine/"
-curl -d username={username} -d password={password} $BASE_URL/cloudapi/users/authenticate
-```
-
 <a id="javascript"></a>
 ## Using JavaScript
 

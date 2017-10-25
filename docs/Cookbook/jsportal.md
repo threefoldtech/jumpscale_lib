@@ -4,12 +4,12 @@
 - to install through prefab
 
 ```
-j.tools.prefab.local.apps.mongodb.install()
+j.tools.prefab.local.db.mongodb.install()
 #will install deps & start from branch
-j.tools.prefab.local.apps.portal.install(True,True,"8.1.0")
+j.tools.prefab.local.web.portal.install(True,True,"8.1.0")
 
-j.tools.prefab.local.solutions.cockpit.install_deps()
-j.tools.prefab.local.solutions.cockpit.install(True,"8.1.0")
+j.tools.prefab.local.js9.cockpit.install_deps()
+j.tools.prefab.local.js9.cockpit.install(True,"8.1.0")
 ```
 
 ## login

@@ -27,10 +27,10 @@ class KVMController:
     def open(self):
         uri = None
         self.authorized = False
-        j.tools.prefab.local.ssh.keygen(name='libvirt')
+        j.tools.prefab.local.system.ssh.keygen(name='libvirt')
         self.pubkey = j.tools.prefab.local.core.file_read('/root/.ssh/libvirt.pub')
         if self._host != 'localhost':
-            self.authorized = not self.executor.prefab.ssh.authorize(self.user, self.pubkey)
+            self.authorized = not self.executor.prefab.system.ssh.authorize(self.user, self.pubkey)
             uri = 'qemu+ssh://%s/system?no_tty=1&keyfile=/root/.ssh/libvirt&no_verify=1' % self._host
         self.connection = libvirt.open(uri)
         self.readonly = libvirt.openReadOnly(uri)
@@ -45,7 +45,7 @@ class KVMController:
         close(self.connection)
         close(self.readonly)
         if self.authorized:
-            self.executor.prefab.ssh.unauthorize(self.user, self.pubkey)
+            self.executor.prefab.system.ssh.unauthorize(self.user, self.pubkey)
 
     def get_template(self, template):
         return self._env.get_template(template)

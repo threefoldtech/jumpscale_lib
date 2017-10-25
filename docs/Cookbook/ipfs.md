@@ -4,7 +4,7 @@
 - to install through prefab
 
 ```
-j.tools.prefab.local.apps.ipfs.install()
+j.tools.prefab.local.storage.ipfs.install()
 ```
 
 ```

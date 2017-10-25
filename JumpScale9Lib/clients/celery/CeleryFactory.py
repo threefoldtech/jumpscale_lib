@@ -8,14 +8,16 @@ class CeleryFactory:
         self.__jslocation__ = "j.clients.celery"
         self.actors = {}
         self.app = None
+        self.url = "redis://localhost:6379/0"
+        self.actorsPath = "actors"
 
-    def flowerStart(self, url="redis://localhost:9999/0"):
+    def flowerStart(self):
         from flower.command import FlowerCommand
         from flower.utils import bugreport
 
         flower = FlowerCommand()
 
-        argv = ['flower.py', '--broker=%s' % url]
+        argv = ['flower.py', '--broker=%s' % self.url]
 
         flower.execute_from_commandline(argv=argv)
 
@@ -46,7 +48,8 @@ class CeleryFactory:
         out += "\n"
         return out
 
-    def getCodeServer(self, path):
+    def getCodeServer(self):
+        path = self.actorsPath
         if not j.sal.fs.exists(path=path):
             raise j.exceptions.Input("could not find actors path:%s" % path)
         code = ""
@@ -54,18 +57,20 @@ class CeleryFactory:
             code += self._getCode(item)
         return code
 
-    def getCodeClient(self, path, actorName):
-        path2 = "%s/%s.py" % (path, actorName)
+    def getCodeClient(self, actorName):
+        path2 = "%s/%s.py" % (self.actorsPath, actorName)
         if not j.sal.fs.exists(path=path2):
             raise j.exceptions.Input("could not find actor path:%s" % path2)
         code = self._getCode(path2)
         return code
 
-    def celeryStart(self, url="redis://localhost:9999/0", concurrency=4, actorsPath="actors"):
+    def celeryStart(self, concurrency=4, actorsPath="actors"):
 
         from celery import Celery
 
-        app = Celery('tasks', broker=url)
+        # j.clients.redis.start4core()
+
+        app = Celery('tasks', broker=self.url)
 
         app.conf.update(
             CELERY_TASK_SERIALIZER='json',
@@ -73,20 +78,21 @@ class CeleryFactory:
             CELERY_RESULT_SERIALIZER='json',
             CELERY_TIMEZONE='Europe/Oslo',
             CELERY_ENABLE_UTC=True,
-            CELERY_RESULT_BACKEND='rpc',
+            # CELERY_RESULT_BACKEND='rpc',
             CELERY_RESULT_PERSISTENT=True,
-            # CELERY_RESULT_BACKEND = BROKER_URL,
+            CELERY_RESULT_BACKEND=self.url,
         )
 
         app.conf["CELERY_ALWAYS_EAGER"] = False
         app.conf["CELERYD_CONCURRENCY"] = concurrency
 
-        code = self.getCodeServer(actorsPath)
+        code = self.getCodeServer()
         exec(code, locals(), globals())
 
         app.worker_main()
 
-    def celeryClient(self, actorName, url="redis://localhost:9999/0", actorsPath="actors", local=False):
+    def getCeleryClient(self, actorName, local=False):
+
         if actorName in self.actors:
             return self.actors[actorName]
 
@@ -94,7 +100,7 @@ class CeleryFactory:
 
             from celery import Celery
 
-            app = Celery('tasks', broker=url)
+            app = Celery('tasks', broker=self.url)
 
             app.conf.update(
                 CELERY_TASK_SERIALIZER='json',
@@ -102,19 +108,19 @@ class CeleryFactory:
                 CELERY_RESULT_SERIALIZER='json',
                 CELERY_TIMEZONE='Europe/Oslo',
                 CELERY_ENABLE_UTC=True,
-                CELERY_RESULT_BACKEND='rpc',
+                # CELERY_RESULT_BACKEND='rpc',
                 CELERY_RESULT_PERSISTENT=True,
-                # CELERY_RESULT_BACKEND = BROKER_URL,
+                CELERY_RESULT_BACKEND=self.url,
             )
 
-            if local:
-                app.conf["CELERY_ALWAYS_EAGER"] = False
+            # if local:
+            #     app.conf["CELERY_ALWAYS_EAGER"] = False
 
             self.app = app
         else:
             app = self.app
 
-        code = self.getCodeClient(actorsPath, actorName=actorName)
+        code = self.getCodeClient(actorName=actorName)
         exec(code, locals(), globals())
 
         self.actors[actorName] = eval("%s" % actorName)
