@@ -34,7 +34,7 @@ class Services:
             if role and service['role'] != role:
                 return
             if name and service['name'] != name:
-                return False
+                return
             try:
                 ays_service = self._ayscl.getServiceByName(service['name'], service['role'], self._repository.model['name'])
             except Exception as e:

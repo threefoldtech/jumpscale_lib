@@ -9,16 +9,26 @@ def _extract_error(resp):
     raise resp
     
 class ActorTemplates:
-    def __init__(self, repository):
+    def __init__(self, repository=None, client=None):
         self._repository = repository
-        self._ayscl = repository._ayscl
+        if repository:
+            self._ayscl = repository._ayscl
+        if client:
+            self._ayscl = client._ayscl
 
     def list(self, role=None, name=None):
+        if self._repository:
+            return self._listLocalTemplates(role, name)
+        else:
+            return self._listGlobalTemplates(role, name)
+
+    def _listLocalTemplates(self, role=None, name=None):
         """
-        List all actor templates.
+        List all local (local to the repository) actor templates;
 
         Returns: list of actor templates
         """
+
         try:
             resp = self._ayscl.listTemplates(self._repository.model['name'])
         except Exception as e:
@@ -26,13 +36,54 @@ class ActorTemplates:
 
         ays_templates = resp.json()
         templates = list()
+
         for template in sorted(ays_templates, key=lambda template: template['name']):
+            if role and template['role'] != role:
+                continue
+            if name and template['name'] != name:
+                continue
             try:
                 ays_template = self._ayscl.getTemplate(template['name'], self._repository.model['name'])
             except Exception as e:
                 return _extract_error(e) 
-            templates.append(ActorTemplate(self._repository, ays_template.json()))
+            templates.append(ActorTemplate(ays_template.json()))
         return templates
+    
+    def _listGlobalTemplates(self, role=None, name=None):
+        """
+        Returns a list of all (global) AYS templates.
+        """
+        try:
+            resp = self._ayscl.listAYSTemplates()
+        except Exception as e:
+            return _extract_error(e)
+        
+        ays_templates = resp.json()
+        templates = list()
+
+        for template in sorted(ays_templates, key=lambda template: template['name']):
+            if role and template['role'] != role:
+                continue
+            if name and template['name'] != name:
+                continue
+            try:
+                ays_template = self._ayscl.getAYSTemplate(template['name'])
+            except Exception as e:
+                return _extract_error(e)
+            templates.append(ActorTemplate(ays_template.json()))
+        return templates
+
+    def addTemplates(self, repo_url, branch):
+        """
+        Adds AYS global templates from a give Git repository
+        Args:
+            repo_url: URL of the Git repository with the templates to import, e.g. "https://github.com/openvcloud/ays_templates"
+            branch: branch name in the Git repository, e.g. "master"
+        """
+
+        if repository == None:
+            data = {'url': '{repo_url}','branch': '{branch}'}
+            self._ayscl.addTemplateRepo(data)
 
     def get(self, name):
         """
@@ -51,12 +102,10 @@ class ActorTemplates:
         raise KeyError("Could not find template with name {}".format(role, name))
 
 class ActorTemplate:
-    def __init__(self, repository, model):
-        self._repository = repository
-        self._ayscl = repository._ayscl
+    def __init__(self, model):
         self.model = model
 
     def __repr__(self):
-        return "actor template: %s" % (self.model["name"])
+        return "%s" % (self.model["name"])
 
     __str__ = __repr__

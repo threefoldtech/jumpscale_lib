@@ -1,6 +1,7 @@
 import requests
 from .ays_service import AysService 
 from .Repository import Repositories
+from .ActorTemplate import ActorTemplates
 
 DEFAULT_URL = "https://localhost:5000"
 
@@ -10,28 +11,13 @@ class Client:
         self._session = requests.Session()
         self._session.headers.update({"Content-Type": "application/json"})
         self._ayscl = AysService(self)
+        self.templates = ActorTemplates(client=self)
         self.repositories = Repositories(self)
         if jwt:
             self._set_auth_header('Bearer {}'.format(jwt))
         if clientID and secret:
             jwt = self._getJWT(clientID, secret, validity)
             self._set_auth_header('Bearer {}'.format(jwt))
-
-    def addTemplates(self, repo_url, branch):
-        """
-        Adds AYS template from a give Git repository
-        Args:
-            repo_url: URL of the Git repository with the templates to import, e.g. "https://github.com/openvcloud/ays_templates"
-            branch: branch name in the Git repository, e.g. "master"
-        """
-        data = {'url': '{repo_url}','branch': '{branch}'}
-        self._ayscl.addTemplateRepo(data)
-
-    def listTemplates(self):
-        """
-        Returns a list of all (global) AYS templates.
-        """
-        return self._ayscl.listAYSTemplates()
 
     def _getJWT(self, clientID, secret, validity=3600):
         params = {
