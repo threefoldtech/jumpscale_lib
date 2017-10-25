@@ -8,6 +8,7 @@ BRANCH="9.3.0"
 sudo -H pip3 install --upgrade git+https://github.com/jumpscale/lib9.git@${BRANCH}#subdirectory=JumpScale9Lib/clients/atyourservice
 ```
 
+Below we discuss:
 - [Connecting to the AYS server using an AYS Client object](#client)
 - [Using the Auto-generated Client](#auto-generated)
 - [Listing and adding AYS Templates](#ays-templates)
@@ -24,7 +25,7 @@ sudo -H pip3 install --upgrade git+https://github.com/jumpscale/lib9.git@${BRANC
 
 Your first step will be to get an AYS Client instance, through which you will do all AYS interactions.
 
-In a typical setup the AYS server will be protected by ItsYou.online, requiring a JSON Web token (JWT) in order to use the AYS RESTful API. This JSON is created by the AYS client, you simply need to pass the client ID and secret that protects the AYS server. In the below example we assume you first saved the client ID and secret into environment variables:
+In a typical setup the AYS server will be protected by ItsYou.online, requiring you to pass an JSON Web token (JWT) in order to use the AYS RESTful API. This JSON is created by the AYS client. You simply need to pass the client ID and secret that protects the AYS server. In the below example we assume you first exported the client ID and secret in environment variables:
 ```python
 import os
 client_id = os.environ["CLIENT_ID"]
@@ -42,14 +43,14 @@ secret = config["iyo"]["secret"]
 url = config["openvcloud"]["url"]
 ```
 
-The above uses a `config.yaml` 
+The above uses a `config.yaml` structured as follows:
  ```yaml
  iyo:
   client_id: FjMckSiqtJK8XXNARNeakFrsfxVp
   secret: gXpM4fPfHiXT3UblaJwmAhjd72kB`
 ```
 
-Alternatively you can create the JWT yourself as documented in the [How to get a JWT for authenticating against AYS](how_to_get_a_JWT_for_AYS.md) and then use the following code to pass the JWT:
+Alternatively you can create the JWT yourself as documented in [How to get a JWT for authenticating against AYS](how_to_get_a_JWT_for_AYS.md) and then use the following code to pass the JWT:
 ```python
 url = "http://192.168.196.5:5000"
 jwt = "<copy the JWT value here>"
@@ -63,7 +64,7 @@ This AYS client is actually a wrapper for the AYS client that is auto-generated 
 
 The auto-generated client is available through the `_ayscl` attribute of the AYS client.
 
-Here's an example on how to list all AYS templates:
+Here's an example on how to list all AYS templates using the auto-generated client:
 ```python
 client_id = os.environ["CLIENT_ID"]
 secret = os.environ["SECRET"]
@@ -74,16 +75,38 @@ response = cl2.listAYSTemplates()
 response.json()
 ```
 
-All next examples will use the AYS client.
+All next examples will use the AYS client, not the auto-generated client.
 
 <a id="ays-templates"></a>
 ## Listing and adding AYS Templates
 
 List all global AYS templates:
 ```python
-cl.listTemplate()
+cl.templates.list()
 ```
 
+In order to only list the templates with the "node" role:
+```python
+repo.templates.list(role="node")
+```
+
+You can also list all local templates of a specific repository:
+```python
+repo_name = "<here the name of the repository>"
+repo = cl.repositories.get("repo_name")
+repo.templates.list()
+```
+
+In order to get a closer look to a specific template, here for the template  with name "node.ovc":
+```python
+globalTemplate = repo.templates.get(name="node.ovc")
+globalTemplate.model
+```
+ 
+And this is how to add all OpenvCloud templates from the master branch of the [openvcloud/ays_templates](https://github.com/openvcloud/ays_templates) repository:
+```python
+cl.templates.addTemplates("https://github.com/openvcloud/ays_templates", "master")
+```
 
 <a id="repositories"></a>
 ## Working with repositories
