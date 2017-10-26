@@ -96,7 +96,7 @@ class ActorTemplates:
         """
 
         if self._repository == None:
-            data = {'url': '{repo_url}','branch': '{branch}'}
+            data = {'url': repo_url,'branch': branch}
             try:
                 resp = self._ayscl.addTemplateRepo(data)
             except Exception as e:
