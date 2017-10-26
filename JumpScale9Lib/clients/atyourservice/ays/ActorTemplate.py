@@ -112,7 +112,7 @@ class ActorTemplates:
 
         Returns: actor template instance
 
-        Raises: KeyError when no service match the specified arguments.
+        Raises: KeyError when no service match the specified arguments
         """
         for template in self.list():
             if template.model['name'] == name:

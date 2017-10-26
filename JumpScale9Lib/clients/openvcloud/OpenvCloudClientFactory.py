@@ -35,42 +35,19 @@ class OpenvCloudClientFactory:
         url = url.lower()
         if url.startswith("http"):
             url = url.split("//")[1].rstrip("/")
-        print("get openvcloud client on url:%s" % url)
+        print("get OpenvCloud client on url:%s" % url)
         return url
-
-    def getLegacy(self, url, login=None, password=None):
-        """
-
-        only use this for legacy reasons or private deployments where there is no itsyou.online used
-
-        if you want to use secret or jwt, DO not use this method use .getFromApiSecret(...)
-
-        url e.g. https://se-gen-1.demo.greenitglobe.com/  (is the base url of the environment)
-
-
-        """
-        url = self._urlClean(url)
-        cl = Client(url, login, password, secret=None, port=443, jwt=None)
-        return cl
-
-    def getFromAYSService(self, service):
-        """
-        start from an atyourservice service
-        """
-        return self.get(
-            url=service.model.data.url,
-            login=service.model.data.login,
-            password=service.model.data.password,
-            jwt=service.model.data.jwt,
-            port=service.model.data.port)
 
     def get(self, applicationId, secret, url):
         """
-        this is the default way how to do this, create a secret/app key on ityou.online
+        Returns an OpenvCloud Client object for a given application ID and secret.
 
-        instructions see: 
+        Get the application ID and secret by creating an API key on the settings page of your user profile on https://itsyou.online.
 
-        url e.g. https://se-gen-1.demo.greenitglobe.com/  (is the base url of the environment)        
+        Args:
+            - applicationId: application ID of the API key as set in ItsYou.online for your user profile
+            - secret: secret part of the API key as set in ItsYou.online for your user profile
+            - url: base url of the OpenvCloud environment, e.g. https://se-gen-1.demo.greenitglobe.com/     
         """
         url = self._urlClean(url)
         jwt = self.getJWTTokenFromItsYouOnline(applicationId, secret)
@@ -80,14 +57,45 @@ class OpenvCloudClientFactory:
         cl = Client(url, login, password, secret, port, jwt)
         return cl
 
+    def getLegacy(self, url, login=None, password=None):
+        """
+        Returns an OpenvCloud Client object for a given username and password.
+                
+        Only use this for legacy purposes or in private deployments where ItsYou.online is not used.
+
+        It is highly recommended to use the get() method instead, passing an application ID and secret from ItsYou.online.
+
+        Args:
+            url: base url of the OpenvCloud environment, e.g. https://se-gen-1.demo.greenitglobe.com/
+            login: OpenvCloud username
+            password: password of the OpenvCloud user
+        """
+
+        url = self._urlClean(url)
+        cl = Client(url, login, password, secret=None, port=443, jwt=None)
+        return cl
+
+    def getFromAYSService(self, service):
+        """
+        Returns an OpenvCloud Client object for a given AYS service object.
+        """
+        return self.get(
+            url=service.model.data.url,
+            login=service.model.data.login,
+            password=service.model.data.password,
+            jwt=service.model.data.jwt,
+            port=service.model.data.port)
+
     def getJWTTokenFromItsYouOnline(self, applicationId, secret, validity=3600):
         """
-        this method will return jwt token starting from applicationId & secret
+        Returns JSON Web token (JWT) for the specified application ID and secret.
 
-        go to https: // itsyou.online/  # /settings add api key (label is not important)
+        Get the application ID and secret by creating an API key on the settings page of your user profile on https://itsyou.online.
 
-        get the appid & secret from there
-
+        Args:
+            - applicationId: application ID of the API key as set in ItsYou.online for your user profile
+            - secret: secret part of the API key as set in ItsYou.online for your user profile
+            - validity: (defaults to 3600) duration in seconds that the requested JWT should stay valid 
         """
 
         params = {
@@ -103,13 +111,12 @@ class OpenvCloudClientFactory:
         jwt = resp.content.decode('utf8')
         return jwt
 
-
 class Client:
 
     def __init__(self, url, login, password=None, secret=None, port=443, jwt=None):
         if not password and not secret and not jwt:
             raise ValueError(
-                "Can not connect to openvcloud without either password, secret or jwt")
+                "Cannot connect to OpenvCloud without either password, secret or JWT")
         self._url = url
         self._login = login
         self._password = password
@@ -148,7 +155,7 @@ class Client:
     def __login(self, password, secret, jwt):
         if not password and not secret and not jwt:
             raise RuntimeError(
-                "Can not connect to openvcloud without either password, secret or jwt")
+                "Cannot connect to OpenvCloud without either password, secret or JWT")
         if jwt:
             import jose.jwt
             payload = jose.jwt.get_unverified_claims(jwt)
@@ -184,6 +191,22 @@ class Client:
     def account_get(self, name, create=True,
                     maxMemoryCapacity=-1, maxVDiskCapacity=-1, maxCPUCapacity=-1, maxNASCapacity=-1,
                     maxNetworkOptTransfer=-1, maxNetworkPeerTransfer=-1, maxNumPublicIP=-1):
+        """
+        Returns the OpenvCloud account with the given name, and in case it doesn't exist yet the account will be created. 
+
+        Args:
+            - name (required): name of the account to lookup or create if it doesn't exist yet, e.g. "myaccount"
+            - create (defaults to True): if set to True the account is created in case it doesn't exist yet
+            - maxMemoryCapacity (defaults to -1: unlimited): available memory in GB for all virtual machines in the account
+            - maxVDiskCapacity (defaults to -1: unlimited): available disk capacity in GiB for all virtual disks in the account
+            - maxCPUCapacity (defaults to -1: unlimited): total number of available virtual CPU core that can be used by the virtual machines in the account
+            - maxNASCapacity (defaults to -1: unlimited): not implemented
+            - maxNetworkOptTransfer (defaults to -1: unlimited): not implemented
+            - maxNetworkPeerTransfer (defaults to -1: unlimited): not implemented
+            - maxNumPublicIP (defaults to -1: unlimited): number of external IP addresses that can be used in the account
+            
+        Raises: KeyError if account doesn't exist, and create argument was set to False
+        """
         for account in self.accounts:
             if account.model['name'] == name:
                 return account
@@ -206,7 +229,7 @@ class Client:
         return self._login
 
     def __repr__(self):
-        return "openvcloud client: %s" % self._url
+        return "OpenvCloud client: %s" % self._url
 
     __str__ = __repr__
 
@@ -288,11 +311,23 @@ class Account(Authorizables):
                   maxNetworkOptTransfer=-1, maxNetworkPeerTransfer=-1, maxNumPublicIP=-1,
                   externalnetworkId=None):
         """
-        will get space if it exists, if not will create it
-        to retrieve existing one location does not have to be specified
+        Returns the cloud space with the given name, and in case it doesn't exist yet the account will be created. 
 
-        example: for ms1 possible locations: ca1, eu1(uk), eu2(be)
-
+        Args:
+            - name (required): name of the cloud space to lookup or create if it doesn't exist yet, e.g. "myvdc"
+            - location (only required when cloud space needs to be created): location when the cloud space needs to be created 
+            - create (defaults to True): if set to True the account is created in case it doesn't exist yet
+            - maxMemoryCapacity (defaults to -1: unlimited): available memory in GB for all virtual machines in the cloud space
+            - maxVDiskCapacity (defaults to -1: unlimited): available disk capacity in GiB for all virtual disks in the cloud space
+            - maxCPUCapacity (defaults to -1: unlimited): total number of available virtual CPU core that can be used by the virtual machines in the cloud space
+            - maxNASCapacity (defaults to -1: unlimited): not implemented
+            - maxNetworkOptTransfer (defaults to -1: unlimited): not implemented
+            - maxNetworkPeerTransfer (defaults to -1: unlimited): not implemented
+            - maxNumPublicIP (defaults to -1: unlimited): number of external IP addresses that can be used in the cloud space
+            
+        Raises:
+            - RuntimeError is no location was specified
+            - RuntimeError if cloud space doesn't exist, and create argument was set to False
         """
         if not location:
             raise j.exceptions.RuntimeError("Location cannot be empty.")
@@ -384,7 +419,7 @@ class Account(Authorizables):
             accountId=self.id, reason='API request')
 
     def __str__(self):
-        return "openvcloud client account: %(name)s" % (self.model)
+        return "OpenvCloud client account: %(name)s" % (self.model)
 
     __repr__ = __str__
 
@@ -449,16 +484,16 @@ class Space(Authorizables):
 
     def enable(self, reason):
         """
-        Will enable the cloudspace.
-        : param reason: string: The reason why the cloudspace should be enabled.
+        Will enable the cloud space.
+        : param reason: string: The reason why the cloud space should be enabled.
         """
         self.client.api.cloudapi.cloudspaces.enable(
             cloudspaceId=self.id, reason=reason)
 
     def disable(self, reason):
         """
-        Will disable the cloudspace.
-        : param reason: string: The reason why the cloudspace should be disabled.
+        Will disable the cloud space.
+        : param reason: string: The reason why the cloud space should be disabled.
         """
         self.client.api.cloudapi.cloudspaces.disable(
             cloudspaceId=self.id, reason=reason)
@@ -470,12 +505,13 @@ class Space(Authorizables):
                 self.model = cloudspace
                 break
         else:
-            raise j.exceptions.RuntimeError("Cloudspace has been deleted")
+            raise j.exceptions.RuntimeError("Cloud space has been deleted")
 
-    def machine_create_ifnotexist(
+    def machine_get(
             self,
             name,
-            sshkeyname,
+            create=False,
+            sshkeyname="",
             memsize=2,
             vcpus=1,
             disksize=10,
@@ -484,33 +520,43 @@ class Space(Authorizables):
             sizeId=None,
             stackId=None):
         """
-        @param memsize in MB or GB
-        for now vcpu's is ignored(waiting for openvcloud)
+        Returns the virtual machine with given name, and in case it doesn't exist yet creates the machine if the create argument is set to True. 
 
+        Args:
+            - name: (required) name of the virtual machine to lookup or create if it doesn't exist yet, e.g. "My first VM"
+            - create (defaults to False): if set to true the machine is created in case it doesn't exist yet
+            - sshkeyname (only required for creating new machine): name of the private key loaded by ssh-agent that will get copied into authorized_keys
+            - memsize (defaults to 2): memory size in MB or in GB, e.g. 4096
+            - vcpus (defaults to 1): number of virtual CPU cores; value is ignored in versions prior to 3.x, use sizeId in order to set the number of virtual CPU cores 
+            - disksize (default to 10): boot disk size in MB
+            - datadisks (optional): list of data disks sizes in GB, e.g. [20, 20, 50]
+            - image (defaults to "Ubuntu 16.04 x6"): name of the OS image to load
+            - sizeId (optional): overrides the value set for memsize, denotes the type or "size" of the virtual machine, actually sets the number of virtual CPU cores and amount of memory, see the sizes property of the cloud space for the sizes available in the cloud space 
+            - stackId (optional): identifies the grid node on which to create the virtual machine, if nothing specified (recommended) OpenvCloud will decide where to create the virtual machine
 
+        Raises: RuntimeError if machine doesn't exist, and create argument was set to False (default)
         """
         machines = self.machines
         if name not in machines:
-            return self.machine_create(name=name,
-                                       sshkeyname=sshkeyname,
-                                       memsize=memsize,
-                                       vcpus=vcpus,
-                                       disksize=disksize,
-                                       datadisks=datadisks,
-                                       image=image,
-                                       sizeId=sizeId,
-                                       stackId=stackId)
-        else:
-            return machines[name]
-
-    def machine_get(self, name):
-        machines = self.machines
-        if name not in machines:
-            raise RuntimeError("Cannot find machine:%s" % name)
+            if create == True:
+                return self.machine_create(name=name,
+                                           sshkeyname=sshkeyname,
+                                           memsize=memsize,
+                                           vcpus=vcpus,
+                                           disksize=disksize,
+                                           datadisks=datadisks,
+                                           image=image,
+                                           sizeId=sizeId,
+                                           stackId=stackId)
+            else:
+                raise RuntimeError("Cannot find machine:%s" % name)
         else:
             return machines[name]
 
     def machines_delete(self):
+        """
+        Deletes all machines in the cloud space.
+        """
         for key, machine in self.machines.items():
             machine.delete()
 
@@ -527,11 +573,20 @@ class Space(Authorizables):
             stackId=None,
     ):
         """
-        @param sshkeyname is obliged will get key from ssh-agent and needs to be loaded !!!
+        Creates a new virtual machine.
 
-        @param memsize in MB or GB
-        for now vcpu's is ignored(waiting for openvcloud)
-
+        Args:
+            - name (required): name of the virtual machine, e.g. "My first VM"
+            - sshkeyname (required): name of the private key loaded by ssh-agent that will get copied into authorized_keys
+            - memsize (defaults to 2): memory size in MB or in GB, e.g. 4096
+            - vcpus (defaults to 1): number of virtual CPU cores; value is ignored in versions prior to 3.x, use sizeId in order to set the number of virtual CPU cores 
+            - disksize (default to 10): boot disk size in MB
+            - datadisks (optional): list of data disks sizes in GB, e.g. [20, 20, 50]
+            - image (defaults to "Ubuntu 16.04 x6"): name of the OS image to load
+            - sizeId (optional): overrides the value set for memsize, denotes the type or "size" of the virtual machine, actually sets the number of virtual CPU cores and amount of memory, see the sizes property of the cloud space for the sizes available in the cloud space 
+            - stackId (optional): identifies the grid node on which to create the virtual machine, if nothing specified (recommended) OpenvCloud will decide where to create the virtual machine
+        
+        Raises: RuntimeError if machine with given name already exists.
         """
         imageId = self.image_find_id(image)
         if sizeId is None:
@@ -539,7 +594,7 @@ class Space(Authorizables):
         if name in self.machines:
             raise j.exceptions.RuntimeError(
                 "Name is not unique, already exists in %s" % self)
-        print("cloudspaceid:%s name:%s size:%s image:%s disksize:%s" %
+        print("Cloud space ID:%s name:%s size:%s image:%s disksize:%s" %
               (self.id, name, sizeId, imageId, disksize))
         if stackId:
             self.client.api.cloudbroker.machine.createOnStack(
@@ -563,7 +618,7 @@ class Space(Authorizables):
 
         # remember the node in the local node configuration
         j.tools.develop.nodes.nodeSet(name, addr=p.executor.sshclient.addr, port=p.executor.sshclient.port,
-                                      cat=self.client._url, description="deployment in openvcloud")
+                                      cat=self.client._url, description="deployment in OpenvCloud")
 
         return m
 
@@ -573,7 +628,7 @@ class Space(Authorizables):
         publicip = machine.space.model['publicipaddress']
         while not publicip:
             print(
-                "machine openvcloud:%s not ready yet with public ip, wait 1 sec, try again" % self)
+                "machine OpenvCloud:%s not ready yet with public ip, wait 1 sec, try again" % self)
             time.sleep(1)
             machine.space.refresh()
             publicip = machine.space.model['publicipaddress']
@@ -712,7 +767,7 @@ class Machine:
         """
         Will create a new machine that is a clone of this one.
         : param name: the name of the clone that will be created.
-        : param cloudspaceId: optional id of the cloudspace in which the machine should be put.
+        : param cloudspaceId: optional id of the cloud space in which the machine should be put.
         : param snapshotTimestamp: optional snapshot to base the clone upon.
         : return: the id of the created machine
         """
