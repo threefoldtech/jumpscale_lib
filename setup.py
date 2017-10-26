@@ -12,9 +12,11 @@ def _post_install(libname, libpath):
 
     # add this plugin to the config
     c = j.core.state.configGet('plugins', defval={})
-    c[libname] = libpath
+    c[libname] = "%s/github/jumpscale/lib9/JumpScale9Lib" % j.dirs.CODEDIR
+    # c[libname] = libpath
     j.core.state.configSet('plugins', c)
-    j.do.execute("pip3 install 'git+https://github.com/zero-os/0-core#egg=0-core-client&subdirectory=client/py-client'")
+    j.do.execute(
+        "pip3 install 'git+https://github.com/zero-os/0-core#egg=0-core-client&subdirectory=client/py-client'")
     j.tools.jsloader.generate()
 
 
@@ -23,8 +25,10 @@ class install(_install):
     def run(self):
         _install.run(self)
         libname = self.config_vars['dist_name']
-        libpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), libname)
-        self.execute(_post_install, (libname, libpath), msg="Running post install task")
+        libpath = os.path.join(os.path.dirname(
+            os.path.abspath(__file__)), libname)
+        self.execute(_post_install, (libname, libpath),
+                     msg="Running post install task")
 
 
 class develop(_develop):
@@ -32,8 +36,10 @@ class develop(_develop):
     def run(self):
         _develop.run(self)
         libname = self.config_vars['dist_name']
-        libpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), libname)
-        self.execute(_post_install, (libname, libpath), msg="Running post install task")
+        libpath = os.path.join(os.path.dirname(
+            os.path.abspath(__file__)), libname)
+        self.execute(_post_install, (libname, libpath),
+                     msg="Running post install task")
 
 
 long_description = ""
@@ -89,8 +95,8 @@ setup(
         'uvloop>=0.8.0',
         'watchdog>=0.8.3',
         'dnspython>=1.15.0',
-        'libvirt-python>=3.3.0',
-        'apache_libcloud>=2.0.0',
+        # 'libvirt-python>=3.3.0',
+        # 'apache_libcloud>=2.0.0',
         'python-etcd>=0.4.5',
         'zerotier>=1.1.2',
         'packet-python>=1.33',

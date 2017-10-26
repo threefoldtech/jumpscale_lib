@@ -1,23 +1,21 @@
 # How to get a JWT for authenticating against OpenvCloud
 
-## first create your secrets on itsyou.online
+## First create your application ID and secret on ItsYou.online
 
 Prerequirements:
-- Registrated user on ItsYou.online
-
-In order to get a JWT from ItsYou.online, you first need to create an application key for your ItsYou.online identity:
+- Registered user on ItsYou.online
 
 ![](images/iyo_jwt.png)
 
-## get jwt manually
+## Get JWT manually
 
-### from jumpscale
+### From JumpScale
 
 ```python
 jwt = j.clients.openvcloud.getJWTTokenFromItsYouOnline(applicationId, secret)
 ```
 
-### through curl
+### Through curl
 
 ```bash
 export APP_ID="..."
@@ -26,3 +24,4 @@ export JWT2=$(curl -d 'grant_type=client_credentials&client_id='"$APP_ID"'&clien
 echo $JWT2
 ```
 
+> Also see [Getting started with the OpenvCloud Cloud API](https://gig.gitbooks.io/ovcdoc_public/content/API/GettingStarted.html) for more details about this JWT.

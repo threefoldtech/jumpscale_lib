@@ -274,7 +274,7 @@ class Account(Authorizables):
         """
         return self.client.api.cloudapi.disks.list(accountId=self.id)
 
-    def delete_disk(self, disk_id, detach=True):
+    def disk_delete(self, disk_id, detach=True):
         """
         Wrapper to delete disk by its id. I think there should be a class for disks to list all its wrappers
         : param disk_id: integer: The disk id need to be removed
@@ -326,16 +326,7 @@ class Account(Authorizables):
         """
         return self.client.api.cloudapi.disks.list(accountId=self.id)
 
-    def delete_disk(self, disk_id, detach=True):
-        """
-        Wrapper to delete disk by its id. I think there should be a class for disks to list all its wrappers
-        : param disk_id: integer: The disk id need to be removed
-        : param detach: boolean: detach the disk from the machine first
-        : return:
-        """
-        return self.client.api.cloudapi.disks.delete(diskId=disk_id, detach=detach)
-
-    def create_disk(self, name, gid, description, size=0, type="B", ssd_size=0):
+    def disk_create(self, name, gid, description, size=0, type="B", ssd_size=0):
         res = self.client.api.cloudapi.disks.create(accountId=self.id,
                                                     name=name,
                                                     gid=gid,
@@ -406,7 +397,7 @@ class Space(Authorizables):
         self.model = model
         self.id = model["id"]
 
-    def add_external_network(self, name, subnet, gateway, startip, endip, gid, vlan):
+    def externalnetwork_add(self, name, subnet, gateway, startip, endip, gid, vlan):
         self.client.api.cloudbroker.iaas.addExternalNetwork(cloudspaceId=self.id,
                                                             name=name,
                                                             subnet=subnet,
@@ -611,10 +602,10 @@ class Space(Authorizables):
         sshclient.SSHAuthorizeKey(sshkeyname)
 
     @property
-    def portforwardings(self):
+    def portforwards(self):
         return self.client.api.cloudapi.portforwarding.list(cloudspaceId=self.id)
 
-    def isPortforwardExists(self, publicIp, publicport, protocol):
+    def portforward_exists(self, publicIp, publicport, protocol):
         for pf in self.portforwardings:
             if pf['publicIp'] == publicIp and int(pf['publicPort']) == int(publicport) and pf['protocol'] == protocol:
                 return True
@@ -730,7 +721,7 @@ class Machine:
                                                        cloudspaceId=cloudspaceId,
                                                        snapshotTimestamp=snapshotTimestamp)
 
-    def create_snapshot(self, name=None):
+    def snapshot_create(self, name=None):
         """
         Will create a snapshot of the machine.
         : param name: the name of the snapshot that will be created. Default: creation time
@@ -740,14 +731,15 @@ class Machine:
         self.client.api.cloudapi.machines.snapshot(
             machineId=self.id, name=name)
 
-    def list_snapshots(self):
+    @property
+    def snapshots(self):
         """
         Will return a list of snapshots of the machine.
         : return: the list of snapshots
         """
         return self.client.api.cloudapi.machines.listSnapshots(machineId=self.id)
 
-    def delete_snapshot(self, epoch):
+    def snapshot_delete(self, epoch):
         """
         Will delete a snapshot of the machine.
         : param epoch: the epoch of the snapshot to be deleted.
@@ -755,7 +747,7 @@ class Machine:
         self.client.api.cloudapi.machines.deleteSnapshot(
             machineId=self.id, epoch=epoch)
 
-    def rollback_snapshot(self, epoch):
+    def snapshot_rollback(self, epoch):
         """
         Will rollback a snapshot of the machine.
         : param epoch: the epoch of the snapshot to be rollbacked.
@@ -763,18 +755,18 @@ class Machine:
         self.client.api.cloudapi.machines.rollbackSnapshot(
             machineId=self.id, epoch=epoch)
 
-    def getHistory(self, size):
+    def history_get(self, size):
         return self.client.api.cloudapi.machines.getHistory(machineId=self.id, size=size)
 
-    def attach_external_network(self):
+    def externalnetwork_attach(self):
         self.client.api.cloudapi.machines.attachExternalNetwork(
             machineId=self.id)
 
-    def detach_external_network(self):
+    def externalnetwork_detach(self):
         self.client.api.cloudapi.machines.detachExternalNetwork(
             machineId=self.id)
 
-    def add_disk(self, name, description, size=10, type='D', ssdSize=0):
+    def disk_add(self, name, description, size=10, type='D', ssdSize=0):
         disk_id = self.client.api.cloudapi.machines.addDisk(machineId=self.id,
                                                             diskName=name,
                                                             description=description,
@@ -792,7 +784,7 @@ class Machine:
         machine_data = self.client.api.cloudapi.machines.get(machineId=self.id)
         return machine_data['disks']
 
-    def detach_disk(self, disk_id):
+    def disk_detach(self, disk_id):
         return self.client.api.cloudapi.machines.detachDisk(machineId=self.id, diskId=disk_id)
 
     def disk_limit_io(self, disk_id, total_bytes_sec, read_bytes_sec, write_bytes_sec, total_iops_sec,
@@ -809,10 +801,10 @@ class Machine:
                                                size_iops_sec=size_iops_sec)
 
     @property
-    def portforwardings(self):
+    def portforwards(self):
         return self.client.api.cloudapi.portforwarding.list(cloudspaceId=self.space.id, machineId=self.id)
 
-    def create_portforwarding(self, publicport, localport, protocol='tcp'):
+    def portforward(self, publicport, localport, protocol='tcp'):
         if protocol not in ['tcp', 'udp']:
             raise j.exceptions.RuntimeError(
                 "Protocol for portforward should be tcp or udp not %s" % protocol)
@@ -860,7 +852,7 @@ class Machine:
 
         return (realpublicport, localport)
 
-    def delete_portforwarding(self, publicport):
+    def portforward_delete(self, publicport):
         self.client.api.cloudapi.portforwarding.deleteByPort(
             cloudspaceId=self.space.id,
             publicIp=self.space.model['publicipaddress'],
@@ -868,11 +860,11 @@ class Machine:
             proto='tcp'
         )
 
-    def delete_portfowarding_by_id(self, pfid):
+    def portforward_delete_by_id(self, pfid):
         self.client.api.cloudapi.portforwarding.delete(cloudspaceid=self.space.id,
                                                        id=pfid)
 
-    def get_machine_ip(self):
+    def machineip_get(self):
         machine = self.client.api.cloudapi.machines.get(machineId=self.id)
 
         def getMachineIP(machine):

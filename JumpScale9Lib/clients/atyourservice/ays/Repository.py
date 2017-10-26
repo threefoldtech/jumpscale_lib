@@ -25,7 +25,7 @@ class Repositories:
         """
         List all repositories.
 
-        Returns: list of repositories
+        Returns a list of repository objects.
         """
         ays_repositories = self._ayscl.listRepositories().json()
         repositories = list()
@@ -40,7 +40,7 @@ class Repositories:
         Args:
             name: name of the repository to retrieve
 
-        Returns: repository
+        Returns a repository object.
         """
         for repository in self.list():
             if repository.model.get('name') == name:
@@ -55,7 +55,7 @@ class Repositories:
             name: name of the repository to create
             git: url of the Git repository
 
-        Return: list of runs
+        Returns a repository object.
         """
         data = {
             'name' : name,
@@ -82,7 +82,7 @@ class Repository:
 
     def destroy(self):
         """
-        All services and runs will be deleted, blueprints are kept
+        All services and runs will be deleted, blueprints are kept.
         Make sure to do a commit before you do a distroy, this will give you a chance to roll back.
         """
         try:
