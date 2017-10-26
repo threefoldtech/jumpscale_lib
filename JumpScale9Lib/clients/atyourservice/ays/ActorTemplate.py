@@ -84,15 +84,24 @@ class ActorTemplates:
 
     def addTemplates(self, repo_url, branch):
         """
-        Adds AYS global templates from a give Git repository
+        Adds AYS global templates from a give Git repository. Not available yet for adding local templates.
+        
         Args:
             repo_url: URL of the Git repository with the templates to import, e.g. "https://github.com/openvcloud/ays_templates"
             branch: branch name in the Git repository, e.g. "master"
+        
+        Returns: HTTP response object.
+        
+        Raises: HTTPError error message.
         """
 
-        if repository == None:
+        if self._repository == None:
             data = {'url': '{repo_url}','branch': '{branch}'}
-            self._ayscl.addTemplateRepo(data)
+            try:
+                resp = self._ayscl.addTemplateRepo(data)
+            except Exception as e:
+                return _extract_error(e)
+            return resp
 
     def get(self, name):
         """
