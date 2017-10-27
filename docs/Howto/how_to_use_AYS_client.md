@@ -17,7 +17,7 @@ Below we discuss:
 - [Runs](#runs)
 - [Services](#services)
 - [Actions](#actions)
-- [Actors](actors)
+- [Actors](#actors)
 
 
 <a id="client"></a>

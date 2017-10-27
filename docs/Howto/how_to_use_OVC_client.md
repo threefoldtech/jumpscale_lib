@@ -2,17 +2,13 @@
 
 In order to use the OpenvCloud client you need a JSON Web token (JWT).
 
-It is recommended to let the OpenvCloud generate this JWT for you, by just passing your application ID and secret when creating the OpenvCloud client.
+It is recommended to let the OpenvCloud client generate this JWT for you, by just passing your application ID and secret when instantiating the OpenvCloud client. So you first need an application ID and secret.
 
-In the below example we first read the application ID and secret from a YAML formated configuration file:
-```python
-config = j.data.serializer.yaml.load("config.yaml")
-applicationId = config["iyo"]["appid"]
-secret = config["iyo"]["secret"]
-url = config["openvcloud"]["url"]
-```
+You get this application ID and secret by creating an API key on the settings page of your [ItsYou.online](https://itsyou.online) user profile.
 
-This requires a `config.yaml` structured as follows:
+![](images/iyo_jwt.png)
+
+For the below example we will save the application ID and secret in a YAML formated `config.yaml` configuration file structured as follows:
 ```yaml
 iyo:
   appid: FjMckSiqtJK8XABCRNeakTowfxVp
@@ -22,26 +18,57 @@ openvcloud:
   url: 'https://se-gen-1.demo.greenitglobe.com'
 ```
 
-With this connecting is simple:
+From within you code you can then easily read the application ID and secret from the configuration file:
 ```python
-cl = j.clients.openvcloud.get(applicationId, secret, url)
+config = j.data.serializer.yaml.load("config.yaml")
+applicationId = config["iyo"]["appid"]
+secret = config["iyo"]["secret"]
+url = config["openvcloud"]["url"]
 ```
 
-> Also see [How to get a JWT for authenticating against OpenvCloud](how_to_get_a_JWT_for_OVC.md).
+With this connecting is simple:
+```python
+client = j.clients.openvcloud.get(applicationId, secret, url)
+```
 
-Below we discuss:
+Alternatively, you can also connect to an OpenvCloud environment with a legacy username and password. This is highly discouraged though. You should only choose this option in a strictly private deployment where ItsYou.online is unavailable:
+```python
+login = "<your legacy username>"
+password = "<your legacy password>"
+client = j.clients.getLegacy(url, login, password)
+```
+
+Next we discuss:
+- [Cloud API](#cloud-api)
 - [Accounts](#accounts)
 - [Cloud Spaces](#cloud-spaces)
 - [Virtual Machines](#virtual-machines)
-- [Cloud API](#cloud-api)
+- [Prefab](#prefab)
+
+<a id="cloud-api"></a>
+## Accessing the Cloud API
+
+The OpenvCloud client uses the OpenvCloud Cloud API underneath. You can access the OpenvCloud Cloud API via the OpenvCloud client via the `api` attribute of the OpenvCloud client.
+
+List all OS images using the OpenvCloud API:
+```python
+client.api.cloudapi.images.list()
+```
+
+For more details about using the OpenvCloud API see[How to use the OpenvCloud Cloud API](how_to_use_OVC_API.md).
 
 <a id="accounts"></a>
 ## Accounts
 
 Access an account:
 ```python
-account_name="..."
-acc = cl.account_get(account_name)
+account_name = "<your OpenvCloud account name here>"
+account = client.account_get(account_name)
+```
+
+The above code will try to create a new account in case there was no account found with the given name. This default behavior can switched off by passing `False` the optional `create` argument:
+```python
+account = client.account_get(account_name, create=False)
 ```
 
 <a id="cloud-spaces"></a>
@@ -49,24 +76,32 @@ acc = cl.account_get(account_name)
 
 List all cloud spaces:
 ```python
-acc.spaces
+account.spaces
 ```
 
 Get the first cloud space:
 ```python
-vdc = acc.spaces[0]
+vdc = account.spaces[0]
 ```
 
 Or get a cloud space by name:
 ```python
-cloud_space_name = "..."
-location = "..."
-cs = acc.space_get(cloud_space_name, location)
+cloud_space_name = "<your cloud space name here>"
+locations = client.locations
+location = locations[0]['locationCode']
+vdc = account.space_get(cloud_space_name, location)
 ```
 
-The above code will create a new cloud space in the specified location if the cloud space doesn't exist yet. In case you don't want this behaviour, set the `create` argument to `False` (the default is `True`):
+The above code will create a new cloud space if the cloud space doesn't exist yet. In case you don't want this behavior, set the `create` argument to `False` (the default is `True`):
 ```python
-cs = acc.space_get(cloud_space_name, location, create=False)
+vdc = account.space_get(cloud_space_name, location, create=False)
+```
+
+Also note that we specified the first available location to create to cloud space in.
+
+List all available images that are available in a cloud space:
+```python
+print([item["name"] for item in vdc.images])
 ```
 
 <a id="virtual-machines"></a>
@@ -74,24 +109,32 @@ cs = acc.space_get(cloud_space_name, location, create=False)
 
 List the machines in the cloud space:
 ```python
-cs.machines
+vdc.machines
 ```
 
 Get a machine:
 ```python
 machine_name = "..."
-vm = cs.machines.get(machine_name)
+vm = vdc.machines.get(machine_name)
 ```
 
 Create a new virtual machines:
 ```python
-sshkeyname = "<name of the SSH private keyname loaded bu the SSH agent>"
-machine = space.machine_create_ifnotexist(name, sshkeyname = sshkeyname)
+sshkeyname = "<name of the SSH private key loaded by the SSH agent>"
+machine = vdc.machine_create(name=name, sshkeyname = sshkeyname)
 ```
 
-This will create new virtual machine using default values, typically Ubuntu 16.04 with @GB memory and a 10 GB boot disk.
+This will create new virtual machine using default values:
+- Ubuntu 16.04 with 2GB memory
+- 1 virtual CPU core
+- 10 GB boot disk
 
-Check the VM model:
+Alternatively you can also get an existing machine, and have it created if it doesn't exist yet:
+```python
+machine = vdc.machine_get(name=name, create=True, sshkeyname=sshkeyname)
+```
+
+See all properties of the virtual machine:
 ```python
 machine.model
 ```
@@ -101,12 +144,15 @@ List the disks:
 machine.disks
 ```
 
-<a id="cloud-api"></a>
-## Accessing the Cloud API
+<a id="prefab"></a>
+## Prefab
 
-The OpenvCloud client uses the OpenvCloud Cloud API. You can access it via the OpenvCloud client via the `api` attribute.
-
-List all images:
+From a machine object you can easily access prefab executor for the machine: 
 ```python
-cl.api.cloudapi.images.list()
+p = machine.prefab
+```
+
+With this prefab executor you can for instance install the basic system services: 
+```python
+p.system.base.install()
 ```
