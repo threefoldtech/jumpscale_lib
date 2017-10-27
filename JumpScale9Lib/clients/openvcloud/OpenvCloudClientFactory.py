@@ -618,7 +618,7 @@ class Space(Authorizables):
 
         # remember the node in the local node configuration
         j.tools.develop.nodes.nodeSet(name, addr=p.executor.sshclient.addr, port=p.executor.sshclient.port,
-                                      cat=self.client._url, description="deployment in OpenvCloud")
+                                      cat="openvcloud", description="deployment in openvcloud")
 
         return m
 
