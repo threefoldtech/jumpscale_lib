@@ -50,7 +50,7 @@ The above uses a `config.yaml` structured as follows:
   secret: gXpM4fPfHiXT3UblaJwmAhjd72kB`
 ```
 
-Alternatively you can create the JWT yourself as documented in [How to get a JWT for authenticating against AYS](how_to_get_a_JWT_for_AYS.md) and then use the following code to pass the JWT:
+Alternatively you can create the JWT yourself as documented in [How to get a JWT for authenticating against AYS](JWT_for_AYS.md) and then use the following code to pass the JWT:
 ```python
 url = "http://192.168.196.5:5000"
 jwt = "<copy the JWT value here>"

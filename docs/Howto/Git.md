@@ -1,4 +1,45 @@
-# How to Use Git Automated
+# How to use Git
+
+- [Manually](#manually)
+- [Automated](#automated)
+
+<a id="manually"></a>
+## How to Use Git Manually
+
+### Generate keys
+
+- Generate your own SSH keys
+
+  - Look at <https://help.github.com/articles/generating-ssh-keys/> for a good explanation
+
+- Best to use a passphrase!!! You will only have to use the passphrase when you load it in your ssh-add
+
+### Load ssh-agent
+
+```bsh
+js 'j.clients.ssh.SSHKeysLoad()'
+```
+
+### Set your Git private details
+
+```bash
+git config --global user.email "your_email@example.com"
+git config --global user.name "Billy Everyteen"
+```
+
+### How to manually checkout a Git repository
+
+```bash
+mkdir -p ~/code/github/jumpscale
+cd ~/code/github/jumpscale
+git clone git@github.com:Jumpscale/jumpscale_core9.git
+```
+
+The nice thing is you will not have to use login/password when doing code management as long as you have your keys filled in.
+DO NOT checkout code using http, always use SSH.
+
+<a id="automated"></a>
+## How to Use Git Automated
 
 We have a handy tool `jscode` to make working with source code easier.
 
@@ -33,7 +74,7 @@ optional arguments:
   -o, --onlychanges     will only do an action where modified files are found
 ```
 
-## jscode init
+### jscode init
 
 ```bash
 jscode init
@@ -46,12 +87,12 @@ jscode init
 
 > If you entered a passphrase for your key, you will get asked for it when you do a relogin
 
-## jscode status and jscode list
+### jscode status and jscode list
 
 - `jscode status` shows all the code repos status (if it has local modifications)
 - `jscode list` shows the remote `URLs`
 
-## jscode commit
+### jscode commit
 
 Commits changes in a repo (or all repos).
 
@@ -67,7 +108,7 @@ If any of the arguments are not supplied by the user, they will be interactively
 - r: repo name
 - m: message
 
-## jscode update
+### jscode update
 
 Pulls all new remote changes to local clone.
 
@@ -75,15 +116,15 @@ Pulls all new remote changes to local clone.
 jscode update
 ```
 
-## jscode push
+### jscode push
 
-Pushes all local commitsto remote.
+Pushes all local commits to remote.
 
 ```shell
 jscode push -m "message"
 ```
 
-## status
+### status
 
 ```shell
 jscode status
@@ -100,3 +141,4 @@ title = "How To Use Git Automated"
 date = "2017-04-08"
 tags = ["howto"]
 ```
+

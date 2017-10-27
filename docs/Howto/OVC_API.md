@@ -1,6 +1,6 @@
 # How to use the OpenvCloud Cloud API
 
-It is highly recommended to interact with OpenvCloud through the OpenvCloud client, as documented in [Using the OpenvCloud Client](/docs/how_to_use_OVC_client.md).
+It is highly recommended to interact with OpenvCloud through the OpenvCloud client, as documented in [Using the OpenvCloud Client](/docs/OVC_client.md).
 
 Underneath the OpenvCloud client uses the OpenvCloud Cloud API, which is documented here.
 
@@ -10,7 +10,7 @@ Underneath the OpenvCloud client uses the OpenvCloud Cloud API, which is documen
 <a id="python"></a>
 ## Using Python
 
-In order to interact with the OpenvCloud Cloud API you will need to authenticate, for which you need a JSON Web token (JWT). See [How to get a JWT for authenticating against OpenvCloud](how_to_get_a_JWT_for_OVC.md) for instructions on how to get this JWT.
+In order to interact with the OpenvCloud Cloud API you will need to authenticate, for which you need a JSON Web token (JWT). See [How to get a JWT for authenticating against OpenvCloud](JWT_for_OVC.md) for instructions on how to get this JWT.
 
 This JWT then needs to be added to your headers as follows:
 ```python

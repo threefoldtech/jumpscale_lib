@@ -1,4 +1,4 @@
-# How to use geodns
+# How to use GeoDNS
 
 ## install geodns
 ```python
