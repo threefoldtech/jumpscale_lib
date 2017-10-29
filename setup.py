@@ -9,7 +9,6 @@ import os
 
 def _post_install(libname, libpath):
     from js9 import j
-
     # add this plugin to the config
     c = j.core.state.configGet('plugins', defval={})
     c[libname] = "%s/github/jumpscale/lib9/JumpScale9Lib" % j.dirs.CODEDIR
@@ -101,7 +100,11 @@ setup(
         'zerotier>=1.1.2',
         'packet-python>=1.33',
         'blosc>=1.5.1',
-        'dnspython'
+        'dnspython',
+        'pynacl>=1.1.2',
+    ],
+    dependency_links=[
+        "git+https://github.com/pyca/pynacl"
     ],
     cmdclass={
         'install': install,

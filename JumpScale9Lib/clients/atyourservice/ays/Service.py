@@ -41,18 +41,18 @@ class Services:
                 return _extract_error(e)
             services.append(Service(self._repository, ays_service.json()))
 
-        services = list()          
-        
-        if self._relationship == None:
+        services = list()
+
+        if self._relationship is None:
             try:
                 resp = self._ayscl.listServices(self._repository.model.get('name'))
             except Exception as e:
                 return _extract_error(e)
             ays_services = resp.json()
-    
+
             for service in sorted(ays_services, key=lambda service: '{role}!{name}'.format(**service)):
                 AppendIfMatch(services, service, role, name)
-                 
+
         else:
             if self._relationship == 'children':
                 if self._relatedService and self._relatedService.model['children']:
@@ -65,8 +65,8 @@ class Services:
             if self._relationship == 'producers':
                 if self._relatedService and self._relatedService.model['producers']:
                     for producer in self._relatedService.model['producers']:
-                        AppendIfMatch(services, producer, role, name)  
-        
+                        AppendIfMatch(services, producer, role, name)
+
         return services
 
     def get(self, role, name):

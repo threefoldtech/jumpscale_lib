@@ -28,7 +28,7 @@ class KubernetesCluster():
         @return prefab connection !
 
         """
-        if keyname == None:
+        if keyname is None:
             keyname = j.core.state.configMe["ssh"]["sshkeyname"]
 
     def deploy...():

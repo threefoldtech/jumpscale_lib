@@ -11,7 +11,7 @@ class ZerotierClientInteral:
         self.apibase = "https://my.zerotier.com/api"
 
     def request(self, path, data=None):
-        if data == None:
+        if data is None:
             return requests.get(self.apibase + path, headers={'Authorization': 'Bearer ' + self.apikey})
 
         else:

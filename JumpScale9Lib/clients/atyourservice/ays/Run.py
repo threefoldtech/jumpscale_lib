@@ -78,7 +78,7 @@ class Runs:
         Returns: run with given key, or last run if no key specified
         """
         for run in self.list():
-            if key == None:
+            if key is None:
                 return run
             if run.model['key'] == key:
                 return run

@@ -73,7 +73,7 @@ class Blueprints:
         Returns: nothing
         """
 
-        if name == None:
+        if name is None:
             try:
                 resp = self._ayscl.listBlueprints(self._repository.model["name"], query_params={'archived': False})
             except Exception as e:
