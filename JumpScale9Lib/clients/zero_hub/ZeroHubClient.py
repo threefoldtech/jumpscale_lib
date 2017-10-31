@@ -1,6 +1,5 @@
-
 from js9 import j
-
+import zerohub as ZHubClient
 
 class ZeroHubClient:
     """
@@ -8,11 +7,35 @@ class ZeroHubClient:
     make userfriendly how to use
 
     show how to use IYO authentication
-
     """
 
-    def __init__(self, ...):
-        ...
+    def __init__(self):
+        self.client = ZHubClient("https://staging.hub.gig.tech/api")
+        self.api = self.client.api
+
+    def repositories(self):
+        return self.api.repositories.repositories_get().json()
+
+    def list(self, username=None):
+        if not username:
+            return self.api.flist.flist_get().json()
+
+        return self.api.flist.flist_byUsername_get(username).json()
+
+    def get(self, username, flist):
+        return self.api.flist.flist_byUsernameflist_get(username, flist).json()
+
+    def upload(self, filename):
+        return self.api.flist.flist_meupload_post({'file': open(filename, 'rb')}, content_type='multipart/form-data')
+
+    def rename(self, source, destination):
+        return self.api.flist.flist_meflistrenametarget_get(source, destination).json()
+
+    def symlink(self, source, linkname):
+        return self.api.flist.flist_meflistlinklinkname_get(source, linkname).json()
+
+    def delete(self, filename):
+        return self.api.flist.flist_meflist_delete(filename).json()
 
     def sandbox_upload(self, path):
         """
@@ -22,3 +45,4 @@ class ZeroHubClient:
         all what people need to do this action should be called from this method
 
         """
+        pass

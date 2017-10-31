@@ -8,10 +8,14 @@ class ZeroStorFactory:
         self.__jslocation__ = "j.clients.zerohub"
         self.logger = j.logger.get("j.clients.zerohub")
 
-    def getClient(self, ...):
+    def getClient(self, token=None):
         """
         # Getting client via accesstoken
 
-
         """
-        return ZeroHubClient...)
+        cl = ZeroHubClient()
+
+        if token:
+            cl.api.set_token(token)
+
+        return cl
