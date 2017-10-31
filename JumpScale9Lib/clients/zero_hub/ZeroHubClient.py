@@ -1,5 +1,5 @@
+from zeroos.zerohub import Client as ZHubClient
 from js9 import j
-import zerohub as ZHubClient
 
 class ZeroHubClient:
     """
