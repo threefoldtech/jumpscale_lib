@@ -157,8 +157,8 @@ class Container:
         if sshpubkey != "" and sshpubkey is not None:
             key = sshpubkey
         else:
-            if not j.clients.ssh.SSHAgentAvailable():
-                j.clients.ssh.loadSSHAgent()
+            if not j.clients.ssh.ssh_agent_available():
+                j.clients.ssh.start_ssh_agent()
 
             if keyname != "" and keyname is not None:
                 key = j.clients.ssh.SSHKeyGetFromAgentPub(keyname)

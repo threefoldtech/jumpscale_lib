@@ -21,7 +21,6 @@ class NACLClient:
     def _get_key_path(self, name, path=None):
         """
         Get key path derived from name and path provided
-            :param self:
             :param name: name of the file
             :param path: path of dir of the key file, if None it'll fall back to ~/.ssh
             @return: key path
