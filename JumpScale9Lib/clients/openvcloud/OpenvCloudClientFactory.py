@@ -35,7 +35,7 @@ class OpenvCloudClientFactory:
         url = url.lower()
         if url.startswith("http"):
             url = url.split("//")[1].rstrip("/")
-        print("Get OpenvCloud client on URL:%s" % url)
+        print("Get OpenvCloud client on URL: %s" % url)
         return url
 
     def get(self, applicationId, secret, url):
@@ -624,7 +624,7 @@ class Space(Authorizables):
 
     def _authorizeSSH(self, machine, sshkeyname):
         print("authorize ssh")
-        machineip, machinedict = machine.get_machine_ip()
+        machineip, machinedict = machine.machineip_get()
         publicip = machine.space.model['publicipaddress']
         while not publicip:
             print(
@@ -864,7 +864,7 @@ class Machine:
             raise j.exceptions.RuntimeError(
                 "Protocol for portforward should be tcp or udp not %s" % protocol)
 
-        machineip, _ = self.get_machine_ip()
+        machineip, _ = self.machineip_get()
 
         publicAddress = self.space.model['publicipaddress']
         if not publicAddress:
@@ -951,7 +951,7 @@ class Machine:
 
         """
         if self._prefab is None:
-            machineip, machine = self.get_machine_ip()
+            machineip, machine = self.machineip_get()
             publicip = self.space.model['publicipaddress']
             while not publicip:
                 time.sleep(5)
