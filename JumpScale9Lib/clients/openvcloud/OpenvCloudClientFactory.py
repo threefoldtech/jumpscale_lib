@@ -635,7 +635,7 @@ class Space(Authorizables):
 
         sshport = None
         usedports = set()
-        for portforward in machine.space.portforwardings:
+        for portforward in machine.space.portforwards:
             if portforward['localIp'] == machineip and int(portforward['localPort']) == 22:
                 sshport = int(portforward['publicPort'])
                 break
@@ -661,7 +661,7 @@ class Space(Authorizables):
         return self.client.api.cloudapi.portforwarding.list(cloudspaceId=self.id)
 
     def portforward_exists(self, publicIp, publicport, protocol):
-        for pf in self.portforwardings:
+        for pf in self.portforwards:
             if pf['publicIp'] == publicIp and int(pf['publicPort']) == int(publicport) and pf['protocol'] == protocol:
                 return True
         return False
@@ -876,7 +876,7 @@ class Machine:
 
         if publicport is None:
             unavailable_ports = [int(portinfo['publicPort'])
-                                 for portinfo in self.space.portforwardings]
+                                 for portinfo in self.space.portforwards]
             candidate = 2200
 
             while candidate in unavailable_ports:
@@ -960,7 +960,7 @@ class Machine:
 
             sshport = None
             usedports = set()
-            for portforward in self.space.portforwardings:
+            for portforward in self.space.portforwards:
                 if portforward['localIp'] == machineip and int(portforward['localPort']) == 22:
                     sshport = int(portforward['publicPort'])
                     break
