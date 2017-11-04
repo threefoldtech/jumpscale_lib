@@ -35,7 +35,7 @@ class OpenvCloudClientFactory:
         url = url.lower()
         if url.startswith("http"):
             url = url.split("//")[1].rstrip("/")
-        print("get OpenvCloud client on url:%s" % url)
+        print("Get OpenvCloud client on URL:%s" % url)
         return url
 
     def get(self, applicationId, secret, url):
@@ -85,22 +85,6 @@ class OpenvCloudClientFactory:
             password=service.model.data.password,
             jwt=service.model.data.jwt,
             port=service.model.data.port)
-
-    def get(self, applicationId, secret, url):
-        """
-        this is the default way how to do this, create a secret/app key on ityou.online
-
-        instructions see:
-
-        url e.g. https://se-gen-1.demo.greenitglobe.com/  (is the base url of the environment)
-        """
-        url = self._urlClean(url)
-        jwt = self.getJWTTokenFromItsYouOnline(applicationId, secret)
-        login = None
-        password = None
-        port = 443
-        cl = Client(url, login, password, secret, port, jwt)
-        return cl
 
     def getJWTTokenFromItsYouOnline(self, applicationId, secret, validity=3600):
         """
