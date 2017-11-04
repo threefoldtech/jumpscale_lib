@@ -645,7 +645,7 @@ class Space(Authorizables):
             requested_sshport = 2200
             while requested_sshport in usedports:
                 requested_sshport += 1
-            machine.create_portforwarding(requested_sshport, 22)
+            machine.portforward_create(requested_sshport, 22)
 
             sshport = requested_sshport
 
@@ -859,7 +859,7 @@ class Machine:
     def portforwards(self):
         return self.client.api.cloudapi.portforwarding.list(cloudspaceId=self.space.id, machineId=self.id)
 
-    def portforward(self, publicport, localport, protocol='tcp'):
+    def portforward_create(self, publicport, localport, protocol='tcp'):
         if protocol not in ['tcp', 'udp']:
             raise j.exceptions.RuntimeError(
                 "Protocol for portforward should be tcp or udp not %s" % protocol)
@@ -899,9 +899,9 @@ class Machine:
             # - if it's an auto-generated port, we probably hit a concurrence issue
             #   let's try again with a new port
             if str(e).startswith("409 Conflict") and publicport is None:
-                return self.create_portforwarding(None, localport, protocol)
+                return self.portforward_create(None, localport, protocol)
 
-            # - if the port was choose excplicitly, then it's not the lib's fault
+            # - if the port was choose explicitly, then it's not the lib's fault
             raise j.exceptions.RuntimeError(
                 "Port forward already exists. Please specify another port forwarding")
 
