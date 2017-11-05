@@ -59,7 +59,7 @@ class Capnp:
         return ModelBaseCollection
 
     def getModelCollection(self, schema, category, namespace=None, modelBaseClass=None,
-                           modelBaseCollectionClass=None, db=None, indexDb=None):
+                           modelBaseCollectionClass=None, db=None):
         """
         @param schema is capnp_schema
 
@@ -80,7 +80,7 @@ class Capnp:
 
             mydb=j.data.kvs.getMemoryStore(name="mymemdb")
 
-            collection=j.data.capnp.getModelCollection(schema=ModelCapnp,category="issue",modelBaseClass=MyModelBase,db=mydb,indexDb=mydb)
+            collection=j.data.capnp.getModelCollection(schema=ModelCapnp,category="issue",modelBaseClass=MyModelBase,db=mydb)
 
             ```
         """
@@ -120,11 +120,12 @@ class Capnp:
     def getSchemaFromText(self, schemaInText, name="Schema"):
         if not schemaInText.strip():
             schemaInText = """
-@%s;
-struct Schema {
+            @%s;
+            struct Schema {
 
-}
-""" % j.data.idgenerator.generateCapnpID()
+            }
+            """ % j.data.idgenerator.generateCapnpID()
+            
         schemas = self._getSchemas(schemaInText)
         schema = eval("schemas.%s" % name)
         return schema
@@ -152,6 +153,12 @@ struct Schema {
         return args
 
     def getObj(self, schemaInText, name="Schema", args={}, binaryData=None):
+        """
+        @PARAM schemaInText is capnp schema
+        @PARAM name is the name of the obj in the schema e.g. Issue
+        @PARAM args are the starting date for the obj, normally a dict
+        @PARAM binaryData is this is given then its the binary data to create the obj from, cannot be sed together with args (its one or the other)
+        """
 
         # . are removed from . to Uppercase
         args = args.copy()  # to not change the args passed in argument
@@ -216,6 +223,7 @@ struct Schema {
         # dummy test, not used later
         obj = self.getObj(capnpschema, name="Issue")
         obj.state = "ok"
+        
 
         # now we just get the capnp schema for this object
         schema = self.getSchemaFromText(capnpschema, name="Issue")
@@ -223,7 +231,7 @@ struct Schema {
         # mydb = j.data.kvs.getRedisStore(name="mymemdb")
         mydb = None  # is memory
 
-        collection = self.getModelCollection(schema, category="test", modelBaseClass=None, db=mydb, indexDb=mydb)
+        collection = self.getModelCollection(schema, category="test", modelBaseClass=None, db=mydb)
         start = time.time()
         print("start populate 100.000 records")
         collection.logger.disabled = True
