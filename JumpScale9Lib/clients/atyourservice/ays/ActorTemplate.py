@@ -7,7 +7,7 @@ def _extract_error(resp):
             return content.get('error', resp.response.text)
         return resp.response.text
     raise resp
-    
+
 class ActorTemplates:
     def __init__(self, repository=None, client=None):
         self._repository = repository
@@ -54,10 +54,10 @@ class ActorTemplates:
             try:
                 ays_template = self._ayscl.getTemplate(template['name'], self._repository.model['name'])
             except Exception as e:
-                return _extract_error(e) 
+                return _extract_error(e)
             templates.append(ActorTemplate(ays_template.json()))
         return templates
-    
+
     def _listGlobalTemplates(self, role=None, name=None):
         """
         Returns a list of all (global) AYS templates.
@@ -66,7 +66,7 @@ class ActorTemplates:
             resp = self._ayscl.listAYSTemplates()
         except Exception as e:
             return _extract_error(e)
-        
+
         ays_templates = resp.json()
         templates = list()
 
@@ -85,17 +85,17 @@ class ActorTemplates:
     def addTemplates(self, repo_url, branch):
         """
         Adds AYS global templates from a give Git repository. Not available yet for adding local templates.
-        
+
         Args:
             repo_url: URL of the Git repository with the templates to import, e.g. "https://github.com/openvcloud/ays_templates"
             branch: branch name in the Git repository, e.g. "master"
-        
+
         Returns: HTTP response object.
-        
+
         Raises: HTTPError error message.
         """
 
-        if self._repository == None:
+        if self._repository is None:
             data = {'url': repo_url,'branch': branch}
             try:
                 resp = self._ayscl.addTemplateRepo(data)

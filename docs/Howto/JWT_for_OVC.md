@@ -2,9 +2,9 @@
 
 In order to authenticate against OpenvCloud you need a JSON Web token (JWT).
 
-When interacting with OpenvCloud through the OpenvCloud client, this JWT gets created for you when instantiating an OpenvCloud client object, as documented in [Using the OpenvCloud Client](how_to_use_OVC_client.md). So in that case there is no need to create the JWT yourself.
+When interacting with OpenvCloud through the OpenvCloud client, this JWT gets created for you when instantiating an OpenvCloud client object, as documented in [Using the OpenvCloud Client](OVC_client.md). So in that case there is no need to create the JWT yourself.
 
-In other cases, for instance for creating OpenvCloud blueprints that you want to send to an AYS server, or when directly interacting with the OpenvCloud Cloud API as documented in [How to use the OpenvCloud Cloud API](how_to_use_OVC_API.md), you will need to created the JWT yourself.
+In other cases, for instance for creating OpenvCloud blueprints that you want to send to an AYS server, or when directly interacting with the OpenvCloud Cloud API as documented in [How to use the OpenvCloud Cloud API](OVC_API.md), you will need to create the JWT yourself.
 
 To create a JWT you always need an application ID and secret. You get this application ID and secret by creating an API key on the settings page of your [ItsYou.online](https://itsyou.online) user profile:
 
@@ -40,7 +40,7 @@ export APP_ID="..."
 export SECRET="..."
 ``` 
 
-Then from Python
+Then from Python:
 ```python
 import os
 import requests

@@ -35,7 +35,7 @@ class OpenvCloudClientFactory:
         url = url.lower()
         if url.startswith("http"):
             url = url.split("//")[1].rstrip("/")
-        print("get OpenvCloud client on url:%s" % url)
+        print("Get OpenvCloud client on URL: %s" % url)
         return url
 
     def get(self, applicationId, secret, url):
@@ -47,7 +47,7 @@ class OpenvCloudClientFactory:
         Args:
             - applicationId: application ID of the API key as set in ItsYou.online for your user profile
             - secret: secret part of the API key as set in ItsYou.online for your user profile
-            - url: base url of the OpenvCloud environment, e.g. https://se-gen-1.demo.greenitglobe.com/     
+            - url: base url of the OpenvCloud environment, e.g. https://se-gen-1.demo.greenitglobe.com/
         """
         url = self._urlClean(url)
         jwt = self.getJWTTokenFromItsYouOnline(applicationId, secret)
@@ -60,7 +60,7 @@ class OpenvCloudClientFactory:
     def getLegacy(self, url, login=None, password=None):
         """
         Returns an OpenvCloud Client object for a given username and password.
-                
+
         Only use this for legacy purposes or in private deployments where ItsYou.online is not used.
 
         It is highly recommended to use the get() method instead, passing an application ID and secret from ItsYou.online.
@@ -95,7 +95,7 @@ class OpenvCloudClientFactory:
         Args:
             - applicationId: application ID of the API key as set in ItsYou.online for your user profile
             - secret: secret part of the API key as set in ItsYou.online for your user profile
-            - validity: (defaults to 3600) duration in seconds that the requested JWT should stay valid 
+            - validity: (defaults to 3600) duration in seconds that the requested JWT should stay valid
         """
 
         params = {
@@ -192,7 +192,7 @@ class Client:
                     maxMemoryCapacity=-1, maxVDiskCapacity=-1, maxCPUCapacity=-1, maxNASCapacity=-1,
                     maxNetworkOptTransfer=-1, maxNetworkPeerTransfer=-1, maxNumPublicIP=-1):
         """
-        Returns the OpenvCloud account with the given name, and in case it doesn't exist yet the account will be created. 
+        Returns the OpenvCloud account with the given name, and in case it doesn't exist yet the account will be created.
 
         Args:
             - name (required): name of the account to lookup or create if it doesn't exist yet, e.g. "myaccount"
@@ -204,7 +204,7 @@ class Client:
             - maxNetworkOptTransfer (defaults to -1: unlimited): not implemented
             - maxNetworkPeerTransfer (defaults to -1: unlimited): not implemented
             - maxNumPublicIP (defaults to -1: unlimited): number of external IP addresses that can be used in the account
-            
+
         Raises: KeyError if account doesn't exist, and create argument was set to False
         """
         for account in self.accounts:
@@ -311,11 +311,11 @@ class Account(Authorizables):
                   maxNetworkOptTransfer=-1, maxNetworkPeerTransfer=-1, maxNumPublicIP=-1,
                   externalnetworkId=None):
         """
-        Returns the cloud space with the given name, and in case it doesn't exist yet the account will be created. 
+        Returns the cloud space with the given name, and in case it doesn't exist yet the account will be created.
 
         Args:
             - name (required): name of the cloud space to lookup or create if it doesn't exist yet, e.g. "myvdc"
-            - location (only required when cloud space needs to be created): location when the cloud space needs to be created 
+            - location (only required when cloud space needs to be created): location when the cloud space needs to be created
             - create (defaults to True): if set to True the account is created in case it doesn't exist yet
             - maxMemoryCapacity (defaults to -1: unlimited): available memory in GB for all virtual machines in the cloud space
             - maxVDiskCapacity (defaults to -1: unlimited): available disk capacity in GiB for all virtual disks in the cloud space
@@ -324,7 +324,7 @@ class Account(Authorizables):
             - maxNetworkOptTransfer (defaults to -1: unlimited): not implemented
             - maxNetworkPeerTransfer (defaults to -1: unlimited): not implemented
             - maxNumPublicIP (defaults to -1: unlimited): number of external IP addresses that can be used in the cloud space
-            
+
         Raises:
             - RuntimeError is no location was specified
             - RuntimeError if cloud space doesn't exist, and create argument was set to False
@@ -520,18 +520,18 @@ class Space(Authorizables):
             sizeId=None,
             stackId=None):
         """
-        Returns the virtual machine with given name, and in case it doesn't exist yet creates the machine if the create argument is set to True. 
+        Returns the virtual machine with given name, and in case it doesn't exist yet creates the machine if the create argument is set to True.
 
         Args:
             - name: (required) name of the virtual machine to lookup or create if it doesn't exist yet, e.g. "My first VM"
             - create (defaults to False): if set to true the machine is created in case it doesn't exist yet
             - sshkeyname (only required for creating new machine): name of the private key loaded by ssh-agent that will get copied into authorized_keys
             - memsize (defaults to 2): memory size in MB or in GB, e.g. 4096
-            - vcpus (defaults to 1): number of virtual CPU cores; value is ignored in versions prior to 3.x, use sizeId in order to set the number of virtual CPU cores 
+            - vcpus (defaults to 1): number of virtual CPU cores; value is ignored in versions prior to 3.x, use sizeId in order to set the number of virtual CPU cores
             - disksize (default to 10): boot disk size in MB
             - datadisks (optional): list of data disks sizes in GB, e.g. [20, 20, 50]
             - image (defaults to "Ubuntu 16.04 x6"): name of the OS image to load
-            - sizeId (optional): overrides the value set for memsize, denotes the type or "size" of the virtual machine, actually sets the number of virtual CPU cores and amount of memory, see the sizes property of the cloud space for the sizes available in the cloud space 
+            - sizeId (optional): overrides the value set for memsize, denotes the type or "size" of the virtual machine, actually sets the number of virtual CPU cores and amount of memory, see the sizes property of the cloud space for the sizes available in the cloud space
             - stackId (optional): identifies the grid node on which to create the virtual machine, if nothing specified (recommended) OpenvCloud will decide where to create the virtual machine
 
         Raises: RuntimeError if machine doesn't exist, and create argument was set to False (default)
@@ -579,13 +579,13 @@ class Space(Authorizables):
             - name (required): name of the virtual machine, e.g. "My first VM"
             - sshkeyname (required): name of the private key loaded by ssh-agent that will get copied into authorized_keys
             - memsize (defaults to 2): memory size in MB or in GB, e.g. 4096
-            - vcpus (defaults to 1): number of virtual CPU cores; value is ignored in versions prior to 3.x, use sizeId in order to set the number of virtual CPU cores 
+            - vcpus (defaults to 1): number of virtual CPU cores; value is ignored in versions prior to 3.x, use sizeId in order to set the number of virtual CPU cores
             - disksize (default to 10): boot disk size in MB
             - datadisks (optional): list of data disks sizes in GB, e.g. [20, 20, 50]
             - image (defaults to "Ubuntu 16.04 x6"): name of the OS image to load
-            - sizeId (optional): overrides the value set for memsize, denotes the type or "size" of the virtual machine, actually sets the number of virtual CPU cores and amount of memory, see the sizes property of the cloud space for the sizes available in the cloud space 
+            - sizeId (optional): overrides the value set for memsize, denotes the type or "size" of the virtual machine, actually sets the number of virtual CPU cores and amount of memory, see the sizes property of the cloud space for the sizes available in the cloud space
             - stackId (optional): identifies the grid node on which to create the virtual machine, if nothing specified (recommended) OpenvCloud will decide where to create the virtual machine
-        
+
         Raises: RuntimeError if machine with given name already exists.
         """
         imageId = self.image_find_id(image)
@@ -624,7 +624,7 @@ class Space(Authorizables):
 
     def _authorizeSSH(self, machine, sshkeyname):
         print("authorize ssh")
-        machineip, machinedict = machine.get_machine_ip()
+        machineip, machinedict = machine.machineip_get()
         publicip = machine.space.model['publicipaddress']
         while not publicip:
             print(
@@ -635,7 +635,7 @@ class Space(Authorizables):
 
         sshport = None
         usedports = set()
-        for portforward in machine.space.portforwardings:
+        for portforward in machine.space.portforwards:
             if portforward['localIp'] == machineip and int(portforward['localPort']) == 22:
                 sshport = int(portforward['publicPort'])
                 break
@@ -645,7 +645,7 @@ class Space(Authorizables):
             requested_sshport = 2200
             while requested_sshport in usedports:
                 requested_sshport += 1
-            machine.create_portforwarding(requested_sshport, 22)
+            machine.portforward_create(requested_sshport, 22)
 
             sshport = requested_sshport
 
@@ -661,7 +661,7 @@ class Space(Authorizables):
         return self.client.api.cloudapi.portforwarding.list(cloudspaceId=self.id)
 
     def portforward_exists(self, publicIp, publicport, protocol):
-        for pf in self.portforwardings:
+        for pf in self.portforwards:
             if pf['publicIp'] == publicIp and int(pf['publicPort']) == int(publicport) and pf['protocol'] == protocol:
                 return True
         return False
@@ -859,12 +859,12 @@ class Machine:
     def portforwards(self):
         return self.client.api.cloudapi.portforwarding.list(cloudspaceId=self.space.id, machineId=self.id)
 
-    def portforward(self, publicport, localport, protocol='tcp'):
+    def portforward_create(self, publicport, localport, protocol='tcp'):
         if protocol not in ['tcp', 'udp']:
             raise j.exceptions.RuntimeError(
                 "Protocol for portforward should be tcp or udp not %s" % protocol)
 
-        machineip, _ = self.get_machine_ip()
+        machineip, _ = self.machineip_get()
 
         publicAddress = self.space.model['publicipaddress']
         if not publicAddress:
@@ -876,7 +876,7 @@ class Machine:
 
         if publicport is None:
             unavailable_ports = [int(portinfo['publicPort'])
-                                 for portinfo in self.space.portforwardings]
+                                 for portinfo in self.space.portforwards]
             candidate = 2200
 
             while candidate in unavailable_ports:
@@ -899,9 +899,9 @@ class Machine:
             # - if it's an auto-generated port, we probably hit a concurrence issue
             #   let's try again with a new port
             if str(e).startswith("409 Conflict") and publicport is None:
-                return self.create_portforwarding(None, localport, protocol)
+                return self.portforward_create(None, localport, protocol)
 
-            # - if the port was choose excplicitly, then it's not the lib's fault
+            # - if the port was choose explicitly, then it's not the lib's fault
             raise j.exceptions.RuntimeError(
                 "Port forward already exists. Please specify another port forwarding")
 
@@ -951,7 +951,7 @@ class Machine:
 
         """
         if self._prefab is None:
-            machineip, machine = self.get_machine_ip()
+            machineip, machine = self.machineip_get()
             publicip = self.space.model['publicipaddress']
             while not publicip:
                 time.sleep(5)
@@ -960,13 +960,13 @@ class Machine:
 
             sshport = None
             usedports = set()
-            for portforward in self.space.portforwardings:
+            for portforward in self.space.portforwards:
                 if portforward['localIp'] == machineip and int(portforward['localPort']) == 22:
                     sshport = int(portforward['publicPort'])
                     break
                 usedports.add(int(portforward['publicPort']))
 
-            if sshport == None:
+            if sshport is None:
                 raise RuntimeError(
                     "Cannot find sshport at public side to access this machine")
 

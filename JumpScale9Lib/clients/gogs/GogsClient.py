@@ -727,7 +727,7 @@ class GogsClient:
             raise NotFoundException("User or repo does not exist")
 
     # def labelsSet(self, reponame=None, owner=None):
-    #     """If owner or reponame == None then will walk over all."""
+    #     """If owner or reponame is None then will walk over all."""
 
     def ownerDeleteLabels(self, owner):
         """delete all labels from the owner"""
@@ -779,7 +779,7 @@ class GogsClient:
             self.build_url("repos", owner, reponame, 'milestones'))
         if response_milestones.status_code == 200:
             return response_milestones.json()
-    
+
     def milestoneCreate(self, reponame, milestone, owner=None):
         if not owner:
             owner = self.login
@@ -810,8 +810,8 @@ class GogsClient:
         milestones = [m for m in self.milestonesList(reponame, owner) if m['title'] == milestone]
         if not milestones:
             return {}
-        
-        for milestone in milestones: 
+
+        for milestone in milestones:
             url = self.build_url("repos", owner, reponame, "milestones", str(milestone['id']))
             response = self.session.delete(url)
         return response.status_code == 204

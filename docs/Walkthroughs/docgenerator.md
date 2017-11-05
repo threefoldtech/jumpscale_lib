@@ -1,22 +1,18 @@
 
-# docgenerator
+# Docgenerator
 
-process all markdown files in a git repo, write a summary.md file
-optionally call pdf gitbook generator to produce pdf(s)
+Docgenerator processes all markdown files in a Git repository, creates a summary.md file, and optionally uses the PDF generator for GitBook to produce a PDF.
 
-
-# process
-
-## arguments are
+## Arguments
 
 - outdirectory
 - url of site where docs will be
 
-## preprocess
+## Preprocess
 
-- docgenerator walks over all directories below a dir
-- docgenerator remembers when a .git repo & get's the url path
-- docgenerator identifies following types of dirs
+- Docgenerator walks over all directories below a dir
+- Docgenerator remembers when a .git repository and gets the URL path
+- Docgenerator identifies following types of dirs
     - macros
         - each dir called macros is considered to be a macros dir
     - documentation
@@ -24,24 +20,24 @@ optionally call pdf gitbook generator to produce pdf(s)
         - files in here can be definitions, documents, blogs, ...
         - config.yaml defines how to deal with the info in such a directory
     - the directories are remembered together with their git counterparts
-- now all macro's are loaded
-- now all filenames are remembered (this is to let the include work)
+- Now all macro's are loaded
+- Now all filenames are remembered (this is to let the include work)
 
-## process per doc directory (as found in previous step)
+## Process per doc directory (as found in previous step)
 
-- walk over files in directory (recursive)
-- when config.yaml overload previous one
-- copy files to outdirectory
+- Walk over files in directory (recursive)
+- When config.yaml overload previous one
+- Copy files to outdirectory
     - $outdir/$sitename/src
-- walk over the files and for each file
+- Walk over the files and for each file
     - make sure config.yaml as well as meta data info in file is loaded (is a big dict)
     - use mustache template engine to replace the arguments
     - execute the macro's & mustache again (recursive until no more macro's to be processed)
-- per site do the production step
+- Per site do the production step
     - lookup template used, copy inside $outdir/$sitename
     - use hugo or ... to generate the site
 
-# metadata
+## Metadata
 
 ## config.yaml
 

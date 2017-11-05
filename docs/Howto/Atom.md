@@ -1,3 +1,11 @@
+# Using Atom
+
+- [Create an Atom Plugin](#plugin)
+- [Autocompleting JumpScale in Atom Editor](#autocompletion)
+
+<a id="plugin"></a>
+## Create an Atom Plugin
+
 ![screenshot from 2016-08-14 16-55-52](https://cloud.githubusercontent.com/assets/64129/17649980/b095dbe0-6249-11e6-95ff-d6a6d8eddb17.png)
 
 1- Generate package `Packages -> Package generator` -> will set package name to execjs
@@ -95,9 +103,12 @@ module.exports = Execjs =
 
 ```
 
+<a id="autocompletion"></a>
+## Autocompleting JumpScale in Atom Editor (or any editor)
+
+You can use:
+```python
+j.tools.atom.generateJumpscaleAutoCompletion()
 ```
-!!!
-title = "How To Create Plugin Atom"
-date = "2017-04-08"
-tags = ["howto"]
-```
+
+It will generate a full stub of JumpScale framework that can be used by jedi (the most common code completion library).

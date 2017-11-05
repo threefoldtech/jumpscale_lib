@@ -55,7 +55,7 @@ List all OS images using the OpenvCloud API:
 client.api.cloudapi.images.list()
 ```
 
-For more details about using the OpenvCloud API see[How to use the OpenvCloud Cloud API](how_to_use_OVC_API.md).
+For more details about using the OpenvCloud API see[How to use the OpenvCloud Cloud API](OVC_API.md).
 
 <a id="accounts"></a>
 ## Accounts
