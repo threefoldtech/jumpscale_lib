@@ -28,7 +28,7 @@ Alternatively you can also create a JWT by interacting directly with the ItsYou.
 export APP_ID="..."
 export SECRET="..."
 export JWT=$(curl -d 'grant_type=client_credentials&client_id='"$APP_ID"'&client_secret='"$SECRET"'&response_type=id_token' https://itsyou.online/v1/oauth/access_token)
-echo $JWT2
+echo $JWT
 ```
 
 <a id="python"></a>
