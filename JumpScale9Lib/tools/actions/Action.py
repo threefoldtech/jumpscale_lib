@@ -365,9 +365,9 @@ class Action:
 
         if "$(" in s:
             s = self.hrd.applyOnContent(s)
-            s = j.dirs.replaceTxtDirVars(s)
+            s = j.dirs.replace_txt_dir_vars(s)
         elif "$" in s:
-            s = j.dirs.replaceTxtDirVars(s)
+            s = j.dirs.replace_txt_dir_vars(s)
 
         return s
 
