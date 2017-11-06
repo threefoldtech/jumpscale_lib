@@ -3,10 +3,7 @@ from js9 import j
 
 class ZeroHubClient:
     """
-    Provide an easy way to communicate and do some actions
-    on the ZeroHub
-
-    FIXME: show how to use IYO authentication
+    Provide an easy way to communicate and do some actions on the ZeroHub
     """
 
     def __init__(self):
@@ -15,8 +12,24 @@ class ZeroHubClient:
 
     def authentificate(self, token, username=None):
         """
-        FIXME: Set authentification token
+        This is fastest way to authentifcate yourself.
+
+        By providing a valid token (jwt) to this method, you have nothing more
+        to do. A valid jwt can be extracted from your brower cookies or generated
+        using some itsyou.online endpoint
+
+        Please use j.clients.itsyouonline to generare a token, any valid token with
+        a username set is valid. To allows multi-users (eg: for organization upload),
+        please add a scope `user:memberof:[organization]` to your token.
+
+        If you have scope for another username than your, you can specify
+        which username you want to use via the 'username' argument.
         """
+        self.api.set_token(token)
+
+        if username:
+            self.api.set_user(username)
+
         return True
 
     def repositories(self):
