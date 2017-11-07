@@ -8,12 +8,11 @@ class ZeroHubFactory:
 
     def getClient(self, token=None):
         """
-        # Getting client via accesstoken
-
+        Getting client (with optional accesstoken)
         """
         cl = ZeroHubClient()
 
         if token:
-            cl.api.set_token(token)
+            cl.authentificate(token)
 
         return cl
