@@ -353,14 +353,6 @@ class Account(Authorizables):
                 raise j.exceptions.RuntimeError(
                     "Could not find space with name %s" % name)
 
-    @property
-    def disks(self):
-        """
-        Wrapper to list all disks related to an account
-        : return: dict list of disks details
-        """
-        return self.client.api.cloudapi.disks.list(accountId=self.id)
-
     def disk_create(self, name, gid, description, size=0, type="B", ssd_size=0):
         res = self.client.api.cloudapi.disks.create(accountId=self.id,
                                                     name=name,
