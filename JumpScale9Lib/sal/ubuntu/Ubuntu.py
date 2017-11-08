@@ -172,7 +172,7 @@ stop on runlevel [016]
                 C += "env %s=%s\n" % (key, value)
         C += "exec %s %s\n" % (daemonpath, args)
 
-        C = j.dirs.replaceTxtDirVars(C)
+        C = j.dirs.replace_txt_dir_vars(C)
 
         j.tools.path.get("/etc/init/%s.conf" % servicename).write_text(C)
         if reload:

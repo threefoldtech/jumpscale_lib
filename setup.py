@@ -14,7 +14,7 @@ def _post_install(libname, libpath):
     c[libname] = "%s/github/jumpscale/lib9/JumpScale9Lib" % j.dirs.CODEDIR
     # c[libname] = libpath
     j.core.state.configSet('plugins', c)
-    j.do.execute(
+    j.sal.process.execute(
         "pip3 install 'git+https://github.com/zero-os/0-core#egg=0-core-client&subdirectory=client/py-client'")
     j.tools.jsloader.generate()
 

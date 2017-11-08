@@ -52,7 +52,7 @@ class ZeroOSFactory:
         pip3 install -U "git+https://github.com/zero-os/0-orchestrator.git@${ORCHESTRATOR_BRANCH}#subdirectory=pyclient"
         pip3 install -U zerotier
         """
-        j.do.execute(cmd)
+        j.sal.process.execute(cmd)
 
     def zeroNodeInstall_OVH(self, OVHServerID, OVHClient, zerotierNetworkID, zerotierClient):
         """

@@ -29,7 +29,7 @@ class OpenvCloudClientFactory:
         self.__jslocation__ = "j.clients.openvcloud"
 
     def install(self):
-        j.do.execute("pip3 install python-jose")
+        j.sal.process.execute("pip3 install python-jose")
 
     def _urlClean(self, url):
         url = url.lower()
