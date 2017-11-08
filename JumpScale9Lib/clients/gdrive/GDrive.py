@@ -8,7 +8,7 @@ import io
 try:
     from apiclient import discovery
 except BaseException:
-    j.do.execute("pip3 install google-api-python-client")
+    j.sal.process.execute("pip3 install google-api-python-client")
 from apiclient import discovery
 # from apiclient.http import *
 from oauth2client import client
