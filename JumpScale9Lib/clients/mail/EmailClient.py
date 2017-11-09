@@ -13,9 +13,9 @@ class EmailClient:
 
     def __init__(self):
         self.__jslocation__ = "j.clients.email"
-        if 'email' not in j.application.config:
+        if not j.core.state.configGet('email', ""):
             raise RuntimeError("Email is not in config")
-        config = j.application.config['email']
+        config = j.core.state.configGet['email']
         self._server = config['smtp_server']
         self._port = config['smtp_port']
         self._ssl = self._port in [465, 587]

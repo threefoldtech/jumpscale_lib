@@ -51,7 +51,6 @@ j.sal.ubuntu
 ```
 
 - `checkroot` asserts the current user is root
-- `whoami` prints effective usernames
 - `version_get` returns a tuple of `CODENAME`, `Description`, `ID` and `RELEASE`
 
 ```python

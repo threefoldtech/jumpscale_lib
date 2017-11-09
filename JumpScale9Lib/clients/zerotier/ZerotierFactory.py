@@ -126,5 +126,5 @@ class ZerotierFactory:
         """
         """
         if token is "":
-            token = j.core.state.config["zerotier"]["apitoken"]
+            token = j.core.state.ConfigGetFromDict("zerotier", "apitoken")
         return ZerotierClient(token)

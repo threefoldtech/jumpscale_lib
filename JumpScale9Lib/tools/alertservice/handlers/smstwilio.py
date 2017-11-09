@@ -10,11 +10,11 @@ class TwilioSMSHandler(Handler):
         self.service = service
         self._baseurl = 'https://%(AccountSid)s:%(AuthToken)s@api.twilio.com/2010-04-01/Accounts/%(AccountSid)s/Messages'
         self.authurl = None
-        if j.application.config.exists('twilio.accountsid'):
-            accountinfo = {'AccountSid': j.application.config.get('twilio.accountsid'),
-                           'AuthToken': j.application.config.get('twilio.authtoken')}
+        if j.core.state.configGet('twilio.accountsid', ""):
+            accountinfo = {'AccountSid': j.core.state.configGet('twilio.accountsid'),
+                           'AuthToken': j.core.state.configGet('twilio.authtoken')}
             self.authurl = self._baseurl % accountinfo
-            self.fromnr = j.application.config.get('twilio.from')
+            self.fromnr = j.core.state.configGet('twilio.from')
 
     def escalate(self, alert, users):
         if not self.authurl:

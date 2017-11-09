@@ -89,7 +89,7 @@ class GoogleCompute:
 
     def instance_create(self, name="builder", machineType="n1-standard-1", osType="ubuntu-1604", startupScript="", storageBucket="", sshkeyname=''):
         """
-        @param sshkeyname is your name for your ssh key, if not specified will use your preferred key from j.application.config["ssh"]["sshkeyname"]
+        @param sshkeyname is your name for your ssh key, if not specified will use your preferred key from j.core.config["ssh"]["sshkeyname"]
         """
         source_disk_image = self.imageurl_get()
         # Configure the machine

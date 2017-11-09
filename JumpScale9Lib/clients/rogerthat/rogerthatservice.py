@@ -39,7 +39,7 @@ def jsonrpc(func):
 
 
 class GeventWSServer:
-    SERVICEKEY = j.application.config.get('rogerthat.servicekey')
+    SERVICEKEY = j.core.state.configGet('rogerthat.servicekey')
 
     def __init__(self, addr, port, handler):
         self.logger = j.logger.get('j.clients.rogerthat.service')

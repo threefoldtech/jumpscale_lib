@@ -58,7 +58,7 @@ Message: %(errormessage)s
 
 
 class RogerThatHandler:
-    API_KEY = j.application.config.get('rogerthat.apikey')
+    API_KEY = j.core.state,configGet('rogerthat.apikey', "")
 
     def __init__(self, service):
         self.service = service

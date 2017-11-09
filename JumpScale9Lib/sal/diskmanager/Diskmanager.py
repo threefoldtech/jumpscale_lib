@@ -247,8 +247,6 @@ class Diskmanager:
                                     if not j.sal.fs.exists(hrdpath) and initialize:
                                         C = """
                                         diskinfo.partnr=
-                                        diskinfo.gid=
-                                        diskinfo.nid=
                                         diskinfo.type=
                                         diskinfo.epoch=
                                         diskinfo.description=
@@ -260,10 +258,6 @@ class Diskmanager:
                                             "please give description for disk"))
                                         hrd.set("diskinfo.type", ",".join(j.tools.console.askChoiceMultiple(
                                             ["BOOT", "CACHE", "TMP", "DATA", "OTHER"])))
-                                        hrd.set("diskinfo.gid",
-                                                j.application.whoAmI.gid)
-                                        hrd.set("diskinfo.nid",
-                                                j.application.whoAmI.nid)
                                         hrd.set("diskinfo.epoch",
                                                 j.data.time.getTimeEpoch())
 
@@ -281,8 +275,6 @@ class Diskmanager:
                                         disk.type = hrd.get(
                                             "diskinfo.type").split(",")
                                         disk.type.sort()
-                                        disk.nid = j.application.whoAmI.nid
-                                        disk.gid = j.application.whoAmI.gid
 
                                         disk.save()
                                         diskid = disk.guid
@@ -314,7 +306,7 @@ class Diskmanager:
         return result
 
     def partitionsMount_Ext4Data(self):
-        for path, gid, partnr, size, free, ssd in self.partitionsFind_Ext4Data():
+        for path, partnr, size, free, ssd in self.partitionsFind_Ext4Data():
             mntdir = "/mnt/datadisks/%s" % partnr
             j.sal.fs.createDir(mntdir)
             cmd = "mount %s %s" % (path, mntdir)

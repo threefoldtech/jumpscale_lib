@@ -114,7 +114,7 @@ class Docker:
         returns [[name, image, sshport, status]]
 
         """
-        
+
         res = []
         for item in self.containers:
             res.append([item.name,item.image ,
@@ -126,7 +126,7 @@ class Docker:
         """
         return detailed info
         """
-        
+
         return self.client.containers()
 
     def get(self, name, die=True):
@@ -146,7 +146,7 @@ class Docker:
     def exportRsync(self, name, backupname, key="pub"):
         raise j.exceptions.RuntimeError("not implemented")
         self.removeRedundantFiles(name)
-        ipaddr = j.application.config.get("jssync.addr")
+        ipaddr = j.core.state.configGet("jssync.addr")
         path = self._getMachinePath(name)
         if not j.sal.fs.exists(path):
             raise j.exceptions.RuntimeError("cannot find machine:%s" % path)
@@ -171,7 +171,7 @@ class Docker:
         @param basename is the name of a start of a machine locally, will be used as basis and then the source will be synced over it
         """
         raise j.exceptions.RuntimeError("not implemented")
-        ipaddr = j.application.config.get("jssync.addr")
+        ipaddr = j.core.state.configGet("jssync.addr")
         path = self._getMachinePath(name)
 
         self.btrfsSubvolNew(name)
@@ -278,7 +278,7 @@ class Docker:
         if ssh is True and myinit is False:
             raise ValueError("SSH can't be enabled without myinit.")
         # check there is weave
-        # 
+        #
 
         name = name.lower().strip()
         self.logger.info(("create:%s" % name))
@@ -496,7 +496,7 @@ class Docker:
                 self.client.remove_image(item["Id"])
 
     def ping(self):
-        
+
         try:
             self.client.ping()
         except Exception as e:
@@ -731,4 +731,4 @@ class Docker:
     #
     #     cmd = "cp -r /var/jumpscale/%s/%s %s" % (rndd, source_name, dest)
     #     self.run(name, cmd)
-    #     j.sal.fs.remove(temp)    
+    #     j.sal.fs.remove(temp)

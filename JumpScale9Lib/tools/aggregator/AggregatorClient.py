@@ -117,9 +117,7 @@ class AggregatorClient:
             funcname,
             funcfilepath,
             backtrace,
-            str(timestamp),
-            j.application.whoAmI.gid,
-            j.application.whoAmI.nid)
+            str(timestamp))
 
     def statGet(self, key):
         """

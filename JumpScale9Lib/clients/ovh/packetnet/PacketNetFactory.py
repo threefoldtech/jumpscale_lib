@@ -15,5 +15,5 @@ class PacketNetFactory:
         """
         """
         if auth_token is "":
-            auth_token = j.core.state.config["packetnet"]["apitoken"]
+            auth_token = j.core.state.configGetFromDict("packetnet", "apitoken")
         return packet.Manager(auth_token=auth_token)

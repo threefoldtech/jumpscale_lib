@@ -233,8 +233,6 @@ class TestEngine:
         test.db.enable = testmod.enable
         test.db.license = testmod.license
         test.db.priority = testmod.priority
-        test.db.gid = j.application.whoAmI.gid
-        test.db.nid = j.application.whoAmI.nid
         test.db.state = 'INIT'
         test.db.teststates = dict()
         test.db.testrun = testrunname
