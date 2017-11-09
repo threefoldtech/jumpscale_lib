@@ -1,17 +1,18 @@
 from .ZeroHubClient import ZeroHubClient
 from js9 import j
 
-
-class ZeroStorFactory:
-
+class ZeroHubFactory:
     def __init__(self):
         self.__jslocation__ = "j.clients.zerohub"
         self.logger = j.logger.get("j.clients.zerohub")
 
-    def getClient(self, ...):
+    def getClient(self, token=None):
         """
-        # Getting client via accesstoken
-
-
+        Getting client (with optional accesstoken)
         """
-        return ZeroHubClient...)
+        cl = ZeroHubClient()
+
+        if token:
+            cl.authentificate(token)
+
+        return cl
