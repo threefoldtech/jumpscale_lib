@@ -57,7 +57,7 @@ class OpenvCloudClientFactory:
         cl = Client(url, login, password, secret, port, jwt)
         return cl
 
-    def getLegacy(self, url, login=None, password=None):
+    def getLegacy(self, url, login=None, password=None, port=443, jwt=None):
         """
         Returns an OpenvCloud Client object for a given username and password.
 
@@ -72,14 +72,14 @@ class OpenvCloudClientFactory:
         """
 
         url = self._urlClean(url)
-        cl = Client(url, login, password, secret=None, port=443, jwt=None)
+        cl = Client(url, login, password, secret=None, port=port, jwt=jwt)
         return cl
 
     def getFromAYSService(self, service):
         """
         Returns an OpenvCloud Client object for a given AYS service object.
         """
-        return self.get(
+        return self.getLegacy(
             url=service.model.data.url,
             login=service.model.data.login,
             password=service.model.data.password,
