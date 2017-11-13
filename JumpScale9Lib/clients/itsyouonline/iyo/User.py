@@ -4,7 +4,6 @@ from jose import jwt
 class User:
     def __init__(self, client):
         self._client = client
-        self._users_cl = UsersService(client)
         self.username = username_get()
 
     def username_get(self):
@@ -17,7 +16,7 @@ class User:
         """get all all user info from ItsYou.online"""
 
         try:
-            resp = self._users_cl.GetUser(self.username)
+            resp = self._client.users.GetUser(self.username)
 
         except Exception as e:
             print("Error while getting organization: {}".format(_extract_error(e)))

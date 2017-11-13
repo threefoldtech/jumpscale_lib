@@ -1,4 +1,6 @@
 import requests
+from .users_service import UsersService
+from .organizations_service import OrganizationsService 
 
 DEFAULT_URL = "https://itsyou.online/api"
 
@@ -9,6 +11,8 @@ class Client:
         self._session = requests.Session()
         self._session.headers.update({"Content-Type": "application/json"})
         self._session.headers.update({"Authorization": jwt})
+        self.users = UsersService(self)
+        self.organizations = OrganizationsService(self)
 
     def get_jwt(id, secret):
         """
