@@ -35,7 +35,7 @@ class Repositories:
 
     def get(self, name):
         """
-        Gets a repsotirory with a give name.
+        Gets a repository with a give name.
 
         Args:
             name: name of the repository to retrieve
@@ -49,7 +49,7 @@ class Repositories:
 
     def create(self, name, git):
         """
-        Creates a new repositoy with given name and git repository address.
+        Creates a new repository with given name and git repository address.
 
         Args:
             name: name of the repository to create
