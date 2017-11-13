@@ -1,5 +1,5 @@
-from .user import User
-from .organization import Organization
+from .User import User
+from .Organization import Organization
 from .client import Client
 
 DEFAULT_URL = "https://itsyou.online"
