@@ -161,7 +161,7 @@ class Client:
                 jwt = refresh_jwt(jwt, payload)
             self.api._session.headers['Authorization'] = 'bearer {}'.format(
                 jwt)
-            self._login = payload['username']
+            self._login = '{}@{}'.format(payload['username'], payload['iss'])
         else:
             if password:
                 if self._isms1:
