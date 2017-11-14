@@ -9,6 +9,10 @@ class ClientFactory:
     def __init__(self):
         self.__jslocation__ = 'j.clients.itsyouonline'
 
+    #def install(self):
+    #    """Install the dependencies.""" 
+    #    j.sal.process.execute("pip3 install python-jose")
+
     def get_user(self, application_id, secret, url=DEFAULT_URL):
         """
         Get a client object for an ItsYou.online user.
@@ -19,7 +23,7 @@ class ClientFactory:
             url: url of the ItsYou.online service; defaults to https://itsyou.online
         """
         jwt = Client.get_jwt(application_id, secret)
-        return get_user_with_jwt(jwt)
+        return self.get_user_with_jwt(jwt)
 
     def get_organization(self, global_id, secret, url=DEFAULT_URL):
         """
@@ -31,7 +35,7 @@ class ClientFactory:
             url: url of the ItsYou.online service; defaults to https://itsyou.online
         """
         jwt = Client.get_jwt(global_id, secret)
-        return get_organization_with_jwt(jwt)
+        return self.get_organization_with_jwt(jwt)
 
     def get_user_with_jwt(self, jwt):
         """
