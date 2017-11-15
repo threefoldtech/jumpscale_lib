@@ -62,7 +62,7 @@ class Client:
                 headers.update(contentheader)
         return headers
 
-    def get(self, uri, data, headers, params, content_type):
+    def get(self, uri, data, headers, params, content_type):            
         headers = self.get_headers(headers, content_type)
        
         res = self.session.get(uri, headers=headers, params=params)

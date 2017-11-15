@@ -1,6 +1,7 @@
 from .users_service import UsersService
 from .Organization import Organizations
 from .PublicKey import PublicKeys
+from .ApiKey import ApiKeys
 from jose import jwt
 import logging
 
@@ -10,8 +11,9 @@ class User:
         self.username = self.username_get()
         self.model = self.model_get()
         self.public_keys = PublicKeys(self)
+        self.api_keys = ApiKeys(self)
         self.organizations = Organizations(self)
-
+         
     def username_get(self):
         """Get username from unverified JWT."""
         claims = jwt.get_unverified_claims(self._client.jwt)

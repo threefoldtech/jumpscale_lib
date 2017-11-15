@@ -1,5 +1,6 @@
 from jose import jwt
 import logging
+from .ApiKey import ApiKeys
 
 class Organizations:
     def __init__(self, user):
@@ -43,7 +44,8 @@ class Organizations:
 class Organization:
     def __init__(self, client, model):
         self._client = client
-        self.model = model     
+        self.model = model
+        self.api_keys = ApiKeys(self)  
 
     def global_id_get_from_jwt(self):
         """Get global_id from unverified JWT."""
