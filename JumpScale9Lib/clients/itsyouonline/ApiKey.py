@@ -7,11 +7,10 @@ class ApiKeys:
 
     def list(self):
         """List all API access keys of the ItsYou.online user or organization."""
-        import ipdb;ipdb.set_trace()
         try:
             if "username" in self._parent.model:
                 resp = self._client.users.ListAPIKeys(self._parent.username)
-            if "globalid" in self._parent.model:
+            elif "globalid" in self._parent.model:
                 resp = self._client.organizations.GetOrganizationAPIKeyLabels(self._parent.model["globalid"])
         except Exception as e:
             logging.exception("Unable to list all API access keys")
@@ -21,7 +20,10 @@ class ApiKeys:
 
         for item in resp.json():
             try:
-                api_key = self.get(item)
+                if "username" in self._parent.model:
+                    api_key = self.get(item["label"])
+                elif "globalid" in self._parent.model:
+                    api_key = self.get(item)
             except Exception as e:
                 logging.exception("Unable to get API access key with label %s" % (item))
                 return
@@ -36,12 +38,11 @@ class ApiKeys:
             label: label of the API access key
 
         Returns an API access key object.
-        """
-        import ipdb;ipdb.set_trace()        
+        """        
         try:
             if "username" in self._parent.model:
                 resp = self._client.users.GetAPIkey(label, self._parent.username)
-            if "globalid" in self._parent.model:
+            elif "globalid" in self._parent.model:
                 resp = self._client.organizations.GetOrganizationAPIKey(label, self._parent.model["globalid"])
         except Exception as e:
             logging.exception("Unable to get API access key with label %s" % (label))
