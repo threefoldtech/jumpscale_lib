@@ -7,7 +7,7 @@ class UsersService:
         Get the avatar file associated with this id
         It is method for GET /users/avatar/img/{hash}
         """
-        uri = self.client.base_url + "/users/avatar/img/"+hash
+        uri = self.client.base_url + "/api/users/avatar/img/"+hash
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -16,7 +16,7 @@ class UsersService:
         Removes an address
         It is method for DELETE /users/{username}/addresses/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/addresses/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/addresses/"+label
         return self.client.delete(uri, None, headers, query_params, content_type)
 
 
@@ -25,7 +25,7 @@ class UsersService:
         Get the details of an address.
         It is method for GET /users/{username}/addresses/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/addresses/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/addresses/"+label
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -34,7 +34,7 @@ class UsersService:
         Update the label and/or value of an existing address.
         It is method for PUT /users/{username}/addresses/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/addresses/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/addresses/"+label
         return self.client.put(uri, data, headers, query_params, content_type)
 
 
@@ -43,7 +43,7 @@ class UsersService:
         List of all of the user his addresses.
         It is method for GET /users/{username}/addresses
         """
-        uri = self.client.base_url + "/users/"+username+"/addresses"
+        uri = self.client.base_url + "/api/users/"+username+"/addresses"
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -52,7 +52,7 @@ class UsersService:
         Register a new address
         It is method for POST /users/{username}/addresses
         """
-        uri = self.client.base_url + "/users/"+username+"/addresses"
+        uri = self.client.base_url + "/api/users/"+username+"/addresses"
         return self.client.post(uri, data, headers, query_params, content_type)
 
 
@@ -61,7 +61,7 @@ class UsersService:
         Removes an API key
         It is method for DELETE /users/{username}/apikeys/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/apikeys/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/apikeys/"+label
         return self.client.delete(uri, None, headers, query_params, content_type)
 
 
@@ -70,7 +70,7 @@ class UsersService:
         Get an API key by label
         It is method for GET /users/{username}/apikeys/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/apikeys/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/apikeys/"+label
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -79,7 +79,7 @@ class UsersService:
         Updates the label for the API key
         It is method for PUT /users/{username}/apikeys/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/apikeys/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/apikeys/"+label
         return self.client.put(uri, data, headers, query_params, content_type)
 
 
@@ -88,7 +88,7 @@ class UsersService:
         Lists the API keys
         It is method for GET /users/{username}/apikeys
         """
-        uri = self.client.base_url + "/users/"+username+"/apikeys"
+        uri = self.client.base_url + "/api/users/"+username+"/apikeys"
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -97,7 +97,7 @@ class UsersService:
         Adds an APIKey to the user
         It is method for POST /users/{username}/apikeys
         """
-        uri = self.client.base_url + "/users/"+username+"/apikeys"
+        uri = self.client.base_url + "/api/users/"+username+"/apikeys"
         return self.client.post(uri, data, headers, query_params, content_type)
 
 
@@ -106,7 +106,7 @@ class UsersService:
         Remove the authorization for an organization, the granted organization will no longer have access the user's information.
         It is method for DELETE /users/{username}/authorizations/{grantedTo}
         """
-        uri = self.client.base_url + "/users/"+username+"/authorizations/"+grantedTo
+        uri = self.client.base_url + "/api/users/"+username+"/authorizations/"+grantedTo
         return self.client.delete(uri, None, headers, query_params, content_type)
 
 
@@ -115,7 +115,7 @@ class UsersService:
         Get the authorization for a specific organization.
         It is method for GET /users/{username}/authorizations/{grantedTo}
         """
-        uri = self.client.base_url + "/users/"+username+"/authorizations/"+grantedTo
+        uri = self.client.base_url + "/api/users/"+username+"/authorizations/"+grantedTo
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -124,7 +124,7 @@ class UsersService:
         Modify which information an organization is able to see.
         It is method for PUT /users/{username}/authorizations/{grantedTo}
         """
-        uri = self.client.base_url + "/users/"+username+"/authorizations/"+grantedTo
+        uri = self.client.base_url + "/api/users/"+username+"/authorizations/"+grantedTo
         return self.client.put(uri, data, headers, query_params, content_type)
 
 
@@ -133,7 +133,7 @@ class UsersService:
         Get the list of authorizations.
         It is method for GET /users/{username}/authorizations
         """
-        uri = self.client.base_url + "/users/"+username+"/authorizations"
+        uri = self.client.base_url + "/api/users/"+username+"/authorizations"
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -142,7 +142,7 @@ class UsersService:
         Create a new avatar with the specified label from a provided image file
         It is method for POST /users/{username}/avatar/img/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/avatar/img/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/avatar/img/"+label
         return self.client.post(uri, data, headers, query_params, content_type)
 
 
@@ -151,7 +151,7 @@ class UsersService:
         Update the avatar and possibly the avatar file stored on itsyou.online
         It is method for PUT /users/{username}/avatar/{label}/to/{newlabel}
         """
-        uri = self.client.base_url + "/users/"+username+"/avatar/"+label+"/to/"+newlabel
+        uri = self.client.base_url + "/api/users/"+username+"/avatar/"+label+"/to/"+newlabel
         return self.client.put(uri, data, headers, query_params, content_type)
 
 
@@ -160,7 +160,7 @@ class UsersService:
         Delete the avatar with the specified label
         It is method for DELETE /users/{username}/avatar/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/avatar/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/avatar/"+label
         return self.client.delete(uri, None, headers, query_params, content_type)
 
 
@@ -169,7 +169,7 @@ class UsersService:
         Update the avatar and possibly the link to the avatar
         It is method for PUT /users/{username}/avatar/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/avatar/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/avatar/"+label
         return self.client.put(uri, data, headers, query_params, content_type)
 
 
@@ -178,7 +178,7 @@ class UsersService:
         List all avatars for the user
         It is method for GET /users/{username}/avatar
         """
-        uri = self.client.base_url + "/users/"+username+"/avatar"
+        uri = self.client.base_url + "/api/users/"+username+"/avatar"
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -187,7 +187,7 @@ class UsersService:
         Create a new avatar with the specified label from a link
         It is method for POST /users/{username}/avatar
         """
-        uri = self.client.base_url + "/users/"+username+"/avatar"
+        uri = self.client.base_url + "/api/users/"+username+"/avatar"
         return self.client.post(uri, data, headers, query_params, content_type)
 
 
@@ -196,7 +196,7 @@ class UsersService:
         Delete a BankAccount
         It is method for DELETE /users/{username}/banks/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/banks/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/banks/"+label
         return self.client.delete(uri, None, headers, query_params, content_type)
 
 
@@ -205,7 +205,7 @@ class UsersService:
         Get the details of a bank account
         It is method for GET /users/{username}/banks/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/banks/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/banks/"+label
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -214,7 +214,7 @@ class UsersService:
         Update an existing bankaccount and label.
         It is method for PUT /users/{username}/banks/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/banks/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/banks/"+label
         return self.client.put(uri, data, headers, query_params, content_type)
 
 
@@ -223,7 +223,7 @@ class UsersService:
         List of the user his bank accounts.
         It is method for GET /users/{username}/banks
         """
-        uri = self.client.base_url + "/users/"+username+"/banks"
+        uri = self.client.base_url + "/api/users/"+username+"/banks"
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -232,7 +232,7 @@ class UsersService:
         Create new bank account
         It is method for POST /users/{username}/banks
         """
-        uri = self.client.base_url + "/users/"+username+"/banks"
+        uri = self.client.base_url + "/api/users/"+username+"/banks"
         return self.client.post(uri, data, headers, query_params, content_type)
 
 
@@ -241,7 +241,7 @@ class UsersService:
         Get the contracts where the user is 1 of the parties. Order descending by date.
         It is method for GET /users/{username}/contracts
         """
-        uri = self.client.base_url + "/users/"+username+"/contracts"
+        uri = self.client.base_url + "/api/users/"+username+"/contracts"
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -250,7 +250,7 @@ class UsersService:
         Create a new contract.
         It is method for POST /users/{username}/contracts
         """
-        uri = self.client.base_url + "/users/"+username+"/contracts"
+        uri = self.client.base_url + "/api/users/"+username+"/contracts"
         return self.client.post(uri, data, headers, query_params, content_type)
 
 
@@ -259,7 +259,7 @@ class UsersService:
         Removes an address
         It is method for DELETE /users/{username}/digitalwallet/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/digitalwallet/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/digitalwallet/"+label
         return self.client.delete(uri, None, headers, query_params, content_type)
 
 
@@ -268,7 +268,7 @@ class UsersService:
         Get the details of a digital wallet address.
         It is method for GET /users/{username}/digitalwallet/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/digitalwallet/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/digitalwallet/"+label
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -277,7 +277,7 @@ class UsersService:
         Update the label and/or value of an existing address.
         It is method for PUT /users/{username}/digitalwallet/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/digitalwallet/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/digitalwallet/"+label
         return self.client.put(uri, data, headers, query_params, content_type)
 
 
@@ -286,7 +286,7 @@ class UsersService:
         List all of the user his digital wallets.
         It is method for GET /users/{username}/digitalwallet
         """
-        uri = self.client.base_url + "/users/"+username+"/digitalwallet"
+        uri = self.client.base_url + "/api/users/"+username+"/digitalwallet"
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -295,7 +295,7 @@ class UsersService:
         Register a new digital asset address
         It is method for POST /users/{username}/digitalwallet
         """
-        uri = self.client.base_url + "/users/"+username+"/digitalwallet"
+        uri = self.client.base_url + "/api/users/"+username+"/digitalwallet"
         return self.client.post(uri, data, headers, query_params, content_type)
 
 
@@ -304,7 +304,7 @@ class UsersService:
         Sends validation email to email address
         It is method for POST /users/{username}/emailaddresses/{label}/validate
         """
-        uri = self.client.base_url + "/users/"+username+"/emailaddresses/"+label+"/validate"
+        uri = self.client.base_url + "/api/users/"+username+"/emailaddresses/"+label+"/validate"
         return self.client.post(uri, data, headers, query_params, content_type)
 
 
@@ -313,7 +313,7 @@ class UsersService:
         Removes an email address
         It is method for DELETE /users/{username}/emailaddresses/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/emailaddresses/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/emailaddresses/"+label
         return self.client.delete(uri, None, headers, query_params, content_type)
 
 
@@ -322,7 +322,7 @@ class UsersService:
         Updates the label and/or value of an email address
         It is method for PUT /users/{username}/emailaddresses/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/emailaddresses/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/emailaddresses/"+label
         return self.client.put(uri, data, headers, query_params, content_type)
 
 
@@ -331,7 +331,7 @@ class UsersService:
         Get a list of the user his email addresses.
         It is method for GET /users/{username}/emailaddresses
         """
-        uri = self.client.base_url + "/users/"+username+"/emailaddresses"
+        uri = self.client.base_url + "/api/users/"+username+"/emailaddresses"
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -340,7 +340,7 @@ class UsersService:
         Register a new email address
         It is method for POST /users/{username}/emailaddresses
         """
-        uri = self.client.base_url + "/users/"+username+"/emailaddresses"
+        uri = self.client.base_url + "/api/users/"+username+"/emailaddresses"
         return self.client.post(uri, data, headers, query_params, content_type)
 
 
@@ -349,7 +349,7 @@ class UsersService:
         Delete the associated facebook account
         It is method for DELETE /users/{username}/facebook
         """
-        uri = self.client.base_url + "/users/"+username+"/facebook"
+        uri = self.client.base_url + "/api/users/"+username+"/facebook"
         return self.client.delete(uri, None, headers, query_params, content_type)
 
 
@@ -358,7 +358,7 @@ class UsersService:
         Unlink Github Account
         It is method for DELETE /users/{username}/github
         """
-        uri = self.client.base_url + "/users/"+username+"/github"
+        uri = self.client.base_url + "/api/users/"+username+"/github"
         return self.client.delete(uri, None, headers, query_params, content_type)
 
 
@@ -367,7 +367,7 @@ class UsersService:
         Get all of the user his information. This will be limited to the scopes that the user has authorized. See https://gig.gitbooks.io/itsyouonline/content/oauth2/scopes.html and https://gig.gitbooks.io/itsyouonline/content/oauth2/availableScopes.html for more information.
         It is method for GET /users/{username}/info
         """
-        uri = self.client.base_url + "/users/"+username+"/info"
+        uri = self.client.base_url + "/api/users/"+username+"/info"
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -376,7 +376,7 @@ class UsersService:
         Gets the key written to this users keystore for the given label by the accessing organization
         It is method for GET /users/{username}/keystore/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/keystore/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/keystore/"+label
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -385,7 +385,7 @@ class UsersService:
         Lists all keys written to this users keystore by the accessing organization
         It is method for GET /users/{username}/keystore
         """
-        uri = self.client.base_url + "/users/"+username+"/keystore"
+        uri = self.client.base_url + "/api/users/"+username+"/keystore"
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -394,7 +394,7 @@ class UsersService:
         Saves a new key to this users keystore. The username, globalid and timestamp will be overwritten
         It is method for POST /users/{username}/keystore
         """
-        uri = self.client.base_url + "/users/"+username+"/keystore"
+        uri = self.client.base_url + "/api/users/"+username+"/keystore"
         return self.client.post(uri, data, headers, query_params, content_type)
 
 
@@ -403,7 +403,7 @@ class UsersService:
         Update the user his firstname and lastname
         It is method for PUT /users/{username}/name
         """
-        uri = self.client.base_url + "/users/"+username+"/name"
+        uri = self.client.base_url + "/api/users/"+username+"/name"
         return self.client.put(uri, data, headers, query_params, content_type)
 
 
@@ -412,7 +412,7 @@ class UsersService:
         Get the list of notifications, these are pending invitations or approvals or other requests.
         It is method for GET /users/{username}/notifications
         """
-        uri = self.client.base_url + "/users/"+username+"/notifications"
+        uri = self.client.base_url + "/api/users/"+username+"/notifications"
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -421,7 +421,7 @@ class UsersService:
         Removes the user from an organization
         It is method for DELETE /users/{username}/organizations/{globalid}/leave
         """
-        uri = self.client.base_url + "/users/"+username+"/organizations/"+globalid+"/leave"
+        uri = self.client.base_url + "/api/users/"+username+"/organizations/"+globalid+"/leave"
         return self.client.delete(uri, None, headers, query_params, content_type)
 
 
@@ -430,7 +430,7 @@ class UsersService:
         Reject membership invitation in an organization.
         It is method for DELETE /users/{username}/organizations/{globalid}/roles/{role}
         """
-        uri = self.client.base_url + "/users/"+username+"/organizations/"+globalid+"/roles/"+role
+        uri = self.client.base_url + "/api/users/"+username+"/organizations/"+globalid+"/roles/"+role
         return self.client.delete(uri, None, headers, query_params, content_type)
 
 
@@ -439,7 +439,7 @@ class UsersService:
         Accept membership in organization
         It is method for POST /users/{username}/organizations/{globalid}/roles/{role}
         """
-        uri = self.client.base_url + "/users/"+username+"/organizations/"+globalid+"/roles/"+role
+        uri = self.client.base_url + "/api/users/"+username+"/organizations/"+globalid+"/roles/"+role
         return self.client.post(uri, data, headers, query_params, content_type)
 
 
@@ -448,7 +448,7 @@ class UsersService:
         Get the list organizations a user is owner or member of
         It is method for GET /users/{username}/organizations
         """
-        uri = self.client.base_url + "/users/"+username+"/organizations"
+        uri = self.client.base_url + "/api/users/"+username+"/organizations"
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -457,7 +457,7 @@ class UsersService:
         Update the user his password
         It is method for PUT /users/{username}/password
         """
-        uri = self.client.base_url + "/users/"+username+"/password"
+        uri = self.client.base_url + "/api/users/"+username+"/password"
         return self.client.put(uri, data, headers, query_params, content_type)
 
 
@@ -466,7 +466,7 @@ class UsersService:
         Sends a validation text message to the phone number.
         It is method for POST /users/{username}/phonenumbers/{label}/validate
         """
-        uri = self.client.base_url + "/users/"+username+"/phonenumbers/"+label+"/validate"
+        uri = self.client.base_url + "/api/users/"+username+"/phonenumbers/"+label+"/validate"
         return self.client.post(uri, data, headers, query_params, content_type)
 
 
@@ -475,7 +475,7 @@ class UsersService:
         Verifies a phone number
         It is method for PUT /users/{username}/phonenumbers/{label}/validate
         """
-        uri = self.client.base_url + "/users/"+username+"/phonenumbers/"+label+"/validate"
+        uri = self.client.base_url + "/api/users/"+username+"/phonenumbers/"+label+"/validate"
         return self.client.put(uri, data, headers, query_params, content_type)
 
 
@@ -484,7 +484,7 @@ class UsersService:
         Removes a phonenumber
         It is method for DELETE /users/{username}/phonenumbers/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/phonenumbers/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/phonenumbers/"+label
         return self.client.delete(uri, None, headers, query_params, content_type)
 
 
@@ -493,7 +493,7 @@ class UsersService:
         Get the details of a phone number.
         It is method for GET /users/{username}/phonenumbers/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/phonenumbers/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/phonenumbers/"+label
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -502,7 +502,7 @@ class UsersService:
         Update the label and/or value of an existing phonenumber.
         It is method for PUT /users/{username}/phonenumbers/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/phonenumbers/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/phonenumbers/"+label
         return self.client.put(uri, data, headers, query_params, content_type)
 
 
@@ -511,7 +511,7 @@ class UsersService:
         List of all of the user his phone numbers.
         It is method for GET /users/{username}/phonenumbers
         """
-        uri = self.client.base_url + "/users/"+username+"/phonenumbers"
+        uri = self.client.base_url + "/api/users/"+username+"/phonenumbers"
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -520,7 +520,7 @@ class UsersService:
         Register a new phonenumber
         It is method for POST /users/{username}/phonenumbers
         """
-        uri = self.client.base_url + "/users/"+username+"/phonenumbers"
+        uri = self.client.base_url + "/api/users/"+username+"/phonenumbers"
         return self.client.post(uri, data, headers, query_params, content_type)
 
 
@@ -529,7 +529,7 @@ class UsersService:
         Delete a public key
         It is method for DELETE /users/{username}/publickeys/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/publickeys/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/publickeys/"+label
         return self.client.delete(uri, None, headers, query_params, content_type)
 
 
@@ -538,7 +538,7 @@ class UsersService:
         Get a public key
         It is method for GET /users/{username}/publickeys/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/publickeys/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/publickeys/"+label
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -547,7 +547,7 @@ class UsersService:
         Upates the label and/or key of an existing public key
         It is method for PUT /users/{username}/publickeys/{label}
         """
-        uri = self.client.base_url + "/users/"+username+"/publickeys/"+label
+        uri = self.client.base_url + "/api/users/"+username+"/publickeys/"+label
         return self.client.put(uri, data, headers, query_params, content_type)
 
 
@@ -556,7 +556,7 @@ class UsersService:
         Lists all public keys
         It is method for GET /users/{username}/publickeys
         """
-        uri = self.client.base_url + "/users/"+username+"/publickeys"
+        uri = self.client.base_url + "/api/users/"+username+"/publickeys"
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -565,7 +565,7 @@ class UsersService:
         Add a public key
         It is method for POST /users/{username}/publickeys
         """
-        uri = self.client.base_url + "/users/"+username+"/publickeys"
+        uri = self.client.base_url + "/api/users/"+username+"/publickeys"
         return self.client.post(uri, data, headers, query_params, content_type)
 
 
@@ -574,7 +574,7 @@ class UsersService:
         Removes a RegistryEntry from the user's registry
         It is method for DELETE /users/{username}/registry/{key}
         """
-        uri = self.client.base_url + "/users/"+username+"/registry/"+key
+        uri = self.client.base_url + "/api/users/"+username+"/registry/"+key
         return self.client.delete(uri, None, headers, query_params, content_type)
 
 
@@ -583,7 +583,7 @@ class UsersService:
         Get a RegistryEntry from the user's registry.
         It is method for GET /users/{username}/registry/{key}
         """
-        uri = self.client.base_url + "/users/"+username+"/registry/"+key
+        uri = self.client.base_url + "/api/users/"+username+"/registry/"+key
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -592,7 +592,7 @@ class UsersService:
         Lists the Registry entries
         It is method for GET /users/{username}/registry
         """
-        uri = self.client.base_url + "/users/"+username+"/registry"
+        uri = self.client.base_url + "/api/users/"+username+"/registry"
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -601,7 +601,7 @@ class UsersService:
         Adds a RegistryEntry to the user's registry, if the key is already used, it is overwritten.
         It is method for POST /users/{username}/registry
         """
-        uri = self.client.base_url + "/users/"+username+"/registry"
+        uri = self.client.base_url + "/api/users/"+username+"/registry"
         return self.client.post(uri, data, headers, query_params, content_type)
 
 
@@ -610,7 +610,7 @@ class UsersService:
         Sign a see object
         It is method for PUT /users/{username}/see/{uniqueid}/{globalid}/sign/{version}
         """
-        uri = self.client.base_url + "/users/"+username+"/see/"+uniqueid+"/"+globalid+"/sign/"+version
+        uri = self.client.base_url + "/api/users/"+username+"/see/"+uniqueid+"/"+globalid+"/sign/"+version
         return self.client.put(uri, data, headers, query_params, content_type)
 
 
@@ -619,7 +619,7 @@ class UsersService:
         Get a see object
         It is method for GET /users/{username}/see/{uniqueid}/{globalid}
         """
-        uri = self.client.base_url + "/users/"+username+"/see/"+uniqueid+"/"+globalid
+        uri = self.client.base_url + "/api/users/"+username+"/see/"+uniqueid+"/"+globalid
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -628,7 +628,7 @@ class UsersService:
         Updates a see object
         It is method for PUT /users/{username}/see/{uniqueid}/{globalid}
         """
-        uri = self.client.base_url + "/users/"+username+"/see/"+uniqueid+"/"+globalid
+        uri = self.client.base_url + "/api/users/"+username+"/see/"+uniqueid+"/"+globalid
         return self.client.put(uri, data, headers, query_params, content_type)
 
 
@@ -637,7 +637,7 @@ class UsersService:
         Get a list of all see objects.
         It is method for GET /users/{username}/see
         """
-        uri = self.client.base_url + "/users/"+username+"/see"
+        uri = self.client.base_url + "/api/users/"+username+"/see"
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -646,7 +646,7 @@ class UsersService:
         Create new see object
         It is method for POST /users/{username}/see
         """
-        uri = self.client.base_url + "/users/"+username+"/see"
+        uri = self.client.base_url + "/api/users/"+username+"/see"
         return self.client.post(uri, data, headers, query_params, content_type)
 
 
@@ -655,7 +655,7 @@ class UsersService:
         Disable TOTP two-factor authentication.
         It is method for DELETE /users/{username}/totp
         """
-        uri = self.client.base_url + "/users/"+username+"/totp"
+        uri = self.client.base_url + "/api/users/"+username+"/totp"
         return self.client.delete(uri, None, headers, query_params, content_type)
 
 
@@ -664,7 +664,7 @@ class UsersService:
         Get a TOTP secret and issuer that can be used for setting up two-factor authentication.
         It is method for GET /users/{username}/totp
         """
-        uri = self.client.base_url + "/users/"+username+"/totp"
+        uri = self.client.base_url + "/api/users/"+username+"/totp"
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -673,7 +673,7 @@ class UsersService:
         Enable two-factor authentication using TOTP.
         It is method for POST /users/{username}/totp
         """
-        uri = self.client.base_url + "/users/"+username+"/totp"
+        uri = self.client.base_url + "/api/users/"+username+"/totp"
         return self.client.post(uri, data, headers, query_params, content_type)
 
 
@@ -682,7 +682,7 @@ class UsersService:
         Get the possible two-factor authentication methods"
         It is method for GET /users/{username}/twofamethods
         """
-        uri = self.client.base_url + "/users/"+username+"/twofamethods"
+        uri = self.client.base_url + "/api/users/"+username+"/twofamethods"
         return self.client.get(uri, None, headers, query_params, content_type)
 
 
@@ -690,7 +690,7 @@ class UsersService:
         """
         It is method for GET /users/{username}
         """
-        uri = self.client.base_url + "/users/"+username
+        uri = self.client.base_url + "/api/users/"+username
         return self.client.get(uri, None, headers, query_params, content_type)
 
 

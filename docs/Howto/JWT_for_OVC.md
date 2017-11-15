@@ -18,18 +18,14 @@ jwt = j.clients.openvcloud.getJWTTokenFromItsYouOnline(applicationId, secret, va
 
 Alternatively you can also create a JWT by interacting directly with the ItsYou.online RESTful API using:
 
-- [cURL](#curl)
+- [JumpScale client for ItsYou.online](#jumpscale)
 - [Python](#python)
+- [cURL](#curl)
 
-<a id="curl"></a>
-## Using cURL to get the JWT directly from the ItsYou.online RESTful API
+<a id="jumpscale"></a>
+## Using JumpScale client for ItsYou.online to get a JWT
 
-```bash
-export APP_ID="..."
-export SECRET="..."
-export JWT=$(curl -d 'grant_type=client_credentials&client_id='"$APP_ID"'&client_secret='"$SECRET"'&response_type=id_token' https://itsyou.online/v1/oauth/access_token)
-echo $JWT
-```
+See [Using the ItsYou.online Client](IYO_client.md)
 
 <a id="python"></a>
 ## Using Python to get the JWT directly from the ItsYou.online RESTful API
@@ -55,4 +51,14 @@ url = 'https://itsyou.online/v1/oauth/access_token'
 resp = requests.post(url, params=params)
 resp.raise_for_status()
 jwt = resp.content.decode('utf8')
+```
+
+<a id="curl"></a>
+## Using cURL to get the JWT directly from the ItsYou.online RESTful API
+
+```bash
+export APP_ID="..."
+export SECRET="..."
+export JWT=$(curl -d 'grant_type=client_credentials&client_id='"$APP_ID"'&client_secret='"$SECRET"'&response_type=id_token' https://itsyou.online/v1/oauth/access_token)
+echo $JWT
 ```

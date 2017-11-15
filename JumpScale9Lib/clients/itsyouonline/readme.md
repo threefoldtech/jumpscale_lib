@@ -1,48 +1,7 @@
-# ItsYouOnline client
+# JumpScale Client for ItsYou.online
 
-Simply get the api client by calling
-```
-client = j.clients.itsyouonline.get()
-```
+The ItsYou.online client makes interacting with the RESTful API of an ItsYou.online server easy.
 
-## Authentication
+This ItsYou.online client is actually a wrapper for the ItsYou.online client that is auto-generated from the [RAML specification of the ItsYou.online RESTful API](https://github.com/itsyouonline/identityserver/blob/master/specifications/api/itsyouonline.raml).
 
-### Via Client Credentials
-
-You can use your user API key which you can get from https://itsyou.online/#home/
-under the settings tab.
-
-```python
-applicationid = 'YYYYYY'
-apikey = 'XXXXXXXXX'
-client.oauth.LoginViaClientCredentials(client_id=applicationid, client_secret=apikey)
-```
-
-### Manually by setting oauth token
-
-```python
-client.api.session.headers['Authorization'] = 'token <oauth token>'
-```
-
-### Manually by setting jwt key
-
-```python
-client.api.session.headers['Authorization'] = 'bearer <jwt key>'
-```
-
-
-## Example methods
-
-After authenticating
-
-```python
-client.api.GetUserPhonenumberByLabel('Home', 'John').json()
-Out[17]: {'label': 'Home', 'phonenumber': '+15551234'}
-
-...
-```
-
-
-## to get updated version of the client
-
-- copy from https://github.com/itsyouonline/identityserver/tree/master/clients/python/itsyouonline
+See [How to use the JumpScale client for ItsYou.online](/docs/IYO_client.md) for getting started instructions.

@@ -1,4 +1,5 @@
 from .users_service import UsersService
+from .Organization import Organizations
 from .PublicKey import PublicKeys
 from jose import jwt
 import logging
@@ -9,6 +10,7 @@ class User:
         self.username = self.username_get()
         self.model = self.model_get()
         self.public_keys = PublicKeys(self)
+        self.organizations = Organizations(self)
 
     def username_get(self):
         """Get username from unverified JWT."""
