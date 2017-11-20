@@ -459,5 +459,5 @@ class OrganizationsService:
         Create a new organization. 1 user should be in the owners list. Validation is performed to check if the securityScheme allows management on this user.
         It is method for POST /organizations
         """
-        uri = self.client.base_url + "/organizations"
+        uri = self.client.base_url + "/api/organizations"
         return self.client.post(uri, data, headers, query_params, content_type)

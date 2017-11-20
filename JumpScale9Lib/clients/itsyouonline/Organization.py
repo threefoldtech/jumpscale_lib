@@ -39,7 +39,33 @@ class Organizations:
         except Exception as e:
             logging.exception("Unable to get organization key with global ID %s" % (global_id))
             return
-        return Organization(self._client, resp.json())  
+
+        return Organization(self._client, resp.json())
+
+
+    def create(self, name):
+        """
+        Creates a new ItsYou.online organization.
+
+        Args:
+            name: name of the organization to create, this name needs to be globally unique
+
+        Returns an organization object.
+        """
+        data = {
+            'globalid': name,
+            'owners': [self._user.username] 
+        }
+
+        try:
+            resp = self._client.organizations.CreateNewOrganization(data)
+
+        except Exception as e:
+            logging.exception("Unable to create an new organization key with global ID %s" % (name))
+            return
+
+        return Organization(self._client, resp.json())
+
 
 class Organization:
     def __init__(self, client, model):
