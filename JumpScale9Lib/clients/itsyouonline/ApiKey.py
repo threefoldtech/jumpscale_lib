@@ -41,6 +41,7 @@ class ApiKeys:
         """        
         try:
             if "username" in self._parent.model:
+                import ipdb;ipdb.set_trace()
                 resp = self._client.users.GetAPIkey(label, self._parent.username)
             elif "globalid" in self._parent.model:
                 resp = self._client.organizations.GetOrganizationAPIKey(label, self._parent.model["globalid"])
