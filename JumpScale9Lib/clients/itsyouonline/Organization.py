@@ -66,6 +66,22 @@ class Organizations:
 
         return Organization(self._client, resp.json())
 
+    def delete(self, name):
+        """
+        Delete an organization with a give name.
+
+        Returns:
+            True if successful
+            False if unsuccessful
+        """
+
+        try:
+            resp = self._client.organizations.DeleteOrganization(name)
+        except Exception as e:
+            logging.exception("Unable to delete organization key with global ID %s" % (name))
+            return False
+        return True
+
 
 class Organization:
     def __init__(self, client, model):
