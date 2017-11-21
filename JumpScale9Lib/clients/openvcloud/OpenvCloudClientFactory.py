@@ -57,7 +57,7 @@ class OpenvCloudClientFactory:
         cl = Client(url, login, password, secret, port, jwt)
         return cl
 
-    def getLegacy(self, url, login=None, password=None):
+    def getLegacy(self, url, login=None, password=None, port=443, jwt=None):
         """
         Returns an OpenvCloud Client object for a given username and password.
 
@@ -72,14 +72,14 @@ class OpenvCloudClientFactory:
         """
 
         url = self._urlClean(url)
-        cl = Client(url, login, password, secret=None, port=443, jwt=None)
+        cl = Client(url, login, password, secret=None, port=port, jwt=jwt)
         return cl
 
     def getFromAYSService(self, service):
         """
         Returns an OpenvCloud Client object for a given AYS service object.
         """
-        return self.get(
+        return self.getLegacy(
             url=service.model.data.url,
             login=service.model.data.login,
             password=service.model.data.password,
@@ -163,7 +163,7 @@ class Client:
                 jwt = refresh_jwt(jwt, payload)
             self.api._session.headers['Authorization'] = 'bearer {}'.format(
                 jwt)
-            self._login = payload['username']
+            self._login = '{}@{}'.format(payload['username'], payload['iss'])
         else:
             if password:
                 if self._isms1:
@@ -399,12 +399,14 @@ class Account(Authorizables):
 
     def refresh(self):
         accounts = self.client.api.cloudapi.accounts.list()
+        found = False
         for account in accounts:
             if account['id'] == self.id:
                 self.model = account
+                found = True
                 break
-        else:
-            raise j.exceptions.RuntimeError("Account has been deleted")
+        if not found:
+            raise j.exceptions.RuntimeError("No account found with name %s. The user doesn't have access to the account or it is been deleted." % self.model['name'])
 
     def delete(self):
         self.client.api.cloudbroker.account.delete(

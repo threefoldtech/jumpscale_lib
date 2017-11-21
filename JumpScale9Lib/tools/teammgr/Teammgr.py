@@ -1,103 +1,84 @@
 from js9 import j
 
-persontoml="""
-
+fixed_toml = """
 login =""
 first_name = ""
 last_name = ""
 locations = []
 companies = []
 departments = []
-
 languageCode = "en-us"
 title = []
-
 description_internal =""
-
 description_public_friendly =""
-
 description_public_formal =""
-
 hobbies = ""
-
 pub_ssh_key= ""
-
 skype = ""
 telegram = ""
 itsyou_online = ""
-
 reports_into = ""
-
 mobile = []
-
 email = []
-
 github = ""
 linkedin = ""
-
 links = []
-
-
 """
 
 
-class TODO():
-
-    def __init__(self,team,path,todo):
-        path=path.replace("//","/")
-        self.team=team
-        self.path=path
-        self.todo=todo
+class TODO:
+    def __init__(self, team, path, todo):
+        path = path.replace("//", "/")
+        self.team = team
+        self.path = path
+        self.todo = todo
 
     @property
     def person(self):
         return j.sal.fs.getBaseName(self.path)
 
-
     def __repr__(self):
-        return "Todo %s:%s:%s:%s   "%(self.team.company,self.team.name,self.path,self.todo)
+        return "Todo %s:%s:%s:%s   " % (self.team.company, self.team.name, self.path, self.todo)
 
-    __str__=__repr__        
+    __str__ = __repr__
 
-class Team():
-    def __init__(self,company,name,path):
+
+class Team:
+    def __init__(self, company, name, path):
         self.company = company
-        self.path=path
-        self.name=name
+        self.path = path
+        self.name = name
         self.todo = []
 
-    def addTodo(self,path,todo):
-        todo=todo.replace("_","-")
-        td=TODO(self,path,todo)
-        print(td)
+    def add_to_do(self, path, todo):
+        todo = todo.replace("_", "-")
+        td = TODO(self, path, todo)
         self.todo.append(td)
 
     @property
-    def todoPerPerson(self):
-        todo2={}
+    def todo_per_person(self):
+        todo2 = {}
         for todo in self.todo:
             if todo.person not in todo2:
-                todo2[todo.person]=[]
+                todo2[todo.person] = []
             todo2[todo.person].append(todo)
         return todo2
 
     @property
     def todo_md(self):
-        md="# TODO FOR : %s %s\n\n"%(self.company,self.name)
-        for person,todos in self.todoPerPerson.items():
-            md+="## %s\n\n"%person
+        md = "# TODO FOR : %s %s\n\n" % (self.company, self.name)
+        for person, todos in self.todo_per_person.items():
+            md += "## %s\n\n" % person
             for todo in todos:
-                md+="- %s\n"%(todo.todo)
-            md+="\n"
+                md += "- %s\n" % todo.todo
+            md += "\n"
 
         return md
 
     def __repr__(self):
-        return "Team %s:%s:%s"%(self.company,self.name,self.path)
+        return "Team %s:%s:%s" % (self.company, self.name, self.path)
 
-    __str__=__repr__
-
-    
+    __str__ = __repr__
 
 
 class Teammgr:
@@ -105,180 +86,125 @@ class Teammgr:
         self.__jslocation__ = "j.tools.team_manager"
         self.teams = {}
 
-    def _addTeam(self,path,company,name):
-        key="%s_%s"%(company,name)
-        if not key in self.teams.keys():
-            self.teams[key]=Team(company,name,path)
+    def _add_team(self, path, company, name):
+        key = "%s_%s" % (company, name)
+        if key not in self.teams:
+            self.teams[key] = Team(company, name, path)
         return self.teams[key]
-            
 
-    def process(self,path):
+    def process(self, path):
+        team_path = path + "/team"
+        if not j.sal.fs.exists(team_path):
+            raise RuntimeError("Cannot find team path:%s" % team_path)
 
-        teampath=path+"/team"
+        for team_name_path in j.sal.fs.listDirsInDir(team_path, recursive=False):
+            team_name = j.sal.fs.getBaseName(team_name_path)
+            for catPath in j.sal.fs.listDirsInDir(team_name_path, recursive=False):
+                cat = j.sal.fs.getBaseName(catPath)
+                team_obj = self._add_team(catPath, team_name, cat)
+                for personPath in j.sal.fs.listDirsInDir(catPath, recursive=False):
+                    images = j.sal.fs.listFilesInDir(personPath, filter="*.jpg")
+                    unprocessed_images = [item for item in images if j.sal.fs.getBaseName(item) == "unprocessed.jpg"]
+                    if images and not unprocessed_images:
+                        # did not have an unprocessed one need to copy to unprocessed name
+                        image = images[0]
+                        j.sal.fs.renameFile(image, "%s/unprocessed.jpg" % (j.sal.fs.getDirName(image)))
+                    elif not unprocessed_images:
+                        team_obj.add_to_do(personPath, "did not find unprocessed picture, please add")
 
-        if not j.sal.fs.exists(teampath):
-            raise RuntimeError("Cannot find teampath:%s"%teampath)
+                    self.fix_toml(team_obj, personPath)
 
-        for teamnamePath in j.sal.fs.listDirsInDir(teampath,recursive=False):
-            teamname=j.sal.fs.getBaseName(teamnamePath)
-            for catPath in j.sal.fs.listDirsInDir(teamnamePath,recursive=False):
-                    cat=j.sal.fs.getBaseName(catPath)
-                    teamObj=self._addTeam(catPath,teamname,cat)
-                    for personPath in j.sal.fs.listDirsInDir(catPath,recursive=False):
-                        personName=j.sal.fs.getBaseName(personPath)
-                        images=j.sal.fs.listFilesInDir(personPath,filter="*.jpg")
-                        unprocessed = [item for item in images if item == "unprocessed.jpg"]
-                        processed = [item for item in images if j.sal.fs.getBaseName(item) == "processed.jpg"]
-                        images = [item for item in images if not j.sal.fs.getBaseName(item) == "unprocessed.jpg"]  #filter the unprocessed ones
-                        images = [item for item in images if not j.sal.fs.getBaseName(item) == "processed.jpg"]  #filter the unprocessed ones
+        j.sal.fs.createDir("%s/todo" % path)
+        for key, team in self.teams.items():
+            path1 = "%s/todo/%s_%s.md" % (path, team.company, team.name)
+            j.sal.fs.writeFile(path1, team.todo_md)
 
-                        if len(images)==1 and unprocessed==[]:
-                            #did not have an unprocessed one need to copy to unprocessed name
-                            image=images[0]
-                            j.sal.fs.renameFile(image,"%s/unprocessed.jpg"%(j.sal.fs.getDirName(image)))
-                        elif unprocessed==[]:
-                            teamObj.addTodo(personPath,"did not find unprocessed picture, please add")
+    @staticmethod
+    def fix_toml(team_obj, person_path):
 
-                        if processed==[]:
-                            teamObj.addTodo(personPath,"did not find processed picture, please add")
-
-                        self.fixtoml(teamObj,personPath)
-
-        j.sal.fs.createDir("%s/todo"%path)
-        for key,team in self.teams.items():
-            path1="%s/todo/%s_%s.md"%(path,team.company,team.name)
-            j.sal.fs.writeFile(path1,team.todo_md)
-
-
-
-    def fixtoml(self,teamObj,personPath):        
-
-        dpath="%s/fixed.yaml"%(personPath)
-        j.sal.fs.remove(dpath)
-        dpath="%s/fixed.toml"%(personPath)
-        j.sal.fs.remove(dpath)
-
-        # dpath="%s/fixed.toml"%(personPath)
-        dpath="%s/fixed_donotchange.toml"%(personPath)
-        if j.sal.fs.exists(dpath):
-            newtoml=j.data.serializer.toml.load(dpath)
-        else:
-            newtoml=j.data.serializer.toml.loads(persontoml)
-
-        #fix older toml files
-        for item in ["companies"]:
-            if item not in newtoml.keys():
-                newtoml[item]=[]
-
-        def addToToml(newtoml,key,val,overwrite=False):
-            print ("process toml:%s:%s"%(key,val))
+        def add_to_toml(newtoml, key, val):
             if j.data.types.list.check(newtoml[key]):
                 if j.data.types.list.check(val):
                     for val0 in val:
+                        val = str(val).lower().strip()
                         if val0 not in newtoml[key]:
                             newtoml[key].append(val0)
                 else:
-                    val=str(val).replace("'","")
+                    val = str(val).replace("'", "")
                     if val not in newtoml[key]:
                         newtoml[key].append(val)
             elif j.data.types.bool.check(newtoml[key]):
-                if str(val).lower() in ['true',"1","y","yes"]:
-                    val=True
+                if str(val).lower() in ['true', "1", "y", "yes"]:
+                    val = True
                 else:
-                    val=False
-                newtoml[key]=val
+                    val = False
+                newtoml[key] = val
             elif j.data.types.int.check(newtoml[key]):
-                newtoml[key]=int(val)
+                newtoml[key] = int(val)
             elif j.data.types.float.check(newtoml[key]):
-                newtoml[key]=int(val)
+                newtoml[key] = int(val)
             else:
-                newtoml[key]=str(val)
+                newtoml[key] = str(val)
 
             return newtoml
 
-        # tomlfiles=j.sal.fs.listFilesInDir(personPath,filter="*.toml")
-        # tomlfiles = [item for item in tomlfiles if not j.sal.fs.getBaseName(item) == "person.toml"]
-        # tomlfiles = [item for item in tomlfiles if not j.sal.fs.getBaseName(item) == "profile.toml"]
-        # if len(tomlfiles)>0:
-        #     teamObj.addTodo(personPath,"found unrecognized toml files (non person or profile)")
-
-        def process(newtoml,name):
-            tpath="%s/%s.toml"%(personPath,name)
-
-            error=False
-            if j.sal.fs.exists(tpath):
-
+        def process(newtoml, name):
+            toml_path = "%s/%s.toml" % (person_path, name)
+            if j.sal.fs.exists(toml_path):
                 try:
-                    persontoml=j.data.serializer.toml.load(tpath)
-                except Exception as e:
-                    teamObj.addTodo(personPath,"toml file is corrupt:%s"%tpath)
+                    personal_toml = j.data.serializer.toml.load(toml_path)
+                except Exception:
+                    team_obj.add_to_do(person_path, "toml file is corrupt:%s" % toml_path)
                     return newtoml
 
-                for key,val in persontoml.items():
-                    if key not in newtoml.keys():
-                        if key=="experience":
+                for key, val in personal_toml.items():
+                    if key not in newtoml:
+                        if key == "experience":
                             try:
-                                newtoml=addToToml(newtoml,"description_public_formal",val)
+                                newtoml = add_to_toml(newtoml, "description_public_formal", val)
                             except Exception as e:
-                                teamObj.addTodo(personPath,"type error:%s %s (%s)"%(tpath,key,e))
-                        elif key=="description":
-                            try:
-                                newtoml=addToToml(newtoml,"description_public_formal",val)
-                            except Exception as e:
-                                teamObj.addTodo(personPath,"type error:%s %s (%s)"%(tpath,key,e))
-                        elif key in ["escalation","action"]:
-                            pass
-                        else:
-                            error=True
-                            teamObj.addTodo(personPath,"found unrecognized key:%s in tomlfile:%s"%(key,tpath))
+                                team_obj.add_to_do(person_path, "type error:%s %s (%s)" % (toml_path, key, e))
+                        elif key not in ["escalation", "action"]:
+                            team_obj.add_to_do(person_path,
+                                               "found unrecognized key:%s in toml file:%s" % (key, toml_path))
                     else:
                         try:
-                            newtoml=addToToml(newtoml,key,val)
+                            newtoml = add_to_toml(newtoml, key, val)
                         except Exception as e:
-                            teamObj.addTodo(personPath,"type error:%s %s (%s)"%(tpath,key,e))
-
-            # if error==False:
-            #     j.sal.fs.remove(tpath)
-
+                            team_obj.add_to_do(person_path, "type error:%s %s (%s)" % (toml_path, key, e))
             return newtoml
 
-        newtoml=process(newtoml,"profile")
-        newtoml=process(newtoml,"person")
+        j.sal.fs.remove("%s/fixed.yaml" % person_path)
+        j.sal.fs.remove("%s/fixed.toml" % person_path)
 
-        departm="%s:%s"%(teamObj.company,teamObj.name)
-        if not departm in newtoml["departments"]:
-            newtoml["departments"].append(departm)
+        final_toml_path = "%s/fixed_donotchange.toml" % person_path
+        if j.sal.fs.exists(final_toml_path):
+            new_toml = j.data.serializer.toml.load(final_toml_path)
+        else:
+            new_toml = j.data.serializer.toml.loads(fixed_toml)
 
-        if not teamObj.company in newtoml["companies"]:
-            newtoml["companies"].append(teamObj.company)
+        # fix older toml files
+        new_toml.setdefault("companies", [])
 
-        for item in ["login","first_name","last_name","description_public_formal","description_public_friendly","pub_ssh_key","telegram","reports_into"]:
-            if newtoml[item]=="":
-                teamObj.addTodo(personPath,"empty value for:%s"%(item))
-        for item in ["locations","departments","title","mobile","email"]:
-            if newtoml[item]==[]:
-                teamObj.addTodo(personPath,"empty value for:%s"%(item))
+        new_toml = process(new_toml, "profile")
+        new_toml = process(new_toml, "person")
 
-        def processStrList(newtoml,key):
-            out=[]
-            for item in newtoml[key]:
-                item=item.lower().strip()
-                out.append(item)
-            newtoml[key]=out
-            return newtoml
-        
-        for item in ["locations","departments","companies","departments"]:
-            newtoml=processStrList(newtoml,item)
+        department = "%s:%s" % (team_obj.company, team_obj.name)
+        if department not in new_toml["departments"]:
+            new_toml["departments"].append(department)
 
-        def processStr(newtoml,key):
-            val=newtoml[key]
-            val=val.lower().strip()
-            newtoml[key]=val
-            return newtoml
+        if team_obj.company not in new_toml["companies"]:
+            new_toml["companies"].append(team_obj.company)
 
-        for item in ["login","first_name","last_name","telegram","skype"]:
-            newtoml=processStr(newtoml,item)
+        for item in ["login", "first_name", "last_name", "description_public_formal", "description_public_friendly",
+                     "pub_ssh_key", "telegram", "reports_into", "locations", "departments", "title", "mobile", "email"]:
+            if not new_toml[item]:
+                team_obj.add_to_do(person_path, "empty value for:%s" % item)
 
+        for key in ["locations", "companies", "departments"]:
+            new_toml[key] = [toml_item.lower().strip() for toml_item in new_toml[key]]
 
-        j.data.serializer.toml.dump(dpath,newtoml)
+        for key in ["login", "first_name", "last_name", "telegram", "skype"]:
+            new_toml[key] = new_toml[key].lower().strip()
 
+        j.data.serializer.toml.dump(final_toml_path, new_toml)
