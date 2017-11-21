@@ -1,4 +1,3 @@
-# OpenvCloud 
+# JumpScale Client for OpenvCloud 
 
-
-See [Using the OpenvCloud Client](/docs/how_to_use_OVC_client.md).
+See [How to use the JumpScale client for OpenvCloud](/docs/how_to_use_OVC_client.md) for getting started.

@@ -12,6 +12,8 @@
 
 - [Use the AYS Client](AYS_client.md)
 
+- [Use the ItsYou.online Client](IYO_client.md)
+
 - [Get a JWT for AYS](JWT_for_AYS.md)
 - [Gt a JWT for OpenvCloud](JWT_for_OVC.md)
 
