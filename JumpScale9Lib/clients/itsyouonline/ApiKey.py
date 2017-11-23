@@ -64,7 +64,6 @@ class ApiKeys:
         data = {
             'label' : label
         }
-        import ipdb;ipdb.set_trace()
         if "username" in self._parent.model:
             data['username'] = self._parent.model["username"]
             try:
