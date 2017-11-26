@@ -559,7 +559,7 @@ class Space(Authorizables):
             name,
             sshkeyname,
             memsize=2,
-            vcpus=1,
+            vcpus=None,
             disksize=10,
             datadisks=[],
             image="Ubuntu 16.04 x64",
@@ -588,7 +588,7 @@ class Space(Authorizables):
             raise RuntimeError('Name cannot contain spaces')
         imageId = self.image_find_id(image)
         if sizeId is None:
-            sizeId = self.size_find_id(memsize)
+            sizeId = self.size_find_id(memsize, vcpus)
         if name in self.machines:
             raise j.exceptions.RuntimeError(
                 "Name is not unique, already exists in %s" % self)
@@ -669,13 +669,14 @@ class Space(Authorizables):
             memory = memory * 1024  # prob given in GB
 
         sizes = [(item["memory"], item) for item in self.sizes]
-        sizes.sort(key=lambda size: size[0])
-        sizes.reverse()
+        sizes.sort(key=lambda size: size[0], reverse=True)
         for size, sizeinfo in sizes:
             if memory > size / 1.1:
+                if vcpus and vcpus != sizeinfo['vcpus']:
+                    continue
                 return sizeinfo['id']
 
-        raise j.exceptions.RuntimeError("did not find memory size:%s" % memory)
+        raise j.exceptions.RuntimeError("did not find memory size:%s, or found with different vcpus" % memory)
 
     @property
     def sizes(self):
