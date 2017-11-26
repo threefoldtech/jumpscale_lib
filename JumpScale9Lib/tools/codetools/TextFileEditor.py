@@ -12,6 +12,7 @@ class TextFileEditor:
 
     def __init__(self, filepath):
         self.filepath = filepath
+        self.logger = j.logger.get('TextFileEditor')
         self.content = j.sal.fs.fileGetContents(filepath)
 
     def getTextLineEditor(self):
@@ -35,12 +36,12 @@ class TextFileEditor:
     def find1Line(self, includes="", excludes=""):
         """
         if moren than 1 line or 0 line error will be raised
-        @param includes are include patters (regular expressions)
+        @param includes are include patterns (regular expressions) in list
         @param excludes
         @return [linenr,line]
         """
-        j.logger.log("try to find 1 line which matches the specified includes %s & excludes %s" %
-                     (includes, excludes), 8)
+        # self.logger.info("try to find 1 line which matches the specified includes %s & excludes %s" %
+        #                  (includes, excludes), 8)
         result = []
         linenr = 0
         if includes == "":
@@ -60,7 +61,8 @@ class TextFileEditor:
                 "Could not find a line matching %s and not matching %s in file %s" %
                 (includes, excludes, self.filepath))
         if len(result) > 1:
-            raise j.exceptions.RuntimeError("Found more than 1 line matching %s" % (includes, self.filepath))
+            raise j.exceptions.RuntimeError(
+                "Found more than 1 line matching %s" % (includes, self.filepath))
         return [linenrfound, linefound]
 
     def replaceLinesFromFunction(self, replaceFunction, argument, includes="", excludes=""):
@@ -74,7 +76,8 @@ class TextFileEditor:
 
         """
         # TODO: add good logging statements everywhere   (id:49)
-        self.content = j.data.regex.replaceLines(replaceFunction, argument, self.content, includes, excludes)
+        self.content = j.data.regex.replaceLines(
+            replaceFunction, argument, self.content, includes, excludes)
         self.save()
 
     def replace1LineFromFunction(self, replaceFunction, argument, includes="", excludes=""):
@@ -82,8 +85,10 @@ class TextFileEditor:
         same as with replaceLinesFromFunction, but only 1 line will be matched
 
         """
-        self.find1Line(includes, excludes)  # make sure only 1 line can match otherwise error will be raised
-        self.replaceLinesFromFunction(replaceFunction, argument, includes, excludes)
+        self.find1Line(
+            includes, excludes)  # make sure only 1 line can match otherwise error will be raised
+        self.replaceLinesFromFunction(
+            replaceFunction, argument, includes, excludes)
         self.save()
 
     def replace1Line(self, newcontent, includes="", excludes=""):
@@ -93,7 +98,8 @@ class TextFileEditor:
         both are arrays
         replace matching lines with new content
         """
-        self.find1Line(includes, excludes)  # make sure only 1 line can match otherwise error will be raised
+        self.find1Line(
+            includes, excludes)  # make sure only 1 line can match otherwise error will be raised
         self.replaceLines(newcontent, includes, excludes)
         self.save()
 
@@ -147,12 +153,15 @@ class TextFileEditor:
         """
         content = content.strip()
         lineEditor = self.getTextLineEditor()
-        lineEditor.matchBlocks("main", ["### %s" % sectionName], [], ["###END %s" % sectionName], [])
+        lineEditor.matchBlocks("main", ["### %s" % sectionName], [], [
+                               "###END %s" % sectionName], [])
 
         if not lineEditor.existsBlock("main"):
-            lineEditor.addBlock("main", "### %s\n%s\n###END %s\n" % (sectionName, content, sectionName))
+            lineEditor.addBlock("main", "### %s\n%s\n###END %s\n" %
+                                (sectionName, content, sectionName))
         else:
-            lineEditor.replaceBlock("main", "### %s\n%s\n###END %s\n" % (sectionName, content, sectionName))
+            lineEditor.replaceBlock("main", "### %s\n%s\n###END %s\n" % (
+                sectionName, content, sectionName))
 
         lineEditor.save()
         self.content = j.sal.fs.fileGetContents(self.filepath)
@@ -164,7 +173,8 @@ class TextFileEditor:
         delete that part
         """
         lineEditor = self.getTextLineEditor()
-        lineEditor.matchBlocks("main", ["### %s" % sectionName], [], ["###END %s" % sectionName], [])
+        lineEditor.matchBlocks("main", ["### %s" % sectionName], [], [
+                               "###END %s" % sectionName], [])
         lineEditor.deleteBlock("main")
         lineEditor.save()
         self.content = j.sal.fs.fileGetContents(self.filepath)
@@ -179,7 +189,8 @@ class TextFileEditor:
         @param regexFindsubsetToReplace: The subset within regexFind that you want to replace
         @param replacewith: The replacement
         """
-        self.content = j.data.regex.replace(regexFind, regexFindsubsetToReplace, replaceWith, self.content)
+        self.content = j.data.regex.replace(
+            regexFind, regexFindsubsetToReplace, replaceWith, self.content)
         self.save()
 
     def replaceNonRegex(self, tofind, replaceWith):
@@ -198,7 +209,8 @@ class TextFileEditor:
         for line in self.content.split("\n"):
             if reset and done is False and line.find(tofind) != -1 and ignoreRegex is not None:
                 # found right line
-                line = j.data.regex.replace(ignoreRegex, ignoreRegex, "", line).rstrip()
+                line = j.data.regex.replace(
+                    ignoreRegex, ignoreRegex, "", line).rstrip()
                 line = line + add
                 print(("CH:%s" % line))
                 done = True
@@ -222,5 +234,6 @@ class TextFileEditor:
         if filepath is None:
             filepath = self.filepath
         if filepath is None:
-            raise j.exceptions.RuntimeError("Cannot write the textfile because path is None")
+            raise j.exceptions.RuntimeError(
+                "Cannot write the textfile because path is None")
         j.sal.fs.writeFile(filepath, self.content)
