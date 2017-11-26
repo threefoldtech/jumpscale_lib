@@ -1,4 +1,4 @@
-# How to use the AYS client
+# How to use the JumpScale client for AYS
 
 The AYS client is available as part of [jumpscale/lib9](https://github.com/Jumpscale/lib9).
 

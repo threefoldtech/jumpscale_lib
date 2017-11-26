@@ -1,4 +1,4 @@
-# Using the OpenvCloud Client
+# How to use the JumpScale client for OpenvCloud
 
 In order to use the OpenvCloud client you need a JSON Web token (JWT).
 

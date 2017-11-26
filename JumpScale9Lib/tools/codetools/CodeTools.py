@@ -49,11 +49,8 @@ class CodeTools:
             self._templateengine = TemplateEngineWrapper()
         return self._templateengine
 
-    @property
-    def texteditor(self):
-        if self._texteditor is None:
-            self._texteditor = TextFileEditor()
-        return self._texteditor
+    def textEditorGet(self, path):
+        return TextFileEditor(path)
 
     @property
     def wordreplacer(self):
@@ -160,7 +157,8 @@ class CodeTools:
 
                 elif isinstance(value, dict) and not isinstance(obj.__dict__[objpropname], dict):
                     # is a dict which represents another object
-                    raise j.exceptions.RuntimeError("not supported, only 1 level deep objects")
+                    raise j.exceptions.RuntimeError(
+                        "not supported, only 1 level deep objects")
                 else:
                     obj.__dict__[objpropname] = value
             return obj
@@ -171,7 +169,8 @@ class CodeTools:
         if isinstance(data, dict):
             for key, value in list(data.items()):
                 # is for new obj functionname
-                objpropname = "_P_%s" % key if not key.startswith('_P_') else key
+                objpropname = "_P_%s" % key if not key.startswith(
+                    '_P_') else key
 
                 if isinstance(value, dict) and isinstance(obj.__dict__[objpropname], dict):
                     # is a real dict (not a dict as representation of an object)
@@ -203,7 +202,8 @@ class CodeTools:
 
                 elif isinstance(value, dict) and not isinstance(obj.__dict__[objpropname], dict):
                     # is a dict which represents another object
-                    obj.__dict__[objpropname] = self.dict2JSModelobject(obj.__dict__[objpropname], value)
+                    obj.__dict__[objpropname] = self.dict2JSModelobject(
+                        obj.__dict__[objpropname], value)
                 else:
                     obj.__dict__[objpropname] = value
             return obj
@@ -358,6 +358,7 @@ class CodeTools:
                 content2 += "\n"
             else:
                 if line.find("    ") != 0:
-                    raise j.exceptions.RuntimeError("identation error for %s." % content)
+                    raise j.exceptions.RuntimeError(
+                        "identation error for %s." % content)
                 content2 += "%s\n" % line[4:]
         return content2

@@ -580,8 +580,12 @@ class Space(Authorizables):
             - sizeId (optional): overrides the value set for memsize, denotes the type or "size" of the virtual machine, actually sets the number of virtual CPU cores and amount of memory, see the sizes property of the cloud space for the sizes available in the cloud space
             - stackId (optional): identifies the grid node on which to create the virtual machine, if nothing specified (recommended) OpenvCloud will decide where to create the virtual machine
 
-        Raises: RuntimeError if machine with given name already exists.
+        Raises:
+            - RuntimeError if machine with given name already exists.
+            - RuntimeError if machine name contains spaces
         """
+        if ' ' in name:
+            raise RuntimeError('Name cannot contain spaces')
         imageId = self.image_find_id(image)
         if sizeId is None:
             sizeId = self.size_find_id(memsize)
