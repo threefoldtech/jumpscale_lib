@@ -1,7 +1,7 @@
 
 from js9 import j
 import os
-from .SwaggerSpec import *
+from .SwaggerSpec import SwaggerSpec
 
 
 class RamlAppServer:
@@ -18,7 +18,7 @@ class RamlAppServer:
         return j.sal.fs.getDirName(os.path.abspath(__file__)).rstrip("/")
 
     def _nodeInstall(self, cmdname, name, reset=False):
-        if reset or j.sal.process.checkInstalled(cmdname) == False:
+        if reset or j.sal.process.checkInstalled(cmdname) is False:
             print("nodeinstall:%s" % cmdname)
             npath = j.sal.fs.joinPaths(j.dirs.VARDIR, "nodejs_modules")
             if not j.sal.fs.exists(npath):
@@ -47,9 +47,9 @@ class RamlAppServer:
         """
         """
 
-        if j.sal.process.checkInstalled("go") == False:
+        if j.sal.process.checkInstalled("go") is False:
             j.tools.prefab.local.runtimes.golang.install()
-        if j.sal.process.checkInstalled("npm") == False:
+        if j.sal.process.checkInstalled("npm") is False:
             j.tools.prefab.local.runtimes.nodejs.install()
         self._nodeInstall("raml2html", "raml2html")
         self._nodeInstall("api-spec-converter", "api-spec-converter")
@@ -63,7 +63,7 @@ class RamlAppServer:
             j.sal.fs.symlink("%s/lib/bin/converter.js" % res,
                              "/usr/local/bin/raml_converter", overwriteTarget=True)
 
-        if j.sal.process.checkInstalled("go-raml") == False:
+        if j.sal.process.checkInstalled("go-raml") is False:
             grpath = j.sal.fs.joinPaths(j.dirs.HOMEDIR, "go", "bin", "go-raml")
             if not j.sal.fs.exists(grpath):
                 j.sal.process.execute("go get -u github.com/Jumpscale/go-raml")
@@ -98,7 +98,7 @@ class RamlAppServer:
 
         def _generate():
 
-            j.sal.fs.remove("%s/generated"%path)
+            j.sal.fs.remove("%s/generated" % path)
 
             cmd = "cd %s;mkdir -p generated/server;cd api_spec;go-raml server --language python --dir ../generated/server --ramlfile main.raml" % path
             j.sal.process.executeInteractive(cmd)
@@ -132,4 +132,3 @@ class RamlAppServer:
             j.sal.fs.copyFile(spath, dpath)
             editor = j.tools.code.textEditorGet(dpath)
             editor.replace1Line('', ["comment this when in js9 ramlserver"])
-

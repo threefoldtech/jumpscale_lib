@@ -87,7 +87,7 @@ class ItsYouOnline(OauthInstance):
         import jose
         import jose.jwt
         scope = self.scope + ',offline_access'
-        organization = j.portal.tools.server.active.oauth_cfg['organization']
+        organization = j.portal.tools.server.active.oauth_cfg['client_id']
         payload = {'code': code, 'client_id': self.id, 'client_secret': self.secret,
                    'redirect_uri': self.redirect_url, 'grant_type': '', 'scope': scope,
                    'response_type': 'id_token', 'state': state, 'aud': organization}
