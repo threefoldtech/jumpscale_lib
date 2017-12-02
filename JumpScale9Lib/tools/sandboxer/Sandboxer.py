@@ -23,7 +23,8 @@ class Dep:
         else:
             if j.sal.fs.exists(self.path):
                 return
-        raise j.exceptions.RuntimeError("could not find lib (dep): '%s'" % self.path)
+        raise j.exceptions.RuntimeError(
+            "could not find lib (dep): '%s'" % self.path)
 
     def copyTo(self, path):
         dest = j.sal.fs.joinPaths(path, self.name)
@@ -101,6 +102,9 @@ class Sandboxer:
         return result
 
     def findLibs(self, path):
+        """
+        not needed to use manually, is basically ldd
+        """
         result = self._ldd(path)
         return result
 
@@ -129,8 +133,10 @@ class Sandboxer:
 
         print("SANDBOX COPY: %s to %s" % (path, dest))
 
-        excludeFileRegex = [re.compile(r'%s' % item) for item in excludeFileRegex]
-        excludeDirRegex = [re.compile(r'%s' % item) for item in excludeDirRegex]
+        excludeFileRegex = [re.compile(r'%s' % item)
+                            for item in excludeFileRegex]
+        excludeDirRegex = [re.compile(r'%s' % item)
+                           for item in excludeDirRegex]
         for extregex in excludeFiltersExt:
             excludeFileRegex.append(re.compile(r'(\.%s)$' % extregex))
 
@@ -164,99 +170,99 @@ class Sandboxer:
         j.sal.fswalker.walkFunctional(path, callbackFunctionFile=callbackFile, callbackFunctionDir=None, arg=(
             path, dest), callbackForMatchDir=callbackForMatchDir, callbackForMatchFile=callbackForMatchFile)
 
-    def sandbox_python3(self):
-        j.tools.prefab.local.js9.sandbox_python()
+    # def sandbox_python3(self):
+    #     j.tools.prefab.local.js9.sandbox_python()
 
-    def dedupe(self, path, storpath, name, excludeFiltersExt=[
-               "pyc", "bak"], append=False, reset=False, removePrefix="", compress=True, delete=False, excludeDirs=[]):
-        def copy2dest(src, removePrefix):
-            if j.sal.fs.isLink(src):
-                srcReal = j.sal.fs.readLink(src)
-                if not j.sal.fs.isAbsolute(srcReal):
-                    srcReal = j.sal.fs.joinPaths(j.sal.fs.getParent(src), srcReal)
-            else:
-                srcReal = src
+    # def dedupe(self, path, storpath, name, excludeFiltersExt=[
+    #            "pyc", "bak"], append=False, reset=False, removePrefix="", compress=True, delete=False, excludeDirs=[]):
+    #     def copy2dest(src, removePrefix):
+    #         if j.sal.fs.isLink(src):
+    #             srcReal = j.sal.fs.readLink(src)
+    #             if not j.sal.fs.isAbsolute(srcReal):
+    #                 srcReal = j.sal.fs.joinPaths(j.sal.fs.getParent(src), srcReal)
+    #         else:
+    #             srcReal = src
 
-            md5 = j.data.hash.md5(srcReal)
-            dest2 = "%s/%s/%s/%s" % (storpath2, md5[0], md5[1], md5)
-            dest2_bro = "%s/%s/%s/%s.bro" % (storpath2, md5[0], md5[1], md5)
-            path_src = j.tools.path.get(srcReal)
-            self.original_size += path_src.size
-            if compress:
-                print("- %-100s %sMB" % (srcReal, round(path_src.size / 1000000, 1)))
-                if delete or not j.sal.fs.exists(dest2_bro):
-                    cmd = "bro --quality 7 --input '%s' --output %s" % (srcReal, dest2_bro)
-                    # print (cmd)
-                    j.sal.process.execute(cmd)
-                    if not j.sal.fs.exists(dest2_bro):
-                        raise j.exceptions.RuntimeError("Could not do:%s" % cmd)
-                    path_dest = j.tools.path.get(dest2_bro)
-                    size = path_dest.size
-                    self.new_size += size
-                    if not self.original_size == 0:
-                        efficiency = round(self.new_size / self.original_size, 3)
-                    else:
-                        efficiency = 1
-                    if not path_src.size == 0:
-                        efficiency_now = round(path_dest.size / path_src.size, 3)
-                    else:
-                        efficiency_now = 0
-                    print("- %-100s %-6s %-6s %sMB" %
-                          ("", efficiency, efficiency_now, round(self.original_size / 1000000, 1)))
-            else:
-                j.sal.fs.copyFile(srcReal, dest2)
+    #         md5 = j.data.hash.md5(srcReal)
+    #         dest2 = "%s/%s/%s/%s" % (storpath2, md5[0], md5[1], md5)
+    #         dest2_bro = "%s/%s/%s/%s.bro" % (storpath2, md5[0], md5[1], md5)
+    #         path_src = j.tools.path.get(srcReal)
+    #         self.original_size += path_src.size
+    #         if compress:
+    #             print("- %-100s %sMB" % (srcReal, round(path_src.size / 1000000, 1)))
+    #             if delete or not j.sal.fs.exists(dest2_bro):
+    #                 cmd = "bro --quality 7 --input '%s' --output %s" % (srcReal, dest2_bro)
+    #                 # print (cmd)
+    #                 j.sal.process.execute(cmd)
+    #                 if not j.sal.fs.exists(dest2_bro):
+    #                     raise j.exceptions.RuntimeError("Could not do:%s" % cmd)
+    #                 path_dest = j.tools.path.get(dest2_bro)
+    #                 size = path_dest.size
+    #                 self.new_size += size
+    #                 if not self.original_size == 0:
+    #                     efficiency = round(self.new_size / self.original_size, 3)
+    #                 else:
+    #                     efficiency = 1
+    #                 if not path_src.size == 0:
+    #                     efficiency_now = round(path_dest.size / path_src.size, 3)
+    #                 else:
+    #                     efficiency_now = 0
+    #                 print("- %-100s %-6s %-6s %sMB" %
+    #                       ("", efficiency, efficiency_now, round(self.original_size / 1000000, 1)))
+    #         else:
+    #             j.sal.fs.copyFile(srcReal, dest2)
 
-            stat = j.sal.fs.statPath(srcReal)
+    #         stat = j.sal.fs.statPath(srcReal)
 
-            if removePrefix != "":
-                if src.startswith(removePrefix):
-                    src = src[len(removePrefix):]
-                    if src[0] != "/":
-                        src = "/" + src
+    #         if removePrefix != "":
+    #             if src.startswith(removePrefix):
+    #                 src = src[len(removePrefix):]
+    #                 if src[0] != "/":
+    #                     src = "/" + src
 
-            out = "%s|%s|%s\n" % (src, md5, stat.st_size)
-            return out
+    #         out = "%s|%s|%s\n" % (src, md5, stat.st_size)
+    #         return out
 
-        if reset:
-            j.sal.fs.removeDirTree(storpath)
+    #     if reset:
+    #         j.sal.fs.removeDirTree(storpath)
 
-        storpath2 = j.sal.fs.joinPaths(storpath, "files")
-        j.sal.fs.createDir(storpath2)
-        j.sal.fs.createDir(j.sal.fs.joinPaths(storpath, "md"))
-        for i1 in "1234567890abcdef":
-            for i2 in "1234567890abcdef":
-                j.sal.fs.createDir("%s/%s/%s" % (storpath2, i1, i2))
+    #     storpath2 = j.sal.fs.joinPaths(storpath, "files")
+    #     j.sal.fs.createDir(storpath2)
+    #     j.sal.fs.createDir(j.sal.fs.joinPaths(storpath, "md"))
+    #     for i1 in "1234567890abcdef":
+    #         for i2 in "1234567890abcdef":
+    #             j.sal.fs.createDir("%s/%s/%s" % (storpath2, i1, i2))
 
-        print("DEDUPE: %s to %s" % (path, storpath))
+    #     print("DEDUPE: %s to %s" % (path, storpath))
 
-        plistfile = j.sal.fs.joinPaths(storpath, "md", "%s.flist" % name)
+    #     plistfile = j.sal.fs.joinPaths(storpath, "md", "%s.flist" % name)
 
-        if append and j.sal.fs.exists(path=plistfile):
-            out = j.sal.fs.fileGetContents(plistfile)
-        else:
-            j.sal.fs.remove(plistfile)
-            out = ""
+    #     if append and j.sal.fs.exists(path=plistfile):
+    #         out = j.sal.fs.fileGetContents(plistfile)
+    #     else:
+    #         j.sal.fs.remove(plistfile)
+    #         out = ""
 
-        # excludeFileRegex=[]
-        # for extregex in excludeFiltersExt:
-        #     excludeFileRegex.append(re.compile(ur'(\.%s)$'%extregex))
-        def skipDir(src):
-            for d in excludeDirs:
-                if src.startswith(d):
-                    return True
-            return False
+    #     # excludeFileRegex=[]
+    #     # for extregex in excludeFiltersExt:
+    #     #     excludeFileRegex.append(re.compile(ur'(\.%s)$'%extregex))
+    #     def skipDir(src):
+    #         for d in excludeDirs:
+    #             if src.startswith(d):
+    #                 return True
+    #         return False
 
-        if not j.sal.fs.isDir(path):
-            out += copy2dest(path, removePrefix)
-        else:
-            for src in j.sal.fs.listFilesInDir(path, recursive=True, exclude=[
-                                               "*.pyc", "*.git*"], followSymlinks=True, listSymlinks=True):
-                if skipDir(src):
-                    continue
-                out += copy2dest(src, removePrefix)
+    #     if not j.sal.fs.isDir(path):
+    #         out += copy2dest(path, removePrefix)
+    #     else:
+    #         for src in j.sal.fs.listFilesInDir(path, recursive=True, exclude=[
+    #                                            "*.pyc", "*.git*"], followSymlinks=True, listSymlinks=True):
+    #             if skipDir(src):
+    #                 continue
+    #             out += copy2dest(src, removePrefix)
 
-        out = j.data.text.sort(out)
-        j.sal.fs.writeFile(plistfile, out)
+    #     out = j.data.text.sort(out)
+    #     j.sal.fs.writeFile(plistfile, out)
 
     # def findDependencies(self, path, deps={}):
     #     excl = ["libc.so", "libpthread.so", "libutil.so"]

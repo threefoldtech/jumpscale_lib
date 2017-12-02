@@ -4,10 +4,15 @@ from .client import Client
 
 DEFAULT_BASE_URL = "https://itsyou.online"
 
+
 class ClientFactory:
 
     def __init__(self):
         self.__jslocation__ = 'j.clients.itsyouonline'
+
+    def install_for_ubuntu(self):
+        j.sal.process.execute("apt install  python3.5-dev")
+        j.sal.process.execute("pip3 install python-jose")
 
     def get_user(self, application_id, secret, validity=None, refreshable=False, scope=None, base_url=DEFAULT_BASE_URL):
         """
@@ -21,7 +26,8 @@ class ClientFactory:
             scope: defaults to None
             base_url: base url of the ItsYou.online service; defaults to https://itsyou.online
         """
-        jwt = Client.get_jwt(application_id, secret, validity, refreshable, scope, base_url)
+        jwt = Client.get_jwt(application_id, secret,
+                             validity, refreshable, scope, base_url)
         return self.get_user_with_jwt(jwt, base_url)
 
     def get_organization(self, global_id, secret, validity=None, refreshable=False, scope=None, base_url=DEFAULT_BASE_URL):
@@ -36,7 +42,8 @@ class ClientFactory:
             scope: defaults to None
             base_url: base url of the ItsYou.online service; defaults to https://itsyou.online
         """
-        jwt = Client.get_jwt(global_id, secret, validity, refreshable, scope, base_url)
+        jwt = Client.get_jwt(global_id, secret, validity,
+                             refreshable, scope, base_url)
         return self.get_organization_with_jwt(jwt, base_url)
 
     def get_jwt(self, client_id, secret, validity=None, refreshable=False, scope=None, base_url=DEFAULT_BASE_URL):
@@ -62,7 +69,7 @@ class ClientFactory:
             base_url: base url of the ItsYou.online service; defaults to https://itsyou.online
         """
         client = self.get_client_with_jwt(jwt, base_url)
-        return User(client) 
+        return User(client)
 
     def get_organization_with_jwt(self, jwt, base_url=DEFAULT_BASE_URL):
         """
@@ -87,7 +94,8 @@ class ClientFactory:
             scope: defaults to None
             base_url: base url of the ItsYou.online service; defaults to https://itsyou.online
         """
-        jwt = Client.get_jwt(client_id, secret, validity, refreshable, scope, base_url)
+        jwt = Client.get_jwt(client_id, secret, validity,
+                             refreshable, scope, base_url)
         return Client(jwt, base_url)
 
     def get_client_with_jwt(self, jwt, base_url=DEFAULT_BASE_URL):

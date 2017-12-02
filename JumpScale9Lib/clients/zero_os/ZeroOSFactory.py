@@ -33,6 +33,9 @@ class ZeroOS:
             res = self.node.ensure_persistance(name=name)
         return res
 
+    def install(self):
+        j.sal.process.execute("pip3 install 0-orchestrator")
+
 
 class ZeroOSFactory:
     """
@@ -193,18 +196,16 @@ class ZeroOSFactory:
 
         return ip_pub, ipaddr_priv
 
-    def get(self, ip_pub, ip_priv):
+    def get(self, ip_priv):
         print("[+] contacting zero-os server: %s" % ip_priv)
-        while True:
-            try:
-                node = Node(ip_priv)
-                node.client.timeout = 180
-                break
 
-            except RuntimeError as e:
-                print(
-                    "[+] make sure the server with public ip address %s is authorized in the zertotier network" % ip_pub)
-                time.sleep(1)
-                pass
+        print("[+] check port: 6379")
+        res = j.sal.nettools.waitConnectionTest(ip_priv, 6379, 90)
+        if res is False:
+            msg = "[+] make sure you are authorized in the zertotier network"
+            raise RuntimeError(msg)
+
+        node = Node(ip_priv)
+        node.client.timeout = 180
 
         return ZeroOS(node)

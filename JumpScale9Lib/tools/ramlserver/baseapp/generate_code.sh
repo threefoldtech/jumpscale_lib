@@ -1,1 +1,0 @@
-js9 'j.tools.ramlAppServer.generate()'

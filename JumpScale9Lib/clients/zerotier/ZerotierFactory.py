@@ -103,7 +103,7 @@ class ZerotierClient:
         return result
 
     def networkMemberGetFromIPPub(self, ip_pub, networkId, online=True):
-        res = self.getNetworkMembers(networkId, online)
+        res = self.networkMembersGet(networkId, online)
 
         res = [item for item in res if item['ipaddr_pub'] == ip_pub]
 

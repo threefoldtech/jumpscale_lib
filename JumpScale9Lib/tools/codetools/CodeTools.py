@@ -4,9 +4,9 @@ import inspect
 from JumpScale9 import j
 
 from .ClassBase import ClassBase, JSModelBase, JSRootModelBase
-from .TemplateEngineWrapper import TemplateEngineWrapper
+from .TemplateEngine import TemplateEngine
 from .TextFileEditor import TextFileEditor
-from .WordReplacer import WordReplacer
+from .ReplaceTool import ReplaceTool
 
 
 # ujson.dumps does not support some arguments like separators, indent ...etc
@@ -33,29 +33,26 @@ class CodeTools:
         self._templateengine = None
         # self.executor = CodeExecutor()
         self._wordreplacer = None
-        self._codemanager = None
+        # self._codemanager = None
         self._texteditor = None
 
-    @property
-    def codemanager(self):
-        if self._codemanager is None:
-            from CodeManager import CodeManager
-            self._codemanager = CodeManager()
-        return self._codemanager
+    # @property
+    # def codemanager(self):
+    #     if self._codemanager is None:
+    #         from CodeManager import CodeManager
+    #         self._codemanager = CodeManager()
+    #     return self._codemanager
 
     @property
-    def templateengine(self):
-        if self._templateengine is None:
-            self._templateengine = TemplateEngineWrapper()
-        return self._templateengine
+    def template_engine_get(self):
+        return TemplateEngine()
 
-    def textEditorGet(self, path):
+    def text_editor_get(self, path):
         return TextFileEditor(path)
 
-    @property
-    def wordreplacer(self):
+    def replace_tool_get(self):
         if self._wordreplacer is None:
-            self._wordreplacer = WordReplacer()
+            self._wordreplacer = ReplaceTool()
         return self._wordreplacer
 
     def textToTitle(self, text, maxnrchars=60):
@@ -104,12 +101,12 @@ class CodeTools:
         path = inspect.getsourcefile(classs.__class__)
         return path, nr, code
 
-    def classEditGeany(self, classs):
-        """
-        look for editor (uses geany) and then edit the file
-        """
-        filepath, linenr, sourcecode = self.classInfoGet(classs)
-        j.sal.process.executeWithoutPipe("geany %s" % filepath)
+    # def classEditGeany(self, classs):
+    #     """
+    #     look for editor (uses geany) and then edit the file
+    #     """
+    #     filepath, linenr, sourcecode = self.classInfoGet(classs)
+    #     j.sal.process.executeWithoutPipe("geany %s" % filepath)
 
     def classGetBase(self):
         return ClassBase
