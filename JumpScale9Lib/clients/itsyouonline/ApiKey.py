@@ -81,6 +81,9 @@ class ApiKeys:
             except Exception as e:
                 logging.exception("Unable to create a new API key for organization %s" % (self._parent.model["globalid"]))
                 return
+        else:
+            logging.exception("Unable to create new API key")
+            return
 
         if resp.ok:
             return self.get(label)
