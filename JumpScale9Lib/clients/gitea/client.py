@@ -6,8 +6,8 @@ import requests
 from .api.repos_service import ReposService 
 #from api.repositories.{id}_service import Repositories.{Id}Service 
 #from api.teams.{id}_service import Teams.{Id}Service 
-#from .api.user_service import UserService 
-#from .api.users_service import UsersService 
+from .api.user_service import UserService 
+from .api.users_service import UsersService 
 #from .api.version_service import VersionService 
 
 
@@ -25,8 +25,8 @@ class Client:
         self.repos = ReposService(self)
         #self.repositories/{id} = Repositories/{Id}Service(self)
         #self.teams/{id} = Teams/{Id}Service(self)
-        #self.user = UserService(self)
-        #self.users = UsersService(self)
+        self.user = UserService(self)
+        self.users = UsersService(self)
         #self.version = VersionService(self)
 
     def is_goraml_class(self, data):
