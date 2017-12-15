@@ -17,7 +17,6 @@ class GitHubFactory:
     #     return GitHubRepoClient(account, reponame)
 
     def getClient(self, login_or_token, password=None):
-        import ipdb;ipdb.set_trace()
         if login_or_token not in self._clients:
             self._clients[login_or_token] = GitHubClient(
                 login_or_token, password)
