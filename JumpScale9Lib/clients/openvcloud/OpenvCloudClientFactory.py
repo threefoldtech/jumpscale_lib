@@ -224,6 +224,17 @@ class Client:
                                                 maxNumPublicIP=maxNumPublicIP)
             return self.account_get(name, False)
 
+    def get_available_images(self, cloudspaceId, accountId):
+        """
+        lists all available images for a cloud space
+
+        Args:
+            - cloudspaceId (required): cloud space Id
+            - accountId (required): account Id
+        """
+
+        return self.api.cloudapi.images.list(cloudspaceId=cloudspaceId, accountId=accountId)
+
     @property
     def login(self):
         return self._login
