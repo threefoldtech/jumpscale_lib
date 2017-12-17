@@ -224,13 +224,13 @@ class Client:
                                                 maxNumPublicIP=maxNumPublicIP)
             return self.account_get(name, False)
 
-    def get_available_images(self, cloudspaceId, accountId):
+    def get_available_images(self, cloudspaceId=None, accountId=None):
         """
         lists all available images for a cloud space
 
         Args:
-            - cloudspaceId (required): cloud space Id
-            - accountId (required): account Id
+            - cloudspaceId (optional): cloud space Id
+            - accountId (optional): account Id
         """
 
         return self.api.cloudapi.images.list(cloudspaceId=cloudspaceId, accountId=accountId)
