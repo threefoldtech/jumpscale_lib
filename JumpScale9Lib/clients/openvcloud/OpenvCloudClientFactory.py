@@ -412,6 +412,17 @@ class Account(Authorizables):
         self.client.api.cloudbroker.account.delete(
             accountId=self.id, reason='API request')
 
+    def get_available_images(self, cloudspaceId=None):
+        """
+        lists all available images for a cloud space
+
+        Args:
+            - cloudspaceId (optional): cloud space Id
+        """
+
+        return self.client.api.cloudapi.images.list(cloudspaceId=cloudspaceId, accountId=self.id)
+
+
     def __str__(self):
         return "OpenvCloud client account: %(name)s" % (self.model)
 
