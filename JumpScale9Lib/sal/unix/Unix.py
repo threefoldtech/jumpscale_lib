@@ -224,7 +224,7 @@ class UnixSystem:
         @param pid: process id
         """
 
-        j.logger.log('Killing process group of %d' % pid, 7)
+        j.logger.logging.info('Killing process group of %d' % pid)
         import signal
         os.killpg(os.getpgid(pid), signal.SIGKILL)
 
@@ -242,7 +242,7 @@ class UnixSystem:
         """
         if not group:
             group = 'root'
-        j.logger.log('Chown %s:%s %s' % (user, group, path), 8)
+        j.logger.logging.info('Chown %s:%s %s' % (user, group, path))
         uid = pwd.getpwnam(user).pw_uid
         if group is None:
             gid = grp.getgrnam(group).gr_gid
@@ -258,7 +258,7 @@ class UnixSystem:
         """
         Chmod based on system.fs.walk
         """
-        j.logger.log('Chmod %s' % root, 8)
+        j.logger.logging.info('Chmod %s' % root)
         if j.sal.fs.isFile(root):
             os.chmod(root, mode)
         else:
@@ -300,7 +300,7 @@ class UnixSystem:
         return j.sal.process.execute(**kwargs)
 
     #@deprecated('j.sal.unix.executeDaemonAsUser',
-    #            alternative='j.sal.process.runDaemon', version='3.2')
+    #            alternative='j.sal.process.executeDaemon', version='3.2')
     def executeDaemonAsUser(self, command, username, **kwargs):
         '''Execute a given command as a background process as a specific user
 
@@ -308,7 +308,7 @@ class UnixSystem:
         be executed as some specific user. This requires the application which
         spawns the command to be running as root.
 
-        Next to this, it behaves exactly as C{j.sal.process.runDaemon},
+        Next to this, it behaves exactly as C{j.sal.process.executeDaemon},
         including the same named arguments.
 
         @param command: Command to execute
@@ -330,10 +330,10 @@ class UnixSystem:
         kwargs = kwargs.copy()
         kwargs['commandline'] = command
 
-        return j.sal.process.runDaemon(**kwargs)
+        return j.sal.process.executeDaemon(**kwargs)
 
     def _prepareCommand(self, command, username):
-        j.logger.log('Attempt to run %s as user %s' % (command, username), 6)
+        j.logger.logging.debug('Attempt to run %s as user %s' % (command, username))
         try:
             pwent = pwd.getpwnam(username)
         except KeyError:
@@ -360,7 +360,7 @@ class UnixSystem:
         if not path or not j.data.types.unixdirpath.check(path):
             raise ValueError('Path %s is invalid' % path)
 
-        j.logger.log('Change root to %s' % path, 5)
+        j.logger.logging.info('Change root to %s' % path)
         os.chroot(path)
 
     def addSystemUser(self, username, groupname=None, shell="/bin/bash", homedir=None):
@@ -375,8 +375,8 @@ class UnixSystem:
         '''
 
         if not j.sal.unix.unixUserExists(username):
-            j.logger.log(
-                "User [%s] does not exist, creating an entry" % username, 5)
+            j.logger.logging.info(
+                "User [%s] does not exist, creating an entry" % username)
 
             command = "useradd"
             options = []
@@ -389,8 +389,7 @@ class UnixSystem:
             if homedir:
                 options.append("-d '%s'" % homedir)
             command = "%s %s %s" % (command, " ".join(options), username)
-            # print command
-            exitCode, stdout, stderr = j.sal.process.run(command, stopOnError=False)
+            exitCode, stdout, stderr = j.sal.process.execute(command)
 
             if exitCode:
                 output = '\n'.join(('Stdout:', stdout, 'Stderr:', stderr, ))
@@ -402,7 +401,7 @@ class UnixSystem:
                 j.sal.fs.chmod(homedir, 0o700)
 
         else:
-            j.logger.log("User %s already exists" % username, 4)
+            j.logger.logging.warning("User %s already exists" % username)
 
     def addSystemGroup(self, groupname):
         ''' Add a group to the system
@@ -413,14 +412,14 @@ class UnixSystem:
         @type groupname : string
         '''
         if not j.sal.unix.unixGroupExists(groupname):
-            j.logger.log("Group [%s] does not exist, creating an entry" % groupname, 5)
-            exitCode, stdout, stderr = j.sal.process.run("groupadd %s" % groupname, stopOnError=False)
+            j.logger.logging.info("Group [%s] does not exist, creating an entry" % groupname)
+            exitCode, stdout, stderr = j.sal.process.execute("groupadd %s" % groupname)
 
             if exitCode:
                 output = '\n'.join(('Stdout:', stdout, 'Stderr:', stderr, ))
                 raise j.exceptions.RuntimeError('Failed to add group %s, error: %s' % (groupname, output))
         else:
-            j.logger.log("Group %s already exists" % groupname, 4)
+            j.logger.logging.warning("Group %s already exists" % groupname)
 
     def addUserToGroup(self, username, groupname):
         assert j.sal.unix.unixUserExists(username), \
@@ -492,7 +491,7 @@ class UnixSystem:
             raise ValueError("User [%s] does not exist, cannot disable user" % username)
         else:
             command = 'passwd %s -l' % username
-            exitCode, stdout, stderr = j.sal.process.run(command, stopOnError=False)
+            exitCode, stdout, stderr = j.sal.process.execute(command)
 
             if exitCode:
                 output = '\n'.join(('Stdout:', stdout, 'Stderr:', stderr, ))
@@ -510,7 +509,7 @@ class UnixSystem:
             raise ValueError("User [%s] does not exist, cannot enable user" % username)
         else:
             command = 'passwd %s -u' % username
-            exitCode, stdout, stderr = j.sal.process.run(command, stopOnError=False)
+            exitCode, stdout, stderr = j.sal.process.execute(command)
 
             if exitCode:
                 output = '\n'.join(('Stdout:', stdout, 'Stderr:', stderr, ))
@@ -532,7 +531,7 @@ class UnixSystem:
         else:
             removehome = "-r" if removehome else ""
             command = 'userdel %s %s' % (removehome, username)
-            exitCode, stdout, stderr = j.sal.process.run(command, stopOnError=False)
+            exitCode, stdout, stderr = j.sal.process.execute(command)
 
             if exitCode:
                 output = '\n'.join(('Stdout:', stdout, 'Stderr:', stderr, ))
@@ -553,7 +552,7 @@ class UnixSystem:
             raise ValueError("User [%s] does not exist, cannot set password" % username)
         else:
             command = "echo '%s:%s' | chpasswd" % (username, password)
-            exitCode, stdout, stderr = j.sal.process.run(command, stopOnError=False)
+            exitCode, stdout, stderr = j.sal.process.execute(command)
 
             if exitCode:
                 output = '\n'.join(('Stdout:', stdout, 'Stderr:', stderr, ))

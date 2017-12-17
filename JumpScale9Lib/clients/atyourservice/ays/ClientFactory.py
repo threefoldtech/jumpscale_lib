@@ -7,7 +7,7 @@ class ClientFactory:
     def __init__(self):
         self.__jslocation__ = 'j.clients.ays'
 
-    def get(self, client_id, client_secret, url=DEFAULT_URL, validity=3600):
+    def get(self, url=DEFAULT_URL, client_id=None, client_secret=None, validity=3600):
         """
         Get an AYS client to interact with a local or remote AYS server.
 
