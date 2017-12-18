@@ -583,6 +583,7 @@ class Space(Authorizables):
         Raises:
             - RuntimeError if machine with given name already exists.
             - RuntimeError if machine name contains spaces
+            - RuntimeError if machine name contains underscores
         """
         if ' ' in name:
             raise RuntimeError('Name cannot contain spaces')
