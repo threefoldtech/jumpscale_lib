@@ -22,10 +22,12 @@ class NACLClientFactory:
 
 class NACLClient:
 
-    def __init__(self,name,path,secret):
+    def __init__(self,name,path,secret,keyname_ssh=""):
         self.name = name
         if path=="":
             self.path = j.sal.fs.getcwd()
+
+        self.keyname_ssh = keyname_ssh
 
         self.keyname=name
 
@@ -42,7 +44,8 @@ class NACLClient:
             self.secret=""
         else:
             #this creates a unique encryption box
-            secret2=self.hash32(secretseed+secret)
+            #the secret needs 3 components: the passphrase(secret), the secretseed means the repo & a loaded ssh-agent with your ssh key
+            secret2=self.hash32(secretseed+secret+self.sign_with_ssh_key(secretseed+secret))
             #self._box is a temp encryption box which only exists while this process runs
             self._box = nacl.secret.SecretBox(nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE) ) #create temp box encrypt/decr (this to not keep secret in mem)
             self.secret = self._box.encrypt(secret2,nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE))
@@ -56,6 +59,12 @@ class NACLClient:
             # self._keys_generate() #DOES NOT WORK YET  #TODO: *1
             pass
         self._privkey = ""
+
+        self.ssh_agent = paramiko.agent.Agent()
+
+        if len(self.ssh_agent.get_keys())!=1:
+            raise RuntimeError("only 1 ssh key supported for now, need use use self.keyname_ssh")
+        self.ssh_agent_key = self.ssh_agent.get_keys()[0]
 
     def _load(self):
         self._privkey = j.sal.fileGetContents(self.path_privatekey,binary=True)
@@ -87,7 +96,12 @@ class NACLClient:
         m = hashlib.sha256()
         m.update(self.tobytes(data))
         return m.digest()
-        
+
+    def hash8(self,data):
+        #shortcut, maybe better to use murmur hash
+        m = hashlib.sha256()
+        m.update(self.tobytes(data))
+        return m.digest()[0:8]        
 
     def encryptSymmetric(self,data,secret=""):
         if secret=="":
@@ -154,6 +168,15 @@ class NACLClient:
       
         self.init()
 
+
+    def sign_with_ssh_key(self,data):
+        """
+        will return 32 byte signature which uses the ssh_agent loaded on your system
+        this can be used to verify data against your own ssh_agent to make sure data has not been tampered with
+        """
+        self.keyname_ssh
+        hash=hashlib.sha1(data).digest()
+        return self.hash32(self.ssh_agent_key.sign_ssh_data(hash))
 
 
     # def init(self):
