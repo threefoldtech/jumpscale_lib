@@ -1,40 +1,50 @@
 from js9 import j
-from zeroos.orchestrator.sal.Node import Node
+# from zeroos.orchestrator.sal.Node import Node
 import ovh
 import requests
 import time
 
+from .Client import *
+# class ZeroOSClient:
+#     def __init__(self, client):
+#         self._client = client
+#         self.logger = 
+#         self.aggregator = AggregatorManager(self._client )
+#         self.bridges = BridgeManager(self._client )
+#         self.btrfs = BtrfsManager(self._client )
+#         self.config = Config(self._client )
+#         self.containers = ContainerManager(self._client )
+#         self.disks = DiskManager(self._client )
+#         self.filesystem = FilesystemManager(self._client )
+#         self.ip = IPManager(self._client )
+#         self.kvm = KvmManager(self._client )
+#         self.logs = LogManager(self._client )
+#         self.nft = Nft(self._client )
+#         self.processes = ProcessManager(self._client )
+#         self.zerotier = ZerotierManager(self._client )
 
-class ZeroOS:
-    def __init__(self, node):
-        self.node = node
-        self.client = node.client
+#     def allow_port_tcp(self, port, interface=None, subnet=None):
+#         for item in self.client.nft.list():
+#             if item.startswith("tcp") and "accept" in item and str(port) in item:
+#                 return True
+#         self.client.nft.open_port(port)
+#         return True
 
-    def allow_port_tcp(self, port, interface=None, subnet=None):
-        for item in self.client.nft.list():
-            if item.startswith("tcp") and "accept" in item and str(port) in item:
-                return True
-        self.client.nft.open_port(port)
-        return True
+#     def prepare_disks(self,  name="fscache", wipedisks=False):
+#         """
+#         if exists will return, if not will create
+#         when wipedisks used will reset the disks (CAREFUL)
+#         """
+#         print("[+] prepare disks")
+#         if wipedisks:
+#             self.node.wipedisks()
 
-    def prepare_disks(self,  name="fscache", wipedisks=False):
-        """
-        if exists will return, if not will create
-        when wipedisks used will reset the disks (CAREFUL)
-        """
-        print("[+] prepare disks")
-        if wipedisks:
-            self.node.wipedisks()
-
-        res = self.node.find_persistance(name=name)
-        if res is not None:
-            return res
-        else:
-            res = self.node.ensure_persistance(name=name)
-        return res
-
-    def install(self):
-        j.sal.process.execute("pip3 install 0-orchestrator")
+#         res = self.node.find_persistance(name=name)
+#         if res is not None:
+#             return res
+#         else:
+#             res = self.node.ensure_persistance(name=name)
+#         return res
 
 
 class ZeroOSFactory:
@@ -43,19 +53,18 @@ class ZeroOSFactory:
 
     def __init__(self):
         self.__jslocation__ = "j.clients.zero_os"
-        self.__imports__ = "ovh"
-        self.logger = j.logger.get('j.clients.ovh')
+        self.logger = j.logger.get('j.clients.zero-os')
         self.connections = {}
 
-    def client_install(self):
-        cmd = """
-        export CORE_BRANCH="master"
-        export ORCHESTRATOR_BRANCH="master"
-        pip3 install -U "git+https://github.com/zero-os/0-core.git@${CORE_BRANCH}#subdirectory=client/py-client"
-        pip3 install -U "git+https://github.com/zero-os/0-orchestrator.git@${ORCHESTRATOR_BRANCH}#subdirectory=pyclient"
-        pip3 install -U zerotier
-        """
-        j.sal.process.execute(cmd)
+    # def client_install(self):
+    #     cmd = """
+    #     export CORE_BRANCH="master"
+    #     export ORCHESTRATOR_BRANCH="master"
+    #     pip3 install -U "git+https://github.com/zero-os/0-core.git@${CORE_BRANCH}#subdirectory=client/py-client"
+    #     pip3 install -U "git+https://github.com/zero-os/0-orchestrator.git@${ORCHESTRATOR_BRANCH}#subdirectory=pyclient"
+    #     pip3 install -U zerotier
+    #     """
+    #     j.sal.process.execute(cmd)
 
     def zeroNodeInstall_OVH(self, OVHServerID, OVHClient, zerotierNetworkID, zerotierClient):
         """
@@ -100,9 +109,10 @@ class ZeroOSFactory:
 
         return ip_pub, ipaddr_priv
 
-    def zeroNodeInstall_PacketNET(self, packetnetClient, zerotierClient, project_name, plan_type, location, server_name, zerotierNetworkID, ipxe_base='https://bootstrap.gig.tech/ipxe/master'):
+    def zeroNodeInstall_PacketNET(self, packetnetClient, zerotierClient, project_name, \
+            plan_type, location, server_name, zerotierNetworkID, ipxe_base='https://bootstrap.gig.tech/ipxe/master'):
         """
-        packetnetClient = packet = j.clients.packetnet.get('TOKEN')
+        packetnetClient = j.clients.packetnet.get('TOKEN')
         zerotierClient = j.clients.zerotier.get('TOKEN')
         project_name = packet.net project
         plan_type: one of "Type 0", "Type 1", "Type 2" ,"Type 2A", "Type 3", "Type S"
@@ -196,16 +206,19 @@ class ZeroOSFactory:
 
         return ip_pub, ipaddr_priv
 
-    def get(self, ip_priv):
-        print("[+] contacting zero-os server: %s" % ip_priv)
+    def get(self, host, port=6379, password="", db=0, ssl=True, timeout=None, testConnectionAttempts=3):
+        # super().__init__(timeout=timeout)):
 
-        print("[+] check port: 6379")
+        self.logger.info("[+] contacting zero-os server: %s" % host)
+
+        self.logger.info("[+] check port: 6379")
         res = j.sal.nettools.waitConnectionTest(ip_priv, 6379, 90)
         if res is False:
             msg = "[+] make sure you are authorized in the zertotier network"
             raise RuntimeError(msg)
 
-        node = Node(ip_priv)
-        node.client.timeout = 180
+        client=Client(host=host, port=port, password=password, db=db, \
+            ssl=ssl, timeout=timeout, testConnectionAttempts=testConnectionAttempts)
 
-        return ZeroOS(node)
+
+        return ZeroOSClient(client)

@@ -15,6 +15,7 @@ class PacketNet():
         self._projectid = None
         self._devices = None
         self.projectname = ""
+        self.logger = j.logger.get('j.clients.packetnet1')
 
     @property
     def projectid(self):
@@ -202,6 +203,9 @@ class PacketNet():
             ssh.execute("ls /")
 
             return device, ssh.prefab
+
+        j.tools.develop.nodes.nodeSet(name=hostname, addr=ipaddr, port=22, cat='packet', description='', selected=True)
+
         return ipaddr
 
     def addSSHKey(self, sshkeyPub):
