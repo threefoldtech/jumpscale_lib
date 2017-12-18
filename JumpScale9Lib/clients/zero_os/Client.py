@@ -329,16 +329,16 @@ class Client(BaseClient):
         self._redis = redis.Redis(host=host, port=port, password=password, db=db, ssl=ssl,
                                   socket_timeout=socket_timeout,
                                   socket_keepalive=True, socket_keepalive_options=socket_keepalive_options)
-        self._container_manager = ContainerManager(self)
-        self._bridge_manager = BridgeManager(self)
-        self._disk_manager = DiskManager(self)
-        self._btrfs_manager = BtrfsManager(self)
-        self._zerotier = ZerotierManager(self)
-        self._kvm = KvmManager(self)
-        self._logger = Logger(self)
-        self._nft = Nft(self)
-        self._config = Config(self)
-        self._aggregator = AggregatorManager(self)
+        self.container = ContainerManager(self)
+        self.bridge = BridgeManager(self)
+        self.disk = DiskManager(self)
+        self.btrfs = BtrfsManager(self)
+        self.zerotier = ZerotierManager(self)
+        self.kvm = KvmManager(self)
+        self.logger = Logger(self)
+        self.nft = Nft(self)
+        self.config = Config(self)
+        self.aggregator = AggregatorManager(self)
 
         if testConnectionAttempts:
             for _ in range(testConnectionAttempts):
@@ -350,87 +350,8 @@ class Client(BaseClient):
                     return
             raise ConnectionError("Could not connect to remote host %s" % host)
 
-    @property
-    def container(self):
-        """
-        Container manager
-        :return:
-        """
-        return self._container_manager
 
-    @property
-    def bridge(self):
-        """
-        Bridge manager
-        :return:
-        """
-        return self._bridge_manager
-
-    @property
-    def disk(self):
-        """
-        Disk manager
-        :return:
-        """
-        return self._disk_manager
-
-    @property
-    def btrfs(self):
-        """
-        Btrfs manager
-        :return:
-        """
-        return self._btrfs_manager
-
-    @property
-    def zerotier(self):
-        """
-        Zerotier manager
-        :return:
-        """
-        return self._zerotier
-
-    @property
-    def kvm(self):
-        """
-        KVM manager
-        :return:
-        """
-        return self._kvm
-
-    @property
-    def logger(self):
-        """
-        Logger manager
-        :return:
-        """
-        return self._logger
-
-    @property
-    def nft(self):
-        """
-        NFT manager
-        :return:
-        """
-        return self._nft
-
-    @property
-    def config(self):
-        """
-        Config manager
-        :return:
-        """
-        return self._config
-
-    @property
-    def aggregator(self):
-        """
-        Aggregator manager
-        :return:
-        """
-        return self._aggregator
-
-    def raw(self, command, arguments, queue=None, max_time=None, stream=False, tags=None, id=None):
+    def _raw(self, command, arguments, queue=None, max_time=None, stream=False, tags=None, id=None):
         """
         Implements the low level command call, this needs to build the command structure
         and push it on the correct queue.
@@ -468,5 +389,5 @@ class Client(BaseClient):
 
         return Response(self, id)
 
-    def response_for(self, id):
+    def _response_for(self, id):
         return Response(self, id)
