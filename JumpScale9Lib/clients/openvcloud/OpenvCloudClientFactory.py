@@ -586,6 +586,8 @@ class Space(Authorizables):
         """
         if ' ' in name:
             raise RuntimeError('Name cannot contain spaces')
+        if '_' in name:
+            raise RuntimeError('Name cannot contain underscores (_)')
         imageId = self.image_find_id(image)
         if sizeId is None:
             sizeId = self.size_find_id(memsize, vcpus)
