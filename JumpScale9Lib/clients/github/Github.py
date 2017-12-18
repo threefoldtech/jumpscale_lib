@@ -83,3 +83,72 @@ class GitHubClient(JSConfigClient):
                 user = User(self, githubObj=githubObj)
                 self.users[githubObj.login] = user
             return self.users[githubObj.login]
+
+    def getOrganizations(self):
+        """
+        gets all organization for an authorized user
+        """
+        return self.api.get_user().get_orgs()
+
+    def getRepos(self, organizationId=None):
+        """
+        gets all repos for a user if organizationId=None otherwise it return only repos for this organization
+
+        Args:
+            - organizationId (optional): Id for the organization to get repos from
+
+        Raises:
+            - RuntimeError if organizationId doesn't exist or the user is not enroled in this organization
+        """
+        if not organizationId:
+            return self.api.get_user().get_repos()
+        else:
+            orgs = self.api.get_user().get_orgs()
+            for org in orgs:
+                if org.id == organizationId:
+                    return org.get_repos()
+            raise RuntimeError("Cannot find Organization with id :%s" % organizationId)
+
+    def getRepo(self, repoName):
+        """
+        gets a specific repo by name
+
+        Args:
+            - repoName: the repo name
+        """
+        return self.api.get_user().get_repo(repoName)
+
+    def createRepo(self, name, description=NotSet, homepage=NotSet, private=NotSet, has_issues=NotSet, has_wiki=NotSet,
+                    has_downloads=NotSet, auto_init=NotSet, gitignore_template=NotSet):
+        """
+        creates a repo
+
+        Args:
+            - name (required): repo name
+            - description (optional): repo desription
+            - homepage (optional): the home page for the repo
+            - private (optional): if true the repo will be created as private repo
+            - has_issues (optional): indicates that the repo has issues or no
+            - has_wiki (optional): indicates that the repo has wiki or no
+            - has_downloads (optional): indicates that the repo has downloads or no
+            - auto_init (optional): if true the repo will be automaticly initialized
+            - gitignore_template (optional): the gitignore template
+
+        """
+        return self.api.get_user().create_repo(name, description=description, homepage=homepage, private=private, has_issues=has_issues,
+                    has_wiki=has_wiki, has_downloads=has_downloads, auto_init=auto_init, gitignore_template=gitignore_template)
+
+    def deleteRepo(self, repo):
+        """
+        deletes a repo
+
+        Args:
+            - repo (required): a repo to be deleted
+
+        Raises:
+            - RuntimeError if repo is not a valid Repository
+        """
+        if isinstance(repo, github.Repository.Repository):
+            repo.delete()
+        else:
+            raise RuntimeError("invalid Repository")
