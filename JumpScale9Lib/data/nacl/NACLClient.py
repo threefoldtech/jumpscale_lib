@@ -1,50 +1,177 @@
 from js9 import j
 from nacl.public import PrivateKey, SealedBox, PublicKey
 import nacl.signing
+import nacl.secret
+import nacl.utils    
+import nacl.hash   
+import hashlib
 
-# IMPORTANT
-# use functionality in j.clients.ssh to deal with SSH-Agent & getting key info, improve if required
+
+class NACLClientFactory:
+
+    def __init(self):
+        self.__jslocation__ = "j.data.nacl"
+        
+    def get(self,name="key",path="",secret=""):
+        """
+        if path not specified then is current path
+        """
+        return NACLClient(name,path,secret)
+
 
 
 class NACLClient:
-    """
-    TODO: To use the SealedBox we use the latest dev of PyNacl package
-    TODO: use the latest stable when it's added to the newest stable version (1.2.0)
-    https://pynacl.readthedocs.io/en/latest/
-    """
 
-    def __init__(self):
-        self.__jslocation__ = "j.data.nacl"
-        self.default_key_dir = j.sal.fs.joinPaths(j.dirs.HOMEDIR, ".ssh")
+    def __init__(self,name,path,secret):
+        self.name = name
+        if path=="":
+            self.path = j.sal.fs.getcwd()
+
+        self.keyname=name
+
+        #get/create the secret seed
+        self.path_secretseed = "%s/%s.seed"%(self.path,self.keyname)        
+        if not j.sal.fs.exists(self.path_secretseed):
+            secretseed = self.hash32(nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE))
+            j.sal.fs.writeFile(path_secretseed, secretseed, binary=True)
+        else:
+            secretseed=j.sal.fs.readFile(path_secretseed, binary=True)
 
 
-    def _get_key_path(self, name, path=None):
+        if secret=="":
+            self.secret=""
+        else:
+            #this creates a unique encryption box
+            secret2=self.hash32(secretseed+secret)
+            #self._box is a temp encryption box which only exists while this process runs
+            self._box = nacl.secret.SecretBox(nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE) ) #create temp box encrypt/decr (this to not keep secret in mem)
+            self.secret = self._box.encrypt(secret2,nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE))
+            secret=""
+            secret2=""
+            secretseed=""
+
+        self.path_privatekey = "%s/%s.priv"%(self.path,self.keyname)
+        self.path_pubkey = "%s/%s.pub"%(self.path,self.keyname)
+        if not j.sal.fs.exists(self.path_privatekey) or not j.sal.fs.exists(self.path_pubkey):
+            # self._keys_generate() #DOES NOT WORK YET  #TODO: *1
+            pass
+        self._privkey = ""
+
+    def _load(self):
+        self._privkey = j.sal.fileGetContents(self.path_privatekey,binary=True)
+        self.pubkey = j.sal.fileGetContents(self.path_pubkey,binary=True)
+
+    @property
+    def privkey(self):
+        if self._privkey == "":
+            self._load()
+        key1=self.decryptSymmetric(self._privkey)
+        return PrivateKey(key1)
+        
+
+    def _getSecret(self):
+        #this to make sure we don't have our secret key open in memory
+        if self.secret=="":
+            return ""
+        res=self._box.decrypt(self.secret)
+        if res==b"":
+            raise RuntimeError("serious bug, cannot get secret key")
+        return res
+
+    def tobytes(self,data):
+        if j.data.types.bytes.check(data)==False:
+            data=data.encode()    #will encode utf8
+        return data 
+
+    def hash32(self,data):
+        m = hashlib.sha256()
+        m.update(self.tobytes(data))
+        return m.digest()
+        
+
+    def encryptSymmetric(self,data,secret=""):
+        if secret=="":
+            box = nacl.secret.SecretBox(self._getSecret())
+        else:
+            box = nacl.secret.SecretBox(self.hash32(secret))
+        res = box.encrypt(self.tobytes(data),nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE))
+        box = None
+        return res
+
+    def decryptSymmetric(self,data,secret=""):
+        if secret=="":
+            box = nacl.secret.SecretBox(self._getSecret())
+        else:
+            box = nacl.secret.SecretBox(self.hash32(secret))
+        res = box.decrypt(self.tobytes(data),nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE))
+        box = None
+        return res   
+
+    def _keys_generate(self):
         """
-        Get key path derived from name and path provided
-            :param name: name of the file
-            :param path: path of dir of the key file, if None it'll fall back to ~/.ssh
-            @return: key path
+        Generate private key (strong) & store in chosen path & will load in this class
         """
-        if path:
-            return j.sal.fs.joinPaths(path, "%s.priv" % name)
+        key = PrivateKey.generate()
+        key2 = key.encode()
+        key3 = self.encryptSymmetric(key2)
+        path=self.path_privatekey
+        j.sal.fs.writeFile(path, key2, binary=True)
+        j.sal.fs.chmod(path, 0o600)
 
-        return j.sal.fs.joinPaths(self.default_key_dir, "%s.priv" % name)
+        pubkey=self.pubkey_get(name,path)
 
-    def generete_private_key(self, name, path=None):
-        """
-        Generate private key (strong) & store in chosen path
-            :param name: file name that key should be stored in
-            :param path: path of dir of the key file
-            @return privkey
-        """
-        generated_priv_key = PrivateKey.generate()
-        file_path = self._get_key_path(name, path)
+        key2 = key2.public_key.encode()
+        key3 = self.encryptSymmetric(key2)
+        path=self.path_pubkey
+        j.sal.fs.writeFile(path, key2, binary=True)
+        j.sal.fs.chmod(path, 0o600)    
 
-        j.sal.fs.writeFile(file_path, generated_priv_key.encode())
-        j.sal.fs.chmod(file_path, 0o600)
-        return generated_priv_key
+    def test(self):
+        
+        a=self.encryptSymmetric("something")
+        b=self.decryptSymmetric(a)
+        assert a==b
 
-    def get_priv_key(self, name, path=None):
+        a=self.encryptSymmetric("something","qwerty")
+        b=self.decryptSymmetric(a,"qwerty")
+        assert a==b
+
+        a=self.encryptSymmetric("something",b"qwerty")
+        b=self.decryptSymmetric(a,b"qwerty")
+        assert a==b
+
+        a=self.encryptSymmetric(b"something",b"qwerty")
+        b=self.decryptSymmetric(a,b"qwerty")
+        assert a==b
+
+
+    def start(self):
+        try:
+            from jose import jwt
+        except:
+            print("jose not installed will try now")
+            j.sal.process.execute("pip3 install python-jose")
+      
+        self.init()
+
+
+
+    # def init(self):
+    #     self.path=j.clients.git.pullGitRepo(url=self.url)
+
+
+            
+
+
+    ###OLD ###
+
+
+
+    def load(self,secret):
+        print("sss")
+        from IPython import embed;embed(colors='Linux')
+
+    def privatekey_get(self, name, path=None):
         """
         docstring here
             :param name: name of file that contains pubkey
@@ -55,7 +182,7 @@ class NACLClient:
         encoded_priv_key = j.sal.fs.readFile(file_path, binary=True)
         return PrivateKey(encoded_priv_key)
 
-    def get_public_key(self, name, path=None):
+    def pubkey_get(self, name, path=None):
         """
         Get public key derived from private key stored in the filesystem
             :param name: filename that contains the private key
