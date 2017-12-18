@@ -271,6 +271,17 @@ class Client:
             raise j.exceptions.RuntimeError(
                     "Could not find account with name %s" % accountName)
 
+    def get_available_images(self, cloudspaceId=None, accountId=None):
+        """
+        lists all available images for a cloud space
+
+        Args:
+            - cloudspaceId (optional): cloud space Id
+            - accountId (optional): account Id
+        """
+
+        return self.api.cloudapi.images.list(cloudspaceId=cloudspaceId, accountId=accountId)
+
     @property
     def login(self):
         return self._login
@@ -459,6 +470,17 @@ class Account(Authorizables):
         self.client.api.cloudbroker.account.delete(
             accountId=self.id, reason='API request')
 
+    def get_available_images(self, cloudspaceId=None):
+        """
+        lists all available images for a cloud space
+
+        Args:
+            - cloudspaceId (optional): cloud space Id
+        """
+
+        return self.client.api.cloudapi.images.list(cloudspaceId=cloudspaceId, accountId=self.id)
+
+
     def __str__(self):
         return "OpenvCloud client account: %(name)s" % (self.model)
 
@@ -612,6 +634,7 @@ class Space(Authorizables):
             image="Ubuntu 16.04 x64",
             sizeId=None,
             stackId=None,
+            description=None,
     ):
         """
         Creates a new virtual machine.
@@ -626,13 +649,17 @@ class Space(Authorizables):
             - image (defaults to "Ubuntu 16.04 x6"): name of the OS image to load
             - sizeId (optional): overrides the value set for memsize, denotes the type or "size" of the virtual machine, actually sets the number of virtual CPU cores and amount of memory, see the sizes property of the cloud space for the sizes available in the cloud space
             - stackId (optional): identifies the grid node on which to create the virtual machine, if nothing specified (recommended) OpenvCloud will decide where to create the virtual machine
+            - description (optional): machine description
 
         Raises:
             - RuntimeError if machine with given name already exists.
             - RuntimeError if machine name contains spaces
+            - RuntimeError if machine name contains underscores
         """
         if ' ' in name:
             raise RuntimeError('Name cannot contain spaces')
+        if '_' in name:
+            raise RuntimeError('Name cannot contain underscores (_)')
         imageId = self.image_find_id(image)
         if sizeId is None:
             sizeId = self.size_find_id(memsize, vcpus)
@@ -649,10 +676,11 @@ class Space(Authorizables):
                 imageId=imageId,
                 disksize=disksize,
                 datadisks=datadisks,
-                stackid=stackId)
+                stackid=stackId,
+                description=description)
         else:
             res = self.client.api.cloudapi.machines.create(
-                cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks)
+                cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks, description=description)
             print("created machine")
             machine = self.machines[name]
             self._authorizeSSH(machine, sshkeyname=sshkeyname)

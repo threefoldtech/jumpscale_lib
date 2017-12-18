@@ -56,6 +56,8 @@ class RamlTools:
         python-jose==1.3.2
         '''
 
+        #TODO 
+
 
 
 
@@ -109,7 +111,9 @@ class RamlTools:
 
         def _generate():
 
-            goramlpath="/Users/kristofdespiegeleer1/opt/go_proj/bin/go-raml"
+            # goramlpath="/Users/kristofdespiegeleer1/opt/go_proj/bin/go-raml"
+            rc,goramlpath,err=j.sal.process.execute("which go-raml")
+            goramlpath=goramlpath.strip()
 
             j.sal.fs.remove("%s/generated" % path)
 
@@ -118,6 +122,7 @@ class RamlTools:
             j.sal.process.executeInteractive(cmd)
 
             cmd = "cd %s;mkdir -p generated/client;cd api_spec;%s client --language python --python-unmarshall-response=true --dir ../generated/client --ramlfile main.raml" % (path,goramlpath)
+            print(cmd)
             j.sal.process.executeInteractive(cmd)
 
             cmd = "cd %s;rm -rf htmldoc;mkdir -p htmldoc;cd api_spec;raml2html -i main.raml -o ../htmldoc/api.html -v" % path

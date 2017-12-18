@@ -1,6 +1,7 @@
 from .User import User
 from .Organization import Organization
 from .client import Client
+from .ConfigUI import *
 
 DEFAULT_BASE_URL = "https://itsyou.online"
 
@@ -107,3 +108,8 @@ class ClientFactory:
             base_url: base url of the ItsYou.online service; defaults to https://itsyou.online
         """
         return Client(jwt, base_url)
+
+    def configure(self):
+        app = ConfigUI()
+        app.run()
+        from IPython import embed;embed(colors='Linux')
