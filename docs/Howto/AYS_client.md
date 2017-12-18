@@ -31,7 +31,7 @@ import os
 client_id = os.environ["CLIENT_ID"]
 secret = os.environ["SECRET"]
 url = "http://192.168.196.5:5000"
-cl = j.clients.ays.getWithClientID(clientID=client_id, secret=secret, url=url)
+cl = j.clients.ays.getWithClientID(url=url, clientID=client_id, secret=secret)
 ```
 
 Or in case you saved the client ID and password in a YAML formated configuration file:
