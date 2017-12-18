@@ -587,6 +587,7 @@ class Space(Authorizables):
             image="Ubuntu 16.04 x64",
             sizeId=None,
             stackId=None,
+            description=None,
     ):
         """
         Creates a new virtual machine.
@@ -601,6 +602,7 @@ class Space(Authorizables):
             - image (defaults to "Ubuntu 16.04 x6"): name of the OS image to load
             - sizeId (optional): overrides the value set for memsize, denotes the type or "size" of the virtual machine, actually sets the number of virtual CPU cores and amount of memory, see the sizes property of the cloud space for the sizes available in the cloud space
             - stackId (optional): identifies the grid node on which to create the virtual machine, if nothing specified (recommended) OpenvCloud will decide where to create the virtual machine
+            - description (optional): machine description
 
         Raises:
             - RuntimeError if machine with given name already exists.
@@ -627,10 +629,11 @@ class Space(Authorizables):
                 imageId=imageId,
                 disksize=disksize,
                 datadisks=datadisks,
-                stackid=stackId)
+                stackid=stackId,
+                description=description)
         else:
             res = self.client.api.cloudapi.machines.create(
-                cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks)
+                cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks, description=description)
             print("created machine")
             machine = self.machines[name]
             self._authorizeSSH(machine, sshkeyname=sshkeyname)
