@@ -583,9 +583,12 @@ class Space(Authorizables):
         Raises:
             - RuntimeError if machine with given name already exists.
             - RuntimeError if machine name contains spaces
+            - RuntimeError if machine name contains underscores
         """
         if ' ' in name:
             raise RuntimeError('Name cannot contain spaces')
+        if '_' in name:
+            raise RuntimeError('Name cannot contain underscores (_)')
         imageId = self.image_find_id(image)
         if sizeId is None:
             sizeId = self.size_find_id(memsize, vcpus)
