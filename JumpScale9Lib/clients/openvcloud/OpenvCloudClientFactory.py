@@ -579,7 +579,7 @@ class Space(Authorizables):
     def machine_create(
             self,
             name,
-            sshkeyname,
+            sshkeyname=None,
             memsize=2,
             vcpus=None,
             disksize=10,
@@ -633,24 +633,25 @@ class Space(Authorizables):
                 datadisks=datadisks,
                 stackid=stackId,
                 description=description)
+            machine = self.machine_get(name)
         else:
             res = self.client.api.cloudapi.machines.create(
                 cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks, description=description)
-            print("created machine")
             machine = self.machines[name]
-            self._authorizeSSH(machine, sshkeyname=sshkeyname)
+        if not sshkeyname:
+            return machine
+
+        self._authorizeSSH(machine, sshkeyname=sshkeyname)
         
-        m = self.machines[name]
         if sshkeypath:
-            m.ssh_keypath = sshkeypath
-        p = m.prefab
+            machine.ssh_keypath = sshkeypath
+        p = machine.prefab
         p.core.hostname = name  # make sure hostname is set
 
         # remember the node in the local node configuration
         j.tools.develop.nodes.nodeSet(name, addr=p.executor.sshclient.addr, port=p.executor.sshclient.port,
                                       cat="openvcloud", description="deployment in openvcloud")
-
-        return m
+        return machine
 
     def _authorizeSSH(self, machine, sshkeyname):
         print("authorize ssh")
