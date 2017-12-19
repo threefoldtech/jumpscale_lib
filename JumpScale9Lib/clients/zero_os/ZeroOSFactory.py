@@ -80,13 +80,12 @@ class ZeroOSFactory:
         cl = OVHClient
         zt = zerotierClient
 
-        print("[+] booting server " + OVHServerID + " to zero-os")
-        task = cl.zeroOSBoot(target=OVHServerID,
-                             zerotierNetworkID=zerotierNetworkID)
-        print("[+] waiting " + OVHServerID + " for reboot")
+        self.logger.debug("booting server {} to zero-os".format(OVHServerID))
+        task = cl.zeroOSBoot(target=OVHServerID, zerotierNetworkID=zerotierNetworkID)
+        self.logger.debug("waiting for {} to reboote".format(OVHServerID))
         cl.waitServerReboot(OVHServerID, task['taskId'])
         ip_pub = cl.serverGetDetail(OVHServerID)["ip"]
-        print("[+] ip addr is:%s" % ip_pub)
+        self.logger.info("ip addr is:%s" % ip_pub)
 
         while True:
             try:
@@ -96,16 +95,15 @@ class ZeroOSFactory:
                 break
             except RuntimeError as e:
                 # case where we don't find the member in zerotier
-                print("[-] %s" % e)
+                self.logger.error(e)
                 time.sleep(1)
             except IndexError as e:
                 # case were we the member doesn't have a private ip
-                print(
-                    "[+] please authorize the server with the public ip %s in the zerotier network" % ip_pub)
+                self.logger.error("please authorize the server with the public ip %s in the zerotier network" % ip_pub)
                 time.sleep(1)
 
-        print("[+] server found: %s" % member['id'])
-        print("zerotier IP: %s" % ipaddr_priv)
+        self.logger.debug("server found: %s" % member['id'])
+        self.logger.debug("zerotier IP: %s" % ipaddr_priv)
 
         return ip_pub, ipaddr_priv
 
@@ -123,7 +121,7 @@ class ZeroOSFactory:
         """
 
         valid_plan_types = ("Type 0", "Type 1", "Type 2",
-                            "Type 2A", "Type 3", "Type S")
+                            "Type 2A", "Type 3", "Type S") #FIXME
         if plan_type not in valid_plan_types:
             j.exceptions.Input("bad plan type %s. Valid plan type are %s" % (
                 plan_type, ','.join(valid_plan_types)))
@@ -133,76 +131,35 @@ class ZeroOSFactory:
         hostname = server_name
 
         # find project id
-        project_ids = [project.id for project in packetnetClient.getProjects(
-        ) if project.name == project_name]
+        project_ids = [project.id for project in packetnetClient.projects if project.name == project_name]
         if not project_ids:
             raise j.exceptions.NotFound(
                 'No projects found with name %s' % project_name)
         project_id = project_ids[0]
+        packetnetClient.project_id = project_id
 
-        # find service type id
-        project_devices = {
-            device.hostname: device for device in packetnetClient.list_devices(project_id)}
-        if hostname not in project_devices:
-            plan_ids = [plan.id for plan in packetnetClient.list_plans()
-                        if plan.name == plan_type]
-            if not plan_ids:
-                raise j.exceptions.NotFound(
-                    'No plans found with name %s' % plan_type)
-            plan_id = plan_ids[0]
+        packetnetClient.startDevice(hostname=server_name, plan=plan_type, facility=location, os='ubuntu_17_04',
+                                             ipxeUrl=ipxe_url, wait=True, remove=False)
 
-            # find facility id
-            facility_id = None
-            for facility in packetnetClient.list_facilities():
-                if facility.name.lower().find(location.lower()) != -1:
-                    facility_id = facility.id
-
-            if facility_id is None:
-                raise j.exceptions.Input(
-                    message="Could not find facility in packet.net:%s" % location)
-            try:
-                device = packetnetClient.create_device(project_id=project_id, hostname=hostname, plan=plan_id,
-                                                       facility=facility_id, operating_system='custom_ipxe', ipxe_script_url=ipxe_url)
-            except Exception as e:
-                if "Service Unavailable" in str(e):
-                    raise j.exceptions.Input(
-                        message="could not create packet.net machine, type of machine not available")
-                raise e
-        else:
-            device = project_devices[hostname]
-
-        print("[+] booting server ", end='')
-        timeout_start = time.time()
-        timeout = 900
-        while time.time() < timeout_start + timeout and device.state != 'active':
-            time.sleep(5)
-            device = packetnetClient.get_device(device.id)
-            print('.', end='')
-
-        if device.state != 'active':
-            raise RuntimeError('Too long to provision')
-
-        ip_pub = [netinfo['address']
-                  for netinfo in device.ip_addresses if netinfo['public'] and netinfo['address_family'] == 4]
+        device = packetnetClient.getDevice(server_name)
+        ip_pub = [netinfo['address'] for netinfo in device.ip_addresses if netinfo['public'] and netinfo['address_family'] == 4]
 
         while True:
             try:
-                member = zerotierClient.getNetworkMemberFromIPPub(
-                    ip_pub[0], networkId=zerotierNetworkID, online=True)
+                member = zerotierClient.networkMemberGetFromIPPub(ip_pub[0], networkId=zerotierNetworkID, online=True)
                 ipaddr_priv = member["ipaddr_priv"][0]
                 break
             except RuntimeError as e:
                 # case where we don't find the member in zerotier
-                print("[-] %s" % e)
+                self.logger.error(e)
                 time.sleep(1)
             except IndexError as e:
                 # case were we the member doesn't have a private ip
-                print(
-                    "[+] please authorize the server with the public ip %s in the zerotier network" % ip_pub[0])
+                self.logger.error("please authorize the server with the public ip %s in the zerotier network" % ip_pub[0])
                 time.sleep(1)
 
-        print("[+] server found: %s" % device.id)
-        print("[+] zerotier IP: %s" % ipaddr_priv)
+        self.logger.debug("server found: %s" % device.id)
+        self.logger.debug("zerotier IP: %s" % ipaddr_priv)
 
         return ip_pub, ipaddr_priv
 

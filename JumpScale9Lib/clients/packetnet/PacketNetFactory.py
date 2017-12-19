@@ -6,7 +6,7 @@ import time
 
 class PacketNet():
 
-    def __init__(self, client):
+    def __init__(self, client, projectname=""):
         self.client = client
         self._plans = None
         self._facilities = None
@@ -14,7 +14,7 @@ class PacketNet():
         self._projects = None
         self._projectid = None
         self._devices = None
-        self.projectname = ""
+        self.projectname = projectname
         self.logger = j.logger.get('j.clients.packetnet1')
 
     @property
@@ -114,7 +114,7 @@ class PacketNet():
             print("found machine, remove:%s" % name)
             res.delete()
 
-    def startDevice(self,  hostname="removeMe", plan='baremetal_0', facility='ams1', os='ubuntu_17_04', wait=True, remove=False):
+    def startDevice(self,  hostname="removeMe", plan='baremetal_0', facility='ams1', os='ubuntu_17_04', ipxeUrl=None, wait=True, remove=False):
         """
         will delete if it exists when remove=True, otherwise will check if it exists, if yes will return device object
         if not will create
@@ -122,7 +122,7 @@ class PacketNet():
         example ipxeUrl = https://bootstrap.gig.tech/ipxe/zero-os-master-generic
         """
         return self._startDevice(hostname=hostname, plan=plan, facility=facility, os=os,
-                                 wait=wait, remove=remove, ipxeUrl=None, zerotierId="", always_pxe=False)
+                                 wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId="", always_pxe=False)
 
     def startZeroOS(self, hostname="removeMe", plan='baremetal_0', facility='ams1', zerotierId="", zerotierAPI="", wait=True, remove=False):
         """
