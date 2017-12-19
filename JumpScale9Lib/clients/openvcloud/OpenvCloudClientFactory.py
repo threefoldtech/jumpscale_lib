@@ -224,6 +224,53 @@ class Client:
                                                 maxNumPublicIP=maxNumPublicIP)
             return self.account_get(name, False)
 
+    def space_get(self,
+        accountName,
+        spaceName,
+        location="",
+        createSpace=True,
+        maxMemoryCapacity=-1,
+        maxVDiskCapacity=-1,
+        maxCPUCapacity=-1,
+        maxNASCapacity=-1,
+        maxNetworkOptTransfer=-1,
+        maxNetworkPeerTransfer=-1,
+        maxNumPublicIP=-1,
+        externalnetworkId=None):
+        """
+        Returns the OpenvCloud space with the given account_name, space_name, space_location and in case the account doesn't exist yet it will be created.
+
+        Args:
+            - accountName (required): name of the account to lookup, e.g. "myaccount"
+            - spaceName (required): name of the cloud space to lookup or create if it doesn't exist yet, e.g. "myvdc"
+            - location (only required when cloud space needs to be created): location when the cloud space needs to be created
+            - createSpace (defaults to True): if set to True the account is created in case it doesn't exist yet
+            - maxMemoryCapacity (defaults to -1: unlimited): available memory in GB for all virtual machines in the cloud space
+            - maxVDiskCapacity (defaults to -1: unlimited): available disk capacity in GiB for all virtual disks in the cloud space
+            - maxCPUCapacity (defaults to -1: unlimited): total number of available virtual CPU core that can be used by the virtual machines in the cloud space
+            - maxNASCapacity (defaults to -1: unlimited): not implemented
+            - maxNetworkOptTransfer (defaults to -1: unlimited): not implemented
+            - maxNetworkPeerTransfer (defaults to -1: unlimited): not implemented
+            - maxNumPublicIP (defaults to -1: unlimited): number of external IP addresses that can be used in the cloud space
+        """
+        account = self.account_get(name = accountName,create=False)
+        if account:
+            return account.space_get(name = spaceName,
+                                create=createSpace,
+                                location=location,
+                                maxMemoryCapacity=maxMemoryCapacity,
+                                maxVDiskCapacity=maxVDiskCapacity,
+                                maxCPUCapacity=maxCPUCapacity,
+                                maxNASCapacity=maxNASCapacity,
+                                maxNetworkOptTransfer=maxNetworkOptTransfer,
+                                maxNetworkPeerTransfer=maxNetworkPeerTransfer,
+                                maxNumPublicIP=maxNumPublicIP,
+                                externalnetworkId=externalnetworkId
+                                )
+        else:
+            raise j.exceptions.RuntimeError(
+                    "Could not find account with name %s" % accountName)
+
     def get_available_images(self, cloudspaceId=None, accountId=None):
         """
         lists all available images for a cloud space
