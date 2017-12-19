@@ -137,19 +137,17 @@ class NACLClient:
         """
         Generate private key (strong) & store in chosen path & will load in this class
         """
-        key = PrivateKey.generate()
-        key2 = key.encode()
+        key = PrivateKey.generate()        
+        key2 = key.encode() #generates a bytes representation of the key
         key3 = self.encryptSymmetric(key2)
         path = self.path_privatekey
         j.sal.fs.writeFile(path, key2, binary=True)
         j.sal.fs.chmod(path, 0o600)
 
-        pubkey = self.pubkey_get(name, path)
-
-        key2 = key2.public_key.encode()
+        key2 = key.public_key.encode()
         key3 = self.encryptSymmetric(key2)
         path = self.path_pubkey
-        j.sal.fs.writeFile(path, key2, binary=True)
+        j.sal.fs.writeFile(path, key2)
         j.sal.fs.chmod(path, 0o600)
 
     def test(self):

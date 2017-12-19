@@ -1,6 +1,6 @@
 from js9 import j
 
-fixed_toml = """
+TEMPLATE_PERSON_TOML = """
 login =""
 first_name = ""
 last_name = ""
@@ -12,6 +12,7 @@ title = []
 description_internal =""
 description_public_friendly =""
 description_public_formal =""
+experience = ""
 hobbies = ""
 pub_ssh_key= ""
 skype = ""
@@ -38,7 +39,7 @@ class Todo:
         return j.sal.fs.getBaseName(self.path)
 
     def __repr__(self):
-        return "Todo %s:%s:%s:%s   " % (self.department.company, self.department.name, self.path, self.todo)
+        return "Todo %s:%s:%s   " % ( self.department.name, self.path, self.todo)
 
     __str__ = __repr__
 
@@ -48,11 +49,11 @@ class Person:
         self.path = path
         self.name = name
         self.todo = []
+        self.load()
 
     def load(self):
         self.images_fix()
         self.toml_fix()
-        self.save()
 
     def images_fix(self):
         #make sure we have an unprocessed.jpg
@@ -66,37 +67,24 @@ class Person:
             self.add_to_do(person_path, "did not find unprocessed picture, please add")        
         
 
-    def save(self):
-        pass
-
 
     @staticmethod
     def toml_fix(department_obj, person_path):
 
         def process(newtoml, name):
-            toml_path = "%s/%s.toml" % (person_path, name)
+            toml_path = "%s/%s.toml" % (self.path, name)
             if j.sal.fs.exists(toml_path):
                 try:
-                    personal_toml = j.data.serializer.toml.load(toml_path)
+                    tomlupdate = j.data.serializer.toml.load(toml_path)
                 except Exception:
-                    department_obj.add_to_do(person_path, "toml file is corrupt:%s" % toml_path)
+                    self.department.add_to_do(person_path, "toml file is corrupt:%s" % toml_path)
                     return newtoml
 
-                for key, val in personal_toml.items():
-                    if key not in newtoml:
-                        if key == "experience":
-                            try:
-                                newtoml = add_to_toml(newtoml, "description_public_formal", val)
-                            except Exception as e:
-                                department_obj.add_to_do(person_path, "type error:%s %s (%s)" % (toml_path, key, e))
-                        elif key not in ["escalation", "action"]:
-                            department_obj.add_to_do(person_path,
-                                               "found unrecognized key:%s in toml file:%s" % (key, toml_path))
-                    else:
-                        try:
-                            newtoml = add_to_toml(newtoml, key, val)
-                        except Exception as e:
-                            department_obj.add_to_do(person_path, "type error:%s %s (%s)" % (toml_path, key, e))
+                newtoml,errors=j.data.serializer.toml.merge(newtoml, tomlupdate, keys_replace={}, add_non_exist=False, die=False, errors=[])
+
+                for error in errors:
+                    self.department.add_to_do(person_path, "could not find key:%s in template" % error)
+
             return newtoml
 
         #just remove old stuff
@@ -107,33 +95,34 @@ class Person:
         if j.sal.fs.exists(final_toml_path):
             new_toml = j.data.serializer.toml.load(final_toml_path)
         else:
-            new_toml = j.data.serializer.toml.loads(fixed_toml) #load the template
+            new_toml = j.data.serializer.toml.loads(TEMPLATE_PERSON_TOML) #load the template
 
-        # fix older toml files
-        new_toml.setdefault("companies", [])
-
+        #
         new_toml = process(new_toml, "profile")
         new_toml = process(new_toml, "person")
 
-        department = "%s:%s" % (department_obj.company, department_obj.name)
-        if department not in new_toml["departments"]:
+        # add department name to the departments in the new toml file
+        if self.department.name not in new_toml["departments"]:
             new_toml["departments"].append(department)
 
-        if department_obj.company not in new_toml["companies"]:
-            new_toml["companies"].append(department_obj.company)
 
         for item in ["login", "first_name", "last_name", "description_public_formal", "description_public_friendly",
                      "pub_ssh_key", "telegram", "reports_into", "locations", "departments", "title", "mobile", "email"]:
             if not new_toml[item]:
-                department_obj.add_to_do(person_path, "empty value for:%s" % item)
+                self.department.add_to_do(person_path, "empty value for:%s" % item)
 
+        #make lower case
         for key in ["locations", "companies", "departments"]:
             new_toml[key] = [toml_item.lower().strip() for toml_item in new_toml[key]]
+
 
         for key in ["login", "first_name", "last_name", "telegram", "skype"]:
             new_toml[key] = new_toml[key].lower().strip()
 
-        j.data.serializer.toml.dump(final_toml_path, new_toml)
+        print(5678)
+        from IPython import embed;embed(colors='Linux')
+        s
+        # j.data.serializer.toml.dump(final_toml_path, new_toml)
 
     def __repr__(self):
         return "Person %s:%s:%s" % (self.department.name, self.name, self.path)
@@ -145,8 +134,9 @@ class Department:
         self.name = name
         self.todo = []
         self.persons = []
+        self.load()
 
-    def load(self)
+    def load(self):
         for person_path in j.sal.fs.listDirsInDir(self.path, recursive=False):
             person_name = j.sal.fs.getBaseName(person_path)
             self.persons.append(Person(self,person_name,person_path))
@@ -179,7 +169,7 @@ class Department:
         return md
 
     def __repr__(self):
-        return "Department %s:%s" % (s self.name, self.path)
+        return "Department %s:%s" % (self.name, self.path)
 
     __str__ = __repr__
 
@@ -194,34 +184,48 @@ class TeamManager:
             self.departments[name] = Department(name, path)
         return self.departments[name]
 
-    def process(self, path=""):
+    def load(self, path=""):
         """
         if path=='' then use current dir 
         """
+        if path=="":
+            path=j.sal.fs.getcwd()
+
+        self.path=path
         
-        path=j.sal.fs.getcwd()
-        
-        path0=path
+        path0=self.path
         found=""
         #look up to find the right dir
         while path0!="":
-            if j.sal.fs.exists("%s/.department"%path0):
+            if j.sal.fs.exists("%s/.team"%path0):
                 found=path0
                 break
             path0=j.sal.fs.getParent(path0).rstrip().rstrip("/").rstrip()
         if found =="":
-            raise RuntimeError("could not find .department in one of the parent dir's (or this dir):'%s'"%path)
+            raise RuntimeError("could not find .team in one of the parent dir's (or this dir):'%s'"%path)
 
-        path=path0
+        self.path=path0
 
-        for department_path in j.sal.fs.listDirsInDir(department_path, recursive=False):
+        for department_path in j.sal.fs.listDirsInDir(path, recursive=False):
             department_name = j.sal.fs.getBaseName(department_path)
-            department_obj = self._add_department(catPath, department_name, cat)
+            department_obj = self._add_department(department_path,department_name)
 
+        self.errors_write()
+
+    def errors_write(self):
         #write all the todo's
-        j.sal.fs.createDir("%s/todo" % path)
+        errorpath="%s/todo" % self.path
+        j.sal.fs.removeDirTree(errorpath)
+        j.sal.fs.createDir(errorpath)
         for key, department in self.departments.items():
-            path1 = "%s/todo/%s.md" % (path, department.name)
+            path1 = "%s/todo/%s.md" % (errorpath, department.name)
             if department.todo_md!="":
                 j.sal.fs.writeFile(path1, department.todo_md)
 
+    def test(self):
+        path=j.clients.git.pullGitRepo("ssh://git@docs.greenitglobe.com:10022/gig/data_team.git")
+        self.load(path=path+"/team")
+
+
+
+#TODO:*2 use as final formal = yaml
