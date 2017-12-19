@@ -27,7 +27,7 @@ class PrefabExample(PrefabApp):
         super().reset()
         self.core.dir_remove(self.BUILDDIR)
         self.core.dir_remove(self.CODEDIR)
-        self.prefab.development.pip.reset()
+        self.prefab.runtimes.pip.reset()
 
     def _run(self, command):
         """

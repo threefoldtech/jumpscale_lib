@@ -224,6 +224,53 @@ class Client:
                                                 maxNumPublicIP=maxNumPublicIP)
             return self.account_get(name, False)
 
+    def space_get(self,
+        accountName,
+        spaceName,
+        location="",
+        createSpace=True,
+        maxMemoryCapacity=-1,
+        maxVDiskCapacity=-1,
+        maxCPUCapacity=-1,
+        maxNASCapacity=-1,
+        maxNetworkOptTransfer=-1,
+        maxNetworkPeerTransfer=-1,
+        maxNumPublicIP=-1,
+        externalnetworkId=None):
+        """
+        Returns the OpenvCloud space with the given account_name, space_name, space_location and in case the account doesn't exist yet it will be created.
+
+        Args:
+            - accountName (required): name of the account to lookup, e.g. "myaccount"
+            - spaceName (required): name of the cloud space to lookup or create if it doesn't exist yet, e.g. "myvdc"
+            - location (only required when cloud space needs to be created): location when the cloud space needs to be created
+            - createSpace (defaults to True): if set to True the account is created in case it doesn't exist yet
+            - maxMemoryCapacity (defaults to -1: unlimited): available memory in GB for all virtual machines in the cloud space
+            - maxVDiskCapacity (defaults to -1: unlimited): available disk capacity in GiB for all virtual disks in the cloud space
+            - maxCPUCapacity (defaults to -1: unlimited): total number of available virtual CPU core that can be used by the virtual machines in the cloud space
+            - maxNASCapacity (defaults to -1: unlimited): not implemented
+            - maxNetworkOptTransfer (defaults to -1: unlimited): not implemented
+            - maxNetworkPeerTransfer (defaults to -1: unlimited): not implemented
+            - maxNumPublicIP (defaults to -1: unlimited): number of external IP addresses that can be used in the cloud space
+        """
+        account = self.account_get(name = accountName,create=False)
+        if account:
+            return account.space_get(name = spaceName,
+                                create=createSpace,
+                                location=location,
+                                maxMemoryCapacity=maxMemoryCapacity,
+                                maxVDiskCapacity=maxVDiskCapacity,
+                                maxCPUCapacity=maxCPUCapacity,
+                                maxNASCapacity=maxNASCapacity,
+                                maxNetworkOptTransfer=maxNetworkOptTransfer,
+                                maxNetworkPeerTransfer=maxNetworkPeerTransfer,
+                                maxNumPublicIP=maxNumPublicIP,
+                                externalnetworkId=externalnetworkId
+                                )
+        else:
+            raise j.exceptions.RuntimeError(
+                    "Could not find account with name %s" % accountName)
+
     def get_available_images(self, cloudspaceId=None, accountId=None):
         """
         lists all available images for a cloud space
@@ -579,7 +626,7 @@ class Space(Authorizables):
     def machine_create(
             self,
             name,
-            sshkeyname,
+            sshkeyname=None,
             memsize=2,
             vcpus=None,
             disksize=10,
@@ -587,6 +634,7 @@ class Space(Authorizables):
             image="Ubuntu 16.04 x64",
             sizeId=None,
             stackId=None,
+            sshkeypath=None,
             description=None,
     ):
         """
@@ -603,6 +651,7 @@ class Space(Authorizables):
             - sizeId (optional): overrides the value set for memsize, denotes the type or "size" of the virtual machine, actually sets the number of virtual CPU cores and amount of memory, see the sizes property of the cloud space for the sizes available in the cloud space
             - stackId (optional): identifies the grid node on which to create the virtual machine, if nothing specified (recommended) OpenvCloud will decide where to create the virtual machine
             - description (optional): machine description
+            - sshkeypath (optional): if not None the sshkey will be reloaded before getting a prefab
 
         Raises:
             - RuntimeError if machine with given name already exists.
@@ -631,22 +680,25 @@ class Space(Authorizables):
                 datadisks=datadisks,
                 stackid=stackId,
                 description=description)
+            machine = self.machine_get(name)
         else:
             res = self.client.api.cloudapi.machines.create(
                 cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks, description=description)
-            print("created machine")
             machine = self.machines[name]
-            self._authorizeSSH(machine, sshkeyname=sshkeyname)
+        if not sshkeyname:
+            return machine
 
-        m = self.machines[name]
-        p = m.prefab
+        self._authorizeSSH(machine, sshkeyname=sshkeyname)
+        
+        if sshkeypath:
+            machine.ssh_keypath = sshkeypath
+        p = machine.prefab
         p.core.hostname = name  # make sure hostname is set
 
         # remember the node in the local node configuration
         j.tools.develop.nodes.nodeSet(name, addr=p.executor.sshclient.addr, port=p.executor.sshclient.port,
                                       cat="openvcloud", description="deployment in openvcloud")
-
-        return m
+        return machine
 
     def _authorizeSSH(self, machine, sshkeyname):
         print("authorize ssh")
@@ -679,7 +731,7 @@ class Space(Authorizables):
         password = machinedict['accounts'][0]['password']
 
         sshclient = j.clients.ssh.get(
-            addr=publicip, port=sshport, login=login, passwd=password, look_for_keys=False, timeout=5)
+            addr=publicip, port=sshport, login=login, passwd=password, look_for_keys=False, timeout=20)
         sshclient.SSHAuthorizeKey(sshkeyname)
 
     @property
@@ -767,6 +819,7 @@ class Machine:
         self._prefab = None
         self.id = self.model["id"]
         self.name = self.model["name"]
+        self.ssh_keypath = None
 
     def start(self):
         self.client.api.cloudapi.machines.start(machineId=self.id)
@@ -997,10 +1050,18 @@ class Machine:
                 raise RuntimeError(
                     "Cannot find sshport at public side to access this machine")
 
-            sshclient = j.clients.ssh.get(addr=publicip, port=sshport)
-
-            executor = j.tools.executor.getFromSSHClient(sshclient)
-
+            #load SSH key if a ssh_keypath provided to the machine
+            executor = None
+            if self.ssh_keypath:
+                j.clients.ssh.load_ssh_key(self.ssh_keypath)
+                sshclient = j.clients.ssh.get(addr=publicip, port=sshport, key_filename=self.ssh_keypath)
+                sshclient._connect()
+                executor = j.tools.executor.getFromSSHClient(sshclient)
+            else:
+                sshclient = j.clients.ssh.get(addr=publicip, port=sshport)
+                executor = j.tools.executor.getFromSSHClient(sshclient)
+            
+    
             self._prefab = j.tools.prefab.get(executor)
 
         return self._prefab
