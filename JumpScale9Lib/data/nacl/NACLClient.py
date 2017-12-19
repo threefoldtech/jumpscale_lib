@@ -196,33 +196,7 @@ class NACLClient:
 
     ###OLD ###
 
-    def load(self, secret):
-        print("sss")
-        from IPython import embed
-        embed(colors='Linux')
-
-    def privatekey_get(self, name, path=None):
-        """
-        docstring here
-            :param name: name of file that contains pubkey
-            :param path: path of dir of the key file
-            @return: private key
-        """
-        file_path = self._get_key_path(name, path)
-        encoded_priv_key = j.sal.fs.readFile(file_path, binary=True)
-        return PrivateKey(encoded_priv_key)
-
-    def pubkey_get(self, name, path=None):
-        """
-        Get public key derived from private key stored in the filesystem
-            :param name: filename that contains the private key
-            :param path: path of dir of the key file
-            @return: public key
-        """
-        file_path = self._get_key_path(name, path)
-        encoded_priv_key = j.sal.fs.readFile(file_path, binary=True)
-        private_key = PrivateKey(encoded_priv_key)
-        return private_key.public_key
+ 
 
     def encrypt(self, data, keyname=None, keypath=None, pubkey=""):
         """
