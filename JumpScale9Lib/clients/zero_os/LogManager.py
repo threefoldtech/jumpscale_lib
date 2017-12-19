@@ -14,11 +14,11 @@ from js9 import j
 from .Client import *
 
 class LogManager:
-    _level_chk = j.tools.typechecker.get({
+    _level_chk = typchk.Checker({
         'level': typchk.Enum("CRITICAL", "ERROR", "WARNING", "NOTICE", "INFO", "DEBUG"),
     })
 
-    _subscribe_chk = j.tools.typechecker.get({
+    _subscribe_chk = typchk.Checker({
         'queue': str,
         'levels': [int],
     })

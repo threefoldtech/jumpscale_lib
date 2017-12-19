@@ -133,7 +133,7 @@ class ZeroOSFactory:
         hostname = server_name
 
         # find project id
-        project_ids = [project.id for project in packetnetClient.list_projects(
+        project_ids = [project.id for project in packetnetClient.getProjects(
         ) if project.name == project_name]
         if not project_ids:
             raise j.exceptions.NotFound(
@@ -209,10 +209,10 @@ class ZeroOSFactory:
     def get(self, host, port=6379, password="", db=0, ssl=True, timeout=None, testConnectionAttempts=3):
         # super().__init__(timeout=timeout)):
 
-        self.logger.info("[+] contacting zero-os server: %s" % host)
+        self.logger.info("[+] contacting zero-os server:{}".format(host))
 
-        self.logger.info("[+] check port: 6379")
-        res = j.sal.nettools.waitConnectionTest(ip_priv, 6379, 90)
+        self.logger.info("[+] check port:{}".format(port))
+        res = j.sal.nettools.waitConnectionTest(host, port, 90)
         if res is False:
             msg = "[+] make sure you are authorized in the zertotier network"
             raise RuntimeError(msg)

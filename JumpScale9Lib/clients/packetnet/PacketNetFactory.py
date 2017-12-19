@@ -22,7 +22,7 @@ class PacketNet():
         if self._projectid == None:
             if self.projectname is not "":
                 for item in self.projects:
-                    if item.name == projectname:
+                    if item.name == self.projectname:
                         self._projectid = item.id
                         return self._projectid
                 raise RuntimeError(

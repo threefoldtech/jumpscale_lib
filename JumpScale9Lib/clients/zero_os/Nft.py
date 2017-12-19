@@ -16,7 +16,7 @@ from .Client import *
 
 
 class Nft:
-    _port_chk = j.tools.typechecker.get({
+    _port_chk = typchk.Checker({
         'port': int,
         'interface': typchk.Or(str, typchk.IsNone()),
         'subnet': typchk.Or(str, typchk.IsNone()),

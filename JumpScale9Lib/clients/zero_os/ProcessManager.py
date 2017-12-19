@@ -11,6 +11,7 @@ import time
 import sys
 from js9 import j
 from .Client import *
+from . import typchk
 
 DefaultTimeout = 10  # seconds
 
@@ -19,11 +20,11 @@ logger = logging.getLogger('g8core')
 
 
 class ProcessManager:
-    _process_chk = j.tools.typechecker.get({
+    _process_chk = typchk.Checker({
         'pid': typchk.Or(int, typchk.IsNone()),
     })
 
-    _kill_chk = j.tools.typechecker.get({
+    _kill_chk = typchk.Checker({
         'pid': int,
         'signal': int,
     })

@@ -305,7 +305,7 @@ class JSONResponse(Response):
 
 
 class Client(BaseClient):
-    _raw_chk = j.tools.typechecker.get({
+    _raw_chk = typchk.Checker({
         'id': str,
         'command': str,
         'arguments': typchk.Any(),
@@ -335,7 +335,7 @@ class Client(BaseClient):
         self.btrfs = BtrfsManager(self)
         self.zerotier = ZerotierManager(self)
         self.kvm = KvmManager(self)
-        self.logger = Logger(self)
+        self.logger = LogManager(self)
         self.nft = Nft(self)
         self.config = Config(self)
         self.aggregator = AggregatorManager(self)

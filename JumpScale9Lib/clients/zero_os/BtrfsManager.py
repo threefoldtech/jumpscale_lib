@@ -1,11 +1,12 @@
 
 from js9 import j
+from . import typchk
 
 DefaultTimeout = 10  # seconds
 
 
 class BtrfsManager:
-    _create_chk = j.tools.typechecker.get({
+    _create_chk = typchk.Checker({
         'label': str,
         'metadata': typchk.Enum("raid0", "raid1", "raid5", "raid6", "raid10", "dup", "single", ""),
         'data': typchk.Enum("raid0", "raid1", "raid5", "raid6", "raid10", "dup", "single", ""),
@@ -13,21 +14,21 @@ class BtrfsManager:
         'overwrite': bool,
     })
 
-    _device_chk = j.tools.typechecker.get({
+    _device_chk = typchk.Checker({
         'mountpoint': str,
         'devices': typchk.Length((str,), 1),
     })
 
-    _subvol_chk = j.tools.typechecker.get({
+    _subvol_chk = typchk.Checker({
         'path': str,
     })
 
-    _subvol_quota_chk = j.tools.typechecker.get({
+    _subvol_quota_chk = typchk.Checker({
         'path': str,
         'limit': str,
     })
 
-    _subvol_snapshot_chk = j.tools.typechecker.get({
+    _subvol_snapshot_chk = typchk.Checker({
         'source': str,
         'destination': str,
         'read_only': bool,

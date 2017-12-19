@@ -16,7 +16,7 @@ DefaultTimeout = 10  # seconds
 logger = logging.getLogger('g8core')
 
 class ZerotierManager:
-    _network_chk = j.tools.typechecker.get({
+    _network_chk = typchk.Checker({
         'network': str,
     })
 

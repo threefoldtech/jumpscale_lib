@@ -8,7 +8,7 @@ from .ProcessManager import *
 from .InfoManager import *
 
 class BaseClient:
-    _system_chk = j.tools.typechecker.get({
+    _system_chk = typchk.Checker({
         'name': str,
         'args': [str],
         'dir': str,
@@ -16,7 +16,7 @@ class BaseClient:
         'env': typchk.Or(typchk.Map(str, str), typchk.IsNone()),
     })
 
-    _bash_chk = j.tools.typechecker.get({
+    _bash_chk = typchk.Checker({
         'stdin': str,
         'script': str,
     })
@@ -230,7 +230,7 @@ class ContainerClient(BaseClient):
         def list(self):
             return self._client.json('corex.zerotier.list', {'container': self._container})
 
-    _raw_chk = j.tools.typechecker.get({
+    _raw_chk = typchk.Checker({
         'container': int,
         'command': {
             'command': str,
@@ -325,7 +325,7 @@ class ContainerManager:
         'monitor': typchk.Or(bool, typchk.Missing()),
     }
 
-    _create_chk = j.tools.typechecker.get({
+    _create_chk = typchk.Checker({
         'root': str,
         'mount': typchk.Or(
             typchk.Map(str, str),
@@ -348,16 +348,16 @@ class ContainerManager:
         'env': typchk.Or(typchk.IsNone(), typchk.Map(str, str))
     })
 
-    _client_chk = j.tools.typechecker.get(
+    _client_chk = typchk.Checker(
         typchk.Or(int, str)
     )
 
-    _nic_add = j.tools.typechecker.get({
+    _nic_add = typchk.Checker({
         'container': int,
         'nic': _nic,
     })
 
-    _nic_remove = j.tools.typechecker.get({
+    _nic_remove = typchk.Checker({
         'container': int,
         'index': int,
     })

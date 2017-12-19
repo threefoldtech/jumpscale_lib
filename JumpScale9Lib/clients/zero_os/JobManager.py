@@ -10,6 +10,7 @@ import logging
 import time
 import sys
 from .Client import *
+from . import typchk
 from js9 import j
 
 DefaultTimeout = 10  # seconds
@@ -20,15 +21,14 @@ logger = logging.getLogger('g8core')
 
 
 class JobManager:
-    _job_chk = j.tools.typechecker.get({
+    _job_chk = typchk.Checker({
         'id': typchk.Or(str, typchk.IsNone()),
     })
 
-    _kill_chk = j.tools.typechecker.get({
+    _kill_chk = typchk.Checker({
         'id': str,
         'signal': int,
     })
-
     def __init__(self, client):
         self._client = client
 
