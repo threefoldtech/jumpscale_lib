@@ -132,7 +132,7 @@ class PacketNet():
             raise RuntimeError("zerotierId needs to be specified")
         if zerotierAPI.strip() == "" or zerotierAPI is None:
             raise RuntimeError("zerotierAPI needs to be specified")
-        ipxeUrl = "https://bootstrap.gig.tech/ipxe/zero-os-master-generic/%s" % zerotierId
+        ipxeUrl = "https://bootstrap.gig.tech/ipxe/master/%s" % zerotierId
 
         ipaddr = self._startDevice(hostname=hostname, plan=plan, facility=facility, os="",
                                    wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId=zerotierId, always_pxe=True)
@@ -152,7 +152,7 @@ class PacketNet():
             except IndexError as e:
                 # case were we the member doesn't have a private ip
                 print(
-                    "[+] please authorize the server with the public ip %s in the zerotier network" % ip_pub[0])
+                    "[+] please authorize the server with the public ip %s in the zerotier network" % ipaddr)
                 time.sleep(1)
 
         print("[+] zerotier IP: %s" % ipaddr_priv)
