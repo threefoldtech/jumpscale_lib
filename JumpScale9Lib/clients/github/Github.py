@@ -90,50 +90,58 @@ class GitHubClient(JSConfigClient):
         """
         return self.api.get_user().get_orgs()
 
-    def repos_get(self, organizationId=None):
+    def repos_get(self, organization_id=None):
         """
-        gets all repos for a user if organizationId=None otherwise it return only repos for this organization
-
-        Args:
-            - organizationId (optional): Id for the organization to get repos from
-
-        Raises:
-            - RuntimeError if organizationId doesn't exist or the user is not enroled in this organization
+        gets all repos for a user if organization_id=None otherwise it return only repos for this organization
+        @param      organization_id: Id for the organization to get repos from if set
+        @type       organization_id: string
+        @return:    Pagination list of repos
+        @rtype:     class:'github.PaginatedList.PaginatedList' of class:'github.Repository.Repository'
         """
-        if not organizationId:
+        if not organization_id:
             return self.api.get_user().get_repos()
         else:
             orgs = self.api.get_user().get_orgs()
             for org in orgs:
-                if org.id == organizationId:
+                if org.id == organization_id:
                     return org.get_repos()
-            raise RuntimeError("Cannot find Organization with id :%s" % organizationId)
+            raise RuntimeError("Cannot find Organization with id :%s" % organization_id)
 
-    def repo_get(self, repoName):
+    def repo_get(self, repo_name):
         """
         gets a specific repo by name
 
-        Args:
-            - repoName: the repo name
+        @param  repo_name: repo name to look for
+        @type   repo_name: string
+        @rtype: class:'github.Repository.Repository'
         """
-        return self.api.get_user().get_repo(repoName)
+        return self.api.get_user().get_repo(repo_name)
 
     def repo_create(self, name, description=NotSet, homepage=NotSet, private=NotSet, has_issues=NotSet, has_wiki=NotSet,
                     has_downloads=NotSet, auto_init=NotSet, gitignore_template=NotSet):
         """
         creates a repo
 
-        Args:
-            - name (required): repo name
-            - description (optional): repo desription
-            - homepage (optional): the home page for the repo
-            - private (optional): if true the repo will be created as private repo
-            - has_issues (optional): indicates that the repo has issues or no
-            - has_wiki (optional): indicates that the repo has wiki or no
-            - has_downloads (optional): indicates that the repo has downloads or no
-            - auto_init (optional): if true the repo will be automaticly initialized
-            - gitignore_template (optional): the gitignore template
-
+        @param   name:               the repo name
+        @type    name:               string
+        @param   description:        repo description
+        @type    description:        string
+        @param   homepage:           home page for this repo
+        @type    homepage:           string
+        @param   private:            if true the repo will be created as private repo
+        @type    private:            boolean
+        @param   has_issues:         indicates that the repo has issues or no
+        @type    has_issues:         boolean
+        @param   has_wiki:           indicates that the repo has wiki or no
+        @type    has_wiki:           boolean
+        @param   has_downloads:      indicates that the repo has downloads or no
+        @type    has_downloads:      boolean
+        @param   auto_init:          if true the repo will be automaticly initialized
+        @type    auto_init:          boolean
+        @param   gitignore_template: the gitignore template
+        @type    gitignore_template: boolean
+        @return  the created repo
+        @rtype   class:'github.Repository.Repository'
         """
         return self.api.get_user().create_repo(name, description=description, homepage=homepage, private=private, has_issues=has_issues,
                     has_wiki=has_wiki, has_downloads=has_downloads, auto_init=auto_init, gitignore_template=gitignore_template)
@@ -142,11 +150,8 @@ class GitHubClient(JSConfigClient):
         """
         deletes a repo
 
-        Args:
-            - repo (required): a repo to be deleted
-
-        Raises:
-            - RuntimeError if repo is not a valid Repository
+        @param  repo:   repo to be deleted
+        @type   repo:   class:'github.Repository.Repository'
         """
         if isinstance(repo, github.Repository.Repository):
             repo.delete()
