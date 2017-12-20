@@ -1,7 +1,6 @@
 from js9 import j
 import time
 import datetime
-import os
 import requests
 
 # NEED: pip3 install python-jose
@@ -126,14 +125,8 @@ class Client:
         # patch handle the case where the connection dies because of inactivity
         self.__patch_portal_client(self.api)
 
-        self._isms1 = 'mothership1' in url
         self.__login(password, secret, jwt)
-        if self._isms1:
-            jsonpath = os.path.join(os.path.dirname(__file__), 'ms1.json')
-            self.api.load_swagger(file=jsonpath, group='cloudapi')
-            patchMS1(self.api)
-        else:
-            self.api.load_swagger(group='cloudapi')
+        self.api.load_swagger(group='cloudapi')
 
     def __patch_portal_client(self, api):
         # try to relogin in the case the connection is dead because of
@@ -731,7 +724,8 @@ class Space(Authorizables):
         password = machinedict['accounts'][0]['password']
 
         sshclient = j.clients.ssh.get(
-            addr=publicip, port=sshport, login=login, passwd=password, look_for_keys=False, timeout=20)
+            addr=publicip, port=sshport, login=login, passwd=password, look_for_keys=False, timeout=300)
+
         sshclient.SSHAuthorizeKey(sshkeyname)
 
     @property
