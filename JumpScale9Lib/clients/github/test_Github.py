@@ -1,7 +1,7 @@
 import pytest
 from js9 import j
 
-from .Github import *
+from .Github import GitHubClient, GitHubFactory, github
 
 NotSet = github.GithubObject.NotSet
 
@@ -22,7 +22,7 @@ def no_user_get_repo(monkeypatch):
     """
     mocking get_repo method
     """
-    def get_repo(self, reponame):
+    def get_repo(self, repo_name):
         return True
     monkeypatch.setattr(github.AuthenticatedUser.AuthenticatedUser, 'get_repo', get_repo)
 
@@ -40,8 +40,8 @@ def no_user_get_repos(monkeypatch):
     """
     mocking get_repos method
     """
-    def get_repos(self, organizationId=None):
-        if organizationId:
+    def get_repos(self, organization_id=None):
+        if organization_id:
             return False
         else:
             return True
@@ -75,28 +75,28 @@ def test_organizations_get():
 @pytest.mark.github_client
 def test_repos_get_without_organization():
     """
-    test repos_get method without organizationId
+    test repos_get method without organization_id
     """
     assert j.clients.github.get("token").repos_get()
 
 @pytest.mark.github_client
 def test_repos_get_with_organization():
     """
-    test repos_get method for organizationId
+    test repos_get method for organization_id
     """
-    assert j.clients.github.get("token").repos_get(organizationId="id")
+    assert j.clients.github.get("token").repos_get(organization_id="id")
 
 @pytest.mark.github_client
 def test_repos_create():
     """
-    test repos_create method for organizationId
+    test repos_create
     """
     assert j.clients.github.get("token").repo_create(name="repo")
 
 @pytest.mark.github_client
 def test_repo_delete():
     """
-    test repo_delete method for organizationId
+    test repo_delete
     """
     try:
         j.clients.github.get("token").repo_delete("invalid")
