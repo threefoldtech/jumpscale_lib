@@ -218,6 +218,7 @@ class BaseClient:
         """
         return self.raw('core.subscribe', {'id': job}, stream=True, id=id)
 
+
 class ContainerClient(BaseClient):
     class ContainerZerotierManager:
         def __init__(self, client, container):

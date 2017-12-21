@@ -2,9 +2,6 @@
 from js9 import j
 from . import typchk
 
-DefaultTimeout = 10  # seconds
-
-
 class BtrfsManager:
     _create_chk = typchk.Checker({
         'label': str,

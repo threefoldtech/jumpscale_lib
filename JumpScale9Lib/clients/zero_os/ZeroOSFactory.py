@@ -126,7 +126,10 @@ class ZeroOSFactory:
             j.exceptions.Input("bad plan type %s. Valid plan type are %s" % (
                 plan_type, ','.join(valid_plan_types)))
 
-        ipxe_url = "%s/%s" % (ipxe_base, zerotierNetworkID)
+        if zerotierNetworkID:
+            ipxe_url = "%s/%s" % (ipxe_base, zerotierNetworkID)
+        else:
+            ipxe_url = None
 
         hostname = server_name
 
@@ -178,4 +181,4 @@ class ZeroOSFactory:
             ssl=ssl, timeout=timeout, testConnectionAttempts=testConnectionAttempts)
 
 
-        return ZeroOSClient(client)
+        return client

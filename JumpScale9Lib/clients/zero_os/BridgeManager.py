@@ -1,5 +1,6 @@
 from js9 import j
 from . import typchk
+import json
 
 DefaultTimeout = 10  # seconds
 
