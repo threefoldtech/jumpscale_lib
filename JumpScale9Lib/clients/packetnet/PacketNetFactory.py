@@ -15,7 +15,9 @@ class PacketNet():
         self._projectid = None
         self._devices = None
         self.projectname = projectname
-        self.logger = j.logger.get('j.clients.packetnet1')
+        self.logger = j.logger.get('j.clients.packetnet')
+
+ 
 
     @property
     def projectid(self):
@@ -212,6 +214,10 @@ class PacketNet():
         raise RuntimeError("not implemented")
 
 
+TEMPLATE = """
+auth_token_ = ""
+"""
+
 class PacketNetFactory:
 
     def __init__(self):
@@ -219,14 +225,22 @@ class PacketNetFactory:
         self.__imports__ = "packet"
         self.logger = j.logger.get('j.clients.packetnet')
         self.connections = {}
+        self.instance="main"
+
+    @property
+    def _configure_class(self):
+        return j.tools.formbuilder.baseclass_get()
+
+    @property
+    def _configure_template(self):
+        return TEMPLATE     
+
+    @property
+    def config(self):
+        return j.tools.secretconfig.get(location=self.__jslocation__,instance=self.instance)
 
     def install(self):
         j.sal.process.execute("pip3 install packet-python")
 
-    def get(self, auth_token=""):
-        """
-        """
-        if auth_token is "":
-            auth_token = j.core.state.configGetFromDict(
-                "packetnet", "apitoken")
-        return PacketNet(packet.Manager(auth_token=auth_token))
+    def get(self):
+        return PacketNet(packet.Manager(auth_token=self.config["auth_token"]))

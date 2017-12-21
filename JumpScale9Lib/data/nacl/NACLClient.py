@@ -7,23 +7,79 @@ import nacl.hash
 import nacl.encoding
 import hashlib
 import paramiko
+import binascii
 
 
 class NACLClientFactory:
 
-    def __init(self):
+    def __init__(self):
         self.__jslocation__ = "j.data.nacl"
+        self._default=None
 
     def get(self, name="key", path="", secret=""):
         """
-        if path not specified then is current path
+        will first look if it can find repo's with name: config_...
+        if more than 1 will match ourid (generated from ssh_agent)
+        if path not specified then is ~/.secrets 
         """
+
+        if path=="":
+            path=j.tools.secretconfig.configrepo_find()                
         return NACLClient(name, path, secret)
 
+    @property
+    def default(self):
+        if self._default==None:
+            self._default=self.get()
+        return self._default
+
+    def test(self):
+
+        cl= self.default #get's the default location & generate's keys
+
+        a = cl.encryptSymmetric("something")
+        b = cl.decryptSymmetric(a)
+
+        assert b == b"something"
+
+        a = cl.encryptSymmetric("something", "qwerty")
+        b = cl.decryptSymmetric(a, b"qwerty")
+        assert b == b"something"
+
+        a = cl.encryptSymmetric("something", "qwerty")
+        b = cl.decryptSymmetric(a, b"qwerty")
+        assert b == b"something"
+
+        a = cl.encryptSymmetric(b"something", "qwerty")
+        b = cl.decryptSymmetric(a, b"qwerty")
+        assert b == b"something"
+
+        #now with hex
+        a = cl.encryptSymmetric(b"something", "qwerty",hex=True)
+        b = cl.decryptSymmetric(a, b"qwerty",hex=True)
+        assert b == b"something"
+        
+
+        a = cl.encrypt(b"something")
+        b = cl.decrypt(a)
+
+        assert b == b"something"
+
+        a = cl.encrypt("something") #non binary start
+        b = cl.decrypt(a)
+
+        
+        #now with hex
+        a = cl.encrypt("something",hex=True) #non binary start
+        b = cl.decrypt(a,hex=True)   
+        assert b == b"something"     
 
 class NACLClient:
 
-    def __init__(self, name, path, secret, keyname_ssh=""):
+    def __init__(self, name, path, secret="", keyname_ssh=""):
+        """
+        is secret == "" then will use the ssh-agent to generate a secret
+        """
 
         self.ssh_agent = paramiko.agent.Agent()
 
@@ -35,7 +91,8 @@ class NACLClient:
             secret = secret.encode()
         self.name = name
         if path == "":
-            self.path = j.sal.fs.getcwd()
+            self.path = "%s/.secrets"%j.dirs.HOMEDIR
+            j.sal.fs.createDir(self.path)
         else:
             self.path = path
 
@@ -47,28 +104,25 @@ class NACLClient:
         if not j.sal.fs.exists(self.path_secretseed):
             secretseed = self.hash32(nacl.utils.random(
                 nacl.secret.SecretBox.KEY_SIZE))
-            j.sal.fs.writeFile(self.path_secretseed, secretseed)
+            self.file_write_hex(self.path_secretseed, secretseed)
         else:
-            secretseed = j.sal.fs.readFile(self.path_secretseed, binary=True)
+            secretseed = self.file_read_hex(self.path_secretseed)
 
-        if secret == b"":
-            self.secret = b""
-        else:
-            # this creates a unique encryption box
-            # the secret needs 3 components: the passphrase(secret), the
-            # secretseed means the repo & a loaded ssh-agent with your ssh key
-            secret2 = self.hash32(secretseed + secret +
-                                  self.sign_with_ssh_key(secretseed + secret))
-            # self._box is a temp encryption box which only exists while this
-            # process runs
-            # create temp box encrypt/decr (this to not keep secret in mem)
-            self._box = nacl.secret.SecretBox(
-                nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE))
-            self.secret = self._box.encrypt(
-                secret2, nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE))
-            secret = ""
-            secret2 = ""
-            secretseed = ""
+        # this creates a unique encryption box
+        # the secret needs 3 components: the passphrase(secret), the
+        # secretseed means the repo & a loaded ssh-agent with your ssh key
+        secret2 = self.hash32(secretseed + secret +
+                                self.sign_with_ssh_key(secretseed + secret))
+        # self._box is a temp encryption box which only exists while this
+        # process runs
+        # create temp box encrypt/decr (this to not keep secret in mem)
+        self._box = nacl.secret.SecretBox(
+            nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE))
+        self.secret = self._box.encrypt(
+            secret2, nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE))
+        secret = ""
+        secret2 = ""
+        secretseed = ""
 
         self.path_privatekey = "%s/%s.priv" % (self.path, self.keyname)
         if not j.sal.fs.exists(self.path_privatekey):
@@ -76,14 +130,11 @@ class NACLClient:
         self._privkey = ""
         self._pubkey = ""
 
-    def _load(self):
-        self._privkey = j.sal.fs.fileGetContents(
-           self.path_privatekey, binary=True)
 
     @property
     def privkey(self):
         if self._privkey == "":
-            self._load()
+            self._privkey = self.file_read_hex(self.path_privatekey)
         key = self.decryptSymmetric(self._privkey)
         privkey = PrivateKey(key)
         self._pubkey = privkey.public_key
@@ -97,8 +148,6 @@ class NACLClient:
 
     def _getSecret(self):
         # this to make sure we don't have our secret key open in memory
-        if self.secret == b"":
-            return b""
         res = self._box.decrypt(self.secret)
         if res == b"":
             raise RuntimeError("serious bug, cannot get secret key")
@@ -120,41 +169,55 @@ class NACLClient:
         m.update(self.tobytes(data))
         return m.digest()[0:8]
 
-    def encryptSymmetric(self, data, secret=""):
+    def encryptSymmetric(self, data, secret="",hex=False,salt=""):
         if secret == "":
             box = nacl.secret.SecretBox(self._getSecret())
         else:
             box = nacl.secret.SecretBox(self.hash32(secret))
-        res = box.encrypt(self.tobytes(data), nacl.utils.random(
-            nacl.secret.SecretBox.NONCE_SIZE))
+        if salt=="":
+            salt= nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE)
+        else:
+            salt=j.data.hash.md5_string(salt)[0:24].encode()
+        res = box.encrypt(self.tobytes(data),salt)
         box = None
+        if hex:
+            res=self.bin_to_hex(res).decode()
         return res
 
-    def decryptSymmetric(self, data, secret=b""):
+    def decryptSymmetric(self, data, secret=b"",hex=False):
         if secret == b"":
             box = nacl.secret.SecretBox(self._getSecret())
         else:
             box = nacl.secret.SecretBox(self.hash32(secret))
+        if hex:
+            data=self.hex_to_bin(data)
         res = box.decrypt(self.tobytes(data))
         box = None
         return res
 
-    def encrypt(self, data):
+    def encrypt(self, data,hex=False):
         """
         Encrypt data using the public key
             :param data: data to be encrypted, should be of type binary
             @return: encrypted data
         """
+        data=self.tobytes(data)
         sealed_box = SealedBox(self.pubkey)
-        return sealed_box.encrypt(data)
+        res=sealed_box.encrypt(data)
+        if hex:
+            res=self.bin_to_hex(res)
+        return res
+    
 
-    def decrypt(self, data):
+    def decrypt(self, data,hex=False):
         """
         Decrypt incoming data using the private key
             :param data: encrypted data provided
             @return decrypted data
         """
         unseal_box = SealedBox(self.privkey)
+        if hex:
+            data=self.hex_to_bin(data)        
         return unseal_box.decrypt(data)
 
     def _keys_generate(self):
@@ -165,49 +228,12 @@ class NACLClient:
         key2 = key.encode() #generates a bytes representation of the key
         key3 = self.encryptSymmetric(key2)
         path = self.path_privatekey
-# <<<<<<< HEAD
-#         j.sal.fs.writeFile(path, key2, binary=True)
-#         j.sal.fs.chmod(path, 0o600)
 
-#         key2 = key.public_key.encode()
-#         key3 = self.encryptSymmetric(key2)
-#         path = self.path_pubkey
-#         j.sal.fs.writeFile(path, key2)
-# =======
-#         j.sal.fs.writeFile(path, key3)
-# >>>>>>> 8c189b86fb29d80b7097f24817d63cd0493c10ae
-        j.sal.fs.chmod(path, 0o600)
-
-    def test(self):
-        a = self.encryptSymmetric("something")
-        b = self.decryptSymmetric(a)
-
-        assert b == b"something"
-
-        a = self.encryptSymmetric("something", "qwerty")
-        b = self.decryptSymmetric(a, b"qwerty")
-        assert b == b"something"
-
-        a = self.encryptSymmetric("something", "qwerty")
-        b = self.decryptSymmetric(a, b"qwerty")
-        assert b == b"something"
-
-        a = self.encryptSymmetric(b"something", "qwerty")
-        b = self.decryptSymmetric(a, b"qwerty")
-        assert b == b"something"
-
-        a = self.encrypt(b"something")
-        b = self.decrypt(a)
-        assert b == b"something"
-
-    def start(self):
-        try:
-            from jose import jwt
-        except:
-            print("jose not installed will try now")
-            j.sal.process.execute("pip3 install python-jose")
-
-        self.init()
+        self.file_write_hex(path, key3)
+        
+        #build in verification
+        key4=self.file_read_hex(path)
+        assert key3==key4
 
     def sign_with_ssh_key(self, data):
         """
@@ -216,11 +242,6 @@ class NACLClient:
         """
         hash = hashlib.sha1(data).digest()
         return self.hash32(self.ssh_agent_key.sign_ssh_data(hash))
-
-    def load(self, secret):
-        print("sss")
-        from IPython import embed
-        embed(colors='Linux')
 
     def sign(self, data):
         """
@@ -243,3 +264,19 @@ class NACLClient:
         verify_key = nacl.signing.VerifyKey(
             signature, encoder=nacl.encoding.HexEncoder)
         return verify_key.verify(data)
+
+    def file_write_hex(self,path,content):
+        content=binascii.hexlify(content)
+        j.sal.fs.writeFile(path,content)
+
+    def file_read_hex(self,path):
+        content=j.sal.fs.readFile(path)
+        content=binascii.unhexlify(content)
+        return content
+
+    def bin_to_hex(self,content):
+        return binascii.hexlify(content)
+
+    def hex_to_bin(self,content):
+        content=binascii.unhexlify(content)
+        return content    

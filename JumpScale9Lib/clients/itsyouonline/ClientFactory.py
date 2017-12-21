@@ -3,9 +3,12 @@ from .Organization import Organization
 from .client import Client
 from .ConfigUI import *
 
-DEFAULT_BASE_URL = "https://itsyou.online"
 
-
+TEMPLATE = """
+baseurl = "https://itsyou.online"
+application_id_ = ""
+secret_ = ""
+"""
 class ClientFactory:
 
     def __init__(self):
@@ -17,7 +20,25 @@ class ClientFactory:
         j.sal.process.execute("pip3 install python-jose")
         j.sal.process.execute("pip3 install PyNaCl")
 
-    def get_user(self, application_id, secret, validity=None, refreshable=False, scope=None, base_url=DEFAULT_BASE_URL):
+    @property
+    def _configure_class(self):
+        return j.tools.formbuilder.baseclass_get()
+
+    @property
+    def _configure_template(self):
+        return TEMPLATE     
+
+    @property
+    def config(self):
+        return j.tools.secretconfig.get(location=self.__jslocation__,instance=self.instance)     
+
+    @property   
+    def jwt(self):
+        jwt = Client.get_jwt(application_id, secret,
+                             validity, refreshable, scope, base_url)
+
+
+    def get_user(self, validity=None, refreshable=False, scope=None, base_url=DEFAULT_BASE_URL):
         """
         Get a client object for an ItsYou.online user.
 
@@ -29,8 +50,6 @@ class ClientFactory:
             scope: defaults to None
             base_url: base url of the ItsYou.online service; defaults to https://itsyou.online
         """
-        jwt = Client.get_jwt(application_id, secret,
-                             validity, refreshable, scope, base_url)
         return self.get_user_with_jwt(jwt, base_url)
 
     def get_organization(self, global_id, secret, validity=None, refreshable=False, scope=None, base_url=DEFAULT_BASE_URL):
