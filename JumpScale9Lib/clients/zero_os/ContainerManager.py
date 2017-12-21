@@ -1,12 +1,17 @@
+import shlex
+import json
 
-from js9 import j
+from .Response import JSONResponse
+from .FilesystemManager import FilesystemManager
+from .IPManager import IPManager
+from .JobManager import JobManager
+from .ProcessManager import ProcessManager
+from .InfoManager import InfoManager
+from .Response import ResultError
+from . import typchk
 
-from JumpScale9Lib.clients.zero_os.Response import JSONResponse
-from .FilesystemManager import *
-from .IPManager import *
-from .JobManager import *
-from .ProcessManager import *
-from .InfoManager import *
+DefaultTimeout = 10  # seconds
+
 
 class BaseClient:
     _system_chk = typchk.Checker({

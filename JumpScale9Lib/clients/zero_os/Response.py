@@ -6,6 +6,7 @@ import logging
 
 logger = logging.getLogger('g8core')
 
+
 class JobNotFoundError(Exception):
     pass
 
