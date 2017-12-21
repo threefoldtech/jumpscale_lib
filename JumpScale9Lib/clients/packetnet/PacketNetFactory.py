@@ -137,7 +137,7 @@ class PacketNet():
             raise RuntimeError("zerotierId needs to be specified")
         if zerotierAPI.strip() == "" or zerotierAPI is None:
             raise RuntimeError("zerotierAPI needs to be specified")
-        ipxeUrl = "https://bootstrap.gig.tech/ipxe/master/%s" % zerotierId
+        ipxeUrl = "https://bootstrap.gig.tech/ipxe/zero-os-master-generic/%s" % zerotierId
 
         ipaddr = self._startDevice(hostname=hostname, plan=plan, facility=facility, os="",
                                    wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId=zerotierId, always_pxe=True)
