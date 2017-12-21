@@ -26,6 +26,13 @@ class OpenvCloudClientFactory:
 
     def __init__(self):
         self.__jslocation__ = "j.clients.openvcloud"
+        self._logger = None
+
+    @property
+    def logger(self):
+        if self._logger is None:
+            self._logger = j.logger.get("OVC Client Factory")
+        return self._logger
 
     def install(self):
         j.sal.process.execute("pip3 install python-jose")
@@ -34,7 +41,7 @@ class OpenvCloudClientFactory:
         url = url.lower()
         if url.startswith("http"):
             url = url.split("//")[1].rstrip("/")
-        print("Get OpenvCloud client on URL: %s" % url)
+        self.logger.info("Get OpenvCloud client on URL: %s" % url)
         return url
 
     def get(self, applicationId, secret, url):
@@ -122,11 +129,25 @@ class Client:
         self._secret = secret
         self._jwt = jwt
         self.api = j.clients.portal.get(url, port)
+        self._logger = None
         # patch handle the case where the connection dies because of inactivity
         self.__patch_portal_client(self.api)
 
+        self._isms1 = 'mothership1' in url
         self.__login(password, secret, jwt)
-        self.api.load_swagger(group='cloudapi')
+        if self._isms1:
+            jsonpath = os.path.join(os.path.dirname(__file__), 'ms1.json')
+            self.api.load_swagger(file=jsonpath, group='cloudapi')
+            patchMS1(self.api)
+        else:
+            self.api.load_swagger(group='cloudapi')
+
+    @property
+    def logger(self):
+        if self._logger is None:
+            self._logger = j.logger.get("OVC Client Factory")
+        return self._logger
+
 
     def __patch_portal_client(self, api):
         # try to relogin in the case the connection is dead because of
@@ -487,6 +508,14 @@ class Space(Authorizables):
         self.client = account.client
         self.model = model
         self.id = model["id"]
+        self._logger = None
+
+    @property
+    def logger(self):
+        if self._logger is None:
+            self._logger = j.logger.get("Space")
+        return self._logger
+
 
     def externalnetwork_add(self, name, subnet, gateway, startip, endip, gid, vlan):
         self.client.api.cloudbroker.iaas.addExternalNetwork(cloudspaceId=self.id,
@@ -661,7 +690,7 @@ class Space(Authorizables):
         if name in self.machines:
             raise j.exceptions.RuntimeError(
                 "Name is not unique, already exists in %s" % self)
-        print("Cloud space ID:%s name:%s size:%s image:%s disksize:%s" %
+        self.logger.info("Cloud space ID:%s name:%s size:%s image:%s disksize:%s" %
               (self.id, name, sizeId, imageId, disksize))
         if stackId:
             self.client.api.cloudbroker.machine.createOnStack(
@@ -694,11 +723,11 @@ class Space(Authorizables):
         return machine
 
     def _authorizeSSH(self, machine, sshkeyname):
-        print("authorize ssh")
+        self.logger.info("authorizing ssh")
         machineip, machinedict = machine.machineip_get()
         publicip = machine.space.model['publicipaddress']
         while not publicip:
-            print(
+            self.logger.info(
                 "machine OpenvCloud:%s not ready yet with public ip, wait 1 sec, try again" % self)
             time.sleep(1)
             machine.space.refresh()
@@ -724,8 +753,7 @@ class Space(Authorizables):
         password = machinedict['accounts'][0]['password']
 
         sshclient = j.clients.ssh.get(
-            addr=publicip, port=sshport, login=login, passwd=password, look_for_keys=False, timeout=300)
-
+            addr=publicip, port=sshport, login=login, passwd=password, look_for_keys=False, timeout=20)
         sshclient.SSHAuthorizeKey(sshkeyname)
 
     @property
@@ -814,6 +842,13 @@ class Machine:
         self.id = self.model["id"]
         self.name = self.model["name"]
         self.ssh_keypath = None
+        self._logger
+
+    @property
+    def logger(self):
+        if self._logger is None:
+            self._logger = j.logger.get("OVC Client Factory")
+        return self._logger
 
     def start(self):
         self.client.api.cloudapi.machines.start(machineId=self.id)
@@ -834,7 +869,7 @@ class Machine:
         self.client.api.cloudapi.machines.reset(machineId=self.id)
 
     def delete(self):
-        print("Machine delete:%s" % self)
+        self.logger.info("Machine delete:%s" % self)
         self.client.api.cloudapi.machines.delete(machineId=self.id)
 
     def clone(self, name, cloudspaceId=None, snapshotTimestamp=None):
