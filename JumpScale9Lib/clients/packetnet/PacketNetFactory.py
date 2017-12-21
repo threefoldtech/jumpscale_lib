@@ -224,7 +224,9 @@ TEMPLATE = """
 auth_token_ = ""
 """
 
-class PacketNetFactory:
+BASE = j.tools.secretconfig.base_class_secret
+
+class PacketNetFactory(BASE):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.packetnet"
@@ -232,21 +234,15 @@ class PacketNetFactory:
         self.logger = j.logger.get('j.clients.packetnet')
         self.connections = {}
         self.instance="main"
-
-    @property
-    def _configure_class(self):
-        return j.tools.formbuilder.baseclass_get()
-
-    @property
-    def _configure_template(self):
-        return TEMPLATE     
-
-    @property
-    def config(self):
-        return j.tools.secretconfig.get(location=self.__jslocation__,instance=self.instance)
+        self._TEMPLATE=TEMPLATE
 
     def install(self):
         j.sal.process.execute("pip3 install packet-python")
 
-    def get(self):
-        return PacketNet(packet.Manager(auth_token=self.config["auth_token"]))
+    def get(self,instance="main"):
+        self.instance=instance
+        from IPython import embed;embed(colors='Linux')
+        return PacketNet(packet.Manager(auth_token=self.config.data["auth_token"]))
+
+    def test(self):
+        from IPython import embed;embed(colors='Linux')

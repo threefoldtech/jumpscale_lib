@@ -37,6 +37,9 @@ class ClientFactory:
         jwt = Client.get_jwt(application_id, secret,
                              validity, refreshable, scope, base_url)
 
+        print(678)
+        from IPython import embed;embed(colors='Linux')
+
 
     def get_user(self, validity=None, refreshable=False, scope=None, base_url=DEFAULT_BASE_URL):
         """
