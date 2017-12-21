@@ -153,7 +153,4 @@ class GitHubClient(JSConfigClient):
         @param  repo:   repo to be deleted
         @type   repo:   class:'github.Repository.Repository'
         """
-        if isinstance(repo, github.Repository.Repository):
-            repo.delete()
-        else:
-            raise RuntimeError("invalid Repository")  
+        repo.delete()

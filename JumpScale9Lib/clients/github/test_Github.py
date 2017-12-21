@@ -1,106 +1,93 @@
 import pytest
+import unittest
+import sys
+from unittest import mock
 from js9 import j
 
-from .Github import GitHubClient, GitHubFactory, github
+class TestGuthubClient(unittest.TestCase):
+    
+    def tearDown(self):
+        """
+        TearDown
+        """
+        # clean up all the imported modules from js9 (we know that its not clean and it does not clean up all the refences)
+        for module in sorted([item for item in sys.modules.keys() if 'JumpScale9' in item], reverse=True):
+            del sys.modules[module]
 
-NotSet = github.GithubObject.NotSet
+    @pytest.mark.ssh_factory
+    @mock.patch('JumpScale9Lib.clients.github.Github.github.Github')
+    def test_organizations_get(self, mock_github):
+        """
+        check if organizations_get working
+        """
+        from JumpScale9Lib.clients.github.Github import GitHubClient
 
-@pytest.fixture(autouse=True)
-def no_org_object(monkeypatch):
-    """
-    mocking organization object
-    """
-    class Org:
-        def __init__(self, id):
-            self.id = id
-        def get_repos(self):
-            return True
-    monkeypatch.setattr(github.Organization, "Organization", Org)
+        githubclient = GitHubClient("usertoken")
+        githubclient.organizations_get()
+        # assert the expected call for get_orgs
+        githubclient.api.get_user().get_orgs.assert_called_with()
 
-@pytest.fixture(autouse=True)
-def no_user_get_repo(monkeypatch):
-    """
-    mocking get_repo method
-    """
-    def get_repo(self, repo_name):
-        return True
-    monkeypatch.setattr(github.AuthenticatedUser.AuthenticatedUser, 'get_repo', get_repo)
+    @pytest.mark.ssh_factory
+    @mock.patch('JumpScale9Lib.clients.github.Github.github.Github')
+    def test_repos_get(self, mock_github):
+        """
+        check if repos_get working
+        """
+        from JumpScale9Lib.clients.github.Github import GitHubClient, github
 
-@pytest.fixture(autouse=True)
-def no_user_get_orgs(monkeypatch):
-    """
-    mocking get_orgs method
-    """
-    def get_orgs(self):
-        return [github.Organization.Organization("id")]
-    monkeypatch.setattr(github.AuthenticatedUser.AuthenticatedUser, 'get_orgs', get_orgs)
+        githubclient = GitHubClient("usertoken")
+        # test repo_get without organization_id
+        githubclient.repos_get()
+        # assert the expected call for get_user().get_repos if no organization id provided
+        githubclient.api.get_user().get_repos.assert_called_with()
 
-@pytest.fixture(autouse=True)
-def no_user_get_repos(monkeypatch):
-    """
-    mocking get_repos method
-    """
-    def get_repos(self, organization_id=None):
-        if organization_id:
-            return False
-        else:
-            return True
-    monkeypatch.setattr(github.AuthenticatedUser.AuthenticatedUser, 'get_repos', get_repos)
+        # test repo_get with organization_id
+        try:
+            githubclient.repos_get(organization_id="id")
+            assert False, "failed to raise runtime error when no organizations found"
+        except RuntimeError:    
+            # assert the expected call for get_user().get_orgs if organization id provided
+            githubclient.api.get_user().get_orgs.assert_called_with()
 
-@pytest.fixture(autouse=True)
-def no_user_create_repo(monkeypatch):
-    """
-    mocking create_repo method
-    """
-    def create_repo(self, name, description=NotSet, homepage=NotSet, private=NotSet, has_issues=NotSet, has_wiki=NotSet,
-                    has_downloads=NotSet, auto_init=NotSet, gitignore_template=NotSet):
-        return True
-    monkeypatch.setattr(github.AuthenticatedUser.AuthenticatedUser, 'create_repo', create_repo)
+    @pytest.mark.ssh_factory
+    @mock.patch('JumpScale9Lib.clients.github.Github.github.Github')
+    def test_repo_get(self, mock_github):
+        """
+        check if repo_get working
+        """
+        from JumpScale9Lib.clients.github.Github import GitHubClient
 
+        githubclient = GitHubClient("usertoken")
+        githubclient.repo_get("repo")
+        # assert the expected call for get_repo
+        githubclient.api.get_user().get_repo.assert_called_with("repo")
 
-@pytest.mark.github_client
-def test_repo_get():
-    """
-    test repo_get method
-    """
-    assert j.clients.github.get("token").repo_get("test")
+    @pytest.mark.ssh_factory
+    @mock.patch('JumpScale9Lib.clients.github.Github.github.Github')
+    def test_repo_create(self, mock_github):
+        """
+        check if repo_create working
+        """
+        from JumpScale9Lib.clients.github.Github import GitHubClient, github
 
-@pytest.mark.github_client
-def test_organizations_get():
-    """
-    test organizations_get method
-    """
-    assert j.clients.github.get("token").organizations_get()[0].id == "id"
+        githubclient = GitHubClient("usertoken")
+        githubclient.repo_create("repo")
+        # assert the expected call for create_repo
+        githubclient.api.get_user().create_repo.assert_called_with("repo", description=github.GithubObject.NotSet, homepage=github.GithubObject.NotSet, private=github.GithubObject.NotSet, has_issues=github.GithubObject.NotSet, has_wiki=github.GithubObject.NotSet,
+                    has_downloads=github.GithubObject.NotSet, auto_init=github.GithubObject.NotSet, gitignore_template=github.GithubObject.NotSet)
+    
+    @pytest.mark.ssh_factory
+    @mock.patch('JumpScale9Lib.clients.github.Github.github.Github')
+    @mock.patch('JumpScale9Lib.clients.github.Github.github.Repository')
+    def test_repo_delete(self, mock_github, mock_repository):
+        """
+        check if repo_delete working
+        """
+        from JumpScale9Lib.clients.github.Github import GitHubClient, github
 
-@pytest.mark.github_client
-def test_repos_get_without_organization():
-    """
-    test repos_get method without organization_id
-    """
-    assert j.clients.github.get("token").repos_get()
-
-@pytest.mark.github_client
-def test_repos_get_with_organization():
-    """
-    test repos_get method for organization_id
-    """
-    assert j.clients.github.get("token").repos_get(organization_id="id")
-
-@pytest.mark.github_client
-def test_repos_create():
-    """
-    test repos_create
-    """
-    assert j.clients.github.get("token").repo_create(name="repo")
-
-@pytest.mark.github_client
-def test_repo_delete():
-    """
-    test repo_delete
-    """
-    try:
-        j.clients.github.get("token").repo_delete("invalid")
-        assert False
-    except RuntimeError:
-        assert True
-
+        githubclient = GitHubClient("usertoken")
+        repo = mock_repository
+        githubclient.repo_delete(repo)
+        # assert the expected call for delete
+        mock_repository.delete.assert_called_with()
+    
