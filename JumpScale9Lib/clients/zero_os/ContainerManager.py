@@ -1,6 +1,7 @@
 
 from js9 import j
 
+from JumpScale9Lib.clients.zero_os.Response import JSONResponse
 from .FilesystemManager import *
 from .IPManager import *
 from .JobManager import *
