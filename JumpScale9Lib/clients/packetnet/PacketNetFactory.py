@@ -123,8 +123,13 @@ class PacketNet():
 
         example ipxeUrl = https://bootstrap.gig.tech/ipxe/zero-os-master-generic
         """
+
+        if ipxeUrl is None:
+            zerotierId = ""
+        else:
+            zerotierId = ipxeUrl.split('/')[-1]
         return self._startDevice(hostname=hostname, plan=plan, facility=facility, os=os,
-                                 wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId="", always_pxe=False)
+                                 wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId=zerotierId, always_pxe=False)
 
     def startZeroOS(self, hostname="removeMe", plan='baremetal_0', facility='ams1', zerotierId="", zerotierAPI="", wait=True, remove=False):
         """
@@ -169,6 +174,7 @@ class PacketNet():
 
         example ipxeUrl = https://bootstrap.gig.tech/ipxe/zero-os-master-generic
         """
+
         if ipxeUrl is None:
             ipxeUrl = ""
         if remove:

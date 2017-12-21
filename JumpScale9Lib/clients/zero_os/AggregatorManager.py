@@ -1,5 +1,7 @@
 from js9 import j
+
 from . import typchk
+
 
 class AggregatorManager:
     _query_chk = typchk.Checker({
@@ -40,4 +42,3 @@ class AggregatorManager:
         self._query_chk.check(args)
 
         return self._client.json('aggregator.query', args)
-

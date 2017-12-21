@@ -1,17 +1,5 @@
-import redis
-import uuid
-import json
-import textwrap
-import shlex
-import base64
-import signal
-import socket
-import logging
-import time
-import sys
-from js9 import j
+from . import typchk
 
-from .Client import *
 
 class LogManager:
     _level_chk = typchk.Checker({
@@ -76,5 +64,3 @@ class LogManager:
         :return:
         """
         return self._client.json('logger.unsubscribe', {'queue': queue})
-
-

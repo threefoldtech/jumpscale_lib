@@ -1,20 +1,7 @@
-import redis
-import uuid
 import json
-import textwrap
-import shlex
-import base64
-import signal
-import socket
-import logging
-import time
-import sys
-from .Client import *
-from js9 import j
 
-DefaultTimeout = 10  # seconds
+from . import typchk
 
-logger = logging.getLogger('g8core')
 
 class DiskManager:
     mktable_chk = typchk.Checker({

@@ -1,8 +1,6 @@
-
 from js9 import j
-from . import typchk
 
-DefaultTimeout = 10  # seconds
+from . import typchk
 
 
 class BtrfsManager:

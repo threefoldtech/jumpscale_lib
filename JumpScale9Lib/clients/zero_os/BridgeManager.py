@@ -1,7 +1,9 @@
+import json
+
 from js9 import j
+
 from . import typchk
 
-DefaultTimeout = 10  # seconds
 
 class BridgeManager:
     _bridge_create_chk = typchk.Checker({
