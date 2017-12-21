@@ -11,9 +11,11 @@ class ClientFactory:
     def __init__(self):
         self.__jslocation__ = 'j.clients.itsyouonline'
 
-    def install_for_ubuntu(self):
-        j.sal.process.execute("apt install  python3.5-dev")
+    def install(self):
+        if j.core.platformtype.myplatform.isUbuntu:
+            j.sal.process.execute("apt install  python3.5-dev")
         j.sal.process.execute("pip3 install python-jose")
+        j.sal.process.execute("pip3 install PyNaCl")
 
     def get_user(self, application_id, secret, validity=None, refreshable=False, scope=None, base_url=DEFAULT_BASE_URL):
         """
