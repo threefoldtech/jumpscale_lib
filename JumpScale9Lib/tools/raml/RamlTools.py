@@ -116,8 +116,23 @@ class RamlToolsFactory:
         c.specs_get("https://github.com/itsyouonline/identityserver/tree/master/specifications/api")
         # c.client_python_generate()
         c.reset()
-        c.server_python_generate()
 
+        c.client_python_generate()
+        #TODO:*1 call some methods on IYO by means of the jwt
+
+        #TODO:*1 get SPORE client, and do test from SPORE client
+
+        c.server_python_generate()
+        #TODO:*1 now start the server (purely from generated in tmux)
+        #TODO:*1 use client to connect to server, do some action on the api
+
+        c.server_python_generate(gevent=False)
+        #TODO:*1 now start the server (purely from generated in tmux)
+        #TODO:*1 use client to connect to server, do some action on the api
+
+        
+
+        raise RuntimeError("need to implement all todo's")
         
 
 
@@ -189,7 +204,12 @@ class RamlTools():
         self._prepare(reset=reset)
         goramlpath=j.tools.raml._goramlpath
 
-        cmd = "cd %s;mkdir -p generated/server;cd api_spec;%s server --language python  --kind gevent-flask --dir ../generated/server --ramlfile main.raml" % (self.path,goramlpath)
+        if gevent:
+            gevent="--kind gevent-flask "
+        else:
+            gevent=""
+
+        cmd = "cd %s;mkdir -p generated/server;cd api_spec;%s server --language python  %s--dir ../generated/server --ramlfile main.raml" % (self.path,goramlpath,gevent)
         print(cmd)
         j.sal.process.execute(cmd)
 
