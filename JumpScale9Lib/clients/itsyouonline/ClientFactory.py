@@ -10,6 +10,8 @@ application_id_ = ""
 secret_ = ""
 """
 
+#TODO:*1 needs to be redone using raml tools & autogeneration of python client
+
 BASE = j.tools.secretconfig.base_class_secret
 class ClientFactory:
 

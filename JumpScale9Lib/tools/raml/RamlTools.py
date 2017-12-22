@@ -39,6 +39,7 @@ class RamlToolsFactory:
             j.tools.prefab.local.runtimes.golang.goraml(reset=True)
         if j.sal.process.checkInstalled("npm") == False:
             j.tools.prefab.local.runtimes.nodejs.install()
+
         npm_install("raml2html")
         npm_install("api-spec-converter")
         npm_install("oas-raml-converter")
@@ -117,8 +118,10 @@ class RamlToolsFactory:
         # c.client_python_generate()
         c.reset()
 
+        jwt=j.clients.itsyouonline.jwt
+
         c.client_python_generate()
-        #TODO:*1 call some methods on IYO by means of the jwt
+        #TODO:*1 call some methods on IYO server by means of the jwt
 
         #TODO:*1 get SPORE client, and do test from SPORE client
 
@@ -130,7 +133,7 @@ class RamlToolsFactory:
         #TODO:*1 now start the server (purely from generated in tmux)
         #TODO:*1 use client to connect to server, do some action on the api
 
-        
+        #TODO: *1 tarantool & golang (server only)
 
         raise RuntimeError("need to implement all todo's")
         
