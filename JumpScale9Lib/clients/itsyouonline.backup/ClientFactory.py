@@ -1,7 +1,8 @@
 from .User import User
 from .Organization import Organization
 from .client import Client
-from .ConfigUI import *
+# from .ConfigUI import *
+from js9 import j
 
 
 TEMPLATE = """
@@ -9,10 +10,20 @@ baseurl = "https://itsyou.online"
 application_id_ = ""
 secret_ = ""
 """
+
+# TODO:*1 needs to be redone using raml tools & autogeneration of python client
+
+BASE = j.tools.secretconfig.base_class_secret_config
+
+
 class ClientFactory:
 
     def __init__(self):
         self.__jslocation__ = 'j.clients.itsyouonline'
+        self._jwt = None
+        self.instance = "main"
+        self._TEMPLATE = TEMPLATE
+        self.raml_spec = "https://raw.githubusercontent.com/itsyouonline/identityserver/master/specifications/api/itsyouonline.raml"
 
     def install(self):
         if j.core.platformtype.myplatform.isUbuntu:
@@ -21,27 +32,15 @@ class ClientFactory:
         j.sal.process.execute("pip3 install PyNaCl")
 
     @property
-    def _configure_class(self):
-        return j.tools.formbuilder.baseclass_get()
-
-    @property
-    def _configure_template(self):
-        return TEMPLATE     
-
-    @property
-    def config(self):
-        return j.tools.secretconfig.get(location=self.__jslocation__,instance=self.instance)     
-
-    @property   
     def jwt(self):
-        jwt = Client.get_jwt(application_id, secret,
-                             validity, refreshable, scope, base_url)
+        if self._jwt == None:
+            self._jwt = Client.get_jwt(self.config.data["application_id"], secret, validity, refreshable, scope, base_url)
 
         print(678)
-        from IPython import embed;embed(colors='Linux')
+        from IPython import embed
+        embed(colors='Linux')
 
-
-    def get_user(self, validity=None, refreshable=False, scope=None, base_url=DEFAULT_BASE_URL):
+    def user(self, validity=None, refreshable=False, scope=None, base_url=DEFAULT_BASE_URL):
         """
         Get a client object for an ItsYou.online user.
 
@@ -136,4 +135,5 @@ class ClientFactory:
     def configure(self):
         app = ConfigUI()
         app.run()
-        from IPython import embed;embed(colors='Linux')
+        from IPython import embed
+        embed(colors='Linux')

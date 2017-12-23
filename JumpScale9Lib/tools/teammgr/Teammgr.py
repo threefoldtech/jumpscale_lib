@@ -55,9 +55,14 @@ class Person:
         self.images_fix()
         self.toml_fix()
 
+    def add_to_do(self, path, todo):
+        todo = todo.replace("_", "-")
+        td = Todo(self, path, todo)
+        self.todo.append(td)
+
     def images_fix(self):
         #make sure we have an unprocessed.jpg
-        images = j.sal.fs.listFilesInDir(person_path, filter="*.jpg")
+        images = j.sal.fs.listFilesInDir(self.path, filter="*.jpg")
         unprocessed_images = [item for item in images if j.sal.fs.getBaseName(item) == "unprocessed.jpg"]
         if images and not unprocessed_images:
             # did not have an unprocessed one need to copy to unprocessed name
@@ -65,33 +70,30 @@ class Person:
             j.sal.fs.renameFile(image, "%s/unprocessed.jpg" % (j.sal.fs.getDirName(image)))
         elif not unprocessed_images:
             self.add_to_do(person_path, "did not find unprocessed picture, please add")        
+
+    def toml_fix(self):
         
-
-
-    @staticmethod
-    def toml_fix(department_obj, person_path):
-
         def process(newtoml, name):
             toml_path = "%s/%s.toml" % (self.path, name)
             if j.sal.fs.exists(toml_path):
                 try:
                     tomlupdate = j.data.serializer.toml.load(toml_path)
                 except Exception:
-                    self.department.add_to_do(person_path, "toml file is corrupt:%s" % toml_path)
+                    self.department.add_to_do(self.path, "toml file is corrupt:%s" % toml_path)
                     return newtoml
 
-                newtoml,errors=j.data.serializer.toml.merge(newtoml, tomlupdate, keys_replace={}, add_non_exist=False, die=False, errors=[])
+                newtoml,errors=j.data.serializer.toml.merge(newtoml, tomlupdate, keys_replace={'name':'first_name'}, add_non_exist=False, die=False, errors=[])
 
                 for error in errors:
-                    self.department.add_to_do(person_path, "could not find key:%s in template" % error)
+                    self.department.add_to_do(self.path, "could not find key:%s in template" % error)
 
             return newtoml
 
         #just remove old stuff
-        j.sal.fs.remove("%s/fixed.yaml" % person_path)
-        j.sal.fs.remove("%s/fixed.toml" % person_path)
+        j.sal.fs.remove("%s/fixed.yaml" % self.path)
+        j.sal.fs.remove("%s/fixed.toml" % self.path)
 
-        final_toml_path = "%s/fixed_donotchange.toml" % person_path
+        final_toml_path = "%s/fixed_donotchange.toml" % self.path
         if j.sal.fs.exists(final_toml_path):
             new_toml = j.data.serializer.toml.load(final_toml_path)
         else:
@@ -103,13 +105,13 @@ class Person:
 
         # add department name to the departments in the new toml file
         if self.department.name not in new_toml["departments"]:
-            new_toml["departments"].append(department)
+            new_toml["departments"].append(self.department.name)
 
 
         for item in ["login", "first_name", "last_name", "description_public_formal", "description_public_friendly",
                      "pub_ssh_key", "telegram", "reports_into", "locations", "departments", "title", "mobile", "email"]:
             if not new_toml[item]:
-                self.department.add_to_do(person_path, "empty value for:%s" % item)
+                self.department.add_to_do(self.path, "empty value for:%s" % item)
 
         #make lower case
         for key in ["locations", "companies", "departments"]:
@@ -174,7 +176,7 @@ class Department:
     __str__ = __repr__
 
 
-class TeamManager:
+class Teammgr:
     def __init__(self):
         self.__jslocation__ = "j.tools.team_manager"
         self.departments = {}
@@ -197,7 +199,7 @@ class TeamManager:
         found=""
         #look up to find the right dir
         while path0!="":
-            if j.sal.fs.exists("%s/.team"%path0):
+            if j.sal.fs.exists("%s/team"%path0):
                 found=path0
                 break
             path0=j.sal.fs.getParent(path0).rstrip().rstrip("/").rstrip()
@@ -206,7 +208,7 @@ class TeamManager:
 
         self.path=path0
 
-        for department_path in j.sal.fs.listDirsInDir(path, recursive=False):
+        for department_path in j.sal.fs.listDirsInDir(self.path, recursive=False):
             department_name = j.sal.fs.getBaseName(department_path)
             department_obj = self._add_department(department_path,department_name)
 
