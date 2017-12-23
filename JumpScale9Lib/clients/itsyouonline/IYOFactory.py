@@ -4,7 +4,7 @@ import urllib
 from js9 import j
 from JumpScale9Lib.clients.itsyouonline.generated.client import Client
 
-SecretConfigBase = j.tools.secretconfig.base_class_secret
+SecretConfigBase = j.tools.secretconfig.base_class_secret_config
 
 
 DEFAULT_BASE_URL = "https://itsyou.online/api"
@@ -38,10 +38,10 @@ class IYOFactory(SecretConfigBase):
     @property
     def jwt(self):
         if self._jwt == None:
-            self._jwt = self.get_jwt(self.config.data["application_id_"], self.config.data["secret_"])
+            self._jwt = self.jwt_get(self.config.data["application_id_"], self.config.data["secret_"])
         return self._jwt
 
-    def get_jwt(self, client_id, secret, validity=None, refreshable=False, scope=None, base_url=DEFAULT_BASE_URL):
+    def jwt_get(self, client_id, secret, validity=None, refreshable=False, scope=None, base_url=DEFAULT_BASE_URL):
         """
         Get a a JSON Web token for an ItsYou.online organization or user.
 

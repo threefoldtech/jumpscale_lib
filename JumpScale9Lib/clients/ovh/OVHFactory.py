@@ -1,6 +1,11 @@
 from js9 import j
 
-import ovh
+try:
+    import ovh
+except:
+    print("WARNING: ovh pip client not found please install do j.clients.ovh.install()")
+    # OVHFactory().install()
+    
 import requests
 import time
 
@@ -17,13 +22,17 @@ import time
 #         raise RuntimeError("stop debug here")
 
 
+TEMPLATE = """
+ipxeBase = "https://bootstrap.gig.tech/ipxe/master"
+endpoint = "soyoustart-eu"
+appkey_ = ""
+appsecret_ = ""
+consumerkey_ = ""
+"""
+
 class OVHClient:
 
     def __init__(self, appkey, appsecret, consumerkey="", endpoint='soyoustart-eu', ipxeBase="https://bootstrap.gig.tech/ipxe/master"):
-        # if consumerkey=="":
-        #     client = ovh.Client(endpoint=endpoint)
-        #     ck = client.new_consumer_key_request()
-        #     ck.add_recursive_rules(ovh.API_READ_WRITE, '/')
         print("OVH INIT")
         self.client = ovh.Client(
             endpoint=endpoint,
@@ -403,7 +412,8 @@ class OVHClient:
             time.sleep(1)
 
 
-class OVHFactory:
+SecretConfigBase = j.tools.secretconfig.base_class_secret_config
+class OVHFactory(SecretConfigBase):
     """
     """
 
@@ -412,8 +422,21 @@ class OVHFactory:
         self.__imports__ = "ovh"
         self.logger = j.logger.get('j.clients.ovh')
         self.connections = {}
+        self.instance = "main"
+        self._TEMPLATE = TEMPLATE     
 
-    def get(self, appkey, appsecret, consumerkey="", endpoint='soyoustart-eu'):
+    def install(self):
+        p=j.tools.prefab.local
+        p.runtimes.pip.install("ovh")
+
+    def client_get(self, instance=""):
+        if instance=="":
+            instance=self.instance
+        c=self.config.data
+        return OVHClient(appkey=c["appkey_"], appsecret=c["appsecret_"], consumerkey=c["consumerkey_"], endpoint=c["endpoint"])
+
+
+    def client_get_byparams(self, appkey, appsecret, consumerkey="", endpoint='soyoustart-eu'):
         """
         Visit https://eu.api.soyoustart.com/createToken/
 
@@ -436,19 +459,8 @@ class OVHFactory:
         """
         return OVHClient(appkey=appkey, appsecret=appsecret, consumerkey=consumerkey, endpoint=endpoint)
 
-    def getByName(self, name):
-        """
-        name is in j.core.config[$name] and can be set with something listNetworkBootloader
 
-        js9 'j.core.state.configSetInDict("ovh_gig","appsecret","xxx")'
-        js9 'j.core.state.configSetInDict("ovh_gig","appkey","xxx")'
-        js9 'j.core.state.configSetInDict("ovh_gig","consumerkey","xxx")'
-        js9 'j.core.state.configSetInDict("ovh_gig","endpoint","soyoustart-eu")'
-
-        """
-        cl = j.clients.ovh.get(appkey=j.core.state.configGetFromDict(name, "appkey"),
-                               appsecret=j.core.state.configGetFromDict(
-                                   name, "appsecret"),
-                               consumerkey=j.core.state.configGetFromDict(name, "consumerkey"))
-
-        return cl
+    def node_get(self,instance=""):
+        cl=j.clients.ovh.client_get(instance=instance)
+        cl.serverInstall(name="", installationTemplate="ubuntu1704-server_64", sshKeyName="ovh",
+                      useDistribKernel=True, noRaid=True, hostname="", wait=True)        

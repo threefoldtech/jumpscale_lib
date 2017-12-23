@@ -1,7 +1,7 @@
 from js9 import j
 from zerorobot.dsl.ZeroRobotClient import ZeroRobotClient
 
-SecretConfigBase = j.tools.secretconfig.base_class_secret
+SecretConfigBase = j.tools.secretconfig.base_class_secret_config
 _template = """
 base_url = "http://localhost:6600"
 """

@@ -224,7 +224,7 @@ TEMPLATE = """
 auth_token_ = ""
 """
 
-BASE = j.tools.secretconfig.base_class_secret
+BASE = j.tools.secretconfig.base_class_secret_config
 
 class PacketNetFactory(BASE):
 
