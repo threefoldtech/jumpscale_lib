@@ -1,7 +1,8 @@
 from .User import User
 from .Organization import Organization
 from .client import Client
-from .ConfigUI import *
+# from .ConfigUI import *
+from js9 import j
 
 
 TEMPLATE = """
@@ -10,17 +11,19 @@ application_id_ = ""
 secret_ = ""
 """
 
-#TODO:*1 needs to be redone using raml tools & autogeneration of python client
+# TODO:*1 needs to be redone using raml tools & autogeneration of python client
 
 BASE = j.tools.secretconfig.base_class_secret
+
+
 class ClientFactory:
 
     def __init__(self):
         self.__jslocation__ = 'j.clients.itsyouonline'
         self._jwt = None
-        self.instance="main"
-        self._TEMPLATE=TEMPLATE   
-        self.raml_spec = "https://raw.githubusercontent.com/itsyouonline/identityserver/master/specifications/api/itsyouonline.raml"     
+        self.instance = "main"
+        self._TEMPLATE = TEMPLATE
+        self.raml_spec = "https://raw.githubusercontent.com/itsyouonline/identityserver/master/specifications/api/itsyouonline.raml"
 
     def install(self):
         if j.core.platformtype.myplatform.isUbuntu:
@@ -28,14 +31,14 @@ class ClientFactory:
         j.sal.process.execute("pip3 install python-jose")
         j.sal.process.execute("pip3 install PyNaCl")
 
-    @property   
+    @property
     def jwt(self):
         if self._jwt == None:
             self._jwt = Client.get_jwt(self.config.data["application_id"], secret, validity, refreshable, scope, base_url)
 
         print(678)
-        from IPython import embed;embed(colors='Linux')
-
+        from IPython import embed
+        embed(colors='Linux')
 
     def user(self, validity=None, refreshable=False, scope=None, base_url=DEFAULT_BASE_URL):
         """
@@ -132,4 +135,5 @@ class ClientFactory:
     def configure(self):
         app = ConfigUI()
         app.run()
-        from IPython import embed;embed(colors='Linux')
+        from IPython import embed
+        embed(colors='Linux')

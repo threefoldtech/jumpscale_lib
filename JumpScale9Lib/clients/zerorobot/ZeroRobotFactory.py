@@ -1,45 +1,31 @@
-from zerorobot.dsl.ZeroRobotClient import ZeroRobotClient
-from JumpScale9.core.State import ClientConfig
-
 from js9 import j
+from zerorobot.dsl.ZeroRobotClient import ZeroRobotClient
 
-CACHE_KEY = 'zerorobot'
+SecretConfigBase = j.tools.secretconfig.base_class_secret
+_template = """
+base_url = "http://localhost:6600"
+"""
 
 
-class ZeroRobotFactory:
-
-    _cache = {}
+class ZeroRobotFactory(SecretConfigBase):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.zrobot"
+        self._TEMPLATE = _template
 
-    def get(self, base_url):
+    def get(self, instance='main'):
         """
         Get a ZeroRobot client for base_url.
-        if it exists a client for this base_url loaded in memory, return it.
-        otherwise, create a new client, put it in the cache and then return it
         """
-        if base_url not in self._cache:
-            self._cache[base_url] = ZeroRobotClient(base_url)
-        return self._cache[base_url]
+        self.instance = instance
+        base_url = self.config.data['base_url']
+        return ZeroRobotClient(base_url)
 
-    def get_by_key(self, key):
-        if key in self._cache:
-            return self._cache[key]
-
-        cfg = j.core.state.clientConfigGet(CACHE_KEY, key)
-        if not cfg.data:
-            raise KeyError("no zero-robot client found for key %s" % key)
-
-        client = self.get(cfg.data['base_url'])
-        self.set(key, client)
-        return client
-
-    def set(self, key, client):
+    def set(self, instance, client):
         """
-        associate key with an instance of client
+        associate an instance name with an instance of the client
         """
-        cfg = ClientConfig(CACHE_KEY, key)
-        cfg.data = {'base_url': client._client.api.base_url}
+
+        sc = j.tools.secretconfig.set(self.__jslocation__, instance)
+        sc.data = {'base_url': client._client.api.base_url}
         cfg.save()
-        self._cache[key] = client
