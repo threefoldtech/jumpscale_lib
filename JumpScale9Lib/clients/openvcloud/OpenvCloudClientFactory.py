@@ -1010,9 +1010,9 @@ class Machine:
             if str(e).startswith("409 Conflict") and publicport is None:
                 return self.portforward_create(None, localport, protocol)
             # check if the cloudspace is still deploying
-            if str(e) == '400 Bad Request\nCannot create a portforwarding during cloudspace deployment.':
-                self.logger.info("Cloudspace still in deployment, will retry to create portforwarding in 10 second")
-                time.sleep(10)
+            if self.space.model["status"] == 'DEPLOYING':
+                self.logger.debug("Cloudspace still in deployment, will retry to create portforwarding in 2 second")
+                time.sleep(2)
                 return self.portforward_create(None, localport, protocol)
 
             # - if the port was choose explicitly, then it's not the lib's fault
