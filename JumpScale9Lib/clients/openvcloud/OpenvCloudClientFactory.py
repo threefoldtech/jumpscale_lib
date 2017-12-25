@@ -610,7 +610,7 @@ class Space(Authorizables):
             print("created machine")
             machine = self.machines[name]
             self._authorizeSSH(machine, sshkeyname=sshkeyname)
-        
+
         m = self.machines[name]
         if sshkeypath:
             m.ssh_keypath = sshkeypath
@@ -650,11 +650,12 @@ class Space(Authorizables):
 
             sshport = requested_sshport
 
+
         login = machinedict['accounts'][0]['login']
         password = machinedict['accounts'][0]['password']
 
         sshclient = j.clients.ssh.get(
-            addr=publicip, port=sshport, login=login, passwd=password, look_for_keys=False, timeout=20)
+            addr=publicip, port=sshport, login=login, passwd=password, look_for_keys=False, timeout=300)
         sshclient.SSHAuthorizeKey(sshkeyname)
 
     @property
@@ -840,7 +841,7 @@ class Machine:
         : return: list of disks details
         """
         machine_data = self.client.api.cloudapi.machines.get(machineId=self.id)
-        return machine_data['disks']
+        return [disk for disk in machine_data['disks'] if disk['type'] != 'M']
 
     def disk_detach(self, disk_id):
         return self.client.api.cloudapi.machines.detachDisk(machineId=self.id, diskId=disk_id)
@@ -985,7 +986,7 @@ class Machine:
                 executor = j.tools.executor.getFromSSHClient(sshclient)
             
     
-            self._prefab = j.tools.prefab.get(executor)
+            self._prefab = j.tools.prefab.get(executor, usecache=False)
 
         return self._prefab
 
