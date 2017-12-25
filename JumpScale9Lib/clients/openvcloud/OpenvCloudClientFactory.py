@@ -27,6 +27,13 @@ class OpenvCloudClientFactory:
 
     def __init__(self):
         self.__jslocation__ = "j.clients.openvcloud"
+        self._logger = None
+
+    @property
+    def logger(self):
+        if self._logger is None:
+            self._logger = j.logger.get("OVC Client Factory")
+        return self._logger
 
     def install(self):
         j.sal.process.execute("pip3 install python-jose")
@@ -35,7 +42,7 @@ class OpenvCloudClientFactory:
         url = url.lower()
         if url.startswith("http"):
             url = url.split("//")[1].rstrip("/")
-        print("Get OpenvCloud client on URL: %s" % url)
+        self.logger.info("Get OpenvCloud client on URL: %s" % url)
         return url
 
     def get(self, applicationId, secret, url):
@@ -494,6 +501,14 @@ class Space(Authorizables):
         self.client = account.client
         self.model = model
         self.id = model["id"]
+        self._logger = None
+
+    @property
+    def logger(self):
+        if self._logger is None:
+            self._logger = j.logger.get("Space")
+        return self._logger
+
 
     def externalnetwork_add(self, name, subnet, gateway, startip, endip, gid, vlan):
         self.client.api.cloudbroker.iaas.addExternalNetwork(cloudspaceId=self.id,
@@ -668,7 +683,7 @@ class Space(Authorizables):
         if name in self.machines:
             raise j.exceptions.RuntimeError(
                 "Name is not unique, already exists in %s" % self)
-        print("Cloud space ID:%s name:%s size:%s image:%s disksize:%s" %
+        self.logger.info("Cloud space ID:%s name:%s size:%s image:%s disksize:%s" %
               (self.id, name, sizeId, imageId, disksize))
         if stackId:
             self.client.api.cloudbroker.machine.createOnStack(
@@ -701,11 +716,11 @@ class Space(Authorizables):
         return machine
 
     def _authorizeSSH(self, machine, sshkeyname):
-        print("authorize ssh")
+        self.logger.info("authorizing ssh")
         machineip, machinedict = machine.machineip_get()
         publicip = machine.space.model['publicipaddress']
         while not publicip:
-            print(
+            self.logger.info(
                 "machine OpenvCloud:%s not ready yet with public ip, wait 1 sec, try again" % self)
             time.sleep(1)
             machine.space.refresh()
@@ -820,6 +835,13 @@ class Machine:
         self.id = self.model["id"]
         self.name = self.model["name"]
         self.ssh_keypath = None
+        self._logger = None
+
+    @property
+    def logger(self):
+        if self._logger is None:
+            self._logger = j.logger.get("OVC Client Factory")
+        return self._logger
 
     def start(self):
         self.client.api.cloudapi.machines.start(machineId=self.id)
@@ -840,7 +862,7 @@ class Machine:
         self.client.api.cloudapi.machines.reset(machineId=self.id)
 
     def delete(self):
-        print("Machine delete:%s" % self)
+        self.logger.info("Machine delete:%s" % self)
         self.client.api.cloudapi.machines.delete(machineId=self.id)
 
     def clone(self, name, cloudspaceId=None, snapshotTimestamp=None):
@@ -979,6 +1001,11 @@ class Machine:
             # - if it's an auto-generated port, we probably hit a concurrence issue
             #   let's try again with a new port
             if str(e).startswith("409 Conflict") and publicport is None:
+                return self.portforward_create(None, localport, protocol)
+            # check if the cloudspace is still deploying
+            if self.space.model["status"] == 'DEPLOYING':
+                self.logger.debug("Cloudspace still in deployment, will retry to create portforwarding in 2 second")
+                time.sleep(2)
                 return self.portforward_create(None, localport, protocol)
 
             # - if the port was choose explicitly, then it's not the lib's fault
