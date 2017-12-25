@@ -635,11 +635,9 @@ class Space(Authorizables):
             res = self.client.api.cloudapi.machines.create(
                 cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks, description=description)
             machine = self.machines[name]
-        if not sshkeyname:
-            return machine
+            self._authorizeSSH(machine, sshkeyname=sshkeyname)
 
-        self._authorizeSSH(machine, sshkeyname=sshkeyname)
-
+        m = self.machines[name]
         if sshkeypath:
             machine.ssh_keypath = sshkeypath
         p = machine.prefab
@@ -677,11 +675,12 @@ class Space(Authorizables):
 
             sshport = requested_sshport
 
+
         login = machinedict['accounts'][0]['login']
         password = machinedict['accounts'][0]['password']
 
         sshclient = j.clients.ssh.get(
-            addr=publicip, port=sshport, login=login, passwd=password, look_for_keys=False, timeout=20)
+            addr=publicip, port=sshport, login=login, passwd=password, look_for_keys=False, timeout=300)
         sshclient.SSHAuthorizeKey(sshkeyname)
 
     @property
@@ -875,7 +874,7 @@ class Machine:
         : return: list of disks details
         """
         machine_data = self.client.api.cloudapi.machines.get(machineId=self.id)
-        return machine_data['disks']
+        return [disk for disk in machine_data['disks'] if disk['type'] != 'M']
 
     def disk_detach(self, disk_id):
         return self.client.api.cloudapi.machines.detachDisk(machineId=self.id, diskId=disk_id)
@@ -1025,8 +1024,14 @@ class Machine:
             else:
                 sshclient = j.clients.ssh.get(addr=publicip, port=sshport)
                 executor = j.tools.executor.getFromSSHClient(sshclient)
+<<<<<<< b7646e0977b41f57ab91e2aaca203a72b1902e6d:JumpScale9Lib/clients/openvcloud/OVCClient.py
 
             self._prefab = j.tools.prefab.get(executor)
+=======
+            
+    
+            self._prefab = j.tools.prefab.get(executor, usecache=False)
+>>>>>>> fixing disk_detach service unavaible and connecting to remote machine with ssh:JumpScale9Lib/clients/openvcloud/OpenvCloudClientFactory.py
 
         return self._prefab
 
