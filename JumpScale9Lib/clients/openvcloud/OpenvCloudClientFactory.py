@@ -649,6 +649,8 @@ class Space(Authorizables):
         machineip, machinedict = machine.machineip_get()
         publicip = machine.space.model['publicipaddress']
         sshport = self._getPortForward(machine)
+        if sshport == None:
+            sshport = self.createPortForward(machine)
         login = machinedict['accounts'][0]['login']
         password = machinedict['accounts'][0]['password']
 
