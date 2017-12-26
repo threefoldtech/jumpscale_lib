@@ -635,9 +635,25 @@ class Space(Authorizables):
             res = self.client.api.cloudapi.machines.create(
                 cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks)
 
-        machine = self.machines[name]
         print("created machine")
+        machine = self.machines[name]
+
+        self.configure_machine(machine=machine, name=name, sshkey_name=sshkeyname, sshkey_path=sshkeypath)
+
         return machine
+
+    def configure_machine(self, machine, name, sshkey_name, sshkey_path):
+        self.createPortForward(machine)
+
+        self._authorizeSSH(machine=machine, sshkey_name=sshkey_name, sshkey_path=sshkey_path)
+
+        prefab = machine.prefab
+        prefab.core.hostname = name  # make sure hostname is set
+
+        # remember the node in the local node configuration
+        j.tools.develop.nodes.nodeSet(name, addr=prefab.executor.sshclient.addr,
+                                      port=prefab.executor.sshclient.port,
+                                      cat="openvcloud", description="deployment in openvcloud")
 
     def createPortForward(self, machine):
         machineip, _ = machine.machineip_get()
@@ -666,13 +682,11 @@ class Space(Authorizables):
                 break
         return sshport
 
-    def _authorizeSSH(self, machine, service):
+    def _authorizeSSH(self, machine, sshkey_name, sshkey_path):
         print("authorize ssh")
 
         # make sure that SSH key is loaded
-        sshkey = service.producers['sshkey'][0]
-        key_path = j.sal.fs.joinPaths(sshkey.path, sshkey.name)
-        j.clients.ssh.load_ssh_key(key_path, True)
+        j.clients.ssh.load_ssh_key(sshkey_path, True)
 
         # prepare data required for sshclient
         machineip, machinedict = machine.machineip_get()
@@ -685,9 +699,9 @@ class Space(Authorizables):
 
         sshclient = j.clients.ssh.get(
             addr=publicip, port=sshport, login=login, passwd=password, look_for_keys=False, timeout=300)
-        sshclient.SSHAuthorizeKey(sshkey.name)
+        sshclient.SSHAuthorizeKey(sshkey_name)
 
-        machine.ssh_keypath = key_path
+        machine.ssh_keypath = sshkey_path
         return machine.prefab
 
     @property
