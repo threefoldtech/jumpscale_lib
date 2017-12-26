@@ -222,6 +222,9 @@ class PacketNet():
 
 TEMPLATE = """
 auth_token_ = ""
+number = 5
+srtr = ""
+llist = [ ]
 """
 
 BASE = j.tools.secretconfig.base_class_secret_config

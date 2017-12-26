@@ -842,7 +842,7 @@ class Machine:
         self.id = self.model["id"]
         self.name = self.model["name"]
         self.ssh_keypath = None
-        self._logger
+        self._logger = None
 
     @property
     def logger(self):
@@ -1008,6 +1008,11 @@ class Machine:
             # - if it's an auto-generated port, we probably hit a concurrence issue
             #   let's try again with a new port
             if str(e).startswith("409 Conflict") and publicport is None:
+                return self.portforward_create(None, localport, protocol)
+            # check if the cloudspace is still deploying
+            if self.space.model["status"] == 'DEPLOYING':
+                self.logger.debug("Cloudspace still in deployment, will retry to create portforwarding in 2 second")
+                time.sleep(2)
                 return self.portforward_create(None, localport, protocol)
 
             # - if the port was choose explicitly, then it's not the lib's fault
