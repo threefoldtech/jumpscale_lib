@@ -16,15 +16,16 @@ secret_ = ""
 """
 
 JSConfigBase = j.tools.configmanager.base_class_config
+
+
 class IYOFactory(JSConfigBase):
 
     def __init__(self):
         self.__jslocation__ = 'j.clients.itsyouonline'
         JSConfigBase.__init__(self)
-        self._config = j.tools.configmanager._get_for_obj(self,instance="main",data={},template=TEMPLATE)
+        self._config = j.tools.configmanager._get_for_obj(self, instance="main", data={}, template=TEMPLATE)
         self._jwt = None
         self.raml_spec = "https://raw.githubusercontent.com/itsyouonline/identityserver/master/specifications/api/itsyouonline.raml"
-
 
     def get(self):
         """
@@ -36,7 +37,7 @@ class IYOFactory(JSConfigBase):
 
     @property
     def jwt(self):
-        if self.config.data["application_id_"]=="":
+        if self.config.data["application_id_"] == "":
             raise RuntimeError("Please configure your itsyou.online, do this by calling js9 'j.clients.itsyouonline.configure()'")
         if self._jwt == None:
             self._jwt = self.jwt_get(self.config.data["application_id_"], self.config.data["secret_"])
@@ -84,6 +85,37 @@ class IYOFactory(JSConfigBase):
         do:
         js9 'j.clients.itsyouonline.test()'
         """
+        from .generated.client.PublicKey import PublicKey
+        from requests.exceptions import HTTPError
+        client = self.get()
+        username = j.tools.myconfig.config.data['login_name']
 
-        client=self.get()
-        #TODO:*1 add some test code so people see how to call IYO and get some info out of it
+        # Read all the API keys registered for your user
+        print("list all API keys:\n###########")
+        for key in client.api.users.ListAPIKeys(username).data:
+            print("label: %s" % key.label)
+            print("app ID %s" % key.applicationid)
+
+        # Create a new API key
+        from requests.exceptions import HTTPError
+        try:
+            key = client.api.users.AddApiKey({"label": 'test'}, username).data
+            print("###########\ncreate new API key: ")
+            print("label: %s" % key.label)
+            print("app ID %s" % key.applicationid)
+        except HTTPError as err:
+            # example of how to deal with exceptions
+            if err.response.status_code == 409:
+                # the key with this label already exists, no need to do anything
+                pass
+            else:
+                raise err
+
+        key_labels = [k.label for k in client.api.users.ListAPIKeys(username).data]
+        assert 'test' in key_labels
+
+        print("###########\ndelete api key")
+        client.api.users.DeleteAPIkey('test', username)
+
+        key_labels = [k.label for k in client.api.users.ListAPIKeys(username).data]
+        assert 'test' not in key_labels
