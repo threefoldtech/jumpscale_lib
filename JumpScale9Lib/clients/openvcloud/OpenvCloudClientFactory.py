@@ -610,24 +610,8 @@ class Space(Authorizables):
         print("created machine")
         return machine
 
-    def _authorizeSSH(self, machine, service):
-        print("authorize ssh")
-
-        # make sure that SSH key is loaded
-        sshkey = service.producers['sshkey'][0]
-        key_path = j.sal.fs.joinPaths(sshkey.path, sshkey.name)
-        j.clients.ssh.load_ssh_key(key_path, True)
-
-        #prepare data required for sshclient
-        machineip, machinedict = machine.machineip_get()
-        publicip = machine.space.model['publicipaddress']
-        while not publicip:
-            print(
-                "machine OpenvCloud:%s not ready yet with public ip, wait 1 sec, try again" % self)
-            time.sleep(1)
-            machine.space.refresh()
-            publicip = machine.space.model['publicipaddress']
-
+    def createPortForward(self, machine):
+        machineip, _ = machine.machineip_get()
         sshport = None
         usedports = set()
         for portforward in machine.space.portforwards:
@@ -641,10 +625,30 @@ class Space(Authorizables):
             while requested_sshport in usedports:
                 requested_sshport += 1
             machine.portforward_create(requested_sshport, 22)
-
             sshport = requested_sshport
+        return sshport;
 
+    def _getPortForward(self, machine):
+        machineip, _ = machine.machineip_get()
+        sshport = None
+        for portforward in machine.space.portforwards:
+            if portforward['localIp'] == machineip and int(portforward['localPort']) == 22:
+                sshport = int(portforward['publicPort'])
+                break
+        return sshport
 
+    def _authorizeSSH(self, machine, service):
+        print("authorize ssh")
+
+        # make sure that SSH key is loaded
+        sshkey = service.producers['sshkey'][0]
+        key_path = j.sal.fs.joinPaths(sshkey.path, sshkey.name)
+        j.clients.ssh.load_ssh_key(key_path, True)
+
+        # prepare data required for sshclient
+        machineip, machinedict = machine.machineip_get()
+        publicip = machine.space.model['publicipaddress']
+        sshport = self._getPortForward(machine)
         login = machinedict['accounts'][0]['login']
         password = machinedict['accounts'][0]['password']
 
