@@ -557,6 +557,7 @@ class Space(Authorizables):
     def machine_create(
             self,
             name,
+            sshkeyname=None,
             memsize=2,
             vcpus=None,
             disksize=10,
@@ -564,6 +565,7 @@ class Space(Authorizables):
             image="Ubuntu 16.04 x64",
             sizeId=None,
             stackId=None,
+            sshkeypath=None,
     ):
         """
         Creates a new virtual machine.
@@ -578,7 +580,7 @@ class Space(Authorizables):
             - image (defaults to "Ubuntu 16.04 x6"): name of the OS image to load
             - sizeId (optional): overrides the value set for memsize, denotes the type or "size" of the virtual machine, actually sets the number of virtual CPU cores and amount of memory, see the sizes property of the cloud space for the sizes available in the cloud space
             - stackId (optional): identifies the grid node on which to create the virtual machine, if nothing specified (recommended) OpenvCloud will decide where to create the virtual machine
-
+            - sshkeypath (optional): if not None the sshkey will be reloaded before getting a prefab
         Raises:
             - RuntimeError if machine with given name already exists.
             - RuntimeError if machine name contains spaces
@@ -606,9 +608,25 @@ class Space(Authorizables):
             res = self.client.api.cloudapi.machines.create(
                 cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks)
 
-        machine = self.machines[name]
         print("created machine")
+        machine = self.machines[name]
+
+        self.configure_machine(machine=machine, name=name, sshkey_name=sshkeyname, sshkey_path=sshkeypath)
+
         return machine
+
+    def configure_machine(self, machine, name, sshkey_name, sshkey_path):
+        self.createPortForward(machine)
+
+        self._authorizeSSH(machine=machine, sshkey_name=sshkey_name, sshkey_path=sshkey_path)
+
+        prefab = machine.prefab
+        prefab.core.hostname = name  # make sure hostname is set
+
+        # remember the node in the local node configuration
+        j.tools.develop.nodes.nodeSet(name, addr=prefab.executor.sshclient.addr,
+                                      port=prefab.executor.sshclient.port,
+                                      cat="openvcloud", description="deployment in openvcloud")
 
     def createPortForward(self, machine):
         machineip, _ = machine.machineip_get()
@@ -637,13 +655,11 @@ class Space(Authorizables):
                 break
         return sshport
 
-    def _authorizeSSH(self, machine, service):
+    def _authorizeSSH(self, machine, sshkey_name, sshkey_path):
         print("authorize ssh")
 
         # make sure that SSH key is loaded
-        sshkey = service.producers['sshkey'][0]
-        key_path = j.sal.fs.joinPaths(sshkey.path, sshkey.name)
-        j.clients.ssh.load_ssh_key(key_path, True)
+        j.clients.ssh.load_ssh_key(sshkey_path, True)
 
         # prepare data required for sshclient
         machineip, machinedict = machine.machineip_get()
@@ -656,9 +672,9 @@ class Space(Authorizables):
 
         sshclient = j.clients.ssh.get(
             addr=publicip, port=sshport, login=login, passwd=password, look_for_keys=False, timeout=300)
-        sshclient.SSHAuthorizeKey(sshkey.name)
+        sshclient.SSHAuthorizeKey(sshkey_name)
 
-        machine.ssh_keypath = key_path
+        machine.ssh_keypath = sshkey_path
         return machine.prefab
 
     @property
