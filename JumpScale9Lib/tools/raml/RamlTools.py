@@ -113,46 +113,63 @@ class RamlToolsFactory:
 
     def test(self):
         self.install(True)
-        path = "/tmp/ramltest"
+        path = '/tmp/ramltest'
         c = self.get(path=path, init=True)
         c.reset()
 
         # jwt = j.clients.itsyouonline.jwt
-        username = j.tools.secretconfig.config.data['login_name']
+        # username = j.tools.secretconfig.config.data['login_name']
 
         try:
-            self.logger.info("genetate client")
-            # load generated client
-            c.client_python_generate()
-            sys.path.append('/tmp/ramltest/generated')
-
-            self.logger.info("test generated client")
-            # from client import Client
-            # cl = Client()
-            # cl.api.session.headers.update({"Authorization": 'bearer {}'.format(jwt)})
-            # # test some call on IYO
-            # # this will raise if it fails
-            # cl.api.users.ListAPIKeys(username)
-
-            # # TODO:*1 get SPORE client, and do test from SPORE client
-
-            self.logger.info("generate python server")
-            c.server_python_generate(gevent=False)
+            # Test Flask Server
+            self.logger.info('generate python server')
+            c.server_python_generate(kind='flask')
             tmux = j.tools.prefab.local.system.processmanager.get('tmux')
-            cmd = 'cd %s/server; python app.py' % path
+            cmd = 'cd %s/server; python3 app.py' % path
             tmux.ensure('ramltest_python_server', cmd)
 
-            self.logger.info("test generate python server with generated python client")
-            cl.api.base_url = "http://localhost:5000"
-            cl.api.users.ListAPIKeys(username)
+            self.logger.info('generate python requests client')
+            # load generated client
+            c.client_python_generate(kind='requests', unmarshall_response=False)  # if unmarshal is true, the client will
+            # fail because the server return empty payload
+
+            sys.path.append('/tmp/ramltest/generated')
+
+            self.logger.info('test generated client')
+            from client import Client
+            cl = Client()
+            cl.api.base_url = 'http://localhost:5000'
+
+            self.logger.info('test generate python server with generated python client')
+
+            cl.api.user.getUser(id='1')
             tmux.stop('ramltest_python_server')
 
+            j.sal.process.killProcessByPort(5000)  # For some reason after stopping the tmux, there is an orphan process
+            # running on 5000
+
+            # Test Gevent Server
             self.logger.info("generate python gevent server")
-            c.server_python_generate(gevent=True)
+            c.server_python_generate(kind='gevent')
+            cmd = 'cd %s/server; python3 server.py' % path
             tmux.ensure('ramltest_gevent_server', cmd)
-            self.logger.info("test generate python gevent server with generated python client")
-            cl.api.users.ListAPIKeys(username)
+
+            self.logger.info('generate python gevent client')
+            # load generated client
+            c.client_python_generate(kind='gevent', unmarshall_response=False)  # if unmarshall is true, the client will
+            # fail because the server return empty payload
+
+            self.logger.info('test generated client')
+            from client import Client
+            cl = Client()
+            cl.api.base_url = 'http://localhost:5000'
+
+            self.logger.info('test generate python server with generated python client')
+
+            cl.api.user.getUser(id='1')
             tmux.stop('ramltest_gevent_server')
+
+            # TODO:*1 get SPORE client, and do test from SPORE client
 
             # TODO: fix support for golang
             # doesn't work now cause go code needs to be in GOPATH
@@ -166,22 +183,20 @@ class RamlToolsFactory:
             # cl.api.users.ListAPIKeys(username)
             # tmux.stop('ramltest_golang_server')
 
-            self.logger.info("generate lua server")
-            c.server_go_generate()
-            tmux.ensure('ramltest_golang_server', cmd)
-            self.logger.info("test generate lua server with generated python client")
-            cl.api.users.ListAPIKeys(username)
-            tmux.stop('ramltest_golang_server')
+            # self.logger.info("generate lua server")
+            # c.server_go_generate()
+            # tmux.ensure('ramltest_golang_server', cmd)
+            # self.logger.info("test generate lua server with generated python client")
+            # cl.api.users.ListAPIKeys(username)
+            # tmux.stop('ramltest_golang_server')
 
         finally:
-            tmux.stop('ramltest_python_server')
-            tmux.stop('ramltest_gevent_server')
             sys.path.remove('/tmp/ramltest/generated')
 
-        raise RuntimeError("need to implement all todo's")
+        # raise RuntimeError("need to implement all todo's")
 
 
-class RamlTools():
+class RamlTools:
 
     def __init__(self, path):
         self.path = path
@@ -195,6 +210,13 @@ class RamlTools():
         else:
             j.sal.fs.remove("%s/generated" % self.path)
             j.sal.fs.remove("%s/htmldoc" % self.path)
+
+    def _get_kind(self, supported_kinds, kind):
+        try:
+            kind = supported_kinds[kind]
+        except KeyError:
+            raise ValueError("Kind of server/client not supported : %s" % kind)
+        return kind
 
     def reset(self):
         j.tools.raml._remove(self.path, all=False)
@@ -219,13 +241,32 @@ class RamlTools():
             if not j.sal.fs.exists(sfile):
                 raise RuntimeError("could not find specfile:%s" % sfile)
 
-    def _client_generate(self, lang, kind=None, reset=False):
+    def _get_cmd(self, no_apidocs=False, no_main=False, lib_root_urls='', import_path='', api_file_per_method=False,
+                    kind='', package='', unmarshall_response=False):
+        cmd = "cd {path};mkdir -p generated/client;cd api_spec;{goraml} {type} --language {lang} \
+                    --dir ../generated/{type}/ --ramlfile main.raml"
+        if no_apidocs:
+            cmd += ' --no-apidocs'
+        if no_main:
+            cmd += ' --no-main'
+        if lib_root_urls:
+            cmd += ' --lib-root-urls {urls}'
+        if import_path:
+            cmd += ' --import-path {import_path}'
+        if api_file_per_method:
+            cmd += ' --api-file-per-method'
+        if package:
+            cmd += ' --package {package}'
+        if kind:
+            cmd += ' --kind {kind}'
+        if unmarshall_response:
+            cmd += ' --python-unmarshall-response'
+
+        return cmd
+
+    def _client_generate(self, reset=False, cmd=''):
         self._prepare(reset=reset)
 
-        cmd = "cd {path};mkdir -p generated/client;cd api_spec;{goraml} client --language {lang} {kind} \
-                --python-unmarshall-response=true --dir ../generated/client --ramlfile main.raml"
-        cmd = cmd.format(path=self.path, goraml=self.goramlpath, kind=kind, lang=lang)
-        print(cmd)
         j.sal.process.executeInteractive(cmd)
 
         cmd = "cd %s;rm -rf htmldoc;mkdir -p htmldoc;cd api_spec;raml2html -i main.raml -o ../htmldoc/api.html -v" % self.path
@@ -235,28 +276,9 @@ class RamlTools():
         # cmd = "cd %s;cd api_spec;oas-raml-converter --from RAML --to OAS20 main.raml > ../generated/swagger_api.json" % self.path
         # j.sal.process.execute(cmd)
 
-    def _server_generate(self, lang, kind='', reset=False):
+    def _server_generate(self, reset=False, cmd=''):
 
         self._prepare(reset=reset)
-        supported_map = {
-            'python': {
-                'gevent': '--kind gevent-flask ',
-                'sanic': '--kind sanic ',
-                'flask': ' ',
-                '': ' ',
-            },
-            'go': {'': '--import-path ramltest'},
-            'tarantool': {'': ' '},
-        }
-        try:
-            kind = supported_map[lang][kind]
-        except KeyError:
-            raise ValueError("language or kind of server not supported (%s : %s)" % (lang, kind))
-
-        cmd = "cd {path};mkdir -p generated/server;cd api_spec;{goraml} server --language \
-                {lang}  {kind} --dir ../generated/server --ramlfile main.raml"
-        cmd = cmd.format(path=self.path, goraml=self.goramlpath, lang=lang, kind=kind)
-        print(cmd)
         j.sal.process.execute(cmd)
 
         # self._client_generate(lang=lang, kind=kind, reset=False)
@@ -264,47 +286,115 @@ class RamlTools():
         # TODO: re-enable when generation of swagger is fixed
         # spec = SwaggerSpec("%s/generated/swagger_api.json" % self.path)
 
-        if lang == 'python':
-            j.sal.fs.createDir("%s/server" % self.path)
+        # if lang == 'python':
+        #     j.sal.fs.createDir("%s/server" % self.path)
+        #
+        #     for objname in spec.rootObjNames:
+        #         spath = "%s/generated/server/%s_api.py" % (self.path, objname)
+        #         dpath = "%s/server/%s_api.py" % (self.path, objname)
+        #         # j.sal.fs.remove(dpath)  # debug
+        #         if not j.sal.fs.exists(dpath):
+        #             j.sal.fs.copyFile(spath, dpath)
+        #
+        #             # THIS WAS NEEDED TO GET IT TO WORK IN THIS CONFIG
+        #             # editor = j.tools.code.text_editor_get(dpath)
+        #             # editor.replace1Line(
+        #             #     '', ["#comment this"])
+        #
+        #     spath = "%s/generated/server/app.py" % (self.path)
+        #     dpath = "%s/server/app.py" % (self.path)
+        #     if not j.sal.fs.exists(dpath):
+        #         j.sal.fs.copyFile(spath, dpath)
+        #
+        #         # THIS WAS NEEDED TO GET IT TO WORK IN THIS CONFIG
+        #         # editor = j.tools.code.text_editor_get(dpath)
+        #         # editor.replace1Line('', ["#comment this"])
 
-            for objname in spec.rootObjNames:
-                spath = "%s/generated/server/%s_api.py" % (self.path, objname)
-                dpath = "%s/server/%s_api.py" % (self.path, objname)
-                # j.sal.fs.remove(dpath)  # debug
-                if not j.sal.fs.exists(dpath):
-                    j.sal.fs.copyFile(spath, dpath)
+        spath = '%s/generated/server/' % self.path
+        dpath = '%s/server/' % self.path
 
-                    # THIS WAS NEEDED TO GET IT TO WORK IN THIS CONFIG
-                    # editor = j.tools.code.text_editor_get(dpath)
-                    # editor.replace1Line(
-                    #     '', ["#comment this"])
+        files = j.sal.fs.listFilesInDir(spath, recursive=True)
 
-            spath = "%s/generated/server/app.py" % (self.path)
-            dpath = "%s/server/app.py" % (self.path)
-            if not j.sal.fs.exists(dpath):
-                j.sal.fs.copyFile(spath, dpath)
+        for file in files:
+            relative_file = file.replace(spath, '')
+            destination_file = j.sal.fs.joinPaths(dpath, relative_file)
+            if not j.sal.fs.exists(destination_file):
+                j.sal.fs.copyFile(file, destination_file, createDirIfNeeded=True)
 
-                # THIS WAS NEEDED TO GET IT TO WORK IN THIS CONFIG
-                # editor = j.tools.code.text_editor_get(dpath)
-                # editor.replace1Line('', ["#comment this"])
-
-    def client_python_generate(self, reset=False):
+    def client_python_generate(self, reset=False, kind='requests', unmarshall_response=True):
         """
         generate the client from self.path specified, if not specified will be current dir
 
-        js9_raml client_generate
+        js9_raml generate_pyclient
         """
-        self._client_generate(lang='python', kind='requests')
+        supported_map = {
+                'gevent': 'gevent-requests',
+                'requests': 'requests',
+                'aiohttp': 'aiohttp',
+        }
+        kind = self._get_kind(supported_map, kind)
 
-    def server_python_generate(self, reset=False, gevent=True):
+        cmd = self._get_cmd(kind=kind, unmarshall_response=unmarshall_response)
+        cmd = cmd.format(path=self.path, goraml=self.goramlpath, kind=kind, lang='python', type='client')
+
+        self._client_generate(reset=reset, cmd=cmd)
+
+    def client_go_generate(self, reset=False, package='client', import_path='', lib_root_urls=''):
+        """
+        generate the client from self.path specified, if not specified will be current dir
+
+        js9_raml generate_goclient
+        """
+
+        cmd = self._get_cmd(package=package, import_path=import_path, lib_root_urls=lib_root_urls)
+        cmd = cmd.format(path=self.path, goraml=self.goramlpath, lang='go',
+                         import_path=import_path, urls=lib_root_urls, package=package, type='client')
+        self._client_generate(reset=reset, cmd=cmd)
+
+    def client_nim_generate(self, reset=False):
+        """
+        generate the client from self.path specified, if not specified will be current dir
+
+        js9_raml generate_goclient
+        """
+        cmd = self._get_cmd()
+        cmd = cmd.format(path=self.path, goraml=self.goramlpath, lang='nim', type='client')
+        self._client_generate(reset=reset, cmd=cmd)
+
+    def server_python_generate(self, reset=False, kind='requests',
+                               no_apidocs=False, no_main=False, lib_root_urls=''):
         """
         generate the site from self.path specified, if not specified will be current dir
 
         can call this command line too (be in self.path where you want to work):
         js9_raml generate
         """
-        kind = 'request' if gevent is False else 'gevent'
-        self._server_generate(lang='python', kind=kind)
+        supported_map = {
+            'gevent': 'gevent-flask',
+            'flask': 'flask',
+            'sanic': 'sanic',
+        }
+        kind = self._get_kind(supported_map, kind)
+        cmd = self._get_cmd(kind=kind, no_apidocs=no_apidocs, no_main=no_main, lib_root_urls=lib_root_urls)
+        cmd = cmd.format(path=self.path, goraml=self.goramlpath, lang='python',
+                         kind=kind, urls=lib_root_urls, type='server')
+
+        self._server_generate(reset=reset, cmd=cmd)
+
+    def server_go_generate(self, reset=False, package='server', no_main=False, no_apidocs=False, import_path='',
+                           lib_root_urls='', api_file_per_method=True):
+        """
+        generate the site from self.path specified, if not specified will be current dir
+
+        can call this command line too (be in self.path where you want to work):
+        js9_raml generate
+        """
+        cmd = self._get_cmd(package=package, no_apidocs=no_apidocs, no_main=no_main, import_path=import_path,
+                            lib_root_urls=lib_root_urls, api_file_per_method=api_file_per_method)
+        cmd = cmd.format(path=self.path, goraml=self.goramlpath, lang='go', package=package,
+                         import_path=import_path, urls=lib_root_urls, type='server')
+
+        self._server_generate(reset=reset, cmd=cmd)
 
     def server_lua_generate(self, reset=False):
         """
@@ -313,7 +403,20 @@ class RamlTools():
         can call this command line too (be in self.path where you want to work):
         js9_raml generate
         """
-        self._server_generate(lang='tarantool')
+        cmd = self._get_cmd()
+        cmd = cmd.format(path=self.path, goraml=self.goramlpath, lang='tarantool', type='server')
+        self._server_generate(reset=reset, cmd=cmd)
+
+    def server_nim_generate(self, reset=False):
+        """
+        generate the site from self.path specified, if not specified will be current dir
+
+        can call this command line too (be in self.path where you want to work):
+        js9_raml generate
+        """
+        cmd = self._get_cmd()
+        cmd = cmd.format(path=self.path, goraml=self.goramlpath, lang='nim', type='server')
+        self._server_generate(reset=reset, cmd=cmd)
 
     def server(self):
         cmd = "cd %s;sh start_server.sh" % self.path
