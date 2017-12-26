@@ -4,7 +4,7 @@ import urllib
 from js9 import j
 from JumpScale9Lib.clients.itsyouonline.generated.client import Client
 
-SecretConfigBase = j.tools.secretconfig.base_class_secret_config
+JSConfigBase = j.tools.configmanager.base_class_config
 
 
 DEFAULT_BASE_URL = "https://itsyou.online/api"
@@ -15,17 +15,16 @@ application_id_ = ""
 secret_ = ""
 """
 
-
-class IYOFactory(SecretConfigBase):
+JSConfigBase = j.tools.configmanager.base_class_config
+class IYOFactory(JSConfigBase):
 
     def __init__(self):
         self.__jslocation__ = 'j.clients.itsyouonline'
+        JSConfigBase.__init__(self)
+        self._config = j.tools.configmanager._get_for_obj(self,instance="main",data={},template=TEMPLATE)
         self._jwt = None
         self.raml_spec = "https://raw.githubusercontent.com/itsyouonline/identityserver/master/specifications/api/itsyouonline.raml"
 
-        # configure sercret config
-        self.instance = "main"
-        self._TEMPLATE = TEMPLATE
 
     def get(self):
         """
@@ -37,6 +36,8 @@ class IYOFactory(SecretConfigBase):
 
     @property
     def jwt(self):
+        if self.config.data["application_id_"]=="":
+            raise RuntimeError("Please configure your itsyou.online, do this by calling js9 'j.clients.itsyouonline.configure()'")
         if self._jwt == None:
             self._jwt = self.jwt_get(self.config.data["application_id_"], self.config.data["secret_"])
         return self._jwt
@@ -77,3 +78,12 @@ class IYOFactory(SecretConfigBase):
         resp.raise_for_status()
         jwt = resp.content.decode('utf8')
         return jwt
+
+    def test(self):
+        """
+        do:
+        js9 'j.clients.itsyouonline.test()'
+        """
+
+        client=self.get()
+        #TODO:*1 add some test code so people see how to call IYO and get some info out of it

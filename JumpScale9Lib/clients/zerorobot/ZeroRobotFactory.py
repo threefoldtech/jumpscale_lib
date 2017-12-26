@@ -1,13 +1,13 @@
 from js9 import j
 from zerorobot.dsl.ZeroRobotClient import ZeroRobotClient
 
-SecretConfigBase = j.tools.secretconfig.base_class_secret_config
+JSConfigBase = j.tools.configmanager.base_class_config
 _template = """
 base_url = "http://localhost:6600"
 """
 
 
-class ZeroRobotFactory(SecretConfigBase):
+class ZeroRobotFactory(JSConfigBase):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.zrobot"
@@ -26,6 +26,6 @@ class ZeroRobotFactory(SecretConfigBase):
         associate an instance name with an instance of the client
         """
 
-        sc = j.tools.secretconfig.set(self.__jslocation__, instance)
+        sc = j.tools.configmanager.set(self.__jslocation__, instance)
         sc.data = {'base_url': client._client.api.base_url}
         cfg.save()

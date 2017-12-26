@@ -118,7 +118,7 @@ class RamlToolsFactory:
         c.reset()
 
         # jwt = j.clients.itsyouonline.jwt
-        # username = j.tools.secretconfig.config.data['login_name']
+        # username = j.tools.configmanager.config.data['login_name']
 
         try:
             # Test Flask Server

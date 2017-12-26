@@ -24,7 +24,7 @@ class NACLClientFactory:
         """
 
         if path=="":
-            path=j.tools.secretconfig.path_configrepo
+            path=j.tools.configmanager.path_configrepo
         return NACLClient(name, path, secret)
 
     @property

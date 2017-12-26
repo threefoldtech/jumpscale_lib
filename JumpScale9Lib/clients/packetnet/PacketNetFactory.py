@@ -227,7 +227,7 @@ srtr = ""
 llist = [ ]
 """
 
-BASE = j.tools.secretconfig.base_class_secret_config
+BASE = j.tools.configmanager.base_class_config
 
 class PacketNetFactory(BASE):
 
