@@ -15,17 +15,16 @@ application_id_ = ""
 secret_ = ""
 """
 
-
+JSConfigBase = j.tools.configmanager.base_class_config
 class IYOFactory(JSConfigBase):
 
     def __init__(self):
         self.__jslocation__ = 'j.clients.itsyouonline'
+        JSConfigBase.__init__(self)
+        self._config = j.tools.configmanager._get_for_obj(self,instance="main",data={},template=TEMPLATE)
         self._jwt = None
         self.raml_spec = "https://raw.githubusercontent.com/itsyouonline/identityserver/master/specifications/api/itsyouonline.raml"
 
-        # configure sercret config
-        self.instance = "main"
-        self._TEMPLATE = TEMPLATE
 
     def get(self):
         """
@@ -35,8 +34,14 @@ class IYOFactory(JSConfigBase):
         client.api.session.headers.update({"Authorization": 'bearer {}'.format(self.jwt)})
         return client
 
+    def configure(self):
+        self.config.configure()
+        self.config.save()
+
     @property
     def jwt(self):
+        if self.config.data["application_id_"]=="":
+            raise RuntimeError("Please configure your itsyou.online, do this by calling js9 'j.clients.itsyouonline.configure()'")
         if self._jwt == None:
             self._jwt = self.jwt_get(self.config.data["application_id_"], self.config.data["secret_"])
         return self._jwt
@@ -77,3 +82,12 @@ class IYOFactory(JSConfigBase):
         resp.raise_for_status()
         jwt = resp.content.decode('utf8')
         return jwt
+
+    def test(self):
+        """
+        do:
+        js9 'j.clients.itsyouonline.test()'
+        """
+
+        client=self.get()
+        from IPython import embed;embed(colors='Linux')
