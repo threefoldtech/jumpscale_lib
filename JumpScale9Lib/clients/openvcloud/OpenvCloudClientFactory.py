@@ -557,7 +557,6 @@ class Space(Authorizables):
     def machine_create(
             self,
             name,
-            sshkeyname,
             memsize=2,
             vcpus=None,
             disksize=10,
@@ -565,7 +564,6 @@ class Space(Authorizables):
             image="Ubuntu 16.04 x64",
             sizeId=None,
             stackId=None,
-            sshkeypath=None,
     ):
         """
         Creates a new virtual machine.
@@ -607,24 +605,20 @@ class Space(Authorizables):
         else:
             res = self.client.api.cloudapi.machines.create(
                 cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks)
-            print("created machine")
-            machine = self.machines[name]
-            self._authorizeSSH(machine, sshkeyname=sshkeyname)
 
-        m = self.machines[name]
-        if sshkeypath:
-            m.ssh_keypath = sshkeypath
-        p = m.prefab
-        p.core.hostname = name  # make sure hostname is set
+        machine = self.machines[name]
+        print("created machine")
+        return machine
 
-        # remember the node in the local node configuration
-        j.tools.develop.nodes.nodeSet(name, addr=p.executor.sshclient.addr, port=p.executor.sshclient.port,
-                                      cat="openvcloud", description="deployment in openvcloud")
-
-        return m
-
-    def _authorizeSSH(self, machine, sshkeyname):
+    def _authorizeSSH(self, machine, service):
         print("authorize ssh")
+
+        # make sure that SSH key is loaded
+        sshkey = service.producers['sshkey'][0]
+        key_path = j.sal.fs.joinPaths(sshkey.path, sshkey.name)
+        j.clients.ssh.load_ssh_key(key_path, True)
+
+        #prepare data required for sshclient
         machineip, machinedict = machine.machineip_get()
         publicip = machine.space.model['publicipaddress']
         while not publicip:
@@ -656,7 +650,10 @@ class Space(Authorizables):
 
         sshclient = j.clients.ssh.get(
             addr=publicip, port=sshport, login=login, passwd=password, look_for_keys=False, timeout=300)
-        sshclient.SSHAuthorizeKey(sshkeyname)
+        sshclient.SSHAuthorizeKey(sshkey.name)
+
+        machine.ssh_keypath = key_path
+        return machine.prefab
 
     @property
     def portforwards(self):
