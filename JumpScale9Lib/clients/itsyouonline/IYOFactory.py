@@ -4,7 +4,7 @@ import urllib
 from js9 import j
 from JumpScale9Lib.clients.itsyouonline.generated.client import Client
 
-SecretConfigBase = j.tools.secretconfig.base_class_secret_config
+JSConfigBase = j.tools.configmanager.base_class_config
 
 
 DEFAULT_BASE_URL = "https://itsyou.online/api"
@@ -16,7 +16,7 @@ secret_ = ""
 """
 
 
-class IYOFactory(SecretConfigBase):
+class IYOFactory(JSConfigBase):
 
     def __init__(self):
         self.__jslocation__ = 'j.clients.itsyouonline'

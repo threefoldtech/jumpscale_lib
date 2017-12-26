@@ -412,8 +412,8 @@ class OVHClient:
             time.sleep(1)
 
 
-SecretConfigBase = j.tools.secretconfig.base_class_secret_config
-class OVHFactory(SecretConfigBase):
+JSConfigBase = j.tools.configmanager.base_class_config
+class OVHFactory(JSConfigBase):
     """
     """
 
