@@ -34,10 +34,6 @@ class IYOFactory(JSConfigBase):
         client.api.session.headers.update({"Authorization": 'bearer {}'.format(self.jwt)})
         return client
 
-    def configure(self):
-        self.config.configure()
-        self.config.save()
-
     @property
     def jwt(self):
         if self.config.data["application_id_"]=="":
