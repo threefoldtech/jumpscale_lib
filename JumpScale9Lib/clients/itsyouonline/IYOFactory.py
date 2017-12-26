@@ -90,4 +90,4 @@ class IYOFactory(JSConfigBase):
         """
 
         client=self.get()
-        from IPython import embed;embed(colors='Linux')
+        #TODO:*1 add some test code so people see how to call IYO and get some info out of it
