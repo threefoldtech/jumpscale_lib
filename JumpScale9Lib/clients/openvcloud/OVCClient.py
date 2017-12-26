@@ -633,23 +633,21 @@ class Space(Authorizables):
             machine = self.machine_get(name)
         else:
             res = self.client.api.cloudapi.machines.create(
-                cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks, description=description)
-            machine = self.machines[name]
-            self._authorizeSSH(machine, sshkeyname=sshkeyname)
+                cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks)
 
-        m = self.machines[name]
-        if sshkeypath:
-            machine.ssh_keypath = sshkeypath
-        p = machine.prefab
-        p.core.hostname = name  # make sure hostname is set
-
-        # remember the node in the local node configuration
-        j.tools.develop.nodes.nodeSet(name, addr=p.executor.sshclient.addr, port=p.executor.sshclient.port,
-                                      cat="openvcloud", description="deployment in openvcloud")
+        machine = self.machines[name]
+        print("created machine")
         return machine
 
-    def _authorizeSSH(self, machine, sshkeyname):
-        self.logger.info("authorizing ssh")
+    def _authorizeSSH(self, machine, service):
+        print("authorize ssh")
+
+        # make sure that SSH key is loaded
+        sshkey = service.producers['sshkey'][0]
+        key_path = j.sal.fs.joinPaths(sshkey.path, sshkey.name)
+        j.clients.ssh.load_ssh_key(key_path, True)
+
+        #prepare data required for sshclient
         machineip, machinedict = machine.machineip_get()
         publicip = machine.space.model['publicipaddress']
         while not publicip:
@@ -681,7 +679,10 @@ class Space(Authorizables):
 
         sshclient = j.clients.ssh.get(
             addr=publicip, port=sshport, login=login, passwd=password, look_for_keys=False, timeout=300)
-        sshclient.SSHAuthorizeKey(sshkeyname)
+        sshclient.SSHAuthorizeKey(sshkey.name)
+
+        machine.ssh_keypath = key_path
+        return machine.prefab
 
     @property
     def portforwards(self):
