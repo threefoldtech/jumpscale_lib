@@ -1,6 +1,7 @@
 import requests
 
 from .api.admin_service import AdminService
+from .api.helpers_service import HelperService
 from .api.markdown_service import MarkdownService
 from .api.org_service import OrgService
 from .api.orgs_service import OrgsService
@@ -30,6 +31,7 @@ class Client:
         self.user = UserService(self)
         self.users = UsersService(self)
         self.version = VersionService(self)
+        self.helpers = HelperService(self)
 
     def is_goraml_class(self, data):
         # check if a data is go-raml generated class
