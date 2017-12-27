@@ -90,8 +90,15 @@ default_milestones = [
     {'title': 'jan_w1', 'due_on': '2018-01-06T00:00:00Z'},
     {'title': 'jan_w2', 'due_on': '2018-01-13T00:00:00Z'},
     {'title': 'jan_w3', 'due_on': '2018-01-20T00:00:00Z'},
-    {'title': 'jan_w4', 'due_on': '2018-01-30T00:00:00Z'},
+    {'title': 'feb_w1', 'due_on': '2018-02-03T00:00:00Z'},
     {'title': 'feb_w2', 'due_on': '2018-02-10T00:00:00Z'},
+    {'title': 'feb_w3', 'due_on': '2018-02-17T00:00:00Z'},
+    {'title': 'feb_w4', 'due_on': '2018-02-24T00:00:00Z'},
+    {'title': 'mar_w1', 'due_on': '2018-03-03T00:00:00Z'},
+    {'title': 'mar_w2', 'due_on': '2018-03-10T00:00:00Z'},
+    {'title': 'mar_w3', 'due_on': '2018-03-17T00:00:00Z'},
+    {'title': 'mar_w3', 'due_on': '2018-03-24T00:00:00Z'},
+    {'title': 'mar_w4', 'due_on': '2018-03-31T00:00:00Z'},
 ]
 ```
 running the following will add the default milestones to repos sarah-test and yves-repo. If a milestone with the same title exists on either repos, it will be skipped.

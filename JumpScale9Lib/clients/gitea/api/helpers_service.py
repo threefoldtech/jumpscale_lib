@@ -1,3 +1,6 @@
+import calendar
+
+
 default_labels = [
     {'color': '#e11d21', 'name': 'priority_critical'},
     {'color': '#f6c6c7', 'name': 'priority_major'},
@@ -19,8 +22,15 @@ default_milestones = [
     {'title': 'jan_w1', 'due_on': '2018-01-06T00:00:00Z'},
     {'title': 'jan_w2', 'due_on': '2018-01-13T00:00:00Z'},
     {'title': 'jan_w3', 'due_on': '2018-01-20T00:00:00Z'},
-    {'title': 'jan_w4', 'due_on': '2018-01-30T00:00:00Z'},
+    {'title': 'feb_w1', 'due_on': '2018-02-03T00:00:00Z'},
     {'title': 'feb_w2', 'due_on': '2018-02-10T00:00:00Z'},
+    {'title': 'feb_w3', 'due_on': '2018-02-17T00:00:00Z'},
+    {'title': 'feb_w4', 'due_on': '2018-02-24T00:00:00Z'},
+    {'title': 'mar_w1', 'due_on': '2018-03-03T00:00:00Z'},
+    {'title': 'mar_w2', 'due_on': '2018-03-10T00:00:00Z'},
+    {'title': 'mar_w3', 'due_on': '2018-03-17T00:00:00Z'},
+    {'title': 'mar_w3', 'due_on': '2018-03-24T00:00:00Z'},
+    {'title': 'mar_w4', 'due_on': '2018-03-31T00:00:00Z'},
 ]
 
 
