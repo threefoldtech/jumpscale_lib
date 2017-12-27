@@ -1,6 +1,14 @@
 from .client import Client
 from js9 import j
 
+#https://docs.grid.tf/api/swagger example api source
+
+#TODO: use our config management like we do in IYO client or OVH client (Christophe can help)
+#TODO: make sure full api is working
+
+#TODO: need example code in the client to : set milestones (in line with the legal repo, and calculate automatically)
+#TODO: need example code in the client to : set labels (remove ones which should not be there)
+
 class GiteaFactory:
 
     def __init__(self):
