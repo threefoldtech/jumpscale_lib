@@ -22,11 +22,28 @@ def refresh_jwt(jwt, payload):
             'Refresh JWT with issuers {} not support'.format(payload['iss']))
 
 
-class OpenvCloudClientFactory:
+TEMPLATE = """
+baseurl = ""
+appkey_ = ""
+appsecret_ = ""
+login = ""
+password_ = ""
+port = 443
+JWT_ = ""
+"""
+
+JSConfigBaseFactory = j.tools.configmanager.base_class_configs
+JSConfigBase = j.tools.configmanager.base_class_config
+
+
+class OpenvCloudClientFactory(JSConfigBaseFactory):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.openvcloud"
         self._logger = None
+        self.__imports__ = "ovc"
+        JSConfigBaseFactory.__init__(self)
+        self._CHILDCLASS = Client
 
     @property
     def logger(self):
@@ -37,49 +54,24 @@ class OpenvCloudClientFactory:
     def install(self):
         j.sal.process.execute("pip3 install python-jose")
 
-    def _urlClean(self, url):
-        url = url.lower()
-        if url.startswith("http"):
-            url = url.split("//")[1].rstrip("/")
-        self.logger.info("Get OpenvCloud client on URL: %s" % url)
-        return url
 
-    def get(self, applicationId, secret, url):
-        """
-        Returns an OpenvCloud Client object for a given application ID and secret.
+    # def getLegacy(self, url, login=None, password=None, port=443, jwt=None):
+    #     """
+    #     Returns an OpenvCloud Client object for a given username and password.
 
-        Get the application ID and secret by creating an API key on the settings page of your user profile on https://itsyou.online.
+    #     Only use this for legacy purposes or in private deployments where ItsYou.online is not used.
 
-        Args:
-            - applicationId: application ID of the API key as set in ItsYou.online for your user profile
-            - secret: secret part of the API key as set in ItsYou.online for your user profile
-            - url: base url of the OpenvCloud environment, e.g. https://se-gen-1.demo.greenitglobe.com/
-        """
-        url = self._urlClean(url)
-        jwt = self.getJWTTokenFromItsYouOnline(applicationId, secret)
-        login = None
-        password = None
-        port = 443
-        cl = Client(url, login, password, secret, port, jwt)
-        return cl
+    #     It is highly recommended to use the get() method instead, passing an application ID and secret from ItsYou.online.
 
-    def getLegacy(self, url, login=None, password=None, port=443, jwt=None):
-        """
-        Returns an OpenvCloud Client object for a given username and password.
+    #     Args:
+    #         url: base url of the OpenvCloud environment, e.g. https://se-gen-1.demo.greenitglobe.com/
+    #         login: OpenvCloud username
+    #         password: password of the OpenvCloud user
+    #     """
 
-        Only use this for legacy purposes or in private deployments where ItsYou.online is not used.
-
-        It is highly recommended to use the get() method instead, passing an application ID and secret from ItsYou.online.
-
-        Args:
-            url: base url of the OpenvCloud environment, e.g. https://se-gen-1.demo.greenitglobe.com/
-            login: OpenvCloud username
-            password: password of the OpenvCloud user
-        """
-
-        url = self._urlClean(url)
-        cl = Client(url, login, password, secret=None, port=port, jwt=jwt)
-        return cl
+    #     url = self._urlClean(url)
+    #     cl = Client(url, login, password, secret=None, port=port, jwt=jwt)
+    #     return cl
 
     def getFromAYSService(self, service):
         """
@@ -117,30 +109,49 @@ class OpenvCloudClientFactory:
         jwt = resp.content.decode('utf8')
         return jwt
 
-class Client:
 
-    def __init__(self, url, login, password=None, secret=None, port=443, jwt=None):
-        if not password and not secret and not jwt:
-            raise ValueError(
-                "Cannot connect to OpenvCloud without either password, secret or JWT")
-        self._url = url
-        self._login = login
-        self._password = password
-        self._secret = secret
-        self._jwt = jwt
-        self.api = j.clients.portal.get(url, port)
+class Client(JSConfigBase):
+    
+
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent)
+        parent = parent or self.parent
+        self._config = j.tools.configmanager._get_for_obj(self, instance=instance, data=data, template=TEMPLATE)
+        self.data = self.config.data
+
         self._logger = None
+        self._initted = False
+
+    def init(self):
+        # if self._initted:
+            # return
+        import ipdb; ipdb.set_trace()
+        self._url = self._urlClean(self.data['baseurl'])
+        self._login = self.data.get('login')
+        self._password = self.data.get('password')
+
+        self._port = self.data.get('port')
+
+        self._appkey = self.data.get('appkey_')
+        self._appsecret = self.data.get('appsecret_')
+        self._jwt = self.data.get('JWT_')
+   
+        if not self.data.get('password') and not (self.data.get('appkey_') and self.data.get('appsecret_') and not self.data.get('JWT_')):
+            raise ValueError("Cannot connect to OpenvCloud without either password, appsecret or JWT")
+        if self._appkey and self._appsecret and not self._jwt:
+            jwt = j.clients.openvcloud.getJWTTokenFromItsYouOnline(self._appkey, self._appsecret)
+            self._jwt = jwt
+            self._port = 443
+            self._login = None
+            self._password = None
+
+        self.api = j.clients.portal.get(self._url, self._port)
         # patch handle the case where the connection dies because of inactivity
         self.__patch_portal_client(self.api)
 
-        self._isms1 = 'mothership1' in url
-        self.__login(password, secret, jwt)
-        if self._isms1:
-            jsonpath = os.path.join(os.path.dirname(__file__), 'ms1.json')
-            self.api.load_swagger(file=jsonpath, group='cloudapi')
-            patchMS1(self.api)
-        else:
-            self.api.load_swagger(group='cloudapi')
+        self.__login(self._password, self._appsecret, self._jwt)
+        self.api.load_swagger(group='cloudapi')
+        self._initted = True
 
     @property
     def logger(self):
@@ -148,10 +159,18 @@ class Client:
             self._logger = j.logger.get("OVC Client Factory")
         return self._logger
 
+    def _urlClean(self, url):
+        self.init()
+        url = url.lower()
+        if url.startswith("http"):
+            url = url.split("//")[1].rstrip("/")
+        self.logger.info("Get OpenvCloud client on URL: %s" % url)
+        return url
 
     def __patch_portal_client(self, api):
         # try to relogin in the case the connection is dead because of
         # inactivity
+        self.init()
         origcall = api.__call__
 
         def patch_call(that, *args, **kwargs):
@@ -167,6 +186,7 @@ class Client:
         api.__call__ = patch_call
 
     def __login(self, password, secret, jwt):
+        self.init()
         if not password and not secret and not jwt:
             raise RuntimeError(
                 "Cannot connect to OpenvCloud without either password, secret or JWT")
@@ -180,18 +200,15 @@ class Client:
             self._login = '{}@{}'.format(payload['username'], payload['iss'])
         else:
             if password:
-                if self._isms1:
-                    secret = self.api.cloudapi.users.authenticate(
-                        username=self._login, password=password)
-                else:
-                    secret = self.api.system.usermanager.authenticate(
-                        name=self._login, secret=password)
+                secret = self.api.system.usermanager.authenticate(
+                    name=self._login, secret=password)
             # make sure cookies are empty, clear guest cookie
             self.api._session.cookies.clear()
             self.api._session.cookies['beaker.session.id'] = secret
 
     @property
     def accounts(self):
+        self.init()
         ovc_accounts = self.api.cloudapi.accounts.list()
         accounts = list()
         for account in ovc_accounts:
@@ -200,6 +217,7 @@ class Client:
 
     @property
     def locations(self):
+        self.init()
         return self.api.cloudapi.locations.list()
 
     def account_get(self, name, create=True,
@@ -221,6 +239,7 @@ class Client:
 
         Raises: KeyError if account doesn't exist, and create argument was set to False
         """
+        self.init()
         for account in self.accounts:
             if account.model['name'] == name:
                 return account
@@ -239,18 +258,18 @@ class Client:
             return self.account_get(name, False)
 
     def space_get(self,
-        accountName,
-        spaceName,
-        location="",
-        createSpace=True,
-        maxMemoryCapacity=-1,
-        maxVDiskCapacity=-1,
-        maxCPUCapacity=-1,
-        maxNASCapacity=-1,
-        maxNetworkOptTransfer=-1,
-        maxNetworkPeerTransfer=-1,
-        maxNumPublicIP=-1,
-        externalnetworkId=None):
+                  accountName,
+                  spaceName,
+                  location="",
+                  createSpace=True,
+                  maxMemoryCapacity=-1,
+                  maxVDiskCapacity=-1,
+                  maxCPUCapacity=-1,
+                  maxNASCapacity=-1,
+                  maxNetworkOptTransfer=-1,
+                  maxNetworkPeerTransfer=-1,
+                  maxNumPublicIP=-1,
+                  externalnetworkId=None):
         """
         Returns the OpenvCloud space with the given account_name, space_name, space_location and in case the account doesn't exist yet it will be created.
 
@@ -267,23 +286,24 @@ class Client:
             - maxNetworkPeerTransfer (defaults to -1: unlimited): not implemented
             - maxNumPublicIP (defaults to -1: unlimited): number of external IP addresses that can be used in the cloud space
         """
-        account = self.account_get(name = accountName,create=False)
+        self.init()
+        account = self.account_get(name=accountName, create=False)
         if account:
-            return account.space_get(name = spaceName,
-                                create=createSpace,
-                                location=location,
-                                maxMemoryCapacity=maxMemoryCapacity,
-                                maxVDiskCapacity=maxVDiskCapacity,
-                                maxCPUCapacity=maxCPUCapacity,
-                                maxNASCapacity=maxNASCapacity,
-                                maxNetworkOptTransfer=maxNetworkOptTransfer,
-                                maxNetworkPeerTransfer=maxNetworkPeerTransfer,
-                                maxNumPublicIP=maxNumPublicIP,
-                                externalnetworkId=externalnetworkId
-                                )
+            return account.space_get(name=spaceName,
+                                     create=createSpace,
+                                     location=location,
+                                     maxMemoryCapacity=maxMemoryCapacity,
+                                     maxVDiskCapacity=maxVDiskCapacity,
+                                     maxCPUCapacity=maxCPUCapacity,
+                                     maxNASCapacity=maxNASCapacity,
+                                     maxNetworkOptTransfer=maxNetworkOptTransfer,
+                                     maxNetworkPeerTransfer=maxNetworkPeerTransfer,
+                                     maxNumPublicIP=maxNumPublicIP,
+                                     externalnetworkId=externalnetworkId
+                                     )
         else:
             raise j.exceptions.RuntimeError(
-                    "Could not find account with name %s" % accountName)
+                "Could not find account with name %s" % accountName)
 
     def get_available_images(self, cloudspaceId=None, accountId=None):
         """
@@ -293,7 +313,7 @@ class Client:
             - cloudspaceId (optional): cloud space Id
             - accountId (optional): account Id
         """
-
+        self.init()
         return self.api.cloudapi.images.list(cloudspaceId=cloudspaceId, accountId=accountId)
 
     @property
@@ -478,7 +498,8 @@ class Account(Authorizables):
                 found = True
                 break
         if not found:
-            raise j.exceptions.RuntimeError("No account found with name %s. The user doesn't have access to the account or it is been deleted." % self.model['name'])
+            raise j.exceptions.RuntimeError(
+                "No account found with name %s. The user doesn't have access to the account or it is been deleted." % self.model['name'])
 
     def delete(self):
         self.client.api.cloudbroker.account.delete(
@@ -493,7 +514,6 @@ class Account(Authorizables):
         """
 
         return self.client.api.cloudapi.images.list(cloudspaceId=cloudspaceId, accountId=self.id)
-
 
     def __str__(self):
         return "OpenvCloud client account: %(name)s" % (self.model)
@@ -515,7 +535,6 @@ class Space(Authorizables):
         if self._logger is None:
             self._logger = j.logger.get("Space")
         return self._logger
-
 
     def externalnetwork_add(self, name, subnet, gateway, startip, endip, gid, vlan):
         self.client.api.cloudbroker.iaas.addExternalNetwork(cloudspaceId=self.id,
@@ -691,7 +710,7 @@ class Space(Authorizables):
             raise j.exceptions.RuntimeError(
                 "Name is not unique, already exists in %s" % self)
         self.logger.info("Cloud space ID:%s name:%s size:%s image:%s disksize:%s" %
-              (self.id, name, sizeId, imageId, disksize))
+                         (self.id, name, sizeId, imageId, disksize))
         if stackId:
             self.client.api.cloudbroker.machine.createOnStack(
                 cloudspaceId=self.id,
@@ -711,7 +730,7 @@ class Space(Authorizables):
             return machine
 
         self._authorizeSSH(machine, sshkeyname=sshkeyname)
-        
+
         if sshkeypath:
             machine.ssh_keypath = sshkeypath
         p = machine.prefab
@@ -778,7 +797,8 @@ class Space(Authorizables):
                     continue
                 return sizeinfo['id']
 
-        raise j.exceptions.RuntimeError("did not find memory size:%s, or found with different vcpus" % memory)
+        raise j.exceptions.RuntimeError(
+            "did not find memory size:%s, or found with different vcpus" % memory)
 
     @property
     def sizes(self):
@@ -1011,7 +1031,8 @@ class Machine:
                 return self.portforward_create(None, localport, protocol)
             # check if the cloudspace is still deploying
             if self.space.model["status"] == 'DEPLOYING':
-                self.logger.debug("Cloudspace still in deployment, will retry to create portforwarding in 2 second")
+                self.logger.debug(
+                    "Cloudspace still in deployment, will retry to create portforwarding in 2 second")
                 time.sleep(2)
                 return self.portforward_create(None, localport, protocol)
 
@@ -1084,18 +1105,18 @@ class Machine:
                 raise RuntimeError(
                     "Cannot find sshport at public side to access this machine")
 
-            #load SSH key if a ssh_keypath provided to the machine
+            # load SSH key if a ssh_keypath provided to the machine
             executor = None
             if self.ssh_keypath:
                 j.clients.ssh.load_ssh_key(self.ssh_keypath)
-                sshclient = j.clients.ssh.get(addr=publicip, port=sshport, key_filename=self.ssh_keypath)
+                sshclient = j.clients.ssh.get(
+                    addr=publicip, port=sshport, key_filename=self.ssh_keypath)
                 sshclient._connect()
                 executor = j.tools.executor.getFromSSHClient(sshclient)
             else:
                 sshclient = j.clients.ssh.get(addr=publicip, port=sshport)
                 executor = j.tools.executor.getFromSSHClient(sshclient)
-            
-    
+
             self._prefab = j.tools.prefab.get(executor)
 
         return self._prefab
