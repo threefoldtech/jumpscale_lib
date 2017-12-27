@@ -566,9 +566,10 @@ class Space(Authorizables):
             sizeId=None,
             stackId=None,
             sshkeypath=None,
+            ignore_name_exists = False
     ):
         """
-        Creates a new virtual machine.
+        Creates a new virtual machine if a one with the same name does not exist.
 
         Args:
             - name (required): name of the virtual machine, e.g. "My first VM"
@@ -590,25 +591,28 @@ class Space(Authorizables):
         imageId = self.image_find_id(image)
         if sizeId is None:
             sizeId = self.size_find_id(memsize, vcpus)
-        if name in self.machines:
+        if name in self.machines and not ignore_name_exists:
             raise j.exceptions.RuntimeError(
                 "Name is not unique, already exists in %s" % self)
         print("Cloud space ID:%s name:%s size:%s image:%s disksize:%s" %
               (self.id, name, sizeId, imageId, disksize))
-        if stackId:
-            self.client.api.cloudbroker.machine.createOnStack(
-                cloudspaceId=self.id,
-                name=name,
-                sizeId=sizeId,
-                imageId=imageId,
-                disksize=disksize,
-                datadisks=datadisks,
-                stackid=stackId)
-        else:
-            res = self.client.api.cloudapi.machines.create(
-                cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks)
 
-        print("created machine")
+        machine = self.machines.get(name)
+        if not machine:
+            if stackId:
+                self.client.api.cloudbroker.machine.createOnStack(
+                    cloudspaceId=self.id,
+                    name=name,
+                    sizeId=sizeId,
+                    imageId=imageId,
+                    disksize=disksize,
+                    datadisks=datadisks,
+                    stackid=stackId)
+            else:
+                res = self.client.api.cloudapi.machines.create(
+                    cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks)
+
+        print("machine created.")
         machine = self.machines[name]
 
         self.configure_machine(machine=machine, name=name, sshkey_name=sshkeyname, sshkey_path=sshkeypath)
@@ -658,9 +662,6 @@ class Space(Authorizables):
     def _authorizeSSH(self, machine, sshkey_name, sshkey_path):
         print("authorize ssh")
 
-        # make sure that SSH key is loaded
-        j.clients.ssh.load_ssh_key(sshkey_path, True)
-
         # prepare data required for sshclient
         machineip, machinedict = machine.machineip_get()
         publicip = machine.space.model['publicipaddress']
@@ -670,9 +671,10 @@ class Space(Authorizables):
         login = machinedict['accounts'][0]['login']
         password = machinedict['accounts'][0]['password']
 
+        # make sure that SSH key is loaded
         sshclient = j.clients.ssh.get(
             addr=publicip, port=sshport, login=login, passwd=password, look_for_keys=False, timeout=300)
-        sshclient.SSHAuthorizeKey(sshkey_name)
+        sshclient.SSHAuthorizeKey(sshkey_name, sshkey_path)
 
         machine.ssh_keypath = sshkey_path
         return machine.prefab
