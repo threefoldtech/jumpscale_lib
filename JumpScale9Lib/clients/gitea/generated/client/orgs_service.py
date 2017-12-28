@@ -1,5 +1,4 @@
 
-from . import
 from .Organization import Organization
 from .Team import Team
 from .api_response import APIResponse

@@ -1,5 +1,4 @@
 
-from . import
 from .Branch import Branch
 from .Comment import Comment
 from .DeployKey import DeployKey
