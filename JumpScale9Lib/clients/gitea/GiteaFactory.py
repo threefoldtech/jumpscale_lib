@@ -7,10 +7,6 @@ from .GiteaClient import GiteaClient
 
 #https://docs.grid.tf/api/swagger example api source
 
-#TODO: make sure full api is working
-
-#TODO: need example code in the client to : set milestones (in line with the legal repo, and calculate automatically)
-#TODO: need example code in the client to : set labels (remove ones which should not be there)
 
 #TODO: (phase 2): export/import a full repo (with issues, milestones & labels) (per repo)
 
@@ -36,8 +32,10 @@ class GiteaFactory(JSConfigBase):
         c = j.tools.raml.get(self._path)
         c.client_python_generate()
 
-    def test(self):
+    def test(self, repo, owner):
         self.generate()
         cl = self.get()
-
-        # @todo: do some code with some basic tests e.g. list the repositories
+        cl.client.repos.issueListIssues(repo, owner)
+        cl.client.repos.issueListLabels(repo, owner)
+        cl.client.repos.issueGetMilestones(repo, owner)
+        cl.client.user.userListEmails()
