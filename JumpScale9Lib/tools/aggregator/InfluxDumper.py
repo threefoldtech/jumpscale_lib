@@ -58,7 +58,7 @@ class InfluxDumper(Dumper.BaseDumper):
                                                          replication='1', default=True)
                 break
         else:
-            self.influx.create_retention_policy('default', rentention_duration, '1', database=database, default=True)
+            self.influxdb.create_retention_policy('default', rentention_duration, '1', database=database, default=True)
 
     def _parse_line(self, line):
         """

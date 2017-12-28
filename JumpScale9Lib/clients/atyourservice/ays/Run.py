@@ -43,11 +43,11 @@ class Runs:
         A run is an collection of actions that will be run on the repository.
 
         Args:
-            execute (True/False): (optional) If true the run will immediatelly be executed once created; default is False
+            execute (True/False): (optional) If true the run will immediately be executed once created; default is False
             callback: (optional) url that will used when finished
 
         Returns:
-            key: run id
+            run id, or the HTTP response if nothing to do
         """
         try:
             resp = self._ayscl.createRun(data=None, repository=self._repository.model["name"], query_params={'simulate': True, 'callback_url': callback})

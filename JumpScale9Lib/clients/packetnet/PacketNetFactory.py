@@ -6,7 +6,7 @@ import time
 
 class PacketNet():
 
-    def __init__(self, client):
+    def __init__(self, client, projectname=""):
         self.client = client
         self._plans = None
         self._facilities = None
@@ -14,14 +14,17 @@ class PacketNet():
         self._projects = None
         self._projectid = None
         self._devices = None
-        self.projectname = ""
+        self.projectname = projectname
+        self.logger = j.logger.get('j.clients.packetnet')
+
+ 
 
     @property
     def projectid(self):
         if self._projectid == None:
             if self.projectname is not "":
                 for item in self.projects:
-                    if item.name == projectname:
+                    if item.name == self.projectname:
                         self._projectid = item.id
                         return self._projectid
                 raise RuntimeError(
@@ -113,15 +116,20 @@ class PacketNet():
             print("found machine, remove:%s" % name)
             res.delete()
 
-    def startDevice(self,  hostname="removeMe", plan='baremetal_0', facility='ams1', os='ubuntu_17_04', wait=True, remove=False):
+    def startDevice(self,  hostname="removeMe", plan='baremetal_0', facility='ams1', os='ubuntu_17_04', ipxeUrl=None, wait=True, remove=False):
         """
         will delete if it exists when remove=True, otherwise will check if it exists, if yes will return device object
         if not will create
 
         example ipxeUrl = https://bootstrap.gig.tech/ipxe/zero-os-master-generic
         """
+
+        if ipxeUrl is None:
+            zerotierId = ""
+        else:
+            zerotierId = ipxeUrl.split('/')[-1]
         return self._startDevice(hostname=hostname, plan=plan, facility=facility, os=os,
-                                 wait=wait, remove=remove, ipxeUrl=None, zerotierId="", always_pxe=False)
+                                 wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId=zerotierId, always_pxe=False)
 
     def startZeroOS(self, hostname="removeMe", plan='baremetal_0', facility='ams1', zerotierId="", zerotierAPI="", wait=True, remove=False):
         """
@@ -131,7 +139,7 @@ class PacketNet():
             raise RuntimeError("zerotierId needs to be specified")
         if zerotierAPI.strip() == "" or zerotierAPI is None:
             raise RuntimeError("zerotierAPI needs to be specified")
-        ipxeUrl = "https://bootstrap.gig.tech/ipxe/zero-os-master-generic/%s" % zerotierId
+        ipxeUrl = "https://bootstrap.gig.tech/ipxe/master/%s" % zerotierId
 
         ipaddr = self._startDevice(hostname=hostname, plan=plan, facility=facility, os="",
                                    wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId=zerotierId, always_pxe=True)
@@ -151,7 +159,7 @@ class PacketNet():
             except IndexError as e:
                 # case were we the member doesn't have a private ip
                 print(
-                    "[+] please authorize the server with the public ip %s in the zerotier network" % ip_pub[0])
+                    "[+] please authorize the server with the public ip %s in the zerotier network" % ipaddr)
                 time.sleep(1)
 
         print("[+] zerotier IP: %s" % ipaddr_priv)
@@ -166,6 +174,7 @@ class PacketNet():
 
         example ipxeUrl = https://bootstrap.gig.tech/ipxe/zero-os-master-generic
         """
+
         if ipxeUrl is None:
             ipxeUrl = ""
         if remove:
@@ -202,27 +211,41 @@ class PacketNet():
             ssh.execute("ls /")
 
             return device, ssh.prefab
+
+        j.tools.develop.nodes.nodeSet(name=hostname, addr=ipaddr, port=22, cat='packet', description='', selected=True)
+
         return ipaddr
 
     def addSSHKey(self, sshkeyPub):
         raise RuntimeError("not implemented")
 
 
-class PacketNetFactory:
+TEMPLATE = """
+auth_token_ = ""
+number = 5
+srtr = ""
+llist = [ ]
+"""
+
+BASE = j.tools.configmanager.base_class_config
+
+class PacketNetFactory(BASE):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.packetnet"
         self.__imports__ = "packet"
         self.logger = j.logger.get('j.clients.packetnet')
         self.connections = {}
+        self.instance="main"
+        self._TEMPLATE=TEMPLATE
 
     def install(self):
         j.sal.process.execute("pip3 install packet-python")
 
-    def get(self, auth_token=""):
-        """
-        """
-        if auth_token is "":
-            auth_token = j.core.state.configGetFromDict(
-                "packetnet", "apitoken")
-        return PacketNet(packet.Manager(auth_token=auth_token))
+    def get(self,instance="main"):
+        self.instance=instance
+        from IPython import embed;embed(colors='Linux')
+        return PacketNet(packet.Manager(auth_token=self.config.data["auth_token"]))
+
+    def test(self):
+        from IPython import embed;embed(colors='Linux')
