@@ -582,8 +582,9 @@ class Space(Authorizables):
             - sizeId (optional): overrides the value set for memsize, denotes the type or "size" of the virtual machine, actually sets the number of virtual CPU cores and amount of memory, see the sizes property of the cloud space for the sizes available in the cloud space
             - stackId (optional): identifies the grid node on which to create the virtual machine, if nothing specified (recommended) OpenvCloud will decide where to create the virtual machine
             - sshkeypath (optional): if not None the sshkey will be reloaded before getting a prefab
+            - ignore_name_exists (Optional): When set to True will not raise RuntimeError when the name already exist
         Raises:
-            - RuntimeError if machine with given name already exists.
+            - RuntimeError if machine with given name already exists and ignore_name_exists is False.
             - RuntimeError if machine name contains spaces
         """
         if ' ' in name:
