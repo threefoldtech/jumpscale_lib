@@ -604,7 +604,7 @@ class Space(Authorizables):
             - sshkeypath (optional): if not None the sshkey will be reloaded before getting a prefab
 
         Raises:
-            - RuntimeError if machine with given name already exists.
+            - RuntimeError if machine with given name already exists and ignore_name_exists is False.
             - RuntimeError if machine name contains spaces
             - RuntimeError if machine name contains underscores
         """
