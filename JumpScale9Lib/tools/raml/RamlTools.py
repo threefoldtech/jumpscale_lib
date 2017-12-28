@@ -278,6 +278,12 @@ class RamlTools:
         self._prepare(reset=reset)
 
         j.sal.process.executeInteractive(cmd)
+
+        # @TODO: remove this part when this issue gets fixed https://github.com/Jumpscale/go-raml/issues/396
+        replace = j.tools.code.replace_tool_get()
+        replace.synonymAdd(regexFind='\\nfrom . import\\n', replaceWith='\n')
+        replace.replace_in_dir(self.generated_path,  recursive=True)
+
         j.sal.fs.createEmptyFile(j.sal.fs.joinPaths(self.generated_path, '__init__.py'))
 
         if doc:

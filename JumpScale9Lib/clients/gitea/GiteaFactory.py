@@ -38,6 +38,6 @@ class GiteaFactory(JSConfigBase):
 
     def test(self):
         self.generate()
-        cl = self.get() #now not workgin something wrong with generation?
+        cl = self.get()
 
         # @todo: do some code with some basic tests e.g. list the repositories

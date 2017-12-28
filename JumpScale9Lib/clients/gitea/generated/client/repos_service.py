@@ -370,110 +370,6 @@ class ReposService:
         except Exception as e:
             raise UnmarshallError(resp, e.message)
 
-    def issueGetComments(self, index, repo, owner, headers=None, query_params=None, content_type="application/json"):
-        """
-        List all comments on an issue
-        It is method for GET /repos/{owner}/{repo}/issue/{index}/comments
-        """
-        uri = self.client.base_url + "/repos/" + owner + "/" + repo + "/issue/" + index + "/comments"
-        resp = self.client.get(uri, None, headers, query_params, content_type)
-        try:
-            if resp.status_code == 200:
-                resps = []
-                for elem in resp.json():
-                    resps.append((elem))
-                return APIResponse(data=resps, response=resp)
-
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
-        except ValueError as msg:
-            raise UnmarshallError(resp, msg)
-        except UnhandledAPIError as uae:
-            raise uae
-        except Exception as e:
-            raise UnmarshallError(resp, e.message)
-
-    def issueRemoveLabel(
-            self,
-            id,
-            index,
-            repo,
-            owner,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
-        """
-        Remove a label from an issue
-        It is method for DELETE /repos/{owner}/{repo}/issue/{index}/labels/{id}
-        """
-        uri = self.client.base_url + "/repos/" + owner + "/" + repo + "/issue/" + index + "/labels/" + id
-        return self.client.delete(uri, None, headers, query_params, content_type)
-
-    def issueClearLabels(self, index, repo, owner, headers=None, query_params=None, content_type="application/json"):
-        """
-        Remove all labels from an issue
-        It is method for DELETE /repos/{owner}/{repo}/issue/{index}/labels
-        """
-        uri = self.client.base_url + "/repos/" + owner + "/" + repo + "/issue/" + index + "/labels"
-        return self.client.delete(uri, None, headers, query_params, content_type)
-
-    def issueAddLabel(self, data, index, repo, owner, headers=None, query_params=None, content_type="application/json"):
-        """
-        Add a label to an issue
-        It is method for POST /repos/{owner}/{repo}/issue/{index}/labels
-        """
-        uri = self.client.base_url + "/repos/" + owner + "/" + repo + "/issue/" + index + "/labels"
-        resp = self.client.post(uri, data, headers, query_params, content_type)
-        try:
-            if resp.status_code == 200:
-                resps = []
-                for elem in resp.json():
-                    resps.append((elem))
-                return APIResponse(data=resps, response=resp)
-
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
-        except ValueError as msg:
-            raise UnmarshallError(resp, msg)
-        except UnhandledAPIError as uae:
-            raise uae
-        except Exception as e:
-            raise UnmarshallError(resp, e.message)
-
-    def issueReplaceLabels(
-            self,
-            data,
-            index,
-            repo,
-            owner,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
-        """
-        Replace an issue's labels
-        It is method for PUT /repos/{owner}/{repo}/issue/{index}/labels
-        """
-        uri = self.client.base_url + "/repos/" + owner + "/" + repo + "/issue/" + index + "/labels"
-        resp = self.client.put(uri, data, headers, query_params, content_type)
-        try:
-            if resp.status_code == 200:
-                resps = []
-                for elem in resp.json():
-                    resps.append((elem))
-                return APIResponse(data=resps, response=resp)
-
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
-        except ValueError as msg:
-            raise UnmarshallError(resp, msg)
-        except UnhandledAPIError as uae:
-            raise uae
-        except Exception as e:
-            raise UnmarshallError(resp, e.message)
-
     def issueDeleteComment(self, id, repo, owner, headers=None, query_params=None, content_type="application/json"):
         """
         Delete a comment
@@ -615,6 +511,30 @@ class ReposService:
         except Exception as e:
             raise UnmarshallError(resp, e.message)
 
+    def issueGetComments(self, index, repo, owner, headers=None, query_params=None, content_type="application/json"):
+        """
+        List all comments on an issue
+        It is method for GET /repos/{owner}/{repo}/issues/{index}/comments
+        """
+        uri = self.client.base_url + "/repos/" + owner + "/" + repo + "/issues/" + index + "/comments"
+        resp = self.client.get(uri, None, headers, query_params, content_type)
+        try:
+            if resp.status_code == 200:
+                resps = []
+                for elem in resp.json():
+                    resps.append((elem))
+                return APIResponse(data=resps, response=resp)
+
+            message = 'unknown status code={}'.format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code,
+                                    message=message)
+        except ValueError as msg:
+            raise UnmarshallError(resp, msg)
+        except UnhandledAPIError as uae:
+            raise uae
+        except Exception as e:
+            raise UnmarshallError(resp, e.message)
+
     def issueCreateComment(
             self,
             data,
@@ -644,6 +564,30 @@ class ReposService:
         except Exception as e:
             raise UnmarshallError(resp, e.message)
 
+    def issueRemoveLabel(
+            self,
+            id,
+            index,
+            repo,
+            owner,
+            headers=None,
+            query_params=None,
+            content_type="application/json"):
+        """
+        Remove a label from an issue
+        It is method for DELETE /repos/{owner}/{repo}/issues/{index}/labels/{id}
+        """
+        uri = self.client.base_url + "/repos/" + owner + "/" + repo + "/issues/" + index + "/labels/" + id
+        return self.client.delete(uri, None, headers, query_params, content_type)
+
+    def issueClearLabels(self, index, repo, owner, headers=None, query_params=None, content_type="application/json"):
+        """
+        Remove all labels from an issue
+        It is method for DELETE /repos/{owner}/{repo}/issues/{index}/labels
+        """
+        uri = self.client.base_url + "/repos/" + owner + "/" + repo + "/issues/" + index + "/labels"
+        return self.client.delete(uri, None, headers, query_params, content_type)
+
     def issueGetLabels(self, index, repo, owner, headers=None, query_params=None, content_type="application/json"):
         """
         Get an issue's labels
@@ -651,6 +595,62 @@ class ReposService:
         """
         uri = self.client.base_url + "/repos/" + owner + "/" + repo + "/issues/" + index + "/labels"
         resp = self.client.get(uri, None, headers, query_params, content_type)
+        try:
+            if resp.status_code == 200:
+                resps = []
+                for elem in resp.json():
+                    resps.append((elem))
+                return APIResponse(data=resps, response=resp)
+
+            message = 'unknown status code={}'.format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code,
+                                    message=message)
+        except ValueError as msg:
+            raise UnmarshallError(resp, msg)
+        except UnhandledAPIError as uae:
+            raise uae
+        except Exception as e:
+            raise UnmarshallError(resp, e.message)
+
+    def issueAddLabel(self, data, index, repo, owner, headers=None, query_params=None, content_type="application/json"):
+        """
+        Add a label to an issue
+        It is method for POST /repos/{owner}/{repo}/issues/{index}/labels
+        """
+        uri = self.client.base_url + "/repos/" + owner + "/" + repo + "/issues/" + index + "/labels"
+        resp = self.client.post(uri, data, headers, query_params, content_type)
+        try:
+            if resp.status_code == 200:
+                resps = []
+                for elem in resp.json():
+                    resps.append((elem))
+                return APIResponse(data=resps, response=resp)
+
+            message = 'unknown status code={}'.format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code,
+                                    message=message)
+        except ValueError as msg:
+            raise UnmarshallError(resp, msg)
+        except UnhandledAPIError as uae:
+            raise uae
+        except Exception as e:
+            raise UnmarshallError(resp, e.message)
+
+    def issueReplaceLabels(
+            self,
+            data,
+            index,
+            repo,
+            owner,
+            headers=None,
+            query_params=None,
+            content_type="application/json"):
+        """
+        Replace an issue's labels
+        It is method for PUT /repos/{owner}/{repo}/issues/{index}/labels
+        """
+        uri = self.client.base_url + "/repos/" + owner + "/" + repo + "/issues/" + index + "/labels"
+        resp = self.client.put(uri, data, headers, query_params, content_type)
         try:
             if resp.status_code == 200:
                 resps = []
