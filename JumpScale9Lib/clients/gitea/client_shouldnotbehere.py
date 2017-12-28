@@ -13,7 +13,7 @@ from .api.users_service import UsersService
 from .api.version_service import VersionService
 
 
-class Client:
+class client:
     def __init__(self, base_uri="/api/v1", token=None):
         self.base_url = base_uri
         self.session = requests.Session()

@@ -264,13 +264,14 @@ class RamlTools:
 
         return cmd
 
-    def _client_generate(self, reset=False, cmd=''):
+    def _client_generate(self, reset=False, cmd='',doc=True):
         self._prepare(reset=reset)
 
         j.sal.process.executeInteractive(cmd)
 
-        cmd = "cd %s;rm -rf htmldoc;mkdir -p htmldoc;cd api_spec;raml2html -i main.raml -o ../htmldoc/api.html -v" % self.path
-        j.sal.process.executeInteractive(cmd)
+        if doc:
+            cmd = "cd %s;rm -rf htmldoc;mkdir -p htmldoc;cd api_spec;raml2html -i main.raml -o ../htmldoc/api.html -v" % self.path
+            j.sal.process.executeInteractive(cmd)
 
         # TODO: test and re-enable
         # cmd = "cd %s;cd api_spec;oas-raml-converter --from RAML --to OAS20 main.raml > ../generated/swagger_api.json" % self.path
@@ -321,7 +322,7 @@ class RamlTools:
             if not j.sal.fs.exists(destination_file):
                 j.sal.fs.copyFile(file, destination_file, createDirIfNeeded=True)
 
-    def client_python_generate(self, reset=False, kind='requests', unmarshall_response=True):
+    def client_python_generate(self, reset=False, kind='requests', unmarshall_response=True, doc=True):
         """
         generate the client from self.path specified, if not specified will be current dir
 
@@ -337,7 +338,7 @@ class RamlTools:
         cmd = self._get_cmd(kind=kind, unmarshall_response=unmarshall_response)
         cmd = cmd.format(path=self.path, goraml=self.goramlpath, kind=kind, lang='python', type='client')
 
-        self._client_generate(reset=reset, cmd=cmd)
+        self._client_generate(reset=reset, cmd=cmd, doc=doc)
 
     def client_go_generate(self, reset=False, package='client', import_path='', lib_root_urls=''):
         """
