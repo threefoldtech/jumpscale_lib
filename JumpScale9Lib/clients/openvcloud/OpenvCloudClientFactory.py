@@ -102,7 +102,7 @@ class Client(JSConfigBase):
 
         self._url = self._urlClean(self.config.data['baseurl'])
         self._login = self.config.data.get('login')
-        self._password = self.config.data.get('password')
+        self._password = self.config.data.get('password_')
 
         self._port = self.config.data.get('port')
 
@@ -110,10 +110,10 @@ class Client(JSConfigBase):
         self._appsecret = self.config.data.get('appsecret_')
         self._jwt = self.config.data.get('JWT_')
 
-        if not self.config.data.get('password') and not (self.config.data.get('appkey_') and
+        if not self.config.data.get('password_') and not (self.config.data.get('appkey_') and
            self.config.data.get('appsecret_') and not self.config.data.get('JWT_')):
             self.config.configure()
-        if not self.config.data.get('password') and not (self.config.data.get('appkey_') and
+        if not self.config.data.get('password_') and not (self.config.data.get('appkey_') and
            self.config.data.get('appsecret_') and not self.config.data.get('JWT_')):
             raise ValueError("Cannot connect to OpenvCloud without either password, appsecret or JWT")
         if self._appkey and self._appsecret and not self._jwt:
