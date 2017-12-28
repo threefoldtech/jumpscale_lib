@@ -58,12 +58,13 @@ class OpenvCloudClientFactory(JSConfigBaseFactory):
         """
         Returns an OpenvCloud Client object for a given AYS service object.
         """
-        return self.getLegacy(
-            url=service.model.data.url,
-            login=service.model.data.login,
-            password=service.model.data.password,
-            jwt=service.model.data.jwt,
-            port=service.model.data.port)
+        data = {'baseurl': service.model.data.url,
+                'login': service.model.data.login,
+                'password_': service.model.data.password,
+                'JWT_': service.model.data.jwt,
+                'port': service.model.data.port}
+        toml = j.data.serializer.toml.dumps(service)
+        return self.get(data=toml)
 
     def getJWTTokenFromItsYouOnline(self, applicationId, secret, validity=3600):
         """
@@ -96,7 +97,7 @@ class Client(JSConfigBase):
     def __init__(self, instance, data={}, parent=None):
         JSConfigBase.__init__(self, instance=instance, data=data, parent=parent)
         parent = parent or self.parent
-        self._config = j.tools.configmanager._get_for_obj(self, instance=instance, data=data, template=TEMPLATE)    
+        self._config = j.tools.configmanager._get_for_obj(self, instance=instance, data=data, template=TEMPLATE)
 
         self._logger = None
 
