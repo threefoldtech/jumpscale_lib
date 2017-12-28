@@ -18,9 +18,6 @@ class GiteaFactory(JSConfigBase):
     def __init__(self):
         self.__jslocation__ = "j.clients.gitea"
         self.logger = j.logger.get("j.clients.gitea")
-        path="%s/generated"%self._path
-        if path not in sys.path:
-            sys.path.append(path)
         from .GiteaClient import GiteaClient
         self._CHILDCLASS=GiteaClient 
         JSConfigBase.__init__(self)

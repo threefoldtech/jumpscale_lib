@@ -1,7 +1,7 @@
 from js9 import j
 
 import calendar
-from client import Client
+from JumpScale9Lib.clients.gitea.generated.client import Client
 
 default_labels = [
     {'color': '#e11d21', 'name': 'priority_critical'},
@@ -39,7 +39,7 @@ default_milestones = [
 
 TEMPLATE = """
 url = ""
-secret = ""
+secret_ = ""
 """
 
 JSConfigBase = j.tools.configmanager.base_class_config

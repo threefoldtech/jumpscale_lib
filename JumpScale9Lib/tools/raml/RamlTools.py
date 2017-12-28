@@ -52,7 +52,10 @@ class RamlToolsFactory:
             t.synonymAdd(regexFind='.*node --harmony.*', replaceWith='#!/usr/bin/env node')
             t.replace_in_dir("/opt/node/bin")
 
-        j.tools.prefab.local.system.package.install("capnproto")
+        if not self._prefab.core.isMac:
+            j.tools.prefab.local.system.package.install("capnproto")
+        else:
+            j.tools.prefab.local.system.package.install("capnp")
 
         # now install appropriate pips
         j.tools.prefab.local.runtimes.pip.install("autopep8")
@@ -166,7 +169,12 @@ class RamlToolsFactory:
 
             self.logger.info('test generate python server with generated python client')
 
-            cl.api.user.getUser(id='1')
+            r=cl.api.user.getUser(id='1')
+            assert r.json() == {}
+            assert r.status_code==200
+
+            #TODO:*1 should test the api docs: http://localhost:5000/apidocs/index.html?raml=api.raml, just to see they are there
+
             tmux.stop('ramltest_gevent_server')
 
             # TODO:*1 get SPORE client, and do test from SPORE client
