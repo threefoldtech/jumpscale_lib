@@ -1,7 +1,6 @@
 from js9 import j
 import time
 import datetime
-import os
 import requests
 
 # NEED: pip3 install python-jose
@@ -27,6 +26,13 @@ class OpenvCloudClientFactory:
 
     def __init__(self):
         self.__jslocation__ = "j.clients.openvcloud"
+        self._logger = None
+
+    @property
+    def logger(self):
+        if self._logger is None:
+            self._logger = j.logger.get("OVC Client Factory")
+        return self._logger
 
     def install(self):
         j.sal.process.execute("pip3 install python-jose")
@@ -35,7 +41,7 @@ class OpenvCloudClientFactory:
         url = url.lower()
         if url.startswith("http"):
             url = url.split("//")[1].rstrip("/")
-        print("Get OpenvCloud client on URL: %s" % url)
+        self.logger.info("Get OpenvCloud client on URL: %s" % url)
         return url
 
     def get(self, applicationId, secret, url):
@@ -123,6 +129,7 @@ class Client:
         self._secret = secret
         self._jwt = jwt
         self.api = j.clients.portal.get(url, port)
+        self._logger = None
         # patch handle the case where the connection dies because of inactivity
         self.__patch_portal_client(self.api)
 
@@ -134,6 +141,13 @@ class Client:
             patchMS1(self.api)
         else:
             self.api.load_swagger(group='cloudapi')
+
+    @property
+    def logger(self):
+        if self._logger is None:
+            self._logger = j.logger.get("OVC Client Factory")
+        return self._logger
+
 
     def __patch_portal_client(self, api):
         # try to relogin in the case the connection is dead because of
@@ -223,6 +237,64 @@ class Client:
                                                 maxNetworkPeerTransfer=maxNetworkPeerTransfer,
                                                 maxNumPublicIP=maxNumPublicIP)
             return self.account_get(name, False)
+
+    def space_get(self,
+        accountName,
+        spaceName,
+        location="",
+        createSpace=True,
+        maxMemoryCapacity=-1,
+        maxVDiskCapacity=-1,
+        maxCPUCapacity=-1,
+        maxNASCapacity=-1,
+        maxNetworkOptTransfer=-1,
+        maxNetworkPeerTransfer=-1,
+        maxNumPublicIP=-1,
+        externalnetworkId=None):
+        """
+        Returns the OpenvCloud space with the given account_name, space_name, space_location and in case the account doesn't exist yet it will be created.
+
+        Args:
+            - accountName (required): name of the account to lookup, e.g. "myaccount"
+            - spaceName (required): name of the cloud space to lookup or create if it doesn't exist yet, e.g. "myvdc"
+            - location (only required when cloud space needs to be created): location when the cloud space needs to be created
+            - createSpace (defaults to True): if set to True the account is created in case it doesn't exist yet
+            - maxMemoryCapacity (defaults to -1: unlimited): available memory in GB for all virtual machines in the cloud space
+            - maxVDiskCapacity (defaults to -1: unlimited): available disk capacity in GiB for all virtual disks in the cloud space
+            - maxCPUCapacity (defaults to -1: unlimited): total number of available virtual CPU core that can be used by the virtual machines in the cloud space
+            - maxNASCapacity (defaults to -1: unlimited): not implemented
+            - maxNetworkOptTransfer (defaults to -1: unlimited): not implemented
+            - maxNetworkPeerTransfer (defaults to -1: unlimited): not implemented
+            - maxNumPublicIP (defaults to -1: unlimited): number of external IP addresses that can be used in the cloud space
+        """
+        account = self.account_get(name = accountName,create=False)
+        if account:
+            return account.space_get(name = spaceName,
+                                create=createSpace,
+                                location=location,
+                                maxMemoryCapacity=maxMemoryCapacity,
+                                maxVDiskCapacity=maxVDiskCapacity,
+                                maxCPUCapacity=maxCPUCapacity,
+                                maxNASCapacity=maxNASCapacity,
+                                maxNetworkOptTransfer=maxNetworkOptTransfer,
+                                maxNetworkPeerTransfer=maxNetworkPeerTransfer,
+                                maxNumPublicIP=maxNumPublicIP,
+                                externalnetworkId=externalnetworkId
+                                )
+        else:
+            raise j.exceptions.RuntimeError(
+                    "Could not find account with name %s" % accountName)
+
+    def get_available_images(self, cloudspaceId=None, accountId=None):
+        """
+        lists all available images for a cloud space
+
+        Args:
+            - cloudspaceId (optional): cloud space Id
+            - accountId (optional): account Id
+        """
+
+        return self.api.cloudapi.images.list(cloudspaceId=cloudspaceId, accountId=accountId)
 
     @property
     def login(self):
@@ -412,6 +484,17 @@ class Account(Authorizables):
         self.client.api.cloudbroker.account.delete(
             accountId=self.id, reason='API request')
 
+    def get_available_images(self, cloudspaceId=None):
+        """
+        lists all available images for a cloud space
+
+        Args:
+            - cloudspaceId (optional): cloud space Id
+        """
+
+        return self.client.api.cloudapi.images.list(cloudspaceId=cloudspaceId, accountId=self.id)
+
+
     def __str__(self):
         return "OpenvCloud client account: %(name)s" % (self.model)
 
@@ -425,6 +508,14 @@ class Space(Authorizables):
         self.client = account.client
         self.model = model
         self.id = model["id"]
+        self._logger = None
+
+    @property
+    def logger(self):
+        if self._logger is None:
+            self._logger = j.logger.get("Space")
+        return self._logger
+
 
     def externalnetwork_add(self, name, subnet, gateway, startip, endip, gid, vlan):
         self.client.api.cloudbroker.iaas.addExternalNetwork(cloudspaceId=self.id,
@@ -566,7 +657,8 @@ class Space(Authorizables):
             sizeId=None,
             stackId=None,
             sshkeypath=None,
-            ignore_name_exists = False
+            ignore_name_exists = False,
+            description=None,
     ):
         """
         Creates a new virtual machine if a one with the same name does not exist.
@@ -581,21 +673,26 @@ class Space(Authorizables):
             - image (defaults to "Ubuntu 16.04 x6"): name of the OS image to load
             - sizeId (optional): overrides the value set for memsize, denotes the type or "size" of the virtual machine, actually sets the number of virtual CPU cores and amount of memory, see the sizes property of the cloud space for the sizes available in the cloud space
             - stackId (optional): identifies the grid node on which to create the virtual machine, if nothing specified (recommended) OpenvCloud will decide where to create the virtual machine
+            - description (optional): machine description
             - sshkeypath (optional): if not None the sshkey will be reloaded before getting a prefab
             - ignore_name_exists (Optional): When set to True will not raise RuntimeError when the name already exist
+
         Raises:
             - RuntimeError if machine with given name already exists and ignore_name_exists is False.
             - RuntimeError if machine name contains spaces
+            - RuntimeError if machine name contains underscores
         """
         if ' ' in name:
             raise RuntimeError('Name cannot contain spaces')
+        if '_' in name:
+            raise RuntimeError('Name cannot contain underscores (_)')
         imageId = self.image_find_id(image)
         if sizeId is None:
             sizeId = self.size_find_id(memsize, vcpus)
         if name in self.machines and not ignore_name_exists:
             raise j.exceptions.RuntimeError(
                 "Name is not unique, already exists in %s" % self)
-        print("Cloud space ID:%s name:%s size:%s image:%s disksize:%s" %
+        self.logger.info("Cloud space ID:%s name:%s size:%s image:%s disksize:%s" %
               (self.id, name, sizeId, imageId, disksize))
 
         machine = self.machines.get(name)
@@ -663,7 +760,7 @@ class Space(Authorizables):
     def _authorizeSSH(self, machine, sshkey_name, sshkey_path):
         print("authorize ssh")
 
-        # prepare data required for sshclient
+        # prepare data required https://github.com/Jumpscale/ays9/pull/406for sshclient
         machineip, machinedict = machine.machineip_get()
         publicip = machine.space.model['publicipaddress']
         sshport = self._getPortForward(machine)
@@ -766,6 +863,13 @@ class Machine:
         self.id = self.model["id"]
         self.name = self.model["name"]
         self.ssh_keypath = None
+        self._logger = None
+
+    @property
+    def logger(self):
+        if self._logger is None:
+            self._logger = j.logger.get("OVC Client Factory")
+        return self._logger
 
     def start(self):
         self.client.api.cloudapi.machines.start(machineId=self.id)
@@ -786,7 +890,7 @@ class Machine:
         self.client.api.cloudapi.machines.reset(machineId=self.id)
 
     def delete(self):
-        print("Machine delete:%s" % self)
+        self.logger.info("Machine delete:%s" % self)
         self.client.api.cloudapi.machines.delete(machineId=self.id)
 
     def clone(self, name, cloudspaceId=None, snapshotTimestamp=None):
@@ -925,6 +1029,11 @@ class Machine:
             # - if it's an auto-generated port, we probably hit a concurrence issue
             #   let's try again with a new port
             if str(e).startswith("409 Conflict") and publicport is None:
+                return self.portforward_create(None, localport, protocol)
+            # check if the cloudspace is still deploying
+            if self.space.model["status"] == 'DEPLOYING':
+                self.logger.debug("Cloudspace still in deployment, will retry to create portforwarding in 2 second")
+                time.sleep(2)
                 return self.portforward_create(None, localport, protocol)
 
             # - if the port was choose explicitly, then it's not the lib's fault

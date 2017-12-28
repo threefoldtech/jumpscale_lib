@@ -442,7 +442,7 @@ class Netconfig:
                 cmd = "ip addr flush dev %s" % interface
                 j.sal.process.execute(cmd)
 
-            j.sal.process.execute("sudo stop network-manager", showout=False, outputStderr=False, die=False)
+            j.sal.process.execute("sudo stop network-manager", showout=False, die=False)
             j.sal.fs.writeFile("/etc/init/network-manager.override", "manual")
 
             j.sal.netconfig.interfaces_reset()
