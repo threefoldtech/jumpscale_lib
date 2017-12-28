@@ -52,7 +52,10 @@ class RamlToolsFactory:
             t.synonymAdd(regexFind='.*node --harmony.*', replaceWith='#!/usr/bin/env node')
             t.replace_in_dir("/opt/node/bin")
 
-        j.tools.prefab.local.system.package.install("capnproto")
+        if not self._prefab.core.isMac:
+            j.tools.prefab.local.system.package.install("capnproto")
+        else:
+            j.tools.prefab.local.system.package.install("capnp")
 
         # now install appropriate pips
         j.tools.prefab.local.runtimes.pip.install("autopep8")
@@ -103,7 +106,6 @@ class RamlToolsFactory:
     def _remove(self, path, all=True):
         j.sal.fs.remove("%s/server" % path)
         j.sal.fs.remove("%s/generated" % path)
-        j.sal.fs.remove("%s/htmldoc" % path)
         j.sal.fs.remove("%s/generate_client.sh" % path)
         j.sal.fs.remove("%s/generate_server.sh" % path)
         if all:
@@ -166,7 +168,12 @@ class RamlToolsFactory:
 
             self.logger.info('test generate python server with generated python client')
 
-            cl.api.user.getUser(id='1')
+            r=cl.api.user.getUser(id='1')
+            assert r.json() == {}
+            assert r.status_code==200
+
+            #TODO:*1 should test the api docs: http://localhost:5000/apidocs/index.html?raml=api.raml, just to see they are there
+
             tmux.stop('ramltest_gevent_server')
 
             # TODO:*1 get SPORE client, and do test from SPORE client
@@ -209,7 +216,6 @@ class RamlTools:
             self.reset()
         else:
             j.sal.fs.remove("%s/generated" % self.path)
-            j.sal.fs.remove("%s/htmldoc" % self.path)
 
     def _get_kind(self, supported_kinds, kind):
         try:
@@ -220,6 +226,10 @@ class RamlTools:
 
     def reset(self):
         j.tools.raml._remove(self.path, all=False)
+
+    @property
+    def generated_path(self):
+        return j.sal.fs.joinPaths(self.path, 'generated')
 
     def specs_get(self, giturl):
         """
@@ -264,13 +274,16 @@ class RamlTools:
 
         return cmd
 
-    def _client_generate(self, reset=False, cmd=''):
+    def _client_generate(self, reset=False, cmd='', doc=True):
         self._prepare(reset=reset)
 
         j.sal.process.executeInteractive(cmd)
+        j.sal.fs.createEmptyFile(j.sal.fs.joinPaths(self.generated_path, '__init__.py'))
 
-        cmd = "cd %s;rm -rf htmldoc;mkdir -p htmldoc;cd api_spec;raml2html -i main.raml -o ../htmldoc/api.html -v" % self.path
-        j.sal.process.executeInteractive(cmd)
+        if doc:
+            cmd = "cd %s;rm -rf htmldoc;mkdir -p htmldoc; \
+            cd ../api_spec;raml2html -i main.raml -o ../generated/htmldoc/api.html -v" % self.generated_path
+            j.sal.process.executeInteractive(cmd)
 
         # TODO: test and re-enable
         # cmd = "cd %s;cd api_spec;oas-raml-converter --from RAML --to OAS20 main.raml > ../generated/swagger_api.json" % self.path
@@ -321,7 +334,7 @@ class RamlTools:
             if not j.sal.fs.exists(destination_file):
                 j.sal.fs.copyFile(file, destination_file, createDirIfNeeded=True)
 
-    def client_python_generate(self, reset=False, kind='requests', unmarshall_response=True):
+    def client_python_generate(self, reset=False, kind='requests', unmarshall_response=True, doc=True):
         """
         generate the client from self.path specified, if not specified will be current dir
 
@@ -337,7 +350,7 @@ class RamlTools:
         cmd = self._get_cmd(kind=kind, unmarshall_response=unmarshall_response)
         cmd = cmd.format(path=self.path, goraml=self.goramlpath, kind=kind, lang='python', type='client')
 
-        self._client_generate(reset=reset, cmd=cmd)
+        self._client_generate(reset=reset, cmd=cmd, doc=doc)
 
     def client_go_generate(self, reset=False, package='client', import_path='', lib_root_urls=''):
         """
