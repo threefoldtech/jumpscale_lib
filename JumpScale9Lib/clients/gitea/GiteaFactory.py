@@ -46,3 +46,5 @@ class GiteaFactory(JSConfigBase):
     def test(self):
         self.generate() #I think there still needs to be a __init__.py in generated directory (needs to be done automatically)
         cl=self.client_get() #now not workgin something wrong with generation?
+
+        #do some code with some basic tests e.g. list the repositories
