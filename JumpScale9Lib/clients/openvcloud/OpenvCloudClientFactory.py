@@ -92,7 +92,6 @@ class OpenvCloudClientFactory(JSConfigBaseFactory):
 
 
 class Client(JSConfigBase):
-    
 
     def __init__(self, instance, data={}, parent=None):
         JSConfigBase.__init__(self, instance=instance, data=data, parent=parent)
@@ -100,7 +99,7 @@ class Client(JSConfigBase):
         self._config = j.tools.configmanager._get_for_obj(self, instance=instance, data=data, template=TEMPLATE)    
 
         self._logger = None
-        
+
         self._url = self._urlClean(self.config.data['baseurl'])
         self._login = self.config.data.get('login')
         self._password = self.config.data.get('password')
@@ -110,12 +109,12 @@ class Client(JSConfigBase):
         self._appkey = self.config.data.get('appkey_')
         self._appsecret = self.config.data.get('appsecret_')
         self._jwt = self.config.data.get('JWT_')
-   
-        if not self.config.data.get('password') and not (self.config.data.get('appkey_')
-           and self.config.data.get('appsecret_') and not self.config.data.get('JWT_')):
+
+        if not self.config.data.get('password') and not (self.config.data.get('appkey_') and
+           self.config.data.get('appsecret_') and not self.config.data.get('JWT_')):
             self.config.configure()
-        if not self.config.data.get('password') and not (self.config.data.get('appkey_')
-           and self.config.data.get('appsecret_') and not self.config.data.get('JWT_')):
+        if not self.config.data.get('password') and not (self.config.data.get('appkey_') and
+           self.config.data.get('appsecret_') and not self.config.data.get('JWT_')):
             raise ValueError("Cannot connect to OpenvCloud without either password, appsecret or JWT")
         if self._appkey and self._appsecret and not self._jwt:
             jwt = j.clients.openvcloud.getJWTTokenFromItsYouOnline(self._appkey, self._appsecret)
