@@ -54,25 +54,6 @@ class OpenvCloudClientFactory(JSConfigBaseFactory):
     def install(self):
         j.sal.process.execute("pip3 install python-jose")
 
-
-    # def getLegacy(self, url, login=None, password=None, port=443, jwt=None):
-    #     """
-    #     Returns an OpenvCloud Client object for a given username and password.
-
-    #     Only use this for legacy purposes or in private deployments where ItsYou.online is not used.
-
-    #     It is highly recommended to use the get() method instead, passing an application ID and secret from ItsYou.online.
-
-    #     Args:
-    #         url: base url of the OpenvCloud environment, e.g. https://se-gen-1.demo.greenitglobe.com/
-    #         login: OpenvCloud username
-    #         password: password of the OpenvCloud user
-    #     """
-
-    #     url = self._urlClean(url)
-    #     cl = Client(url, login, password, secret=None, port=port, jwt=jwt)
-    #     return cl
-
     def getFromAYSService(self, service):
         """
         Returns an OpenvCloud Client object for a given AYS service object.
@@ -116,27 +97,25 @@ class Client(JSConfigBase):
     def __init__(self, instance, data={}, parent=None):
         JSConfigBase.__init__(self, instance=instance, data=data, parent=parent)
         parent = parent or self.parent
-        self._config = j.tools.configmanager._get_for_obj(self, instance=instance, data=data, template=TEMPLATE)
-        self.data = self.config.data
+        self._config = j.tools.configmanager._get_for_obj(self, instance=instance, data=data, template=TEMPLATE)    
 
         self._logger = None
-        self._initted = False
+        
+        self._url = self._urlClean(self.config.data['baseurl'])
+        self._login = self.config.data.get('login')
+        self._password = self.config.data.get('password')
 
-    def init(self):
-        # if self._initted:
-            # return
-        import ipdb; ipdb.set_trace()
-        self._url = self._urlClean(self.data['baseurl'])
-        self._login = self.data.get('login')
-        self._password = self.data.get('password')
+        self._port = self.config.data.get('port')
 
-        self._port = self.data.get('port')
-
-        self._appkey = self.data.get('appkey_')
-        self._appsecret = self.data.get('appsecret_')
-        self._jwt = self.data.get('JWT_')
+        self._appkey = self.config.data.get('appkey_')
+        self._appsecret = self.config.data.get('appsecret_')
+        self._jwt = self.config.data.get('JWT_')
    
-        if not self.data.get('password') and not (self.data.get('appkey_') and self.data.get('appsecret_') and not self.data.get('JWT_')):
+        if not self.config.data.get('password') and not (self.config.data.get('appkey_')
+           and self.config.data.get('appsecret_') and not self.config.data.get('JWT_')):
+            self.config.configure()
+        if not self.config.data.get('password') and not (self.config.data.get('appkey_')
+           and self.config.data.get('appsecret_') and not self.config.data.get('JWT_')):
             raise ValueError("Cannot connect to OpenvCloud without either password, appsecret or JWT")
         if self._appkey and self._appsecret and not self._jwt:
             jwt = j.clients.openvcloud.getJWTTokenFromItsYouOnline(self._appkey, self._appsecret)
@@ -151,7 +130,6 @@ class Client(JSConfigBase):
 
         self.__login(self._password, self._appsecret, self._jwt)
         self.api.load_swagger(group='cloudapi')
-        self._initted = True
 
     @property
     def logger(self):
@@ -160,7 +138,6 @@ class Client(JSConfigBase):
         return self._logger
 
     def _urlClean(self, url):
-        self.init()
         url = url.lower()
         if url.startswith("http"):
             url = url.split("//")[1].rstrip("/")
@@ -170,7 +147,6 @@ class Client(JSConfigBase):
     def __patch_portal_client(self, api):
         # try to relogin in the case the connection is dead because of
         # inactivity
-        self.init()
         origcall = api.__call__
 
         def patch_call(that, *args, **kwargs):
@@ -186,7 +162,6 @@ class Client(JSConfigBase):
         api.__call__ = patch_call
 
     def __login(self, password, secret, jwt):
-        self.init()
         if not password and not secret and not jwt:
             raise RuntimeError(
                 "Cannot connect to OpenvCloud without either password, secret or JWT")
@@ -208,7 +183,6 @@ class Client(JSConfigBase):
 
     @property
     def accounts(self):
-        self.init()
         ovc_accounts = self.api.cloudapi.accounts.list()
         accounts = list()
         for account in ovc_accounts:
@@ -217,7 +191,6 @@ class Client(JSConfigBase):
 
     @property
     def locations(self):
-        self.init()
         return self.api.cloudapi.locations.list()
 
     def account_get(self, name, create=True,
@@ -239,7 +212,6 @@ class Client(JSConfigBase):
 
         Raises: KeyError if account doesn't exist, and create argument was set to False
         """
-        self.init()
         for account in self.accounts:
             if account.model['name'] == name:
                 return account
@@ -286,7 +258,6 @@ class Client(JSConfigBase):
             - maxNetworkPeerTransfer (defaults to -1: unlimited): not implemented
             - maxNumPublicIP (defaults to -1: unlimited): number of external IP addresses that can be used in the cloud space
         """
-        self.init()
         account = self.account_get(name=accountName, create=False)
         if account:
             return account.space_get(name=spaceName,
@@ -313,7 +284,6 @@ class Client(JSConfigBase):
             - cloudspaceId (optional): cloud space Id
             - accountId (optional): account Id
         """
-        self.init()
         return self.api.cloudapi.images.list(cloudspaceId=cloudspaceId, accountId=accountId)
 
     @property

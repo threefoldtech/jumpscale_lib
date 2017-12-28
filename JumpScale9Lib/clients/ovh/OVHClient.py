@@ -5,7 +5,7 @@ try:
 except:
     print("WARNING: ovh pip client not found please install do j.clients.ovh.install()")
     # OVHFactory().install()
-    
+
 import requests
 import time
 
@@ -19,13 +19,14 @@ consumerkey_ = ""
 """
 
 JSConfigBase = j.tools.configmanager.base_class_config
+
+
 class OVHClient(JSConfigBase):
 
-    def __init__(self,instance,data={},parent=None):
-        JSConfigBase.__init__(self,instance=instance,data=data,parent=parent)
-        self._config = j.tools.configmanager._get_for_obj(self,instance=instance,data=data,template=TEMPLATE)
-        c=self.config.data
-        print("OVH INIT")
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent)
+        self._config = j.tools.configmanager._get_for_obj(self, instance=instance, data=data, template=TEMPLATE)
+        c = self.config.data
         self.client = ovh.Client(
             endpoint=c["endpoint"],
             application_key=c["appkey_"],
@@ -135,7 +136,6 @@ class OVHClient(JSConfigBase):
         details = self.serverGetDetail(name)
         e = j.tools.executor.getSSHBased(addr=details['ip'], key_filename=sshkey, passphrase=passphrase)
         return e.prefab
-
 
     # def backupInit(self, name):
     #     try:
@@ -402,4 +402,3 @@ class OVHClient(JSConfigBase):
                 return True
 
             time.sleep(1)
-
