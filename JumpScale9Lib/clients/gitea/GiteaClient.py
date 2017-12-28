@@ -1,7 +1,7 @@
 from js9 import j
 
 import calendar
-from JumpScale9Lib.clients.gitea.generated.client import Client
+from JumpScale9Lib.clients.gitea.generated.client.client import Client
 
 default_labels = [
     {'color': '#e11d21', 'name': 'priority_critical'},
@@ -36,34 +36,37 @@ default_milestones = [
 ]
 
 
-
 TEMPLATE = """
 url = ""
-secret_ = ""
+gitea_token_ = ""
 """
 
 JSConfigBase = j.tools.configmanager.base_class_config
+
+
 class GiteaClient(JSConfigBase):
 
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigBase.__init__(self, instance=instance,
+                              data=data, parent=parent)
+        self._config = j.tools.configmanager._get_for_obj(
+            self, instance=instance, data=data, template=TEMPLATE)
 
-    def __init__(self,instance,data={},parent=None):
-        JSConfigBase.__init__(self,instance=instance,data=data,parent=parent)
-        self._config = j.tools.configmanager._get_for_obj(self,instance=instance,data=data,template=TEMPLATE)
-
-        if self.config.data["url"]=="":
+        if self.config.data["url"] == "" or self.config.data["gitea_token_"] == "":
             self.config.configure()
 
-        base_uri=self.config.data["url"]
-        if "/api" not in base_uri:    
-            base_uri+="/api/v1"
-        
-        #TODO:*1 need to do more checks that url is properly formated
+        if self.config.data["url"] == "" or self.config.data["gitea_token_"] == "":
+            raise RuntimeError("url and gitea_token_ are not properly configured")
 
-        self.client=Client(base_uri=base_uri)
+        base_uri = self.config.data["url"]
+        if "/api" not in base_uri:
+            base_uri += "/api/v1"
 
-        token = j.clients.itsyouonline.jwt #get it from itsyou.online
+        # TODO:*1 need to do more checks that url is properly formated
 
-        self.client.set_auth_header('token {}'.format(token))        
+        self.client = Client(base_uri=base_uri)
+
+        self.client.set_auth_header('token {}'.format(self.config.data["gitea_token_"]))
 
     def addLabelsToRepos(self, repos, labels=default_labels):
         """
@@ -75,12 +78,14 @@ class GiteaClient(JSConfigBase):
         :return:
         """
         for repo in repos:
-            repo_labels = self.client.repos.issueListLabels(repo['name'], repo['owner']).json()
+            repo_labels = self.client.repos.issueListLabels(
+                repo['name'], repo['owner']).data
             names = [l['name'] for l in repo_labels]
             for label in labels:
                 if label['name'] in names:
                     continue
-                self.client.repos.issueCreateLabel(label, repo['name'], repo['owner'])
+                self.client.repos.issueCreateLabel(
+                    label, repo['name'], repo['owner'])
 
     def addMileStonesToRepos(self, repos, milestones=default_milestones):
         """
@@ -92,10 +97,11 @@ class GiteaClient(JSConfigBase):
         :return:
         """
         for repo in repos:
-            repo_milestones = self.client.repos.issueGetMilestones(repo['name'], repo['owner']).json()
+            repo_milestones = self.client.repos.issueGetMilestones(
+                repo['name'], repo['owner']).data
             names = [m['title'] for m in repo_milestones]
             for milestone in milestones:
                 if milestone['title'] in names:
                     continue
-                self.client.repos.issueCreateMilestone(milestone, repo['name'], repo['owner'])
-                
+                self.client.repos.issueCreateMilestone(
+                    milestone, repo['name'], repo['owner'])

@@ -2,9 +2,7 @@
 
 Connect:
 ```python
-import os
-token = os.environ["GITEA_TOKEN"]
-j.clients.gitea.get_client("https://docs.grid.tf/api/v1", token)
+j.clients.gitea.get()
 ```
 
 Repositories:
@@ -14,9 +12,9 @@ data["name"] = "yves_repo"
 data["description"] = "cool"
 data["auto_init"] = False
 
-g  = j.clients.gitea.get_client("https://docs.grid.tf/api/v1", token)
+g  = j.clients.gitea.get()
 
-r = g.user.createCurrentUserRepo(data)
+r = g.client.user.createCurrentUserRepo(data)
 ```
 
 Labels:
@@ -27,7 +25,7 @@ label_data["color"] = "#b60205"
 
 label_data["name"] = "priority_critical"
 
-label = g.repos.issueCreateLabel(label_data, "yves_repo", "yves@vreegoebezig.be")
+label = g.client.repos.issueCreateLabel(label_data, "yves_repo", "yves@vreegoebezig.be")
 ```
 
 Milestones:
@@ -42,17 +40,17 @@ milestone_data["title"] = "RC1"
 
 milestone_data["due_on"] = "2017-12-15T15:22:43.188Z"
 
-m = g.repos.issueCreateMilestone(milestone_data, "yves_repo", "yves@vreegoebezig.be")
+m = g.client.repos.issueCreateMilestone(milestone_data, "yves_repo", "yves@vreegoebezig.be")
 ```
 
 
 Helper functions:
 
-On `g.helpers` we add any extra functions that wrap several functionalities to make our life easier.
+We added some extra functions that wrap several of the generated client's functionalities to make our life easier.
 
 The ones that exist so far:
 
-- `g.helpers.addLabelsToRepos`: Adds a list of labels to a list of repos. If labels are not supplied to the function, it uses the default labels list.
+- `g.addLabelsToRepos`: Adds a list of labels to a list of repos. If labels are not supplied to the function, it uses the default labels list.
 
 
 ```python
@@ -80,7 +78,7 @@ g.repos.helpers.addLabelsToRepos(repos)
 ```
 
 
-- `g.helpers.addMileStonesToRepos`: Adds a list of milestones to a list of repos. If milestones are not supplied to the function, it uses the default milestones list.
+- `g.addMileStonesToRepos`: Adds a list of milestones to a list of repos. If milestones are not supplied to the function, it uses the default milestones list.
 
 
 ```python
@@ -105,5 +103,5 @@ running the following will add the default milestones to repos sarah-test and yv
 
 ```python
 repos = [{'owner': 'boctors@greenitglobe.com', 'name':'sarah-test'}, {'owner': 'yves@vreegoebezig.be', 'name':'yves_repo'}]
-g.repos.helpers.addMileStonesToRepos(repos)
+g.addMileStonesToRepos(repos)
 ```
