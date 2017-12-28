@@ -43,7 +43,6 @@ class CodeTools:
     #         self._codemanager = CodeManager()
     #     return self._codemanager
 
-    @property
     def template_engine_get(self):
         return TemplateEngine()
 
