@@ -5,10 +5,13 @@ Auto-generated class for Label
 from . import client_support
 
 
-class Label(object):
+class Label(str):
     """
     auto-generated. don't touch.
     """
+
+    def __new__(cls, *args, **kwargs):
+        return super().__new__(cls, *args, **kwargs)
 
     @staticmethod
     def create(**kwargs):
@@ -26,9 +29,6 @@ class Label(object):
         data = json or kwargs
 
         # set attributes
-
-    def __str__(self):
-        return self.as_json(indent=4)
 
     def as_json(self, indent=0):
         return client_support.to_json(self, indent=indent)

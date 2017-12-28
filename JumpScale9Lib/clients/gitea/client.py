@@ -1,14 +1,16 @@
 import requests
 
-#from .api.admin.users_service import UsersService 
-#from .api.org/{org}_service import Org.{Org}Service 
-#from .api.orgs_service import OrgsService 
-from .api.repos_service import ReposService 
-#from api.repositories.{id}_service import Repositories.{Id}Service 
-#from api.teams.{id}_service import Teams.{Id}Service 
-from .api.user_service import UserService 
-from .api.users_service import UsersService 
-#from .api.version_service import VersionService 
+from .api.admin_service import AdminService
+from .api.helpers_service import HelperService
+from .api.markdown_service import MarkdownService
+from .api.org_service import OrgService
+from .api.orgs_service import OrgsService
+from .api.repos_service import ReposService
+from .api.repositories_service import RepositoriesService
+from .api.teams_service import TeamsService
+from .api.user_service import UserService
+from .api.users_service import UsersService
+from .api.version_service import VersionService
 
 
 class Client:
@@ -18,16 +20,18 @@ class Client:
 
         if token:
             self.set_auth_header('token {}'.format(token))
-        
-        #self.admin.users = Admin.UsersService(self)
-        #self.org/{org} = Org/{Org}Service(self)
-        #self.orgs = OrgsService(self)
+
+        self.admin = AdminService(self)
+        self.markdown = MarkdownService(self)
+        self.org = OrgService(self)
+        self.orgs = OrgsService(self)
         self.repos = ReposService(self)
-        #self.repositories/{id} = Repositories/{Id}Service(self)
-        #self.teams/{id} = Teams/{Id}Service(self)
+        self.repositories = RepositoriesService(self)
+        self.teams = TeamsService(self)
         self.user = UserService(self)
         self.users = UsersService(self)
-        #self.version = VersionService(self)
+        self.version = VersionService(self)
+        self.helpers = HelperService(self)
 
     def is_goraml_class(self, data):
         # check if a data is go-raml generated class
@@ -63,7 +67,7 @@ class Client:
             res = method(uri, files=data, headers=headers, params=params)
         elif data is None:
             res = method(uri, headers=headers, params=params)
-        elif type(data) is str:
+        elif isinstance(data, str):
             res = method(uri, data=data, headers=headers, params=params)
         else:
             res = method(uri, json=data, headers=headers, params=params)
