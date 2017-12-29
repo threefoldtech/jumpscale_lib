@@ -24,8 +24,7 @@ JSConfigBase = j.tools.configmanager.base_class_config
 class OVHClient(JSConfigBase):
 
     def __init__(self, instance, data={}, parent=None):
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent)
-        self._config = j.tools.configmanager._get_for_obj(self, instance=instance, data=data, template=TEMPLATE)
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,template=TEMPLATE)
         c = self.config.data
         self.client = ovh.Client(
             endpoint=c["endpoint"],

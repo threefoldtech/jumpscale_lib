@@ -16,9 +16,7 @@ class PacketNet(JSConfigClient):
 
     def __init__(self, instance, data={}, parent=None):
         JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent)
-        self._config = j.tools.configmanager._get_for_obj(
-            self, instance=instance, data=data, template=TEMPLATE)
+                                data=data, parent=parent, template=TEMPLATE)
 
         if not self.config.data['auth_token_']:
             self.config.configure()

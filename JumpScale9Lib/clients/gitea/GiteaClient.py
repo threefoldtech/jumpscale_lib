@@ -15,6 +15,8 @@ default_labels = [
     {'color': '#bfe5bf', 'name': 'state_question'},
     {'color': '#bfe5bf', 'name': 'state_verification'},
     {'color': '#fef2c0', 'name': 'type_bug'},
+    {'color': '#fef2c0', 'name': 'type_task'},
+    {'color': '#fef2c0', 'name': 'type_story'},
     {'color': '#fef2c0', 'name': 'type_feature'},
     {'color': '#fef2c0', 'name': 'type_question'},
     {'color': '0000000', 'name': 'state_blocked'},
@@ -46,10 +48,10 @@ class GiteaClient(JSConfigBase):
 
         base_uri = self.config.data["url"]
         if "/api" not in base_uri:
-            base_uri += "/api/v1"
+            self.config.data_set("url", "%s/api/v1"%base_uri)
+            self.config.save()
 
         # TODO:*1 need to do more checks that url is properly formated
-
 
     @property
     def client(self):

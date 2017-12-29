@@ -4,7 +4,7 @@ import os
 import sys
 
 from .GiteaClient import GiteaClient
-
+from pprint import pprint as print
 #https://docs.grid.tf/api/swagger example api source
 
 
@@ -18,8 +18,9 @@ class GiteaFactory(JSConfigBase):
     def __init__(self):
         self.__jslocation__ = "j.clients.gitea"        
         self.logger = j.logger.get("j.clients.gitea")
-        self._CHILDCLASS = GiteaClient
         JSConfigBase.__init__(self)
+        self._CHILDCLASS = GiteaClient
+        
 
     @property
     def _path(self):
@@ -32,9 +33,16 @@ class GiteaFactory(JSConfigBase):
         c = j.tools.raml.get(self._path)
         c.client_python_generate()
 
-    def test(self, repo, owner):
-        self.generate()
+    def test(self): 
+        """
+        js9 'j.clients.gitea.test()'
+        """
+        # self.generate()
         cl = self.get()
+
+        print(cl.client.orgs.orgListMembers("threefold").data)
+        from IPython import embed;embed(colors='Linux')
+
         cl.client.repos.issueListIssues(repo, owner)
         cl.client.repos.issueListLabels(repo, owner)
         cl.client.repos.issueGetMilestones(repo, owner)
