@@ -6,143 +6,85 @@ import requests
 # NEED: pip3 install python-jose
 
 
-def refresh_jwt(jwt, payload):
-    if payload['iss'] == 'itsyouonline':
-        refreshurl = "https://itsyou.online/v1/oauth/jwt/refresh"
-        response = requests.get(refreshurl, headers={
-                                'Authorization': 'bearer {}'.format(jwt)})
-        if response.ok:
-            return response.text
-        else:
-            raise RuntimeError("Failed to refresh JWT eror: {}:{}".format(
-                response.status_code, response.text))
-        pass
-    else:
-        raise RuntimeError(
-            'Refresh JWT with issuers {} not support'.format(payload['iss']))
+# def refresh_jwt(jwt, payload):
+#     if payload['iss'] == 'itsyouonline':
+#         refreshurl = "https://itsyou.online/v1/oauth/jwt/refresh"
+#         response = requests.get(refreshurl, headers={
+#                                 'Authorization': 'bearer {}'.format(jwt)})
+#         if response.ok:
+#             return response.text
+#         else:
+#             raise RuntimeError("Failed to refresh JWT eror: {}:{}".format(
+#                 response.status_code, response.text))
+#         pass
+#     else:
+#         raise RuntimeError(
+#             'Refresh JWT with issuers {} not support'.format(payload['iss']))
+
+
+# TEMPLATE = """
+# baseurl = ""
+# appkey_ = ""
+# appsecret_ = ""
+# login = ""
+# password_ = ""
+# port = 443
+# """
 
 
 TEMPLATE = """
-baseurl = ""
-appkey_ = ""
-appsecret_ = ""
-login = ""
-password_ = ""
+address = ""
 port = 443
-JWT_ = ""
+appkey_ = ""
+login = ""
 """
 
-JSConfigBaseFactory = j.tools.configmanager.base_class_configs
+
 JSConfigBase = j.tools.configmanager.base_class_config
 
-
-class OpenvCloudClientFactory(JSConfigBaseFactory):
-
-    def __init__(self):
-        self.__jslocation__ = "j.clients.openvcloud"
-        self._logger = None
-        self.__imports__ = "ovc"
-        JSConfigBaseFactory.__init__(self)
-        self._CHILDCLASS = Client
-
-    @property
-    def logger(self):
-        if self._logger is None:
-            self._logger = j.logger.get("OVC Client Factory")
-        return self._logger
-
-    def install(self):
-        j.sal.process.execute("pip3 install python-jose")
-
-    def getFromAYSService(self, service):
-        """
-        Returns an OpenvCloud Client object for a given AYS service object.
-        """
-        data = {'baseurl': service.model.data.url,
-                'login': service.model.data.login,
-                'password_': service.model.data.password,
-                'JWT_': service.model.data.jwt,
-                'port': service.model.data.port}
-        toml = j.data.serializer.toml.dumps(service)
-        return self.get(data=toml)
-
-    def getJWTTokenFromItsYouOnline(self, applicationId, secret, validity=3600):
-        """
-        Returns JSON Web token (JWT) for the specified application ID and secret.
-
-        Get the application ID and secret by creating an API key on the settings page of your user profile on https://itsyou.online.
-
-        Args:
-            - applicationId: application ID of the API key as set in ItsYou.online for your user profile
-            - secret: secret part of the API key as set in ItsYou.online for your user profile
-            - validity: (defaults to 3600) duration in seconds that the requested JWT should stay valid
-        """
-
-        params = {
-            'grant_type': 'client_credentials',
-            'response_type': 'id_token',
-            'client_id': applicationId,
-            'client_secret': secret,
-            'validity': validity
-        }
-        url = 'https://itsyou.online/v1/oauth/access_token'
-        resp = requests.post(url, params=params)
-        resp.raise_for_status()
-        jwt = resp.content.decode('utf8')
-        return jwt
-
-
-class Client(JSConfigBase):
+class OVCClient(JSConfigBase):
 
     def __init__(self, instance, data={}, parent=None):
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent)
-        parent = parent or self.parent
-        self._config = j.tools.configmanager._get_for_obj(self, instance=instance, data=data, template=TEMPLATE)
-
-        self._logger = None
-
-        self._url = self._urlClean(self.config.data['baseurl'])
-        self._login = self.config.data.get('login')
-        self._password = self.config.data.get('password_')
-
-        self._port = self.config.data.get('port')
-
-        self._appkey = self.config.data.get('appkey_')
-        self._appsecret = self.config.data.get('appsecret_')
-        self._jwt = self.config.data.get('JWT_')
-
-        if not self.config.data.get('password_') and not (self.config.data.get('appkey_') and
-           self.config.data.get('appsecret_') and not self.config.data.get('JWT_')):
-            self.config.configure()
-        if not self.config.data.get('password_') and not (self.config.data.get('appkey_') and
-           self.config.data.get('appsecret_') and not self.config.data.get('JWT_')):
-            raise ValueError("Cannot connect to OpenvCloud without either password, appsecret or JWT")
-        if self._appkey and self._appsecret and not self._jwt:
-            jwt = j.clients.openvcloud.getJWTTokenFromItsYouOnline(self._appkey, self._appsecret)
-            self._jwt = jwt
-            self._port = 443
-            self._login = None
-            self._password = None
-
-        self.api = j.clients.portal.get(self._url, self._port)
-        # patch handle the case where the connection dies because of inactivity
-        self.__patch_portal_client(self.api)
-
-        self.__login(self._password, self._appsecret, self._jwt)
-        self.api.load_swagger(group='cloudapi')
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,template=TEMPLATE)
+        self._api=None
+        self.operator = True
 
     @property
-    def logger(self):
-        if self._logger is None:
-            self._logger = j.logger.get("OVC Client Factory")
-        return self._logger
+    def api(self):
+        if self._api == None:
+            self._api = j.clients.portal.get( self.config.data.get("address"), self.config.data.get("port"))
+            # patch handle the case where the connection dies because of inactivity
+            self.__patch_portal_client(self._api)
+            self.__login()
+            self._api.load_swagger(group='cloudapi')
+        return self._api
 
-    def _urlClean(self, url):
-        url = url.lower()
-        if url.startswith("http"):
-            url = url.split("//")[1].rstrip("/")
-        self.logger.info("Get OpenvCloud client on URL: %s" % url)
-        return url
+    def install(self):
+        j.clients.itsyouonline.install()
+
+    def config_check(self):
+        """
+        check the configuration if not what you want the class will barf & show you where it went wrong
+        """
+
+        def urlClean(url):
+            url = url.lower()
+            url=url.strip()
+            if url.startswith("http"):
+                url = url.split("//")[1].rstrip("/")
+            if "/" in url:
+                url=url.split("/")[0]
+            self.logger.info("Get OpenvCloud client on URL: %s" % url)
+            return url
+
+        self.config.data_set("address",urlClean(self.config.data["address"]))
+
+        if self.config.data["address"].strip()=="":
+            return "please specify address to OpenvCloud server (address) e.g. se-gen-1.demo.greenitglobe.com"
+        if self.config.data.get("appkey_")!="" and self.config.data.get("login")=="":
+            return "when appkey used then login cannot be empty"
+        if self.config.data.get("appkey_")=="" and self.config.data.get("login")!="":
+            return "when login used appkey_ cannot be empty"
 
     def __patch_portal_client(self, api):
         # try to relogin in the case the connection is dead because of
@@ -161,25 +103,21 @@ class Client(JSConfigBase):
 
         api.__call__ = patch_call
 
-    def __login(self, password, secret, jwt):
-        if not password and not secret and not jwt:
-            raise RuntimeError(
-                "Cannot connect to OpenvCloud without either password, secret or JWT")
-        if jwt:
+    def __login(self):
+        if self.config.data.get("appkey_")!="" and self.operator==False:
+            self.api._session.cookies.clear()
+            # secret=self.api.system.usermanager.authenticate(name=self.config.data.get("login"),secret=self.config.data.get("appkey_"))
+            self.api._session.cookies['beaker.session.id'] = self.config.data.get("appkey_")
+            self._login = self.config.data.get("login")  #IS THIS NEEDED WHEN USING SECRET KEY
+        else:
+            jwt = j.clients.itsyouonline.jwt
             import jose.jwt
             payload = jose.jwt.get_unverified_claims(jwt)
             if payload['exp'] < time.time():
-                jwt = refresh_jwt(jwt, payload)
-            self.api._session.headers['Authorization'] = 'bearer {}'.format(
-                jwt)
+                j.clients.itsyouonline.reset()
+                jwt = j.clients.itsyouonline.jwt
+            self.api._session.headers['Authorization'] = 'bearer {}'.format(jwt)
             self._login = '{}@{}'.format(payload['username'], payload['iss'])
-        else:
-            if password:
-                secret = self.api.system.usermanager.authenticate(
-                    name=self._login, secret=password)
-            # make sure cookies are empty, clear guest cookie
-            self.api._session.cookies.clear()
-            self.api._session.cookies['beaker.session.id'] = secret
 
     @property
     def accounts(self):
@@ -291,7 +229,7 @@ class Client(JSConfigBase):
         return self._login
 
     def __repr__(self):
-        return "OpenvCloud client: %s" % self._url
+        return "OpenvCloud client:\n%s" % self.config
 
     __str__ = __repr__
 

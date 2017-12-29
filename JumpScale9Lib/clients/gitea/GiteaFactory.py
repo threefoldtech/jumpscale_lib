@@ -16,10 +16,10 @@ JSConfigBase = j.tools.configmanager.base_class_configs
 class GiteaFactory(JSConfigBase):
 
     def __init__(self):
-        self.__jslocation__ = "j.clients.gitea"
+        self.__jslocation__ = "j.clients.gitea"        
         self.logger = j.logger.get("j.clients.gitea")
-        JSConfigBase.__init__(self)
         self._CHILDCLASS = GiteaClient
+        JSConfigBase.__init__(self)
 
     @property
     def _path(self):

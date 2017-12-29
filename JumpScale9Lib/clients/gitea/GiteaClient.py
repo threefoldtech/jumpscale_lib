@@ -32,16 +32,17 @@ JSConfigBase = j.tools.configmanager.base_class_config
 class GiteaClient(JSConfigBase):
 
     def __init__(self, instance, data={}, parent=None):
-        JSConfigBase.__init__(self, instance=instance,
-                              data=data, parent=parent)
-        self._config = j.tools.configmanager._get_for_obj(
-            self, instance=instance, data=data, template=TEMPLATE)
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,template=TEMPLATE)
+        self._client=None
+
+
+    def config_check(self):
+        """
+        check the configuration if not what you want the class will barf & show you where it went wrong
+        """
 
         if self.config.data["url"] == "" or self.config.data["gitea_token_"] == "":
-            self.config.configure()
-
-        if self.config.data["url"] == "" or self.config.data["gitea_token_"] == "":
-            raise RuntimeError("url and gitea_token_ are not properly configured")
+            return "url and gitea_token_ are not properly configured, cannot be empty"
 
         base_uri = self.config.data["url"]
         if "/api" not in base_uri:
@@ -49,9 +50,13 @@ class GiteaClient(JSConfigBase):
 
         # TODO:*1 need to do more checks that url is properly formated
 
-        self.client = Client(base_uri=base_uri)
 
-        self.client.set_auth_header('token {}'.format(self.config.data["gitea_token_"]))
+    @property
+    def client(self):
+        if self._client==None:
+            self._client = Client(base_uri=self.config.data["url"])
+            self.client.set_auth_header('token {}'.format(self.config.data["gitea_token_"]))
+        return self._client
 
     def addLabelsToRepos(self, repos, labels=default_labels):
         """

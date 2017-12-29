@@ -22,11 +22,14 @@ class IYOFactory(JSConfigBase):
 
     def __init__(self):
         self.__jslocation__ = 'j.clients.itsyouonline'
-        JSConfigBase.__init__(self)
-        self._config = j.tools.configmanager._get_for_obj(self, instance="main", data={}, template=TEMPLATE)
+        JSConfigBase.__init__(self, instance="main", template=TEMPLATE)
         self._jwt = None
         self.raml_spec = "https://raw.githubusercontent.com/itsyouonline/identityserver/master/specifications/api/itsyouonline.raml"
 
+
+    def reset(self):
+        self._jwt = None
+        
     def get(self):
         """
         Get an ItsYouOnline REST API client
@@ -34,6 +37,9 @@ class IYOFactory(JSConfigBase):
         client = Client()
         client.api.session.headers.update({"Authorization": 'bearer {}'.format(self.jwt)})
         return client
+
+    def install(self):
+        j.tools.prefab.local.runtimes.pip.install("python-jose")
 
     @property
     def jwt(self):
