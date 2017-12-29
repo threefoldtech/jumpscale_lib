@@ -5,36 +5,59 @@ from .Issue import Issue
 # pygithub is for pip3
 import github
 
+JSConfigFactory = j.tools.configmanager.base_class_configs
+JSConfigClient = j.tools.configmanager.base_class_config
 
-class GitHubFactory:
+TEMPLATE = """
+login = ""
+token_ = ""
+password_ = ""
+"""
+
+
+class GitHubFactory(JSConfigFactory):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.github"
         self.__imports__ = "PyGithub"
         self._clients = {}
+        JSConfigFactory.__init__(self)
+        self._CHILDCLASS = GitHubClient
 
     # def getRepoClient(self, account, reponame):
     #     return GitHubRepoClient(account, reponame)
 
-    def getClient(self, login_or_token, password=None):
-        if login_or_token not in self._clients:
-            self._clients[login_or_token] = GitHubClient(
-                login_or_token, password)
-        return self._clients[login_or_token]
+    # def getClient(self, login_or_token, password_=None):
+    #     if login_or_token not in self._clients:
+    #         self._clients[login_or_token] = GitHubClient(
+    #             login_or_token, password_)
+    #     return self._clients[login_or_token]
 
     def getIssueClass(self):
         # return Issue
         return Issue
 
 
-class GitHubClient:
+class GitHubClient(JSConfigClient):
 
-    def __init__(self, login_or_token, password=None):
-        self.api = github.Github(login_or_token, password, per_page=100)
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigClient.__init__(self, instance=instance,
+                                data=data, parent=parent)
+        self._config = j.tools.configmanager._get_for_obj(
+            self, instance=instance, data=data, template=TEMPLATE)
+        if not (self.config.data['token_'] or (self.config.data['login'] and self.config.data['password_'])):
+            self.config.configure()
+        if not (self.config.data['token_'] or (self.config.data['login'] and self.config.data['password_'])):
+            raise RuntimeError("Missing Github token_ or login/password_")
+
+        login_or_token = self.config.data['token_'] or self.config.data['login']
+        password_ = self.config.data['password_'] if self.config.data['password_'] != "" else None
+        self.api = github.Github(login_or_token, password_, per_page=100)
         self.logger = j.logger.get('j.clients.github')
         self.users = {}
         self.repos = {}
         self.milestones = {}
+
     # def getRepo(self, fullname):
     #     """
     #     fullname e.g. incubaid/myrepo

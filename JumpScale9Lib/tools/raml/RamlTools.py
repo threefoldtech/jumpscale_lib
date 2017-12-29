@@ -106,7 +106,6 @@ class RamlToolsFactory:
     def _remove(self, path, all=True):
         j.sal.fs.remove("%s/server" % path)
         j.sal.fs.remove("%s/generated" % path)
-        j.sal.fs.remove("%s/htmldoc" % path)
         j.sal.fs.remove("%s/generate_client.sh" % path)
         j.sal.fs.remove("%s/generate_server.sh" % path)
         if all:
@@ -217,7 +216,6 @@ class RamlTools:
             self.reset()
         else:
             j.sal.fs.remove("%s/generated" % self.path)
-            j.sal.fs.remove("%s/htmldoc" % self.path)
 
     def _get_kind(self, supported_kinds, kind):
         try:
@@ -228,6 +226,10 @@ class RamlTools:
 
     def reset(self):
         j.tools.raml._remove(self.path, all=False)
+
+    @property
+    def generated_path(self):
+        return j.sal.fs.joinPaths(self.path, 'generated')
 
     def specs_get(self, giturl):
         """
@@ -272,13 +274,21 @@ class RamlTools:
 
         return cmd
 
-    def _client_generate(self, reset=False, cmd='',doc=True):
+    def _client_generate(self, reset=False, cmd='', doc=True):
         self._prepare(reset=reset)
 
         j.sal.process.executeInteractive(cmd)
 
+        # @TODO: remove this part when this issue gets fixed https://github.com/Jumpscale/go-raml/issues/396
+        replace = j.tools.code.replace_tool_get()
+        replace.synonymAdd(regexFind='\\nfrom . import\\n', replaceWith='\n')
+        replace.replace_in_dir(self.generated_path,  recursive=True)
+
+        j.sal.fs.createEmptyFile(j.sal.fs.joinPaths(self.generated_path, '__init__.py'))
+
         if doc:
-            cmd = "cd %s;rm -rf htmldoc;mkdir -p htmldoc;cd api_spec;raml2html -i main.raml -o ../htmldoc/api.html -v" % self.path
+            cmd = "cd %s;rm -rf htmldoc;mkdir -p htmldoc; \
+            cd ../api_spec;raml2html -i main.raml -o ../generated/htmldoc/api.html -v" % self.generated_path
             j.sal.process.executeInteractive(cmd)
 
         # TODO: test and re-enable

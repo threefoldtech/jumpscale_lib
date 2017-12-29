@@ -1,8 +1,10 @@
 from js9 import j
 
-from .OVHClient import *
+from .OVHClient import OVHClient
 
 JSConfigBase = j.tools.configmanager.base_class_configs
+
+
 class OVHFactory(JSConfigBase):
     """
     """
@@ -12,14 +14,13 @@ class OVHFactory(JSConfigBase):
         self.__imports__ = "ovh"
         self.logger = j.logger.get('j.clients.ovh')
         JSConfigBase.__init__(self)
-        self._CHILDCLASS=OVHClient        
+        self._CHILDCLASS = OVHClient
 
     def install(self):
-        p=j.tools.prefab.local
+        p = j.tools.prefab.local
         p.runtimes.pip.install("ovh")
 
-
-    def get_manual(self, instance, appkey, appsecret, consumerkey="", endpoint='soyoustart-eu',ipxeBase="https://bootstrap.gig.tech/ipxe/master"):
+    def get_manual(self, instance, appkey, appsecret, consumerkey="", endpoint='soyoustart-eu', ipxeBase="https://bootstrap.gig.tech/ipxe/master"):
         """
 
         @PARAM instance is the name of this client
@@ -43,27 +44,24 @@ class OVHFactory(JSConfigBase):
             runabove-ca for RunAbove API
 
         """
-        data={}
-        data["appkey_"]=appkey
-        data["appsecret_"]=appsecret
-        data["consumerkey_"]=consumerkey   
-        data["endpoint"]=endpoint
-        data["ipxeBase"]=ipxeBase
+        data = {}
+        data["appkey_"] = appkey
+        data["appsecret_"] = appsecret
+        data["consumerkey_"] = consumerkey
+        data["endpoint"] = endpoint
+        data["ipxeBase"] = ipxeBase
 
-        return self.get(instance=instance,data=data)
-
+        return self.get(instance=instance, data=data)
 
     # def node_get(self,instance=""):
     #     cl=j.clients.ovh.client_get(instance=instance)
     #     cl.serverInstall(name="", installationTemplate="ubuntu1704-server_64", sshKeyName="ovh",
-    #                   useDistribKernel=True, noRaid=True, hostname="", wait=True)        
-
-
+    # useDistribKernel=True, noRaid=True, hostname="", wait=True)
 
     def test(self):
         """
         do:
         js9 'j.clients.ovh.test()'
-        """        
-        client=self.get()
+        """
+        client = self.get()
         print(client.serversGet())

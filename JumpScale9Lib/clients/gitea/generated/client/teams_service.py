@@ -1,5 +1,4 @@
 
-from . import
 from .Team import Team
 from .api_response import APIResponse
 from .unhandled_api_error import UnhandledAPIError

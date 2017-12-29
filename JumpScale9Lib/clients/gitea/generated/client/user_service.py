@@ -1,5 +1,4 @@
 
-from . import
 from .GPGKey import GPGKey
 from .PublicKey import PublicKey
 from .Repository import Repository
