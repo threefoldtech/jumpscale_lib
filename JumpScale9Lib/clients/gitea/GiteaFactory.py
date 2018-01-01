@@ -40,10 +40,28 @@ class GiteaFactory(JSConfigBase):
         # self.generate()
         cl = self.get()
 
-        print(cl.client.orgs.orgListMembers("threefold").data)
-        from IPython import embed;embed(colors='Linux')
+        print(cl.orgs_currentuser_list())
 
-        cl.client.repos.issueListIssues(repo, owner)
-        cl.client.repos.issueListLabels(repo, owner)
-        cl.client.repos.issueGetMilestones(repo, owner)
-        cl.client.user.userListEmails()
+
+        names=[item for item in cl.orgs_currentuser_list().keys()]
+        names.sort()
+        if "threefold" in names:
+            name="threefold"
+        else:
+            name=names[0]
+
+        org = cl.org_get(name)
+        
+        #CAREFULL WILL GO OVER ALL MILESTONES
+        # org.labels_milestones_add(remove_old=False)
+
+        print (org.repos_list())
+
+        repoName=[item for item in org.repos_list().keys()][0] #first reponame
+
+        repo = org.repo_get(repoName)
+
+        # repo.labels_add()
+        # repo.milestones_add(remove_old=False)
+        
+        print(repo.issues_get())

@@ -14,9 +14,9 @@ class Kraken(JSConfigBase):
         self.__jslocation__ = 'j.clients.kraken'
         JSConfigBase.__init__(self, instance="main", data={}, parent=None,template=TEMPLATE)
 
-    def install(self):
-        j.tools.prefab.local.runtimes.pip.install("pykrakenapi")
-        j.tools.prefab.local.runtimes.pip.install("krakenex")
+    def install(self,reset=False):
+        j.tools.prefab.local.runtimes.pip.install("pykrakenapi",reset=reset)
+        j.tools.prefab.local.runtimes.pip.install("krakenex",reset=reset)
 
     def get(self):
         import krakenex
