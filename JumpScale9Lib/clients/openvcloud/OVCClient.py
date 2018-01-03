@@ -37,6 +37,7 @@ address = ""
 port = 443
 appkey_ = ""
 login = ""
+JWT_ = ""
 """
 
 
@@ -51,7 +52,7 @@ class OVCClient(JSConfigBase):
 
     @property
     def api(self):
-        if self._api == None:
+        if self._api is None:
             self._api = j.clients.portal.get( self.config.data.get("address"), self.config.data.get("port"))
             # patch handle the case where the connection dies because of inactivity
             self.__patch_portal_client(self._api)
