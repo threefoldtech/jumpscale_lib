@@ -695,23 +695,24 @@ class Space(Authorizables):
         login = machinedict['accounts'][0]['login']
         password = machinedict['accounts'][0]['password']
 
+        sshclient = j.clients.ssh.get(
+            addr=publicip, port=sshport, login=login, passwd=password, allow_agent=False, look_for_keys=False,
+            timeout=300)
         # make sure that SSH key is loaded
-
         bad_auth_type_exist = True
         timeout = 5*60
         start = j.data.time.getTimeEpoch()
         while start + timeout > j.data.time.getTimeEpoch() and bad_auth_type_exist:
             try:
-                sshclient = j.clients.ssh.get(
-                    addr=publicip, port=sshport, login=login, passwd=password, look_for_keys=False, timeout=300)
-                sshclient.SSHAuthorizeKey(sshkey_name, sshkey_path)
+                sshclient.connect()
                 bad_auth_type_exist = False
             except BadAuthenticationType as e:
                 self.logger.error("Bad Authentication Type : %s" % str(e))
-                bad_auth_type_exist = True
 
         if bad_auth_type_exist:
             raise BadAuthenticationType()
+
+        sshclient.SSHAuthorizeKey(sshkey_name, sshkey_path)
 
         machine.ssh_keypath = sshkey_path
         return machine.prefab
@@ -1050,21 +1051,14 @@ class Machine:
             executor = None
             if self.ssh_keypath:
                 j.clients.ssh.load_ssh_key(self.ssh_keypath)
-                sshclient = j.clients.ssh.get(
-                    addr=publicip, port=sshport, key_filename=self.ssh_keypath)
-                sshclient._connect()
+                sshclient = j.clients.ssh.get(addr=publicip, port=sshport, key_filename=self.ssh_keypath)
+                sshclient.connect()
                 executor = j.tools.executor.getFromSSHClient(sshclient)
             else:
                 sshclient = j.clients.ssh.get(addr=publicip, port=sshport)
                 executor = j.tools.executor.getFromSSHClient(sshclient)
-<<<<<<< b7646e0977b41f57ab91e2aaca203a72b1902e6d:JumpScale9Lib/clients/openvcloud/OVCClient.py
 
-            self._prefab = j.tools.prefab.get(executor)
-=======
-            
-    
             self._prefab = j.tools.prefab.get(executor, usecache=False)
->>>>>>> fixing disk_detach service unavaible and connecting to remote machine with ssh:JumpScale9Lib/clients/openvcloud/OpenvCloudClientFactory.py
 
         return self._prefab
 
