@@ -2,7 +2,7 @@ from js9 import j
 import time
 import datetime
 import requests
-
+from paramiko.ssh_exception import BadAuthenticationType
 # NEED: pip3 install python-jose
 
 
@@ -657,11 +657,10 @@ class Space(Authorizables):
             sizeId=None,
             stackId=None,
             sshkeypath=None,
-            ignore_name_exists = False,
             description=None,
     ):
         """
-        Creates a new virtual machine if a one with the same name does not exist.
+        Creates a new virtual machine.
 
         Args:
             - name (required): name of the virtual machine, e.g. "My first VM"
@@ -675,10 +674,9 @@ class Space(Authorizables):
             - stackId (optional): identifies the grid node on which to create the virtual machine, if nothing specified (recommended) OpenvCloud will decide where to create the virtual machine
             - description (optional): machine description
             - sshkeypath (optional): if not None the sshkey will be reloaded before getting a prefab
-            - ignore_name_exists (Optional): When set to True will not raise RuntimeError when the name already exist
 
         Raises:
-            - RuntimeError if machine with given name already exists and ignore_name_exists is False.
+            - RuntimeError if machine with given name already exists.
             - RuntimeError if machine name contains spaces
             - RuntimeError if machine name contains underscores
         """
@@ -689,26 +687,24 @@ class Space(Authorizables):
         imageId = self.image_find_id(image)
         if sizeId is None:
             sizeId = self.size_find_id(memsize, vcpus)
-        if name in self.machines and not ignore_name_exists:
+        if name in self.machines:
             raise j.exceptions.RuntimeError(
                 "Name is not unique, already exists in %s" % self)
         self.logger.info("Cloud space ID:%s name:%s size:%s image:%s disksize:%s" %
               (self.id, name, sizeId, imageId, disksize))
 
-        machine = self.machines.get(name)
-        if not machine:
-            if stackId:
-                self.client.api.cloudbroker.machine.createOnStack(
-                    cloudspaceId=self.id,
-                    name=name,
-                    sizeId=sizeId,
-                    imageId=imageId,
-                    disksize=disksize,
-                    datadisks=datadisks,
-                    stackid=stackId)
-            else:
-                res = self.client.api.cloudapi.machines.create(
-                    cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks)
+        if stackId:
+            self.client.api.cloudbroker.machine.createOnStack(
+                cloudspaceId=self.id,
+                name=name,
+                sizeId=sizeId,
+                imageId=imageId,
+                disksize=disksize,
+                datadisks=datadisks,
+                stackid=stackId)
+        else:
+            res = self.client.api.cloudapi.machines.create(
+                cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks)
 
         print("machine created.")
         machine = self.machines[name]
@@ -770,9 +766,22 @@ class Space(Authorizables):
         password = machinedict['accounts'][0]['password']
 
         # make sure that SSH key is loaded
-        sshclient = j.clients.ssh.get(
-            addr=publicip, port=sshport, login=login, passwd=password, look_for_keys=False, timeout=300)
-        sshclient.SSHAuthorizeKey(sshkey_name, sshkey_path)
+
+        bad_auth_type_exist = True
+        timeout = 5*60
+        start = j.data.time.getTimeEpoch()
+        while start + timeout > j.data.time.getTimeEpoch() and bad_auth_type_exist:
+            try:
+                sshclient = j.clients.ssh.get(
+                    addr=publicip, port=sshport, login=login, passwd=password, look_for_keys=False, timeout=300)
+                sshclient.SSHAuthorizeKey(sshkey_name, sshkey_path)
+                bad_auth_type_exist = False
+            except BadAuthenticationType as e:
+                self.logger.error("Bad Authentication Type : %s" % str(e))
+                bad_auth_type_exist = True
+
+        if bad_auth_type_exist:
+            raise BadAuthenticationType()
 
         machine.ssh_keypath = sshkey_path
         return machine.prefab
