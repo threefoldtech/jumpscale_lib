@@ -60,6 +60,7 @@ class GiteaClient(JSConfigBase):
         return self.cache.get("orgs", method=do, refresh=refresh, expire=60)
 
     def org_get(self,name):
+        self.logger.info("org:get:%s"%name)
         if name not in self.orgs_currentuser_list().keys():
             raise RuntimeError("Could not find %s in orgs on gitea"%name)
         return GiteaOrg(self,name)

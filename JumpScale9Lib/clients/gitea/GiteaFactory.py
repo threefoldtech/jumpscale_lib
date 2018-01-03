@@ -17,7 +17,7 @@ class GiteaFactory(JSConfigBase):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.gitea"        
-        self.logger = j.logger.get("j.clients.gitea")
+        self.logger = j.logger.get("gitea")
         JSConfigBase.__init__(self)
         self._CHILDCLASS = GiteaClient
         
@@ -32,6 +32,39 @@ class GiteaFactory(JSConfigBase):
         """
         c = j.tools.raml.get(self._path)
         c.client_python_generate()
+
+    def labels_milestones_set(self,orgname="*",reponame="*",instance="main",remove_old=False):
+        """
+        * means all in the selection
+
+        @PARAM remove_old if True will select labels/milestones which are old & need to be removed
+
+        """
+        self.logger.info("labels_milestones_set:%s:%s"%(orgname,reponame))
+        cl = self.get(instance=instance)
+        if orgname =="*":
+            for orgname0 in cl.orgs_currentuser_list():
+                # print(cl.orgs_currentuser_list())
+                # print("orgname0:%s"%orgname0)
+                self.labels_milestones_set(orgname=orgname0,reponame=reponame,instance=instance,remove_old=remove_old)
+            return 
+
+        org=cl.org_get(orgname)
+
+        if reponame =="*":
+            for reponame0 in org.repos_list():
+                # print(org.repos_list())
+                # print("reponame0:%s"%reponame0)
+                self.labels_milestones_set(orgname=orgname,reponame=reponame0,instance=instance,remove_old=remove_old)
+            return 
+
+        repo = org.repo_get(reponame)
+        repo.labels_add(remove_old=remove_old)
+        repo.milestones_add(remove_old=remove_old)
+        
+        
+
+
 
     def test(self): 
         """

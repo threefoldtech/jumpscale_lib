@@ -24,7 +24,7 @@ class GiteaOrg():
         self.id = client.orgs_currentuser_list()[name]
         self.client=client
         self.api = self.client.api.orgs
-        self.cache=j.data.cache.get("gitea_org")
+        self.cache=j.data.cache.get("gitea_org_%s"%self.name)
         self.logger = j.logger.get('%s'%self)
 
     def labels_default_get(self):
@@ -46,6 +46,7 @@ class GiteaOrg():
         return res
 
     def repo_get(self,name):
+        self.logger.info("repo:get:%s"%name)
         if name not in self._repos_get().keys():
             raise RuntimeError("cannot find repo with name:%s in %s"%(name,self))
         data=self._repos_get()[name]

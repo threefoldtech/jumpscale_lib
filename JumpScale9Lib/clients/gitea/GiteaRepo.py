@@ -12,7 +12,7 @@ class GiteaRepo():
         self.id = data["id"]
         self.client=org.client
         self.api = self.client.api.repos
-        self.cache=j.data.cache.get("gitea_repo")
+        self.cache=j.data.cache.get("gitea_repo_%s_%s"%(self.owner,self.name))
         self.logger = j.logger.get('%s'%self)
 
     def labels_add(self, labels=None,remove_old=False):
@@ -85,6 +85,9 @@ class GiteaRepo():
             milestone = milestone_get(title,deadline)
             self.client.api.repos.issueCreateMilestone(milestone, self.name, self.owner)
 
+        milestone = milestone_get("roadmap","2100-12-30")
+        self.client.api.repos.issueCreateMilestone(milestone, self.name, self.owner)
+
         if remove_old:
             milestones_default=[item[0] for item in milestones]
             for item in repo_milestones:
@@ -98,7 +101,7 @@ class GiteaRepo():
 
         today = datetime.today()
         thismonth = today.month
-        months = [i for i in range(thismonth,thismonth+3)]
+        months = [i for i in range(thismonth,thismonth+5)]
         year = today.year
         milestones = []
 
@@ -107,16 +110,32 @@ class GiteaRepo():
 
         # Add weekly milestones
         for month in months:
+            lastdate=[item for item in c.itermonthdates(2018,month) if item.month==month][-1]
             month_name = calendar.month_name[month].lower()[0:3]
-            weeks = c.monthdayscalendar(year, month)
+            # weeks = c.monthdayscalendar(year, month)
 
-            for i, week in enumerate(weeks):
-                # check if this week has a value for Saturday
-                day = week[6]
-                if day:
-                    title = '%s_w%s' % (month_name, i + 1)
-                    due_on = '%s-%s-%s' % (year, str(month).zfill(2), str(day).zfill(2))
-                    milestones.append((title, due_on))
+            due_on = '%s-%s-%s' % (lastdate.year, str(lastdate.month).zfill(2), str(lastdate.day).zfill(2))
+            milestones.append((month_name, due_on))  
+
+            # if month == thismonth:
+            #     for i, week in enumerate(weeks):
+            #         # check if this week has a value for Saturday
+            #         day = week[6]
+            #         if day:
+            #             title = '%s_w%s' % (month_name, i + 1)
+            #             due_on = '%s-%s-%s' % (year, str(month).zfill(2), str(day).zfill(2))
+            #             milestones.append((title, due_on))
+            # else:
+            #     res=[]
+            #     for i, week in enumerate(weeks):
+            #         # check if this week has a value for Saturday
+            #         day = week[6]
+            #         if day:
+            #             res.append((i,day))
+            #     i,day=res[-1]
+            #     title = '%s_w%s' % (month_name, i + 1)
+            #     due_on = '%s-%s-%s' % (year, str(month).zfill(2), str(day).zfill(2))
+            #     milestones.append((title, due_on))                        
 
         # Add quarter milestone
         for quarter in range(1,5):
