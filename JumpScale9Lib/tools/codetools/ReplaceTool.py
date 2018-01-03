@@ -180,7 +180,6 @@ class ReplaceTool:
         return text
 
     def replace_in_dir(self,path, recursive=False, filter=None):
-        print("replace_in_dir")
         for item in j.sal.fs.listFilesInDir(path=path,recursive=recursive,filter=filter,followSymlinks=True):
             try:
                 C=j.sal.fs.readFile(item)
@@ -192,7 +191,7 @@ class ReplaceTool:
                 continue
             C2=self.replace(C)
             if C!=C2:
-                print("replaced %s in dir for:%s"%(item,path))
+                j.logger.logging.debug("replaced %s in dir for: %s" % (item, path))
                 j.sal.fs.writeFile(item,C2)
 
     # def replaceInConfluence(self, text):

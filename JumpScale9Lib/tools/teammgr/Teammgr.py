@@ -69,7 +69,7 @@ class Person:
             image = images[0]
             j.sal.fs.renameFile(image, "%s/unprocessed.jpg" % (j.sal.fs.getDirName(image)))
         elif not unprocessed_images:
-            self.add_to_do(person_path, "did not find unprocessed picture, please add")        
+            self.add_to_do(self.path, "did not find unprocessed picture, please add")        
 
     def toml_fix(self):
         
@@ -94,12 +94,12 @@ class Person:
         j.sal.fs.remove("%s/fixed.toml" % self.path)
 
         final_toml_path = "%s/fixed_donotchange.toml" % self.path
+        
+        new_toml = j.data.serializer.toml.loads(TEMPLATE_PERSON_TOML) #load the template
         if j.sal.fs.exists(final_toml_path):
-            new_toml = j.data.serializer.toml.load(final_toml_path)
-        else:
-            new_toml = j.data.serializer.toml.loads(TEMPLATE_PERSON_TOML) #load the template
+            # if already exists, update fields of template
+            new_toml.update(j.data.serializer.toml.load(final_toml_path))
 
-        #
         new_toml = process(new_toml, "profile")
         new_toml = process(new_toml, "person")
 
@@ -117,14 +117,12 @@ class Person:
         for key in ["locations", "companies", "departments"]:
             new_toml[key] = [toml_item.lower().strip() for toml_item in new_toml[key]]
 
-
         for key in ["login", "first_name", "last_name", "telegram", "skype"]:
             new_toml[key] = new_toml[key].lower().strip()
 
-        print(5678)
-        from IPython import embed;embed(colors='Linux')
-        s
-        # j.data.serializer.toml.dump(final_toml_path, new_toml)
+        #from IPython import embed;embed(colors='Linux')
+
+        j.data.serializer.toml.dump(final_toml_path, new_toml)
 
     def __repr__(self):
         return "Person %s:%s:%s" % (self.department.name, self.name, self.path)
@@ -188,6 +186,9 @@ class Teammgr:
 
     def load(self, path=""):
         """
+        Path within the directory of the team is expected.
+        Parent or the directory itself should be /team
+
         if path=='' then use current dir 
         """
         if path=="":
@@ -197,30 +198,32 @@ class Teammgr:
         
         path0=self.path
         found=""
+        
         #look up to find the right dir
         while path0!="":
             if j.sal.fs.exists("%s/team"%path0):
                 found=path0
                 break
             path0=j.sal.fs.getParent(path0).rstrip().rstrip("/").rstrip()
-        if found =="":
-            raise RuntimeError("could not find .team in one of the parent dir's (or this dir):'%s'"%path)
+        if not found:
+            raise RuntimeError("could not find /team in one of the parent dir's (or this dir):'%s'"%path)
 
-        self.path=path0
+        self.path="%s/team"%path0
+        
+        for team_path in j.sal.fs.listDirsInDir(self.path, recursive=False):
+            for department_path in j.sal.fs.listDirsInDir(team_path, recursive=False):
+                department_name = j.sal.fs.getBaseName(department_path)        
+                department_obj = self._add_department(department_path,department_name)                
 
-        for department_path in j.sal.fs.listDirsInDir(self.path, recursive=False):
-            department_name = j.sal.fs.getBaseName(department_path)
-            department_obj = self._add_department(department_path,department_name)
+            self.errors_write(team_path)
 
-        self.errors_write()
-
-    def errors_write(self):
-        #write all the todo's
-        errorpath="%s/todo" % self.path
+    def errors_write(self, team_path):
+        # write all the todo's
+        errorpath="%s/todo" % team_path
         j.sal.fs.removeDirTree(errorpath)
         j.sal.fs.createDir(errorpath)
         for key, department in self.departments.items():
-            path1 = "%s/todo/%s.md" % (errorpath, department.name)
+            path1 = "%s/%s.md" % (errorpath, department.name)
             if department.todo_md!="":
                 j.sal.fs.writeFile(path1, department.todo_md)
 

@@ -5,6 +5,14 @@ import requests
 import json
 
 
+JSConfigFactory = j.tools.configmanager.base_class_configs
+JSConfigClient = j.tools.configmanager.base_class_config
+
+TEMPLATE = """
+token_ = ""
+"""
+
+
 class ZerotierClientInteral:
     def __init__(self, apikey):
         self.apikey = apikey
@@ -46,12 +54,21 @@ class ZerotierClientInteral:
         return self.delete("/network/%s" % id)
 
 
-class ZerotierClient:
+class ZerotierClient(JSConfigClient):
 
-    def __init__(self, token):
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigClient.__init__(self, instance=instance,
+                                data=data, parent=parent)
+        self._config = j.tools.configmanager._get_for_obj(
+            self, instance=instance, data=data, template=TEMPLATE)
+
+        if not self.config.data['token_']:
+            self.config.configure()
+        if not self.config.data['token_']:
+            raise RuntimeError("Missing auth token in config instance {}".format(instance))
         self.client = zerotier.client.Client()
-        self.client.set_auth_header("Bearer " + token)
-        self._client = ZerotierClientInteral(token)
+        self.client.set_auth_header("Bearer " + self.config.data['token_'])
+        self._client = ZerotierClientInteral(self.config.data['token_'])
 
     def memberAuthorize(self, zerotierNetworkId, name, macaddr, description=""):
         members = self.networkMembersGet(zerotierNetworkId, online=True)
@@ -114,17 +131,12 @@ class ZerotierClient:
         return res[0]
 
 
-class ZerotierFactory:
+class ZerotierFactory(JSConfigFactory):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.zerotier"
         self.__imports__ = "zerotier"
         self.logger = j.logger.get('j.clients.zerotier')
         self.connections = {}
-
-    def get(self, token=""):
-        """
-        """
-        if token is "":
-            token = j.core.state.ConfigGetFromDict("zerotier", "apitoken")
-        return ZerotierClient(token)
+        JSConfigFactory.__init__(self)
+        self._CHILDCLASS = ZerotierClient

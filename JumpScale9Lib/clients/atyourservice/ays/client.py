@@ -1,24 +1,41 @@
+from js9 import j
 import requests
 
-from .ays_service import AysService 
+from .ays_service import AysService
 
 from .Repository import Repositories
 from .ActorTemplate import ActorTemplates
 
-DEFAULT_URL = "https://localhost:5000"
+TEMPLATE = """
+baseurl = "https://localhost:5000"
+jwt_ = ""
+clientid_ = ""
+secret_ = ""
+validity = ""
+"""
 
-class Client:
-    def __init__(self, url=DEFAULT_URL, jwt=None, clientID=None, secret=None, validity=None):
-        self._base_url = url
+JSConfigBase = j.tools.configmanager.base_class_config
+
+
+class Client(JSConfigBase):
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigBase.__init__(self, instance=instance,
+                              data=data, parent=parent)
+        self._config = j.tools.configmanager._get_for_obj(
+            self, instance=instance, data=data, template=TEMPLATE)
+
+        if self.config.data['baseurl'] == '':
+            self.config.configure()
+        self._base_url = self.config.data['baseurl']
         self._session = requests.Session()
         self._session.headers.update({"Content-Type": "application/json"})
         self._ayscl = AysService(self)
         self.templates = ActorTemplates(client=self)
         self.repositories = Repositories(self)
-        if jwt:
-            self._set_auth_header('Bearer {}'.format(jwt))
-        if clientID and secret:
-            jwt = self._getJWT(clientID, secret, validity)
+        if self.config.data['jwt_']:
+            self._set_auth_header('Bearer {}'.format(self.config.data['jwt_']))
+        if self.config.data['clientid_'] and self.config.data['secret_']:
+            jwt = self._getJWT(self.config.data['clientid_'], self.config.data['secret_'], self.config.data.get('validity', None))
             self._set_auth_header('Bearer {}'.format(jwt))
 
     def _getJWT(self, clientID, secret, validity=3600):
@@ -61,7 +78,7 @@ class Client:
             res = method(uri, files=data, headers=headers, params=params)
         elif data is None:
             res = method(uri, headers=headers, params=params)
-        elif type(data) is str:
+        elif isinstance(data, str):
             res = method(uri, data=data, headers=headers, params=params)
         else:
             res = method(uri, json=data, headers=headers, params=params)

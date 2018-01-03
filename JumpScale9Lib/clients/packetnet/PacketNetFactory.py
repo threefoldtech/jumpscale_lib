@@ -3,21 +3,35 @@ from js9 import j
 import packet
 import time
 
+JSConfigFactory = j.tools.configmanager.base_class_configs
+JSConfigClient = j.tools.configmanager.base_class_config
 
-class PacketNet():
+TEMPLATE = """
+auth_token_ = ""
+project_name = ""
+"""
 
-    def __init__(self, client, projectname=""):
-        self.client = client
+
+class PacketNet(JSConfigClient):
+
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigClient.__init__(self, instance=instance,
+                                data=data, parent=parent, template=TEMPLATE)
+
+        if not self.config.data['auth_token_']:
+            self.config.configure()
+        if not self.config.data['auth_token_']:
+            raise RuntimeError("Missing auth token in config instance {}".format(instance))
+        self.client = packet.Manager(
+            auth_token=self.config.data["auth_token_"])
         self._plans = None
         self._facilities = None
         self._oses = None
         self._projects = None
         self._projectid = None
         self._devices = None
-        self.projectname = projectname
+        self.projectname = self.config.data['project_name']
         self.logger = j.logger.get('j.clients.packetnet')
-
- 
 
     @property
     def projectid(self):
@@ -220,32 +234,19 @@ class PacketNet():
         raise RuntimeError("not implemented")
 
 
-TEMPLATE = """
-auth_token_ = ""
-number = 5
-srtr = ""
-llist = [ ]
-"""
-
-BASE = j.tools.secretconfig.base_class_secret_config
-
-class PacketNetFactory(BASE):
+class PacketNetFactory(JSConfigFactory):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.packetnet"
         self.__imports__ = "packet"
         self.logger = j.logger.get('j.clients.packetnet')
         self.connections = {}
-        self.instance="main"
-        self._TEMPLATE=TEMPLATE
+        JSConfigFactory.__init__(self)
+        self._CHILDCLASS = PacketNet
 
     def install(self):
         j.sal.process.execute("pip3 install packet-python")
 
-    def get(self,instance="main"):
-        self.instance=instance
-        from IPython import embed;embed(colors='Linux')
-        return PacketNet(packet.Manager(auth_token=self.config.data["auth_token"]))
-
     def test(self):
-        from IPython import embed;embed(colors='Linux')
+        from IPython import embed
+        embed(colors='Linux')

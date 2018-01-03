@@ -22,9 +22,11 @@ class NACLClientFactory:
         if more than 1 will match ourid (generated from ssh_agent)
         if path not specified then is ~/.secrets 
         """
-
+        j.clients.ssh.ssh_agent_check()
+        if not j.clients.ssh.ssh_keys_list_from_agent():
+            j.clients.ssh.ssh_keys_load()
         if path=="":
-            path=j.tools.secretconfig.path_configrepo
+            path=j.tools.configmanager.path_configrepo
         return NACLClient(name, path, secret)
 
     @property
@@ -80,12 +82,10 @@ class NACLClient:
         """
         is secret == "" then will use the ssh-agent to generate a secret
         """
-
         self.ssh_agent = paramiko.agent.Agent()
 
         if len(self.ssh_agent.get_keys()) != 1:
-            raise RuntimeError(
-                "only 1 ssh key supported for now, need use use self.keyname_ssh")
+            raise RuntimeError("only 1 ssh key supported for now, need to use self.keyname_ssh")
         self.ssh_agent_key = self.ssh_agent.get_keys()[0]
         if isinstance(secret, str):
             secret = secret.encode()
