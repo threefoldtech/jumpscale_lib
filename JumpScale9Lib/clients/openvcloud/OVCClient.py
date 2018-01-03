@@ -629,13 +629,15 @@ class Space(Authorizables):
                 imageId=imageId,
                 disksize=disksize,
                 datadisks=datadisks,
-                stackid=stackId)
+                stackid=stackId,
+                description=description)
+            machine = self.machine_get(name)
         else:
             res = self.client.api.cloudapi.machines.create(
-                cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks)
-
+                cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks, description=description)
+            machine = self.machines[name]
         print("machine created.")
-        machine = self.machines[name]
+
 
         self.configure_machine(machine=machine, name=name, sshkey_name=sshkeyname, sshkey_path=sshkeypath)
 
