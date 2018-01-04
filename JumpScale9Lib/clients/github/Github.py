@@ -21,8 +21,7 @@ class GitHubFactory(JSConfigFactory):
         self.__jslocation__ = "j.clients.github"
         self.__imports__ = "PyGithub"
         self._clients = {}
-        JSConfigFactory.__init__(self)
-        self._CHILDCLASS = GitHubClient
+        JSConfigFactory.__init__(self, GitHubClient)
 
     # def getRepoClient(self, account, reponame):
     #     return GitHubRepoClient(account, reponame)

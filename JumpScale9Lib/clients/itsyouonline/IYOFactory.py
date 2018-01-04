@@ -26,10 +26,9 @@ class IYOFactory(JSConfigBase):
         self._jwt = None
         self.raml_spec = "https://raw.githubusercontent.com/itsyouonline/identityserver/master/specifications/api/itsyouonline.raml"
 
-
     def reset(self):
         self._jwt = None
-        
+
     def get(self):
         """
         Get an ItsYouOnline REST API client

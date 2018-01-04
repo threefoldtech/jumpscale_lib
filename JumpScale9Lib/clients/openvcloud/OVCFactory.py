@@ -10,12 +10,9 @@ class OVCClientFactory(JSConfigBaseFactory):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.openvcloud"
-        self._logger = None
-        self.__imports__ = "ovc"
-        JSConfigBaseFactory.__init__(self)
-
-        self._CHILDCLASS = OVCClient
         self.logger = j.logger.get("OVC Client Factory")
+        self.__imports__ = "ovc"
+        JSConfigBaseFactory.__init__(self, OVCClient)
 
     # TODO:*1 change ays to use the config mgmt, in any class where you need e.g. the client just do j.clients.openvcloud.get(instance=...)
     # the instance name is only thing which needs to be in the relevan AYS
