@@ -9,10 +9,10 @@ class ZeroStorFactory:
         self.__imports__ = "requests"
         self.logger = j.logger.get("j.clients.zerostor")
 
-    def getClient(self, ...):
+    def getClient(self):
         """
         # Getting client via accesstoken
 
 
         """
-        return ZeroStorClient...)
+        return ZeroStorClient
