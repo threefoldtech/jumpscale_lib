@@ -1,10 +1,7 @@
 import os
 from js9 import j
+j.tools.prefab.local.bash.locale_check()
 import click
-
-os.environ['LC_ALL'] = 'C.UTF-8'
-os.environ['LANG'] = 'C.UTF-8'
-
 
 @click.command()
 @click.option('--influx-host', default='127.0.0.1', help='address of the influxdb server')

@@ -80,13 +80,16 @@ class DocGenerator:
         return self.gitRepos[path]
 
     def install(self, reset=False):
+        """
+        js9 'j.tools.docgenerator.install()'
+        """
         prefab = j.tools.prefab.local
         if prefab.core.doneGet("docgenerator:installed") == False or reset:
             prefab.runtimes.nodejs.install()
             prefab.runtimes.nodejs.phantomjs()
             if "darwin" in str(j.core.platformtype.myplatform):
-                prefab.core.run("brew install graphviz")
-                prefab.core.run("brew install hugo")
+                prefab.system.package.install('graphviz')
+                prefab.system.package.install('hugo')
                 # prefab.core.run("brew install caddy")
             elif "ubuntu" in str(j.core.platformtype.myplatform):
                 prefab.system.package.install('graphviz')
@@ -124,7 +127,7 @@ class DocGenerator:
 
         C2 = """
         $ws/$name/ {
-            root /optvar/docgenerator/$name/public
+            root $vardir/docgenerator/$name/public
             #log ../access.log
         }
 
@@ -134,12 +137,14 @@ class DocGenerator:
             out2 += C3
         out2 = out2.replace("$outpath", self.outpath)
         out2 = out2.replace("$ws", self.ws)
+        out2 = out2.replace("$vardir", j.dirs.VARDIR)
         j.sal.fs.writeFile(filename=dest, contents=out2, append=False)
         return dest
 
     def init(self):
         if not self._initOK:
             self.install()
+            j.clients.redis.start4core()
             j.sal.fs.remove(self._macroCodepath)
             # load the default macro's
             self.loadMacros("https://github.com/Jumpscale/docgenerator/tree/master/macros")
@@ -215,7 +220,7 @@ class DocGenerator:
 
     def generateJSDoc(self, start=True):
         # self.load(pathOrUrl="https://github.com/Jumpscale/portal9")
-        self.load(pathOrUrl="https://github.com/Jumpscale/ays9/tree/master/docs")
+        # self.load(pathOrUrl="https://github.com/Jumpscale/ays9/tree/master/docs")
         self.load(pathOrUrl="https://github.com/Jumpscale/core9/")
         self.load(pathOrUrl="https://github.com/Jumpscale/lib9")
         self.load(pathOrUrl="https://github.com/Jumpscale/prefab9")
