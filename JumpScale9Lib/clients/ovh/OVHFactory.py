@@ -13,8 +13,7 @@ class OVHFactory(JSConfigBase):
         self.__jslocation__ = "j.clients.ovh"
         self.__imports__ = "ovh"
         self.logger = j.logger.get('j.clients.ovh')
-        JSConfigBase.__init__(self)
-        self._CHILDCLASS = OVHClient
+        JSConfigBase.__init__(self, OVHClient)
 
     def install(self):
         p = j.tools.prefab.local

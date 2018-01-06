@@ -168,11 +168,11 @@ class RamlToolsFactory:
 
             self.logger.info('test generate python server with generated python client')
 
-            r=cl.api.user.getUser(id='1')
+            r = cl.api.user.getUser(id='1')
             assert r.json() == {}
-            assert r.status_code==200
+            assert r.status_code == 200
 
-            #TODO:*1 should test the api docs: http://localhost:5000/apidocs/index.html?raml=api.raml, just to see they are there
+            # TODO:*1 should test the api docs: http://localhost:5000/apidocs/index.html?raml=api.raml, just to see they are there
 
             tmux.stop('ramltest_gevent_server')
 
@@ -239,7 +239,7 @@ class RamlTools:
         specpath = "%s/api_spec" % self.path
         j.sal.fs.remove(specpath)
         j.sal.fs.copyDirTree(specpath_downloaded, specpath)
-        sfiles = j.sal.fs.listFilesInDir(specpath)
+        sfiles = j.sal.fs.listFilesInDir(specpath, filter='*.raml')
         sfile = "%s/main.raml" % specpath
         if len(sfiles) == 1:
             # check is main.raml, if not rename
@@ -252,7 +252,7 @@ class RamlTools:
                 raise RuntimeError("could not find specfile:%s" % sfile)
 
     def _get_cmd(self, no_apidocs=False, no_main=False, lib_root_urls='', import_path='', api_file_per_method=False,
-                    kind='', package='', unmarshall_response=False):
+                 kind='', package='', unmarshall_response=False):
         cmd = "cd {path};mkdir -p generated/client;cd api_spec;{goraml} {type} --language {lang} \
                     --dir ../generated/{type}/ --ramlfile main.raml"
         if no_apidocs:
@@ -347,9 +347,9 @@ class RamlTools:
         js9_raml generate_pyclient
         """
         supported_map = {
-                'gevent': 'gevent-requests',
-                'requests': 'requests',
-                'aiohttp': 'aiohttp',
+            'gevent': 'gevent-requests',
+            'requests': 'requests',
+            'aiohttp': 'aiohttp',
         }
         kind = self._get_kind(supported_map, kind)
 

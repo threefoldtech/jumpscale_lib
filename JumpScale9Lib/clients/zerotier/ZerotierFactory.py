@@ -14,6 +14,7 @@ token_ = ""
 
 
 class ZerotierClientInteral:
+
     def __init__(self, apikey):
         self.apikey = apikey
         self.apibase = "https://my.zerotier.com/api"
@@ -138,5 +139,4 @@ class ZerotierFactory(JSConfigFactory):
         self.__imports__ = "zerotier"
         self.logger = j.logger.get('j.clients.zerotier')
         self.connections = {}
-        JSConfigFactory.__init__(self)
-        self._CHILDCLASS = ZerotierClient
+        JSConfigFactory.__init__(self, ZerotierClient)

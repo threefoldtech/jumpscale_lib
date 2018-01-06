@@ -19,8 +19,6 @@ class PacketNet(JSConfigClient):
                                 data=data, parent=parent, template=TEMPLATE)
 
         if not self.config.data['auth_token_']:
-            self.config.configure()
-        if not self.config.data['auth_token_']:
             raise RuntimeError("Missing auth token in config instance {}".format(instance))
         self.client = packet.Manager(
             auth_token=self.config.data["auth_token_"])
@@ -241,8 +239,7 @@ class PacketNetFactory(JSConfigFactory):
         self.__imports__ = "packet"
         self.logger = j.logger.get('j.clients.packetnet')
         self.connections = {}
-        JSConfigFactory.__init__(self)
-        self._CHILDCLASS = PacketNet
+        JSConfigFactory.__init__(self, PacketNet)
 
     def install(self):
         j.sal.process.execute("pip3 install packet-python")

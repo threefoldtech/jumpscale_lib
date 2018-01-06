@@ -1,31 +1,22 @@
+import os
+
 from js9 import j
-from zerorobot.dsl.ZeroRobotClient import ZeroRobotClient
+from JumpScale9Lib.clients.zerorobot.ZeroRobotClient import ZeroRobotClient
 
-JSConfigBase = j.tools.configmanager.base_class_config
-_template = """
-base_url = "http://localhost:6600"
-"""
+JSConfigFactoryBase = j.tools.configmanager.base_class_configs
 
 
-class ZeroRobotFactory(JSConfigBase):
+class ZeroRobotFactory(JSConfigFactoryBase):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.zrobot"
-        self._TEMPLATE = _template
+        super().__init__(child_class=ZeroRobotClient)
 
-    def get(self, instance='main'):
+    def generate(self):
         """
-        Get a ZeroRobot client for base_url.
+        generate the client out of the raml specs
         """
-        self.instance = instance
-        base_url = self.config.data['base_url']
-        return ZeroRobotClient(base_url)
-
-    def set(self, instance, client):
-        """
-        associate an instance name with an instance of the client
-        """
-
-        sc = j.tools.configmanager.set(self.__jslocation__, instance)
-        sc.data = {'base_url': client._client.api.base_url}
-        cfg.save()
+        path = j.sal.fs.getDirName(os.path.abspath(__file__)).rstrip("/")
+        c = j.tools.raml.get(path)
+        c.specs_get('https://github.com/Jumpscale/0-robot/blob/master/raml')
+        c.client_python_generate()

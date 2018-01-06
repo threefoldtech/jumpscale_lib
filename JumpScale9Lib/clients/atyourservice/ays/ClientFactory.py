@@ -8,8 +8,7 @@ class ClientFactory(JSConfigBase):
 
     def __init__(self):
         self.__jslocation__ = 'j.clients.ays'
-        JSConfigBase.__init__(self)
-        self._CHILDCLASS = Client
+        JSConfigBase.__init__(self, Client)
 
     # def get(self, url=DEFAULT_URL, client_id=None, client_secret=None, validity=3600):
     #     """
