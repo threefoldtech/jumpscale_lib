@@ -762,6 +762,7 @@ class Space(Authorizables):
             timeout=300)
         # make sure that SSH key is loaded
         bad_auth_type_exist = True
+        bad_auth_type_instance = None
         timeout = 5*60
         start = j.data.time.getTimeEpoch()
         while start + timeout > j.data.time.getTimeEpoch() and bad_auth_type_exist:
@@ -770,9 +771,11 @@ class Space(Authorizables):
                 bad_auth_type_exist = False
             except BadAuthenticationType as e:
                 self.logger.error("Bad Authentication Type : %s" % str(e))
+                bad_auth_type_instance = e
+                time.sleep(2)
 
         if bad_auth_type_exist:
-            raise BadAuthenticationType()
+            raise bad_auth_type_instance
 
         sshclient.SSHAuthorizeKey(sshkey_name, sshkey_path)
 
