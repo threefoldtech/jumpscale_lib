@@ -657,20 +657,10 @@ class Space(Authorizables):
                                       cat="openvcloud", description="deployment in openvcloud")
 
     def createPortForward(self, machine):
-        machineip, _ = machine.machineip_get()
-        sshport = None
-        usedports = set()
-        for portforward in machine.space.portforwards:
-            if portforward['localIp'] == machineip and int(portforward['localPort']) == 22:
-                sshport = int(portforward['publicPort'])
-                break
-            usedports.add(int(portforward['publicPort']))
+        sshport = self._getPortForward(machine=machine)
 
         if sshport is None:
-            requested_sshport = 2200
-            while requested_sshport in usedports:
-                requested_sshport += 1
-            machine.portforward_create(requested_sshport, 22)
+            machine.portforward_create(None, 22)
             sshport = requested_sshport
         return sshport;
 
