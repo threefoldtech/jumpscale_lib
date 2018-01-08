@@ -660,8 +660,7 @@ class Space(Authorizables):
         sshport = self._getPortForward(machine=machine)
 
         if sshport is None:
-            machine.portforward_create(None, 22)
-            sshport = requested_sshport
+            sshport, _ = machine.portforward_create(None, 22)
         return sshport;
 
     def _getPortForward(self, machine):
