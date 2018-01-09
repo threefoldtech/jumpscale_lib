@@ -618,7 +618,7 @@ class Space(Authorizables):
         if name in self.machines:
             raise j.exceptions.RuntimeError(
                 "Name is not unique, already exists in %s" % self)
-        print("Cloud space ID:%s name:%s size:%s image:%s disksize:%s" %
+        self.logger.info("Cloud space ID:%s name:%s size:%s image:%s disksize:%s" %
               (self.id, name, sizeId, imageId, disksize))
 
         if stackId:
@@ -636,7 +636,7 @@ class Space(Authorizables):
             res = self.client.api.cloudapi.machines.create(
                 cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks, description=description)
             machine = self.machines[name]
-        print("machine created.")
+        self.logger.info("machine created.")
 
 
         self.configure_machine(machine=machine, name=name, sshkey_name=sshkeyname, sshkey_path=sshkeypath)
@@ -644,6 +644,15 @@ class Space(Authorizables):
         return machine
 
     def configure_machine(self, machine, name, sshkey_name, sshkey_path):
+        """
+            configure a virtual machine
+
+            Args:
+                - machine (required) the machine object
+                - name (required) name of the machine
+                - sshkey_name (required) sshkey name to be added to authorized keys in virtual machine
+                - sshkey_path (required) sshkey path to be added to authorized keys in virtual machine
+            """
         self.createPortForward(machine)
 
         self._authorizeSSH(machine=machine, sshkey_name=sshkey_name, sshkey_path=sshkey_path)
@@ -673,7 +682,7 @@ class Space(Authorizables):
         return sshport
 
     def _authorizeSSH(self, machine, sshkey_name, sshkey_path):
-        print("authorize ssh")
+        self.logger.debug("authorize ssh")
 
         # prepare data required for sshclient
         machineip, machinedict = machine.machineip_get()
