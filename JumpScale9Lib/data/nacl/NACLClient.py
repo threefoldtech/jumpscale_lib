@@ -6,7 +6,7 @@ import nacl.utils
 import nacl.hash
 import nacl.encoding
 import hashlib
-from .AgentWithKeyname import Agent
+from .AgentWithKeyname import AgentWithName
 import binascii
 
 
@@ -20,7 +20,7 @@ class NACLClientFactory:
         """
         will first look if it can find repo's with name: config_...
         if more than 1 will match ourid (generated from ssh_agent)
-        if path not specified then is ~/.secrets 
+        if path not specified then is ~/.secrets
         """
         sshkeyname = sshkeyname
         if path == "":
@@ -78,7 +78,7 @@ class NACLClient:
         """
         is secret == "" then will use the ssh-agent to generate a secret
         """
-        self.ssh_agent = Agent()
+        self.ssh_agent = AgentWithName()
         if keyname_ssh:
             keys = {j.sal.fs.getBaseName(k.keyname): k for k in self.ssh_agent.get_keys()}
             if keyname_ssh not in keys:
