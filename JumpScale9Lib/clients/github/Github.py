@@ -4,6 +4,7 @@ from .Issue import Issue
 
 # pygithub is for pip3
 import github
+NotSet = github.GithubObject.NotSet
 
 JSConfigFactory = j.tools.configmanager.base_class_configs
 JSConfigClient = j.tools.configmanager.base_class_config
@@ -26,11 +27,11 @@ class GitHubFactory(JSConfigFactory):
     # def getRepoClient(self, account, reponame):
     #     return GitHubRepoClient(account, reponame)
 
-    def get(self, login_or_token, password=None):
-        if login_or_token not in self._clients:
-            self._clients[login_or_token] = GitHubClient(
-                login_or_token, password)
-        return self._clients[login_or_token]
+    # def get(self, login_or_token, password=None):
+    #     if login_or_token not in self._clients:
+    #         self._clients[login_or_token] = GitHubClient(
+    #             login_or_token, password)
+    #     return self._clients[login_or_token]
 
     def issue_get(self):
         # return Issue
@@ -41,11 +42,11 @@ class GitHubClient(JSConfigClient):
 
     def __init__(self, instance, data={}, parent=None):
         JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent)
+                                data=data, parent=parent, template=TEMPLATE)
         self._config = j.tools.configmanager._get_for_obj(
             self, instance=instance, data=data, template=TEMPLATE)
         if not (self.config.data['token_'] or (self.config.data['login'] and self.config.data['password_'])):
-            self.config.configure()
+            self.configure()
         if not (self.config.data['token_'] or (self.config.data['login'] and self.config.data['password_'])):
             raise RuntimeError("Missing Github token_ or login/password_")
 
