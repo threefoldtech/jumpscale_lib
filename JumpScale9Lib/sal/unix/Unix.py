@@ -70,7 +70,7 @@ class UnixSystem:
     def getMachineInfo(self):
         '''Get memory and CPU info about this machine
 
-        @returns: Amount of available memory, CPU speed and number of CPUs
+        @returns: Amount of available memory in (MBs), Average CPU speed in (MHz) and number of CPUs
         @rtype: tuple
         '''
         mem = 0
@@ -88,8 +88,9 @@ class UnixSystem:
             cpucontent = j.sal.fs.fileGetContents("/proc/cpuinfo")
             matches = re.findall("^cpu\sMHz\s+:\s(\d+)\.\d+$", cpucontent, re.MULTILINE)
             if matches:
+                int_values = [int(x) for x in matches]
                 nrcpu = len(matches)
-                cpumhz = int(matches[0])
+                cpumhz = int(sum(int_values) / nrcpu) # get average of CPUs speeds
             return mem, cpumhz, nrcpu
         elif j.core.platformtype.myplatform.isSolaris():
             command = "prtconf | grep Memory | awk '{print $3}'"
