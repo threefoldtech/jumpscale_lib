@@ -263,7 +263,7 @@ class UnixSystem:
         if j.sal.fs.isFile(root):
             os.chmod(root, mode)
         else:
-            items = j.sal.fs.walkExtended(root=root, recurse=recurse, dirPattern=dirPattern,
+            items = j.sal.fswalker.walkExtended(root=root, recurse=recurse, dirPattern=dirPattern,
                                           filePattern=filePattern, dirs=dirs, files=files)
 
             for item in items:
