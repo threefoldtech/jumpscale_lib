@@ -251,10 +251,10 @@ class UnixSystem:
             gid = grp.getgrnam(group).gr_gid
         os.chown(path, uid, gid)
         if recursive:
-            files = j.sal.fs.walk(path, return_folders=1, return_files=1, recurse=-1)
-            for file in files:
-                os.chown(file, uid, gid)
+            def process_path(arg, path):
+                os.chown(path, uid, gid)
 
+            j.sal.fswalker.walk(path, process_path, recursive=True, includeFolders=True)
     def chmod(self, root, mode, recurse=0, dirPattern='*', filePattern='*', dirs=True, files=True):
         """
         Chmod based on system.fs.walk
