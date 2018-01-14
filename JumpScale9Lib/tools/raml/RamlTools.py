@@ -105,7 +105,7 @@ class RamlToolsFactory:
 
     def _remove(self, path, all=True):
         j.sal.fs.remove("%s/server" % path)
-        j.sal.fs.remove("%s/generated" % path)
+        j.sal.fs.remove("%s/client" % path)
         j.sal.fs.remove("%s/generate_client.sh" % path)
         j.sal.fs.remove("%s/generate_server.sh" % path)
         if all:
@@ -135,16 +135,15 @@ class RamlToolsFactory:
             c.client_python_generate(kind='requests', unmarshall_response=False)  # if unmarshal is true, the client will
             # fail because the server return empty payload
 
-            sys.path.append('/tmp/ramltest/generated')
+            sys.path.append('/tmp/ramltest/')
 
             self.logger.info('test generated client')
             from client import Client
-            cl = Client()
-            cl.api.base_url = 'http://localhost:5000'
+            cl = Client('http://localhost:5000')
 
             self.logger.info('test generate python server with generated python client')
 
-            cl.api.user.getUser(id='1')
+            cl.user.getUser(id='1')
             tmux.stop('ramltest_python_server')
 
             j.sal.process.killProcessByPort(5000)  # For some reason after stopping the tmux, there is an orphan process
@@ -163,12 +162,11 @@ class RamlToolsFactory:
 
             self.logger.info('test generated client')
             from client import Client
-            cl = Client()
-            cl.api.base_url = 'http://localhost:5000'
+            cl = Client('http://localhost:5000')
 
             self.logger.info('test generate python server with generated python client')
 
-            r = cl.api.user.getUser(id='1')
+            r = cl.user.getUser(id='1')
             assert r.json() == {}
             assert r.status_code == 200
 
@@ -198,7 +196,7 @@ class RamlToolsFactory:
             # tmux.stop('ramltest_golang_server')
 
         finally:
-            sys.path.remove('/tmp/ramltest/generated')
+            sys.path.remove('/tmp/ramltest/')
 
         # raise RuntimeError("need to implement all todo's")
 
@@ -211,12 +209,6 @@ class RamlTools:
         if not j.sal.fs.exists("%s/api_spec" % self.path):
             raise RuntimeError("Cannot find api_spec dir in %s, please use 'js9_raml init' to generate." % path)
 
-    def _prepare(self, reset=False):
-        if reset:
-            self.reset()
-        else:
-            j.sal.fs.remove("%s/generated" % self.path)
-
     def _get_kind(self, supported_kinds, kind):
         try:
             kind = supported_kinds[kind]
@@ -226,10 +218,6 @@ class RamlTools:
 
     def reset(self):
         j.tools.raml._remove(self.path, all=False)
-
-    @property
-    def generated_path(self):
-        return j.sal.fs.joinPaths(self.path, 'generated')
 
     def specs_get(self, giturl):
         """
@@ -253,8 +241,8 @@ class RamlTools:
 
     def _get_cmd(self, no_apidocs=False, no_main=False, lib_root_urls='', import_path='', api_file_per_method=False,
                  kind='', package='', unmarshall_response=False):
-        cmd = "cd {path};mkdir -p generated/client;cd api_spec;{goraml} {type} --language {lang} \
-                    --dir ../generated/{type}/ --ramlfile main.raml"
+        cmd = "cd {path};mkdir -p {type};cd api_spec;{goraml} {type} --language {lang} \
+                    --dir ../{type}/ --ramlfile main.raml"
         if no_apidocs:
             cmd += ' --no-apidocs'
         if no_main:
@@ -275,20 +263,15 @@ class RamlTools:
         return cmd
 
     def _client_generate(self, reset=False, cmd='', doc=True):
-        self._prepare(reset=reset)
+        if reset:
+            self.reset()
 
         j.sal.process.executeInteractive(cmd)
 
-        # @TODO: remove this part when this issue gets fixed https://github.com/Jumpscale/go-raml/issues/396
-        replace = j.tools.code.replace_tool_get()
-        replace.synonymAdd(regexFind='\\nfrom . import\\n', replaceWith='\n')
-        replace.replace_in_dir(self.generated_path,  recursive=True)
-
-        j.sal.fs.createEmptyFile(j.sal.fs.joinPaths(self.generated_path, '__init__.py'))
-
         if doc:
             cmd = "cd %s;rm -rf htmldoc;mkdir -p htmldoc; \
-            cd ../api_spec;raml2html -i main.raml -o ../generated/htmldoc/api.html -v" % self.generated_path
+            cd ../api_spec; \
+            raml2html -i main.raml -o ../client/htmldoc/api.html -v" % j.sal.fs.joinPaths(self.path, 'client')
             j.sal.process.executeInteractive(cmd)
 
         # TODO: test and re-enable
@@ -296,49 +279,13 @@ class RamlTools:
         # j.sal.process.execute(cmd)
 
     def _server_generate(self, reset=False, cmd=''):
+        if reset:
+            self.reset()
 
-        self._prepare(reset=reset)
         j.sal.process.execute(cmd)
-
-        # self._client_generate(lang=lang, kind=kind, reset=False)
 
         # TODO: re-enable when generation of swagger is fixed
         # spec = SwaggerSpec("%s/generated/swagger_api.json" % self.path)
-
-        # if lang == 'python':
-        #     j.sal.fs.createDir("%s/server" % self.path)
-        #
-        #     for objname in spec.rootObjNames:
-        #         spath = "%s/generated/server/%s_api.py" % (self.path, objname)
-        #         dpath = "%s/server/%s_api.py" % (self.path, objname)
-        #         # j.sal.fs.remove(dpath)  # debug
-        #         if not j.sal.fs.exists(dpath):
-        #             j.sal.fs.copyFile(spath, dpath)
-        #
-        #             # THIS WAS NEEDED TO GET IT TO WORK IN THIS CONFIG
-        #             # editor = j.tools.code.text_editor_get(dpath)
-        #             # editor.replace1Line(
-        #             #     '', ["#comment this"])
-        #
-        #     spath = "%s/generated/server/app.py" % (self.path)
-        #     dpath = "%s/server/app.py" % (self.path)
-        #     if not j.sal.fs.exists(dpath):
-        #         j.sal.fs.copyFile(spath, dpath)
-        #
-        #         # THIS WAS NEEDED TO GET IT TO WORK IN THIS CONFIG
-        #         # editor = j.tools.code.text_editor_get(dpath)
-        #         # editor.replace1Line('', ["#comment this"])
-
-        spath = '%s/generated/server/' % self.path
-        dpath = '%s/server/' % self.path
-
-        files = j.sal.fs.listFilesInDir(spath, recursive=True)
-
-        for file in files:
-            relative_file = file.replace(spath, '')
-            destination_file = j.sal.fs.joinPaths(dpath, relative_file)
-            if not j.sal.fs.exists(destination_file):
-                j.sal.fs.copyFile(file, destination_file, createDirIfNeeded=True)
 
     def client_python_generate(self, reset=False, kind='requests', unmarshall_response=True, doc=True):
         """
