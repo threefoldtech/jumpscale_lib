@@ -61,7 +61,7 @@ class UnixSystem:
         @type var: string
         '''
         # TODO: there are better ways of doing this
-        exitcode, output, err = j.sal.process.execute(". %s > /dev/null && echo $%s" % (file, var), shell=True)
+        exitcode, output, err = j.sal.process.execute(". %s > /dev/null && echo $%s" % (file, var), useShell=True)
         if exitcode != 0:
             return ""
         else:
@@ -94,10 +94,10 @@ class UnixSystem:
             return mem, cpumhz, nrcpu
         elif j.core.platformtype.myplatform.isSolaris():
             command = "prtconf | grep Memory | awk '{print $3}'"
-            exitcoude, output, err = j.sal.process.execute(command, shell=True)
+            exitcoude, output, err = j.sal.process.execute(command, useShell=True)
             mem = output.strip()
             command = "psrinfo -v | grep 'processor operates' | awk '{print $6}'"
-            exitcoude, output, err = j.sal.process.execute(command, shell=True)
+            exitcoude, output, err = j.sal.process.execute(command, useShell=True)
             tuples = output.strip().split("\n")
             nrcpu = len(tuples)
             cpumhz = int(tuples[0])
