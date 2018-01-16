@@ -4,9 +4,6 @@ import urllib
 from js9 import j
 from JumpScale9Lib.clients.itsyouonline.generated.client import Client
 
-JSConfigBase = j.tools.configmanager.base_class_config
-
-
 DEFAULT_BASE_URL = "https://itsyou.online/api"
 
 TEMPLATE = """
@@ -16,29 +13,68 @@ secret_ = ""
 """
 
 JSConfigBase = j.tools.configmanager.base_class_config
+JSConfigBaseFactory = j.tools.configmanager.base_class_configs
 
-
-class IYOFactory(JSConfigBase):
+class IYOFactory(JSConfigBaseFactory):
 
     def __init__(self):
         self.__jslocation__ = 'j.clients.itsyouonline'
-        JSConfigBase.__init__(self, instance="main", template=TEMPLATE)
-        self._jwt = None
         self.raml_spec = "https://raw.githubusercontent.com/itsyouonline/identityserver/master/specifications/api/itsyouonline.raml"
+        JSConfigBaseFactory.__init__(self, IYOClient)
 
-    def reset(self):
-        self._jwt = None
-
-    def get(self):
-        """
-        Get an ItsYouOnline REST API client
-        """
-        client = Client()
-        client.api.session.headers.update({"Authorization": 'bearer {}'.format(self.jwt)})
-        return client
-
+    
     def install(self):
         j.tools.prefab.local.runtimes.pip.install("python-jose")
+
+    
+    def test(self):
+        """
+        do:
+        js9 'j.clients.itsyouonline.test()'
+        """
+        from .generated.client.PublicKey import PublicKey
+        from requests.exceptions import HTTPError
+        client = self.get()
+        username = j.tools.myconfig.config.data['login_name']
+
+        # Read all the API keys registered for your user
+        print("list all API keys:\n###########")
+        for key in client.api.users.ListAPIKeys(username).data:
+            print("label: %s" % key.label)
+            print("app ID %s" % key.applicationid)
+
+        # Create a new API key
+        from requests.exceptions import HTTPError
+        try:
+            key = client.api.users.AddApiKey({"label": 'test'}, username).data
+            print("###########\ncreate new API key: ")
+            print("label: %s" % key.label)
+            print("app ID %s" % key.applicationid)
+        except HTTPError as err:
+            # example of how to deal with exceptions
+            if err.response.status_code == 409:
+                # the key with this label already exists, no need to do anything
+                pass
+            else:
+                raise err
+
+        key_labels = [k.label for k in client.api.users.ListAPIKeys(username).data]
+        assert 'test' in key_labels
+
+        print("###########\ndelete api key")
+        client.api.users.DeleteAPIkey('test', username)
+
+        key_labels = [k.label for k in client.api.users.ListAPIKeys(username).data]
+        assert 'test' not in key_labels
+
+
+class IYOClient(JSConfigBase, Client):
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,template=TEMPLATE)
+        c = self.config.data
+        Client.__init__(self, base_uri=c['baseurl'])
+        self._jwt = None
+        self.api.session.headers.update({"Authorization": 'bearer {}'.format(self.jwt)})
 
     @property
     def jwt(self):
@@ -84,43 +120,6 @@ class IYOFactory(JSConfigBase):
         resp.raise_for_status()
         jwt = resp.content.decode('utf8')
         return jwt
-
-    def test(self):
-        """
-        do:
-        js9 'j.clients.itsyouonline.test()'
-        """
-        from .generated.client.PublicKey import PublicKey
-        from requests.exceptions import HTTPError
-        client = self.get()
-        username = j.tools.myconfig.config.data['login_name']
-
-        # Read all the API keys registered for your user
-        print("list all API keys:\n###########")
-        for key in client.api.users.ListAPIKeys(username).data:
-            print("label: %s" % key.label)
-            print("app ID %s" % key.applicationid)
-
-        # Create a new API key
-        from requests.exceptions import HTTPError
-        try:
-            key = client.api.users.AddApiKey({"label": 'test'}, username).data
-            print("###########\ncreate new API key: ")
-            print("label: %s" % key.label)
-            print("app ID %s" % key.applicationid)
-        except HTTPError as err:
-            # example of how to deal with exceptions
-            if err.response.status_code == 409:
-                # the key with this label already exists, no need to do anything
-                pass
-            else:
-                raise err
-
-        key_labels = [k.label for k in client.api.users.ListAPIKeys(username).data]
-        assert 'test' in key_labels
-
-        print("###########\ndelete api key")
-        client.api.users.DeleteAPIkey('test', username)
-
-        key_labels = [k.label for k in client.api.users.ListAPIKeys(username).data]
-        assert 'test' not in key_labels
+    
+    def reset(self):
+        self._jwt = None
