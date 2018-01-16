@@ -1,13 +1,15 @@
 from .GogsClient import GogsClient
 from js9 import j
 
+JSConfigBaseFactory = j.tools.configmanager.base_class_configs
 
-class GogsFactory:
+class GogsFactory(JSConfigBaseFactory):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.gogs"
         self.__imports__ = "requests,psycopg2"
         self.logger = j.logger.get("j.clients.gogs")
+        JSConfigBaseFactory.__init__(self, GogsClient)
 
     def getRestClient(self, addr='https://127.0.0.1', port=3000, login='root', passwd='root', accesstoken=None):
         """
