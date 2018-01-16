@@ -105,13 +105,13 @@ class OVCClient(JSConfigBase):
         api.__call__ = patch_call
 
     def __login(self):
-        if self.config.data.get("appkey_")!="" and self.operator==False:
+        if self.config.data.get("appkey_") != "" and self.operator is False:
             self.api._session.cookies.clear()
             # secret=self.api.system.usermanager.authenticate(name=self.config.data.get("login"),secret=self.config.data.get("appkey_"))
             self.api._session.cookies['beaker.session.id'] = self.config.data.get("appkey_")
             self._login = self.config.data.get("login")  #IS THIS NEEDED WHEN USING SECRET KEY
         else:
-            jwt = j.clients.itsyouonline.jwt
+            jwt = j.clients.itsyouonline.get().jwt
             import jose.jwt
             payload = jose.jwt.get_unverified_claims(jwt)
             if payload['exp'] < time.time():
@@ -646,7 +646,7 @@ class Space(Authorizables):
         p.core.hostname = name  # make sure hostname is set
 
         # remember the node in the local node configuration
-        j.tools.develop.nodes.nodeSet(name, addr=p.executor.sshclient.addr, port=p.executor.sshclient.port,
+        j.tools.nodemgr.set(name, addr=p.executor.sshclient.addr, port=p.executor.sshclient.port,
                                       cat="openvcloud", description="deployment in openvcloud")
         return machine
 
