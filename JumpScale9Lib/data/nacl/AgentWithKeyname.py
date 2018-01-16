@@ -34,7 +34,7 @@ class AgentSSHKeys(AgentSSH):
         self._keys = tuple(keys)
 
 
-class Agent(AgentSSHKeys, Agent):
+class AgentWithName(AgentSSHKeys, Agent):
     def __init__(self):
         AgentSSHKeys.__init__(self)
         super().__init__()

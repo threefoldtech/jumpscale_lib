@@ -58,9 +58,12 @@ class ZerotierClientInteral:
 class ZerotierClient(JSConfigClient):
 
     def __init__(self, instance, data={}, parent=None):
-        JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE)
+        super().__init__(instance=instance, data=data, parent=parent, template=TEMPLATE)
 
+        if not self.config.data['token_']:
+            self.config.configure()
+        if not self.config.data['token_']:
+            raise RuntimeError("Missing auth token in config instance {}".format(instance))
         self.client = zerotier.client.Client()
         self.client.set_auth_header("Bearer " + self.config.data['token_'])
         self._client = ZerotierClientInteral(self.config.data['token_'])
