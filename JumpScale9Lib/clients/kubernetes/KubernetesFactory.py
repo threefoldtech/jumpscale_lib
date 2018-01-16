@@ -24,7 +24,6 @@ class KubernetesFactory:
         from .Kubernetes import KubernetesMaster as K8s
         return K8s(config_path, context=context, ssh_key_path=ssh_key_path, incluster_config=incluster_config)
 
-
     def create_config(self, config, path=None):
         """
         create config file.
@@ -35,7 +34,7 @@ class KubernetesFactory:
         if not path:
             directory = '%s/.kube/' % j.dirs.HOMEDIR
             j.sal.fs.createDir(directory)
-            path = j.sal.fs.joinbPaths(directory, 'config')
+            path = j.sal.fs.joinPaths(directory, 'config')
         data = j.data.serializer.yaml.dumps(config)
         j.sal.fs.writeFile(path, data)
         j.logger.logging.info('file saved at %s' % path)
@@ -53,6 +52,3 @@ class KubernetesFactory:
         kub.list_services()
         prefab = kub.deploy_ubuntu1604('tester')
         prefab.core.run('ls')
-
-
-
