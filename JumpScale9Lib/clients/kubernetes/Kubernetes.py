@@ -7,7 +7,7 @@ TEMPLATE = """
 config_path = ""
 context = ""
 ssh_key_path = ""
-incluster_config = 0
+incluster_config = false
 """
 
 
