@@ -8,31 +8,41 @@ import time
 import pprint
 from js9 import j
 
+JSConfigFactory = j.tools.configmanager.base_class_configs
+JSConfigClient = j.tools.configmanager.base_class_config
 
-class Syncthing:
+TEMPLATE = """
+addr = "localhost"
+port = 0
+sshport = 22
+rootpasswd_ = ""
+apikey = ""
+"""
+class SyncthingFactory(JSConfigFactory):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.syncthing"
-
-    def get(self, addr="localhost", port=22001, sshport=22, rootpasswd="js111js", apikey="js111js"):
-        return SyncthingClient(addr, port, sshport, rootpasswd, apikey)
+        JSConfigFactory.__init__(self, SyncthingClient)
 
 
-class SyncthingClient:
+class SyncthingClient(JSConfigClient):
 
-    def __init__(self, addr="localhost", port=22001, sshport=22, rootpasswd="js111js", apikey="js111js"):
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigClient.__init__(self, instance=instance,
+                                data=data, parent=parent, template=TEMPLATE)
+        c = self.config.data
         self.logger = j.logger.get('j.clients.syncthing')
         self._session = requests.session()
-        addr = addr.lower()
+        addr = c['addr'].lower()
         if addr == "127.0.0.1":
             addr = "localhost"
         self.addr = addr
-        self.sshport = sshport
-        self.rootpasswd = rootpasswd
-        self.port = port
+        self.sshport = c['sshport']
+        self.rootpasswd = c['rootpasswd_']
+        self.port = c['port']
         # TODO: need to be https
         self.syncthing_url = 'http://%s:%s/rest' % (self.addr, self.port)
-        self.syncthing_apikey = apikey
+        self.syncthing_apikey = c['apikey']
         self._config = None
 
     def executeBashScript(self, cmds, die=True):
