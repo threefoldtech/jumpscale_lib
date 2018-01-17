@@ -1,6 +1,6 @@
 
 from js9 import j
-from JumpScale9Lib.clients.zerorobot.generated.client.client import Client
+from JumpScale9Lib.clients.zerorobot.client import Client
 
 JSConfigClientBase = j.tools.configmanager.base_class_config
 
