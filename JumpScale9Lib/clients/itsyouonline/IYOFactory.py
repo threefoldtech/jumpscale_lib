@@ -15,18 +15,17 @@ secret_ = ""
 JSConfigBase = j.tools.configmanager.base_class_config
 JSConfigBaseFactory = j.tools.configmanager.base_class_configs
 
+
 class IYOFactory(JSConfigBaseFactory):
 
     def __init__(self):
         self.__jslocation__ = 'j.clients.itsyouonline'
         self.raml_spec = "https://raw.githubusercontent.com/itsyouonline/identityserver/master/specifications/api/itsyouonline.raml"
-        JSConfigBaseFactory.__init__(self, IYOClient)
+        JSConfigBaseFactory.__init__(self, IYOClient, single_item=True)
 
-    
     def install(self):
         j.tools.prefab.local.runtimes.pip.install("python-jose")
 
-    
     def test(self):
         """
         do:
@@ -70,7 +69,7 @@ class IYOFactory(JSConfigBaseFactory):
 
 class IYOClient(JSConfigBase, Client):
     def __init__(self, instance, data={}, parent=None):
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,template=TEMPLATE)
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE)
         c = self.config.data
         Client.__init__(self, base_uri=c['baseurl'])
         self._jwt = None
@@ -120,6 +119,6 @@ class IYOClient(JSConfigBase, Client):
         resp.raise_for_status()
         jwt = resp.content.decode('utf8')
         return jwt
-    
+
     def reset(self):
         self._jwt = None
