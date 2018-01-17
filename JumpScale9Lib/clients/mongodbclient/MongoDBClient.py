@@ -8,7 +8,7 @@ JSConfigClient = j.tools.configmanager.base_class_config
 TEMPLATE = """
 host = "localhost"
 port = 27017
-ssl = 0
+ssl = false # Boolean
 replicaset = ""
 """
 
