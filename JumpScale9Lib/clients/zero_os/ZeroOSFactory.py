@@ -3,16 +3,21 @@ import time
 from js9 import j
 
 from .Client import Client
+from .sal.Node import Node
+
+JSConfigFactoryBase = j.tools.configmanager.base_class_configs
 
 
-class ZeroOSFactory:
+class ZeroOSFactory(JSConfigFactoryBase):
     """
     """
 
     def __init__(self):
         self.__jslocation__ = "j.clients.zero_os"
+        super().__init__(Client)
         self.logger = j.logger.get('j.clients.zero-os')
         self.connections = {}
+        self.sal = SALFactory(self)
 
     def zeroNodeInstall_OVH(self, OVHServerID, OVHClient, zerotierNetworkID, zerotierClient):
         """
@@ -55,8 +60,8 @@ class ZeroOSFactory:
 
         return ip_pub, ipaddr_priv
 
-    def zeroNodeInstall_PacketNET(self, packetnetClient, zerotierClient, project_name, \
-            plan_type, location, server_name, zerotierNetworkID, ipxe_base='https://bootstrap.gig.tech/ipxe/master'):
+    def zeroNodeInstall_PacketNET(self, packetnetClient, zerotierClient, project_name,
+                                  plan_type, location, server_name, zerotierNetworkID, ipxe_base='https://bootstrap.gig.tech/ipxe/master'):
         """
         packetnetClient = j.clients.packetnet.get('TOKEN')
         zerotierClient = j.clients.zerotier.get('TOKEN')
@@ -69,7 +74,7 @@ class ZeroOSFactory:
         """
 
         valid_plan_types = ("Type 0", "Type 1", "Type 2",
-                            "Type 2A", "Type 3", "Type S") #FIXME
+                            "Type 2A", "Type 3", "Type S")  # FIXME
         if plan_type not in valid_plan_types:
             j.exceptions.Input("bad plan type %s. Valid plan type are %s" % (
                 plan_type, ','.join(valid_plan_types)))
@@ -90,7 +95,7 @@ class ZeroOSFactory:
         packetnetClient.project_id = project_id
 
         packetnetClient.startDevice(hostname=server_name, plan=plan_type, facility=location, os='ubuntu_17_04',
-                                             ipxeUrl=ipxe_url, wait=True, remove=False)
+                                    ipxeUrl=ipxe_url, wait=True, remove=False)
 
         device = packetnetClient.getDevice(server_name)
         ip_pub = [netinfo['address'] for netinfo in device.ip_addresses if netinfo['public'] and netinfo['address_family'] == 4]
@@ -114,19 +119,12 @@ class ZeroOSFactory:
 
         return ip_pub, ipaddr_priv
 
-    def get(self, host, port=6379, password="", db=0, ssl=True, timeout=None, testConnectionAttempts=3):
-        # super().__init__(timeout=timeout)):
 
-        self.logger.info("[+] contacting zero-os server:{}".format(host))
+class SALFactory:
 
-        self.logger.info("[+] check port:{}".format(port))
-        res = j.sal.nettools.waitConnectionTest(host, port, 90)
-        if res is False:
-            msg = "[+] make sure you are authorized in the zertotier network"
-            raise RuntimeError(msg)
+    def __init__(self, factory):
+        self._factory = factory
 
-        client=Client(host=host, port=port, password=password, db=db, \
-            ssl=ssl, timeout=timeout, testConnectionAttempts=testConnectionAttempts)
-
-
-        return client
+    def node_get(self, instance='main'):
+        client = self._factory.get(instance)
+        return Node(client)

@@ -1,6 +1,15 @@
 import requests
 import os
 import json
+from js9 import j
+TEMPLATE = """
+ip = ""
+port = 82
+secret_ = ""
+"""
+
+JSConfigBase = j.tools.configmanager.base_class_config
+
 
 
 class ApiError(Exception):
@@ -86,3 +95,12 @@ class Resource(BaseResource):
                 :type %(name)s: %(type)s""" % param
             api.__doc__ = docstring
         return swagger
+
+class PortalClient(JSConfigBase, Resource):
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,template=TEMPLATE)
+        c = self.config.data
+        ip = c['ip']
+        port = c['port']
+        secret = c['secret_']
+        Resource.__init__(self, ip, port, secret, "/restmachine")

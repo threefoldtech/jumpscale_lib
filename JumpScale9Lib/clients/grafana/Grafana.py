@@ -3,37 +3,32 @@ import requests
 from requests.auth import HTTPBasicAuth
 import os
 
+JSConfigBaseFactory = j.tools.configmanager.base_class_configs
 
-class GrafanaFactory:
+class GrafanaFactory(JSConfigBaseFactory):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.grafana"
         self.__imports__ = "requests"
+        JSConfigBaseFactory.__init__(self, GrafanaClient)
+        
+TEMPLATE = """
+url = ""
+username = ""
+password_ = ""
+verify_ssl = 1
+"""
 
-    def get(self, url="http://localhost:3000", username="admin", password="admin", verify_ssl=True):
-        return GrafanaClient(url, username, password, verify_ssl=verify_ssl)
+JSConfigBase = j.tools.configmanager.base_class_config
+class GrafanaClient(JSConfigBase):
 
-    def getByInstance(self, instance=None):
-        if instance is None or instance == '':
-            service = j.atyourservice.server.findServices(
-                role="grafana_client", first=True)
-        else:
-            service = j.atyourservice.server.findServices(
-                role="grafana_client", instance=instance, first=True)
-        hrd = service.hrd
-
-        url = hrd.get("param.url")
-        username = hrd.get("param.username")
-        password = hrd.get("param.password")
-        return self.get(url, username, password)
-
-
-class GrafanaClient:
-
-    def __init__(self, url, username, password, verify_ssl=True):
-        self._url = url
-        self.setAuth(username, password)
-        self._verify_ssl = verify_ssl
+    def __init__(self, instance, data={}, parent=None):
+    # def __init__(self, url, username, password, verify_ssl=True):
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,template=TEMPLATE)
+        c = self.config.data
+        self._url = c['url']
+        self.setAuth(c['username'], c['password_'])
+        self._verify_ssl = c['verify_ssl']
 
     def ping(self):
         url = os.path.join(self._url, 'api/org/')
