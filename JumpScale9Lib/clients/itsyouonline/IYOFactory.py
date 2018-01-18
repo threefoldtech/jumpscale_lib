@@ -66,23 +66,6 @@ class IYOFactory(JSConfigBaseFactory):
         key_labels = [k.label for k in client.api.users.ListAPIKeys(username).data]
         assert 'test' not in key_labels
 
-
-class IYOClient(JSConfigBase, Client):
-    def __init__(self, instance, data={}, parent=None):
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE)
-        c = self.config.data
-        Client.__init__(self, base_uri=c['baseurl'])
-        self._jwt = None
-        self.api.session.headers.update({"Authorization": 'bearer {}'.format(self.jwt)})
-
-    @property
-    def jwt(self):
-        if self.config.data["application_id_"] == "":
-            raise RuntimeError("Please configure your itsyou.online, do this by calling js9 'j.clients.itsyouonline.configure()'")
-        if self._jwt == None:
-            self._jwt = self.jwt_get(self.config.data["application_id_"], self.config.data["secret_"])
-        return self._jwt
-
     def jwt_get(self, client_id, secret, validity=None, refreshable=False, scope=None, base_url=DEFAULT_BASE_URL):
         """
         Get a a JSON Web token for an ItsYou.online organization or user.
@@ -119,6 +102,24 @@ class IYOClient(JSConfigBase, Client):
         resp.raise_for_status()
         jwt = resp.content.decode('utf8')
         return jwt
+
+
+class IYOClient(JSConfigBase, Client):
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE)
+        c = self.config.data
+        Client.__init__(self, base_uri=c['baseurl'])
+        self._jwt = None
+        self.api.session.headers.update({"Authorization": 'bearer {}'.format(self.jwt)})
+
+    @property
+    def jwt(self):
+        if self.config.data["application_id_"] == "":
+            raise RuntimeError("Please configure your itsyou.online, do this by calling js9 'j.clients.itsyouonline.configure()'")
+        if self._jwt == None:
+            self._jwt = j.clients.itsyouonline.jwt_get(self.config.data["application_id_"], self.config.data["secret_"])
+        return self._jwt
+
 
     def reset(self):
         self._jwt = None
