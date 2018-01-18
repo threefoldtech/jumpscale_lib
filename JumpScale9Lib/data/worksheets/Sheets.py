@@ -133,7 +133,7 @@ class Sheets():
         r1.text2row("2:100,5:200", standstill=5, defval=None,round=False, interpolate=True)
 
         r2=s.addRow("amount",groupname="price")
-        r2.text2row("0:100mEGP,5:10mEUR", standstill=5, defval=None,round=False, interpolate=True)
+        r2.text2row("0:100mEGP,10:1k EUR", interpolate=True)
 
 
-        # from IPython import embed;embed(colors='Linux')
+        from IPython import embed;embed(colors='Linux')
