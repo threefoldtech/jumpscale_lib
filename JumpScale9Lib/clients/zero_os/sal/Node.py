@@ -133,7 +133,7 @@ class Node:
             self.client.bash('mkdir /tmp/log && mv /var/log/* /tmp/log/')
             self.client.disk.mount(storagepool.devicename, logpath, ['subvol={}'.format(snapshot.subvolume)])
             self.client.bash('mv /tmp/log/* /var/log/').get()
-            self.client.logger.reopen()
+            self.client.log_manager.reopen()
             # startup syslogd and klogd
             self.client.system('syslogd -n -O /var/log/messages')
             self.client.system('klogd -n')
