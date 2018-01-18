@@ -117,7 +117,7 @@ class IYOClient(JSConfigBase, Client):
         if self.config.data["application_id_"] == "":
             raise RuntimeError("Please configure your itsyou.online, do this by calling js9 'j.clients.itsyouonline.configure()'")
         if self._jwt == None:
-            self._jwt = j.clients.itsyouonline.jwt_get(self.config.data["application_id_"], self.config.data["secret_"])
+            self._jwt = self._parent.jwt_get(self.config.data["application_id_"], self.config.data["secret_"])
         return self._jwt
 
 

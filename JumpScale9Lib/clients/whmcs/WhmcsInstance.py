@@ -5,39 +5,31 @@ from JumpScale9Lib.clients.whmcs.whmcsusers import whmcsusers
 from JumpScale9Lib.clients.whmcs.whmcstickets import whmcstickets
 from JumpScale9Lib.clients.whmcs.whmcsorders import whmcsorders
 
+JSConfigClient = j.tools.configmanager.base_class_config
 
-class WhmcsInstance:
+TEMPLATE = """
+username = ""
+md5_password_ = ""
+accesskey_ = ""
+url = ""
+cloudspace_product_id = ""
+operations_user_id = ""
+operations_department_id = ""
+"""
+class WhmcsInstance(JSConfigClient):
 
-    def __init__(self,
-                 username,
-                 md5_password,
-                 accesskey,
-                 url,
-                 cloudspace_product_id,
-                 operations_user_id,
-                 operations_department_id,
-                 instance):
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigClient.__init__(self, instance=instance,
+                                data=data, parent=parent, template=TEMPLATE)
 
-        if not username:
-            hrd = j.application.getAppInstanceHRD('whmcs_client', instance)
-            self._username = hrd.get('instance.whmcs.client.username')
-            self._md5_password = hrd.get('instance.whmcs.client.md5_password')
-            self._accesskey = hrd.get('instance.whmcs.client.accesskey')
-            self._url = hrd.get('instance.whmcs.client.url')
-            self._cloudspace_product_id = hrd.get(
-                'instance.whmcs.client.cloudspace_product_id')
-            self._operations_user_id = hrd.get(
-                'instance.whmcs.client.operations_user_id')
-            self._operations_department_id = hrd.get(
-                'instance.whmcs.client.operations_department_id')
-        else:
-            self._username = username
-            self._md5_password = md5_password
-            self._accesskey = accesskey
-            self._url = url
-            self._cloudspace_product_id = cloudspace_product_id
-            self._operations_user_id = operations_user_id
-            self._operations_department_id = operations_department_id
+        c = self.config.data
+        self._username = c['username']
+        self._md5_password = c['md5_password_']
+        self._accesskey = c['accesskey_']
+        self._url = c['url']
+        self._cloudspace_product_id = c['cloudspace_product_id']
+        self._operations_user_id = c['operations_user_id']
+        self._operations_department_id = c['operations_department_id']
 
         self._whmcsusers = None
         self._whmcstickets = None
