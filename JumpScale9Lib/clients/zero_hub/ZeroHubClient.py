@@ -1,16 +1,27 @@
 from zeroos.zerohub import Client as ZHubClient
 from js9 import j
 
-class ZeroHubClient:
+JSConfigClient = j.tools.configmanager.base_class_config
+
+TEMPLATE = """
+token_ = ""
+username = ""
+"""
+
+class ZeroHubClient(JSConfigClient):
     """
     Provide an easy way to communicate and do some actions on the ZeroHub
     """
 
-    def __init__(self):
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigClient.__init__(self, instance=instance,
+                                data=data, parent=parent, template=TEMPLATE)
+        self.token = self.config.data['token_']
+        self.username = self.config.data['username']
         self.client = ZHubClient("https://staging.hub.gig.tech/api")
         self.api = self.client.api
 
-    def authentificate(self, token, username=None):
+    def authentificate(self):
         """
         This is fastest way to authentifcate yourself.
 
@@ -25,10 +36,10 @@ class ZeroHubClient:
         If you have scope for another username than your, you can specify
         which username you want to use via the 'username' argument.
         """
-        self.api.set_token(token)
+        self.api.set_token(self.token)
 
-        if username:
-            self.api.set_user(username)
+        if self.username:
+            self.api.set_user(self.username)
 
         return True
 
