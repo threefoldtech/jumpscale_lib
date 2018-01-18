@@ -1,15 +1,27 @@
 # from __future__ import print_function
 from js9 import j
 
+JSConfigFactory = j.tools.configmanager.base_class_configs
+JSConfigClient = j.tools.configmanager.base_class_config
 
-class CeleryFactory:
-
+TEMPLATE = """
+url = "redis://localhost:6379/0"
+actors_path = "actors"
+"""
+class CeleryFactory(JSConfigFactory):
     def __init__(self):
         self.__jslocation__ = "j.clients.celery"
+        JSConfigFactory.__init__(self, CeleryClient)
+
+class CeleryClient(JSConfigClient):
+
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigClient.__init__(self, instance=instance,
+                                data=data, parent=parent, template=TEMPLATE)
         self.actors = {}
         self.app = None
-        self.url = "redis://localhost:6379/0"
-        self.actorsPath = "actors"
+        self.url = self.config.data['url']
+        self.actorsPath = self.config.data['actors_path']
 
     def flowerStart(self):
         from flower.command import FlowerCommand
@@ -118,7 +130,7 @@ class CeleryFactory:
 
             self.app = app
         else:
-            app = self.app
+            app = self.appactorName
 
         code = self.getCodeClient(actorName=actorName)
         exec(code, locals(), globals())
