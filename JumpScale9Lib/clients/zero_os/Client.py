@@ -1,29 +1,39 @@
-import socket
-import redis
-import uuid
-import logging
 import json
+import logging
+import socket
+import uuid
 
-from .ContainerManager import ContainerManager
+import redis
+from js9 import j
+
+from . import typchk
+from .AggregatorManager import AggregatorManager
 from .BridgeManager import BridgeManager
 from .BtrfsManager import BtrfsManager
-from .DiskManager import DiskManager
 from .Config import Config
-from .AggregatorManager import AggregatorManager
+from .ContainerManager import BaseClient, ContainerManager
+from .DiskManager import DiskManager
 from .KvmManager import KvmManager
 from .LogManager import LogManager
 from .Nft import Nft
-from .ZerotierManager import ZerotierManager
 from .Response import Response
-from .ContainerManager import BaseClient
-from . import typchk
-
+from .ZerotierManager import ZerotierManager
 
 DefaultTimeout = 10  # seconds
-logger = logging.getLogger('g8core')
+
+_config_template = {
+    'host': "127.0.0.1",
+    'port': 6379,
+    'password_': "",
+    'db': 0,
+    'ssl': True,
+    'timeout': 5,
+}
+
+JSConfigClientBase = j.tools.configmanager.base_class_config
 
 
-class Client(BaseClient):
+class Client(BaseClient, JSConfigClientBase):
     _raw_chk = typchk.Checker({
         'id': str,
         'command': str,
@@ -34,40 +44,45 @@ class Client(BaseClient):
         'tags': typchk.Or([str], typchk.IsNone()),
     })
 
-    def __init__(self, host, port=6379, password="", db=0, ssl=True, timeout=None, testConnectionAttempts=3):
-        super().__init__(timeout=timeout)
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigClientBase.__init__(self, instance=instance, data=data, parent=parent, template=_config_template)
+        timeout = self.config.data['timeout']
+        BaseClient.__init__(self, timeout=timeout)
 
-        socket_timeout = (timeout + 5) if timeout else 15
-        socket_keepalive_options = dict()
-        if hasattr(socket, 'TCP_KEEPIDLE'):
-            socket_keepalive_options[socket.TCP_KEEPIDLE] = 1
-        if hasattr(socket, 'TCP_KEEPINTVL'):
-            socket_keepalive_options[socket.TCP_KEEPINTVL] = 1
-        if hasattr(socket, 'TCP_KEEPIDLE'):
-            socket_keepalive_options[socket.TCP_KEEPIDLE] = 1
-        self._redis = redis.Redis(host=host, port=port, password=password, db=db, ssl=ssl,
-                                  socket_timeout=socket_timeout,
-                                  socket_keepalive=True, socket_keepalive_options=socket_keepalive_options)
+        self.__redis = None
+
         self._container_manager = ContainerManager(self)
         self._bridge_manager = BridgeManager(self)
         self._disk_manager = DiskManager(self)
         self._btrfs_manager = BtrfsManager(self)
         self._zerotier = ZerotierManager(self)
         self._kvm = KvmManager(self)
-        self._logger = LogManager(self)
+        self._log_manager = LogManager(self)
         self._nft = Nft(self)
-        self._config = Config(self)
+        self._config_manager = Config(self)
         self._aggregator = AggregatorManager(self)
 
-        if testConnectionAttempts:
-            for _ in range(testConnectionAttempts):
-                try:
-                    self.ping()
-                except:
-                    pass
-                else:
-                    return
-            raise ConnectionError("Could not connect to remote host %s" % host)
+    @property
+    def _redis(self):
+        if self.__redis is None:
+            timeout = self.config.data['timeout']
+            socket_timeout = (timeout + 5) if timeout else 15
+            socket_keepalive_options = dict()
+            if hasattr(socket, 'TCP_KEEPIDLE'):
+                socket_keepalive_options[socket.TCP_KEEPIDLE] = 1
+            if hasattr(socket, 'TCP_KEEPINTVL'):
+                socket_keepalive_options[socket.TCP_KEEPINTVL] = 1
+            if hasattr(socket, 'TCP_KEEPIDLE'):
+                socket_keepalive_options[socket.TCP_KEEPIDLE] = 1
+
+            self.__redis = redis.Redis(host=self.config.data['host'],
+                                       port=self.config.data['port'],
+                                       password=self.config.data['password_'],
+                                       db=self.config.data['db'], ssl=self.config.data['ssl'],
+                                       socket_timeout=socket_timeout,
+                                       socket_keepalive=True, socket_keepalive_options=socket_keepalive_options)
+
+        return self.__redis
 
     @property
     def container(self):
@@ -118,12 +133,12 @@ class Client(BaseClient):
         return self._kvm
 
     @property
-    def logger(self):
+    def log_manager(self):
         """
         Logger manager
         :return:
         """
-        return self._logger
+        return self._log_manager
 
     @property
     def nft(self):
@@ -134,12 +149,12 @@ class Client(BaseClient):
         return self._nft
 
     @property
-    def config(self):
+    def config_manager(self):
         """
         Config manager
         :return:
         """
-        return self._config
+        return self._config_manager
 
     @property
     def aggregator(self):
@@ -182,7 +197,7 @@ class Client(BaseClient):
         self._redis.rpush('core:default', json.dumps(payload))
         if self._redis.brpoplpush(flag, flag, DefaultTimeout) is None:
             TimeoutError('failed to queue job {}'.format(id))
-        logger.debug('%s >> g8core.%s(%s)', id, command, ', '.join(("%s=%s" % (k, v) for k, v in arguments.items())))
+        self.logger.debug('%s >> g8core.%s(%s)', id, command, ', '.join(("%s=%s" % (k, v) for k, v in arguments.items())))
 
         return Response(self, id)
 

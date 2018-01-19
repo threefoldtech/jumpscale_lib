@@ -2,8 +2,21 @@ from js9 import j
 
 import importlib
 
+JSConfigFactory = j.tools.configmanager.base_class_configs
+JSConfigClient = j.tools.configmanager.base_class_config
 
-class PeeweeFactory:
+TEMPLATE = """
+ipaddr = "localhost"
+port = 0
+login = "postgres"
+passwd_ = ""
+dbname = "template"
+dbtype = "postgres"
+schema = ""
+cache = true
+"""
+
+class PeeweeFactory(JSConfigFactory):
     """
     """
 
@@ -11,6 +24,7 @@ class PeeweeFactory:
         self.__jslocation__ = "j.clients.peewee"
         self.__imports__ = "psycopg2,peewee"
         self.clients = {}
+        JSConfigFactory.__init__(self, PeeweeClient)
 
     # def getClient(self, ipaddr="localhost", port=5432, login="postgres", passwd="rooter", dbname="template"):
     #     key = "%s_%s_%s_%s_%s" % (ipaddr, port, login, passwd, dbname)
@@ -34,25 +48,30 @@ class PeeweeFactory:
         for item in j.core.db.keys("peewee.*"):
             j.core.db.delete(item)
 
-    def getModel(
-            self,
-            ipaddr="localhost",
-            port=5432,
-            login="postgres",
-            passwd="rooter",
-            dbname="template",
-            dbtype="postgres",
-            schema=None,
-            cache=True):
-        """
-        example usage:
-            model=j.clients.peewee.getModel(login="gogs",passwd="something",dbname="gogs")
-            print([item.name for item in model.Issue.select()])
-        """
-        key = "%s_%s_%s_%s_%s" % (ipaddr, port, login, dbname, dbtype)
+class PeeweeClient(JSConfigClient):
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigClient.__init__(self, instance=instance,
+                                data=data, parent=parent, template=TEMPLATE)
+        c = self.config.data
+        self.ipaddr = c['ipaddr']
+        self.port = c['port']
+        self.login = c['login']
+        self.passwd = c['passwd_']
+        self.dbname = c['dbname']
+        self.dbtype = c['dbtype']
+        self.schema = c['schema']
+        self.cache = c['cache']
+        self._model = None
+
+
+    @property
+    def model(self):
+        if self._model:
+            return self._model
+        key = "%s_%s_%s_%s_%s" % (self.ipaddr, self.port, self.login, self.dbname, self.dbtype)
 
         if j.core.db.get("peewee.code.%s" % key) is None:
-            cmd = 'pwiz.py -H %s  -p %s -u "%s" -P -i %s' % (ipaddr, port, login, dbname)
+            cmd = 'pwiz.py -H %s  -p %s -u "%s" -P -i %s' % (self.ipaddr, self.port, self.login, self.dbname)
             rc, out, err = j.sal.process.execute(cmd, useShell=True, die=True, showout=False)
             j.core.db.set("peewee.code.%s" % key, out)
         code = j.core.db.get("peewee.code.%s" % key).decode()
@@ -64,4 +83,7 @@ class PeeweeFactory:
         loader = importlib.machinery.SourceFileLoader(key, path)
         module = loader.load_module(key)
 
+        self._model = module
         return module
+
+        

@@ -2,23 +2,23 @@
 from js9 import j
 from .Sheet import *
 
-# BASE CLASS WAS j.tools.code.classGetBase()
-
 
 class Sheets():
 
     def __init__(self):
-        self.__jslocation__ = "j.tools.worksheets"
+        self.__jslocation__ = "j.data.worksheets"
         self.sheets = {}
         self.sheetsByCategory = {}
         self.sheetNames = []
 
-    def new(self, name, nrcols=72, headers=[], category=None):
-        sheet = Sheet(name, nrcols=nrcols, headers=headers)
-        self.add(sheet, category)
-        return sheet
+    def sheet_new(self, name, nrcols=72, headers=[], period="M"):
+        """
+        @param period is M,Q or Y
+        """
+        return Sheet(name, nrcols=nrcols, headers=headers, period=period)
+        
 
-    def add(self, sheet, category=None):
+    def sheet_add(self, sheet, category=None):
         self.sheets[sheet.name] = sheet
         if category is not None:
             if category not in self.sheetsByCategory:
@@ -104,3 +104,36 @@ class Sheets():
                 rows2.append(row)
         newRow = self.applyFunction(rows2, mult, newRow)
         return newRow
+
+    def test(self):
+        '''
+        js9 'j.data.worksheets.test()'
+        '''
+
+        s=self.sheet_new("test")
+        r=s.addRow("nrCU",groupname="units")
+        r.setCell(posx=0,value=1,maxvalue=50)
+        r.setCell(posx=10,value=10,maxvalue=50)
+        r.setCell(posx=48,value=40,maxvalue=50)
+        r.interpolate()
+
+        r=s.addRow("nrSU",groupname="units")
+        r.setCell(posx=0,value=1,maxvalue=60)
+        r.setCell(posx=10,value=5,maxvalue=60)
+        r.setCell(posx=48,value=20,maxvalue=60)
+        r.interpolate()
+
+        res=[4.0,8.0,11.0,15.0,19.0,22.0,26.0,29.0,33.0,36.0,40.0,43.0,47.0,50.0,54.0,58.0,60.0,60.0,60.0,60.0,60.0,60.0,60.0,60.0]
+        assert r.aggregate("Q")==res
+
+        r=s.addRow("unitsTotal",groupname="units")
+        r0=s.sumRows(["nrCU","nrSU"],"unitsTotal")
+
+        r1=s.addRow("nrNU",groupname="units")
+        r1.text2row("2:100,5:200", standstill=5, defval=None,round=False, interpolate=True)
+
+        r2=s.addRow("amount",groupname="price")
+        r2.text2row("0:100mEGP,10:1k EUR", interpolate=True)
+
+
+        from IPython import embed;embed(colors='Linux')

@@ -959,7 +959,7 @@ class WindowsSystem:
         if j.sal.fs.isDir(dirPath):
             self.grantAccessToFile(dirPath, userName)
 
-            for subDir in j.sal.fs.walkExtended(dirPath, recurse=1):
+            for subDir in j.sal.fswalker.walkExtended(dirPath, recurse=1):
                 self.grantAccessToFile(subDir, userName)
         else:
             self.logger.info('%s is not a valid directory' % dirPath)
@@ -1000,7 +1000,7 @@ class WindowsSystem:
             if j.sal.fs.isDir(dirPath):
                 if force:
                     fileMode = win32file.GetFileAttributesW(dirPath)
-                    for file in j.sal.fs.walk(dirPath, recurse=1):
+                    for file in j.sal.fswalk.walk(dirPath, recurse=1):
                         self.logger.info('Changing attributes on %s' % fileMode)
                         win32file.SetFileAttributesW(file, fileMode & ~win32file.FILE_ATTRIBUTE_HIDDEN)
                 if errorHandler is not None:
