@@ -118,12 +118,18 @@ class Node:
         mount the fscache storage pool and copy the content of the in memmory fs inside
         """
         mountedpaths = [mount.mountpoint for mount in self.list_mounts()]
-        containerpath = '/var/cache/containers'
-        if containerpath not in mountedpaths:
-            if storagepool.exists('containercache'):
-                storagepool.get('containercache').delete()
-            fs = storagepool.create('containercache')
-            self.client.disk.mount(storagepool.devicename, containerpath, ['subvol={}'.format(fs.subvolume)])
+
+        def create_cache_dir(path, name):
+            self.client.filesystem.mkdir(path)
+            if path not in mountedpaths:
+                if storagepool.exists(name):
+                    storagepool.get(name).delete()
+                fs = storagepool.create(name)
+                self.client.disk.mount(storagepool.devicename, path, ['subvol={}'.format(fs.subvolume)])
+
+        create_cache_dir('/var/cache/containers', 'containercache')
+        create_cache_dir('/var/cache/vm', 'vmcache')
+
         logpath = '/var/log'
         if logpath not in mountedpaths:
             # logs is empty filesystem which we create a snapshot on to store logs of current boot
