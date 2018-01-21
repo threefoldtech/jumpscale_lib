@@ -11,7 +11,6 @@ import time
 
 TEMPLATE = """
 ipxeBase = "https://bootstrap.gig.tech/ipxe/master"
-baseurl = "https://itsyou.online/api"
 endpoint = "soyoustart-eu"
 appkey_ = ""
 appsecret_ = ""
@@ -178,10 +177,11 @@ class OVHClient(JSConfigBase):
                 raise RuntimeError(
                     "sshkeyname needs to be specified or only 1 sshkey needs to be loaded")
             sshKeyName = items[0]
+            sshKeyName = j.sal.fs.getBaseName(sshKeyName)
 
         if sshKeyName not in self.sshkeys_get():
             pubkey=j.clients.ssh.SSHKeyGetFromAgentPub(sshKeyName)
-            self.sshkey_add(name, pubkey)            
+            self.sshkey_add(sshKeyName, pubkey)
 
         if name == "":
             raise j.exceptions.Input(
