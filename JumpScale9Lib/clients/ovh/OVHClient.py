@@ -22,6 +22,9 @@ JSConfigBase = j.tools.configmanager.base_class_config
 
 
 class OVHClient(JSConfigBase):
+    """
+    
+    """
 
     def __init__(self, instance, data={}, parent=None):
         JSConfigBase.__init__(self, instance=instance,
@@ -137,18 +140,6 @@ class OVHClient(JSConfigBase):
     #             raise e
     #     return res
 
-    # def prefabsGet(self):
-    #     """
-    #     return all prefab connections to all known servers
-
-    #     returns [(name,prefab),]
-    #     """
-    #     res = []
-    #     for name in self.serversList:
-    #         details = self.server_detail_get(name)
-    #         e = j.tools.executor.get(details["ip"])
-    #         res.append((name, e.prefab))
-    #     return res
 
     def servers_install_wait(self):
         nrInstalling = 1
@@ -167,7 +158,7 @@ class OVHClient(JSConfigBase):
         self.details = {}
         print("INSTALL DONE")
 
-    def server_install(self, name, ovh_id="", installationTemplate="ubuntu1704-server_64", sshKeyName=None,
+    def server_install(self, name, ovh_id="", installationTemplate="ubuntu1710-server_64", sshKeyName=None,
                        useDistribKernel=True, noRaid=True, hostname="", wait=True):
         """
 
@@ -186,12 +177,11 @@ class OVHClient(JSConfigBase):
             if len(items) != 1:
                 raise RuntimeError(
                     "sshkeyname needs to be specified or only 1 sshkey needs to be loaded")
-            raise RuntimeError("not implemented yet")
-            # TODO:*1 need to check if the found key is already in OVH, if not upload to OVH
+            sshKeyName = items[0]
 
         if sshKeyName not in self.sshkeys_get():
-            raise j.exceptions.Input(message="could not find sshKeyName:%s" %
-                                     sshKeyName, level=1, source="", tags="", msgpub="")
+            pubkey=j.clients.ssh.SSHKeyGetFromAgentPub(sshKeyName)
+            self.sshkey_add(name, pubkey)            
 
         if name == "":
             raise j.exceptions.Input(
