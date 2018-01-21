@@ -22,7 +22,7 @@ JSConfigBase = j.tools.configmanager.base_class_config
 
 class OVHClient(JSConfigBase):
     """
-    
+
     """
 
     def __init__(self, instance, data={}, parent=None):
@@ -66,7 +66,7 @@ class OVHClient(JSConfigBase):
         @param name: name of the new public SSH key
         @param key: ASCII encoded public SSH key to add
         """
-        return self.client.post('/me/sshkey', keyName=name, key=key)
+        return self.client.post('/me/sshKey', keyName=name, key=key)
 
     def node_get(self, name, nodename=None):
         data = self.server_detail_get(name)
@@ -139,13 +139,12 @@ class OVHClient(JSConfigBase):
     #             raise e
     #     return res
 
-
     def servers_install_wait(self):
         nrInstalling = 1
         while nrInstalling > 0:
             nrInstalling = 0
             for item in self.servers_list():
-                status = self.serverGetInstallStatus(name=item, reload=True)
+                status = self.server_install_status(name=item, reload=True)
                 key = "server_detail_get_%s" % item  # lets make sure server is out of cache too
                 self.cache.delete(key)
                 if status != "active":
@@ -180,7 +179,7 @@ class OVHClient(JSConfigBase):
             sshKeyName = j.sal.fs.getBaseName(sshKeyName)
 
         if sshKeyName not in self.sshkeys_get():
-            pubkey=j.clients.ssh.SSHKeyGetFromAgentPub(sshKeyName)
+            pubkey = j.clients.ssh.SSHKeyGetFromAgentPub(sshKeyName)
             self.sshkey_add(sshKeyName, pubkey)
 
         if name == "":
@@ -219,14 +218,12 @@ class OVHClient(JSConfigBase):
             if name in self.details:
                 self.details.pop(name)
 
-        conf = self.servers_detail_get(ovh_id)
-        ipaddr = ...
-        port = ...
+        conf = self.server_detail_get(name)
+        ipaddr = conf['ip']
+        port = 22
 
         node = j.tools.nodemgr.set(name, ipaddr, port, cat="ovh",
                                    clienttype="j.clients.ovh")
-        node.client = self
-        node.pubconfig = conf
         return node
 
     def boot_image_pxe_list(self):

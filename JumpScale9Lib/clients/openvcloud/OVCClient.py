@@ -46,14 +46,16 @@ JSConfigBase = j.tools.configmanager.base_class_config
 class OVCClient(JSConfigBase):
 
     def __init__(self, instance, data={}, parent=None):
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,template=TEMPLATE)
-        self._api=None
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE)
+        self._api = None
         self.operator = True
 
     @property
     def api(self):
         if self._api is None:
-            self._api = j.clients.portal.get( self.config.data.get("address"), self.config.data.get("port"))
+            self._api = j.clients.portal.get(data={'ip': self.config.data.get("address"),
+                                                   'port': self.config.data.get("port"),
+                                                   'secret_': self.config.data.get('JWT_')})
             # patch handle the case where the connection dies because of inactivity
             self.__patch_portal_client(self._api)
             self.__login()
@@ -646,8 +648,8 @@ class Space(Authorizables):
         p.core.hostname = name  # make sure hostname is set
 
         # remember the node in the local node configuration
-        j.tools.nodemgr.set(name, addr=p.executor.sshclient.addr, port=p.executor.sshclient.port,
-                                      cat="openvcloud", description="deployment in openvcloud")
+        node = j.tools.nodemgr.set(name, addr=p.executor.sshclient.addr, port=p.executor.sshclient.port,
+                                   cat="openvcloud", description="deployment in openvcloud")
         return machine
 
     def _authorizeSSH(self, machine, sshkeyname):
