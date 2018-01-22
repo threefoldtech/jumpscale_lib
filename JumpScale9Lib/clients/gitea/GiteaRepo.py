@@ -5,11 +5,11 @@ import calendar
 class GiteaRepo():
 
     def __init__(self, org,name,data):
-        self.name = data["name"]
-        self.owner = data["owner"]["login"]
+        self.name = data.name
+        self.owner = data.owner.login
         self.data=data
         self.org=org
-        self.id = data["id"]
+        self.id = data.id
         self.client=org.client
         self.api = self.client.api.repos
         self.cache=j.data.cache.get("gitea_repo_%s_%s"%(self.owner,self.name))
@@ -33,23 +33,23 @@ class GiteaRepo():
         if labels==None:
             labels_default = self.org.labels_default_get()
 
-        repo_labels = self.api.issueListLabels(self.name,self.owner).data
+        repo_labels = self.api.issueListLabels(self.name,self.owner)[0]
         # @TODO: change the way we check on label name when this is fixed 
-        names = [l['name'] for l in repo_labels]
+        names = [l.name for l in repo_labels]
         for label in labels_default:
-            if label['name'] in names:
+            if label["name"] in names:
                 continue
             self.client.api.repos.issueCreateLabel(label, self.name, self.owner)
 
 
         def get_label_id(name):
             for item in repo_labels:
-                if item["name"]==name:
+                if item.name==name:
                     return str(item["id"])
         
         if remove_old:
-            labels_on_repo = [item["name"] for item in repo_labels]
-            labels_default = [item["name"] for item in labels_default]
+            labels_on_repo = [item.name for item in repo_labels]
+            labels_default = [item.name for item in labels_default]
             for label in labels_on_repo:
                 if label not in labels_default:
                     self.client.api.repos.issueDeleteLabel(get_label_id(label), self.name, self.owner)
@@ -76,7 +76,7 @@ class GiteaRepo():
             deadline=deadline_get(deadline)
             return {"title":title,"due_on":deadline}
 
-        repo_milestones = self.client.api.repos.issueGetMilestones(self.name, self.owner).data
+        repo_milestones = self.client.api.repos.issueGetMilestones(self.name, self.owner)[0]
         # @TODO: change the way we check on milestone title when this is fixed https://github.com/Jumpscale/go-raml/issues/396
         names = [m['title'] for m in repo_milestones]
         for title,deadline in milestones:
@@ -148,7 +148,7 @@ class GiteaRepo():
         return milestones
 
     def issues_get(self):
-         return self.api.issueListIssues(self.name,self.owner).data
+         return self.api.issueListIssues(self.name,self.owner)[0]
                     
     def __repr__(self):
         return "repo:%s"%self.name

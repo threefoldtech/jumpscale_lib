@@ -17,42 +17,42 @@ default_labels = [
     {'color': '#fef2c0', 'name': 'type_question'}
 ]
 
-class GiteaOrg():
 
-    def __init__(self, client,name):
+class GiteaOrg:
+
+    def __init__(self, client, name):
         self.name = name
         self.id = client.orgs_currentuser_list()[name]
-        self.client=client
+        self.client = client
         self.api = self.client.api.orgs
-        self.cache=j.data.cache.get("gitea_org_%s"%self.name)
-        self.logger = j.logger.get('%s'%self)
+        self.cache = j.data.cache.get("gitea_org_%s" % self.name)
+        self.logger = j.logger.get('%s' % self)
 
     def labels_default_get(self):
         return default_labels
 
-    def _repos_get(self,refresh=False):
+    def _repos_get(self, refresh=False):
         def do():
-            res={}
-            for item in self.client.api.orgs.orgListRepos(self.name).data:
-                res[item["name"]]=item        
+            res = {}
+            for item in self.client.api.orgs.orgListRepos(self.name)[0]:
+                res[item.name] = item
             return res
-        return self.cache.get("orgs", method=do, refresh=refresh, expire=60)        
-        
+        return self.cache.get("orgs", method=do, refresh=refresh, expire=60)
 
-    def repos_list(self,refresh=False):
-        res={}
+    def repos_list(self, refresh=False):
+        res = {}
         for name,item in self._repos_get(refresh=refresh).items():
-            res[name]=item["id"]
+            res[name] = item.id
         return res
 
-    def repo_get(self,name):
-        self.logger.info("repo:get:%s"%name)
+    def repo_get(self, name):
+        self.logger.info("repo:get:%s" % name)
         if name not in self._repos_get().keys():
-            raise RuntimeError("cannot find repo with name:%s in %s"%(name,self))
-        data=self._repos_get()[name]
-        return GiteaRepo(self,name,data)
+            raise RuntimeError("cannot find repo with name:%s in %s" % (name, self))
+        data = self._repos_get()[name]
+        return GiteaRepo(self, name, data)
 
-    def labels_milestones_add(self, labels=default_labels,remove_old = False):
+    def labels_milestones_add(self, labels=default_labels, remove_old=False):
         """
         If a label with the same name exists on a repo, it won't be added.
 
@@ -62,12 +62,12 @@ class GiteaOrg():
 
         """
         for repo_name in self.repos_list():
-            repo=self.repo_get(repo_name)
+            repo = self.repo_get(repo_name)
 
             repo.milestones_add(remove_old=remove_old)
             repo.labels_add(remove_old=remove_old)
 
     def __repr__(self):
-        return "org:%s"%self.name
+        return "org:%s" % self.name
 
-    __str__=__repr__
+    __str__ = __repr__
