@@ -1,9 +1,11 @@
+import time
 class TIMER:
     def __init__(self):
         self.__jslocation__ = "j.tools.timer"
 
     @staticmethod
-    def start():
+    def start(cat=""):
+        TIMER._cat = cat
         TIMER.clean()
         TIMER._start = time.time()
 
@@ -28,6 +30,8 @@ class TIMER:
 
     @staticmethod
     def result():
+        if TIMER._cat !="":
+            print("\nDURATION FOR:%s"%TIMER._cat)
         print(("duration:%s" % TIMER.duration))
         print(("nritems:%s" % TIMER.nritems))
-        print(("performance:%s" % TIMER.performance))
+        print(("performance:%s/sec" % int(TIMER.performance)))

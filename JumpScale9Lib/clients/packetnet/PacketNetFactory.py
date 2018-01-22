@@ -222,11 +222,20 @@ class PacketNet(JSConfigClient):
 
             ssh.execute("ls /")
 
-            return device, ssh.prefab
+        conf = {}
+        conf ["facility"] = facility
+        conf ["netinfo"] = res["ip_addresses"]
+        conf ["plan"] = plan
+        conf ["hostname"] = hostname
+        conf ["project_id"] = self.projectid
+        conf ["os"] = os
+        conf ["ipxeUrl"] = ipxeUrl
 
-        j.tools.develop.nodes.nodeSet(name=hostname, addr=ipaddr, port=22, cat='packet', description='', selected=True)
+        node = j.tools.develop.nodes.set(name=hostname, addr=ipaddr, port=22, cat='packet', description='', selected=True,clienttype="j.clients.packetnet")
+        node.client = self
+        node.pubconfig = conf
 
-        return ipaddr
+        return node
 
     def addSSHKey(self, sshkeyPub):
         raise RuntimeError("not implemented")

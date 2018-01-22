@@ -11,7 +11,6 @@ import time
 
 TEMPLATE = """
 ipxeBase = "https://bootstrap.gig.tech/ipxe/master"
-baseurl = "https://itsyou.online/api"
 endpoint = "soyoustart-eu"
 appkey_ = ""
 appsecret_ = ""
@@ -22,6 +21,9 @@ JSConfigBase = j.tools.configmanager.base_class_config
 
 
 class OVHClient(JSConfigBase):
+    """
+
+    """
 
     def __init__(self, instance, data={}, parent=None):
         JSConfigBase.__init__(self, instance=instance,
@@ -64,7 +66,7 @@ class OVHClient(JSConfigBase):
         @param name: name of the new public SSH key
         @param key: ASCII encoded public SSH key to add
         """
-        return self.client.post('/me/sshkey', keyName=name, key=key)
+        return self.client.post('/me/sshKey', keyName=name, key=key)
 
     def node_get(self, name, nodename=None):
         data = self.server_detail_get(name)
@@ -137,25 +139,12 @@ class OVHClient(JSConfigBase):
     #             raise e
     #     return res
 
-    # def prefabsGet(self):
-    #     """
-    #     return all prefab connections to all known servers
-
-    #     returns [(name,prefab),]
-    #     """
-    #     res = []
-    #     for name in self.serversList:
-    #         details = self.server_detail_get(name)
-    #         e = j.tools.executor.get(details["ip"])
-    #         res.append((name, e.prefab))
-    #     return res
-
     def servers_install_wait(self):
         nrInstalling = 1
         while nrInstalling > 0:
             nrInstalling = 0
             for item in self.servers_list():
-                status = self.serverGetInstallStatus(name=item, reload=True)
+                status = self.server_install_status(name=item, reload=True)
                 key = "server_detail_get_%s" % item  # lets make sure server is out of cache too
                 self.cache.delete(key)
                 if status != "active":
@@ -167,7 +156,7 @@ class OVHClient(JSConfigBase):
         self.details = {}
         print("INSTALL DONE")
 
-    def server_install(self, name, ovh_id="", installationTemplate="ubuntu1704-server_64", sshKeyName=None,
+    def server_install(self, name, ovh_id="", installationTemplate="ubuntu1710-server_64", sshKeyName=None,
                        useDistribKernel=True, noRaid=True, hostname="", wait=True):
         """
 
@@ -186,12 +175,12 @@ class OVHClient(JSConfigBase):
             if len(items) != 1:
                 raise RuntimeError(
                     "sshkeyname needs to be specified or only 1 sshkey needs to be loaded")
-            raise RuntimeError("not implemented yet")
-            # TODO:*1 need to check if the found key is already in OVH, if not upload to OVH
+            sshKeyName = items[0]
+            sshKeyName = j.sal.fs.getBaseName(sshKeyName)
 
         if sshKeyName not in self.sshkeys_get():
-            raise j.exceptions.Input(message="could not find sshKeyName:%s" %
-                                     sshKeyName, level=1, source="", tags="", msgpub="")
+            pubkey = j.clients.ssh.SSHKeyGetFromAgentPub(sshKeyName)
+            self.sshkey_add(sshKeyName, pubkey)
 
         if name == "":
             raise j.exceptions.Input(
@@ -229,14 +218,12 @@ class OVHClient(JSConfigBase):
             if name in self.details:
                 self.details.pop(name)
 
-        conf = self.servers_detail_get(ovh_id)
-        ipaddr = ...
-        port = ...
+        conf = self.server_detail_get(name)
+        ipaddr = conf['ip']
+        port = 22
 
         node = j.tools.nodemgr.set(name, ipaddr, port, cat="ovh",
                                    clienttype="j.clients.ovh")
-        node.client = self
-        node.pubconfig = conf
         return node
 
     def boot_image_pxe_list(self):
