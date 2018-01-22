@@ -87,6 +87,8 @@ class DocGenerator:
         if prefab.core.doneGet("docgenerator:installed") == False or reset:
             prefab.runtimes.nodejs.install()
             prefab.runtimes.nodejs.phantomjs()
+            prefab.runtimes.golang.install()
+            
             if "darwin" in str(j.core.platformtype.myplatform):
                 prefab.system.package.install('graphviz')
                 prefab.system.package.install('hugo')
@@ -97,20 +99,18 @@ class DocGenerator:
                 # prefab.core.file_download('https://github.com/gohugoio/hugo/releases/download/v0.26/hugo_0.26_Linux-64bit.tar.gz')
                 # prefab.core.file_expand('$TMPDIR/hugo_0.26_Linux-64bit.tar.gz')
                 # prefab.core.file_copy('$TMPDIR/hugo_0.26_Linux-64bit/hugo', '/usr/bin/')
-                # prefab.core.run("go get -v github.com/gohugoio/hugo")
-
-                prefab.core.run("go get -u -v github.com/gohugoio/hugo")
-
-                #IF FROM SOURCE
                 # go get github.com/kardianos/govendor
                 # govendor get github.com/gohugoio/hugo
                 # go install github.com/gohugoio/hugo
 
-            prefab.runtimes.golang.install()
+                prefab.core.run("go get -u -v github.com/gohugoio/hugo")
+
             prefab.web.caddy.build()
             prefab.core.run("npm install -g mermaid", profile=True)
             prefab.web.caddy.configure()
             prefab.core.doneSet("docgenerator:installed")
+
+            prefab.runtimes.pip.install("dash,dash-renderer,dash-html-components,dash-core-components,plotly")
 
     def startWebserver(self):
         """

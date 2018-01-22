@@ -43,22 +43,35 @@ types_color_code = '#fef2c0'
 priorities = ["critical", "major", "normal", "minor"]  # prefix: type
 prio_color_code = '#f9d0c4'
 
+TEMPLATE = """
+addr = ""
+port = 3000
+password_ = ""
+login = ""
+token_ = ""
+"""
 
-class GogsClient:
 
-    def __init__(self, addr, login="root", passwd="root", port=3000, accesstoken=None):
+JSConfigBase = j.tools.configmanager.base_class_config
+class GogsClient(JSConfigBase):
+
+    # def __init__(self, addr, login="root", passwd="root", port=3000, accesstoken=None):
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,template=TEMPLATE)
+        c = self.config.data
+        addr = c["addr"]
         if not addr.startswith("http"):
             addr = "http://{addr}".format(addr=addr)
-        self.addr = addr + ":{port}".format(port=port)
-        self.login = login
-        self.password = passwd
-        self.port = port
+        self.addr = addr + ":{port}".format(port=c['port'])
+        self.login = c['login']
+        self.password = c['password_']
+        self.port = c['port']
         self.baseurl = baseurl.format(addr=self.addr)
         self.session = requests.session()
-        if not accesstoken:
-            self.session.auth = HTTPBasicAuth(login, passwd)
+        if not c['token_']:
+            self.session.auth = HTTPBasicAuth(self.login, self.password)
         else:
-            self.session.headers['Authorization'] = 'token {}'.format(accesstoken)
+            self.session.headers['Authorization'] = 'token {}'.format(c['token_'])
 
         self.logger = j.logger.get("j.clients.gogs")
         self.logger.info("gogs client initted:%s for user %s" % (self.addr, self.login))

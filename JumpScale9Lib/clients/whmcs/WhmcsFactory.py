@@ -1,7 +1,7 @@
 from js9 import j
 from JumpScale9Lib.clients.whmcs.WhmcsInstance import WhmcsInstance
 
-
+JSConfigFactory = j.tools.configmanager.base_class_configs
 class Dummy:
 
     def __getattribute__(self, attr, *args, **kwargs):
@@ -21,30 +21,12 @@ class DummyWhmcs:
         self.users = Dummy()
 
 
-class WhmcsFactory:
+class WhmcsFactory(JSConfigFactory):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.whmcs"
         self.logger = j.logger.get('j.clients.whmcs')
-
-    def get(self,
-            username='',
-            md5_password='',
-            accesskey='',
-            url='',
-            cloudspace_product_id='',
-            operations_user_id='',
-            operations_department_id='',
-            instance='main'):
-
-        return WhmcsInstance(username,
-                             md5_password,
-                             accesskey,
-                             url,
-                             cloudspace_product_id,
-                             operations_user_id,
-                             operations_department_id,
-                             instance)
+        JSConfigFactory.__init__(self, WhmcsInstance)
 
     def getDummy(self):
         return DummyWhmcs()

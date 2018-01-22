@@ -12,14 +12,30 @@ try:
 except BaseException:
     import urllib.parse as urllib
 
+JSConfigFactory = j.tools.configmanager.base_class_configs
+JSConfigClient = j.tools.configmanager.base_class_config
 
-class GraphiteClient:
+TEMPLATE = """
+server = "127.0.0.1"
+carbon_port = 2003
+graphite_port = 8081
+"""
 
+
+class GraphiteFactory(JSConfigFactory):
     def __init__(self):
         self.__jslocation__ = "j.clients.graphite"
-        self._SERVER = '127.0.0.1'
-        self._CARBON_PORT = 2003
-        self._GRAPHITE_PORT = 8081
+        JSConfigFactory.__init__(self, GraphiteClient)
+
+class GraphiteClient(JSConfigClient):
+
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigClient.__init__(self, instance=instance,
+                                data=data, parent=parent, template=TEMPLATE)
+        c = self.config.data
+        self._SERVER = c['server']
+        self._CARBON_PORT = c['carbon_port']
+        self._GRAPHITE_PORT = c['graphite_port']
         self._url = "http://%s:%s/render" % (self._SERVER, self._GRAPHITE_PORT)
 
         # self.sock.connect((self.CARBON_SERVER, self.CARBON_PORT))

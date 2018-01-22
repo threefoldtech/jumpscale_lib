@@ -3,21 +3,33 @@ import time
 import urllib
 from js9 import j
 
+TEMPLATE = """
+config_path = ""
+context = ""
+ssh_key_path = ""
+incluster_config = false
+"""
 
-class KubernetesMaster:
+
+JSConfigBase = j.tools.configmanager.base_class_config
+
+class KubernetesMaster(JSConfigBase):
     """
     A class that represents a top view of the hirarchy.
     Where only the config, context , or namespace are defined.
     """
-
-    def __init__(self, config_path=None, context=None, ssh_key_path=None, incluster_config=False):
+    def __init__(self, instance, data={}, parent=None):
         """
         Creates a client instance that connects to either a config path or context or both
-
-        @param config_path,, str: full path to configuration file.
-        @param context ,, str: context name usually the same as the cluster used for isolation on same nodes.
-        @param ssh_key_path ,, str: full path of ssh key to load.
         """
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,template=TEMPLATE)
+        # load data from jsconfig
+        c = self.config.data
+        config_path = c['config_path']
+        context = c['context']
+        ssh_key_path = c['ssh_key_path']
+        incluster_config = c['incluster_config']
+
         if incluster_config:
             config.load_incluster_config()
         else:

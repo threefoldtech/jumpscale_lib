@@ -8,14 +8,24 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+JSConfigFactory = j.tools.configmanager.base_class_configs
+JSConfigClient = j.tools.configmanager.base_class_config
 
-class EmailClient:
+TEMPLATE = """
+smtp_server = ""
+smtp_port = 0
+login = ""
+password = ""
+from = ""
+"""
 
-    def __init__(self):
-        self.__jslocation__ = "j.clients.email"
-        if not j.core.state.configGet('email', ""):
-            raise RuntimeError("Email is not in config")
-        config = j.core.state.configGet['email']
+class EmailClient(JSConfigClient):
+
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigClient.__init__(self, instance=instance,
+                                data=data, parent=parent, template=TEMPLATE)
+        
+        config = self.config.data
         self._server = config['smtp_server']
         self._port = config['smtp_port']
         self._ssl = self._port in [465, 587]
@@ -131,3 +141,9 @@ class EmailClient:
     #     s.sendmail(msg['From'], msg['To'], msg.as_string())
     #
     #     s.quit()
+
+
+class EmailClientFactory(JSConfigFactory):
+    def __init__(self):
+        self.__jslocation__ = "j.clients.email"
+        JSConfigFactory.__init__(self, EmailClient)

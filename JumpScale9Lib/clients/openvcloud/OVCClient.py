@@ -46,14 +46,16 @@ JSConfigBase = j.tools.configmanager.base_class_config
 class OVCClient(JSConfigBase):
 
     def __init__(self, instance, data={}, parent=None):
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,template=TEMPLATE)
-        self._api=None
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE)
+        self._api = None
         self.operator = True
 
     @property
     def api(self):
         if self._api is None:
-            self._api = j.clients.portal.get( self.config.data.get("address"), self.config.data.get("port"))
+            self._api = j.clients.portal.get(data={'ip': self.config.data.get("address"),
+                                                   'port': self.config.data.get("port"),
+                                                   'secret_': self.config.data.get('JWT_')})
             # patch handle the case where the connection dies because of inactivity
             self.__patch_portal_client(self._api)
             self.__login()
@@ -105,13 +107,13 @@ class OVCClient(JSConfigBase):
         api.__call__ = patch_call
 
     def __login(self):
-        if self.config.data.get("appkey_")!="" and self.operator==False:
+        if self.config.data.get("appkey_") != "" and self.operator is False:
             self.api._session.cookies.clear()
             # secret=self.api.system.usermanager.authenticate(name=self.config.data.get("login"),secret=self.config.data.get("appkey_"))
             self.api._session.cookies['beaker.session.id'] = self.config.data.get("appkey_")
             self._login = self.config.data.get("login")  #IS THIS NEEDED WHEN USING SECRET KEY
         else:
-            jwt = j.clients.itsyouonline.jwt
+            jwt = j.clients.itsyouonline.get().jwt
             import jose.jwt
             payload = jose.jwt.get_unverified_claims(jwt)
             if payload['exp'] < time.time():
@@ -664,6 +666,7 @@ class Space(Authorizables):
         j.tools.develop.nodes.nodeSet(name, addr=prefab.executor.sshclient.addr,
                                       port=prefab.executor.sshclient.port,
                                       cat="openvcloud", description="deployment in openvcloud")
+        return machine
 
     def createPortForward(self, machine):
         sshport = self._getPortForward(machine=machine)

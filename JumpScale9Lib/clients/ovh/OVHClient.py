@@ -11,7 +11,6 @@ import time
 
 TEMPLATE = """
 ipxeBase = "https://bootstrap.gig.tech/ipxe/master"
-baseurl = "https://itsyou.online/api"
 endpoint = "soyoustart-eu"
 appkey_ = ""
 appsecret_ = ""
@@ -22,9 +21,13 @@ JSConfigBase = j.tools.configmanager.base_class_config
 
 
 class OVHClient(JSConfigBase):
+    """
+
+    """
 
     def __init__(self, instance, data={}, parent=None):
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,template=TEMPLATE)
+        JSConfigBase.__init__(self, instance=instance,
+                              data=data, parent=parent, template=TEMPLATE)
         c = self.config.data
         self.client = ovh.Client(
             endpoint=c["endpoint"],
@@ -39,33 +42,38 @@ class OVHClient(JSConfigBase):
             db=j.data.kvs.getRedisStore())
         self.ipxeBase = c["ipxeBase"]
 
-    def nameCheck(self, name):
+    def name_check(self, name):
         if "ns302912" in name:
             raise RuntimeError("Cannot use server:%s" % name)
 
     def reset(self):
         self.cache.reset()
 
-    def installationTemplates(self):
+    def installationtemplates_get(self):
         def getData():
-            print("get installationTemplates")
+            print("get installationtemplates_get")
             return self.client.get('/dedicated/installationTemplate')
-        return self.cache.get("installationTemplates", getData, expire=3600)
+        return self.cache.get("installationtemplates_get", getData, expire=3600)
 
-    def sshKeysGet(self):
+    def sshkeys_get(self):
         def getData():
             print("get sshkeys")
             return self.client.get('/me/sshKey')
         return self.cache.get("sshKeys", getData)
 
-    def sshKeyAdd(self, name, key):
+    def sshkey_add(self, name, key):
         """
         @param name: name of the new public SSH key
         @param key: ASCII encoded public SSH key to add
         """
-        return self.client.post('/me/sshkey', keyName=name, key=key)
+        return self.client.post('/me/sshKey', keyName=name, key=key)
 
-    def serversGetList(self):
+    def node_get(self, name, nodename=None):
+        data = self.server_detail_get(name)
+        node = j.tools.nodemgr.get(name, create=False)
+        return OVHNode(self, data, node)
+
+    def servers_list(self):
         def getData():
             print("get serversList")
             llist = self.client.get("/dedicated/server")
@@ -73,26 +81,9 @@ class OVHClient(JSConfigBase):
             return llist
         return self.cache.get("serversList", getData)
 
-    # def getETCDConnectionFromCluster(self):
-    #     """
-    #     will check ssh on each server, when ssh found then check if there is an ETCD server installed
-    #     if not will install
-    #     if yes will return
-    #     """
-    #     l = []
-    #     for item in self.serversGetList():
-    #         try:
-    #             l.append(self.prefabGet(item))
-    #         except:
-    #             pass
-    #     from IPython import embed
-    #     print("DEBUG NOW sdsd")
-    #     embed()
-    #     raise RuntimeError("stop debug here")
-
-    def serverGetDetail(self, name, reload=False):
-        self.nameCheck(name)
-        key = "serverGetDetail_%s" % name
+    def server_detail_get(self, name, reload=False):
+        self.name_check(name)
+        key = "server_detail_get_%s" % name
         if reload:
             self.cache.delete(key)
 
@@ -101,8 +92,8 @@ class OVHClient(JSConfigBase):
             return self.client.get("/dedicated/server/%s" % name)
         return self.cache.get(key, getData, name=name, expire=120)
 
-    def serverGetInstallStatus(self, name, reload=False):
-        self.nameCheck(name)
+    def server_install_status(self, name, reload=False):
+        self.name_check(name)
         key = "serverGetInstallStatus%s" % name
         if reload:
             self.cache.delete(key)
@@ -118,23 +109,11 @@ class OVHClient(JSConfigBase):
                     raise e
         return self.cache.get(key, getData, name=name, expire=120)
 
-    def serversGet(self):
+    def servers_detail_get(self):
         res = []
-        for item in self.serversGetList():
-            res.append((item, self.serverGetDetail(item)))
+        for item in self.servers_list():
+            res.append((item, self.server_detail_get(item)))
         return res
-
-    def prefabGet(self, name):
-        self.nameCheck(name)
-        details = self.serverGetDetail(name)
-        e = j.tools.executor.get(details["ip"])
-        return e.prefab
-
-    def prefabGetSSH(self, name, sshkey, passphrase=None):
-        self.nameCheck(name)
-        details = self.serverGetDetail(name)
-        e = j.tools.executor.getSSHBased(addr=details['ip'], key_filename=sshkey, passphrase=passphrase)
-        return e.prefab
 
     # def backupInit(self, name):
     #     try:
@@ -160,26 +139,13 @@ class OVHClient(JSConfigBase):
     #             raise e
     #     return res
 
-    def prefabsGet(self):
-        """
-        return all prefab connections to all known servers
-
-        returns [(name,prefab),]
-        """
-        res = []
-        for name in self.serversList:
-            details = self.serverGetDetail(name)
-            e = j.tools.executor.get(details["ip"])
-            res.append((name, e.prefab))
-        return res
-
-    def serversWaitInstall(self):
+    def servers_install_wait(self):
         nrInstalling = 1
         while nrInstalling > 0:
             nrInstalling = 0
-            for item in self.serversGetList():
-                status = self.serverGetInstallStatus(name=item, reload=True)
-                key = "serverGetDetail_%s" % item  # lets make sure server is out of cache too
+            for item in self.servers_list():
+                status = self.server_install_status(name=item, reload=True)
+                key = "server_detail_get_%s" % item  # lets make sure server is out of cache too
                 self.cache.delete(key)
                 if status != "active":
                     print(item)
@@ -190,53 +156,61 @@ class OVHClient(JSConfigBase):
         self.details = {}
         print("INSTALL DONE")
 
-    def serverInstall(self, name="", installationTemplate="ubuntu1704-server_64", sshKeyName="ovh",
-                      useDistribKernel=True, noRaid=True, hostname="", wait=True):
+    def server_install(self, name, ovh_id="", installationTemplate="ubuntu1710-server_64", sshKeyName=None,
+                       useDistribKernel=True, noRaid=True, hostname="", wait=True):
         """
-        if name == * then will install on all and names will be the name given by ovh
+
+        if sshKeyName == None, and there is only 1 loaded, then will take that key
+
+        will return node_client
 
         """
-        self.nameCheck(name)
-        if installationTemplate not in self.installationTemplates():
+        self.name_check(name)
+        if installationTemplate not in self.installationtemplates_get():
             raise j.exceptions.Input(message="could not find install template:%s" %
                                      templateName, level=1, source="", tags="", msgpub="")
-        if sshKeyName not in self.sshKeysGet():
-            raise j.exceptions.Input(message="could not find sshKeyName:%s" %
-                                     sshKeyName, level=1, source="", tags="", msgpub="")
 
-        if name == "*":
-            for item in self.serversGetList():
-                self.serverInstall(name=item, wait=False)
-            wait = True
-        elif name == "":
+        if sshKeyName == None:
+            items = j.clients.ssh.ssh_keys_list_from_agent()
+            if len(items) != 1:
+                raise RuntimeError(
+                    "sshkeyname needs to be specified or only 1 sshkey needs to be loaded")
+            sshKeyName = items[0]
+            sshKeyName = j.sal.fs.getBaseName(sshKeyName)
+
+        if sshKeyName not in self.sshkeys_get():
+            pubkey = j.clients.ssh.SSHKeyGetFromAgentPub(sshKeyName)
+            self.sshkey_add(sshKeyName, pubkey)
+
+        if name == "":
             raise j.exceptions.Input(
                 message="please specify name", level=1, source="", tags="", msgpub="")
-        else:
-            if hostname == "":
-                hostname = name
-            details = {}
-            details["installationTemplate"] = installationTemplate
-            details["useDistribKernel"] = useDistribKernel
-            details["noRaid"] = noRaid
-            details["customHostname"] = hostname
-            details["sshKeyName"] = sshKeyName
 
-            # make sure cache for this server is gone
-            key = "serverGetDetail_%s" % name
-            self.cache.delete(key)
+        if hostname == "":
+            hostname = name
+        details = {}
+        details["installationTemplate"] = installationTemplate
+        details["useDistribKernel"] = useDistribKernel
+        details["noRaid"] = noRaid
+        details["customHostname"] = hostname
+        details["sshKeyName"] = sshKeyName
 
-            try:
-                self.client.post("/dedicated/server/%s/install/start" %
-                                 name, details=details, templateName=installationTemplate)
-            except Exception as e:
-                if "A reinstallation is already in todo" in str(e):
-                    print("INFO:%s:%s" % (name, e))
-                    pass
-                else:
-                    raise e
+        # make sure cache for this server is gone
+        key = "server_detail_get_%s" % name
+        self.cache.delete(key)
+
+        try:
+            self.client.post("/dedicated/server/%s/install/start" %
+                             name, details=details, templateName=installationTemplate)
+        except Exception as e:
+            if "A reinstallation is already in todo" in str(e):
+                print("INFO:%s:%s" % (name, e))
+                pass
+            else:
+                raise e
 
         if wait:
-            self.serversWaitInstall()
+            self.servers_install_wait()
 
         if name == "":
             self.details = {}
@@ -244,26 +218,34 @@ class OVHClient(JSConfigBase):
             if name in self.details:
                 self.details.pop(name)
 
-    def listNetworkBootloader(self):
+        conf = self.server_detail_get(name)
+        ipaddr = conf['ip']
+        port = 22
+
+        node = j.tools.nodemgr.set(name, ipaddr, port, cat="ovh",
+                                   clienttype="j.clients.ovh")
+        return node
+
+    def boot_image_pxe_list(self):
         """
         Lists iPXE scripts installed on the account
         """
         return self.client.get("/me/ipxeScript")
 
-    def inspectNetworkBootloader(self, name):
+    def boot_image_pxe_get(self, name):
         """
         Returns contents of the iPXE script name given in parameter
         """
-        return self.client.delete("/me/ipxeScript/%s" % name)
+        return self.client.get("/me/ipxeScript/%s" % name)
 
-    def deleteNetworkBootloader(self, name):
+    def boot_image_pxe_delete(self, name):
         """
         Delete a iPXE script boot entry
         Note: this require DELETE account capability
         """
         return self.client.delete("/me/ipxeScript/%s" % name)
 
-    def installNetworkBootloader(self, ipxe):
+    def boot_image_pxe_set(self, name, script, description=""):
         """
         Set a new iPXE boot script bootloader
         ipxe: should contains a dictionary with:
@@ -271,13 +253,18 @@ class OVHClient(JSConfigBase):
           - name: a name which will identify the iPXE script entry
           - script: the iPXE script which will be executed during the boot
         """
-        return self.client.post("/me/ipxeScript", **ipxe)
+        dd = {}
+        dd["name"] = name
+        dd["script"] = script
+        dd["description"] = description
 
-    def isBootAvailable(self, name):
+        return self.client.post("/me/ipxeScript", **dd)
+
+    def boot_image_pxe_available(self, name):
         """
         Checkk if an iPXE boot script name already exists
         """
-        existing = self.listNetworkBootloader()
+        existing = self.boot_image_pxe_list()
 
         for item in existing:
             if item == name:
@@ -285,7 +272,7 @@ class OVHClient(JSConfigBase):
 
         return None
 
-    def _setBootloader(self, target, bootid):
+    def _bootloader_set(self, target, bootid):
         print("[+] bootloader selected: %s" % bootid)
 
         payload = {"bootId": int(bootid)}
@@ -293,7 +280,7 @@ class OVHClient(JSConfigBase):
 
         return True
 
-    def setBootloader(self, target, name):
+    def bootloader_set(self, target, name):
         """
         Set and apply an iPXE boot script to a remote server
         - target: need to be a OVH server hostname
@@ -301,22 +288,22 @@ class OVHClient(JSConfigBase):
         """
         bootlist = self.client.get(
             "/dedicated/server/%s/boot?bootType=ipxeCustomerScript" % target)
-        checked = None
+        # checked = None
 
         for bootid in bootlist:
             data = self.client.get(
                 "/dedicated/server/%s/boot/%s" % (target, bootid))
             if data['kernel'] == name:
-                return self._setBootloader(target, bootid)
+                return self._bootloader_set(target, bootid)
 
         return False
 
-    def reboot(self, name):
+    def server_reboot(self, name):
         """
         Reboot a server
         - target: need to be a OVH server hostname
         """
-        self.nameCheck(name)
+        self.name_check(name)
         return self.client.post("/dedicated/server/%s/reboot" % name)
 
     #
@@ -325,7 +312,7 @@ class OVHClient(JSConfigBase):
     def _zos_build(self, url):
         """
         Internal use.
-        This build an OVH adapted iPXE script based on an officiel bootstrap URL
+        This build an OVH adapted iPXE script based on an official bootstrap URL
         """
         # strip trailing flash
         url = url.rstrip('/')
@@ -365,33 +352,33 @@ class OVHClient(JSConfigBase):
 
         return {'description': description, 'name': name, 'script': fixed}
 
-    def zeroOSBoot(self, target, zerotierNetworkID):
+    def zero_os_boot(self, target, zerotierNetworkID):
         """
         Configure a node to use Zero-OS iPXE kernel
         - target: need to be an OVH server hostname
         - zerotierNetworkID: network to be used in zerotier
         """
-        self.nameCheck(target)
+        self.name_check(target)
         url = "%s/%s" % (self.ipxeBase, zerotierNetworkID)
         ipxe = self._zos_build(url)
 
         print("[+] description: %s" % ipxe['description'])
         print("[+] boot loader: %s" % ipxe['name'])
 
-        if not self.isBootAvailable(ipxe['name']):
+        if not self.boot_image_pxe_available(ipxe['name']):
             print("[+] installing the bootloader")
-            self.installNetworkBootloader(ipxe)
-        self.setBootloader(target, ipxe['name'])
+            self.boot_image_pxe_set(ipxe)
+        self.bootloader_set(target, ipxe['name'])
         return self.reboot(target)
 
-    def getTask(self, target, taskId):
+    def task_get(self, target, taskId):
         return self.client.get("/dedicated/server/%s/task/%s" % (target, taskId))
 
-    def waitServerReboot(self, target, taskId):
+    def server_wait_reboot(self, target, taskId):
         current = ""
 
         while True:
-            status = self.getTask(target, taskId)
+            status = self.task_get(target, taskId)
 
             if status['status'] != current:
                 current = status['status']
