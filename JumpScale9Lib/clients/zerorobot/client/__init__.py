@@ -8,6 +8,7 @@ from .EnumTaskState import EnumTaskState
 from .Error import Error
 from .Service import Service
 from .ServiceCreate import ServiceCreate
+from .ServiceFilter import ServiceFilter
 from .ServiceState import ServiceState
 from .ServiceUpgradeRequest import ServiceUpgradeRequest
 from .Task import Task

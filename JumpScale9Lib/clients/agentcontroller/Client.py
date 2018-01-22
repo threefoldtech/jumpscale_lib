@@ -1,17 +1,22 @@
 import JumpScale9Lib.clients.agentcontroller.acclient as acclient
 import JumpScale9Lib.clients.agentcontroller.simple as simple
+from js9 import j
+
+JSConfigFactory = j.tools.configmanager.base_class_configs
+JSConfigClient = j.tools.configmanager.base_class_config
+
+TEMPLATE = """
+address = "localhost"
+port = 6379
+password_ = ""
+"""
 
 
-class ACFactory:
+class ACFactory(JSConfigFactory):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.agentcontroller"
-
-    def getAdvanced(self, address='localhost', port=6379, password=None):
-        return acclient.Client(address, port, password)
-
-    def get(self, address='localhost', port=6379, password=None):
-        return simple.SimpleClient(self.getAdvanced(address=address, port=port, password=password))
+        JSConfigFactory.__init__(self, ACClient)
 
     def getRunArgs(self, domain=None, name=None, max_time=0, max_restart=0, recurring_period=0, stats_interval=0,
                    args=None, loglevels='*', loglevels_db=None, loglevels_ac=None, queue=None):
@@ -34,3 +39,24 @@ class ACFactory:
                                 recurring_period=recurring_period, stats_interval=stats_interval, args=args,
                                 loglevels=loglevels, loglevels_db=loglevels_db, loglevels_ac=loglevels_ac,
                                 queue=queue)
+
+class ACClient(JSConfigClient, simple.SimpleClient):
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigClient.__init__(self, instance=instance,
+                                data=data, parent=parent, template=TEMPLATE)
+        c = self.config.data
+        self.address = c['address']
+        self.port = c['port']
+        self.password = c['password_']
+        self._advanced_client = None
+        simple.SimpleClient.__init__(self.advanced_client)
+
+    @property
+    def advanced_client(self):
+        if not self._advanced_client:
+            self._advanced_client = acclient.Client(address=self.address, port=self.port, password=self.password)
+
+        return self._advanced_client
+       
+            
+        
