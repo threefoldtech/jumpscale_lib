@@ -1,9 +1,10 @@
 from js9 import j
 # from collections import OrderedDict
 
-from .ModelBase import ModelBase
+from .ModelBase3 import ModelBase3
 
-class ModelBaseData(ModelBase):
+
+class ModelBaseData(ModelBase3):
 
     def __init__(self, key="", new=False, collection=None):
         super().__init__(key=key, new=new, collection=collection)
@@ -35,4 +36,3 @@ def getText(text):
 
 def getInt(nr):
     return int(nr)
-

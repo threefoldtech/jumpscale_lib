@@ -3,9 +3,9 @@ import sys
 import capnp
 from collections import OrderedDict
 import capnp
-from .ModelBase import ModelBase
-from .ModelBase import ModelBaseWithData
-from .ModelBase import ModelBaseCollection
+
+from .ModelBaseCollection3 import ModelBaseCollection3
+from .ModelBaseData3 import ModelBaseData
 
 
 class Tools():
@@ -59,7 +59,7 @@ class Capnp:
         return ModelBaseCollection
 
     def getModelCollection(self, schema, category, namespace=None, modelBaseClass=None,
-                           modelBaseCollectionClass=None, db=None,indexDb=None):
+                           modelBaseCollectionClass=None, db=None, indexDb=None):
         """
         @param schema is capnp_schema
 
@@ -125,7 +125,7 @@ class Capnp:
 
             }
             """ % j.data.idgenerator.generateCapnpID()
-            
+
         schemas = self._getSchemas(schemaInText)
         schema = eval("schemas.%s" % name)
         return schema
@@ -226,7 +226,6 @@ class Capnp:
         # dummy test, not used later
         obj = self.getObj(capnpschema, name="Issue")
         obj.state = "ok"
-        
 
         # now we just get the capnp schema for this object
         schema = self.getSchemaFromText(capnpschema, name="Issue")
@@ -252,7 +251,8 @@ class Capnp:
         print("population in %.2fs" % (end_populate - start))
         print("find in %.2fs" % (end_find - end_populate))
 
-        from IPython import embed;embed(colors='Linux')
+        from IPython import embed
+        embed(colors='Linux')
 
     def testWithRedis(self):
         capnpschema = '''
