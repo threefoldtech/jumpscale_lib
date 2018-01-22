@@ -63,8 +63,8 @@ class RamlTools:
             cmd += ' --package {package}'
         if kind:
             cmd += ' --kind {kind}'
-        # if unmarshall_response:
-        #     cmd += ' --python-unmarshall-response'
+        if unmarshall_response:
+            cmd += ' --python-unmarshall-response'
 
         return cmd
 
@@ -88,7 +88,7 @@ class RamlTools:
         if reset:
             self.reset()
 
-        res=j.sal.process.execute(cmd)
+        j.sal.process.execute(cmd)
 
         # TODO: re-enable when generation of swagger is fixed
         # spec = SwaggerSpec("%s/generated/swagger_api.json" % self.path)
@@ -106,7 +106,7 @@ class RamlTools:
         }
         kind = self._get_kind(supported_map, kind)
 
-        cmd = self._get_cmd(kind=kind)#, unmarshall_response=unmarshall_response)
+        cmd = self._get_cmd(kind=kind, unmarshall_response=unmarshall_response)
         cmd = cmd.format(path=self.path, goraml=self.goramlpath, kind=kind, lang='python', type='client')
 
         self._client_generate(reset=reset, cmd=cmd, doc=doc)

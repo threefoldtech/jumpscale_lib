@@ -7,6 +7,7 @@ from js9 import j
 from .SwaggerSpec import *
 from .RamlTools import RamlTools
 
+
 class RamlToolsFactory:
 
     """
@@ -38,10 +39,10 @@ class RamlToolsFactory:
         # self._prefab.runtimes.nodejs.reset()
         npm_install = self._prefab.runtimes.nodejs.npm_install
 
-        if j.sal.process.checkInstalled("go") == False:
+        if not j.sal.process.checkInstalled("go"):
             j.tools.prefab.local.runtimes.golang.install()
             j.tools.prefab.local.runtimes.golang.goraml(reset=True)
-        if j.sal.process.checkInstalled("npm") == False:
+        if not j.sal.process.checkInstalled("npm"):
             j.tools.prefab.local.runtimes.nodejs.install()
 
         npm_install("raml2html")
@@ -129,14 +130,15 @@ class RamlToolsFactory:
 
         # Test Flask Server
         self.logger.info('generate python server')
-        c.server_python_generate(kind='gevent')
+        c.server_python_generate(kind='flask')
         tmux = j.tools.prefab.local.system.processmanager.get('tmux')
         cmd = 'cd %s/server; python3 app.py' % path
         tmux.ensure('ramltest_python_server', cmd)
 
         self.logger.info('generate python requests client')
         # load generated client
-        c.client_python_generate(kind='requests', unmarshall_response=True)  
+        c.client_python_generate(kind='requests', unmarshall_response=False)  # if unmarshall is true, the client will
+        # fail because the server return empty payload because we are testing an unimplemented server
 
         sys.path.append('/tmp/ramltest/')
 
@@ -146,43 +148,38 @@ class RamlToolsFactory:
 
         self.logger.info('test generate python server with generated python client')
 
-        res=cl.user.getUser(id='1')
+        cl.user.getUser(id='1')
+        r = cl.user.getUser(id='1')
+        assert r.json() == {}
+        assert r.status_code == 200
+        tmux.stop('ramltest_python_server')
 
-        from IPython import embed;embed(colors='Linux')
-
-        # tmux.stop('ramltest_python_server')
-
-        # j.sal.process.killProcessByPort(5000)  # For some reason after stopping the tmux, there is an orphan process
-
-
-        #TODO: need to do for gevent 
-
+        j.sal.process.killProcessByPort(5000)  # For some reason after stopping the tmux, there is an orphan process
         # running on 5000
 
-        # # Test Gevent Server
-        # self.logger.info("generate python server")
-        # c.server_python_generate(kind='flask')  #HOW TO DO GEVENT???
-        # cmd = 'cd %s/server; python3 app.py' % path
-        # tmux.ensure('ramltest_gevent_server', cmd)
+        # Test Gevent Server
+        self.logger.info("generate python server")
+        c.server_python_generate(kind='gevent')
+        cmd = 'cd %s/server; python3 app.py' % path
+        tmux.ensure('ramltest_gevent_server', cmd)
 
-        # self.logger.info('generate python client')
-        # # load generated client
-        # c.client_python_generate(kind='gevent')#, unmarshall_response=False)  # if unmarshall is true, the client will
-        # # fail because the server return empty payload
+        self.logger.info('generate python gevent client')
+        # load generated client
+        c.client_python_generate(kind='gevent', unmarshall_response=False)  # if unmarshall is true, the client will
+        # fail because the server return empty payload because we are testing an unimplemented server
 
-        # self.logger.info('test generated client')
-        # from client import Client
-        # cl = Client('http://localhost:5000')
+        self.logger.info('test generated client')
+        from client import Client
+        cl = Client('http://localhost:5000')
 
-        # self.logger.info('test generate python server with generated python client')
+        self.logger.info('test generate python server with generated python client')
 
-        # r = cl.user.getUser(id='1')
-        # assert r.json() == {}
-        # assert r.status_code == 200
+        r = cl.user.getUser(id='1')
+        assert r.json() == {}
+        assert r.status_code == 200
+        tmux.stop('ramltest_gevent_server')
 
-        # # TODO:*1 should test the api docs: http://localhost:5000/apidocs/index.html?raml=api.raml, just to see they are there
-
-        # tmux.stop('ramltest_gevent_server')
+        # TODO:*1 should test the api docs: http://localhost:5000/apidocs/index.html?raml=api.raml, just to see they are there
 
         # TODO:*1 get SPORE client, and do test from SPORE client
 
@@ -206,4 +203,3 @@ class RamlToolsFactory:
         # tmux.stop('ramltest_golang_server')
 
         # raise RuntimeError("need to implement all todo's")
-
