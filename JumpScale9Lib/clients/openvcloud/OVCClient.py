@@ -2,7 +2,7 @@ from js9 import j
 import time
 import datetime
 import requests
-
+from paramiko.ssh_exception import BadAuthenticationType
 # NEED: pip3 install python-jose
 
 
@@ -621,7 +621,8 @@ class Space(Authorizables):
             raise j.exceptions.RuntimeError(
                 "Name is not unique, already exists in %s" % self)
         self.logger.info("Cloud space ID:%s name:%s size:%s image:%s disksize:%s" %
-                         (self.id, name, sizeId, imageId, disksize))
+              (self.id, name, sizeId, imageId, disksize))
+
         if stackId:
             self.client.api.cloudbroker.machine.createOnStack(
                 cloudspaceId=self.id,
@@ -637,54 +638,88 @@ class Space(Authorizables):
             res = self.client.api.cloudapi.machines.create(
                 cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks, description=description)
             machine = self.machines[name]
-        if not sshkeyname:
-            return machine
+        self.logger.info("machine created.")
 
-        self._authorizeSSH(machine, sshkeyname=sshkeyname)
 
-        if sshkeypath:
-            machine.ssh_keypath = sshkeypath
-        p = machine.prefab
-        p.core.hostname = name  # make sure hostname is set
+        self.configure_machine(machine=machine, name=name, sshkey_name=sshkeyname, sshkey_path=sshkeypath)
 
-        # remember the node in the local node configuration
-        node = j.tools.nodemgr.set(name, addr=p.executor.sshclient.addr, port=p.executor.sshclient.port,
-                                   cat="openvcloud", description="deployment in openvcloud")
         return machine
 
-    def _authorizeSSH(self, machine, sshkeyname):
-        self.logger.info("authorizing ssh")
-        machineip, machinedict = machine.machineip_get()
-        publicip = machine.space.model['publicipaddress']
-        while not publicip:
-            self.logger.info(
-                "machine OpenvCloud:%s not ready yet with public ip, wait 1 sec, try again" % self)
-            time.sleep(1)
-            machine.space.refresh()
-            publicip = machine.space.model['publicipaddress']
+    def configure_machine(self, machine, name, sshkey_name, sshkey_path):
+        """
+            configure a virtual machine
 
+            Args:
+                - machine (required) the machine object
+                - name (required) name of the machine
+                - sshkey_name (required) sshkey name to be added to authorized keys in virtual machine
+                - sshkey_path (required) sshkey path to be added to authorized keys in virtual machine
+            """
+        self.createPortForward(machine)
+
+        self._authorizeSSH(machine=machine, sshkey_name=sshkey_name, sshkey_path=sshkey_path)
+
+        prefab = machine.prefab
+        prefab.core.hostname = name  # make sure hostname is set
+
+        # remember the node in the local node configuration
+        j.tools.develop.nodes.nodeSet(name, addr=prefab.executor.sshclient.addr,
+                                      port=prefab.executor.sshclient.port,
+                                      cat="openvcloud", description="deployment in openvcloud")
+        return machine
+
+    def createPortForward(self, machine):
+        sshport = self._getPortForward(machine=machine)
+
+        if sshport is None:
+            sshport, _ = machine.portforward_create(None, 22)
+        return sshport;
+
+    def _getPortForward(self, machine):
+        machineip, _ = machine.machineip_get()
         sshport = None
-        usedports = set()
         for portforward in machine.space.portforwards:
             if portforward['localIp'] == machineip and int(portforward['localPort']) == 22:
                 sshport = int(portforward['publicPort'])
                 break
-            usedports.add(int(portforward['publicPort']))
+        return sshport
 
-        if sshport is None:
-            requested_sshport = 2200
-            while requested_sshport in usedports:
-                requested_sshport += 1
-            machine.portforward_create(requested_sshport, 22)
+    def _authorizeSSH(self, machine, sshkey_name, sshkey_path):
+        self.logger.debug("authorize ssh")
 
-            sshport = requested_sshport
-
+        # prepare data required for sshclient
+        machineip, machinedict = machine.machineip_get()
+        publicip = machine.space.model['publicipaddress']
+        sshport = self._getPortForward(machine)
+        if sshport == None:
+            sshport = self.createPortForward(machine)
         login = machinedict['accounts'][0]['login']
         password = machinedict['accounts'][0]['password']
 
         sshclient = j.clients.ssh.get(
-            addr=publicip, port=sshport, login=login, passwd=password, look_for_keys=False, timeout=20)
-        sshclient.SSHAuthorizeKey(sshkeyname)
+            addr=publicip, port=sshport, login=login, passwd=password, allow_agent=False, look_for_keys=False,
+            timeout=300)
+        # make sure that SSH key is loaded
+        bad_auth_type_exist = True
+        bad_auth_type_instance = None
+        timeout = 5*60
+        start = j.data.time.getTimeEpoch()
+        while start + timeout > j.data.time.getTimeEpoch() and bad_auth_type_exist:
+            try:
+                sshclient.connect()
+                bad_auth_type_exist = False
+            except BadAuthenticationType as e:
+                self.logger.error("Bad Authentication Type : %s" % str(e))
+                bad_auth_type_instance = e
+                time.sleep(2)
+
+        if bad_auth_type_exist:
+            raise bad_auth_type_instance
+
+        sshclient.SSHAuthorizeKey(sshkey_name, sshkey_path)
+
+        machine.ssh_keypath = sshkey_path
+        return machine.prefab
 
     @property
     def portforwards(self):
@@ -877,7 +912,7 @@ class Machine:
         : return: list of disks details
         """
         machine_data = self.client.api.cloudapi.machines.get(machineId=self.id)
-        return machine_data['disks']
+        return [disk for disk in machine_data['disks'] if disk['type'] != 'M']
 
     def disk_detach(self, disk_id):
         return self.client.api.cloudapi.machines.detachDisk(machineId=self.id, diskId=disk_id)
@@ -1020,15 +1055,14 @@ class Machine:
             executor = None
             if self.ssh_keypath:
                 j.clients.ssh.load_ssh_key(self.ssh_keypath)
-                sshclient = j.clients.ssh.get(
-                    addr=publicip, port=sshport, key_filename=self.ssh_keypath)
-                sshclient._connect()
+                sshclient = j.clients.ssh.get(addr=publicip, port=sshport, key_filename=self.ssh_keypath)
+                sshclient.connect()
                 executor = j.tools.executor.getFromSSHClient(sshclient)
             else:
                 sshclient = j.clients.ssh.get(addr=publicip, port=sshport)
                 executor = j.tools.executor.getFromSSHClient(sshclient)
 
-            self._prefab = j.tools.prefab.get(executor)
+            self._prefab = j.tools.prefab.get(executor, usecache=False)
 
         return self._prefab
 
