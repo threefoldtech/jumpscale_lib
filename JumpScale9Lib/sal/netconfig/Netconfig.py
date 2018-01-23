@@ -36,7 +36,7 @@ class Netconfig:
         @param excludes list: excluded interfaces.
         """
         excludes.append("lo")
-        for nic in j.sal.nic.nics:
+        for nic in j.sal.nettools.getNics():
             if nic not in excludes:
                 cmd = "ifdown %s --force" % nic
                 print("shutdown:%s" % nic)
@@ -201,7 +201,7 @@ class Netconfig:
         @param dev str: interface name.
         """
         if dev is None:
-            for nic in j.sal.nic.nics:
+            for nic in j.sal.nettools.getNics():
                 cmd = "ifdown %s --force" % nic
                 print("shutdown:%s" % nic)
                 self._executor.execute(cmd, die=False)
