@@ -44,7 +44,8 @@ class GiteaFactory(JSConfigBase):
             for orgname0 in cl.orgs_currentuser_list():
                 # print(cl.orgs_currentuser_list())
                 # print("orgname0:%s"%orgname0)
-                self.labels_milestones_set(orgname=orgname0, reponame=reponame, instance=instance, remove_old=remove_old)
+                self.labels_milestones_set(orgname=orgname0, reponame=reponame,
+                                           instance=instance, remove_old=remove_old)
             return
 
         org = cl.org_get(orgname)
@@ -53,7 +54,8 @@ class GiteaFactory(JSConfigBase):
             for reponame0 in org.repos_list():
                 # print(org.repos_list())
                 # print("reponame0:%s"%reponame0)
-                self.labels_milestones_set(orgname=orgname, reponame=reponame0, instance=instance, remove_old=remove_old)
+                self.labels_milestones_set(orgname=orgname, reponame=reponame0,
+                                           instance=instance, remove_old=remove_old)
             return
 
         repo = org.repo_get(reponame)
@@ -83,9 +85,9 @@ class GiteaFactory(JSConfigBase):
 
         print(org.repos_list())
 
-        repoName = [item for item in org.repos_list().keys()][0]  # first reponame
+        repo_name = [item for item in org.repos_list().keys()][0]  # first reponame
 
-        repo = org.repo_get(repoName)
+        repo = org.repo_get(repo_name)
 
         # repo.labels_add()
         # repo.milestones_add(remove_old=False)
