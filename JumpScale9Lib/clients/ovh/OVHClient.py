@@ -369,7 +369,7 @@ class OVHClient(JSConfigBase):
             print("[+] installing the bootloader")
             self.boot_image_pxe_set(ipxe)
         self.bootloader_set(target, ipxe['name'])
-        return self.reboot(target)
+        return self.server_reboot(target)
 
     def task_get(self, target, taskId):
         return self.client.get("/dedicated/server/%s/task/%s" % (target, taskId))

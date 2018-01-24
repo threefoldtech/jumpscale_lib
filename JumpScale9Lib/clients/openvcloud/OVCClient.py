@@ -553,7 +553,7 @@ class Space(Authorizables):
         """
         machines = self.machines
         if name not in machines:
-            if create == True:
+            if create is True:
                 return self.machine_create(name=name,
                                            sshkeyname=sshkeyname,
                                            memsize=memsize,
@@ -574,6 +574,7 @@ class Space(Authorizables):
         """
         for key, machine in self.machines.items():
             machine.delete()
+            j.tools.nodemgr.delete(key)
 
     def machine_create(
             self,
@@ -593,7 +594,7 @@ class Space(Authorizables):
         Creates a new virtual machine.
 
         Args:
-            - name (required): name of the virtual machine, e.g. "My first VM"
+            - name (required): name of the virtual machine, e.g. "MyFirstVM"
             - sshkeyname (required): name of the private key loaded by ssh-agent that will get copied into authorized_keys
             - memsize (defaults to 2): memory size in MB or in GB, e.g. 4096
             - vcpus (defaults to 1): number of virtual CPU cores; value is ignored in versions prior to 3.x, use sizeId in order to set the number of virtual CPU cores
@@ -663,9 +664,9 @@ class Space(Authorizables):
         prefab.core.hostname = name  # make sure hostname is set
 
         # remember the node in the local node configuration
-        j.tools.develop.nodes.nodeSet(name, addr=prefab.executor.sshclient.addr,
-                                      port=prefab.executor.sshclient.port,
-                                      cat="openvcloud", description="deployment in openvcloud")
+        j.tools.nodemgr.set(name, addr=prefab.executor.sshclient.addr, port=prefab.executor.sshclient.port,
+                            cat="openvcloud", clienttype="j.clients.openvcloud", description="deployment in openvcloud")
+
         return machine
 
     def createPortForward(self, machine):
@@ -673,7 +674,7 @@ class Space(Authorizables):
 
         if sshport is None:
             sshport, _ = machine.portforward_create(None, 22)
-        return sshport;
+        return sshport
 
     def _getPortForward(self, machine):
         machineip, _ = machine.machineip_get()
@@ -684,7 +685,7 @@ class Space(Authorizables):
                 break
         return sshport
 
-    def _authorizeSSH(self, machine, sshkey_name, sshkey_path):
+    def _authorizeSSH(self, machine, sshkey_name, sshkey_path=None):
         self.logger.debug("authorize ssh")
 
         # prepare data required for sshclient
@@ -716,7 +717,11 @@ class Space(Authorizables):
         if bad_auth_type_exist:
             raise bad_auth_type_instance
 
-        sshclient.SSHAuthorizeKey(sshkey_name, sshkey_path)
+        sshkey_data = None
+        if sshkey_path:
+            sshkey_data = j.sal.fs.fileGetContents(sshkey_path)
+
+        sshclient.SSHAuthorizeKey(sshkey_name, sshkey_data)
 
         machine.ssh_keypath = sshkey_path
         return machine.prefab
@@ -837,6 +842,7 @@ class Machine:
     def delete(self):
         self.logger.info("Machine delete:%s" % self)
         self.client.api.cloudapi.machines.delete(machineId=self.id)
+        j.tools.nodemgr.delete(self.name)
 
     def clone(self, name, cloudspaceId=None, snapshotTimestamp=None):
         """
