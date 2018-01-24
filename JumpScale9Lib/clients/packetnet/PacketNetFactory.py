@@ -125,7 +125,7 @@ class PacketNet(JSConfigClient):
         res = self.getDevice(name)
         if res != None:
             self._devices = None
-            print("found machine, remove:%s" % name)
+            self.logger.debug("found machine, remove:%s" % name)
             res.delete()
 
     def startDevice(self,  hostname="removeMe", plan='baremetal_0', facility='ams1', os='ubuntu_17_04', ipxeUrl=None, wait=True, remove=False):
@@ -166,15 +166,14 @@ class PacketNet(JSConfigClient):
                 break
             except RuntimeError as e:
                 # case where we don't find the member in zerotier
-                print("[-] %s" % e)
+                self.logger.info("[-] %s" % e)
                 time.sleep(1)
             except IndexError as e:
                 # case were we the member doesn't have a private ip
-                print(
-                    "[+] please authorize the server with the public ip %s in the zerotier network" % ipaddr)
+                self.logger.error("[+] please authorize the server with the public ip %s in the zerotier network" % ipaddr)
                 time.sleep(1)
 
-        print("[+] zerotier IP: %s" % ipaddr_priv)
+        self.logger.info("[+] zerotier IP: %s" % ipaddr_priv)
         zosclient = j.clients.zero_os.get(ipaddr_priv)
         return zosclient, ipaddr, ipaddr_priv
 
@@ -204,34 +203,32 @@ class PacketNet(JSConfigClient):
         while res["state"] not in ["active"]:
             res = device.update()
             time.sleep(1)
-            print(res["state"])
+            self.logger.debug(res["state"])
 
         ipaddr = [netinfo['address']
                   for netinfo in res["ip_addresses"] if netinfo['public'] and netinfo['address_family'] == 4]
 
         ipaddr = ipaddr[0]
 
-        print("ipaddress found = %s" % ipaddr)
+        self.logger.info("ipaddress found = %s" % ipaddr)
 
         if zerotierId == "":
-            print("test ssh port & wait")
             j.sal.nettools.waitConnectionTest(ipaddr, 22, 60)
-            print("ssh answered")
 
             ssh = j.clients.ssh.get(addr=ipaddr)
 
             ssh.execute("ls /")
 
         conf = {}
-        conf ["facility"] = facility
-        conf ["netinfo"] = res["ip_addresses"]
-        conf ["plan"] = plan
-        conf ["hostname"] = hostname
-        conf ["project_id"] = self.projectid
-        conf ["os"] = os
-        conf ["ipxeUrl"] = ipxeUrl
+        conf["facility"] = facility
+        conf["netinfo"] = res["ip_addresses"]
+        conf["plan"] = plan
+        conf["hostname"] = hostname
+        conf["project_id"] = self.projectid
+        conf["os"] = os
+        conf["ipxeUrl"] = ipxeUrl
 
-        node = j.tools.develop.nodes.set(name=hostname, addr=ipaddr, port=22, cat='packet', description='', selected=True,clienttype="j.clients.packetnet")
+        node = j.tools.develop.nodes.set(name=hostname, addr=ipaddr, port=22, cat='packet', description='', selected=True, clienttype="j.clients.packetnet")
         node.client = self
         node.pubconfig = conf
 

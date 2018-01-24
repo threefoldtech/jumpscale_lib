@@ -10,6 +10,7 @@ JSConfigClient = j.tools.configmanager.base_class_config
 
 TEMPLATE = """
 token_ = ""
+networkID_ = ""
 """
 
 
@@ -96,7 +97,6 @@ class ZerotierClient(JSConfigClient):
         return res
 
     def networkMembersGet(self, networkId, online=True):
-
         res = self.client.network.listMembers(id=networkId).json()
         result = []
         for item in res:

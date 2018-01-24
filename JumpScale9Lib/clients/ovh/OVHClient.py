@@ -3,7 +3,7 @@ from js9 import j
 try:
     import ovh
 except:
-    print("WARNING: ovh pip client not found please install do j.clients.ovh.install()")
+    self.logger.warning("WARNING: ovh pip client not found please install do j.clients.ovh.install()")
     # OVHFactory().install()
 
 import requests
@@ -42,6 +42,8 @@ class OVHClient(JSConfigBase):
             db=j.data.kvs.getRedisStore())
         self.ipxeBase = c["ipxeBase"]
 
+        self.logger = j.logger.get('ovh')
+
     def name_check(self, name):
         if "ns302912" in name:
             raise RuntimeError("Cannot use server:%s" % name)
@@ -51,13 +53,13 @@ class OVHClient(JSConfigBase):
 
     def installationtemplates_get(self):
         def getData():
-            print("get installationtemplates_get")
+            self.logger.debug("get installationtemplates_get")
             return self.client.get('/dedicated/installationTemplate')
         return self.cache.get("installationtemplates_get", getData, expire=3600)
 
     def sshkeys_get(self):
         def getData():
-            print("get sshkeys")
+            self.logger.debug("get sshkeys")
             return self.client.get('/me/sshKey')
         return self.cache.get("sshKeys", getData)
 
@@ -75,7 +77,7 @@ class OVHClient(JSConfigBase):
 
     def servers_list(self):
         def getData():
-            print("get serversList")
+            self.logger.debug("get serversList")
             llist = self.client.get("/dedicated/server")
             llist = [item for item in llist if item.find("ns302912") == -1]
             return llist
@@ -88,7 +90,6 @@ class OVHClient(JSConfigBase):
             self.cache.delete(key)
 
         def getData(name):
-            # print("get %s" % key)
             return self.client.get("/dedicated/server/%s" % name)
         return self.cache.get(key, getData, name=name, expire=120)
 
@@ -99,7 +100,7 @@ class OVHClient(JSConfigBase):
             self.cache.delete(key)
 
         def getData(name):
-            print("get %s" % key)
+            self.logger.debug("get %s" % key)
             try:
                 return self.client.get("/dedicated/server/%s/install/status" % name)
             except Exception as e:
@@ -148,13 +149,13 @@ class OVHClient(JSConfigBase):
                 key = "server_detail_get_%s" % item  # lets make sure server is out of cache too
                 self.cache.delete(key)
                 if status != "active":
-                    print(item)
-                    print(j.data.serializer.yaml.dumps(status))
-                    print("-------------")
+                    self.logger.debug(item)
+                    self.logger.debug(j.data.serializer.yaml.dumps(status))
+                    self.logger.debug("-------------")
                     nrInstalling += 1
             time.sleep(2)
         self.details = {}
-        print("INSTALL DONE")
+        self.logger.info("server install done")
 
     def server_install(self, name, ovh_id="", installationTemplate="ubuntu1710-server_64", sshKeyName=None,
                        useDistribKernel=True, noRaid=True, hostname="", wait=True):
@@ -204,7 +205,7 @@ class OVHClient(JSConfigBase):
                              name, details=details, templateName=installationTemplate)
         except Exception as e:
             if "A reinstallation is already in todo" in str(e):
-                print("INFO:%s:%s" % (name, e))
+                self.logger.debug("%s:%s" % (name, e))
                 pass
             else:
                 raise e
@@ -273,7 +274,7 @@ class OVHClient(JSConfigBase):
         return None
 
     def _bootloader_set(self, target, bootid):
-        print("[+] bootloader selected: %s" % bootid)
+        self.logger.info("[+] bootloader selected: %s" % bootid)
 
         payload = {"bootId": int(bootid)}
         self.client.put("/dedicated/server/%s" % target, **payload)
@@ -316,7 +317,7 @@ class OVHClient(JSConfigBase):
         """
         # strip trailing flash
         url = url.rstrip('/')
-        print("zero hub url:%s" % url)
+        self.logger.info("zero hub url:%s" % url)
         # downloading original ipxe script
         try:
             script = requests.get(url)
@@ -362,11 +363,11 @@ class OVHClient(JSConfigBase):
         url = "%s/%s" % (self.ipxeBase, zerotierNetworkID)
         ipxe = self._zos_build(url)
 
-        print("[+] description: %s" % ipxe['description'])
-        print("[+] boot loader: %s" % ipxe['name'])
+        self.logger.info("[+] description: %s" % ipxe['description'])
+        self.logger.info("[+] boot loader: %s" % ipxe['name'])
 
         if not self.boot_image_pxe_available(ipxe['name']):
-            print("[+] installing the bootloader")
+            self.logger.info("[+] installing the bootloader")
             self.boot_image_pxe_set(ipxe)
         self.bootloader_set(target, ipxe['name'])
         return self.server_reboot(target)
@@ -382,7 +383,7 @@ class OVHClient(JSConfigBase):
 
             if status['status'] != current:
                 current = status['status']
-                print("[+] rebooting %s: %s" % (target, current))
+                self.logger.info("[+] rebooting %s: %s" % (target, current))
 
             if status['status'] == 'done':
                 return True
