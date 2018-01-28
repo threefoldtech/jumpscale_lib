@@ -153,7 +153,7 @@ class PacketNet(JSConfigClient):
             raise RuntimeError("zerotierAPI needs to be specified")
         ipxeUrl = "https://bootstrap.gig.tech/ipxe/master/%s" % zerotierId
 
-        ipaddr = self._startDevice(hostname=hostname, plan=plan, facility=facility, os="",
+        node = self._startDevice(hostname=hostname, plan=plan, facility=facility, os="",
                                    wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId=zerotierId, always_pxe=True)
 
         zerotierClient = j.clients.zerotier.get(zerotierAPI)
@@ -161,7 +161,7 @@ class PacketNet(JSConfigClient):
         while True:
             try:
                 member = zerotierClient.networkMemberGetFromIPPub(
-                    ipaddr, networkId=zerotierId, online=True)
+                    node.addr, networkId=zerotierId, online=True)
                 ipaddr_priv = member["ipaddr_priv"][0]
                 break
             except RuntimeError as e:
@@ -175,7 +175,7 @@ class PacketNet(JSConfigClient):
 
         self.logger.info("[+] zerotier IP: %s" % ipaddr_priv)
         zosclient = j.clients.zero_os.get(ipaddr_priv)
-        return zosclient, ipaddr, ipaddr_priv
+        return zosclient, node, ipaddr_priv
 
     def _startDevice(self,  hostname="removeMe", plan='baremetal_0', facility='ams1',
                      os='ubuntu_17_04', wait=True, remove=True, ipxeUrl=None, zerotierId="", always_pxe=False):
