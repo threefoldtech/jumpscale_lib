@@ -46,6 +46,7 @@ JSConfigBase = j.tools.configmanager.base_class_config
 class OVCClient(JSConfigBase):
 
     def __init__(self, instance, data={}, parent=None):
+        self.cfginstance = instance
         JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE)
         self._api = None
         self.operator = True
@@ -113,7 +114,7 @@ class OVCClient(JSConfigBase):
             self.api._session.cookies['beaker.session.id'] = self.config.data.get("appkey_")
             self._login = self.config.data.get("login")  #IS THIS NEEDED WHEN USING SECRET KEY
         else:
-            jwt = j.clients.itsyouonline.get().jwt
+            jwt = j.clients.itsyouonline.get(instance=self.cfginstance).jwt
             import jose.jwt
             payload = jose.jwt.get_unverified_claims(jwt)
             if payload['exp'] < time.time():
@@ -640,7 +641,6 @@ class Space(Authorizables):
                 cloudspaceId=self.id, name=name, sizeId=sizeId, imageId=imageId, disksize=disksize, datadisks=datadisks, description=description)
             machine = self.machines[name]
         self.logger.info("machine created.")
-
 
         self.configure_machine(machine=machine, name=name, sshkey_name=sshkeyname, sshkey_path=sshkeypath)
 
