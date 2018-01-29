@@ -154,14 +154,14 @@ class PacketNet(JSConfigClient):
         ipxeUrl = "https://bootstrap.gig.tech/ipxe/master/%s" % zerotierId
 
         node = self._startDevice(hostname=hostname, plan=plan, facility=facility, os="",
-                                   wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId=zerotierId, always_pxe=True)
+                                 wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId=zerotierId, always_pxe=True)
 
-        zerotierClient = j.clients.zerotier.get(zerotierAPI)
+        data = {'token_': zerotierAPI, 'networkID_': zerotierId}
+        zerotierClient = j.clients.zerotier.get(self.instance, data=data)
 
         while True:
             try:
-                member = zerotierClient.networkMemberGetFromIPPub(
-                    node.addr, networkId=zerotierId, online=True)
+                member = zerotierClient.networkMemberGetFromIPPub(node.addr, networkId=zerotierId, online=True)
                 ipaddr_priv = member["ipaddr_priv"][0]
                 break
             except RuntimeError as e:
@@ -174,7 +174,8 @@ class PacketNet(JSConfigClient):
                 time.sleep(1)
 
         self.logger.info("[+] zerotier IP: %s" % ipaddr_priv)
-        zosclient = j.clients.zero_os.get(ipaddr_priv)
+        data = {'host': ipaddr_priv, 'timeout': 10, 'port': 6379, 'password_': '', 'db': 0, 'ssl': True}
+        zosclient = j.clients.zero_os.get(ipaddr_priv, data=data)
         return zosclient, node, ipaddr_priv
 
     def _startDevice(self,  hostname="removeMe", plan='baremetal_0', facility='ams1',
