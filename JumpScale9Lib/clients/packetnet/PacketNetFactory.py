@@ -170,7 +170,7 @@ class PacketNet(JSConfigClient):
                 time.sleep(1)
             except IndexError as e:
                 # case were we the member doesn't have a private ip
-                self.logger.error("[+] please authorize the server with the public ip %s in the zerotier network" % ipaddr)
+                self.logger.error("[+] please authorize the server with the public ip %s in the zerotier network" % node.addr)
                 time.sleep(1)
 
         self.logger.info("[+] zerotier IP: %s" % ipaddr_priv)
