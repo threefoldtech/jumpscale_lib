@@ -69,21 +69,18 @@ class ZerotierClient(JSConfigClient):
         self.client.set_auth_header("Bearer " + self.config.data['token_'])
         self._client = ZerotierClientInteral(self.config.data['token_'])
 
-    def memberAuthorize(self, zerotierNetworkId, name, macaddr, description=""):
-        members = self.networkMembersGet(zerotierNetworkId, online=True)
-        for member in members:
-            if member["authorized"] is False:
-                id = member["id"]
-                topost = {}
-                topost["name"] = name
-                topost["description"] = description
-                topost["authorized"] = True
-                print(886)
-                from IPython import embed
-                embed(colors='Linux')
-                self._client.request("/api/network/%s/member/%s" %
-                                     (zerotierNetworkId, id), topost)
-                self._client.request("/api/network/%s" % (zerotierNetworkId))
+    def memberAuthorize(self, zerotierNetworkId, ip_pub):
+        res = self.client.network.listMembers(id=zerotierNetworkId).json()
+        members = [item for item in res if item['physicalAddress'] == ip_pub]
+        if not members:
+            raise RuntimeError('no such memeber as %s' % zerotierNetworkId)
+        member = members[0]
+        if member['config']["authorized"] is False:
+            id = member["nodeId"]
+            member['config']['authorized'] = True
+            data = json.dumps(member)
+            self._client.request("/network/%s/member/%s" % (zerotierNetworkId, id), member)
+            self.logger.info('[+] authorized %s on %s' % (member['physicalAddress'], zerotierNetworkId))
 
     def networksGet(self):
         """

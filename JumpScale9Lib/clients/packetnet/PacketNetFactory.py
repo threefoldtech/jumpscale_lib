@@ -163,6 +163,7 @@ class PacketNet(JSConfigClient):
             try:
                 member = zerotierClient.networkMemberGetFromIPPub(node.addr, networkId=zerotierId, online=True)
                 ipaddr_priv = member["ipaddr_priv"][0]
+                zerotierClient.memberAuthorize(zerotierNetworkId=zerotierId, ip_pub=node.addr)
                 break
             except RuntimeError as e:
                 # case where we don't find the member in zerotier
