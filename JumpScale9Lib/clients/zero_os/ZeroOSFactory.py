@@ -19,30 +19,30 @@ class ZeroOSFactory(JSConfigFactoryBase):
         self.connections = {}
         self.sal = SALFactory(self)
 
-    def zeroNodeInstall_OVH(self, OVHServerID, OVHClient, zerotierNetworkID, zerotierClient):
+    def zeroNodeInstall_OVH(self, OVHHostName, OVHClient, zerotierNetworkID, zerotierClient):
         """
 
-        OVHServerID is server id as known by OVH
+        OVHHostName is server name as known by OVH
 
         get clients as follows:
         - zerotierClient = j.clients.zerotier.get(ZT_API_TOKEN)
         - OVHClient = j.clients.ovh.get(...)
 
         """
-
+        
         cl = OVHClient
         zt = zerotierClient
 
-        self.logger.debug("booting server {} to zero-os".format(OVHServerID))
-        task = cl.zeroOSBoot(target=OVHServerID, zerotierNetworkID=zerotierNetworkID)
-        self.logger.debug("waiting for {} to reboote".format(OVHServerID))
-        cl.waitServerReboot(OVHServerID, task['taskId'])
-        ip_pub = cl.serverGetDetail(OVHServerID)["ip"]
+        self.logger.debug("booting server {} to zero-os".format(OVHHostName))
+        task = cl.zero_os_boot(target=OVHHostName, zerotierNetworkID=zerotierNetworkID)
+        self.logger.debug("waiting for {} to reboote".format(OVHHostName))
+        cl.server_wait_reboot(OVHHostName, task['taskId'])
+        ip_pub = cl.server_detail_get(OVHHostName)["ip"]
         self.logger.info("ip addr is:%s" % ip_pub)
 
         while True:
             try:
-                member = zt.getNetworkMemberFromIPPub(
+                member = zt.networkMemberGetFromIPPub(
                     ip_pub, networkId=zerotierNetworkID, online=True)
                 ipaddr_priv = member["ipaddr_priv"][0]
                 break
