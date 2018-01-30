@@ -2,18 +2,17 @@ import requests
 import os
 import json
 from js9 import j
+
 TEMPLATE = """
 ip = ""
-port = 82
-secret_ = ""
+port = 8200
+iyoinstance = ""
 """
 
 JSConfigBase = j.tools.configmanager.base_class_config
 
 
-
 class ApiError(Exception):
-
     def __init__(self, response):
         msg = '%s %s' % (response.status_code, response.reason)
         try:
@@ -34,7 +33,6 @@ class ApiError(Exception):
 
 
 class BaseResource:
-
     def __init__(self, session, url):
         self._session = session
         self._url = url
@@ -59,12 +57,8 @@ class BaseResource:
 
 
 class Resource(BaseResource):
-
-    def __init__(self, ip, port, secret, path):
+    def __init__(self, ip, port, path):
         session = requests.Session()
-
-        if secret is not None:
-            session.cookies['beaker.session.id'] = secret
 
         scheme = "http" if port != 443 else "https"
         url = "%s://%s:%s/%s" % (scheme, ip, port, path.lstrip('/'))
@@ -96,11 +90,13 @@ class Resource(BaseResource):
             api.__doc__ = docstring
         return swagger
 
+
 class PortalClient(JSConfigBase, Resource):
-    def __init__(self, instance, data={}, parent=None):
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,template=TEMPLATE)
-        c = self.config.data
-        ip = c['ip']
-        port = c['port']
-        secret = c['secret_']
-        Resource.__init__(self, ip, port, secret, "/restmachine")
+    def __init__(self, instance, data=None, parent=None):
+        if not data:
+            data = {}
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE)
+        cfg = self.config.data
+        ip = cfg['ip']
+        port = cfg['port']
+        Resource.__init__(self, ip, port, "/restmachine")
