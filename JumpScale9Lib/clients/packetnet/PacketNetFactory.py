@@ -143,7 +143,7 @@ class PacketNet(JSConfigClient):
         return self._startDevice(hostname=hostname, plan=plan, facility=facility, os=os,
                                  wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId=zerotierId, always_pxe=False)
 
-    def startZeroOS(self, hostname="removeMe", plan='baremetal_0', facility='ams1', zerotierId="", zerotierAPI="", wait=True, remove=False):
+    def startZeroOS(self, hostname="removeMe", plan='baremetal_0', facility='ams1', zerotierId="", zerotierAPI="", wait=True, remove=False, params=None):
         """
         return (zero-os-client,pubIpAddress,zerotierIpAddress)
         """
@@ -152,6 +152,10 @@ class PacketNet(JSConfigClient):
         if zerotierAPI.strip() == "" or zerotierAPI is None:
             raise RuntimeError("zerotierAPI needs to be specified")
         ipxeUrl = "https://bootstrap.gig.tech/ipxe/master/%s" % zerotierId
+
+        if params is not None:
+            pstring = '%20'.join(params)
+            ipxeUrl = ipxeUrl + '/' + pstring
 
         node = self._startDevice(hostname=hostname, plan=plan, facility=facility, os="",
                                    wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId=zerotierId, always_pxe=True)
