@@ -44,38 +44,47 @@ class OVHClient(JSConfigBase):
 
         self.logger = j.logger.get('ovh')
 
-    def name_check(self, name):
-        if "ns302912" in name:
-            raise RuntimeError("Cannot use server:%s" % name)
-
     def reset(self):
+        """
+        resets cache
+        """
         self.cache.reset()
 
     def installationtemplates_get(self):
+        """
+        gets installation templates
+        """
         def getData():
             self.logger.debug("get installationtemplates_get")
             return self.client.get('/dedicated/installationTemplate')
         return self.cache.get("installationtemplates_get", getData, expire=3600)
 
     def sshkeys_get(self):
+        """
+        lists ssh keys in server
+        """
         def getData():
             self.logger.debug("get sshkeys")
             return self.client.get('/me/sshKey')
         return self.cache.get("sshKeys", getData)
 
     def sshkey_add(self, name, key):
-        """
+        """ adds a ssh key to the server
         @param name: name of the new public SSH key
         @param key: ASCII encoded public SSH key to add
         """
         return self.client.post('/me/sshKey', keyName=name, key=key)
 
-    def node_get(self, name, nodename=None):
-        data = self.server_detail_get(name)
-        node = j.tools.nodemgr.get(name, create=False)
-        return OVHNode(self, data, node)
+    def node_get(self, name):
+        """
+        get node by name
+        """
+        return j.tools.nodemgr.get(name, create=False)
 
     def servers_list(self):
+        """
+        list servers
+        """
         def getData():
             self.logger.debug("get serversList")
             llist = self.client.get("/dedicated/server")
@@ -84,7 +93,11 @@ class OVHClient(JSConfigBase):
         return self.cache.get("serversList", getData)
 
     def server_detail_get(self, name, reload=False):
-        self.name_check(name)
+        """
+        get server details
+        @param name: server name
+        @param reload: if True the cache will be deleted and will the updated details
+        """
         key = "server_detail_get_%s" % name
         if reload:
             self.cache.delete(key)
@@ -94,7 +107,11 @@ class OVHClient(JSConfigBase):
         return self.cache.get(key, getData, name=name, expire=120)
 
     def server_install_status(self, name, reload=False):
-        self.name_check(name)
+        """
+        get server install details
+        @param name: server name
+        @param reload: if True the cache will be deleted and will the updated details
+        """
         key = "serverGetInstallStatus%s" % name
         if reload:
             self.cache.delete(key)
@@ -111,34 +128,13 @@ class OVHClient(JSConfigBase):
         return self.cache.get(key, getData, name=name, expire=120)
 
     def servers_detail_get(self):
+        """
+        get details for all servers in self.servers_list()
+        """
         res = []
         for item in self.servers_list():
             res.append((item, self.server_detail_get(item)))
         return res
-
-    # def backupInit(self, name):
-    #     try:
-    #         self.client.post("/dedicated/server/%s/features/backupFTP" % name)
-    #     except Exception as e:
-    #         if "You already have a backupFTP" in str(e):
-    #             print("backup init already done for %s" % name)
-    #             return "ALREADYOK"
-    #         else:
-    #             raise e
-    #     print("backup init ok for %s" % name)
-    #     return "OK"
-    #
-    # def backupGet(self, name):
-    #     try:
-    #         res = self.client.get("/dedicated/server/%s/features/backupFTP" % name)
-    #     except Exception as e:
-    #         if "The requested object (backupFTP) does not exist" in str(e):
-    #             print("backup was not inited yet for %s" % name)
-    #             self.backupInit(name)
-    #             res = self.client.get("/dedicated/server/%s/features/backupFTP" % name)
-    #         else:
-    #             raise e
-    #     return res
 
     def servers_install_wait(self):
         nrInstalling = 1
@@ -166,10 +162,9 @@ class OVHClient(JSConfigBase):
         will return node_client
 
         """
-        self.name_check(name)
         if installationTemplate not in self.installationtemplates_get():
             raise j.exceptions.Input(message="could not find install template:%s" %
-                                     templateName, level=1, source="", tags="", msgpub="")
+                                     name, level=1, source="", tags="", msgpub="")
 
         if sshKeyName == None:
             items = j.clients.ssh.ssh_keys_list_from_agent()
@@ -304,7 +299,6 @@ class OVHClient(JSConfigBase):
         Reboot a server
         - target: need to be a OVH server hostname
         """
-        self.name_check(name)
         return self.client.post("/dedicated/server/%s/reboot" % name)
 
     #
@@ -359,7 +353,6 @@ class OVHClient(JSConfigBase):
         - target: need to be an OVH server hostname
         - zerotierNetworkID: network to be used in zerotier
         """
-        self.name_check(target)
         url = "%s/%s" % (self.ipxeBase, zerotierNetworkID)
         ipxe = self._zos_build(url)
 
@@ -368,11 +361,16 @@ class OVHClient(JSConfigBase):
 
         if not self.boot_image_pxe_available(ipxe['name']):
             self.logger.info("[+] installing the bootloader")
-            self.boot_image_pxe_set(ipxe)
+            self.boot_image_pxe_set(ipxe['name'], ipxe['script'], ipxe['description'])
         self.bootloader_set(target, ipxe['name'])
         return self.server_reboot(target)
 
     def task_get(self, target, taskId):
+        """
+        get a task
+        @param target: target name
+        @param taskId: taskId
+        """
         return self.client.get("/dedicated/server/%s/task/%s" % (target, taskId))
 
     def server_wait_reboot(self, target, taskId):

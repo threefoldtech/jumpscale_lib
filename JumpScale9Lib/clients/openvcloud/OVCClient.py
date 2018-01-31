@@ -1,7 +1,7 @@
 from js9 import j
 import time
 import datetime
-import requests
+import jose.jwt
 from paramiko.ssh_exception import BadAuthenticationType
 # NEED: pip3 install python-jose
 
@@ -37,7 +37,6 @@ address = ""
 port = 443
 appkey_ = ""
 login = ""
-JWT_ = ""
 """
 
 
@@ -45,8 +44,9 @@ JSConfigBase = j.tools.configmanager.base_class_config
 
 class OVCClient(JSConfigBase):
 
-    def __init__(self, instance, data={}, parent=None):
-        self.cfginstance = instance
+    def __init__(self, instance, data=None, parent=None):
+        if not data:
+            data = {}
         JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE)
         self._api = None
         self.operator = True
@@ -55,8 +55,7 @@ class OVCClient(JSConfigBase):
     def api(self):
         if self._api is None:
             self._api = j.clients.portal.get(data={'ip': self.config.data.get("address"),
-                                                   'port': self.config.data.get("port"),
-                                                   'secret_': self.config.data.get('JWT_')})
+                                                   'port': self.config.data.get("port")})
             # patch handle the case where the connection dies because of inactivity
             self.__patch_portal_client(self._api)
             self.__login()
@@ -99,9 +98,9 @@ class OVCClient(JSConfigBase):
             from JumpScale9Lib.clients.portal.PortalClient import ApiError
             try:
                 return origcall(that, *args, **kwargs)
-            except ApiError:
-                if ApiError.response.status_code == 419:
-                    self.__login(self._password, self._secret, self._jwt)
+            except ApiError as e:
+                if e.response.status_code == 419:
+                    self.__login()
                     return origcall(that, *args, **kwargs)
                 raise
 
@@ -110,16 +109,16 @@ class OVCClient(JSConfigBase):
     def __login(self):
         if self.config.data.get("appkey_") != "" and self.operator is False:
             self.api._session.cookies.clear()
-            # secret=self.api.system.usermanager.authenticate(name=self.config.data.get("login"),secret=self.config.data.get("appkey_"))
             self.api._session.cookies['beaker.session.id'] = self.config.data.get("appkey_")
             self._login = self.config.data.get("login")  #IS THIS NEEDED WHEN USING SECRET KEY
         else:
-            jwt = j.clients.itsyouonline.get(instance=self.cfginstance).jwt
-            import jose.jwt
+            iyo_client = j.clients.itsyouonline.get(sshkey_path=self.sshkey_path)
+            jwt = iyo_client.jwt
             payload = jose.jwt.get_unverified_claims(jwt)
             if payload['exp'] < time.time():
                 j.clients.itsyouonline.reset()
-                jwt = j.clients.itsyouonline.jwt
+                # Regenerate jwt after resetting the expired one
+                jwt = iyo_client.jwt
             self.api._session.headers['Authorization'] = 'bearer {}'.format(jwt)
             self._login = '{}@{}'.format(payload['username'], payload['iss'])
 

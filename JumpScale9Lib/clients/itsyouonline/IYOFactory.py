@@ -2,7 +2,7 @@ import requests
 import urllib
 
 from js9 import j
-from JumpScale9Lib.clients.itsyouonline.generated.client import Client
+from JumpScale9Lib.clients.itsyouonline.generated.client import Client as IYO_Client
 
 DEFAULT_BASE_URL = "https://itsyou.online/api"
 
@@ -104,22 +104,30 @@ class IYOFactory(JSConfigBaseFactory):
         return jwt
 
 
-class IYOClient(JSConfigBase, Client):
+class IYOClient(JSConfigBase):
     def __init__(self, instance, data={}, parent=None):
         JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE)
-        c = self.config.data
-        Client.__init__(self, base_uri=c['baseurl'])
         self._jwt = None
-        self.api.session.headers.update({"Authorization": 'bearer {}'.format(self.jwt)})
+        self._client = None
+        self.api = None
+        self.oauth2_client_oauth_2_0 = None
+
+    def ensure_client(self):
+        if not self._client:
+            self._client = IYO_Client(base_uri=self.config.data['baseurl'])
+            self.api = self._client.api
+            self.oauth2_client_oauth_2_0 = self._client.oauth2_client_oauth_2_0
 
     @property
     def jwt(self):
         if self.config.data["application_id_"] == "":
-            raise RuntimeError("Please configure your itsyou.online, do this by calling js9 'j.clients.itsyouonline.configure()'")
-        if self._jwt == None:
+            raise RuntimeError("Please configure your itsyou.online, do this by calling js9 "
+                               "'j.clients.itsyouonline.configure()'")
+        self.ensure_client()
+        if not self._jwt:
             self._jwt = self._parent.jwt_get(self.config.data["application_id_"], self.config.data["secret_"])
+            self.api.session.headers.update({"Authorization": 'bearer {}'.format(self.jwt)})
         return self._jwt
-
 
     def reset(self):
         self._jwt = None
