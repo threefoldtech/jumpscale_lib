@@ -44,6 +44,10 @@ class OVHClient(JSConfigBase):
 
         self.logger = j.logger.get('ovh')
 
+    def name_check(self, name):
+        if "ns302912" in name:
+            raise RuntimeError("Cannot use server:%s" % name)
+
     def reset(self):
         """
         resets cache
@@ -98,6 +102,7 @@ class OVHClient(JSConfigBase):
         @param name: server name
         @param reload: if True the cache will be deleted and will the updated details
         """
+        self.name_check(name)
         key = "server_detail_get_%s" % name
         if reload:
             self.cache.delete(key)
@@ -112,6 +117,7 @@ class OVHClient(JSConfigBase):
         @param name: server name
         @param reload: if True the cache will be deleted and will the updated details
         """
+        self.name_check(name)
         key = "serverGetInstallStatus%s" % name
         if reload:
             self.cache.delete(key)
@@ -162,6 +168,7 @@ class OVHClient(JSConfigBase):
         will return node_client
 
         """
+        self.name_check(name)
         if installationTemplate not in self.installationtemplates_get():
             raise j.exceptions.Input(message="could not find install template:%s" %
                                      name, level=1, source="", tags="", msgpub="")
@@ -299,6 +306,7 @@ class OVHClient(JSConfigBase):
         Reboot a server
         - target: need to be a OVH server hostname
         """
+        self.name_check(name)
         return self.client.post("/dedicated/server/%s/reboot" % name)
 
     #
@@ -353,6 +361,7 @@ class OVHClient(JSConfigBase):
         - target: need to be an OVH server hostname
         - zerotierNetworkID: network to be used in zerotier
         """
+        self.name_check(target)
         url = "%s/%s" % (self.ipxeBase, zerotierNetworkID)
         ipxe = self._zos_build(url)
 
