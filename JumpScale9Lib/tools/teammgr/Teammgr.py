@@ -24,6 +24,8 @@ email = []
 github = ""
 linkedin = ""
 links = []
+rank = 0
+core = false
 """
 
 
