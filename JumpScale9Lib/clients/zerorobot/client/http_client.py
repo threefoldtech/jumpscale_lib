@@ -18,8 +18,12 @@ class HTTPClient:
         return False
 
     def set_auth_header(self, val):
-        ''' set authorization header value'''
+        """ set authorization header value """
         self.session.headers.update({"Authorization": val})
+
+    def set_header(self, header, val):
+        """ set header """
+        self.session.headers.update({header: val})
 
     def close(self):
         self.session.close()
