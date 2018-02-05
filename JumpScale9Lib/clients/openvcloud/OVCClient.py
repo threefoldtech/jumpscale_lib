@@ -187,7 +187,7 @@ class OVCClient(JSConfigBase):
         Returns the OpenvCloud space with the given account_name, space_name, space_location and in case the account doesn't exist yet it will be created.
 
         Args:
-            - accountName (required): name of the account to lookup, e.g. "myaccount"
+            - accountName :(can be None) name of the account to lookup, e.g. "myaccount"
             - spaceName (required): name of the cloud space to lookup or create if it doesn't exist yet, e.g. "myvdc"
             - location (only required when cloud space needs to be created): location when the cloud space needs to be created
             - createSpace (defaults to True): if set to True the account is created in case it doesn't exist yet
@@ -199,23 +199,29 @@ class OVCClient(JSConfigBase):
             - maxNetworkPeerTransfer (defaults to -1: unlimited): not implemented
             - maxNumPublicIP (defaults to -1: unlimited): number of external IP addresses that can be used in the cloud space
         """
-        account = self.account_get(name=accountName, create=False)
-        if account:
-            return account.space_get(name=spaceName,
-                                     create=createSpace,
-                                     location=location,
-                                     maxMemoryCapacity=maxMemoryCapacity,
-                                     maxVDiskCapacity=maxVDiskCapacity,
-                                     maxCPUCapacity=maxCPUCapacity,
-                                     maxNASCapacity=maxNASCapacity,
-                                     maxNetworkOptTransfer=maxNetworkOptTransfer,
-                                     maxNetworkPeerTransfer=maxNetworkPeerTransfer,
-                                     maxNumPublicIP=maxNumPublicIP,
-                                     externalnetworkId=externalnetworkId
-                                     )
+        if accountName is not None:
+            account = self.account_get(name=accountName, create=False)
+            if account:
+                return account.space_get(name=spaceName,
+                                         create=createSpace,
+                                         location=location,
+                                         maxMemoryCapacity=maxMemoryCapacity,
+                                         maxVDiskCapacity=maxVDiskCapacity,
+                                         maxCPUCapacity=maxCPUCapacity,
+                                         maxNASCapacity=maxNASCapacity,
+                                         maxNetworkOptTransfer=maxNetworkOptTransfer,
+                                         maxNetworkPeerTransfer=maxNetworkPeerTransfer,
+                                         maxNumPublicIP=maxNumPublicIP,
+                                         externalnetworkId=externalnetworkId
+                                         )
+            else:
+                raise j.exceptions.RuntimeError(
+                    "Could not find account with name %s" % accountName)
         else:
-            raise j.exceptions.RuntimeError(
-                "Could not find account with name %s" % accountName)
+            ovc_spaces = self.api.cloudapi.cloudspaces.list()
+            for space in ovc_spaces:
+                if space['name'] == spaceName:
+                    return Space(self, space)
 
     def get_available_images(self, cloudspaceId=None, accountId=None):
         """
@@ -289,7 +295,7 @@ class Account(Authorizables):
         spaces = list()
         for space in ovc_spaces:
             if space['accountId'] == self.model['id']:
-                spaces.append(Space(self, space))
+                spaces.append(Space(self.client, space, account=self))
         return spaces
 
     @property
@@ -434,9 +440,9 @@ class Account(Authorizables):
 
 class Space(Authorizables):
 
-    def __init__(self, account, model):
+    def __init__(self, client, model, account=None):
         self.account = account
-        self.client = account.client
+        self.client = client
         self.model = model
         self.id = model["id"]
         self._logger = None
@@ -767,7 +773,8 @@ class Space(Authorizables):
 
     @property
     def images(self):
-        return self.client.api.cloudapi.images.list(cloudspaceId=self.id, accountId=self.account.id)
+        accountId = None if not self.account else self.account.id
+        return self.client.api.cloudapi.images.list(cloudspaceId=self.id, accountId=accountId)
 
     def delete(self):
         self.client.api.cloudapi.cloudspaces.delete(cloudspaceId=self.id)
