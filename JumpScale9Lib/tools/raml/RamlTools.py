@@ -77,7 +77,7 @@ class RamlTools:
         if doc:
             cmd = "cd %s;rm -rf htmldoc;mkdir -p htmldoc; \
             cd ../api_spec; \
-            raml2html -i main.raml -o ../client/htmldoc/api.html -v" % j.sal.fs.joinPaths(self.path, 'client')
+            raml2html -i main.raml -o api.html&& mv api.html ../client/htmldoc/api.html -v" % j.sal.fs.joinPaths(self.path, 'client')
             j.sal.process.executeInteractive(cmd)
 
         # TODO: test and re-enable
