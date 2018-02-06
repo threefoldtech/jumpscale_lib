@@ -31,10 +31,12 @@ class IYOFactory(JSConfigBaseFactory):
         do:
         js9 'j.clients.itsyouonline.test()'
         """
+        from jose.jwt import get_unverified_claims
         from .generated.client.PublicKey import PublicKey
         from requests.exceptions import HTTPError
         client = self.get()
-        username = j.tools.myconfig.config.data['login_name']
+        jwt_data = get_unverified_claims(client.jwt)
+        username = jwt_data["username"]
 
         # Read all the API keys registered for your user
         print("list all API keys:\n###########")
@@ -43,7 +45,6 @@ class IYOFactory(JSConfigBaseFactory):
             print("app ID %s" % key.applicationid)
 
         # Create a new API key
-        from requests.exceptions import HTTPError
         try:
             key = client.api.users.AddApiKey({"label": 'test'}, username).data
             print("###########\ncreate new API key: ")
