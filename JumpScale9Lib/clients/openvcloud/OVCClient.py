@@ -647,9 +647,17 @@ class Space(Authorizables):
             machine = self.machines[name]
         self.logger.info("machine created.")
 
-        self.configure_machine(machine=machine, name=name, sshkey_name=sshkeyname, sshkey_path=sshkeypath)
+        if image == 'ZERO OS':
+            # if the image installed was zero os, we wont do the normal configuration,
+            # instead we will only create port forward for port 6379 to be used by zero os client
+            port = self.createPortForward(machine, port=6379, default_candidate=6379)
+            self.logger.warning("ZERO OS machine created"
+                                ", you will need zeroos client instead, redis public port = %s" % port)
+        else:
+            self.configure_machine(machine=machine, name=name, sshkey_name=sshkeyname, sshkey_path=sshkeypath)
 
         return machine
+
 
     def configure_machine(self, machine, name, sshkey_name, sshkey_path):
         """
@@ -674,21 +682,32 @@ class Space(Authorizables):
 
         return machine
 
-    def createPortForward(self, machine):
-        sshport = self._getPortForward(machine=machine)
+    def createPortForward(self, machine, port=22, default_candidate=2200):
+        """
+        create port forward
+        @param machine: a machine to create port forward in
+        @param port: a port to be forwarded
+        @param default_candidate: the default candidate port for forwarding
+        """
+        target_port = self._getPortForward(machine=machine, port=port)
 
-        if sshport is None:
-            sshport, _ = machine.portforward_create(None, 22)
-        return sshport
+        if target_port is None:
+            target_port, _ = machine.portforward_create(None, port, default_candidate=default_candidate)
+        return target_port
 
-    def _getPortForward(self, machine):
+    def _getPortForward(self, machine, port=22):
+        """
+        get the public port that is forwarding t0 the given port
+        @param machine: machine object to look into
+        @param port: (default = 22) the private port to look for 
+        """
         machineip, _ = machine.machineip_get()
-        sshport = None
+        target_port = None
         for portforward in machine.space.portforwards:
-            if portforward['localIp'] == machineip and int(portforward['localPort']) == 22:
-                sshport = int(portforward['publicPort'])
+            if portforward['localIp'] == machineip and int(portforward['localPort']) == port:
+                target_port = int(portforward['publicPort'])
                 break
-        return sshport
+        return target_port
 
     def _authorizeSSH(self, machine, sshkey_name, sshkey_path=None):
         self.logger.debug("authorize ssh")
@@ -946,7 +965,7 @@ class Machine:
     def portforwards(self):
         return self.client.api.cloudapi.portforwarding.list(cloudspaceId=self.space.id, machineId=self.id)
 
-    def portforward_create(self, publicport, localport, protocol='tcp'):
+    def portforward_create(self, publicport, localport, default_candidate=2200, protocol='tcp'):
         if protocol not in ['tcp', 'udp']:
             raise j.exceptions.RuntimeError(
                 "Protocol for portforward should be tcp or udp not %s" % protocol)
@@ -964,7 +983,7 @@ class Machine:
         if publicport is None:
             unavailable_ports = [int(portinfo['publicPort'])
                                  for portinfo in self.space.portforwards]
-            candidate = 2200
+            candidate = default_candidate
 
             while candidate in unavailable_ports:
                 candidate += 1
