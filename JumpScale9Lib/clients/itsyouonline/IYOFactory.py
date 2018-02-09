@@ -104,6 +104,13 @@ class IYOFactory(JSConfigBaseFactory):
         jwt = resp.content.decode('utf8')
         return jwt
 
+    def refresh_jwt_token(self, token, validity=86400):
+        headers = {'Authorization': 'bearer %s' % token}
+        params = {'validity': validity}
+        resp = requests.get('https://itsyou.online/v1/oauth/jwt/refresh', headers=headers, params=params)
+        resp.raise_for_status()
+        return resp.content.decode()
+
 
 class IYOClient(JSConfigBase):
     def __init__(self, instance, data={}, parent=None):
