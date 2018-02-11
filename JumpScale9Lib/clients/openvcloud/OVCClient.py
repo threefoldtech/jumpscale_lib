@@ -112,7 +112,7 @@ class OVCClient(JSConfigBase):
             self.api._session.cookies['beaker.session.id'] = self.config.data.get("appkey_")
             self._login = self.config.data.get("login")  #IS THIS NEEDED WHEN USING SECRET KEY
         else:
-            iyo_client = j.clients.itsyouonline.get(sshkey_path=self.sshkey_path)
+            iyo_client = j.clients.itsyouonline.get(instance=self._instance, sshkey_path=self.sshkey_path)
             jwt = iyo_client.jwt
             payload = jose.jwt.get_unverified_claims(jwt)
             if payload['exp'] < time.time():
