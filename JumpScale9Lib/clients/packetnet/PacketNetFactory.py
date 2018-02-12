@@ -17,11 +17,7 @@ class PacketNet(JSConfigClient):
     def __init__(self, instance, data={}, parent=None):
         JSConfigClient.__init__(self, instance=instance,
                                 data=data, parent=parent, template=TEMPLATE)
-
-        if not self.config.data['auth_token_']:
-            raise RuntimeError("Missing auth token in config instance {}".format(instance))
-        self.client = packet.Manager(
-            auth_token=self.config.data["auth_token_"])
+        self._client = None
         self._plans = None
         self._facilities = None
         self._oses = None
@@ -30,6 +26,15 @@ class PacketNet(JSConfigClient):
         self._devices = None
         self.projectname = self.config.data['project_name']
         self.logger = j.logger.get('j.clients.packetnet')
+
+    @property
+    def client(self):
+        if self._client is None:
+            self._client = packet.Manager(
+                auth_token=self.config.data["auth_token_"]
+            )
+
+        return self._client
 
     @property
     def projectid(self):
