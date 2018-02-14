@@ -385,6 +385,13 @@ class Account(Authorizables):
             accountId=self.id, userId=username, recursivedelete=True)
 
     def get_consumption(self, start, end):
+        """
+        Retrieve the consumption of the user bounded by a specific time
+
+        Args:
+            - start (Number): start time in milliseconds
+            - end (Number): end time in milliseconds
+        """
         return self.client.api.cloudapi.accounts.getConsumption(accountId=self.id, start=start, end=end)
 
     def save(self):
