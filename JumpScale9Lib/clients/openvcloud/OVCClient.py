@@ -1088,10 +1088,10 @@ class Machine:
                 j.clients.ssh.load_ssh_key(self.ssh_keypath)
                 sshclient = j.clients.ssh.get(addr=publicip, port=sshport, key_filename=self.ssh_keypath)
                 sshclient.connect()
-                executor = j.tools.executor.getFromSSHClient(sshclient)
+                executor = j.tools.executor.getFromSSHClient(sshclient, usecache=False)
             else:
                 sshclient = j.clients.ssh.get(addr=publicip, port=sshport)
-                executor = j.tools.executor.getFromSSHClient(sshclient)
+                executor = j.tools.executor.getFromSSHClient(sshclient, usecache=False)
 
             self._prefab = j.tools.prefab.get(executor, usecache=False)
 
