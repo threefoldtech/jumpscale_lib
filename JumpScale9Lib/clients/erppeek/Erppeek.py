@@ -17,7 +17,7 @@ password_ = ""
 class ErppeekFactory(JSConfigFactory):
 
     def __init__(self):
-        self.__jslocation__ = "j.clients.telegram"
+        self.__jslocation__ = "j.clients.erppeek"
         self.__imports__ = "erppeek"
         JSConfigFactory.__init__(self, Erppeek)
 
