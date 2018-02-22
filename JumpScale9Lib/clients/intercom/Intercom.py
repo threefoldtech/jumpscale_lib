@@ -29,7 +29,7 @@ class IntercomClient(JSConfigClient):
         self.api = Client(personal_access_token=self.token)
 
     def send_in_app_message(self, body, admin_id, user_id):
-        intercom.messages.create(**{
+        self.api.messages.create(**{
             "message_type": "inapp",
             "body": body,
             "from": {
