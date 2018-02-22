@@ -4,6 +4,7 @@ from js9 import j
 
 from .Client import Client
 from .sal.Node import Node
+from .sal.ZeroDB import ZeroDB
 
 JSConfigFactoryBase = j.tools.configmanager.base_class_configs
 
@@ -128,3 +129,7 @@ class SALFactory:
     def node_get(self, instance='main'):
         client = self._factory.get(instance)
         return Node(client)
+
+    def get_zerodb(self, name, container, addr='0.0.0.0', port=9900, data_dir='/mnt/data',
+                   index_dir='/mnt/index', mode='user', sync=False):
+        return ZeroDB(name, container, addr, port, data_dir, index_dir, mode, sync)
