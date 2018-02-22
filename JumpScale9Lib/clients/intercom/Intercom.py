@@ -11,7 +11,7 @@ JSConfigFactory = j.tools.configmanager.base_class_configs
 JSConfigClient = j.tools.configmanager.base_class_config
 
 TEMPLATE = """
-token_ = "dG9rOmNjNTRlZDFiX2E3OTZfNGFiM185Mjk5X2YzMGQyN2NjODM4ZToxOjA="
+token="dG9rOmNjNTRlZDFiX2E3OTZfNGFiM185Mjk5X2YzMGQyN2NjODM4ZToxOjA="
 """
 
 class Intercom(JSConfigFactory):
@@ -25,10 +25,17 @@ class IntercomClient(JSConfigClient):
         JSConfigClient.__init__(self, instance=instance,
                                 data=data, parent=parent, template=TEMPLATE)
         c = self.config.data
-        self.token = c['token_']
+        self.token = c['token']
         self.api = Client(personal_access_token=self.token)
 
     def send_in_app_message(self, body, admin_id, user_id):
+        """
+        sending an in-app message from an admin to user
+
+        :param body: (String) body of the email
+        :param admin_id: (String) id of sender admin
+        :param user_id: (String) id of user who will receive the message
+        """
         self.api.messages.create(**{
             "message_type": "inapp",
             "body": body,
@@ -42,7 +49,7 @@ class IntercomClient(JSConfigClient):
             }
         })
 
-    def send_mail_message_from_admin_to_user(self, subject, body, template, admin_id, user_id):
+    def send_mail_message(self, subject, body, template, admin_id, user_id):
         """
         sending a mail message from an admin to user
 
@@ -51,7 +58,6 @@ class IntercomClient(JSConfigClient):
         :param template: (String) has one of the 2 values "plain", or "personal"
         :param admin_id: (String) id of sender admin
         :param user_id: (String) id of user who will receive the message
-        :return:
         """
         self.api.messages.create(**{
             "message_type": "email",
