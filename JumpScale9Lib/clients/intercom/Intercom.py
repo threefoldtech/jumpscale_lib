@@ -91,6 +91,14 @@ class IntercomClient(JSConfigClient):
         admins = self.api.admins.all()
         return admins
 
+    def get_admin(self, name):
+        admins = self.api.admins.all()
+        for admin in admins:
+            if admin.name == name:
+                return admin
+        return None
+
+
 
 
 
