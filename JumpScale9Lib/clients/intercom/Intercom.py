@@ -75,4 +75,23 @@ class IntercomClient(JSConfigClient):
         })
 
 
+    def get_user(self, email):
+        user = self.api.users.find(email=email)
+        return user
+
+    def get_all_users(self):
+        users = self.api.users.all()
+        return users
+
+    def delete_user(self, email):
+        user = self.get_user(email=email)
+        self.api.users.delete(user)
+
+    def get_all_admins(self):
+        admins = self.api.admins.all()
+        return admins
+
+
+
+
 
