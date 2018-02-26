@@ -727,7 +727,7 @@ class Space(Authorizables):
             sshport = self.createPortForward(machine)
         login = machinedict['accounts'][0]['login']
         password = machinedict['accounts'][0]['password']
-
+        
         sshclient = j.clients.ssh.get(
             addr=publicip, port=sshport, login=login, passwd=password, allow_agent=False, look_for_keys=False,
             timeout=300)
@@ -1077,15 +1077,13 @@ class Machine:
                 self.space.refresh()
                 publicip = self.space.model['publicipaddress']
 
-            sshport = None
             usedports = set()
             for portforward in self.space.portforwards:
                 if portforward['localIp'] == machineip and int(portforward['localPort']) == 22:
                     sshport = int(portforward['publicPort'])
                     break
                 usedports.add(int(portforward['publicPort']))
-
-            if sshport is None:
+            else:
                 raise RuntimeError(
                     "Cannot find sshport at public side to access this machine")
 
@@ -1094,12 +1092,11 @@ class Machine:
             if self.ssh_keypath:
                 j.clients.ssh.load_ssh_key(self.ssh_keypath)
                 sshclient = j.clients.ssh.get(addr=publicip, port=sshport, key_filename=self.ssh_keypath)
-                sshclient.connect()
-                executor = j.tools.executor.getFromSSHClient(sshclient, usecache=False)
             else:
                 sshclient = j.clients.ssh.get(addr=publicip, port=sshport)
-                executor = j.tools.executor.getFromSSHClient(sshclient, usecache=False)
-
+            sshclient.connect()
+            executor = j.tools.executor.getFromSSHClient(sshclient, usecache=False)
+                
             self._prefab = j.tools.prefab.get(executor, usecache=False)
 
         return self._prefab
