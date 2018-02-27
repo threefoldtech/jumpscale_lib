@@ -31,7 +31,7 @@ class Machine(JSBASE):
 
     @property
     def sshkeyname(self):
-        if self.model["description"] == None:
+        if self.model["description"] is None:
             raise RuntimeError("Could not find sshkeyname, description is empty")
         for line in self.model["description"].split("\n"):
             if line.strip().startswith("sshkeyname:"):
@@ -294,7 +294,7 @@ class Machine(JSBASE):
         sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login=login, passwd=password,
                                       keyname=sshkeyname, allow_agent=False, timeout=300)
 
-        sshclient.check_connection()
+        sshclient.connect()
 
         sshclient.ssh_authorize(sshkeyname, 'root')
         sshclient.config.delete()  # remove this temp sshconnection

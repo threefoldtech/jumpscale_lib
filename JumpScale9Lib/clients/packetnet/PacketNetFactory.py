@@ -255,7 +255,7 @@ class PacketNet(JSConfigClient):
                 self.addSSHKey(sshkey, hostname)
                 sshclient = j.clients.ssh.get(instance=sshkey.instance,
                                               data={'addr': ipaddr, 'login': 'root'})
-            sshclient.isconnected
+            sshclient.connect()
 
         conf = {}
         conf["facility"] = facility
