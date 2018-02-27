@@ -1,77 +1,151 @@
 from js9 import j
+try:
+    from wordpress_json import WordpressJsonWrapper
+except:
+    j.tools.prefab.local.runtimes.pip.install("wordpress-json")
+    from wordpress_json import WordpressJsonWrapper
+
+# this client requires wordpress configurations
+# please follow these instructions https://github.com/stylight/python-wordpress-json
+
 JSConfigBase = j.tools.configmanager.base_class_config
 
 TEMPLATE = """
-path = "/opt/var/data/www"
-url = "localhost:8090"
-title = ""
-admin_user = ""
-admin_password_ = ""
-admin_email = ""
-db_name = 'wordpress'
-db_user = 'wordpress'
-db_password_ = ""
-port = 8090
+url = ""
+username = ""
+password_ = ""
 """
 class WordpressClient(JSConfigBase):
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=None):
         JSConfigBase.__init__(self, instance=instance,
                               data=data, parent=parent, template=TEMPLATE)
         c = self.config.data
-        self.path = c['path']
-        self.url = c['url']
-        self.title = c['title']
-        self.admin_user = c['admin_user']
-        self.admin_password = c['admin_password_']
-        self.admin_email = c['admin_email']
-        self.db_name = c['db_name']
-        self.db_user = c['db_user']
-        self.db_password = c['db_password_']
-        self.port = c['port']
-
-    def install(self, theme=None, plugins=None, reset='false'):
-        """install wordpress with data given in the template
+        self.url = c["url"]
+        self.username = c["username"]
+        self.password = c["password_"]
+        self._api = None
+    
+    @property
+    def api(self):
+        if not self._api:
+            api_url = self.url + "/?rest_route=/wp/v2"
+            self._api = WordpressJsonWrapper(api_url, self.username, self.password)
+        return self._api
+    
+    def users_get(self, id=None):
+        """get user or list users if no id provided
         
         Keyword Arguments:
-            theme {string} -- local path, or direct download link for a theme to install (default: {None})
-            plugins {[string]} -- list of plugin slugs, urls or local paths to install (default: {None})
-            reset {boolean} -- if true installation will start all over again even if it was already installed (default: {False})
-        """
+            id {integer} -- user id, if none will return all users (default: {None})
         
-        p = j.tools.prefab.local
-        p.apps.wordpress.install(self.path, self.url, self.title, self.admin_user, self.admin_password, self.admin_email, 
-                self.db_name, self.db_user, self.db_password, self.port, plugins, theme, reset)
-
-    def install_plugins(self, plugins):
-        """install list of plugins
-        
-        Arguments:
-            plugins {[string]} -- list of plugin slugs, urls or local paths to install
+        Returns:
+            {dict} -- dict representation of users
         """
 
-        if not plugins:
-            return
-        
-        for plugin in plugins:
-            plugins_command = """
-            sudo -u wordpress -i -- wp --path={} plugin install {}
-            """.format(self.path, plugin)
-            self.prefab.core.run(plugins_command, die=False)
-                
-    def install_theme(self, theme, activate=False):
-        """install a theme
+        if id:
+            return self.api.get_user(user_id=id)
+
+        return self.api.get_users()
+
+    def user_create(self, username, email, password, **kwargs):
+        """create a user
         
         Arguments:
-            theme {string} -- local path, or direct download link for a theme to install
+            username {string} -- username
+            email {string } -- email
+            password {string} -- password
+            **kwargs  -- additional user data
+        """
+
+        data = {
+            "username": username,
+            "email": email,
+            "password": password
+        }
+        data.update(kwargs)
+        return self.api.create_user(data=data)
+    
+    def user_delete(self, id, reassign_id):
+        """delete user
+        
+        Arguments:
+            id {integer} -- user id
+            reassign_id {integer} -- Reassign the deleted user's posts and links to this user ID
+        """
+
+        self.api.delete_user(user_id=id, params={"reassign":reassign_id, "force":True})
+    
+    def pages_get(self, id=None):
+        """get page or list pages if id provided
+        
+        Arguments:
+            id {integer} -- page id
+        
+        Returns:
+            dict -- dict representation of pages
+        """
+
+        if id:
+            return self.api.get_pages(page_id=id)
+
+        return self.api.get_pages()
+
+    def page_create(self, publish=False, **kwargs):
+        """create a page
+
+        Keyword Arguments:
+            publish {boolean} -- if true the page will be published after being created (default: {False})
+            kwargs -- this should contain all page's data
+        """
+
+        data ={}
+        if publish:
+            data['status'] = 'publish'
+        data.update(kwargs)
+        return self.api.create_pages(data=data)
+    
+    def page_delete(self, id):
+        """delete page
+        
+        Arguments:
+            id {integer} -- page id to be deleted
+        """     
+
+        self.api.delete_pages(page_id= id)
+
+    def posts_get(self, id=None):
+        """get post or list post if id provided
         
         Keyword Arguments:
-            activate {boolean} -- if True the theme will be activated after install (default: {False})
+            id {integer} -- post id (default: {None})
+        
+        Returns:
+            dict -- dict representation of post
         """
-        if not theme:
-            return
 
-        activate_cmd = "--activate" if activate else ""
-        themes_command = """
-        sudo -u wordpress -i -- wp --path={} theme install {} {}
-        """.format(self.path, theme, activate_cmd)
-        self.prefab.core.run(themes_command, die=False)
+        if id:
+            return self.api.get_post(post_id=id)
+
+        return self.api.get_posts()
+
+    def post_create(self, publish=False, **kwargs):
+        """creates a post
+        
+        Keyword Arguments:
+            publish {boolean} -- if true the post will be published once created (default: {False})
+        """
+
+        data ={}
+        if publish:
+            data['status'] = 'publish'
+        data.update(kwargs)
+        return self.api.create_post(data=data)
+    
+    def post_delete(self, id):
+        """deletes a post
+        
+        Arguments:
+            id {integer} -- post id to be deleted
+        """
+
+        self.api.delete_post(post_id=id)
