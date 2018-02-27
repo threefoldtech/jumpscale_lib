@@ -296,7 +296,7 @@ class Machine(JSBASE):
 
         sshclient.connect()
 
-        sshclient.ssh_authorize(sshkeyname, 'root')
+        sshclient.ssh_authorize('root', sshkeyname)
         sshclient.config.delete()  # remove this temp sshconnection
         sshclient.close()
 
