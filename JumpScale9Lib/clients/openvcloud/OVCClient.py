@@ -1012,13 +1012,13 @@ class Machine:
             # - if it's an auto-generated port, we probably hit a concurrence issue
             #   let's try again with a new port
             if str(e).startswith("409 Conflict") and publicport is None:
-                return self.portforward_create(None, localport, protocol)
+                return self.portforward_create(publicport=None, localport=localport, protocol=protocol)
             # check if the cloudspace is still deploying
             if self.space.model["status"] == 'DEPLOYING':
                 self.logger.debug(
                     "Cloudspace still in deployment, will retry to create portforwarding in 2 second")
                 time.sleep(2)
-                return self.portforward_create(None, localport, protocol)
+                return self.portforward_create(publicport=None, localport=localport, protocol=protocol)
 
             # - if the port was choose explicitly, then it's not the lib's fault
             raise j.exceptions.RuntimeError(
