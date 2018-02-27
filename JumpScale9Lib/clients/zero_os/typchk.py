@@ -3,24 +3,20 @@ from js9 import j
 
 missing = object()
 
-JSBASE = j.application.jsbase_get_class()
-
 
 def primitive(typ):
     return typ in [str, int, float, bool]
 
 
-class CheckerException(Exception, JSBASE):
-    def __init__(self):
-        JSBASE.__init__(self)
+class CheckerException(Exception):
+    pass
 
 
-class Tracker(Exception, JSBASE):
+class Tracker(Exception):
     def __init__(self, base):
         self._base = base
         self._reason = None
         self._branches = []
-        JSBASE.__init__(self)
 
     @property
     def branches(self):
@@ -63,9 +59,8 @@ class Tracker(Exception, JSBASE):
         return str(self)
 
 
-class Option(JSBASE):
+class Option():
     def __init__(self):
-        JSBASE.__init__(self)
         raise NotImplementedError()
 
     def check(self, object, t):
@@ -74,7 +69,6 @@ class Option(JSBASE):
 
 class Or(Option):
     def __init__(self, *types):
-        Option.__init__(self)
         self._checkers = []
         for typ in types:
             self._checkers.append(Checker(typ))
@@ -92,7 +86,7 @@ class Or(Option):
 
 class IsNone(Option):
     def __init__(self):
-        Option.__init__(self)
+        pass
 
     def check(self, object, t):
         if object is not None:
@@ -101,7 +95,7 @@ class IsNone(Option):
 
 class Missing(Option):
     def __init__(self):
-        Option.__init__(self)
+        pass
 
     def check(self, object, t):
         if object != missing:
@@ -110,7 +104,7 @@ class Missing(Option):
 
 class Any(Option):
     def __init__(self):
-        Option.__init__(self)
+        pass
 
     def check(self, object, t):
         return
@@ -123,7 +117,6 @@ class Length(Option):
             raise ValueError("you have to pass wither min or max to the length type checker")
         self._min = min
         self._max = max
-        Option.__init__(self)
 
     def check(self, object, t):
         self._checker.check(object, t)
@@ -137,7 +130,6 @@ class Map(Option):
     def __init__(self, key_type, value_type):
         self._key = Checker(key_type)
         self._value = Checker(value_type)
-        Option.__init__(self)
 
     def check(self, object, t):
         if not isinstance(object, dict):
@@ -152,7 +144,6 @@ class Map(Option):
 class Enum(Option):
     def __init__(self, *valid):
         self._valid = valid
-        Option.__init__(self)
 
     def check(self, object, t):
         if not isinstance(object, str):
@@ -161,7 +152,7 @@ class Enum(Option):
             raise t.reason('value "{}" not in enum'.format(object))
 
 
-class Checker(JSBASE):
+class Checker():
     """
     Build a type checker to check method inputs
 
@@ -204,9 +195,9 @@ class Checker(JSBASE):
     c.check({'name': 'azmy', children:[{'name': 'yahia', 'age': 4.0}]}) # passes
     c.check({'name': 'azmy', children:[{'name': 'yahia', 'age': 4.0}, {'name': 'yassine'}]}) # does not pass
     """
+
     def __init__(self, tyepdef):
         self._typ = tyepdef
-        JSBASE.__init__(self)
 
     def check(self, object, tracker=None):
         if tracker is None:
