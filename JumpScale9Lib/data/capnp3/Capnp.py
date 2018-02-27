@@ -46,7 +46,7 @@ class Capnp(JSBASE):
     def __init__(self):
         self.__jslocation__ = "j.data.capnp"
         self.__imports__ = "pycapnp"
-        self._cache = {}
+        self._schema_cache = {}
         self._capnpVarDir = j.sal.fs.joinPaths(j.dirs.VARDIR, "capnp")
         j.sal.fs.createDir(self._capnpVarDir)
         if self._capnpVarDir not in sys.path:
@@ -100,10 +100,10 @@ class Capnp(JSBASE):
         return id
 
     def removeFromCache(self, schemaId):
-        self._cache.pop(schemaId, None)
+        self._schema_cache.pop(schemaId, None)
 
     def resetSchema(self, schemaId):
-        self._cache.pop(schemaId, None)
+        self._schema_cache.pop(schemaId, None)
         nameOnFS = "schema_%s.capnp" % (schemaId)
         path = j.sal.fs.joinPaths(self._capnpVarDir, nameOnFS)
         if j.sal.fs.exists(path):
@@ -113,14 +113,14 @@ class Capnp(JSBASE):
         schemaInText = j.data.text.strip(schemaInText)
         schemaInText = schemaInText.strip() + "\n"
         schemaId = self.getId(schemaInText)
-        if schemaId not in self._cache:
+        if schemaId not in self._schema_cache:
             nameOnFS = "schema_%s.capnp" % (schemaId)
             path = j.sal.fs.joinPaths(self._capnpVarDir, nameOnFS)
             j.sal.fs.writeFile(filename=path, contents=schemaInText, append=False)
             parser = capnp.SchemaParser()
             schema = parser.load(path)
-            self._cache[schemaId] = schema
-        return self._cache[schemaId]
+            self._schema_cache[schemaId] = schema
+        return self._schema_cache[schemaId]
 
     def getSchemaFromText(self, schemaInText, name="Schema"):
         if not schemaInText.strip():
