@@ -4,15 +4,15 @@ import multiprocessing
 import time
 import logging
 
-
+JSBASE = j.application.jsbase_get_class()
 NUM_WORKERS = 4
 
 
-class BaseDumper:
+class BaseDumper(JSBASE):
 
     def __init__(self, cidr, ports=[6379]):
         logging.root.setLevel(logging.INFO)
-
+        JSBASE.__init__(self)
         self._cidr = cidr
         scanner = NetworkScanner(cidr, ports)
         self._candidates = scanner.scan()

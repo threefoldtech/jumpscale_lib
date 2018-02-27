@@ -13,11 +13,14 @@ from .Disk import Disks, DiskType
 from .healthcheck import HealthCheck
 from .Network import Network
 from .StoragePool import StoragePools
+from js9 import j
 
 Mount = namedtuple('Mount', ['device', 'mountpoint', 'fstype', 'options'])
 
+JSBASE = j.application.jsbase_get_class()
 
-class Node:
+
+class Node(JSBASE):
     """Represent a G8OS Server"""
 
     def __init__(self, client):
@@ -31,6 +34,7 @@ class Node:
         self.network = Network(self)
         self.healthcheck = HealthCheck(self)
         self.client = client
+        JSBASE.__init__(self)
 
     @property
     def name(self):
@@ -217,7 +221,7 @@ class Node:
         self.client.filesystem.upload(remote, bytes)
 
     def wipedisks(self):
-        print('Wiping node {hostname}'.format(**self.client.info.os()))
+        self.logger.debug('Wiping node {hostname}'.format(**self.client.info.os()))
         mounteddevices = {mount['device']: mount for mount in self.client.info.disk()}
 
         def getmountpoint(device):
@@ -229,14 +233,14 @@ class Node:
         for disk in self.client.disk.list()['blockdevices']:
             devicename = '/dev/{}'.format(disk['kname'])
             if disk['tran'] == 'usb':
-                print('   * Not wiping usb {kname} {model}'.format(**disk))
+                self.logger.debug('   * Not wiping usb {kname} {model}'.format(**disk))
                 continue
             mount = getmountpoint(devicename)
             if not mount:
-                print('   * Wiping disk {kname}'.format(**disk))
+                self.logger.debug('   * Wiping disk {kname}'.format(**disk))
                 jobs.append(self.client.system('dd if=/dev/zero of={} bs=1M count=50'.format(devicename)))
             else:
-                print('   * Not wiping {device} mounted at {mountpoint}'.format(device=devicename, mountpoint=mount['mountpoint']))
+                self.logger.debug('   * Not wiping {device} mounted at {mountpoint}'.format(device=devicename, mountpoint=mount['mountpoint']))
 
         # wait for wiping to complete
         for job in jobs:
@@ -264,7 +268,7 @@ class Node:
                 err = error
                 time.sleep(1)
         else:
-            print("Could not ping %s within 30 seconds due to %s" % (self.addr, err))
+            self.logger.debug("Could not ping %s within 30 seconds due to %s" % (self.addr, err))
 
         return state
 

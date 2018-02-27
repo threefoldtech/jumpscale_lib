@@ -10,16 +10,17 @@ from network import Network
 from firewall import Firewall
 
 from js9 import j
-
+JSBASE = j.application.jsbase_get_class()
 
 WRITE_CHUNK_SIZE = 512
 
 
-class UCIError(Exception):
-    pass
+class UCIError(Exception, JSBASE):
+    def __init__(self):
+        JSBASE.__init__(self)
 
 
-class OpenWRTManager:
+class OpenWRTManager(JSBASE):
     WRT_SHELL = '/bin/ash -c'
 
     def __init__(self, con=None):
@@ -29,6 +30,7 @@ class OpenWRTManager:
         self._ftp = PureFTP(self)
         self._network = Network(self)
         self._firewall = Firewall(self)
+        JSBASE.__init__(self)
 
     @property
     def connection(self):
@@ -127,7 +129,10 @@ class OpenWRTManager:
                 j.sal.process.execute('rm -f %s')
 
 
-class OpenWRTFactory:
+class OpenWRTFactory(JSBASE):
+
+    def __init__(self):
+        JSBASE.__init__(self)
 
     def _getFactoryEnabledClasses(self):
         return (("", "UCI", UCI()), ("", "DNS", DNS()), ("", "DHCP", DHCP()), ("", "PureFTP", PureFTP()),

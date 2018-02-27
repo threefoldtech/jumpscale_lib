@@ -1,6 +1,12 @@
-class Master:
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
+
+
+class Master(JSBASE):
 
     def __init__(self, parent):
+        JSBASE.__init__(self)
         self._parent = parent
         self._moduleID = "M1"
 
@@ -15,9 +21,10 @@ class Master:
         return 0, "%d.%d.%d.%d" % (ipaddress[0], ipaddress[1], ipaddress[2], ipaddress[3])
 
 
-class Power:
+class Power(JSBASE):
 
     def __init__(self, parent):
+        JSBASE.__init__(self)
         self._parent = parent
         self._moduleID = "P1"
 

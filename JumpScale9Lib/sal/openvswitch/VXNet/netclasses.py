@@ -1,13 +1,17 @@
 __author__ = 'delandtj'
 
 from .utils import *
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
 
 
-class VXlan:
+class VXlan(JSBASE):
 
     def __init__(self, oid, backend='vxbackend'):
         def bytes(num):
             return num >> 8, num & 0xFF
+        JSBASE.__init__(self)
         self.multicastaddr = '239.0.%s.%s' % bytes(oid.oid)
         self.id = oid
         self.backend = backend
@@ -26,10 +30,11 @@ class VXlan:
         pass
 
 
-class Bridge:
+class Bridge(JSBASE):
 
     def __init__(self, name):
         self.name = name
+        JSBASE.__init__(self)
 
     def create(self):
         createBridge(self.name)
@@ -49,11 +54,13 @@ class VXBridge(Bridge):
     def __init__(self, oid):
         assert isinstance(oid.tostring, object)
         self.name = 'space_' + oid.tostring()
+        Bridge.__init__(name=self.name)
 
 
-class BondBridge:
+class BondBridge(JSBASE):
 
     def __init__(self, name, interfaces, bondname=None, trunks=None):
+        JSBASE.__init__(self)
         self.name = name
         self.interfaces = interfaces
         self.trunks = trunks
@@ -70,9 +77,10 @@ class BondBridge:
         destroyBridge(self.name)
 
 
-class NameSpace:
+class NameSpace(JSBASE):
 
     def __init__(self, name):
+        JSBASE.__init__(self)
         self.name = name
 
     def create(self):
@@ -89,11 +97,13 @@ class VXNameSpace(NameSpace):
 
     def __init__(self, oid):
         self.name = 'ns-' + oid.tostring()
+        NameSpace.__init__(name=self.name)
 
 
-class NetID:
+class NetID(JSBASE):
 
     def __init__(self, oid):
+        JSBASE.__init__(self)
         if isinstance(oid, str):
             self.oid = int(oid, 16)
         else:
@@ -105,9 +115,10 @@ class NetID:
         return oidstring
 
 
-class VethPair:
+class VethPair(JSBASE):
 
     def __init__(self, oid):
+        JSBASE.__init__(self)
         self.left = 'veth-left-%s' % oid.tostring()
         self.right = 'veth-right-%s' % oid.tostring()
 

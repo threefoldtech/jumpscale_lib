@@ -22,12 +22,15 @@ def loadmodule(name, path):
     mod = imp.load_source(name, path)
     return mod
 
+JSBASE = j.application.jsbase_get_class()
 
-class DocSite:
+
+class DocSite(JSBASE):
     """
     """
 
     def __init__(self, path=""):
+        JSBASE.__init__(self)
         self.path = j.sal.fs.getDirName(path)
 
         gitpath = j.clients.git.findGitPath(path)
@@ -242,11 +245,11 @@ class DocSite:
         if doc is not None:
             errormsg2 = "## ERROR: %s\n\n- in doc: %s\n\n%s\n" % (j.data.time.getLocalTimeHR(), doc, errormsg)
             j.sal.fs.writeFile(filename=self.path + "errors.md", contents=errormsg2, append=True)
-            print(errormsg2)
+            self.logger.error(errormsg2)
             doc.errors.append(errormsg)
         else:
             from IPython import embed
-            print("DEBUG NOW raise error")
+            self.logger.error("DEBUG NOW raise error")
             embed()
             raise RuntimeError("stop debug here")
 

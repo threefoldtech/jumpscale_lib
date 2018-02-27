@@ -1,11 +1,13 @@
 from js9 import j
 
+JSBASE = j.application.jsbase_get_class()
 
-class Ubuntu:
+
+class Ubuntu(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.ubuntu"
-        self.logger = j.logger.get("j.sal.ubuntu")
+        JSBASE.__init__(self)
         self._aptupdated = False
         self._checked = False
         self._cache = None
@@ -186,12 +188,10 @@ stop on runlevel [016]
         self.logger.debug("start service on ubuntu for:%s" % servicename)
         if not self.service_status(servicename):
             cmd = "sudo start %s" % servicename
-            # print cmd
             return self._local.execute(cmd)
 
     def service_stop(self, servicename):
         cmd = "sudo stop %s" % servicename
-        # print cmd
         return self._local.execute(cmd, False)
 
     def service_restart(self, servicename):

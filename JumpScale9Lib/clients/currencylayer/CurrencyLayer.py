@@ -5,6 +5,7 @@ api_key_ = ""
 """
 
 JSConfigBase = j.tools.configmanager.base_class_config
+JSBASE = j.application.jsbase_get_class()
 
 
 class CurrencyLayer(JSConfigBase):
@@ -16,7 +17,6 @@ class CurrencyLayer(JSConfigBase):
         self.__jslocation__ = 'j.clients.currencylayer'
         JSConfigBase.__init__(self, instance="main", data={}, parent=None,template=TEMPLATE)
         self._data_cur={}
-        self.cache = j.data.cache.redis_local_get()
 
     def load(self):
         def get():
@@ -25,7 +25,7 @@ class CurrencyLayer(JSConfigBase):
             c=j.clients.http.getConnection()
             r=c.get(url).readlines()
             data=j.data.serializer.json.loads(r[0].decode())["quotes"]
-            print ("fetch currency from internet")
+            self.logger.error("fetch currency from internet")
             return data
         data = self.cache.get("currency_data", get, expire=3600*24)
 
@@ -48,6 +48,6 @@ class CurrencyLayer(JSConfigBase):
         """
         js9 'j.clients.currencylayer.test()'
         """
-        print (self.cur2usd)
-        assert 'AED' in self.cur2usd
+        self.logger.error (self.cur2usd)
+        assert 'aed' in self.cur2usd
 

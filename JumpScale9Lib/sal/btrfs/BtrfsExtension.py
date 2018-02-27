@@ -3,25 +3,28 @@ import re
 
 BASECMD = "btrfs"
 
+JSBASE = j.application.jsbase_get_class()
 
-class BtrfsExtensionFactory(object):
+
+class BtfsExtensionFactory(object, JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.btrfs"
+        JSBASE.__init__(self)
 
     def getBtrfs(self, executor=None):
         ex = executor if executor is not None else j.tools.executorLocal
         return BtrfsExtension(ex)
 
 
-class BtrfsExtension:
+class BtrfsExtension(JSBASE):
 
     def __init__(self, executor):
         self.__conspattern = re.compile("^(?P<key>[^:]+): total=(?P<total>[^,]+), used=(?P<used>.+)$", re.MULTILINE)
         self.__listpattern = re.compile("^ID (?P<id>\d+).+?path (?P<name>.+)$", re.MULTILINE)
         self._executor = executor
         self._disks = None
-        self.logger = j.logger.get("btrfs.extension")
+        JSBASE.__init__(self)
 
     @property
     def prefab(self):
@@ -129,7 +132,7 @@ class BtrfsExtension:
         for i in range(4):
             # ugly for now, but cannot delete subvols, by doing this, it words brute force
             for path2 in self.subvolumeList(path, filter=filter, filterExclude=filterExclude):
-                print("delete:%s" % path2)
+                self.logger.debug("delete:%s" % path2)
                 try:
                     self.subvolumeDelete(path2)
                 except BaseException:
@@ -170,7 +173,7 @@ class BtrfsExtension:
 
         for disk in res:
             if disk.mountpoint == path:
-                print("no need to format btrfs, was already done, warning: did not check if redundant")
+                self.logger.debug("no need to format btrfs, was already done, warning: did not check if redundant")
                 return
             disk.erase()
 

@@ -1,6 +1,10 @@
 from requests.exceptions import HTTPError
 from .Action import Actions
 from .EventHandler import EventHandlers
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
+
 
 def _extract_error(resp):
     if isinstance(resp, HTTPError):
@@ -10,8 +14,10 @@ def _extract_error(resp):
         return resp.response.text
     raise resp
 
-class Services:
+
+class Services(JSBASE):
     def __init__(self, repository, relatedService=None, relationship=None):
+        JSBASE.__init__(self)
         self._repository = repository
         self._ayscl = repository._ayscl
         self._relatedService=relatedService
@@ -102,8 +108,10 @@ class Services:
         except Exception as e:
             return _extract_error(e)
 
-class Service:
+
+class Service(JSBASE):
     def __init__(self, repository, model):
+        JSBASE.__init__(self)
         self._repository = repository
         self._ayscl = repository._ayscl
         self.model = model

@@ -15,6 +15,8 @@ token_ = ""
 password_ = ""
 """
 
+JSBASE = j.application.jsbase_get_class()
+
 
 class GitHubFactory(JSConfigFactory):
 
@@ -53,7 +55,6 @@ class GitHubClient(JSConfigClient):
         login_or_token = self.config.data['token_'] or self.config.data['login']
         password_ = self.config.data['password_'] if self.config.data['password_'] != "" else None
         self.api = github.Github(login_or_token, password_, per_page=100)
-        self.logger = j.logger.get('j.clients.github')
         self.users = {}
         self.repos = {}
         self.milestones = {}

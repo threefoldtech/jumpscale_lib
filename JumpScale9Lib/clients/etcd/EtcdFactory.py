@@ -1,10 +1,14 @@
 import etcd
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
 
 
-class EtcdFactory():
+class EtcdFactory(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.etcd"
+        JSBASE.__init__(self)
         self.__imports__ = "python-etcd"
 
     def get(self, **kwargs):

@@ -2,11 +2,13 @@
 Auto-generated class for AuthorizationMap
 """
 from .Label import Label
-
+from js9 import j
 from . import client_support
 
 
-class AuthorizationMap(object):
+
+
+class AuthorizationMap( ):
     """
     auto-generated. don't touch.
     """
@@ -22,6 +24,7 @@ class AuthorizationMap(object):
         return AuthorizationMap(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

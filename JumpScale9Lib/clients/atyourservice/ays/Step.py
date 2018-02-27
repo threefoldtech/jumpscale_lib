@@ -1,7 +1,12 @@
 from .Job import Jobs
+from js9 import j
 
-class Steps:
+JSBASE = j.application.jsbase_get_class()
+
+
+class Steps(JSBASE):
     def __init__(self, run):
+        JSBASE.__init__(self)
         self._run = run
 
     def list(self):
@@ -32,8 +37,9 @@ class Steps:
                 return step
         raise ValueError("Could not find step with number {}".format(number))
 
-class Step:
+class Step(JSBASE):
     def __init__(self, run, model):
+        JSBASE.__init__(self)
         self._run = run
         self.model = model
         self.jobs = Jobs(step=self)

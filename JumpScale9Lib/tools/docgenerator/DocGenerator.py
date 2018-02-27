@@ -7,6 +7,8 @@ import sys
 # import inspect
 # import copy
 
+JSBASE = j.application.jsbase_get_class()
+
 
 def loadmodule(name, path):
     parentname = ".".join(name.split(".")[:-1])
@@ -23,19 +25,19 @@ if not sys.platform.startswith("darwin"):
         browse
     }
 
-    $ws/fm/ {
-        filemanager / {
-            show           $outpath
-            allow_new      true
-            allow_edit     true
-            allow_commands true
-            allow_command  git
-            allow_command  svn
-            allow_command  hg
-            allow_command  ls
-            block          dotfiles
-        }
-    }
+    # $ws/fm/ {
+    #     filemanager / {
+    #         show           $outpath
+    #         allow_new      true
+    #         allow_edit     true
+    #         allow_commands true
+    #         allow_command  git
+    #         allow_command  svn
+    #         allow_command  hg
+    #         allow_command  ls
+    #         block          dotfiles
+    #     }
+    # }
     '''
 else:
     caddyconfig = '''
@@ -50,7 +52,7 @@ else:
 caddyconfig = j.data.text.strip(caddyconfig)
 
 
-class DocGenerator:
+class DocGenerator(JSBASE):
     """
     process all markdown files in a git repo, write a summary.md file
     optionally call pdf gitbook generator to produce pdf(s)
@@ -58,6 +60,7 @@ class DocGenerator:
 
     def __init__(self):
         self.__jslocation__ = "j.tools.docgenerator"
+        JSBASE.__init__(self)
         self.__imports__ = "toml"
         self._macroPathsDone = []
         self._initOK = False
@@ -69,7 +72,6 @@ class DocGenerator:
         self.gitRepos = {}
         self.webserver = "http://localhost:8080/"
         self.ws = self.webserver.replace("http://", "").replace("https://", "").replace("/", "")
-        self.logger = j.logger.get('docgenerator')
         self._loaded = []
         self._macrosLoaded = []
 
@@ -144,7 +146,7 @@ class DocGenerator:
     def init(self):
         if not self._initOK:
             self.install()
-            j.clients.redis.start4core()
+            j.clients.redis.core_start()
             j.sal.fs.remove(self._macroCodepath)
             # load the default macro's
             self.loadMacros("https://github.com/Jumpscale/docgenerator/tree/master/macros")
@@ -209,7 +211,7 @@ class DocGenerator:
 
         for docDir in j.sal.fs.listFilesInDir(path, recursive=True, filter=".docs"):
             if docDir not in self.docSites:
-                print("found doc dir:%s" % docDir)
+                self.logger.debug("found doc dir:%s" % docDir)
                 ds = DocSite(path=docDir)
                 self.docSites[docDir] = ds
 
@@ -235,7 +237,7 @@ class DocGenerator:
             ds.write()
         if start:
             self.startWebserver()
-        print("TO CHECK GO TO: %s" % self.webserver)
+            self.logger.debug("TO CHECK GO TO: %s" % self.webserver)
 
     def gitUpdate(self):
         if self.docSites == {}:

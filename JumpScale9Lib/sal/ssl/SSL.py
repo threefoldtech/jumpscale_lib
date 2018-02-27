@@ -1,7 +1,12 @@
 # M2Crypto is not supported on python3
+from js9 import j
 
-class Empty:
-    pass
+JSBASE = j.application.jsbase_get_class()
+
+
+class Empty(JSBASE):
+    def __init__(self):
+        JSBASE.__init__(self)
 
 
 # from js9 import j

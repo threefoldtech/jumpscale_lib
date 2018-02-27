@@ -1,5 +1,6 @@
 from js9 import j
 from collections import OrderedDict
+JSBASE = j.application.jsbase_get_class()
 
 
 def getText(text):
@@ -10,7 +11,7 @@ def getInt(nr):
     return int(nr)
 
 
-class ModelBaseCollection3:
+class ModelBaseCollection3(JSBASE):
     """
     This class represent a collection
     It's used to list/find/create new Instance of Model objects
@@ -29,7 +30,7 @@ class ModelBaseCollection3:
         @param category str: category of the model. need to be the same as the category of the single model class
         @param namespace: namespace used to store these object in key-value store
         @param modelBaseClass: important to pass the class not the object. Class used to create instance of this category.
-                               Need to inherits from JumpScale9.data.capnp.ModelBase.ModelBalse
+                               Need to inherits from JumpScale9.data.capnp.ModelBase.ModelBase
         @param db: connection object to the key-value store
         @param indexDb: connection object to the key-value store used for indexing
         """
@@ -73,9 +74,8 @@ class ModelBaseCollection3:
 
         self.modelBaseClass = modelBaseClass if modelBaseClass else ModelBase
 
-        self.logger = j.logger.get("modelBase_%s" % category)
-
         self._init()
+        JSBASE.__init__(self)
 
     def _init(self):
         pass

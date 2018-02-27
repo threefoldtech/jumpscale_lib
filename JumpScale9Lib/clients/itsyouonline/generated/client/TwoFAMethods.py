@@ -2,11 +2,12 @@
 Auto-generated class for TwoFAMethods
 """
 from .Phonenumber import Phonenumber
-
+from js9 import j
 from . import client_support
 
 
-class TwoFAMethods(object):
+
+class TwoFAMethods( ):
     """
     auto-generated. don't touch.
     """
@@ -22,6 +23,7 @@ class TwoFAMethods(object):
         return TwoFAMethods(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

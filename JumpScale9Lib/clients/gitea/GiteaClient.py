@@ -11,14 +11,14 @@ gitea_token_ = ""
 """
 
 JSConfigBase = j.tools.configmanager.base_class_config
+JSBASE = j.application.jsbase_get_class()
 
 
 class GiteaClient(JSConfigBase):
 
-    def __init__(self, instance, data={}, parent=None):
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE)
+    def __init__(self, instance, data={}, parent=None,interactive=False):
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE,interactive=interactive)
         self._api = None
-        self.cache = j.data.cache.get("gitea")
 
     def config_check(self):
         """
@@ -59,6 +59,32 @@ class GiteaClient(JSConfigBase):
         if name not in self.orgs_currentuser_list().keys():
             raise RuntimeError("Could not find %s in orgs on gitea" % name)
         return GiteaOrg(self, name)
+
+    def labels_milestones_set(self, orgname="*", reponame="*", remove_old=False):
+        """
+        * means all in the selection
+
+        @PARAM remove_old if True will select labels/milestones which are old & need to be removed
+
+        """
+        self.logger.info("labels_milestones_set:%s:%s" % (orgname, reponame))
+        if orgname == "*":
+            for orgname0 in self.orgs_currentuser_list():
+                self.labels_milestones_set(orgname=orgname0, reponame=reponame, remove_old=remove_old)
+            return
+
+        org = self.org_get(orgname)
+
+        if reponame == "*":
+            for reponame0 in org.repos_list():
+                # self.logger.debug(org.repos_list())
+                # self.logger.debug("reponame0:%s"%reponame0)
+                self.labels_milestones_set(orgname=orgname, reponame=reponame0, remove_old=remove_old)
+            return
+
+        repo = org.repo_get(reponame)
+        repo.labels_add(remove_old=remove_old)
+        repo.milestones_add(remove_old=remove_old)
 
     def __repr__(self):
         return "gitea client"

@@ -15,6 +15,7 @@ validity = ""
 """
 
 JSConfigBase = j.tools.configmanager.base_class_config
+JSBASE = j.application.jsbase_get_class()
 
 
 class Client(JSConfigBase):

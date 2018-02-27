@@ -17,7 +17,7 @@
 ### Load ssh-agent
 
 ```bsh
-js 'j.clients.ssh.ssh_keys_load()'
+js 'j.clients.ssh.sshkeys_load()'
 ```
 
 ### Set your Git private details

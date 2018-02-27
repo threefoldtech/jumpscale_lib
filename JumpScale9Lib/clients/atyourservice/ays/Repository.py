@@ -7,6 +7,10 @@ from .Service import Services
 from .Scheduler import Scheduler
 from .Run import Runs
 from .Job import Jobs
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
+
 
 def _extract_error(resp):
     if isinstance(resp, HTTPError):
@@ -16,8 +20,10 @@ def _extract_error(resp):
         return resp.response.text
     raise resp
 
-class Repositories:
+
+class Repositories(JSBASE):
     def __init__(self, client):
+        JSBASE.__init__(self)
         self._client = client
         self._ayscl = client._ayscl
 
@@ -67,8 +73,9 @@ class Repositories:
         return self.get(name)
 
 
-class Repository:
+class Repository(JSBASE):
     def __init__(self, client, model):
+        JSBASE.__init__(self)
         self._client = client
         self._ayscl = client._ayscl
         self.model = model
@@ -88,7 +95,7 @@ class Repository:
         try:
             resp = self._ayscl.destroyRepository(data=None, repository=self.model["name"])
         except Exception as e:
-            print("Error while destroying repository: {}".format(_extract_error(e)))
+            self.logger.error("Error while destroying repository: {}".format(_extract_error(e)))
 
     def delete(self):
         """
@@ -98,7 +105,7 @@ class Repository:
         try:
             resp = self._ayscl.deleteRepository(repository=self.model["name"])
         except Exception as e:
-            print("Error while deleting repository: {}".format(_extract_error(e)))
+            self.logger.error("Error while deleting repository: {}".format(_extract_error(e)))
 
     def __repr__(self):
         return "repository: %s" % (self.model["name"])

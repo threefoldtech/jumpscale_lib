@@ -1,22 +1,22 @@
-import logging
 from io import BytesIO
 
 import etcd3
 import yaml
-
-logging.basicConfig(level=logging.INFO)
-default_logger = logging.getLogger(__name__)
+from js9 import j
 
 
-class EtcdCluster:
+JSBASE = j.application.jsbase_get_class()
+
+
+class EtcdCluster(JSBASE):
     """etced server"""
 
     def __init__(self, name, dialstrings, mgmtdialstrings, logger=None):
+        JSBASE.__init__(self)
         self.name = name
         self.dialstrings = dialstrings
         self.mgmtdialstrings = mgmtdialstrings
         self._ays = None
-        self.logger = logger if logger else default_logger
         self._client = None
 
     def _connect(self):
@@ -74,11 +74,12 @@ class EtcdCluster:
             self._connect()
             self.delete(key)
 
-class ETCD:
+class ETCD(JSBASE):
     """etced server"""
 
     def __init__(self, name, container, serverBind, clientBind, peers, mgmtClientBind, data_dir='/mnt/data',
                  password=None, logger=None):
+        JSBASE.__init__(self)
         self.name = name
         self.container = container
         self.serverBind = serverBind
@@ -88,7 +89,6 @@ class ETCD:
         self.peers = ",".join(peers)
         self._ays = None
         self._password = None
-        self.logger = logger if logger else default_logger
 
     @classmethod
     def from_ays(cls, service, password=None, logger=None):

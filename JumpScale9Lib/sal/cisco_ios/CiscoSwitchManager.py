@@ -1,11 +1,14 @@
 from js9 import j
 # import JumpScale9Lib.baselib.remote
 
+JSBASE = j.application.jsbase_get_class()
 
-class CiscoSwitchManager:
+
+class CiscoSwitchManager(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.ciscoswitch"
+        JSBASE.__init__(self)
 
     def get(self, host, login, password):
         return CiscoSwitch(host, login, password)
@@ -15,10 +18,10 @@ class CiscoSwitchManager:
 from .Router import Router
 
 
-class CiscoSwitch:
+class CiscoSwitch(JSBASE):
 
     def __init__(self, host, login, password):
-
+        JSBASE.__init__(self)
         R1 = Router(hostname=host, logfile='cisco.log')
         login_cmd = 'telnet ' + host
         login_expect = '#'  # .format(hostname)  # TODO: NEEDS TO BE ADJUSTED

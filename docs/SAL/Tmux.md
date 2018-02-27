@@ -18,7 +18,7 @@ j.sal.tmux.attachSession(sessionname, windowname, user)
 - List all ongoing Tmux sessions
 
 ```python
-j.sal.tmux.getSessions(user)
+j.sal.tmux.session_gets(user)
 ```
 
 - Kill all ongoing Tmux sessions
@@ -37,7 +37,7 @@ j.sal.tmux.killWindow(session, name, user)
 - List all windows inside a Tmux session
 
 ```python
-j.sal.tmux.getWindows(session, attemps, user):
+j.sal.tmux.window_gets(session, attemps, user):
 ```
 
 - Check if a window with a certain name exists in a session

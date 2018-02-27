@@ -3,10 +3,11 @@ import os
 import time
 
 from .abstracts import Mountable
+from js9 import j
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
+JSBASE = j.application.jsbase_get_class()
 
 def _prepare_device(node, devicename):
     logger.debug("prepare device %s", devicename)
@@ -312,8 +313,9 @@ class StoragePool(Mountable):
         return "StoragePool <{}>".format(self.name)
 
 
-class FileSystem:
+class FileSystem(JSBASE):
     def __init__(self, name, pool):
+        JSBASE.__init__(self)
         self.name = name
         self.pool = pool
         self.subvolume = "filesystems/{}".format(name)
@@ -389,8 +391,9 @@ class FileSystem:
         return "FileSystem <{}: {!r}>".format(self.name, self.pool)
 
 
-class Snapshot:
+class Snapshot(JSBASE):
     def __init__(self, name, filesystem):
+        JSBASE.__init__(self)
         self.filesystem = filesystem
         self.name = name
         self.path = os.path.join(self.filesystem.snapshotspath, name)

@@ -3,12 +3,15 @@ import toml
 import pystache
 import copy
 
+JSBASE = j.application.jsbase_get_class()
 
-class Doc:
+
+class Doc(JSBASE):
     """
     """
 
     def __init__(self, path, name, docSite):
+        JSBASE.__init__(self)
         self.path = path
         self.name = name.lower()
         self.nameOriginal = name
@@ -30,7 +33,7 @@ class Doc:
             data = j.data.serializer.toml.loads(dataText)
         except Exception as e:
             from IPython import embed
-            print("DEBUG NOW toml load issue in doc")
+            self.logger.debug("DEBUG NOW toml load issue in doc")
             embed()
             raise RuntimeError("stop debug here")
         self._updateData(data)
@@ -145,7 +148,7 @@ class Doc:
                         methodcode += "(content=block2)"
                     methodcode = methodcode.replace(",,", ",")
 
-                    # print("methodcode:'%s'" % methodcode)
+                    # self.logger.debug("methodcode:'%s'" % methodcode)
                     if line0[3:].strip().strip(".").strip(",") == "":
                         # means there was metadata data block in doc
                         dataBlock = block2
@@ -153,7 +156,7 @@ class Doc:
                         block = ""
                     else:
                         cmd = "j.tools.docgenerator.macros." + methodcode
-                        # print(cmd)
+                        # self.logger.debug(cmd)
                         # block = eval(cmd)
                         try:
                             block = eval(cmd)
@@ -185,7 +188,7 @@ class Doc:
                 state = "blockstart"
                 continue
 
-            print(line)
+            self.logger.debug(line)
             if state == "start" and (line.startswith("<!-")):
                 state = "blockcomment"
                 continue
@@ -253,7 +256,7 @@ class Doc:
 
         regex = "\] *\([a-zA-Z0-9\.\-\_\ \/]+\)"  # find all possible images
         for match in j.data.regex.yieldRegexMatches(regex, content, flags=0):
-            # print("##:%s" % match)
+            # self.logger.debug("##:%s" % match)
             fname = match.founditem.strip("[]").strip("()")
             if match.founditem.find("/") != -1:
                 fname = fname.split("/")[1]
@@ -352,7 +355,7 @@ class Doc:
 
         regex = "\$\$.*"  # find all possible images
         for match in j.data.regex.yieldRegexMatches(regex, self.content, flags=0):
-            # print("##:%s" % match)
+            # self.logger.debug("##:%s" % match)
             defname = match.founditem
             defname0 = ssplit(defname.replace("$", ""))
             defname = defname0.lower().replace("_", "").replace("-", "").replace(" ", "")

@@ -2,12 +2,16 @@
 from js9 import j
 from .Row import *
 
-class Sheet():
+JSBASE = j.application.jsbase_get_class()
+
+
+class Sheet(JSBASE):
 
     def __init__(self, name, nrcols=72, headers=[], period="M"):
         """
         @param period is M,Q or Y
         """
+        JSBASE.__init__(self)
         self.name = name
         self.description = ""
         self.nrcols = nrcols

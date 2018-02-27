@@ -6,13 +6,13 @@ Auto-generated class for Eco
 from six import string_types
 
 from . import client_support
+from js9 import j
+JSBASE = j.application.jsbase_get_class()
 
-
-class Eco(object):
+class Eco(object, JSBASE):
     """
     auto-generated. don't touch.
     """
-
     @staticmethod
     def create(**kwargs):
         """
@@ -47,6 +47,7 @@ class Eco(object):
         return Eco(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        JSBASE.__init__(self)
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

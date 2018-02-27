@@ -8,7 +8,7 @@ from peewee import *
 # from peewee import print_
 from peewee import __version__ as peewee_version
 from playhouse.reflection import *
-
+from js9 import j
 # TODO: *2 cannot execute, times out on gogs db, should try again
 
 TEMPLATE = """from peewee import *%s
@@ -33,8 +33,10 @@ DATABASE_MAP = dict((value, key)
                     for key in DATABASE_ALIASES
                     for value in DATABASE_ALIASES[key])
 
+JSBASE = j.application.jsbase_get_class()
 
-class Pwiz():
+
+class Pwiz(JSBASE):
 
     def __init__(
             self,
@@ -48,6 +50,7 @@ class Pwiz():
         """
         @param type is mysql,postgres,sqlite
         """
+        JSBASE.__init__(self)
         self.host = host
         self.port = port
         self.user = user
@@ -90,10 +93,10 @@ class Pwiz():
             self.introspector.get_database_name(),
             repr(self.introspector.get_database_kwargs()))
 
-        print("INTROSPECTION DONE")
+        self.logger.debug("INTROSPECTION DONE")
 
         def _process_table(out, table):
-            print("Process table:%s" % table)
+            self.logger.debug("Process table:%s" % table)
             # accum = accum or []
             # foreign_keys = database.foreign_keys[table]
             # for foreign_key in foreign_keys:
@@ -153,7 +156,7 @@ class Pwiz():
                 out += '        primary_key = CompositeKey(%s)\n' % pk_list
             out += '\n'
 
-            print("OK")
+            self.logger.info("OK")
             return out
 
         seen = set()

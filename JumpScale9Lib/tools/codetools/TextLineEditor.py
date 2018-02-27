@@ -3,15 +3,17 @@ from js9 import j
 
 # TODO: P2 S4 :eduard TextLineEditor tool does not work any more, is a
 # pitty because ideal to parse config files on a filesystem (id:83)
+JSBASE = j.application.jsbase_get_class()
 
 
-class TextLineEditor:
+class TextLineEditor(JSBASE):
     """
     represents a piece of text but broken appart in blocks/tokens
     this one works on a line basis
     """
 
     def __init__(self, text, path):
+        JSBASE.__init__(self)
         self.lines = []
         self._higestblocknr = {}  # key is name of block, the value is the last used blocknr
         self.path = path
@@ -219,12 +221,13 @@ class TextLineEditor:
             return ""
 
 
-class LTLine:
+class LTLine(JSBASE):
 
     def __init__(self, line, blockname="", blocknr=0):
         """
         @param no blockname means ignore
         """
+        JSBASE.__init__(self)
         self.block = blockname
         self.line = line
         self.blocknr = blocknr

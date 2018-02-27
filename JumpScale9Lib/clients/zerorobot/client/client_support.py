@@ -10,7 +10,8 @@ from datetime import datetime
 from uuid import UUID
 from enum import Enum
 from dateutil import parser
-
+from js9 import j
+JSBASE = j.application.jsbase_get_class()
 
 # python2/3 compatible basestring, for use in to_dict
 try:
@@ -176,10 +177,13 @@ def to_dict(cls, convert_datetime=True):
     return todict(cls)
 
 
-class DatetimeHandler(object):
+class DatetimeHandler(object, JSBASE):
     """
     output datetime objects as iso-8601 compliant strings
     """
+    def __init__(self):
+        JSBASE.__init__(self)
+
     @classmethod
     def flatten(cls, obj):
         """flatten"""
@@ -191,10 +195,13 @@ class DatetimeHandler(object):
         return timestamp_to_datetime(data)
 
 
-class UUIDHandler(object):
+class UUIDHandler(object, JSBASE):
     """
     output UUID objects as a string
     """
+    def __init__(self):
+        JSBASE.__init__(self)
+
     @classmethod
     def flatten(cls, obj):
         """flatten"""
@@ -206,7 +213,10 @@ class UUIDHandler(object):
         return UUID(data)
 
 
-class EnumHandler(object):
+class EnumHandler(object, JSBASE):
+    def __init__(self):
+        JSBASE.__init__(self)
+
     """
     output Enum objects as their value
     """

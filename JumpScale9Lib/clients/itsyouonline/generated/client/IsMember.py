@@ -3,9 +3,12 @@ Auto-generated class for IsMember
 """
 
 from . import client_support
+from js9 import j
 
 
-class IsMember(object):
+
+
+class IsMember( ):
     """
     auto-generated. don't touch.
     """
@@ -20,6 +23,7 @@ class IsMember(object):
         return IsMember(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

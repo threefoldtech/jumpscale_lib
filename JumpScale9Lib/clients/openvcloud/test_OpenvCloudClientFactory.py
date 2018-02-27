@@ -4,6 +4,7 @@ import sys
 from unittest import mock
 from js9 import j
 
+
 class TestOpencCloudClientFactory(unittest.TestCase):
     def tearDown(self):
         """
@@ -12,7 +13,6 @@ class TestOpencCloudClientFactory(unittest.TestCase):
         # clean up all the imported modules from js9 (we know that its not clean and it does not clean up all the refences)
         for module in sorted([item for item in sys.modules.keys() if 'JumpScale9' in item], reverse=True):
             del sys.modules[module]
-
 
     @pytest.mark.ssh_factory
     @mock.patch('JumpScale9Lib.clients.openvcloud.OpenvCloudClientFactory.Account')
@@ -27,7 +27,7 @@ class TestOpencCloudClientFactory(unittest.TestCase):
             model = dict()
             model["id"] = 123
             space = Space(account=account, model=model)
-            space.machine_create(name=' ',sshkeyname='auto_0')
+            space.machine_create(name=' ', sshkeyname='auto_0')
             assert False
         except RuntimeError:
             assert True
@@ -62,7 +62,7 @@ class TestOpencCloudClientFactory(unittest.TestCase):
         space = Space(account=account, model=model)
         space.machine_create(name='dummy', memsize=5, vcpus=5, sshkeyname='auto_0', image="imageName")
 
-        space.size_find_id.assert_called_with(5,5)
+        space.size_find_id.assert_called_with(5, 5)
 
     @pytest.mark.ssh_factory
     @mock.patch('JumpScale9Lib.clients.openvcloud.OpenvCloudClientFactory.Account')
@@ -78,7 +78,8 @@ class TestOpencCloudClientFactory(unittest.TestCase):
         space = Space(account=account, model=model)
         space.machine_create(name='dummy', sshkeyname='auto_0', sshkeypath='auto_0Path')
 
-        space.configure_machine.assert_called_with(machine=space.machines['dummy'], name='dummy', sshkey_name='auto_0', sshkey_path='auto_0Path')
+        space.configure_machine.assert_called_with(
+            machine=space.machines['dummy'], name='dummy', sshkeyname='auto_0', sshkey_path='auto_0Path')
 
     @pytest.mark.ssh_factory
     @mock.patch('JumpScale9Lib.clients.openvcloud.OpenvCloudClientFactory.Account')
@@ -114,11 +115,4 @@ class TestOpencCloudClientFactory(unittest.TestCase):
         space.machine_create(name='dummy', sshkeyname='auto_0', sshkeypath='auto_0Path')
 
         machine = space.machines['dummy']
-        space._authorizeSSH.assert_called_with(machine=machine, sshkey_name='auto_0', sshkey_path='auto_0Path')
-
-
-
-
-
-
-
+        space._authorizeSSH.assert_called_with(machine=machine, sshkeyname='auto_0', sshkey_path='auto_0Path')

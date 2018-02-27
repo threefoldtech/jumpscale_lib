@@ -2,11 +2,13 @@
 Auto-generated class for UpdateUserNameReqBody
 """
 from six import string_types
-
+from js9 import j
 from . import client_support
 
 
-class UpdateUserNameReqBody(object):
+
+
+class UpdateUserNameReqBody( ):
     """
     auto-generated. don't touch.
     """
@@ -22,6 +24,7 @@ class UpdateUserNameReqBody(object):
         return UpdateUserNameReqBody(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

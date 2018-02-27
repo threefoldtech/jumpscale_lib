@@ -253,6 +253,8 @@ r"""
     license: BSD
 """
 import codecs
+from js9 import j
+
 try:
     codecs.lookup_error('surrogateescape')
     default_errors = 'surrogateescape'
@@ -293,12 +295,15 @@ def _translate_member_name(name):
         name = name.split(None, 2)[-1]
     return name
 
+JSBASE = j.application.jsbase_get_class()
 
-class phpobject:
+
+class phpobject(JSBASE):
     """Simple representation for PHP objects.  This is used """
     __slots__ = ('__name__', '__php_vars__')
 
     def __init__(self, name, d=None):
+        JSBASE.__init__(self)
         if d is None:
             d = {}
         object.__setattr__(self, '__name__', name)

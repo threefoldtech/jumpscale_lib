@@ -1,11 +1,13 @@
 """
 Auto-generated class for ValidityTime
 """
-
+from js9 import j
 from . import client_support
 
 
-class ValidityTime(object):
+
+
+class ValidityTime( ):
     """
     auto-generated. don't touch.
     """
@@ -19,6 +21,7 @@ class ValidityTime(object):
         return ValidityTime(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

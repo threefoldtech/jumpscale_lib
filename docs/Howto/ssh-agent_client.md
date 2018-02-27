@@ -5,28 +5,33 @@ SSH key pairs are used a lot when working with the JumpScale framework.
 Many of the JumpScale clients and tools such as Prefab rely on having private SSH keys loaded by ssh-agent.
 
 At the command line you can list all running ssh-agent instances as follows:
+
 ```bash
 pgrep ssh-agent
 ```
 
 In order to start an ssh-agent from the command line:
+
 ```bash
 ssh-agent
 ```
 
 The same can be achieved using the ssh-agent client from the JumpScale interactive shell:
+
 ```python
-j.clients.ssh.start_ssh_agent()
+j.clients.sshkey.sshagent_start()
 ```
 
 Or directly from the command line:
+
 ```bash
-js9 'j.clients.ssh.start_ssh_agent()'
+js9 'j.clients.sshkey.sshagent_start()'
 ```
 
 This single command will do the following for you:
-- If no ssh-agent is running yet, a new instance will be started
-- Load all SSH keys it can find in `$homedir/.ssh`
+
+* If no ssh-agent is running yet, a new instance will be started
+* Load all SSH keys it can find in `$homedir/.ssh`
 
 You only will need to do this once on a system. Once done the `.bashrc` file will make sure that in every new terminal you have access to your keys.
 
@@ -35,28 +40,33 @@ You only will need to do this once on a system. Once done the `.bashrc` file wil
 Also note that by default it will not start a new instance if there is already one running.
 
 You can verify that ssh-agent is running as follows:
+
 ```python
-j.clients.ssh.ssh_agent_available()
+j.clients.sshkey.sshagent_available()
 ```
 
 In order to only load a specific private key, use the `path` attribute to specify the key location and name as follows:
+
 ```python
-j.clients.ssh.start_ssh_agent(path="~/.ssh/id_rsa")
+j.clients.sshkey.sshagent_start(path="~/.ssh/id_rsa")
 ```
 
 In order to check whether a specific private key is loaded:
+
 ```python
-j.clients.ssh.ssh_agent_check_key_is_loaded("~/.ssh/id_rsa")
+j.clients.ssh.sshkey_is_loaded("~/.ssh/id_rsa")
 ```
 
 You can also have the client create an SSH key pair and immediately load the private key into ssh-agent, by using the `createkeys` argument as follows:
+
 ```python
-j.clients.ssh.load_ssh_key(path="~/.ssh/mykey", createkeys=True)
+j.clients.ssh.sshkey_load(path="~/.ssh/mykey", createkeys=True)
 ```
 
 Or alternatively omit the `path` argument to have `id_rsa` and `id_rsa.pub` created and `id_rsa` loaded by ssh-add:
+
 ```python
-j.clients.ssh.load_ssh_key(createkeys=True)
+j.clients.ssh.sshkey_load(createkeys=True)
 ```
 
 As part of the SSH creation process you will be asked to enter a passphrase, which should be something that is private to you, and easy to remember.
@@ -65,13 +75,11 @@ The ssh-agent will know which agents to use and also remember passphrases of the
 
 The ssh-agent client allows you automate interactions with a local or remote ssh-agent.
 
-
 WHAT FOLLOWS IS WIP
 
 ```python
 client = j.clients.ssh.get()
 ```
-
 
 ```python
 client.login
@@ -82,20 +90,15 @@ client.look_for_keys
 client = j.clients.ssh.get(addr='remote', login='root', port=22, timeout=10)
 ```
 
-
-
-
 If you want to read more about key management see below.
 
-
-- [How to Use Prefab](prefab.md)
-
+* [How to Use Prefab](prefab.md)
 
 ## SSH Basics
 
 ```bash
 #load ssh-agent & all known keys
-js 'j.clients.ssh.start_ssh_agent()'
+js 'j.clients.sshkey.sshagent_start()'
 
 #if it's the first time you need to tell current session path to ssh-agent
 export SSH_AUTH_SOCK=~/sshagent_socket
@@ -133,10 +136,8 @@ This will allow you from your local server to login as root on the remote machin
 Using JumpScale:
 
 ```python
-j.clients.ssh.SSHAuthorizeKey(remoteipaddr,login="root",passwd=None)
+j.clients.ssh.ssh_authorize(user="root", key='keyname')
 ```
-
-If `psswd=None` you will be asked for the password.
 
 ### Varia
 
@@ -178,6 +179,3 @@ Dangerous do not do this, use sudo -s from normal user account""
 sed -i -e '/.*PermitRootLogin.*/ s/.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 /etc/init.d/ssh restart
 ```
-
-
-

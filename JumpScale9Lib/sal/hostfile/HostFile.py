@@ -3,22 +3,24 @@
 import re
 
 from js9 import j
+JSBASE = j.application.jsbase_get_class()
 
 
-class HostFileFactory:
+class HostFileFactory(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.hostsfile"
+        JSBASE.__init__(self)
 
     def get(self):
         return HostFile()
 
 
-class HostFile:
+class HostFile(JSBASE):
 
     def __init__(self):
         self.hostfilePath = "/etc/hosts"
-        self.logger = j.logger.get("j.sal.hostsfile")
+        JSBASE.__init__(self)
 
     def remove(self, ip):
         """Update a hostfile, delete ip from hostsfile

@@ -1,11 +1,13 @@
 from js9 import j
 from .Base import Base
 
+JSBASE = j.application.jsbase_get_class()
+
 
 class User(Base):
 
     def __init__(self, client, githubObj=None):
-        self.logger = j.logger.get('j.clients.github.user')
+        Base.__init__(self)
         self._ddict = {}
         self._githubObj = githubObj
         if githubObj is not None:

@@ -1,11 +1,12 @@
 from js9 import j
 import capnp
 from . import model_capnp as ModelCapnp
+JSBASE = j.application.jsbase_get_class()
 
 logger = j.logger.get('j.tools.flist.merger')
 
 
-class FlistMerger:
+class FlistMerger(JSBASE):
     """
         Tool to merge multiple flist into one
 
@@ -34,6 +35,7 @@ class FlistMerger:
     def __init__(self):
         self._sources = []
         self._dest = None
+        JSBASE.__init__(self)
 
     def add_source(self, flist):
         self._sources.append(flist)

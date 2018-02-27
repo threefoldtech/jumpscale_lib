@@ -2,10 +2,14 @@ import requests
 
 from .organizations_service import OrganizationsService
 from .users_service import UsersService
+from js9 import j
 
 
-class Client:
+
+
+class Client():
     def __init__(self, base_uri="https://itsyou.online/api"):
+        pass
         self.base_url = base_uri
         self.session = requests.Session()
         self.organizations = OrganizationsService(self)

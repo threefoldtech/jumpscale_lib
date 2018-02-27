@@ -7,6 +7,8 @@ Auto-generated class for CreateHookOptionconfig
 from . import client_support
 
 
+
+
 class CreateHookOptionconfig(object):
     """
     auto-generated. don't touch.
@@ -21,6 +23,7 @@ class CreateHookOptionconfig(object):
         return CreateHookOptionconfig(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

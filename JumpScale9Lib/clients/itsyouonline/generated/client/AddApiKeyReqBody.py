@@ -2,11 +2,10 @@
 Auto-generated class for AddApiKeyReqBody
 """
 from .Label import Label
-
 from . import client_support
 
 
-class AddApiKeyReqBody(object):
+class AddApiKeyReqBody():
     """
     auto-generated. don't touch.
     """
@@ -21,6 +20,7 @@ class AddApiKeyReqBody(object):
         return AddApiKeyReqBody(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

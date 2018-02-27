@@ -1,10 +1,12 @@
 from js9 import j
 from .MarkdownComponents import *
+JSBASE = j.application.jsbase_get_class()
 
-class MarkdownDocument:
+
+class MarkdownDocument(JSBASE):
 
     def __init__(self, content="", path=""):
-
+        JSBASE.__init__(self)
         if path != "":
             content = j.sal.fs.fileGetContents(path)
 

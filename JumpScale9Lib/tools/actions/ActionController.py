@@ -7,14 +7,14 @@
 from js9 import j
 from .Action import *
 import traceback
+JSBASE = j.application.jsbase_get_class()
 
-
-class ActionController:
+class ActionController(JSBASE):
     '''Manager controlling actions'''
 
     def __init__(self, _output=None, _width=70):
         self.__jslocation__ = "j.actions"
-        self.logger = j.logger.get("j.actions")
+        JSBASE.__init__(self)
         # self._actions = list()
         # self._width = _width
         self.rememberDone = False

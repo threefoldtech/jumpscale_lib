@@ -34,6 +34,8 @@ discarded. [1]_
 
 import time
 from heapq import heappush, heappop, heapify
+from js9 import j
+JSBASE = j.application.jsbase_get_class()
 
 __version__ = "0.2"
 __all__ = ['CacheKeyError', 'LRUCache', 'DEFAULT_SIZE']
@@ -43,16 +45,17 @@ DEFAULT_SIZE = 16
 """Default size of a new LRUCache object, if no 'size' argument is given."""
 
 
-class CacheKeyError(KeyError):
+class CacheKeyError(KeyError, JSBASE):
     """Error raised when cache requests fail
 
     When a cache record is accessed which no longer exists (or never did),
     this error is raised. To avoid it, you may want to check for the existence
     of a cache record before reading or deleting it."""
-    pass
+    def __init__(self):
+        JSBASE.__init__(self)
 
 
-class LRUCache:
+class LRUCache(JSBASE):
 
     class __Node:
         """Record of a cached value. Not for public consumption."""
@@ -79,6 +82,7 @@ class LRUCache:
         elif not isinstance(size, type(0)):
             raise TypeError(size)
         object.__init__(self)
+        JSBASE.__init__(self)
         self.__heap = []
         self.__dict = {}
         self.size = size

@@ -3,8 +3,9 @@ from .unhandled_api_error import UnhandledAPIError
 from .unmarshall_error import UnmarshallError
 
 
-class MarkdownService:
+class MarkdownService():
     def __init__(self, client):
+        pass
         self.client = client
 
     def renderMarkdownRaw(self, data, headers=None, query_params=None, content_type="application/json"):

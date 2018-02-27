@@ -5,9 +5,12 @@ from zeroos.orchestrator.sal import templates
 
 from js9 import j
 
+JSBASE = j.application.jsbase_get_class()
 
-class InfluxDB:
+
+class InfluxDB(JSBASE):
     def __init__(self, container, ip, port, rpcport):
+        JSBASE.__init__(self)
         self.container = container
         self.ip = ip
         self.port = port

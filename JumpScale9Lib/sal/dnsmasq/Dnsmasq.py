@@ -1,12 +1,13 @@
 from js9 import j
 
+JSBASE = j.application.jsbase_get_class()
 
-class DNSMasq:
+class DNSMasq(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.dnsmasq"
         self._configured = False
-        self.logger = j.logger.get("DNSMasq")
+        JSBASE.__init__(self)
         self.executor = j.tools.executorLocal
         self._prefab = self.executor.prefab
         self._configdir = ""

@@ -1,10 +1,14 @@
 import base64
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
 
 
-class FilesystemManager:
+class FilesystemManager(JSBASE):
 
     def __init__(self, client):
         self._client = client
+        JSBASE.__init__(self)
 
     def open(self, file, mode='r', perm=0o0644):
         """

@@ -28,13 +28,16 @@ rank = 0
 core = false
 """
 
+JSBASE = j.application.jsbase_get_class()
 
-class Todo:
+
+class Todo(JSBASE):
     def __init__(self, department, path, todo):
         path = path.replace("//", "/")
         self.department = department
         self.path = path
         self.todo = todo
+        JSBASE.__init__(self)
 
     @property
     def person(self):
@@ -46,17 +49,21 @@ class Todo:
     __str__ = __repr__
 
 
-class Person:
+class Person(JSBASE):
     def __init__(self, department, name, path):
         self.department = department
         self.path = path
         self.name = name
         self.todo = []
+        self.link = False
         self.load()
+        JSBASE.__init__(self)
 
     def load(self):
+        self.path_fix()
         self.images_fix()
         self.toml_fix()
+        self.readme_fix()
 
     def add_to_do(self, path, todo):
         todo = todo.replace("_", "-")
@@ -64,6 +71,8 @@ class Person:
         self.todo.append(td)
 
     def images_fix(self):
+        if self.link:
+            return
         # make sure we have an unprocessed.jpg
         images = j.sal.fs.listFilesInDir(self.path, filter="*.jpg")
         unprocessed_images = [
@@ -77,9 +86,108 @@ class Person:
             self.add_to_do(
                 self.path, "did not find unprocessed picture, please add")
 
-    def toml_fix(self):
+    def readme_fix(self):
+        if self.link:
+            return
 
-        print("PROCESS FIX:%s" % self)
+        rpath = self.path.rstrip("/") + "/readme.md"
+        if j.sal.fs.exists(rpath):
+            C = j.sal.fs.readFile(rpath)
+            if len(C) > 100:
+                return
+
+        self.logger.debug("readmefix")
+
+        from IPython import embed
+        embed(colors='Linux')
+
+        C = """
+        # Homepage for $name
+
+        ![]($rawurl/processed.jpg)
+
+        ## What is my plan for next weeks/months?
+
+        - my focus ...
+
+        ## My passion?
+
+        - private
+        - professional?
+
+        ## What is my role and ambition in the company?
+
+        - ...
+
+
+        """
+        gitdir = j.clients.git.findGitPath(self.path)
+        cl = j.clients.git.get(gitdir)
+        unc = "/".join(cl.unc.split("/")[:-1])
+        url = "https://%s/src/branch/master/team/%s/%s" % (unc, self.department.name, self.name)
+        rawurl = "https://%s/raw/branch/master/team/%s/%s" % (unc, self.department.name, self.name)
+        C = C.replace("$name", self.name)
+        C = C.replace("$url", url)
+        C = C.replace("$rawurl", rawurl)
+        C = j.data.text.strip(C)
+        dpath = j.sal.fs.getDirName(self.path).rstrip("/") + "/%s/readme.md" % self.name
+        j.sal.fs.writeFile(dpath, C)
+
+    def path_fix(self):
+        bn_org = j.sal.fs.getBaseName(self.path)
+
+        def process(path):
+            bn = j.sal.fs.getBaseName(path)
+            bn = bn.replace(" ", "_")
+            bn = bn.replace("-", "_")
+            bn = bn.lower()
+            bn = j.data.nltk.unidecode(bn)
+            newdest = j.sal.fs.getDirName(path).rstrip("/") + "/" + bn
+            newdest = newdest.replace("//", "/")
+            return newdest, bn
+        newdest, bn = process(self.path)
+        if bn != bn_org:
+
+            if j.sal.fs.isLink(self.path):
+                self.logger.debug("path_fix")
+                j.sal.fs.renameFile(self.path, newdest)
+            else:
+                newdest = j.sal.fs.getDirName(self.path).rstrip("/") + "/" + bn
+                self.logger.debug("rename dir from %s to %s" % (self.path, newdest))
+                j.sal.fs.renameDir(self.path, newdest)
+            self.path = newdest
+            self.name = bn
+
+        if j.sal.fs.isLink(self.path):
+            self.link = True
+            # check where path points too, rename if required
+            linkpath = j.sal.fs.readLink(self.path)
+            bn_org = j.sal.fs.getBaseName(linkpath)
+            newdest, bn = process(linkpath)
+
+            gitdir = j.clients.git.findGitPath(newdest)
+            cl = j.clients.git.get(gitdir)
+            unc = "/".join(cl.unc.split("/")[:-1])
+            depname = linkpath.strip("/").split("/")[-2]
+            url = "https://%s/src/branch/master/team/%s/%s" % (unc, depname, self.name)
+            C = """
+            # $name
+
+            - [link to $name data dir]($url)
+
+            """
+            C = C.replace("$name", self.name)
+            C = C.replace("$url", url)
+            C = j.data.text.strip(C)
+            dpath = j.sal.fs.getDirName(self.path).rstrip("/") + "/%s.md" % bn
+            j.sal.fs.writeFile(dpath, C)
+
+            j.sal.fs.remove(self.path)
+
+    def toml_fix(self):
+        if self.link:
+            return
+            self.logger.debug("PROCESS FIX:%s" % self)
 
         def process(newtoml, name):
             toml_path = "%s/%s.toml" % (self.path, name)
@@ -90,8 +198,6 @@ class Person:
                     self.department.add_to_do(
                         self.path, "toml file is corrupt:%s" % toml_path)
                     return newtoml
-
-                # print(newtoml)
 
                 newtoml, errors = j.data.serializer.toml.merge(newtoml, tomlupdate, keys_replace={
                                                                'name': 'first_name'}, add_non_exist=False, die=False, errors=[])
@@ -145,8 +251,9 @@ class Person:
     __str__ = __repr__
 
 
-class Department:
+class Department(JSBASE):
     def __init__(self, name, path):
+        JSBASE.__init__(self)
         self.path = path
         self.name = name
         self.todo = []
@@ -191,9 +298,10 @@ class Department:
     __str__ = __repr__
 
 
-class Teammgr:
+class Teammgr(JSBASE):
     def __init__(self):
         self.__jslocation__ = "j.tools.team_manager"
+        JSBASE.__init__(self)
         self.departments = {}
 
     def _add_department(self, path, name):

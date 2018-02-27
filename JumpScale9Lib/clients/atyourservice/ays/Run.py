@@ -1,5 +1,9 @@
 from requests.exceptions import HTTPError
 from .Step import Steps
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
+
 
 def _extract_error(resp):
     if isinstance(resp, HTTPError):
@@ -9,8 +13,10 @@ def _extract_error(resp):
         return resp.response.text
     raise resp
 
-class Runs:
+
+class Runs(JSBASE):
     def __init__(self, repository):
+        JSBASE.__init__(self)
         self._repository = repository
         self._ayscl = repository._ayscl
 
@@ -84,8 +90,9 @@ class Runs:
                 return run
         raise ValueError("Could not find run with key {}".format(key))
 
-class Run:
+class Run(JSBASE):
     def __init__(self, repository, model):
+        JSBASE.__init__(self)
         self._repository = repository
         self._ayscl = repository._ayscl
         self.model = model

@@ -12,14 +12,18 @@ RULE_LINE = re.compile('^\[\s*(\d+)\] (.+?)\s{2,}(.+?)\s{2,}(.+)$')
 ParsedDestination = collections.namedtuple('ParsedDestination',
                                            'ip proto port dev')
 
-
-class UFWError(Exception):
-    pass
+JSBASE = j.application.jsbase_get_class()
 
 
-class UFWRule:
+class UFWError(Exception, JSBASE):
+    def __init__(self):
+        JSBASE.__init__(self)
+
+
+class UFWRule(JSBASE):
 
     def __init__(self, action=None, source=None, destination=None, number=None):
+        JSBASE.__init__(self)
         self._number = number
         self._source = source
         self._action = action
@@ -50,7 +54,9 @@ class UFWRule:
         return str(self)
 
 
-class UFWOperation:
+class UFWOperation(JSBASE):
+    def __init__(self):
+        JSBASE.__init__(self)
 
     def cmd(self):
         raise NotImplemented()
@@ -60,12 +66,15 @@ class StatusOp(UFWOperation):
 
     def __init__(self, status=None):
         self._status = status
+        UFWOperation.__init__(self)
 
     def cmd(self):
         return '--force enable' if self._status else 'disable'
 
 
 class ResetOp(UFWOperation):
+    def __init__(self):
+        UFWOperation.__init__(self)
 
     def cmd(self):
         return '--force reset'
@@ -76,6 +85,7 @@ class RuleOp(UFWOperation):
     def __init__(self, rule=None, add=True):
         self._add = add
         self._rule = rule
+        UFWOperation.__init__(self)
 
     def _parser(self, src):
         src = src.replace('(v6)', '').replace('(out)', '')
@@ -142,7 +152,7 @@ class RuleOp(UFWOperation):
         return ' '.join(cmd)
 
 
-class UFWManager:
+class UFWManager(JSBASE):
     ACTION_ALLOW_IN = 'allow in'
     ACTION_ALLOW_OUT = 'allow out'
     ACTION_DENY_IN = 'deny in'
@@ -156,6 +166,7 @@ class UFWManager:
         self._rules = None
         self._enabled = None
         self._transactions = []
+        JSBASE.__init__(self)
 
     def _bool(self, status):
         return status == 'active'

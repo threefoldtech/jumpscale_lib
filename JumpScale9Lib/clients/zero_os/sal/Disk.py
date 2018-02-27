@@ -2,6 +2,9 @@ from enum import Enum
 
 from .abstracts import Mountable
 from .Partition import Partition
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
 
 
 class DiskType(Enum):
@@ -12,11 +15,12 @@ class DiskType(Enum):
     cdrom = 'cdrom'
 
 
-class Disks:
+class Disks(JSBASE):
 
     """Subobject to list disks"""
     def __init__(self, node):
         self.node = node
+        JSBASE.__init__(self)
 
     @property
     def client(self):
@@ -55,6 +59,7 @@ class Disk(Mountable):
         disk_info: dict returned by client.disk.list()
         """
         # g8os client to talk to the node
+        Mountable.__init__(self)
         self.node = node
         self.name = None
         self.size = None

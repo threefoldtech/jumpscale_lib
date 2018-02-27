@@ -17,16 +17,17 @@ default_labels = [
     {'color': '#fef2c0', 'name': 'type_question'}
 ]
 
+JSBASE = j.application.jsbase_get_class()
 
-class GiteaOrg:
+
+class GiteaOrg(JSBASE):
 
     def __init__(self, client, name):
+        JSBASE.__init__(self)
         self.name = name
         self.id = client.orgs_currentuser_list()[name]
         self.client = client
         self.api = self.client.api.orgs
-        self.cache = j.data.cache.get("gitea_org_%s" % self.name)
-        self.logger = j.logger.get('%s' % self)
 
     def labels_default_get(self):
         return default_labels
@@ -41,7 +42,7 @@ class GiteaOrg:
 
     def repos_list(self, refresh=False):
         res = {}
-        for name,item in self._repos_get(refresh=refresh).items():
+        for name, item in self._repos_get(refresh=refresh).items():
             res[name] = item.id
         return res
 
@@ -50,6 +51,14 @@ class GiteaOrg:
         if name not in self._repos_get().keys():
             raise RuntimeError("cannot find repo with name:%s in %s" % (name, self))
         data = self._repos_get()[name]
+        return GiteaRepo(self, name, data)
+
+    def repo_new(self, name):
+        self.logger.info("repo:new:%s" % name)
+        if name in self._repos_get().keys():
+            self.logger.debug("no need to create repo on gitea, exists:%s"%name)
+        self.client.api.org.createOrgRepo(data, org)#TODO:*1
+        raise RuntimeError("NEED TO IMPLEMENT THIS")
         return GiteaRepo(self, name, data)
 
     def labels_milestones_add(self, labels=default_labels, remove_old=False):

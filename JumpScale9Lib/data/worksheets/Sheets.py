@@ -2,11 +2,14 @@
 from js9 import j
 from .Sheet import *
 
+JSBASE = j.application.jsbase_get_class()
 
-class Sheets():
+
+class Sheets(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.data.worksheets"
+        JSBASE.__init__(self)
         self.sheets = {}
         self.sheetsByCategory = {}
         self.sheetNames = []

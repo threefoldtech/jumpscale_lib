@@ -1,9 +1,10 @@
 from js9 import j
 
 from . import typchk
+JSBASE = j.application.jsbase_get_class()
 
 
-class BtrfsManager:
+class BtrfsManager(JSBASE):
     _create_chk = typchk.Checker({
         'label': str,
         'metadata': typchk.Enum("raid0", "raid1", "raid5", "raid6", "raid10", "dup", "single", ""),
@@ -34,7 +35,7 @@ class BtrfsManager:
 
     def __init__(self, client):
         self._client = client
-        self.logger = j.logger.get('j.clients.zos.btrfs')
+        JSBASE.__init__(self)
 
     def list(self):
         """

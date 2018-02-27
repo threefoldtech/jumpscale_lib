@@ -4,10 +4,13 @@ import tempfile
 from urllib.parse import urlparse
 import psutil
 
-class Flist:
+JSBASE = j.application.jsbase_get_class()
+
+
+class Flist(JSBASE):
     def __init__(self):
         self.__jslocation__ = "j.sal.flist"
-        self.logger = j.logger.get("j.sal.flist")
+        JSBASE.__init__(self)
 
         self.FLISTDIR = j.sal.fs.joinPaths(j.dirs.VARDIR, "flists")
         self.CACHEDIR = j.sal.fs.joinPaths(j.dirs.VARDIR, "cache/flists/cache")

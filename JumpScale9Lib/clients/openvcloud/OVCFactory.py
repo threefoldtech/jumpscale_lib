@@ -7,62 +7,53 @@ JSConfigBaseFactory = j.tools.configmanager.base_class_configs
 
 
 class OVCClientFactory(JSConfigBaseFactory):
+    """
+    get method:
+        this will return a client
+
+        in data need:
+            address = ""
+            port = 443
+            jwt_ = ""
+
+        jwt can be gotten from: j.clients.itsyouonline.default.jwt
+        if not filled in will bet done auto
+
+    """
 
     def __init__(self):
         self.__jslocation__ = "j.clients.openvcloud"
-        self.logger = j.logger.get("OVC Client Factory")
         self.__imports__ = "ovc"
         JSConfigBaseFactory.__init__(self, OVCClient)
 
-    # TODO:*1 change ays to use the config mgmt, in any class where you need e.g. the client just do j.clients.openvcloud.get(instance=...)
-    # the instance name is only thing which needs to be in the relevan AYS
+    def getFromParams(self, address, location="", port=443, instance="main", ):
+        """
+        example address:
+        - be-gen-1.demo.greenitglobe.com
 
-    def getFromAYSService(self, service):
-        """
-        Returns an OpenvCloud Client object for a given AYS service object.
-        """
-        data = {'address': service.model['data'].get('url'),
-                'login': service.model['data'].get('login', ""),
-                'JWT_': service.model['data'].get('jwt'),
-                'port': service.model['data'].get('port')}
-        # toml = j.data.serializer.toml.dumps(data)
-        return self.get(data=data)
+        the jwt will be fetched from ' j.clients.itsyouonline.default.jwt'
 
-    def get_for_operator(self, instance="main", data={}):
-        """
-        this will return a client always created for the operator even if the appkey has been filled in
-        """
-        i = self.get(instance, data)
-        i.operator = True
-        return i
+        @PARAM if location not specified will check which one is on environment and if only one use that one
 
-    def get_for_enduser(self, instance="main", data={}):
         """
-        this will return a client always created for the enduser
-        """
-        i = self.get(instance, data)
-        i.operator = False
-        return i
+
+        data = {}
+        data["address"] = address
+        data["port"] = int(port)
+        data["location"] = location
+
+        return self.get(instance=instance, data=data)
 
     def test(self):
+        """
+        js9 'j.clients.openvcloud.test()'
+        """
+        self.logger_enable()
+        cl = j.clients.openvcloud.getFromParams("be-gen-1.demo.greenitglobe.com")
+        self.logger.info(cl.config)
 
-        def mytest_as_operator():
+        self.logger.info("locations")
+        self.logger.info(cl.locations)
 
-            cl = self.get_for_operator()
-            print(cl.config)
-
-            print("locations")
-            print(cl.locations)
-
-            print("images")
-            print(cl.get_available_images())
-
-        def mytest_as_enduser():
-
-            cl = self.get_for_enduser()
-
-            print("images")
-            print(cl.get_available_images())
-
-        # mytest_as_enduser() #TODO:*1 not working yet, needs to be done
-        mytest_as_operator()
+        self.logger.info("images")
+        self.logger.info(cl.get_available_images())

@@ -1,5 +1,11 @@
-class EventHandlers:
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
+
+
+class EventHandlers(JSBASE):
     def __init__(self, service):
+        JSBASE.__init__(self)
         self._service = service
         self._repository = service._repository
         self._ayscl = service._repository._ayscl
@@ -51,8 +57,9 @@ class EventHandlers:
         raise KeyError("Could not find action with name {}".format(name))
 
 
-class EventHandler:
+class EventHandler(JSBASE):
     def __init__(self, service, model):
+        JSBASE.__init__(self)
         self._repository = service
         self._ayscl = repository._ayscl
         self.model = model

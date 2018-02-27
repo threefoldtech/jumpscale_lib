@@ -1,13 +1,16 @@
 
 
 from base import BaseService, BaseServiceSection
+from js9 import j
+JSBASE = j.application.jsbase_get_class()
 
 
-class FirewallError(Exception):
-    pass
+class FirewallError(Exception, JSBASE):
+    def __init__(self):
+        JSBASE.__init__(self)
 
 
-class Redirect(BaseServiceSection):
+class Redirect(BaseServiceSection, JSBASE):
     EXPOSED_FIELDS = [
         'target',
         'src',
@@ -18,6 +21,9 @@ class Redirect(BaseServiceSection):
         'dest_port',
         'name',
     ]
+
+    def __init__(self):
+        JSBASE.__init__(self)
 
     def __str__(self):
         return ('({proto}) {src_dport}:{src} -> '
@@ -34,7 +40,7 @@ class Redirect(BaseServiceSection):
         return str(self)
 
 
-class Rule(BaseServiceSection):
+class Rule(BaseServiceSection, JSBASE):
     EXPOSED_FIELDS = [
         'name',
         'proto',
@@ -50,6 +56,9 @@ class Rule(BaseServiceSection):
         'enabled'
     ]
 
+    def __init__(self):
+        JSBASE.__init__(self)
+
     def __str__(self):
         return ('{name} {target}').format(
             name=self.name,
@@ -60,8 +69,11 @@ class Rule(BaseServiceSection):
         return str(self)
 
 
-class Firewall(BaseService):
+class Firewall(BaseService, JSBASE):
     PACKAGE = 'firewall'
+
+    def __init__(self):
+        JSBASE.__init__(self)
 
     @property
     def zones(self):

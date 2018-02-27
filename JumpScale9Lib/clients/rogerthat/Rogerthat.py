@@ -47,7 +47,6 @@ class Rogerthat(JSConfigClient):
         JSConfigClient.__init__(self, instance=instance,
                                 data=data, parent=parent, template=TEMPLATE)
         self._api_key = self.config.data['api_key_']
-        self.logger = j.logger.get("j.clients.rogerthat")
         self._url = 'https://rogerth.at/api/1'
 
     def _raw_request(self, method, params):

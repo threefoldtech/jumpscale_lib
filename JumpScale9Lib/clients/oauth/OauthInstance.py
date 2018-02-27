@@ -10,7 +10,7 @@ import random
 from js9 import j
 
 JSConfigClient = j.tools.configmanager.base_class_config
-
+JSBASE = j.application.jsbase_get_class()
 TEMPLATE = """
 addr = ""
 accesstokenaddr = ""
@@ -22,6 +22,7 @@ user_info_url = ""
 logout_url = ""
 client_instance = "github"
 """
+
 
 class OauthClient(JSConfigClient):
     def __init__(self, instance, data={}, parent=None):
@@ -53,22 +54,25 @@ class OauthClient(JSConfigClient):
         
         return self._client
 
-class AuthError(Exception):
-    pass
+
+class AuthError(Exception, JSBASE):
+    def __init__(self):
+        JSBASE.__init__(self)
 
 
-class UserInfo(object):
+class UserInfo(object, JSBASE):
 
     def __init__(self, username, emailaddress, groups):
+        JSBASE.__init__(self)
         self.username = username
         self.emailaddress = emailaddress
         self.groups = groups
 
 
-class OauthInstance:
+class OauthInstance(JSBASE):
 
     def __init__(self, addr, accesstokenaddr, client_id, secret, scope, redirect_url, user_info_url, logout_url, instance):
-        self.logger = j.logger.get('j.clients.oauth')
+        JSBASE.__init__(self)
         if not addr:
             raise RuntimeError("Failed to get oauth instance, no address provided")
         else:
@@ -117,6 +121,8 @@ class OauthInstance:
 
 
 class ItsYouOnline(OauthInstance):
+    def __init__(self, addr, accesstokenaddr, client_id, secret, scope, redirect_url, user_info_url, logout_url, instance):
+        OauthInstance.__init__(self, addr, accesstokenaddr, client_id, secret, scope, redirect_url, user_info_url, logout_url, instance)
 
     def getAccessToken(self):
         return j.clients.itsyouonline.jwt_get(self.client_id, self.secret)

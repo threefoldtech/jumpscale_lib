@@ -2,11 +2,14 @@
 from js9 import j
 from urllib import parse as urllib_parse
 
+JSBASE = j.application.jsbase_get_class()
 
-class TemplateEngine:
+
+class TemplateEngine(JSBASE):
 
     def __init__(self):
         self.replaceDict = {}  # dict(string,string)
+        JSBASE.__init__(self)
         # System ##System
 
     def add(self, search, replace, variants=False):

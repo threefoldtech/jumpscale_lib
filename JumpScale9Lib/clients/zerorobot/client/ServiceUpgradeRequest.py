@@ -6,9 +6,11 @@ Auto-generated class for ServiceUpgradeRequest
 from six import string_types
 
 from . import client_support
+from js9 import j
+JSBASE = j.application.jsbase_get_class()
 
 
-class ServiceUpgradeRequest(object):
+class ServiceUpgradeRequest(object, JSBASE):
     """
     auto-generated. don't touch.
     """
@@ -23,6 +25,7 @@ class ServiceUpgradeRequest(object):
         return ServiceUpgradeRequest(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        JSBASE.__init__(self)
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

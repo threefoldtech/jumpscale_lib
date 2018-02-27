@@ -4,10 +4,15 @@ from JumpScale9Lib.clients.whmcs import phpserialize
 
 SSL_VERIFY = False
 
+from js9 import j
 
-class whmcsorders:
+JSBASE = j.application.jsbase_get_class()
+
+
+class whmcsorders(JSBASE):
 
     def __init__(self, authenticationparams, url):
+        JSBASE.__init__(self)
         self._authenticationparams = authenticationparams
         self._url = url
 

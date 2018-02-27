@@ -10,8 +10,10 @@ from .Milestone import RepoMilestone
 from JumpScale9.errorhandling.JSExceptions import Input
 from github.GithubException import UnknownObjectException
 
+JSBASE = j.application.jsbase_get_class()
 
-class GithubRepo:
+
+class GithubRepo(JSBASE):
     TYPES = ["story", "ticket", "task", "bug",
              "feature", "question", "monitor", "unknown"]
     PRIORITIES = ["critical", "urgent", "normal", "minor"]
@@ -20,7 +22,7 @@ class GithubRepo:
               "inprogress", "verification", "closed"]
 
     def __init__(self, client, fullname):
-        self.logger = j.logger.get('j.clients.github.repo')
+        JSBASE.__init__(self)
         self.client = client
         self.fullname = fullname
         self._repoclient = None

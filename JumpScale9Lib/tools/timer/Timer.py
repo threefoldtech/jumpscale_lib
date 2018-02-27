@@ -1,7 +1,11 @@
 import time
-class TIMER:
+from js9 import j
+JSBASE = j.application.jsbase_get_class()
+
+class TIMER(JSBASE):
     def __init__(self):
         self.__jslocation__ = "j.tools.timer"
+        JSBASE.__init__(self)
 
     @staticmethod
     def start(cat=""):

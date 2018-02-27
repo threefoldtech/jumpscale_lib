@@ -3,9 +3,12 @@ Auto-generated class for Label
 """
 
 from . import client_support
+from js9 import j
 
 
-class Label(str):
+
+
+class Label(str, ):
     """
     auto-generated. don't touch.
     """
@@ -22,6 +25,7 @@ class Label(str):
         return Label(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

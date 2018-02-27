@@ -6,12 +6,15 @@ Auto-generated class for ServiceCreate
 from six import string_types
 
 from . import client_support
+from js9 import j
+JSBASE = j.application.jsbase_get_class()
 
 
-class ServiceCreate(object):
+class ServiceCreate(object, JSBASE):
     """
     auto-generated. don't touch.
     """
+
 
     @staticmethod
     def create(**kwargs):
@@ -25,6 +28,7 @@ class ServiceCreate(object):
         return ServiceCreate(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        JSBASE.__init__(self)
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

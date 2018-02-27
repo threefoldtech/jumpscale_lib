@@ -8,6 +8,7 @@ from six import string_types
 from . import client_support
 
 
+
 class CreateEmailOption(object):
     """
     auto-generated. don't touch.
@@ -23,6 +24,7 @@ class CreateEmailOption(object):
         return CreateEmailOption(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

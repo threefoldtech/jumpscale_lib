@@ -2,13 +2,16 @@
 from io import StringIO
 
 from base import BaseService
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
+
+class DNSError(Exception, JSBASE):
+    def __init__(self):
+        JSBASE.__init__(self)
 
 
-class DNSError(Exception):
-    pass
-
-
-class DNS(BaseService):
+class DNS(BaseService, JSBASE):
     PACKAGE = 'dhcp'
     HOSTS = '/tmp/hosts/jumpscale'
 
@@ -18,6 +21,7 @@ class DNS(BaseService):
 
     def __init__(self, wrt):
         super(DNS, self).__init__(wrt)
+        JSBASE.__init__(self)
         self._transactions = list()
 
     @property

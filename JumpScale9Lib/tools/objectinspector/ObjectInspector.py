@@ -9,9 +9,10 @@ from js9 import j
 # 4 function with params
 # 7 ???
 # 8 property
+JSBASE = j.application.jsbase_get_class()
 
 
-class Arg:
+class Arg(JSBASE):
     """
         Wrapper for argument
     """
@@ -19,6 +20,7 @@ class Arg:
     def __init__(self, name, defaultvalue):
         self.name = name
         self.defaultvalue = defaultvalue
+        JSBASE.__init__(self)
 
     def __str__(self):
         out = ""
@@ -39,7 +41,7 @@ def attrib(name, type, doc=None, objectpath=None, filepath=None, extra=None):
     return (name, type, doc, objectpath, filepath, extra)
 
 
-class MethodDoc:
+class MethodDoc(JSBASE):
     """
     Method documentation
     """
@@ -47,6 +49,7 @@ class MethodDoc:
     def __init__(self, method, name, classdoc):
         self.classdoc = classdoc
         self.params = []
+        JSBASE.__init__(self)
 
         inspected = inspect.getargspec(method)
         if inspected.defaults is not None:
@@ -103,9 +106,10 @@ class MethodDoc:
         return self.__str__()
 
 
-class ClassDoc:
+class ClassDoc(JSBASE):
 
     def __init__(self, classobj, location):
+        JSBASE.__init__(self)
         self.location = location
         self.methods = {}
         self.comments = inspect.getdoc(classobj)
@@ -128,7 +132,7 @@ class ClassDoc:
         except BaseException:
             self.errors += '#### Error trying to add %s source in %s.\n' % (name, self.location)
 
-        print("ADD METHOD:%s %s" % (self.path, name))
+        self.logger.debug("ADD METHOD:%s %s" % (self.path, name))
         md = MethodDoc(method, name, self)
         self.methods[name] = md
         return source, md.params
@@ -181,7 +185,7 @@ class ClassDoc:
         return self.__str__()
 
 
-class ObjectInspector:
+class ObjectInspector(JSBASE):
 
     """
     functionality to inspect object structure and generate apifile
@@ -190,13 +194,13 @@ class ObjectInspector:
 
     def __init__(self):
         self.__jslocation__ = "j.tools.objectinspector"
+        JSBASE.__init__(self)
         self.apiFileLocation = j.sal.fs.joinPaths(j.dirs.JSCFGDIR, "codecompletionapi", "JumpScale9Lib.api")
         # j.sal.fs.createDir(j.sal.fs.joinPaths(j.dirs.JSCFGDIR, "codecompletionapi"))
         self.classDocs = {}
         self.visited = []
         self.root = None
         self.manager = None
-        self.logger = j.logger.get('j.tools.objectinspector')
 
         self.jstree = OrderedDict()  # jstree['j.sal']={'unix': unixobject, 'fs': fsobject}
 

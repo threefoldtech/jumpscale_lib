@@ -3,11 +3,13 @@ Auto-generated class for KeyData
 """
 from datetime import datetime
 from six import string_types
-
+from js9 import j
 from . import client_support
 
 
-class KeyData(object):
+
+
+class KeyData( ):
     """
     auto-generated. don't touch.
     """
@@ -24,6 +26,7 @@ class KeyData(object):
         return KeyData(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

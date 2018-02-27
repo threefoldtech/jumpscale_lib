@@ -3,12 +3,15 @@ from OpenSSL import crypto
 import OpenSSL
 from socket import gethostname
 
+JSBASE = j.application.jsbase_get_class()
 
-class SSLSigning:
+
+class SSLSigning(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.ssl_signing"
         self.__imports__ = "pyopenssl"
+        JSBASE.__init__(self)
 
     def create_self_signed_ca_cert(self, cert_dir):
         """
@@ -135,9 +138,9 @@ class SSLSigning:
         try:
             ctx.check_privatekey()
         except OpenSSL.SSL.Error:
-            print("Incorrect key")
+            self.logger.debug("Incorrect key")
         else:
-            print("Key matches certificate")
+            self.logger.debug("Key matches certificate")
 
     def bundle(self, certificate, key, certification_chain=(), passphrase=None):
         """

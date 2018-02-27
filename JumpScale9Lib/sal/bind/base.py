@@ -1,4 +1,10 @@
-class DNS:
+from js9 import j
+JSBASE = j.application.jsbase_get_class()
+
+
+class DNS(JSBASE):
+    def __init__(self):
+        JSBASE.__init__(self)
 
     def start(self):
         raise NotImplemented()

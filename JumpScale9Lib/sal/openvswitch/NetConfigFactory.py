@@ -7,8 +7,10 @@ from .VXNet import vxlan as vxlan
 from .VXNet import netclasses as netcl
 from .VXNet.utils import *
 
+JSBASE = j.application.jsbase_get_class()
 
-class NetConfigFactory:
+
+class NetConfigFactory(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.openvswitch"
@@ -16,6 +18,7 @@ class NetConfigFactory:
         self.PHYSMTU = 2000  # will fit all switches
         self._executor = j.tools.executorLocal
         self.netcl = netcl
+        JSBASE.__init__(self)
 
     def getConfigFromSystem(self, reload=False):
         """
@@ -28,7 +31,7 @@ class NetConfigFactory:
         return self._layout.nicdetail
 
     def _exec(self, cmd, failOnError=True):
-        print(cmd)
+        self.logger.debug(cmd)
         rc, out = self._executor.execute(cmd, die=failOnError)
         return out
 
@@ -340,8 +343,8 @@ iface $bondname inet manual
 
         self._executor.execute("/etc/init.d/openvswitch-switch restart")
 
-        print((self._exec("ip a", failOnError=True)))
-        print((self._exec("ovs-vsctl show", failOnError=True)))
+        self.logger.debug((self._exec("ip a", failOnError=True)))
+        self.logger.debug((self._exec("ovs-vsctl show", failOnError=True)))
 
     def newBondedBackplane(self, name, interfaces, trunks=None):
         """

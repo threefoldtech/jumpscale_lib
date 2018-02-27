@@ -1,13 +1,17 @@
 from js9 import j
 
-
-class MountError(Exception):
-    pass
+JSBASE = j.application.jsbase_get_class()
 
 
-class Mount:
+class MountError(Exception, JSBASE):
+    def __init__(self):
+        JSBASE.__init__(self)
+
+
+class Mount(JSBASE):
 
     def __init__(self, device, path=None, options='', executor=None):
+        JSBASE.__init__(self)
         self._device = device
         self._path = path
         self._autoClean = False

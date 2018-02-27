@@ -3,9 +3,12 @@ Auto-generated class for APIKeyLabel
 """
 
 from . import client_support
+from js9 import j
 
 
-class APIKeyLabel(object):
+
+
+class APIKeyLabel( ):
     """
     auto-generated. don't touch.
     """
@@ -19,6 +22,7 @@ class APIKeyLabel(object):
         return APIKeyLabel(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 
