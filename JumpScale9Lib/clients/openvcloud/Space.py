@@ -279,7 +279,7 @@ class Space(Authorizables):
             machine.authorizeSSH(sshkeyname=sshkeyname)
         else:
             raise RuntimeError("needs to be implemented, no sshkeyname given")
-
+        machine.prefab.core.hostname = name  # make sure hostname is set
         self._node_set(machine)
 
         return machine
