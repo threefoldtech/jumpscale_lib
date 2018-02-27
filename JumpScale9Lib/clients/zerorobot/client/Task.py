@@ -8,11 +8,11 @@ from .EnumTaskState import EnumTaskState
 from six import string_types
 
 from . import client_support
-from js9 import j
-JSBASE = j.application.jsbase_get_class()
 
 
-class Task(object, JSBASE):
+
+
+class Task(object):
     """
     auto-generated. don't touch.
     """
@@ -37,7 +37,7 @@ class Task(object, JSBASE):
         return Task(**kwargs)
 
     def __init__(self, json=None, **kwargs):
-        JSBASE.__init__(self)
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

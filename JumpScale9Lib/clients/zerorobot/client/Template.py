@@ -6,11 +6,11 @@ Auto-generated class for Template
 from six import string_types
 
 from . import client_support
-from js9 import j
-JSBASE = j.application.jsbase_get_class()
 
 
-class Template(object, JSBASE):
+
+
+class Template(object):
     """
     auto-generated. don't touch.
     """
@@ -30,7 +30,7 @@ class Template(object, JSBASE):
         return Template(**kwargs)
 
     def __init__(self, json=None, **kwargs):
-        JSBASE.__init__(self)
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

@@ -5,11 +5,11 @@ Auto-generated class for ServiceFilter
 """
 
 from . import client_support
-from js9 import j
-JSBASE = j.application.jsbase_get_class()
 
 
-class ServiceFilter(object, JSBASE):
+
+
+class ServiceFilter(object):
     """
     auto-generated. don't touch.
     """
@@ -23,7 +23,7 @@ class ServiceFilter(object, JSBASE):
         return ServiceFilter(**kwargs)
 
     def __init__(self, json=None, **kwargs):
-        JSBASE.__init__(self)
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

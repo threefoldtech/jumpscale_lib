@@ -2,13 +2,13 @@
 from .Template import Template
 from .unhandled_api_error import UnhandledAPIError
 from .unmarshall_error import UnmarshallError
-from js9 import j
-JSBASE = j.application.jsbase_get_class()
 
 
-class TemplatesService(JSBASE):
+
+
+class TemplatesService:
     def __init__(self, client):
-        JSBASE.__init__(self)
+        pass
         self.client = client
 
     def ListTemplates(self, headers=None, query_params=None, content_type="application/json"):

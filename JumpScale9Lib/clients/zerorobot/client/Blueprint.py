@@ -5,11 +5,11 @@ Auto-generated class for Blueprint
 """
 
 from . import client_support
-from js9 import j
-JSBASE = j.application.jsbase_get_class()
 
 
-class Blueprint(object, JSBASE):
+
+
+class Blueprint(object):
     """
     auto-generated. don't touch.
     """
@@ -24,7 +24,7 @@ class Blueprint(object, JSBASE):
         return Blueprint(**kwargs)
 
     def __init__(self, json=None, **kwargs):
-        JSBASE.__init__(self)
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 
