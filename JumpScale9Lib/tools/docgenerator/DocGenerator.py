@@ -1,6 +1,6 @@
 from js9 import j
 from .DocSite import DocSite
-
+from .Def import Def
 
 import imp
 import sys
@@ -64,18 +64,22 @@ class DocGenerator(JSBASE):
         self.__imports__ = "toml"
         self._macroPathsDone = []
         self._initOK = False
-        self._macroCodepath = j.sal.fs.joinPaths(j.dirs.VARDIR, "docgenerator_internal", "macros.py")
-        j.sal.fs.createDir(j.sal.fs.joinPaths(j.dirs.VARDIR, "docgenerator_internal"))
+        self._macroCodepath = j.sal.fs.joinPaths(
+            j.dirs.VARDIR, "docgenerator_internal", "macros.py")
+        j.sal.fs.createDir(j.sal.fs.joinPaths(
+            j.dirs.VARDIR, "docgenerator_internal"))
         self._docRootPathsDone = []
-        self.docSites = {}  # location in the outpath per site
+        self.docsites = {}  # location in the outpath per site
         self.outpath = j.sal.fs.joinPaths(j.dirs.VARDIR, "docgenerator")
         self.gitRepos = {}
+        self.defs = {}
         self.webserver = "http://localhost:8080/"
-        self.ws = self.webserver.replace("http://", "").replace("https://", "").replace("/", "")
+        self.ws = self.webserver.replace(
+            "http://", "").replace("https://", "").replace("/", "")
         self._loaded = []
         self._macrosLoaded = []
 
-    def addGitRepo(self, path):
+    def gitrepo_add(self, path):
         if path not in self.gitRepos:
             gc = j.clients.git.get(path)
             self.gitRepos[path] = gc
@@ -87,16 +91,15 @@ class DocGenerator(JSBASE):
         """
         prefab = j.tools.prefab.local
         if prefab.core.doneGet("docgenerator:installed") == False or reset:
-            prefab.runtimes.nodejs.install()
-            prefab.runtimes.nodejs.phantomjs()
-            prefab.runtimes.golang.install()
-            
-            if "darwin" in str(j.core.platformtype.myplatform):
-                prefab.system.package.install('graphviz')
+            prefab.system.package.install('graphviz')
+            if "darwin" in str(j.core.platformtype.myplatform):                
                 prefab.system.package.install('hugo')
-                # prefab.core.run("brew install caddy")
+                prefab.system.package.install('caddy')
             elif "ubuntu" in str(j.core.platformtype.myplatform):
+                prefab.runtimes.golang.install()
+                prefab.runtimes.nodejs.phantomjs()
                 prefab.system.package.install('graphviz')
+                prefab.runtimes.nodejs.install()
                 # Using package install will result in an old version on some machines
                 # prefab.core.file_download('https://github.com/gohugoio/hugo/releases/download/v0.26/hugo_0.26_Linux-64bit.tar.gz')
                 # prefab.core.file_expand('$TMPDIR/hugo_0.26_Linux-64bit.tar.gz')
@@ -104,25 +107,24 @@ class DocGenerator(JSBASE):
                 # go get github.com/kardianos/govendor
                 # govendor get github.com/gohugoio/hugo
                 # go install github.com/gohugoio/hugo
-
                 prefab.core.run("go get -u -v github.com/gohugoio/hugo")
+                prefab.web.caddy.build()
+                prefab.core.run("npm install -g mermaid", profile=True)
+                prefab.web.caddy.configure()
+                prefab.core.doneSet("docgenerator:installed")
 
-            prefab.web.caddy.build()
-            prefab.core.run("npm install -g mermaid", profile=True)
-            prefab.web.caddy.configure()
-            prefab.core.doneSet("docgenerator:installed")
+            # prefab.runtimes.pip.install(
+            #     "dash,dash-renderer,dash-html-components,dash-core-components,plotly")
 
-            prefab.runtimes.pip.install("dash,dash-renderer,dash-html-components,dash-core-components,plotly")
-
-    def startWebserver(self):
+    def webserver_start(self):
         """
         start caddy on localhost:8080
         """
-        configpath = self.generateCaddyFile()
+        configpath = self.caddyfile_generate()
         j.tools.prefab.local.web.caddy.start(configpath=configpath)
         self.logger.info("go to %a" % self.webserver)
 
-    def generateCaddyFile(self):
+    def caddyfile_generate(self):
         dest = "%s/docgenerator/caddyfile" % j.dirs.VARDIR
         j.sal.fs.createDir("%s/docgenerator" % j.dirs.VARDIR)
         out2 = caddyconfig
@@ -134,7 +136,7 @@ class DocGenerator(JSBASE):
         }
 
         """
-        for key, ds in self.docSites.items():
+        for key, ds in self.docsites.items():
             C3 = j.data.text.strip(C2.replace("$name", ds.name))
             out2 += C3
         out2 = out2.replace("$outpath", self.outpath)
@@ -146,27 +148,30 @@ class DocGenerator(JSBASE):
     def init(self):
         if not self._initOK:
             self.install()
-            j.clients.redis.core_start()
+            j.clients.redis.core_get()
             j.sal.fs.remove(self._macroCodepath)
             # load the default macro's
-            self.loadMacros("https://github.com/Jumpscale/docgenerator/tree/master/macros")
+            self.macros_load(
+                "https://github.com/Jumpscale/docgenerator/tree/master/macros")
             self._initOK = True
         if self.webserver[-1] != "/":
             self.webserver += "/"
-        self.ws = self.webserver.replace("http://", "").replace("https://", "").replace("/", "")
+        self.ws = self.webserver.replace(
+            "http://", "").replace("https://", "").replace("/", "")
 
-    def loadMacros(self, pathOrUrl=""):
+    def macros_load(self, pathOrUrl=""):
         """
         @param pathOrUrl can be existing path or url
         e.g. https://github.com/Jumpscale/docgenerator/tree/master/examples
         """
-
+        self.logger.info("load macros")
         path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
 
         if path not in self._macroPathsDone:
 
             if not j.sal.fs.exists(path=path):
-                raise j.exceptions.Input("Cannot find path:'%s' for macro's, does it exist?" % path)
+                raise j.exceptions.Input(
+                    "Cannot find path:'%s' for macro's, does it exist?" % path)
 
             if j.sal.fs.exists(path=self._macroCodepath):
                 code = j.sal.fs.readFile(self._macroCodepath)
@@ -189,6 +194,9 @@ class DocGenerator(JSBASE):
 
     def load(self, pathOrUrl=""):
         """
+
+        js9 'j.tools.docgenerator.load()'
+
         will look for config.yaml in $source/config.yaml
 
         @param pathOrUrl is the location where the markdown docs are which need to be processed
@@ -198,6 +206,8 @@ class DocGenerator(JSBASE):
             this can also be a git url e.g. https://github.com/Jumpscale/docgenerator/tree/master/examples
 
         """
+        if pathOrUrl == "":
+            pathOrUrl = j.sal.fs.getcwd()
         self.logger.info("load:%s" % pathOrUrl)
         if pathOrUrl in self._loaded:
             return
@@ -210,14 +220,15 @@ class DocGenerator(JSBASE):
             path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
 
         for docDir in j.sal.fs.listFilesInDir(path, recursive=True, filter=".docs"):
-            if docDir not in self.docSites:
+            if docDir not in self.docsites:
                 self.logger.debug("found doc dir:%s" % docDir)
                 ds = DocSite(path=docDir)
-                self.docSites[docDir] = ds
+                self.docsites[docDir] = ds
 
     def generateExamples(self, start=True):
-        self.load(pathOrUrl="https://github.com/Jumpscale/docgenerator/tree/master/examples")
-        #self.load(pathOrUrl="https://github.com/Jumpscale/ays9/tree/master/docs")
+        self.load(
+            pathOrUrl="https://github.com/Jumpscale/docgenerator/tree/master/examples")
+        # self.load(pathOrUrl="https://github.com/Jumpscale/ays9/tree/master/docs")
         self.generate(start=start)
 
     def generateJSDoc(self, start=True):
@@ -229,24 +240,30 @@ class DocGenerator(JSBASE):
         self.generate(start=start)
 
     def generate(self, url=None, start=True):
+        """
+        will load all info & process the pre-configured output
+
+        js9 'j.tools.docgenerator.generate()'
+
+        """
         if url is not None:
             self.load(pathOrUrl=url)
-        if self.docSites == {}:
+        if self.docsites == {}:
             self.load()
-        for path, ds in self.docSites.items():
+        for path, ds in self.docsites.items():
             ds.write()
         if start:
-            self.startWebserver()
+            self.webserver_start()
             self.logger.debug("TO CHECK GO TO: %s" % self.webserver)
 
-    def gitUpdate(self):
-        if self.docSites == {}:
+    def git_update(self):
+        if self.docsites == {}:
             self.load()
         for gc in self.gitRepos:
             gc.pull()
 
-    def getDoc(self, name, die=True):
-        for key, ds in self.docSites.items():
+    def doc_get(self, name, die=True):
+        for key, ds in self.docsites.items():
             if name in ds.docs:
                 return ds.docs[name]
         if die:
@@ -255,9 +272,14 @@ class DocGenerator(JSBASE):
         else:
             return None
 
-    def getDocSite(self, name, die=True):
+    def def_get(self, name):
+        if name not in self.defs:
+            raise RuntimeError("cannot find def:%s" % name)
+        return self.defs[name]
+
+    def docsite_get(self, name, die=True):
         name = name.lower()
-        for key, ds in self.docSites.items():
+        for key, ds in self.docsites.items():
             if ds.name == name:
                 return ds
         if die:
