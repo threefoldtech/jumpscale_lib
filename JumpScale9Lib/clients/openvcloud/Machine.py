@@ -292,11 +292,9 @@ class Machine(JSBASE):
         instance = self.ipaddr_public.replace(".", "-") + "-%s" % port + "-%s" % login
 
         sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login=login, passwd=password,
-                                      keyname=sshkeyname, allow_agent=False, timeout=300)
-
+                                      keyname="", allow_agent=False, timeout=300)
         sshclient.connect()
-
-        sshclient.ssh_authorize('root', sshkeyname)
+        sshclient.ssh_authorize(key=sshkeyname, user='root')
         sshclient.config.delete()  # remove this temp sshconnection
         sshclient.close()
 
