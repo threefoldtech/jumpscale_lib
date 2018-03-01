@@ -42,9 +42,9 @@ class GitHubFactory(JSConfigFactory):
 
 class GitHubClient(JSConfigClient):
 
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE)
+                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         self._config = j.tools.configmanager._get_for_obj(
             self, instance=instance, data=data, template=TEMPLATE)
         if not (self.config.data['token_'] or (self.config.data['login'] and self.config.data['password_'])):
