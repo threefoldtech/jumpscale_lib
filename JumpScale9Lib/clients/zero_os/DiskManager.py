@@ -4,7 +4,7 @@ from . import typchk
 
 
 class DiskManager:
-    mktable_chk = typchk.Checker({
+    _mktable_chk = typchk.Checker({
         'disk': str,
         'table_type': typchk.Enum('aix', 'amiga', 'bsd', 'dvh', 'gpt', 'mac', 'msdos', 'pc98', 'sun', 'loop')
     })

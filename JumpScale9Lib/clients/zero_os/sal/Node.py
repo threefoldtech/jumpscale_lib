@@ -13,6 +13,7 @@ from .Disk import Disks, DiskType
 from .healthcheck import HealthCheck
 from .Network import Network
 from .StoragePool import StoragePools
+from .StoragePool import  _prepare_device
 
 Mount = namedtuple('Mount', ['device', 'mountpoint', 'fstype', 'options'])
 
@@ -177,6 +178,29 @@ class Node:
             return False
         return bool(fscache_sp.mountpoint)
 
+    def partition_and_mount_disks(self, name='fscache'):
+        fscache_sp = self.find_persistance(name)
+        devices = fscache_sp.devices if fscache_sp else []
+        mounts = {}
+
+        for disk in self.disks.list():
+            if disk.partitions:
+                continue
+
+            disk.mktable()
+            disk.mkpart('0', '100%')
+
+            for partition in disk.partitions:
+                if partition.devicename in devices:
+                    continue
+                self.client.btrfs.create(partition.name, [partition.devicename])
+                self.client.filesystem.mkdir('/tmp/{}'.format(partition.name))
+                mount_point = '/tmp/{}'.format(partition.name)
+                self.client.disk.mount(partition.devicename, mount_point)
+                mounts[partition.name] = mount_point
+
+        return mounts
+
     def ensure_persistance(self, name='fscache'):
         """
         look for a disk not used,
@@ -260,7 +284,8 @@ class Node:
                 self.client.testConnectionAttempts = 0
                 state = self.client.ping()
                 break
-            except (RuntimeError, ConnectionError, redis.TimeoutError, TimeoutError) as error:
+            except (RuntimeError, ConnectionError, redis.ConnectionError, redis.TimeoutError, TimeoutError) as error:
+                print("****************** in except")
                 err = error
                 time.sleep(1)
         else:
