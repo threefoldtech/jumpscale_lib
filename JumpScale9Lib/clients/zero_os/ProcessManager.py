@@ -1,29 +1,14 @@
-import redis
-import uuid
-import json
-import textwrap
-import shlex
-import base64
 import signal
-import socket
-import logging
-import time
-import sys
-from js9 import j
-from .Client import *
 
-DefaultTimeout = 10  # seconds
-
-logger = logging.getLogger('g8core')
-
+from . import typchk
 
 
 class ProcessManager:
-    _process_chk = j.tools.typechecker.get({
+    _process_chk = typchk.Checker({
         'pid': typchk.Or(int, typchk.IsNone()),
     })
 
-    _kill_chk = j.tools.typechecker.get({
+    _kill_chk = typchk.Checker({
         'pid': int,
         'signal': int,
     })
@@ -55,4 +40,3 @@ class ProcessManager:
         }
         self._kill_chk.check(args)
         return self._client.json('process.kill', args)
-

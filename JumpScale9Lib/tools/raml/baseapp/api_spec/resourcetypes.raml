@@ -76,8 +76,8 @@ std_id_get_post_del:
         description: <<resourcePathName | !singularize | !uppercamelcase>> deleted
 
 std_root_list:
-  displayName: list<<resourcePathName | !singularize | !uppercamelcase >>
   get:
+    displayName: list<<resourcePathName | !singularize | !uppercamelcase >>
     is: [listresponse,authfailure]
 
 std_root_get:

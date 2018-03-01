@@ -61,7 +61,7 @@ class UnixSystem:
         @type var: string
         '''
         # TODO: there are better ways of doing this
-        exitcode, output, err = j.sal.process.execute(". %s > /dev/null && echo $%s" % (file, var), shell=True)
+        exitcode, output, err = j.sal.process.execute(". %s > /dev/null && echo $%s" % (file, var), useShell=True)
         if exitcode != 0:
             return ""
         else:
@@ -70,7 +70,7 @@ class UnixSystem:
     def getMachineInfo(self):
         '''Get memory and CPU info about this machine
 
-        @returns: Amount of available memory, CPU speed and number of CPUs
+        @returns: Amount of available memory in (MBs), Average CPU speed in (MHz) and number of CPUs
         @rtype: tuple
         '''
         mem = 0
@@ -88,15 +88,16 @@ class UnixSystem:
             cpucontent = j.sal.fs.fileGetContents("/proc/cpuinfo")
             matches = re.findall("^cpu\sMHz\s+:\s(\d+)\.\d+$", cpucontent, re.MULTILINE)
             if matches:
+                int_values = [int(x) for x in matches]
                 nrcpu = len(matches)
-                cpumhz = int(matches[0])
+                cpumhz = int(sum(int_values) / nrcpu) # get average of CPUs speeds
             return mem, cpumhz, nrcpu
         elif j.core.platformtype.myplatform.isSolaris():
             command = "prtconf | grep Memory | awk '{print $3}'"
-            exitcoude, output, err = j.sal.process.execute(command, shell=True)
+            exitcoude, output, err = j.sal.process.execute(command, useShell=True)
             mem = output.strip()
             command = "psrinfo -v | grep 'processor operates' | awk '{print $6}'"
-            exitcoude, output, err = j.sal.process.execute(command, shell=True)
+            exitcoude, output, err = j.sal.process.execute(command, useShell=True)
             tuples = output.strip().split("\n")
             nrcpu = len(tuples)
             cpumhz = int(tuples[0])
@@ -250,10 +251,10 @@ class UnixSystem:
             gid = grp.getgrnam(group).gr_gid
         os.chown(path, uid, gid)
         if recursive:
-            files = j.sal.fs.walk(path, return_folders=1, return_files=1, recurse=-1)
-            for file in files:
-                os.chown(file, uid, gid)
+            def process_path(arg, path):
+                os.chown(path, uid, gid)
 
+            j.sal.fswalker.walk(path, process_path, recursive=True, includeFolders=True)
     def chmod(self, root, mode, recurse=0, dirPattern='*', filePattern='*', dirs=True, files=True):
         """
         Chmod based on system.fs.walk
@@ -262,7 +263,7 @@ class UnixSystem:
         if j.sal.fs.isFile(root):
             os.chmod(root, mode)
         else:
-            items = j.sal.fs.walkExtended(root=root, recurse=recurse, dirPattern=dirPattern,
+            items = j.sal.fswalker.walkExtended(root=root, recurse=recurse, dirPattern=dirPattern,
                                           filePattern=filePattern, dirs=dirs, files=files)
 
             for item in items:
@@ -357,7 +358,7 @@ class UnixSystem:
         @param path: Path to chroot() to
         @type path: string
         '''
-        if not path or not j.data.types.unixdirpath.check(path):
+        if not path or not j.sal.fs.checkDirParam(path):
             raise ValueError('Path %s is invalid' % path)
 
         j.logger.logging.info('Change root to %s' % path)

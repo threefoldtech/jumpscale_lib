@@ -9,7 +9,8 @@ class NetworkScanner:
     def __init__(self, cidr, ports=[80]):
         code, _, _ = j.sal.process.execute('which nmap', showout=False, die=False)
         if code != 0:
-            raise j.exceptions.RuntimeError('nmap is not installed')
+            j.logger.logging.info('nmap not found, installing...')
+            j.tools.prefab.local.system.package.install('nmap')
 
         self._ports = ','.join([str(port) for port in ports])
         self._cidr = cidr

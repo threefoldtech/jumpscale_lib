@@ -1,51 +1,38 @@
-import redis
-import uuid
 import json
-import textwrap
-import shlex
-import base64
-import signal
-import socket
-import logging
-import time
-import sys
-from .Client import *
-from js9 import j
 
-DefaultTimeout = 10  # seconds
+from . import typchk
 
-logger = logging.getLogger('g8core')
 
 class DiskManager:
-    _mktable_chk = j.tools.typechecker.get({
+    mktable_chk = typchk.Checker({
         'disk': str,
         'table_type': typchk.Enum('aix', 'amiga', 'bsd', 'dvh', 'gpt', 'mac', 'msdos', 'pc98', 'sun', 'loop')
     })
 
-    _mkpart_chk = j.tools.typechecker.get({
+    _mkpart_chk = typchk.Checker({
         'disk': str,
         'start': typchk.Or(int, str),
         'end': typchk.Or(int, str),
         'part_type': typchk.Enum('primary', 'logical', 'extended'),
     })
 
-    _getpart_chk = j.tools.typechecker.get({
+    _getpart_chk = typchk.Checker({
         'disk': str,
         'part': str,
     })
 
-    _rmpart_chk = j.tools.typechecker.get({
+    _rmpart_chk = typchk.Checker({
         'disk': str,
         'number': int,
     })
 
-    _mount_chk = j.tools.typechecker.get({
+    _mount_chk = typchk.Checker({
         'options': str,
         'source': str,
         'target': str,
     })
 
-    _umount_chk = j.tools.typechecker.get({
+    _umount_chk = typchk.Checker({
         'source': str,
     })
 

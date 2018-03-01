@@ -27,6 +27,7 @@ class KVMController:
     def open(self):
         uri = None
         self.authorized = False
+        #TODO: *1 is this right?, should this be local? (despiegk)
         j.tools.prefab.local.system.ssh.keygen(name='libvirt')
         self.pubkey = j.tools.prefab.local.core.file_read('/root/.ssh/libvirt.pub')
         if self._host != 'localhost':

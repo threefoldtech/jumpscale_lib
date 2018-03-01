@@ -158,6 +158,8 @@ class Doc:
                         try:
                             block = eval(cmd)
                         except Exception as e:
+                            # from IPython import embed;embed(colors='Linux')
+                            # s
                             block = "```python\nERROR IN MACRO*** TODO: *1 ***\ncmd:\n%s\nERROR:\n%s\n```\n" % (cmd, e)
                             self.docSite.raiseError(block, doc=self)
                 else:

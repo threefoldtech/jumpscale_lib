@@ -4,17 +4,21 @@ import urllib.request
 import urllib.error
 import urllib.parse
 
+JSConfigFactory = j.tools.configmanager.base_class_configs
+JSConfigClient = j.tools.configmanager.base_class_config
 
-class RogerthatFactory:
+TEMPLATE = """
+api_key_ = ""
+"""
+
+class RogerthatFactory(JSConfigFactory):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.rogerthat"
-
-    def get(self, api_key):
-        return Rogerthat(api_key)
+        JSConfigFactory.__init__(self, Rogerthat)
 
 
-class Rogerthat:
+class Rogerthat(JSConfigClient):
 
     STATUS_RECEIVED = 1
     STATUS_ACKED = 2
@@ -39,8 +43,10 @@ class Rogerthat:
 
     FLAG_WAIT_FOR_NEXT_MESSAGE = 1
 
-    def __init__(self, api_key):
-        self._api_key = api_key
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigClient.__init__(self, instance=instance,
+                                data=data, parent=parent, template=TEMPLATE)
+        self._api_key = self.config.data['api_key_']
         self.logger = j.logger.get("j.clients.rogerthat")
         self._url = 'https://rogerth.at/api/1'
 

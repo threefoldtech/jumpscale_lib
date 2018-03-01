@@ -1,22 +1,8 @@
-import redis
-import uuid
-import json
-import textwrap
-import shlex
-import base64
-import signal
-import socket
-import logging
-import time
-import sys
-from js9 import j
-
-from .Client import *
-
+from . import typchk
 
 
 class Nft:
-    _port_chk = j.tools.typechecker.get({
+    _port_chk = typchk.Checker({
         'port': int,
         'interface': typchk.Or(str, typchk.IsNone()),
         'subnet': typchk.Or(str, typchk.IsNone()),

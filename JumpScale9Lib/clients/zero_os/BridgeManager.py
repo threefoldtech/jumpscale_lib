@@ -1,9 +1,12 @@
+import json
+
 from js9 import j
 
-DefaultTimeout = 10  # seconds
+from . import typchk
+
 
 class BridgeManager:
-    _bridge_create_chk = j.tools.typechecker.get({
+    _bridge_create_chk = typchk.Checker({
         'name': str,
         'hwaddr': typchk.Or(str, typchk.IsNone()),
         'network': {
@@ -13,7 +16,7 @@ class BridgeManager:
         }
     })
 
-    _bridge_delete_chk = j.tools.typechecker.get({
+    _bridge_delete_chk = typchk.Checker({
         'name': str,
     })
 

@@ -1,34 +1,17 @@
-import redis
-import uuid
-import json
-import textwrap
-import shlex
-import base64
 import signal
-import socket
-import logging
-import time
-import sys
-from .Client import *
-from js9 import j
 
-DefaultTimeout = 10  # seconds
-
-logger = logging.getLogger('g8core')
-
-
+from . import typchk
 
 
 class JobManager:
-    _job_chk = j.tools.typechecker.get({
+    _job_chk = typchk.Checker({
         'id': typchk.Or(str, typchk.IsNone()),
     })
 
-    _kill_chk = j.tools.typechecker.get({
+    _kill_chk = typchk.Checker({
         'id': str,
         'signal': int,
     })
-
     def __init__(self, client):
         self._client = client
 

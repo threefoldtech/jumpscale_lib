@@ -59,7 +59,7 @@ class Capnp:
         return ModelBaseCollection
 
     def getModelCollection(self, schema, category, namespace=None, modelBaseClass=None,
-                           modelBaseCollectionClass=None, db=None):
+                           modelBaseCollectionClass=None, db=None,indexDb=None):
         """
         @param schema is capnp_schema
 
@@ -200,6 +200,9 @@ class Capnp:
         return obj
 
     def test(self):
+        '''
+        js9 'j.data.capnp.test()'
+        '''
         import time
         capnpschema = '''
         @0x93c1ac9f09464fc9;
@@ -248,6 +251,8 @@ class Capnp:
         end_find = time.time()
         print("population in %.2fs" % (end_populate - start))
         print("find in %.2fs" % (end_find - end_populate))
+
+        from IPython import embed;embed(colors='Linux')
 
     def testWithRedis(self):
         capnpschema = '''
@@ -311,12 +316,12 @@ class Capnp:
     def getBinaryData(self, obj):
         return obj.to_bytes_packed()
 
-    def getMemoryObj(self, schema, *args, **kwargs):
-        """
-        creates an object similar as a capnp message but without the constraint of the capnpn on the type and list.
-        Use this to store capnp object in memory instead of using directly capnp object
-        It will be converted in capnp message when saved
-        """
-        msg = schema.new_message(**kwargs)
-        obj = MemoryObject(msg.to_dict(verbose=True), schema=schema)
-        return obj
+    # def getMemoryObj(self, schema, *args, **kwargs):
+    #     """
+    #     creates an object similar as a capnp message but without the constraint of the capnpn on the type and list.
+    #     Use this to store capnp object in memory instead of using directly capnp object, BUT BE AWARE THIS WILL TAKE MUCH MORE MEMORY
+    #     It will be converted in capnp message when saved
+    #     """
+    #     msg = schema.new_message(**kwargs)
+    #     obj = MemoryObject(msg.to_dict(verbose=True), schema=schema)
+    #     return obj

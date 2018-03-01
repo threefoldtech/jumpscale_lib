@@ -15,25 +15,26 @@ import copy
 # import JumpScale9Lib.lib.html
 
 
-class PostgresqlFactory:
+JSConfigFactory = j.tools.configmanager.base_class_configs
+JSConfigClient = j.tools.configmanager.base_class_config
+
+TEMPLATE = """
+ipaddr = ""
+port = ""
+login = ""
+passwd_ = ""
+dbname = ""
+"""
+
+
+class PostgresqlFactory(JSConfigFactory):
     """
     """
 
     def __init__(self):
         self.__jslocation__ = "j.clients.postgres"
         self.__imports__ = "sqlalchemy"
-        self.clients = {}
-
-    def getClient(self, ipaddr="localhost", port=5432, login="postgres", passwd="rooter", dbname="template"):
-        """
-        if used without arguments it connects to local postgresql installed with prefab without modifications
-        #TODO
-        """
-        key = "%s_%s_%s_%s_%s" % (ipaddr, port, login, passwd, dbname)
-        if key not in self.clients:
-            self.clients[key] = PostgresClient(
-                ipaddr, port, login, passwd, dbname)
-        return self.clients[key]
+        JSConfigFactory.__init__(self, PostgresClient)
 
     def createdb(self, db, ipaddr="localhost", port=5432, login="postgres", passwd="rooter"):
         client = psycopg2.connect("dbname='%s' user='%s' host='%s' password='%s' port='%s'" % (
@@ -63,16 +64,20 @@ class PostgresqlFactory:
         j.sal.process.execute(cmd, showout=False, die=False)
 
 
-class PostgresClient:
+class PostgresClient(JSConfigClient):
 
-    def __init__(self, ipaddr, port, login, passwd, dbname):
-        self.ipaddr = ipaddr
-        self.port = port
-        self.login = login
-        self.passwd = passwd
-        self.dbname = dbname
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigClient.__init__(self, instance=instance,
+                                data=data, parent=parent, template=TEMPLATE)
+        c = self.config.data
+
+        self.ipaddr = c['ipaddr']
+        self.port = c['port']
+        self.login = c['login']
+        self.passwd = c['passwd_']
+        self.dbname = c['dbname']
         self.client = psycopg2.connect("dbname='%s' user='%s' host='%s' password='%s' port='%s'" % (
-            dbname, login, ipaddr, passwd, port))
+            self.dbname, self.login, self.ipaddr, self.passwd, self.port))
         self.cursor = None
 
     def getcursor(self):

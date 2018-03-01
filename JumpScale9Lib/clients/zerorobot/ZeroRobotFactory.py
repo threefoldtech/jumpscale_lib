@@ -1,45 +1,22 @@
-from zerorobot.dsl.ZeroRobotClient import ZeroRobotClient
-from JumpScale9.core.State import ClientConfig
+import os
 
 from js9 import j
+from JumpScale9Lib.clients.zerorobot.ZeroRobotClient import ZeroRobotClient
 
-CACHE_KEY = 'zerorobot'
+JSConfigFactoryBase = j.tools.configmanager.base_class_configs
 
 
-class ZeroRobotFactory:
-
-    _cache = {}
+class ZeroRobotFactory(JSConfigFactoryBase):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.zrobot"
+        super().__init__(child_class=ZeroRobotClient)
 
-    def get(self, base_url):
+    def generate(self):
         """
-        Get a ZeroRobot client for base_url.
-        if it exists a client for this base_url loaded in memory, return it.
-        otherwise, create a new client, put it in the cache and then return it
+        generate the client out of the raml specs
         """
-        if base_url not in self._cache:
-            self._cache[base_url] = ZeroRobotClient(base_url)
-        return self._cache[base_url]
-
-    def get_by_key(self, key):
-        if key in self._cache:
-            return self._cache[key]
-
-        cfg = j.core.state.clientConfigGet(CACHE_KEY, key)
-        if not cfg.data:
-            raise KeyError("no zero-robot client found for key %s" % key)
-
-        client = self.get(cfg.data['base_url'])
-        self.set(key, client)
-        return client
-
-    def set(self, key, client):
-        """
-        associate key with an instance of client
-        """
-        cfg = ClientConfig(CACHE_KEY, key)
-        cfg.data = {'base_url': client._client.api.base_url}
-        cfg.save()
-        self._cache[key] = client
+        path = j.sal.fs.getDirName(os.path.abspath(__file__)).rstrip("/")
+        c = j.tools.raml.get(path)
+        c.specs_get('https://github.com/Jumpscale/0-robot/blob/master/raml')
+        c.client_python_generate()

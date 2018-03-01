@@ -304,3 +304,8 @@ class DocSite:
                                      name, level=1, source="", tags="", msgpub="")
         else:
             return None
+
+    def __repr__(self):
+        return "docsite:%s" % ( self.path)
+
+    __str__ = __repr__

@@ -1,22 +1,8 @@
-import redis
-import uuid
-import json
-import textwrap
-import shlex
-import base64
-import signal
-import socket
-import logging
-import time
-import sys
-from .Client import *
-from js9 import j
-DefaultTimeout = 10  # seconds
+from . import typchk
 
-logger = logging.getLogger('g8core')
 
 class ZerotierManager:
-    _network_chk = j.tools.typechecker.get({
+    _network_chk = typchk.Checker({
         'network': str,
     })
 
@@ -68,4 +54,3 @@ class ZerotierManager:
         :return: dict of zerotier statusinfo
         """
         return self._client.json('zerotier.info', {})
-

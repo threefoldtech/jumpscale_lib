@@ -36,7 +36,7 @@ class Netconfig:
         @param excludes list: excluded interfaces.
         """
         excludes.append("lo")
-        for nic in j.sal.nic.nics:
+        for nic in j.sal.nettools.getNics():
             if nic not in excludes:
                 cmd = "ifdown %s --force" % nic
                 print("shutdown:%s" % nic)
@@ -201,7 +201,7 @@ class Netconfig:
         @param dev str: interface name.
         """
         if dev is None:
-            for nic in j.sal.nic.nics:
+            for nic in j.sal.nettools.getNics():
                 cmd = "ifdown %s --force" % nic
                 print("shutdown:%s" % nic)
                 self._executor.execute(cmd, die=False)
@@ -442,7 +442,7 @@ class Netconfig:
                 cmd = "ip addr flush dev %s" % interface
                 j.sal.process.execute(cmd)
 
-            j.sal.process.execute("sudo stop network-manager", showout=False, outputStderr=False, die=False)
+            j.sal.process.execute("sudo stop network-manager", showout=False, die=False)
             j.sal.fs.writeFile("/etc/init/network-manager.override", "manual")
 
             j.sal.netconfig.interfaces_reset()

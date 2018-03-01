@@ -1,46 +1,30 @@
 # Gitea client
 
-Connect:
+
 ```python
-import os
-token = os.environ["GITEA_TOKEN"]
-j.clients.gitea.get_client("https://docs.grid.tf/api/v1", token)
-```
+cl = j.clients.gitea.get()
 
-Repositories:
-```python
-data = {}
-data["name"] = "yves_repo"
-data["description"] = "cool"
-data["auto_init"] = False
+print(cl.orgs_currentuser_list())
 
-g  = j.clients.gitea.get_client("https://docs.grid.tf/api/v1", token)
 
-r = g.user.createCurrentUserRepo(data)
-```
+names=[item for item in cl.orgs_currentuser_list().keys()]
+names.sort()
 
-Labels:
-```python
-label_data={}
+for name in names:
+    org = cl.org_get(name)
 
-label_data["color"] = "#b60205"
+    #CAREFULL WILL GO OVER ALL MILESTONES & LABELS and add them
+    org.labels_milestones_add(remove_old=False)
 
-label_data["name"] = "priority_critical"
+    print (org.repos_list())
 
-label = g.repos.issueCreateLabel(label_data, "yves_repo", "yves@vreegoebezig.be")
-```
+    repoName=[item for item in org.repos_list().keys()][0] #first reponame
 
-Milestones:
-```python
-milestone_data={}
+    repo = org.repo_get(repoName)
 
-milestone_data["description"] = "test milestone"
+    # repo.labels_add()
+    # repo.milestones_add(remove_old=False)
 
-milestone_data["title"] = "RC0"
+    print(repo.issues_get())
 
-milestone_data["title"] = "RC1"
-
-milestone_data["due_on"] = "2017-12-15T15:22:43.188Z"
-
-m = g.repos.issueCreateMilestone(milestone_data, "yves_repo", "yves@vreegoebezig.be")
 ```

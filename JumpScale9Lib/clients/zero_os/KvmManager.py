@@ -1,17 +1,5 @@
-import redis
-import uuid
-import json
-import textwrap
-import shlex
-import base64
-import signal
-import socket
-import logging
-import time
-import sys
-from js9 import j
+from . import typchk
 
-from .Client import *
 
 class KvmManager:
     _iotune_dict = {
@@ -67,7 +55,7 @@ class KvmManager:
             typchk.Missing()
         )
     }
-    _create_chk = j.tools.typechecker.get({
+    _create_chk = typchk.Checker({
         'name': str,
         'media': typchk.Or([_media_dict], typchk.IsNone()),
         'flist': typchk.Or(str, typchk.IsNone()),
@@ -88,7 +76,7 @@ class KvmManager:
         )
     })
 
-    _migrate_network_chk = j.tools.typechecker.get({
+    _migrate_network_chk = typchk.Checker({
         'nics': [{
             'type': typchk.Enum('default', 'bridge', 'vxlan', 'vlan'),
             'id': typchk.Or(str, typchk.Missing()),
@@ -101,23 +89,23 @@ class KvmManager:
         'uuid': str
     })
 
-    _domain_action_chk = j.tools.typechecker.get({
+    _domain_action_chk = typchk.Checker({
         'uuid': str,
     })
 
-    _man_disk_action_chk = j.tools.typechecker.get({
+    _man_disk_action_chk = typchk.Checker({
         'uuid': str,
         'media': _media_dict,
     })
 
-    _man_nic_action_chk = j.tools.typechecker.get({
+    _man_nic_action_chk = typchk.Checker({
         'uuid': str,
         'type': typchk.Enum('default', 'bridge', 'vxlan', 'vlan'),
         'id': typchk.Or(str, typchk.IsNone()),
         'hwaddr': typchk.Or(str, typchk.IsNone()),
     })
 
-    _migrate_action_chk = j.tools.typechecker.get({
+    _migrate_action_chk = typchk.Checker({
         'uuid': str,
         'desturi': str,
     })
@@ -129,7 +117,7 @@ class KvmManager:
 
     _limit_disk_io_dict.update(_iotune_dict)
 
-    _limit_disk_io_action_chk = j.tools.typechecker.get(_limit_disk_io_dict)
+    _limit_disk_io_action_chk = typchk.Checker(_limit_disk_io_dict)
 
     def __init__(self, client):
         self._client = client
@@ -470,4 +458,3 @@ class KvmManager:
         :return:
         """
         return self._client.json('kvm.list', {})
-

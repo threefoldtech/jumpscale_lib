@@ -1,6 +1,6 @@
 from js9 import j
 
-fixed_toml = """
+TEMPLATE_PERSON_TOML = """
 login =""
 first_name = ""
 last_name = ""
@@ -12,6 +12,7 @@ title = []
 description_internal =""
 description_public_friendly =""
 description_public_formal =""
+experience = ""
 hobbies = ""
 pub_ssh_key= ""
 skype = ""
@@ -23,13 +24,15 @@ email = []
 github = ""
 linkedin = ""
 links = []
+rank = 0
+core = false
 """
 
 
-class TODO:
-    def __init__(self, team, path, todo):
+class Todo:
+    def __init__(self, department, path, todo):
         path = path.replace("//", "/")
-        self.team = team
+        self.department = department
         self.path = path
         self.todo = todo
 
@@ -38,112 +41,126 @@ class TODO:
         return j.sal.fs.getBaseName(self.path)
 
     def __repr__(self):
-        return "Todo %s:%s:%s:%s   " % (self.team.company, self.team.name, self.path, self.todo)
+        return "Todo %s:%s:%s   " % (self.department.name, self.path, self.todo)
 
     __str__ = __repr__
 
 
 class Person:
-    def __init__(self, team, name, path):
-        self.team = team
+    def __init__(self, department, name, path):
+        self.department = department
         self.path = path
         self.name = name
         self.todo = []
-        self.path_toml = "%s/profile.toml"%(self.path)
-        
-        
-    def infotosort_add(self,path):
-        """
-        to be sorted later, and to make sure we don't loose the data
-        """
-        dpath="%s/tosort/"%(self.path)
-        j.sal.fs.createDir(dpath)
-        dest="%s/%s"% (dpath,j.sal.fs.getBaseName(path))
-        j.sal.fs.move(path,dest)
+        self.load()
 
-    def info_add(self,path):
-        """
-        read info try to get useful pieces out of it and add to profile
-        """
-        
+    def load(self):
+        self.images_fix()
+        self.toml_fix()
 
-    def fix(self):
-        """
-        walk over data of person and fix
-        """
-        if j.sal.fs.exists(self.path_toml):
+    def add_to_do(self, path, todo):
+        todo = todo.replace("_", "-")
+        td = Todo(self, path, todo)
+        self.todo.append(td)
 
+    def images_fix(self):
+        # make sure we have an unprocessed.jpg
+        images = j.sal.fs.listFilesInDir(self.path, filter="*.jpg")
+        unprocessed_images = [
+            item for item in images if j.sal.fs.getBaseName(item) == "unprocessed.jpg"]
+        if images and not unprocessed_images:
+            # did not have an unprocessed one need to copy to unprocessed name
+            image = images[0]
+            j.sal.fs.renameFile(image, "%s/unprocessed.jpg" %
+                                (j.sal.fs.getDirName(image)))
+        elif not unprocessed_images:
+            self.add_to_do(
+                self.path, "did not find unprocessed picture, please add")
+
+    def toml_fix(self):
+
+        print("PROCESS FIX:%s" % self)
+
+        def process(newtoml, name):
+            toml_path = "%s/%s.toml" % (self.path, name)
             if j.sal.fs.exists(toml_path):
                 try:
-                    personal_toml = j.data.serializer.toml.load(toml_path)
+                    tomlupdate = j.data.serializer.toml.load(toml_path)
                 except Exception:
-                    team_obj.todo_add(self.path, "toml file is corrupt:%s" % toml_path)
+                    self.department.add_to_do(
+                        self.path, "toml file is corrupt:%s" % toml_path)
                     return newtoml
 
-                for key, val in personal_toml.items():
-                    if key not in newtoml:
-                        if key == "experience":
-                            try:
-                                newtoml = j.data.serializer.toml.set_value(fixed_toml, "description_public_formal", val)
-                            except Exception as e:
-                                team_obj.todo_add(self.path, "type error:%s %s (%s)" % (toml_path, key, e))
-                        elif key not in ["escalation", "action"]:
-                            team_obj.todo_add(self.path,
-                                               "found unrecognized key:%s in toml file:%s" % (key, toml_path))
-                    else:
-                        try:
-                            newtoml = j.data.serializer.toml.set_value(fixed_toml, key, val)
-                        except Exception as e:
-                            team_obj.todo_add(self.path, "type error:%s %s (%s)" % (toml_path, key, e))
+                # print(newtoml)
+
+                newtoml, errors = j.data.serializer.toml.merge(newtoml, tomlupdate, keys_replace={
+                                                               'name': 'first_name'}, add_non_exist=False, die=False, errors=[])
+
+                for error in errors:
+                    self.department.add_to_do(
+                        self.path, "could not find key:'%s', value to add was: '%s' in template" % (error[0], error[1]))
+
             return newtoml
 
+        # just remove old stuff
         j.sal.fs.remove("%s/fixed.yaml" % self.path)
         j.sal.fs.remove("%s/fixed.toml" % self.path)
 
-        final_toml_path = "%s/fixed_donotchange.toml" % self.path
-        if j.sal.fs.exists(final_toml_path):
-            new_toml = j.data.serializer.toml.load(final_toml_path)
-        else:
-            new_toml = j.data.serializer.toml.loads(fixed_toml)
+        new_toml = j.data.serializer.toml.loads(
+            TEMPLATE_PERSON_TOML)  # load the template
 
-        # fix older toml files
-        new_toml.setdefault("companies", [])
-
+        new_toml = process(new_toml, "fixed_donotchange")
         new_toml = process(new_toml, "profile")
         new_toml = process(new_toml, "person")
 
-        department = "%s:%s" % (team_obj.company, team_obj.name)
-        if department not in new_toml["departments"]:
-            new_toml["departments"].append(department)
-
-        if team_obj.company not in new_toml["companies"]:
-            new_toml["companies"].append(team_obj.company)
+        # add department name to the departments in the new toml file
+        if self.department.name not in new_toml["departments"]:
+            new_toml["departments"].append(self.department.name)
 
         for item in ["login", "first_name", "last_name", "description_public_formal", "description_public_friendly",
                      "pub_ssh_key", "telegram", "reports_into", "locations", "departments", "title", "mobile", "email"]:
             if not new_toml[item]:
-                team_obj.todo_add(self.path, "empty value for:%s" % item)
+                self.department.add_to_do(
+                    self.path, "empty value for:%s" % item)
 
+        # make lower case
         for key in ["locations", "companies", "departments"]:
-            new_toml[key] = [toml_item.lower().strip() for toml_item in new_toml[key]]
+            new_toml[key] = [toml_item.lower().strip()
+                             for toml_item in new_toml[key]]
 
         for key in ["login", "first_name", "last_name", "telegram", "skype"]:
             new_toml[key] = new_toml[key].lower().strip()
 
-        j.data.serializer.toml.dump(final_toml_path, new_toml)
+        t = j.data.serializer.toml.fancydumps(new_toml)
+
+        final_toml_path = "%s/person.toml" % self.path
+        j.sal.fs.writeFile(final_toml_path, t)
+
+        for item in ["fixed_donotchange", "profile", "fixed"]:
+            j.sal.fs.remove("%s/%s.toml" % (self.path, item))
+
+    def __repr__(self):
+        return "Person %s:%s:%s" % (self.department.name, self.name, self.path)
+
+    __str__ = __repr__
 
 
-class Team:
-    def __init__(self, company, name, path):
-        self.company = company
+class Department:
+    def __init__(self, name, path):
         self.path = path
         self.name = name
         self.todo = []
         self.persons = []
+        self.load()
 
-    def todo_add(self, path, todo):
+    def load(self):
+        for person_path in j.sal.fs.listDirsInDir(self.path, recursive=False):
+            person_name = j.sal.fs.getBaseName(person_path)
+            self.persons.append(Person(self, person_name, person_path))
+
+    def add_to_do(self, path, todo):
         todo = todo.replace("_", "-")
-        td = TODO(self, path, todo)
+        td = Todo(self, path, todo)
         self.todo.append(td)
 
     @property
@@ -157,7 +174,9 @@ class Team:
 
     @property
     def todo_md(self):
-        md = "# TODO FOR : %s %s\n\n" % (self.company, self.name)
+        if len(self.todo_per_person.items()) == 0:
+            return ""
+        md = "# Todo for department : %s\n\n" % (self.name)
         for person, todos in self.todo_per_person.items():
             md += "## %s\n\n" % person
             for todo in todos:
@@ -166,10 +185,8 @@ class Team:
 
         return md
 
-
-
     def __repr__(self):
-        return "Team %s:%s:%s" % (self.company, self.name, self.path)
+        return "Department %s:%s" % (self.name, self.path)
 
     __str__ = __repr__
 
@@ -177,158 +194,66 @@ class Team:
 class Teammgr:
     def __init__(self):
         self.__jslocation__ = "j.tools.team_manager"
-        self.teams = {}
+        self.departments = {}
 
-    def _add_team(self, path, company, name):
-        key = "%s_%s" % (company, name)
-        if key not in self.teams:
-            self.teams[key] = Team(company, name, path)
-        return self.teams[key]
+    def _add_department(self, path, name):
+        if name not in self.departments:
+            self.departments[name] = Department(name, path)
+        return self.departments[name]
 
-    def process(self, path):
-        team_path = path + "/team"
-        if not j.sal.fs.exists(team_path):
-            raise RuntimeError("Cannot find team path:%s" % team_path)
+    def do(self, path=""):
+        """
+        Path within the directory of the team is expected.
+        Parent or the directory itself should be /team
 
-        for team_name_path in j.sal.fs.listDirsInDir(team_path, recursive=False):
-            team_name = j.sal.fs.getBaseName(team_name_path)
-            for catPath in j.sal.fs.listDirsInDir(team_name_path, recursive=False):
-                cat = j.sal.fs.getBaseName(catPath)
-                team_obj = self._add_team(catPath, team_name, cat)
-                for personPath in j.sal.fs.listDirsInDir(catPath, recursive=False):
-                    images = j.sal.fs.listFilesInDir(personPath, filter="*.jpg")
-                    unprocessed_images = [item for item in images if j.sal.fs.getBaseName(item) == "unprocessed.jpg"]
-                    if images and not unprocessed_images:
-                        # did not have an unprocessed one need to copy to unprocessed name
-                        image = images[0]
-                        j.sal.fs.renameFile(image, "%s/unprocessed.jpg" % (j.sal.fs.getDirName(image)))
-                    elif not unprocessed_images:
-                        team_obj.todo_add(personPath, "did not find unprocessed picture, please add")
+        if path=='' then use current dir 
 
-                    self.fix_toml(team_obj, personPath)
+        to call:
 
-        j.sal.fs.createDir("%s/todo" % path)
-        for key, team in self.teams.items():
-            path1 = "%s/todo/%s_%s.md" % (path, team.company, team.name)
-            j.sal.fs.writeFile(path1, team.todo_md)
+        js9 'j.tools.team_manager.do()'
 
+        """
+        if path == "":
+            path = j.sal.fs.getcwd()
 
+        self.path = path
 
+        path0 = self.path
+        found = ""
 
+        # look up to find the right dir
+        while path0 != "":
+            if j.sal.fs.exists("%s/team" % path0):
+                found = path0
+                break
+            path0 = j.sal.fs.getParent(path0).rstrip().rstrip("/").rstrip()
+        if not found:
+            raise RuntimeError(
+                "could not find /team in one of the parent dir's (or this dir):'%s'" % path)
 
-from js9 import j
-import os
-from PIL import Image
+        self.path = "%s/team" % path0
 
-source = j.sal.fs.getParent(j.sal.fs.getParent(os.path.abspath(__file__)))
-j.tools.team_manager.process(source)
-# TODO Change target with js9 repos config
-target = j.sal.fs.getParent(source) + "/www_threefold2.0/www.threefoldtoken.com/themes/landing/static"
-js_target = '{}/js/data.js'.format(target)
-avatars_target = '{}/avatars'.format(target)
-# Teams to exclude
-excluded_teams = {
-    "gig": ["external"]
-}
+        for department_path in j.sal.fs.listDirsInDir(self.path, recursive=False):
+            department_name = j.sal.fs.getBaseName(department_path)
+            department_obj = self._add_department(
+                department_path, department_name)
 
-# teams to be filtered based on company_id field
-filtered_teams = {
-    "gig": ["varia", "sales_marketing", "operations", "engineering"]
-}
+            self.errors_write(self.path)
 
-# Company id to check for filtered team {1: gig, 2: threefold}
-company_id = 2
+    def errors_write(self, team_path):
+        # write all the todo's
+        errorpath = "%s/todo" % team_path
+        j.sal.fs.removeDirTree(errorpath)
+        j.sal.fs.createDir(errorpath)
+        for key, department in self.departments.items():
+            path1 = "%s/%s.md" % (errorpath, department.name)
+            if department.todo_md != "":
+                j.sal.fs.writeFile(path1, department.todo_md)
 
-
-def process_image(img_path, parent_path):
-    img = Image.open(img_path)
-    if img.height != img.width:
-        side = min((img.width, img.height))
-        img = img.crop((0, 0, side, side))
-
-    side = 252
-    if img.height != side:
-        img = img.resize((side, side))
-    new_processed_image = "{}/processed.jpg".format(parent_path)
-    img.save(new_processed_image)
-    return new_processed_image
+    def test(self):
+        path = j.clients.git.pullGitRepo(
+            "ssh://git@docs.greenitglobe.com:10022/gig/data_team.git")
+        self.load(path=path + "/team")
 
 
-all_files = {}
-for team_name_path in j.sal.fs.listDirsInDir(source+"/team", recursive=False):
-    team_name = j.sal.fs.getBaseName(team_name_path)
-    for department_path in j.sal.fs.listDirsInDir(team_name_path, recursive=False):
-        department = j.sal.fs.getBaseName(department_path)
-        if team_name in excluded_teams and department in excluded_teams[team_name]:
-            continue
-        team_obj = j.tools.team_manager._add_team(department_path, team_name, department)
-        for person_path in j.sal.fs.listDirsInDir(department_path, recursive=False):
-            # Get toml file
-            j.tools.team_manager.fix_toml(team_obj, person_path)
-            toml_file = "{}/fixed_donotchange.toml".format(person_path)
-            if not j.sal.fs.exists(toml_file):
-                continue
-            all_files[person_path] = {
-                'team': team_name,
-                'department': department,
-                'toml': toml_file,
-            }
-
-            # Get processed image
-            unprocessed_image = "{}/unprocessed.jpg".format(person_path)
-            processed_image = "{}/processed.jpg".format(person_path)
-            if j.sal.fs.exists(processed_image):
-                all_files[person_path]['image'] = processed_image
-            elif j.sal.fs.exists(unprocessed_image):
-                all_files[person_path]['image'] = process_image(unprocessed_image, person_path)
-
-sections = []
-for person_path, files in all_files.items():
-    # skip all soft links that their links are already exists
-    if j.sal.fs.isLink(person_path) and j.sal.fs.readLink(person_path) in all_files:
-        continue
-    print("Processing: %s" % person_path)
-
-    person = j.data.serializer.toml.load(files['toml'])
-
-    # exclude team members of filtered teams from different company_id
-    if files["team"] in filtered_teams \
-            and files["department"] in filtered_teams[files['team']] \
-            and company_id not in person.get("company_id"):
-        continue
-
-    first_name = person.get('first_name', '')
-    last_name = person.get('last_name', '')
-    name = "{} {}".format(first_name, last_name)
-    login = person.get('login')
-    description = person.get('description_public_friendly') or \
-                  person.get("description_public_formal") or \
-                  person.get("description_internal")
-    linked_in = person.get('linkedin')
-    telegram = person.get('telegram')
-    emails = person.get('email')
-    hobbies = person.get('hobbies')
-    skype = person.get('skype')
-    links = person.get('links')
-    github = person.get('github')
-    avatar_name = ""
-    if files.get('image'):
-        avatar_name = "{}_{}".format(j.sal.fs.getBaseName(person_path), j.sal.fs.getBaseName(files['image']))
-        j.sal.fs.copyFile(files['image'], "{}/{}".format(avatars_target, avatar_name))
-    sections.append({
-        "name": name,
-        "login": login,
-        "description": description,
-        "linked_in": linked_in,
-        "skype": skype,
-        "github": github,
-        "avatar": avatar_name,
-        "telegram": telegram,
-        "emails": emails,
-        "hobbies": hobbies,
-        "links": links
-    })
-
-# write dict to the javascript file
-data = j.data.serializer.json.dumps(sections)
-j.sal.fs.writeFile(js_target, "var team = {};".format(data))
+# TODO:*2 use as final formal = yaml

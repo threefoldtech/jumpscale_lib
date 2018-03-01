@@ -1,24 +1,12 @@
-import redis
-import uuid
-import json
-import textwrap
-import shlex
-import base64
-import signal
-import socket
-import logging
-import time
-import sys
-from js9 import j
+from . import typchk
 
-from .Client import *
 
 class LogManager:
-    _level_chk = j.tools.typechecker.get({
+    _level_chk = typchk.Checker({
         'level': typchk.Enum("CRITICAL", "ERROR", "WARNING", "NOTICE", "INFO", "DEBUG"),
     })
 
-    _subscribe_chk = j.tools.typechecker.get({
+    _subscribe_chk = typchk.Checker({
         'queue': str,
         'levels': [int],
     })
@@ -76,5 +64,3 @@ class LogManager:
         :return:
         """
         return self._client.json('logger.unsubscribe', {'queue': queue})
-
-

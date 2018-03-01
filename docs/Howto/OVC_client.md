@@ -1,44 +1,24 @@
 # How to use the JumpScale client for OpenvCloud
 
-In order to use the OpenvCloud client you need a JSON Web token (JWT).
+there are 2 ways you can connect to an openvcloud
 
-It is recommended to let the OpenvCloud client generate this JWT for you, by just passing your application ID and secret when instantiating the OpenvCloud client. So you first need an application ID and secret.
+## use itsyou.online (PREFERRED)
 
-You get this application ID and secret by creating an API key on the settings page of your [ItsYou.online](https://itsyou.online) user profile.
+@QUESTION: can this be done by endusers as well?
 
-![](images/iyo_jwt.png)
+only need to fill in:
+- address e.g. se-gen-1.demo.greenitglobe.com
 
-For the below example we will save the application ID and secret in a YAML formated `config.yaml` configuration file structured as follows:
-```yaml
-iyo:
-  appid: FjMckSiqtJK8XABCRNeakTowfxVp
-  secret: gXpM4fPfHiXTb3blaJwmAV0Y72kB
+if your itsyou.online has not been configured yet then it will ask these questions as well.
 
-openvcloud:
-  url: 'https://se-gen-1.demo.greenitglobe.com'
-```
+## use secret api key from portal
 
-From within you code you can then easily read the application ID and secret from the configuration file:
-```python
-config = j.data.serializer.yaml.load("config.yaml")
-applicationId = config["iyo"]["appid"]
-secret = config["iyo"]["secret"]
-url = config["openvcloud"]["url"]
-```
+need to fill in:
+- address e.g. se-gen-1.demo.greenitglobe.com
+- appkey_ which can be found in your portal page under settings is e.g. 5db1ed6b-1111-407c-8f62-11113566a22c
 
-With this connecting is simple:
-```python
-client = j.clients.openvcloud.get(applicationId, secret, url)
-```
+## further info 
 
-Alternatively, you can also connect to an OpenvCloud environment with a legacy username and password. This is highly discouraged though. You should only choose this option in a strictly private deployment where ItsYou.online is unavailable:
-```python
-login = "<your legacy username>"
-password = "<your legacy password>"
-client = j.clients.getLegacy(url, login, password)
-```
-
-Next we discuss:
 - [Cloud API](#cloud-api)
 - [Accounts](#accounts)
 - [Cloud Spaces](#cloud-spaces)

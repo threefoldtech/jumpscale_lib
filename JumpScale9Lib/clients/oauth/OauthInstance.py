@@ -9,6 +9,49 @@ import random
 
 from js9 import j
 
+JSConfigClient = j.tools.configmanager.base_class_config
+
+TEMPLATE = """
+addr = ""
+accesstokenaddr = ""
+client_id = ""
+secret_ = ""
+scope = ""
+redirect_url = ""
+user_info_url = ""
+logout_url = ""
+client_instance = "github"
+"""
+
+class OauthClient(JSConfigClient):
+    def __init__(self, instance, data={}, parent=None):
+        JSConfigClient.__init__(self, instance=instance,
+                                data=data, parent=parent, template=TEMPLATE)
+        c = self.config.data
+        self.addr = c['addr']
+        self.accesstokenaddr = c['accesstokenaddr']
+        self.client_id = c['client_id']
+        self.secret = c['secret_']
+        self.scope = c['scope']
+        self.redirect_url = c['redirect_url']
+        self.user_info_url = c['user_info_url']
+        self.logout_url = c['logout_url']
+        self.client_instance = c['client_instance']
+        self._client = None
+
+    @property
+    def client(self):
+        if self._client:
+            return self._client
+
+        if self.client_instance in ('itsyouonline', 'itsyou.online'):
+            self._client = ItsYouOnline(self.addr, self.accesstokenaddr, self.client_id, self.secret, self.scope,
+                                self.redirect_url, self.user_info_url, self.logout_url, self.instance)
+        else:
+            self._client = OauthInstance(self.addr, self.accesstokenaddr, self.client_id, self.secret, self.scope,
+                                self.redirect_url, self.user_info_url, self.logout_url, self.instance)
+        
+        return self._client
 
 class AuthError(Exception):
     pass
@@ -24,21 +67,13 @@ class UserInfo(object):
 
 class OauthInstance:
 
-    def __init__(self, addr, accesstokenaddr, id, secret, scope, redirect_url, user_info_url, logout_url, instance):
+    def __init__(self, addr, accesstokenaddr, client_id, secret, scope, redirect_url, user_info_url, logout_url, instance):
         self.logger = j.logger.get('j.clients.oauth')
         if not addr:
-            hrd = j.application.getAppInstanceHRD('oauth_client', instance)
-            self.addr = hrd.get('instance.oauth.client.url')
-            self.accesstokenaddress = hrd.get('instance.oauth.client.url2')
-            self.id = hrd.get('instance.oauth.client.id')
-            self.scope = hrd.get('instance.oauth.client.scope')
-            self.redirect_url = hrd.get('instance.oauth.client.redirect_url')
-            self.secret = hrd.get('instance.oauth.client.secret')
-            self.user_info_url = hrd.get('instance.oauth.client.user_info_url')
-            self.logout_url = hrd.get('instance.oauth.client.logout_url')
+            raise RuntimeError("Failed to get oauth instance, no address provided")
         else:
             self.addr = addr
-            self.id = id
+            self.client_id = client_id
             self.scope = scope
             self.redirect_url = redirect_url
             self.accesstokenaddress = accesstokenaddr
@@ -50,14 +85,14 @@ class OauthInstance:
 
     @property
     def url(self):
-        params = {'client_id': self.id, 'redirect_uri': self.redirect_url,
+        params = {'client_id': self.client_id, 'redirect_uri': self.redirect_url,
                   'state': self.state, 'response_type': 'code'}
         if self.scope:
             params.update({'scope': self.scope})
         return '%s?%s' % (self.addr, urllib.parse.urlencode(params))
 
     def getAccessToken(self, code, state):
-        payload = {'code': code, 'client_id': self.id, 'client_secret': self.secret,
+        payload = {'code': code, 'client_id': self.client_id, 'client_secret': self.secret,
                    'redirect_uri': self.redirect_url, 'grant_type': 'authorization_code',
                    'state': state}
         result = requests.post(self.accesstokenaddress, data=payload, headers={
@@ -83,38 +118,20 @@ class OauthInstance:
 
 class ItsYouOnline(OauthInstance):
 
-    def getAccessToken(self, code, state):
-        import jose
-        import jose.jwt
-        scope = self.scope + ',offline_access'
-        organization = j.portal.tools.server.active.oauth_cfg['client_id']
-        payload = {'code': code, 'client_id': self.id, 'client_secret': self.secret,
-                   'redirect_uri': self.redirect_url, 'grant_type': '', 'scope': scope,
-                   'response_type': 'id_token', 'state': state, 'aud': organization}
-        result = requests.post(self.accesstokenaddress, data=payload, headers={
-            'Accept': 'application/json'})
-
-        if not result.ok:
-            msg = result.text
-            self.logger.error(msg)
-            raise AuthError(msg)
-        token = result.json()
-        # convert jwt expire time to oauth2 token expire time
-        jwtdata = jose.jwt.get_unverified_claims(token['access_token'])
-        token['expires_in'] = jwtdata['exp'] - time.time()
-        return token
+    def getAccessToken(self):
+        return j.clients.itsyouonline.jwt_get(self.client_id, self.secret)
 
     def getUserInfo(self, accesstoken):
         import jose
         import jose.jwt
-        jwt = accesstoken['access_token']
+        jwt = accesstoken
         headers = {'Authorization': 'bearer %s' % jwt}
 
         jwtdata = jose.jwt.get_unverified_claims(jwt)
         scopes = jwtdata['scope']
         requestedscopes = set(self.scope.split(','))
         if set(jwtdata['scope']).intersection(requestedscopes) != requestedscopes:
-            msg = 'Failed to get the requested scope for %s' % self.client.id
+            msg = 'Failed to get the requested scope for %s' % self.client_id
             raise AuthError(msg)
 
         username = jwtdata['username']

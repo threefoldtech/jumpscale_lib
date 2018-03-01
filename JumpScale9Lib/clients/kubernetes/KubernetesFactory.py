@@ -1,35 +1,42 @@
 from js9 import j
+from kubernetes import client, config
+from .Kubernetes import KubernetesMaster
 
-# pip install kube
-
-
-class KubernetesFactory:
+JSConfigBaseFactory = j.tools.configmanager.base_class_configs
+class KubernetesFactory(JSConfigBaseFactory):
+    """
+    kubernetes client factory each instance can relate to either a config file or a context or both
+    """
 
     def __init__(self):
         self.__jslocation__ = "j.clients.kubernetes"
+        JSConfigBaseFactory.__init__(self, KubernetesMaster)
 
-    def get(self, name, ...):
-        return KubernetesCluster()
-
-
-class KubernetesCluster():
-
-    def __init__(self, ...):
-        pass
-
-    def ubuntu1604_install(self, sshkey=None):
+    def create_config(self, config, path=None):
         """
-        deploy base ubuntu container on kubernetes host
+        create config file.
 
-        use specified sshkey is name of key !
-
-        if empty use the configured in jumpscale
-
-        @return prefab connection !
-
+        @param config ,, dict the configurations in dict format
+        @param path ,, str full path to location the file should be saved will default to HOMEDIR/.kube/config
         """
-        if keyname is None:
-            keyname = j.core.state.configMe["ssh"]["sshkeyname"]
+        if not path:
+            directory = '%s/.kube/' % j.dirs.HOMEDIR
+            j.sal.fs.createDir(directory)
+            path = j.sal.fs.joinPaths(directory, 'config')
+        data = j.data.serializer.yaml.dumps(config)
+        j.sal.fs.writeFile(path, data)
+        j.logger.logging.info('file saved at %s' % path)
 
-    def deploy():
-        raise NotImplemented("Not implemented")
+    def test(self):
+        """
+        TODO WIP
+        """
+
+        kub = self.get()
+        kub.list_clusters()
+        kub.list_deployments()
+        kub.list_nodes()
+        kub.list_pods()
+        kub.list_services()
+        prefab = kub.deploy_ubuntu1604('tester')
+        prefab.core.run('ls')

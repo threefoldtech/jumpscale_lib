@@ -80,13 +80,18 @@ class DocGenerator:
         return self.gitRepos[path]
 
     def install(self, reset=False):
+        """
+        js9 'j.tools.docgenerator.install()'
+        """
         prefab = j.tools.prefab.local
         if prefab.core.doneGet("docgenerator:installed") == False or reset:
             prefab.runtimes.nodejs.install()
             prefab.runtimes.nodejs.phantomjs()
+            prefab.runtimes.golang.install()
+            
             if "darwin" in str(j.core.platformtype.myplatform):
-                prefab.core.run("brew install graphviz")
-                prefab.core.run("brew install hugo")
+                prefab.system.package.install('graphviz')
+                prefab.system.package.install('hugo')
                 # prefab.core.run("brew install caddy")
             elif "ubuntu" in str(j.core.platformtype.myplatform):
                 prefab.system.package.install('graphviz')
@@ -94,20 +99,18 @@ class DocGenerator:
                 # prefab.core.file_download('https://github.com/gohugoio/hugo/releases/download/v0.26/hugo_0.26_Linux-64bit.tar.gz')
                 # prefab.core.file_expand('$TMPDIR/hugo_0.26_Linux-64bit.tar.gz')
                 # prefab.core.file_copy('$TMPDIR/hugo_0.26_Linux-64bit/hugo', '/usr/bin/')
-                # prefab.core.run("go get -v github.com/gohugoio/hugo")
-
-                prefab.core.run("go get -u -v github.com/gohugoio/hugo")
-
-                #IF FROM SOURCE
                 # go get github.com/kardianos/govendor
                 # govendor get github.com/gohugoio/hugo
                 # go install github.com/gohugoio/hugo
 
-            prefab.runtimes.golang.install()
+                prefab.core.run("go get -u -v github.com/gohugoio/hugo")
+
             prefab.web.caddy.build()
             prefab.core.run("npm install -g mermaid", profile=True)
             prefab.web.caddy.configure()
             prefab.core.doneSet("docgenerator:installed")
+
+            prefab.runtimes.pip.install("dash,dash-renderer,dash-html-components,dash-core-components,plotly")
 
     def startWebserver(self):
         """
@@ -124,7 +127,7 @@ class DocGenerator:
 
         C2 = """
         $ws/$name/ {
-            root /optvar/docgenerator/$name/public
+            root $vardir/docgenerator/$name/public
             #log ../access.log
         }
 
@@ -134,12 +137,14 @@ class DocGenerator:
             out2 += C3
         out2 = out2.replace("$outpath", self.outpath)
         out2 = out2.replace("$ws", self.ws)
+        out2 = out2.replace("$vardir", j.dirs.VARDIR)
         j.sal.fs.writeFile(filename=dest, contents=out2, append=False)
         return dest
 
     def init(self):
         if not self._initOK:
             self.install()
+            j.clients.redis.start4core()
             j.sal.fs.remove(self._macroCodepath)
             # load the default macro's
             self.loadMacros("https://github.com/Jumpscale/docgenerator/tree/master/macros")
@@ -215,7 +220,7 @@ class DocGenerator:
 
     def generateJSDoc(self, start=True):
         # self.load(pathOrUrl="https://github.com/Jumpscale/portal9")
-        self.load(pathOrUrl="https://github.com/Jumpscale/ays9/tree/master/docs")
+        # self.load(pathOrUrl="https://github.com/Jumpscale/ays9/tree/master/docs")
         self.load(pathOrUrl="https://github.com/Jumpscale/core9/")
         self.load(pathOrUrl="https://github.com/Jumpscale/lib9")
         self.load(pathOrUrl="https://github.com/Jumpscale/prefab9")
