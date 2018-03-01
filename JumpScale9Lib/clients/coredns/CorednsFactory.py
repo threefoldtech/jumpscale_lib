@@ -18,13 +18,12 @@ class CorednsFactory(JSConfigBase):
         j.clients.redis_config.get_by_params(instance='coredns', ipaddr='localhost', port=6380, password='', unixsocket='', ardb_patch=False)
 
         """
-        j.clients.redis_config.get_by_params(instance=redisname, ipaddr='195.134.212.32', port=6380, password='tf007gig', unixsocket='', ardb_patch=False)
         data = {}
         data["redisconfigname"] = redisname
         return self.get(instance=instance, data=data)
 
-    def test(self):
-        redis = j.clients.redis_config.get_by_params(instance="coredns", port=6380)
+    def test(self, instance="coredns"):
+        redis = j.clients.redis_config.get(instance=instance)
         cl = self.get_by_params(redis.instance)
         domain = 'clienttest.a.grid.tf.'
         ip = "195.134.212.32"
