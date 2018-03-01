@@ -264,7 +264,7 @@ class Node(JSBASE):
                 self.client.testConnectionAttempts = 0
                 state = self.client.ping()
                 break
-            except (RuntimeError, ConnectionError, redis.TimeoutError, TimeoutError) as error:
+            except (RuntimeError, ConnectionError, redis.ConnectionError, redis.TimeoutError, TimeoutError) as error:
                 err = error
                 time.sleep(1)
         else:
