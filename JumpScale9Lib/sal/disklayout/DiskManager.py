@@ -3,14 +3,17 @@ import JumpScale9Lib.sal.disklayout.mount as mount
 import JumpScale9Lib.sal.disklayout.lsblk as lsblk
 import JumpScale9Lib.sal.disklayout.disks as disks
 
+JSBASE = j.application.jsbase_get_class()
 
-class DiskManager:
+
+class DiskManager(JSBASE):
     """
      helps you to gather a lot of information about the disks and partitions.
     """
 
     def __init__(self):
         self.__jslocation__ = "j.sal.disklayout"
+        JSBASE.__init__(self)
         self.disks = []
         self._executor = j.tools.executorLocal
         # self.cache = j.data.cache.get(
@@ -101,7 +104,7 @@ class DiskManager:
                     with mount.Mount(partition.name, options='ro', executor=self._executor) as mnt:
                         config = self._loadconfig(mnt.path)
                 partition.config = config
-                print("found partition: %s:%s" % (disk, partition))
+                self.logger.debug("found partition: %s:%s" % (disk, partition))
 
         def findDisk(devices, name):
 

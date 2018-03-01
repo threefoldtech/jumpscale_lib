@@ -4,8 +4,10 @@ import tarfile
 import time
 from io import BytesIO
 
+JSBASE = j.application.jsbase_get_class()
 
-class Container:
+
+class Container(JSBASE):
     """Docker Container"""
 
     def __init__(self, obj, client):
@@ -18,7 +20,7 @@ class Container:
         """
 
         self.client = client
-        self.logger = j.logger.get('docker_container')
+        JSBASE.__init__(self)
 
         self.obj=obj
         self.name = obj.name
@@ -157,13 +159,13 @@ class Container:
         if sshpubkey != "" and sshpubkey is not None:
             key = sshpubkey
         else:
-            if not j.clients.ssh.ssh_agent_available():
-                j.clients.ssh.start_ssh_agent()
+            if not j.clients.sshkey.sshagent_available():
+                j.clients.sshkey.sshagent_start()
 
             if keyname != "" and keyname is not None:
-                key = j.clients.ssh.SSHKeyGetFromAgentPub(keyname)
+                key = j.clients.ssh.sshkey_pub_get(keyname)
             else:
-                key = j.clients.ssh.SSHKeyGetFromAgentPub("docker_default", die=False)
+                key = j.clients.ssh.sshkey_pub_get("docker_default", die=False)
                 if key is None:
                     dir = j.tools.path.get('%s/.ssh' % home)
                     if dir.listdir("docker_default.pub") == []:

@@ -7,15 +7,17 @@ import time
 import uuid
 
 import aioredis
+from js9 import j
 
-logger = logging.getLogger('g8core')
+JSBASE = j.application.jsbase_get_class()
 
 
-class Response:
+class Response(JSBASE):
     def __init__(self, client, id):
         self._client = client
         self._id = id
         self._queue = 'result:{}'.format(id)
+        JSBASE.__init__(self)
 
     async def exists(self):
         r = self._client._redis
@@ -36,12 +38,12 @@ class Response:
             v = await r.brpoplpush(self._queue, self._queue, min(maxwait, 10))
             if v is not None:
                 return json.loads(v.decode())
-            logger.debug('%s still waiting (%ss)', self._id, int(time.time() - start))
+            self.logger.debug('%s still waiting (%ss)', self._id, int(time.time() - start))
             maxwait -= 10
         raise TimeoutError()
 
 
-class Pubsub:
+class Pubsub(JSBASE):
     def __init__(self, loop, host, port=6379, password="", db=0, ctx=None, timeout=None, testConnectionAttempts=3, callback=None):
 
         socket_timeout = (timeout + 5) if timeout else 15
@@ -69,6 +71,7 @@ class Pubsub:
         self.callback = callback or default_callback
         if not callable(self.callback):
             raise Exception('callback must be callable')
+        JSBASE.__init__(self)
 
     async def get(self):
         if self._redis is not None:
@@ -119,7 +122,7 @@ class Pubsub:
         await self._redis.rpush('core:default', json.dumps(payload))
         if await self._redis.brpoplpush(flag, flag, 10) is None:
             raise TimeoutError('failed to queue job {}'.format(id))
-        logger.debug('%s >> g8core.%s(%s)', id, command, ', '.join(("%s=%s" % (k, v) for k, v in arguments.items())))
+        self.logger.debug('%s >> g8core.%s(%s)', id, command, ', '.join(("%s=%s" % (k, v) for k, v in arguments.items())))
 
         return Response(self, id)
 

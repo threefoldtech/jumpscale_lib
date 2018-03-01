@@ -1,5 +1,9 @@
 from requests.exceptions import HTTPError
 from .Log import Logs
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
+
 
 def _extract_error(resp):
     if isinstance(resp, HTTPError):
@@ -9,8 +13,9 @@ def _extract_error(resp):
         return resp.response.text
     raise resp
     
-class Jobs:
+class Jobs(JSBASE):
     def __init__(self, step=None, repository=None):
+        JSBASE.__init__(self)
         self._step = step
         if step:
             self._repository = step._run._repository
@@ -70,8 +75,9 @@ class Jobs:
                 return job
         raise ValueError("Could not find job with key {}".format(key))
 
-class Job:
+class Job(JSBASE):
     def __init__(self, step, model):
+        JSBASE.__init__(self)
         self._step = step
         self.model = model
         self.logs = Logs(self)

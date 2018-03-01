@@ -14,8 +14,10 @@ LOCKREMOVED = 2
 NOLOCK = 3
 LOCKEXIST = 4
 
+JSBASE = j.application.jsbase_get_class()
 
-class LibvirtUtil:
+
+class LibvirtUtil(JSBASE):
 
     def __init__(self, host='localhost'):
         self._host = host
@@ -25,6 +27,7 @@ class LibvirtUtil:
         self.templatepath = '/mnt/vmstor/kvm/images'
         self.env = Environment(loader=FileSystemLoader(
             j.sal.fs.joinPaths(j.sal.fs.getParent(__file__), 'templates')))
+        JSBASE.__init__(self)
 
     def open(self):
         uri = None
@@ -230,7 +233,7 @@ class LibvirtUtil:
             is_root_volume = self._isRootVolume(
                 domain, snapshotfile['file'].path)
             if not is_root_volume:
-                print('Blockcommit from %s to %s' % (snapshotfile[
+                self.logger.debug('Blockcommit from %s to %s' % (snapshotfile[
                       'file'].path, snapshotfile['file'].backing_file_path))
                 result = domain.blockCommit(snapshotfile['name'], snapshotfile[
                                             'file'].backing_file_path, snapshotfile['file'].path)
@@ -243,7 +246,7 @@ class LibvirtUtil:
                 todelete.append(snapshotfile['file'].backing_file_path)
                 if not new_base:
                     continue
-                print('Blockrebase from %s' % new_base)
+                    self.logger.debug('Blockrebase from %s' % new_base)
                 flags = libvirt.VIR_DOMAIN_BLOCK_REBASE_COPY | libvirt.VIR_DOMAIN_BLOCK_REBASE_REUSE_EXT | libvirt.VIR_DOMAIN_BLOCK_REBASE_SHALLOW
                 result = domain.blockRebase(
                     snapshotfile['name'], new_base, flags)
@@ -309,7 +312,7 @@ class LibvirtUtil:
 
     def _block_job_info(self, domain, path):
         status = domain.blockJobInfo(path, 0)
-        print(status)
+        self.logger.debug(status)
         try:
             cur = status.get('cur', 0)
             end = status.get('end', 0)

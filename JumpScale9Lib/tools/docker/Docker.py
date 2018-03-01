@@ -7,14 +7,15 @@ import docker
 import time
 from urllib import parse
 import copy
+JSBASE = j.application.jsbase_get_class()
 
 
-class Docker:
+class Docker(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.docker"
         self.__imports__ = "docker"
-        self.logger = j.logger.get('j.sal.docker')
+        JSBASE.__init__(self)
         self._basepath = "/storage/docker"
         self._prefix = ""
         self._containers = {}

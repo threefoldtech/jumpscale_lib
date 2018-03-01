@@ -1,13 +1,16 @@
 
 
 from base import BaseService, BaseServiceSection
+from js9 import j
+JSBASE = j.application.jsbase_get_class()
 
 
-class NetworkError(Exception):
-    pass
+class NetworkError(Exception, JSBASE):
+    def __init__(self):
+        JSBASE.__init__(self)
 
 
-class Interface(BaseServiceSection):
+class Interface(BaseServiceSection, JSBASE):
     EXPOSED_FIELDS = [
         'ifname',
         'type',
@@ -34,6 +37,9 @@ class Interface(BaseServiceSection):
         'broadcast'
     ]
 
+    def __init__(self):
+        JSBASE.__init__(self)
+
     def __str__(self):
         return '%s(ifname=%s)' % (self.section.name, self.ifname)
 
@@ -41,11 +47,12 @@ class Interface(BaseServiceSection):
         return str(self)
 
 
-class Network(BaseService):
+class Network(BaseService, JSBASE):
     PACKAGE = 'network'
 
     def __init__(self, wrt=None):
         super(Network, self).__init__(wrt)
+        JSBASE.__init__(self)
         self._nics = None
 
     @property

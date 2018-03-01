@@ -1,7 +1,11 @@
-class BaseKVMComponent:
+from js9 import j
+JSBASE = j.application.jsbase_get_class()
+
+class BaseKVMComponent(JSBASE):
 
     def __init__(self, controller):
         self.controller = controller
+        JSBASE.__init__(self)
 
     @property
     def is_created(self):

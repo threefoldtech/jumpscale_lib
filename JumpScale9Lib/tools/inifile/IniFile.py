@@ -9,11 +9,14 @@ except BaseException:
 # TODO: UGLY, validation should not happen on object (file) where you read
 # from but on file where you populate values (kds)
 
+JSBASE = j.application.jsbase_get_class()
 
-class InifileTool:
+
+class InifileTool(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.tools.inifile"
+        JSBASE.__init__(self)
 
     @staticmethod
     def open(filename, createIfNonExisting=True):
@@ -51,7 +54,7 @@ class InifileTool:
         return IniFile(filename, create=True)
 
 
-class IniFile:
+class IniFile(JSBASE):
     """
     Use with care:
     - addParam and setParam are 'auto-write'
@@ -76,7 +79,7 @@ class IniFile:
             @param removeWhenDereferenced: Whether or not to remove the file when this object is dereferenced
             @type removeWhenDereferenced:  bool
         """
-        self.logger = j.logger.get("j.tools.inifile")
+        JSBASE.__init__(self)
         self.__configParser = ConfigParser()
         self.__removeWhenDereferenced = removeWhenDereferenced
         if isinstance(iniFile, str):  # iniFile is a filepath
@@ -112,7 +115,7 @@ class IniFile:
                 fp = self.__file
             return self.__configParser.readfp(fp)
         except Exception as err:
-            print(err)
+            self.logger.error(err)
             if fp and not fp.closed:
                 fp.close()
             raise j.exceptions.RuntimeError("Failed to read the inifile \nERROR: %s" % (str(err)))

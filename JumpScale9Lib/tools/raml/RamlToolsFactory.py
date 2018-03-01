@@ -7,8 +7,10 @@ from js9 import j
 from .SwaggerSpec import *
 from .RamlTools import RamlTools
 
+JSBASE = j.application.jsbase_get_class()
 
-class RamlToolsFactory:
+
+class RamlToolsFactory(JSBASE):
 
     """
     server which generates & serves raml over gevent
@@ -17,7 +19,7 @@ class RamlToolsFactory:
     def __init__(self):
         self.__jslocation__ = "j.tools.raml"
         self._prefab = j.tools.prefab.local
-        self.logger = j.logger.get('j.tools.raml')
+        JSBASE.__init__(self)
 
     def _check(self):
         rc, self._goramlpath, err = j.sal.process.execute("which go-raml")
@@ -100,7 +102,7 @@ class RamlToolsFactory:
             src = "%s/baseapp/" % self._path
             j.sal.fs.copyDirTree(src, path, keepsymlinks=False,
                                  overwriteFiles=False, rsync=True, rsyncdelete=False)
-            print("now edit main.raml in api_spec director, and run 'js9_raml generate_pyserver or other")
+            self.logger.debug("now edit main.raml in api_spec director, and run 'js9_raml generate_pyserver or other")
             return RamlTools(path)
 
         return RamlTools(path)

@@ -1,15 +1,15 @@
 from js9 import j
 from collections import OrderedDict
 
+JSBASE = j.application.jsbase_get_class()
 
-class ModelBase3():
+
+class ModelBase3(JSBASE):
 
     def __init__(self, key="", new=False, collection=None):
 
         self._propnames = []
         self.collection = collection
-        self.logger = collection.logger
-
         self._key = ""
 
         self.dbobj = None
@@ -39,6 +39,7 @@ class ModelBase3():
         else:
             raise j.exceptions.Input(message="key cannot be empty when no new obj is asked for.",
                                      level=1, source="", tags="", msgpub="")
+        JSBASE.__init__(self)
 
     @property
     def key(self):

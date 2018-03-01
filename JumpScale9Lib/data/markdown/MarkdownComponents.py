@@ -1,11 +1,49 @@
 from js9 import j
+JSBASE = j.application.jsbase_get_class()
 
-class MDTable:
+
+class Object():
+    def __init__(self):
+        pass
+
+
+    def __str__(self):
+        out=""
+        for key,val in self.__dict__.items():
+            out+="%s:%s "%(key,val)
+        out=out.strip()
+        return out
+
+    __repr__ = __str__
+
+
+class MDTable(JSBASE):
 
     def __init__(self):
         self.header = []
         self.rows = []
         self.type = "table"
+        JSBASE.__init__(self)
+
+    def rows_as_objects(self):
+        nrcols=len(self.header)
+        res=[]
+        for row in self.rows:
+            oo=Object()
+            for x in range(0,nrcols):
+                val=row[x]
+                if val.strip()==".":
+                    val=""
+                else:
+                    try:
+                        val=int(val)
+                    except:
+                        pass
+                key=self.header[x]
+                oo.__dict__[key]=val
+            res.append(oo)
+        return res
+
 
     def addHeader(self, cols):
         """
@@ -29,7 +67,7 @@ class MDTable:
             raise j.exceptions.Input(
                 "cols need to be same size as header. %s vs %s" % (len(cols), len(self.header)))
         for nr in range(len(cols)):
-            if cols[nr] is None or cols[nr].strip() == "":
+            if cols[nr] is None or str(cols[nr]).strip() == "":
                 cols[nr] = " . "
         self.rows.append(cols)
 
@@ -43,13 +81,19 @@ class MDTable:
         for row in self.rows:
             x = 0
             for col in row:
+                col=str(col)
                 if len(col) > m[x]:
                     m[x] = len(col)
+                    if m[x]<3:
+                        m[x]=3
                 x += 1
         return m
 
     def __repr__(self):
         def pad(text, l, add=" "):
+            if l<4:
+                l=4
+            text=str(text)
             while(len(text) < l):
                 text += add
             return text
@@ -89,12 +133,13 @@ class MDTable:
     __str__ = __repr__
 
 
-class MDHeader:
+class MDHeader(JSBASE):
 
     def __init__(self, level, title):
         self.level = level
         self.title = title
         self.type = "header"
+        JSBASE.__init__(self)
 
     def __repr__(self):
         pre = ""
@@ -105,12 +150,13 @@ class MDHeader:
     __str__ = __repr__
 
 
-class MDListItem:
+class MDListItem(JSBASE):
 
     def __init__(self, level, text):
         self.level = level
         self.text = text
         self.type = "list"
+        JSBASE.__init__(self)
 
     def __repr__(self):
         pre = ''
@@ -121,11 +167,12 @@ class MDListItem:
     __str__ = __repr__
 
 
-class MDComment:
+class MDComment(JSBASE):
 
     def __init__(self, text):
         self.text = text
         self.type = "comment"
+        JSBASE.__init__(self)
 
     def __repr__(self):
         out = "<!--\n%s\n-->\n" % self.text
@@ -133,11 +180,12 @@ class MDComment:
     __str__ = __repr__
 
 
-class MDComment1Line():
+class MDComment1Line(JSBASE):
 
     def __init__(self, text):
         self.text = text
         self.type = "comment1line"
+        JSBASE.__init__(self)
 
     def __repr__(self):
         out = "<!--%s-->\n" % self.text
@@ -146,11 +194,12 @@ class MDComment1Line():
     __str__ = __repr__
 
 
-class MDBlock:
+class MDBlock(JSBASE):
 
     def __init__(self, text):
         self.text = text
         self.type = "block"
+        JSBASE.__init__(self)
 
     def __repr__(self):
         out = self.text
@@ -164,12 +213,13 @@ class MDBlock:
     __str__ = __repr__
 
 
-class MDCode:
+class MDCode(JSBASE):
 
     def __init__(self, text, lang):
         self.text = text
         self.type = "code"
         self.lang = lang
+        JSBASE.__init__(self)
 
     def __repr__(self):
         out = self.text
@@ -183,9 +233,10 @@ class MDCode:
     __str__ = __repr__
 
 
-class MDData:
+class MDData(JSBASE):
 
     def __init__(self, ddict, name="", guid=""):
+        JSBASE.__init__(self)
         self.name = name
         self.type = "data"
         self.ddict = ddict
@@ -211,6 +262,7 @@ class MDData:
                     "guid cannot be empty and could not be retrieved from dict")
         else:
             self.guid = guid
+
 
     @property
     def datahr(self):

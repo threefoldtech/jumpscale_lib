@@ -3,8 +3,12 @@ from js9 import j
 import re
 import random
 
+JSBASE = j.application.jsbase_get_class()
 
-class Synonym:
+JSBASE = j.application.jsbase_get_class()
+
+
+class Synonym(JSBASE):
 
     def __init__(self, name='', replaceWith='', simpleSearch="", replaceExclude=''):
         """
@@ -13,6 +17,7 @@ class Synonym:
         @param simpleSearch: Search string that'll be replaced with replaceWith
         @defSynonym: If True then this is a definition synonym, which can be used in spectools
         """
+        JSBASE.__init__(self)
         self.simpleSearch = simpleSearch
         self.regexFind = ""
         self.regexFindForReplace = ""
@@ -89,14 +94,15 @@ class Synonym:
         return self.__str__()
 
 
-class ReplaceTool:
+class ReplaceTool(JSBASE):
 
     def __init__(self):
+        JSBASE.__init__(self)
         self.synonyms = []  # array Synonym()
 
     def synonymsPrint(self):
         for syn in self.synonyms:
-            print(syn)
+            self.logger.debug(syn)
 
     def synonymAdd(self, name='', simpleSearch='', regexFind='', regexFindForReplace='',
                    replaceWith='', replaceExclude=''):
@@ -160,7 +166,7 @@ class ReplaceTool:
     #     def replaceinside(matchobj):
     #         match = matchobj.group()
     #         # we found a match now
-    #         # print "regex:%s match:%s replace:%s" % (searchitem[1],match,searchitem[2])
+    #         # self.logger.debug "regex:%s match:%s replace:%s" % (searchitem[1],match,searchitem[2])
     #         if match.find("|") == -1:
     #             match = re.sub("( *\])|(\[ *)", "", match)
     #             toreplace = searchitem[2]
@@ -191,7 +197,7 @@ class ReplaceTool:
                 continue
             C2=self.replace(C)
             if C!=C2:
-                j.logger.logging.debug("replaced %s in dir for: %s" % (item, path))
+                self.logger.debug("replaced %s in dir for: %s" % (item, path))
                 j.sal.fs.writeFile(item,C2)
 
     # def replaceInConfluence(self, text):
@@ -201,7 +207,7 @@ class ReplaceTool:
     #     def replaceinside(matchobj):
     #         match = matchobj.group()
     #         # we found a match now
-    #         # print "regex:%s match:%s replace:%s" % (searchitem[1],match,searchitem[2])
+    #         # self.logger.debug "regex:%s match:%s replace:%s" % (searchitem[1],match,searchitem[2])
     #         if match.find("|") == -1:
     #             match = re.sub("( *\])|(\[ *)", "", match)
     #             match = re.sub(syn.regexFind, syn.replaceWith, match)

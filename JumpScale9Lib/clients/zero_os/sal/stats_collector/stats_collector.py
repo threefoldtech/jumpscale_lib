@@ -1,8 +1,12 @@
 import time
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
 
 
-class StatsCollector:
+class StatsCollector(JSBASE):
     def __init__(self, container, ip, port, db, retention, jwt):
+        JSBASE.__init__(self)
         self.container = container
         self.ip = ip
         self.port = port

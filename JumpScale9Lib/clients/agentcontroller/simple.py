@@ -17,10 +17,13 @@ RESULT_JSON = 20
 
 ResultTuple = collections.namedtuple('ResultTuple', 'status stdout stderr')
 
+JSBASE = j.application.jsbase_get_class()
 
-class ProcessInfo:
+
+class ProcessInfo(JSBASE):
 
     def __init__(self, info):
+        JSBASE.__init__(self)
         self._info = info
 
     @property
@@ -43,12 +46,13 @@ class ProcessInfo:
         return '<ProcessInfo ID:{this.cmd[id]} CMD:{this.cmd[cmd]}>'.format(this=self)
 
 
-class Agent:
+class Agent(JSBASE):
     """
     Represents an active agent (alive)
     """
 
     def __init__(self, client, gid, nid, roles):
+        JSBASE.__init__(self)
         self._client = client
         self._gid = gid
         self._nid = nid
@@ -147,12 +151,13 @@ class Agent:
         return '<Agent {this.gid}:{this.nid} {this.roles}>'.format(this=self)
 
 
-class Result:
+class Result(JSBASE):
     """
     Represents a job result
     """
 
     def __init__(self, job):
+        JSBASE.__init__(self)
         self._job = job
 
     @property
@@ -229,12 +234,13 @@ class Result:
         return '<Result {this.state} from {this.gid}:{this.nid}>'.format(this=self)
 
 
-class Peer:
+class Peer(JSBASE):
     """
     Represents a peer on a share
     """
 
     def __init__(self, gid, nid, peer, share):
+        JSBASE.__init__(self)
         self._gid = gid
         self._nid = nid
         self._peer = peer
@@ -280,12 +286,13 @@ class Peer:
         return '<Peer {this.gid}:{this.nid}>'.format(this=self)
 
 
-class Share:
+class Share(JSBASE):
     """
     Represents a shared folder over syncthing
     """
 
     def __init__(self, gid, nid, folder, sync_client):
+        JSBASE.__init__(self)
         self._gid = gid
         self._nid = nid
         self._folder = folder
@@ -401,10 +408,11 @@ class Share:
         return '<Share on {this.gid}:{this.nid} {this.path}>'.format(this=self)
 
 
-class SyncClient:
+class SyncClient(JSBASE):
     API_TIMEOUT = 10
 
     def __init__(self, client):
+        JSBASE.__init__(self)
         self._client = client._client
         self._ids_cache = {}
 
@@ -546,12 +554,13 @@ class SyncClient:
 # TODO: Currently scheduler has to rebuild command structure for scheduling which is redoing
 # work of most of the 'shortcut' methods. We need to restructure this for
 # better code reuse.
-class SchedulerClient:
+class SchedulerClient(JSBASE):
     """
     Scheduler interface
     """
 
     def __init__(self, client):
+        JSBASE.__init__(self)
         self._simple = client
         self._client = client._client
 
@@ -706,12 +715,13 @@ class SchedulerClient:
         return self._client.schedule_remove_prefix(prefix)
 
 
-class SimpleClient:
+class SimpleClient(JSBASE):
     """
     Simple client
     """
 
     def __init__(self, advanced_client):
+        JSBASE.__init__(self)
         self._client = advanced_client
         self._sync = SyncClient(self)
         self._scheduler = SchedulerClient(self)

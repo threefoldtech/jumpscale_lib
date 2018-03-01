@@ -8,6 +8,8 @@ from six import string_types
 from . import client_support
 
 
+
+
 class CreateOrgOption(object):
     """
     auto-generated. don't touch.
@@ -27,6 +29,7 @@ class CreateOrgOption(object):
         return CreateOrgOption(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

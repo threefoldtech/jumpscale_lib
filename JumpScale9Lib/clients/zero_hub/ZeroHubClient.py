@@ -8,6 +8,7 @@ token_ = ""
 username = ""
 """
 
+
 class ZeroHubClient(JSConfigClient):
     """
     Provide an easy way to communicate and do some actions on the ZeroHub

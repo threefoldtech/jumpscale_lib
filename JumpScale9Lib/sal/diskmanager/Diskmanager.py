@@ -2,7 +2,7 @@ from js9 import j
 import os
 import errno
 import stat
-
+JSBASE = j.application.jsbase_get_class()
 
 def _is_block(file):
     try:
@@ -37,7 +37,7 @@ def get_open_blks(pid):
     return retlist
 
 
-class Disk:
+class Disk(JSBASE):
     """
     identifies a disk in the grid
     """
@@ -54,6 +54,7 @@ class Disk:
         self.model = ""
         self.description = ""
         self.type = []
+        JSBASE.__init__(self)
 
     def __str__(self):
         return "%s %s %s free:%s ssd:%s fs:%s model:%s id:%s" % (
@@ -62,11 +63,12 @@ class Disk:
     __repr__ = __str__
 
 
-class Diskmanager:
+class Diskmanager(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.diskmanager"
         self._parted = None
+        JSBASE.__init__(self)
 
     @property
     def parted(self):
@@ -187,7 +189,7 @@ class Diskmanager:
                         disko.path = partition.path if disk.type != 'loop' else disk.device.path
                         disko.size = round(partition.getSize(unit="mb"), 2)
                         disko.free = 0
-                        print(("partition:%s %s" % (disko.path, disko.size)))
+                        self.logger.debug(("partition:%s %s" % (disko.path, disko.size)))
                         try:
                             fs = self.parted.probeFileSystem(
                                 partition.geometry)
@@ -224,7 +226,7 @@ class Diskmanager:
                         result.append(disko)
 
                         if mountpoint is not None:
-                            print(("mountpoint:%s" % mountpoint))
+                            self.logger.debug(("mountpoint:%s" % mountpoint))
                             size, used, free, percent = psutil.disk_usage(
                                 mountpoint)
                             disko.free = disko.size * float(1 - percent / 100)
@@ -235,7 +237,6 @@ class Diskmanager:
                             if (ttype is None or fs == ttype) and size > minsize and (
                                     maxsize is None or size < maxsize):
                                 if ssd is None or disko.ssd == ssd:
-                                    # print disko
                                     hrdpath = "%s/disk.hrd" % mountpoint
 
                                     if j.sal.fs.exists(hrdpath):
@@ -287,7 +288,7 @@ class Diskmanager:
                                         disko.type.sort()
                                         disko.description = hrd.get(
                                             "diskinfo.description")
-                                        print(("found disk:\n%s" % (disko)))
+                                        self.logger.debug(("found disk:\n%s" % (disko)))
                                     cmd = "umount /mnt/tmp"
                                     j.sal.process.execute(cmd, die=False)
                                     if os.path.ismount("/mnt/tmp"):
@@ -325,7 +326,6 @@ class Diskmanager:
         @return [[$partid,$size,$free]]
         """
         # from IPython import embed
-        # print "DEBUG NOW partitionsGet_Ext4Data"
         # embed()
         # TODO
         pass

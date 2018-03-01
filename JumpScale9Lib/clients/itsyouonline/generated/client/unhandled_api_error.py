@@ -1,4 +1,9 @@
-class UnhandledAPIError(Exception):
+from js9 import j
+
+
+
+
+class UnhandledAPIError(Exception, ):
     """ UnhandledAPIError is exception when the API response doesnt have handler.
 
     It usually happens when the client receive status code
@@ -10,6 +15,7 @@ class UnhandledAPIError(Exception):
     """
 
     def __init__(self, response, code, message):
+        pass
         self.response = response
         self.code = code
         self.message = message

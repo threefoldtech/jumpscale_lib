@@ -40,7 +40,6 @@ class PeeweeFactory(JSConfigFactory):
     #         self._cacheModel[key] = pw.codeModel
     #     code = self._cacheModel[key]
     #     from IPython import embed
-    #     print("DEBUG NOW ooo")
     #     embed()
     #     raise RuntimeError("stop debug here")
 

@@ -1,7 +1,7 @@
 from js9 import j
 
-
-class ClassBase:
+JSBASE = j.application.jsbase_get_class()
+class ClassBase(JSBASE):
     """
     implement def _obj2dict to overrule serialization, output needs to be dict, reverse is _dict2obj
     """
@@ -18,6 +18,9 @@ class ClassBase:
     #"""
     # j.tools.code.classEditGeany(self)
 
+    def __init__(self):
+        JSBASE.__init__(self)
+
     def obj2dict(self):
         return j.tools.code.object2dict(self)
 
@@ -32,11 +35,17 @@ class ClassBase:
 
 class JSModelBase(ClassBase):
 
+    def __init__(self):
+        ClassBase.__init__(self)
+
     def dict2obj(self, data):
         j.tools.code.dict2JSModelobject(self, data)
 
 
 class JSRootModelBase(JSModelBase):
+
+    def __init__(self):
+        JSModelBase.__init__(self)
 
     def getMetaInfo(self):
         """

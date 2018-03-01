@@ -6,11 +6,13 @@ from .EnumJoinOrganizationInvitationRole import EnumJoinOrganizationInvitationRo
 from .EnumJoinOrganizationInvitationStatus import EnumJoinOrganizationInvitationStatus
 from datetime import datetime
 from six import string_types
-
+from js9 import j
 from . import client_support
 
 
-class JoinOrganizationInvitation(object):
+
+
+class JoinOrganizationInvitation( ):
     """
     auto-generated. don't touch.
     """
@@ -33,6 +35,7 @@ class JoinOrganizationInvitation(object):
         return JoinOrganizationInvitation(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

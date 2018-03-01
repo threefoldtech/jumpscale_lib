@@ -5,17 +5,18 @@ import netaddr
 
 # class NetworkingErro(Exception):
 #     pass
+JSBASE = j.application.jsbase_get_class()
+
+class NetworkingError(Exception, JSBASE):
+    def __init__(self):
+        JSBASE.__init__(self)
 
 
-class NetworkingError(Exception):
-    pass
-
-
-class UnixNetworkManager:
+class UnixNetworkManager(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.nic"
-        self.logger = j.logger.get("j.sal.nic")
+        JSBASE.__init__(self)
         self._executor = j.tools.executorLocal
         self._nics = None
 
@@ -78,7 +79,7 @@ class UnixNetworkManager:
     @property
     def nics(self):
         if self._nics is None:
-            rc, ifaces, err = self._executor.execute('ls --color=never -1 /sys/class/net')
+            rc, ifaces, err = self._executor.execute("""ifconfig -a | sed 's/[ \t].*//;/^$/d'""")
             self._nics = [iface for iface in ifaces.splitlines() if iface]
         return self._nics
 

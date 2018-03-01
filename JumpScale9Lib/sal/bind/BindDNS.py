@@ -7,16 +7,18 @@ from dns.rdtypes.IN.A import A
 from JumpScale9Lib.sal.bind.base import DNS
 from js9 import j
 
+JSBASE = j.application.jsbase_get_class()
 
-class Zone:
+
+class Zone(JSBASE):
     CONFIG_FILES_DIR = j.tools.path.get('/etc/bind/')
     NON_ZONE_FILES = ['/etc/bind/named.conf.options']
 
     def __init__(self, domain, type, file):
-        self.logger = j.logger.get("j.sal.bind.zone")
         self.domain = domain
         self.type = type
         self.file = file
+        JSBASE.__init__(self)
 
     def __repr__(self):
         return "{domain:%s, type:%s, file:%s}" % (self.domain, self.type, self.file)
@@ -91,7 +93,7 @@ class BindDNS(DNS):
     def __init__(self):
         self.__jslocation__ = "j.sal.bind"
         self.__imports__ = "dnspython3"
-        self.logger = j.logger.get("j.sal.bind")
+        DNS.__init__(self)
 
     @property
     def zones(self):

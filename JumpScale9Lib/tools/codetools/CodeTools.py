@@ -10,6 +10,7 @@ from .ReplaceTool import ReplaceTool
 
 
 # ujson.dumps does not support some arguments like separators, indent ...etc
+JSBASE = j.application.jsbase_get_class()
 
 def isPrimAttribute(obj, key):
     if key[-1] == "s":
@@ -20,16 +21,18 @@ def isPrimAttribute(obj, key):
     return isprimtype, funcprop
 
 
-class Struct:
+class Struct(JSBASE):
 
     def __init__(self, **kwargs):
+        JSBASE.__init__(self)
         self.__dict__.update(kwargs)
 
 
-class CodeTools:
+class CodeTools(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.tools.code"
+        JSBASE.__init__(self)
         self._templateengine = None
         # self.executor = CodeExecutor()
         self._wordreplacer = None
@@ -88,8 +91,8 @@ class CodeTools:
         print info like source code of class
         """
         filepath, linenr, sourcecode = self.classInfoGet(classs)
-        print(("line:%s in path:%s" % (linenr, filepath)))
-        print(sourcecode)
+        self.logger.debug(("line:%s in path:%s" % (linenr, filepath)))
+        self.logger.debug(sourcecode)
 
     def classInfoGet(self, classs):
         """
@@ -299,7 +302,7 @@ class CodeTools:
                 return data
             else:
                 #from JumpScale9Lib.core.Shell import ipshellDebug,ipshell
-                # print "DEBUG NOW Can only convert object to dict with properties basic types or inherited of ClassBase"
+                # self.logger.debug "DEBUG NOW Can only convert object to dict with properties basic types or inherited of ClassBase"
                 # ipshell()
                 if dieOnUnknown:
                     raise j.exceptions.RuntimeError(
@@ -311,7 +314,6 @@ class CodeTools:
                 return val
 
         out = todict(obj, data, ignoreKeys)
-        # print out
         return out
 
     def object2yaml(self, obj):
@@ -328,7 +330,7 @@ class CodeTools:
     def pprint(self, obj):
         result = self.object2yaml(obj)
         result = result.replace("!!python/unicode", "")
-        print(result)
+        self.logger.debug(result)
 
     def deIndent(self, content, level=1):
         for i in range(0, level):

@@ -9,11 +9,12 @@ from six import string_types
 from . import client_support
 
 
+
+
 class Service(object):
     """
     auto-generated. don't touch.
     """
-
     @staticmethod
     def create(**kwargs):
         """
@@ -29,6 +30,7 @@ class Service(object):
         return Service(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

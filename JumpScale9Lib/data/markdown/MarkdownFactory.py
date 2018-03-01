@@ -11,11 +11,14 @@ import copy
 from .MarkdownDocument import *
 from .MarkdownExample import *
 from .MarkdownComponents import *
+JSBASE = j.application.jsbase_get_class()
 
-class MarkdownFactory:
+
+class MarkdownFactory(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.data.markdown"
+        JSBASE.__init__(self)
 
     def help(self, run=True):
         """
@@ -53,13 +56,12 @@ class MarkdownFactory:
 
         print(md)
         """
-        # print (j.data.text.strip(C))
         j.data.text.printCode(C)
         C = j.data.text.strip(C)
         if run:
             exec(C)
             from IPython import embed
-            print("Shell for help for markdown factory:")
+            self.logger.debug("Shell for help for markdown factory:")
             embed()
 
     def document_get(self, content="", path=""):

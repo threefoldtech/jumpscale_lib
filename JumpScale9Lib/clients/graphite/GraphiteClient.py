@@ -14,7 +14,6 @@ except BaseException:
 
 JSConfigFactory = j.tools.configmanager.base_class_configs
 JSConfigClient = j.tools.configmanager.base_class_config
-
 TEMPLATE = """
 server = "127.0.0.1"
 carbon_port = 2003

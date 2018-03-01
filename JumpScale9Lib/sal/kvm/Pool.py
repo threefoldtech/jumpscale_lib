@@ -8,6 +8,7 @@ from JumpScale9Lib.sal.kvm.Disk import Disk
 class Pool(BaseKVMComponent):
 
     def __init__(self, controller, name):
+        BaseKVMComponent.__init__(controller=controller)
         self.controller = controller
         self.name = name
         self.poolpath = self.controller.executor.prefab.core.joinpaths(self.controller.base_path, self.name)

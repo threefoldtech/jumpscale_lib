@@ -4,7 +4,6 @@
 ```python
 cl = j.clients.gitea.get()
 
-print(cl.orgs_currentuser_list())
 
 
 names=[item for item in cl.orgs_currentuser_list().keys()]
@@ -16,7 +15,6 @@ for name in names:
     #CAREFULL WILL GO OVER ALL MILESTONES & LABELS and add them
     org.labels_milestones_add(remove_old=False)
 
-    print (org.repos_list())
 
     repoName=[item for item in org.repos_list().keys()][0] #first reponame
 
@@ -25,6 +23,5 @@ for name in names:
     # repo.labels_add()
     # repo.milestones_add(remove_old=False)
 
-    print(repo.issues_get())
 
 ```

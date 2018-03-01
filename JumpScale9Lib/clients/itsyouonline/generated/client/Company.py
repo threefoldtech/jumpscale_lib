@@ -3,11 +3,13 @@ Auto-generated class for Company
 """
 from datetime import datetime
 from six import string_types
-
+from js9 import j
 from . import client_support
 
 
-class Company(object):
+
+
+class Company( ):
     """
     auto-generated. don't touch.
     """
@@ -27,6 +29,7 @@ class Company(object):
         return Company(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

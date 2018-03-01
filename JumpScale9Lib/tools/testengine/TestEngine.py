@@ -6,11 +6,14 @@ import unittest
 # import new
 from io import BytesIO
 
+JSBASE = j.application.jsbase_get_class()
 
-class Tee:
+
+class Tee(JSBASE):
 
     def __init__(self, *fobjs):
         self.fileobjs = fobjs
+        JSBASE.__init__(self)
 
     def write(self, data):
         for fileobj in self.fileobjs:
@@ -24,10 +27,11 @@ class Tee:
 PRINTSTR = "\r%s %s"
 
 
-class TestResult(unittest.result.TestResult):
+class TestResult(unittest.result.TestResult, JSBASE):
 
     def __init__(self, debug=False):
         super(TestResult, self).__init__()
+        JSBASE.__init__(self)
         self.tests = dict()
         self.errors = dict()
         self.failure = dict()
@@ -47,11 +51,11 @@ class TestResult(unittest.result.TestResult):
             sys.stderr = buffer
 
     def printStatus(self, test, state=None):
-        print(test)
+        self.logger.debug(test)
         if state:
-            print((PRINTSTR % (state, test._testMethodName)))
+            self.logger.debug((PRINTSTR % (state, test._testMethodName)))
         else:
-            print((PRINTSTR % (' ', test._testMethodName)))
+            self.logger.debug((PRINTSTR % (' ', test._testMethodName)))
         sys.stdout.flush()
 
     def addSkip(self, test, reason):
@@ -68,8 +72,8 @@ class TestResult(unittest.result.TestResult):
     def _checkDebug(self, test, err):
         if self._debug:
             if test in self.tests:
-                print((self.tests[test].getvalue()))
-                print((j.errorhandler.parsePythonExceptionObject(err[1], err[2])))
+                self.logger.debug((self.tests[test].getvalue()))
+                self.logger.debug((j.errorhandler.parsePythonExceptionObject(err[1], err[2])))
             j.application.stop(1)
 
     def addError(self, test, err):
@@ -90,15 +94,16 @@ class TestResult(unittest.result.TestResult):
         sys.stdout = self._original_stdout
 
 
-class Test:
+class Test(JSBASE):
 
     def __init__(self, db, testmodule):
         self.db = db
         self.testmodule = testmodule
         self.eco = None
+        JSBASE.__init__(self)
 
     def execute(self, testrunname, debug=False):
-        print(("\n##TEST:%s %s" % (self.db.organization, self.db.name)))
+        self.logger.debug(("\n##TEST:%s %s" % (self.db.organization, self.db.name)))
         res = {'total': 0, 'error': 0, 'success': 0, 'failed': 0}
         self.db.starttime = time.time()
         self.db.state = 'OK'
@@ -127,15 +132,15 @@ class Test:
                         self.db.testrun, self.db.organization, self.db.name, name, self.db.path)
                     eco.process()
                     self.db.result[name] = eco.guid
-                print(("Fail in test %s" % name))
-                print((self.db.output[name]))
-                print(eco)
+                self.logger.debug(("Fail in test %s" % name))
+                self.logger.debug((self.db.output[name]))
+                self.logger.debug(eco)
             else:
                 res['success'] += 1
                 self.db.teststates[name] = 'OK'
             pass
         self.db.endtime = time.time()
-        print('')
+        self.logger.debug('')
         return res
 
     def __str__(self):
@@ -149,19 +154,21 @@ class Test:
     __repr__ = __str__
 
 
-class FakeTestObj:
+class FakeTestObj(JSBASE):
 
     def __init__(self):
         self.source = dict()
         self.output = dict()
         self.teststates = dict()
         self.result = dict()
+        JSBASE.__init__(self)
 
 
-class TestEngine:
+class TestEngine(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.tools.testengine"
+        JSBASE.__init__(self)
         self.paths = []
         self.tests = []
         self.outputpath = "%s/apps/gridportal/base/Tests/TestRuns/" % j.dirs.JSBASEDIR
@@ -179,7 +186,7 @@ class TestEngine:
             testrunname = j.data.time.getLocalTimeHRForFilesystem()
 
         for path in self.paths:
-            print(("scan dir: %s" % path))
+            self.logger.debug(("scan dir: %s" % path))
             if j.sal.fs.isDir(path):
                 for item in j.sal.fs.listFilesInDir(path, filter="*__test.py", recursive=True):
                     self.testFile(testrunname, item)
@@ -203,12 +210,12 @@ class TestEngine:
         total = sum(x['total'] for x in results)
         error = sum(x['error'] for x in results)
         failed = sum(x['failed'] for x in results)
-        print(("Ran %s tests" % total))
+        self.logger.debug(("Ran %s tests" % total))
         if error:
-            print(('%s Error' % error))
+            self.logger.error(('%s Error' % error))
         if failed:
-            print(('%s Failed' % failed))
-        print('')
+            self.logger.debug(('%s Failed' % failed))
+        self.logger.debug('')
 
     def testFile(self, testrunname, filepath):
         if self.noOsis:

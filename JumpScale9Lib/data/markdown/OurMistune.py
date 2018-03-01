@@ -5,15 +5,17 @@ from JumpScale9Lib.data.markdown.mistune import *
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name
 from pygments.formatters import HtmlFormatter
+JSBASE = j.application.jsbase_get_class()
 
 
-class MDRenderer:
+class MDRenderer(JSBASE):
     """
     markdown renderer
     """
 
     def __init__(self, **kwargs):
         self.options = kwargs
+        JSBASE.__init__(self)
 
     def placeholder(self):
         """Returns the default, empty output value for the renderer.

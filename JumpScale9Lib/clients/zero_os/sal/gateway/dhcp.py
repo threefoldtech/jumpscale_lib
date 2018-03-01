@@ -1,13 +1,15 @@
 import signal
 import time
-
+from js9 import j
 from zeroos.orchestrator.sal import templates
 
 DNSMASQ = '/bin/dnsmasq --conf-file=/etc/dnsmasq.conf -d'
+JSBASE = j.application.jsbase_get_class()
 
 
-class DHCP:
+class DHCP(JSBASE):
     def __init__(self, container, domain, dhcps):
+        JSBASE.__init__(self)
         self.container = container
         self.domain = domain
         self.dhcps = dhcps

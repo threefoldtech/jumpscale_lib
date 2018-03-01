@@ -1,5 +1,11 @@
-class Actions:
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
+
+
+class Actions(JSBASE):
     def __init__(self, service):
+        JSBASE.__init__(self)
         self._service = service
         self._repository = service._repository
         self._ayscl = service._repository._ayscl
@@ -45,8 +51,9 @@ class Actions:
         raise KeyError("Could not find action with name {}".format(name))
 
 
-class Action:
+class Action(JSBASE):
     def __init__(self, service, model):
+        JSBASE.__init__(self)
         self._service = service
         self._repository = service._repository
         self._ayscl = service._repository._ayscl

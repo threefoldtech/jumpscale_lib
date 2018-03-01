@@ -12,7 +12,6 @@ class OVHFactory(JSConfigBase):
     def __init__(self):
         self.__jslocation__ = "j.clients.ovh"
         self.__imports__ = "ovh"
-        self.logger = j.logger.get('j.clients.ovh')
         JSConfigBase.__init__(self, OVHClient)
 
     def install(self):
@@ -63,4 +62,4 @@ class OVHFactory(JSConfigBase):
         js9 'j.clients.ovh.test()'
         """
         client = self.get()
-        print(client.serversGet())
+        self.logger.debug(client.serversGet())

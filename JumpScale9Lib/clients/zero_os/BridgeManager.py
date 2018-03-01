@@ -3,9 +3,10 @@ import json
 from js9 import j
 
 from . import typchk
+JSBASE = j.application.jsbase_get_class()
 
 
-class BridgeManager:
+class BridgeManager(JSBASE):
     _bridge_create_chk = typchk.Checker({
         'name': str,
         'hwaddr': typchk.Or(str, typchk.IsNone()),
@@ -22,7 +23,7 @@ class BridgeManager:
 
     def __init__(self, client):
         self._client = client
-        self.logger = j.logger.get('j.clients.zos.aggr')
+        JSBASE.__init__(self)
 
     def create(self, name, hwaddr=None, network=None, nat=False, settings={}):
         """

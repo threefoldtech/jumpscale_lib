@@ -22,17 +22,20 @@ def loadmodule(name, path):
     mod = imp.load_source(name, path)
     return mod
 
+JSBASE = j.application.jsbase_get_class()
 
-class DocSite:
+
+class DocSite(JSBASE):
     """
     """
 
     def __init__(self, path=""):
+        JSBASE.__init__(self)
         self.path = j.sal.fs.getDirName(path)
 
         gitpath = j.clients.git.findGitPath(path)
 
-        self.git = j.tools.docgenerator.addGitRepo(gitpath)
+        self.git = j.tools.docgenerator.gitrepo_add(gitpath)
         self.defs = {}
         self.defaultContent = {}  # key is relative path in docsite where default content found
 
@@ -152,7 +155,7 @@ class DocSite:
 
             # check if we find a macro dir, if so load
             if base == "macros":
-                j.tools.docgenerator.loadMacros(path=path)
+                j.tools.docgenerator.macros_load(path=path)
 
             if base in ["static"]:
                 return False
@@ -194,8 +197,8 @@ class DocSite:
             if ext == "md":
                 base = base[:-3]  # remove extension
                 if base not in self.docs:
-                    self.docs[base.lower()] = Doc(path, base, docSite=self)
-                    # self.docSiteLast.docs[base] = self.docs[base]
+                    self.docs[base.lower()] = Doc(path, base, docsite=self)
+                    # self.docsiteLast.docs[base] = self.docs[base]
             else:
                 if ext in ["png", "jpg", "jpeg", "pdf", "docx", "doc", "xlsx", "xls", "ppt", "pptx", "gig", "mp4"]:
                     if base in self.files:
@@ -213,13 +216,13 @@ class DocSite:
             callbackForMatchDir=callbackForMatchDir,
             callbackForMatchFile=callbackForMatchFile)
 
-    def addFile(self, path):
+    def file_add(self, path):
         if not j.sal.fs.exists(path, followlinks=True):
             raise j.exceptions.Input(message="Cannot find path:%s" % path, level=1, source="", tags="", msgpub="")
         base = j.sal.fs.getBaseName(path).lower()
         self.files[base] = path
 
-    def copyFiles(self, destination="static/files"):
+    def files_copy(self, destination="static/files"):
         dpath = j.sal.fs.joinPaths(self.outpath, destination)
         j.sal.fs.createDir(dpath)
         for name, path in self.files.items():
@@ -238,15 +241,15 @@ class DocSite:
             self._generator = loadmodule(self.name, self.generatorPath)
         return self._generator
 
-    def raiseError(self, errormsg, doc=None):
+    def error_raise(self, errormsg, doc=None):
         if doc is not None:
             errormsg2 = "## ERROR: %s\n\n- in doc: %s\n\n%s\n" % (j.data.time.getLocalTimeHR(), doc, errormsg)
             j.sal.fs.writeFile(filename=self.path + "errors.md", contents=errormsg2, append=True)
-            print(errormsg2)
+            self.logger.error(errormsg2)
             doc.errors.append(errormsg)
         else:
             from IPython import embed
-            print("DEBUG NOW raise error")
+            self.logger.error("DEBUG NOW raise error")
             embed()
             raise RuntimeError("stop debug here")
 
@@ -282,7 +285,7 @@ class DocSite:
         if j.sal.fs.exists(j.sal.fs.joinPaths(self.path, "static"), followlinks=True):
             j.sal.fs.copyDirTree(j.sal.fs.joinPaths(self.path, "static"), j.sal.fs.joinPaths(self.outpath, "public"))
 
-    def getFile(self, name, die=True):
+    def file_get(self, name, die=True):
         for key, val in self.files.items():
             if key.lower() == name.lower():
                 return key
@@ -295,7 +298,7 @@ class DocSite:
                                      (name, self), level=1, source="", tags="", msgpub="")
         return None
 
-    def getDoc(self, name, die=True):
+    def doc_get(self, name, die=True):
         name = name.lower()
         if name in self.docs:
             return self.docs[name]

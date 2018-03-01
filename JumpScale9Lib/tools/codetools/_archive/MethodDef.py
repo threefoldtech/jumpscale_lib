@@ -1,7 +1,11 @@
+from js9 import j
+JSBASE = j.application.jsbase_get_class()
 
-class MethodDef:
+
+class MethodDef(JSBASE):
 
     def __init__(self, classDef, fileDef, name="", paramstring="", comments="", decorators=[]):
+        JSBASE.__init__(self)
         self.classDef = classDef
         self.fileDef = fileDef
         self.name = name

@@ -1,21 +1,25 @@
 from js9 import j
 
+JSBASE = j.application.jsbase_get_class()
 
-class NginxFactory:
+
+class NginxFactory(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.nginx"
+        JSBASE.__init__(self)
 
     def get(self, path="/etc/nginx"):
         # TODO: *2 let work on path
         return Nginx()
 
 
-class Nginx:
+class Nginx(JSBASE):
 
     def __init__(self):
         self.configPath = j.tools.path.get('/etc').joinpath('nginx', 'conf.d')
         self._executor = j.tools.executorLocal
+        JSBASE.__init__(self)
 
     def list(self):
         return self.configPath.files()

@@ -10,6 +10,7 @@ address = "localhost"
 port = 6379
 password_ = ""
 """
+JSBASE = j.application.jsbase_get_class()
 
 
 class ACFactory(JSConfigFactory):
@@ -40,6 +41,7 @@ class ACFactory(JSConfigFactory):
                                 loglevels=loglevels, loglevels_db=loglevels_db, loglevels_ac=loglevels_ac,
                                 queue=queue)
 
+
 class ACClient(JSConfigClient, simple.SimpleClient):
     def __init__(self, instance, data={}, parent=None):
         JSConfigClient.__init__(self, instance=instance,
@@ -57,6 +59,3 @@ class ACClient(JSConfigClient, simple.SimpleClient):
             self._advanced_client = acclient.Client(address=self.address, port=self.port, password=self.password)
 
         return self._advanced_client
-       
-            
-        

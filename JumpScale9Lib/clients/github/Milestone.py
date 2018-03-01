@@ -1,6 +1,8 @@
 from js9 import j
 from .Base import Base
 
+JSBASE = j.application.jsbase_get_class()
+
 
 class RepoMilestone(Base):
     """
@@ -8,7 +10,7 @@ class RepoMilestone(Base):
     """
 
     def __init__(self, repo, githubObj=None):
-        self.logger = j.logger.get('j.clients.github.milestone')
+        Base.__init__(self)
         self._ddict = {}
         self._githubObj = githubObj
         if githubObj is not None:

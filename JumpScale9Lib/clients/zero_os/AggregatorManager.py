@@ -1,9 +1,10 @@
 from js9 import j
 
 from . import typchk
+JSBASE = j.application.jsbase_get_class()
 
 
-class AggregatorManager:
+class AggregatorManager(JSBASE):
     _query_chk = typchk.Checker({
         'key': typchk.Or(str, typchk.IsNone()),
         'tags': typchk.Map(str, str),
@@ -11,7 +12,7 @@ class AggregatorManager:
 
     def __init__(self, client):
         self._client = client
-        self.logger = j.logger.get('j.clients.zos.aggr')
+        JSBASE.__init__(self)
 
     def query(self, key=None, **tags):
         """

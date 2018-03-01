@@ -3,11 +3,13 @@ Auto-generated class for Phonenumber
 """
 from .Label import Label
 from six import string_types
-
+from js9 import j
 from . import client_support
 
 
-class Phonenumber(object):
+
+
+class Phonenumber( ):
     """
     auto-generated. don't touch.
     """
@@ -23,6 +25,7 @@ class Phonenumber(object):
         return Phonenumber(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

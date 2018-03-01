@@ -4,13 +4,17 @@ from JumpScale9Lib.clients.racktivity.energyswitch.proxy import connection
 from JumpScale9Lib.clients.racktivity.energyswitch.common import convert
 from JumpScale9Lib.clients.racktivity.energyswitch.common.GUIDTable import Value
 from JumpScale9Lib.clients.racktivity.energyswitch.modelfactory.modelfactory import ModelFactory
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
 
 
-class RackSal:
+class RackSal(JSBASE):
     MODULE_INFO = (40031, 0, 1, Value(
         u"type='TYPE_VERSION_FULL'\nsize=4\nLength=4\nunit=''\nscale=0"))
 
     def __init__(self, username, password, hostname, port, rtf=None, moduleinfo=None):  # pylint: disable=W0622
+        JSBASE.__init__(self)
         self.client = connection.Connect(username, password, hostname, port)
         self.__rtf = rtf
         self.__master_inited = False

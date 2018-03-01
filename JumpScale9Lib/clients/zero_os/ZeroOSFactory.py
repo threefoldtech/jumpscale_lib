@@ -6,7 +6,7 @@ from .Client import Client
 from .sal.Node import Node
 
 JSConfigFactoryBase = j.tools.configmanager.base_class_configs
-
+JSBASE = j.application.jsbase_get_class()
 
 class ZeroOSFactory(JSConfigFactoryBase):
     """
@@ -15,7 +15,6 @@ class ZeroOSFactory(JSConfigFactoryBase):
     def __init__(self):
         self.__jslocation__ = "j.clients.zero_os"
         super().__init__(Client)
-        self.logger = j.logger.get('j.clients.zero-os')
         self.connections = {}
         self.sal = SALFactory(self)
 
@@ -120,10 +119,11 @@ class ZeroOSFactory(JSConfigFactoryBase):
         return ip_pub, ipaddr_priv
 
 
-class SALFactory:
+class SALFactory(JSBASE):
 
     def __init__(self, factory):
         self._factory = factory
+        JSBASE.__init__(self)
 
     def node_get(self, instance='main'):
         client = self._factory.get(instance)

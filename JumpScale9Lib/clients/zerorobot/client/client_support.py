@@ -12,6 +12,7 @@ from enum import Enum
 from dateutil import parser
 
 
+
 # python2/3 compatible basestring, for use in to_dict
 try:
     basestring
@@ -180,6 +181,9 @@ class DatetimeHandler(object):
     """
     output datetime objects as iso-8601 compliant strings
     """
+    def __init__(self):
+        pass
+
     @classmethod
     def flatten(cls, obj):
         """flatten"""
@@ -195,6 +199,9 @@ class UUIDHandler(object):
     """
     output UUID objects as a string
     """
+    def __init__(self):
+        pass
+
     @classmethod
     def flatten(cls, obj):
         """flatten"""
@@ -207,6 +214,9 @@ class UUIDHandler(object):
 
 
 class EnumHandler(object):
+    def __init__(self):
+        pass
+
     """
     output Enum objects as their value
     """

@@ -25,10 +25,14 @@ from .api_response import APIResponse
 from .unhandled_api_error import UnhandledAPIError
 from .unmarshall_error import UnmarshallError
 from .userview import userview
+from js9 import j
 
 
-class UsersService:
+
+
+class UsersService():
     def __init__(self, client):
+        pass
         self.client = client
 
     def GetAvatarImage(self, hash, headers=None, query_params=None, content_type="application/json"):

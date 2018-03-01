@@ -24,7 +24,6 @@ if j.core.platformtype.myplatform.isLinux:
     except ImportError as e:
         # We want this to go to stderr, otherwise applications relying on stdout
         # output (build command generator scripts) are pretty busted.
-        #print >> sys.stderr, "Module pxssh not found...Wont be able to ssh on linux!!!"
         print("cannot find pxssh")
         pass
 
@@ -39,8 +38,13 @@ if j.core.platformtype.myplatform.isUnix:
         except BaseException:
             pass
 
+JSBASE = j.application.jsbase_get_class()
 
-class Popen(subprocess.Popen):
+
+class Popen(subprocess.Popen, JSBASE):
+
+    def __init__(self):
+        JSBASE.__init__(self)
 
     def recv(self, maxsize=None):
         return self._recv('stdout', maxsize)
@@ -70,11 +74,11 @@ class Popen(subprocess.Popen):
                 x = msvcrt.get_osfhandle(self.stdin.fileno())
                 (errCode, written) = WriteFile(x, input)
             except ValueError:
-                print("close stdin")
+                self.logger.debug("close stdin")
                 return self._close('stdin')
             except (subprocess.pywintypes.error, Exception) as why:
                 if why[0] in (109, errno.ESHUTDOWN):
-                    print("close stdin")
+                    self.logger.debug("close stdin")
                     return self._close('stdin')
                 raise
             return written
@@ -114,7 +118,7 @@ class Popen(subprocess.Popen):
                 written = os.write(self.stdin.fileno(), input)
             except OSError as why:
                 if why[0] == errno.EPIPE:  # broken pipe
-                    print("close stdin")
+                    self.logger.error("close stdin")
                     return self._close('stdin')
                 raise
 
@@ -145,10 +149,11 @@ class Popen(subprocess.Popen):
                     fcntl.fcntl(conn, fcntl.F_SETFL, flags)
 
 
-class ExpectTool:
+class ExpectTool(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.tools.expect"
+        JSBASE.__init__(self)
 
     @staticmethod
     def new(cmd=None):
@@ -163,7 +168,7 @@ class ExpectTool:
         return Expect(cmd=cmd or '')
 
 
-class Expect:
+class Expect(JSBASE):
     _p = None  # popen process
     error = False
     _lastsend = ""
@@ -176,6 +181,7 @@ class Expect:
     _waitTokens = []  # list of tokens where we wait on when executing
 
     def __init__(self, cmd=""):
+        JSBASE.__init__(self)
         j.logger.addConsoleLogCategory("expect")
         PIPE = subprocess.PIPE
         self._prompt = ""
@@ -264,12 +270,12 @@ class Expect:
         result = self.expect("password:", timeout=timeout)
 
         if result == "E":
-            print("did not see passwd")
+            self.logger.debug("did not see passwd")
             result = self.expect("continue connecting", timeout=timeout / 2)
 
             if result == 0:
-                print("saw confirmation ssh key")
-                print("send yes for ssh key")
+                self.logger.debug("saw confirmation ssh key")
+                self.logger.debug("send yes for ssh key")
                 self.send("yes\n")
                 result = self.expect("password:", timeout=timeout / 2)
             else:
@@ -283,14 +289,14 @@ class Expect:
             if result == "E":
                 result = self.expect("Permission denied")
                 if result != "E" and seedpasswd != "":
-                    print("permission denied, will try to use seedpasswd")
+                    self.logger.debug("permission denied, will try to use seedpasswd")
                     self.send(seedpasswd)
                     result = self.expect("#")
                     if result == "E":
                         raise j.exceptions.RuntimeError("could not login with std passwd nor with seedpasswd")
-                    print("seedpasswd worked")
+                    self.logger.debug("seedpasswd worked")
 
-                    print("change passwd")
+                    self.logger.debug("change passwd")
                     self.send("passwd")
                     result = self.expect("password:")
                     if result == "E":
@@ -387,10 +393,10 @@ class Expect:
         classes C{_out} & C{_error}.
         """
         out, err = self.receive()
-        print(out)
+        self.logger.debug(out)
         if err != "":
-            print("ERROR:")
-            print(err)
+            self.logger.error("ERROR:")
+            self.logger.error(err)
 
     def _receiveOut(self):  # windows only
         """
@@ -603,7 +609,7 @@ class Expect:
                 o = self.receive()[0]
                 o += "\nSTEP: %s: %s\n%s\n" % (nr, stepname, o)
                 out += "%s\n" % o
-                print(o)
+                self.logger.debug(o)
                 self.send(tosend, False)
 
             elif result is False:
@@ -679,8 +685,6 @@ class Expect:
         for line in lines:
             foundmatch = False
             for filter in self._ignoreLineFilter:
-                # print line
-                # print filter
                 if line.find(filter) != -1:
                     j.logger.log("Found ignore line:%s:%s" % (filter, line), 9)
                     foundmatch = True
@@ -704,7 +708,7 @@ class Expect:
         self._timeout = False
         while(timeout is False and done is False):
             returnpart, err = self.receive()
-            print(returnpart)
+            self.logger.debug(returnpart)
             tokenfound = self._checkForTokens(returnpart)
             # j.logger.log("tokenfound:%s"%tokenfound)
             returnpart = self._ignoreLinesBasedOnFilter(returnpart)

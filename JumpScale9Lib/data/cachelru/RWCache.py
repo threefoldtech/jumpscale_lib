@@ -6,14 +6,15 @@ from js9 import j
 from .LRUCache import LRUCache
 
 from operator import itemgetter, attrgetter
+JSBASE = j.application.jsbase_get_class()
 
-
-class RWCache:
+class RWCache(JSBASE):
 
     def __init__(self, nrItemsReadCache, maxNrItemsWriteCache=50, maxTimeWriteCache=2000, writermethod=None):
         self.cacheR = j.tools.cachelru.getRCache(nrItemsReadCache)
         self.cacheW = WCache(maxNrItemsWriteCache,
                              writermethod, maxTimeWriteCache)
+        JSBASE.__init__(self)
 
     def set(self, key, obj):
         self.cacheW[key] = obj
@@ -53,6 +54,7 @@ class WCache:
         elif not isinstance(size, type(0)):
             raise TypeError(size)
         object.__init__(self)
+        JSBASE.__init__(self)
         self.__dict = {}
         self.size = size
         self.flushsize = round(float(size) * 1.2)

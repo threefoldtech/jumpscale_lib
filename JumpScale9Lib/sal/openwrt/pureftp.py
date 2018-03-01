@@ -1,13 +1,16 @@
 
 
 from base import BaseService, BaseServiceSection
+from js9 import j
+JSBASE = j.application.jsbase_get_class()
 
 
-class PureFTPError(Exception):
-    pass
+class PureFTPError(Exception, JSBASE):
+    def __init__(self):
+        JSBASE.__init__(self)
 
 
-class PureFTP(BaseService, BaseServiceSection):
+class PureFTP(BaseService, BaseServiceSection, JSBASE):
     PACKAGE = 'pure-ftpd'
     SECTION = 'pure-ftpd'
 
@@ -76,6 +79,7 @@ class PureFTP(BaseService, BaseServiceSection):
 
     def __init__(self, wrt):
         super(PureFTP, self).__init__(wrt=wrt)
+        JSBASE.__init__(self)
 
     @property
     def section(self):

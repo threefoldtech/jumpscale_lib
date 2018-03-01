@@ -1,11 +1,14 @@
 from .LRUCache import LRUCache
 from .RWCache import RWCache
+from js9 import j
+JSBASE = j.application.jsbase_get_class()
 
 
-class LRUCacheFactory:
+class LRUCacheFactory(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.data.cachelru"
+        JSBASE.__init__(self)
 
     def getRWCache(self, nrItemsReadCache, nrItemsWriteCache=50, maxTimeWriteCache=2000, writermethod=None):
         return RWCache(nrItemsReadCache, nrItemsWriteCache, maxTimeWriteCache, writermethod=writermethod)

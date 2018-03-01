@@ -1,6 +1,8 @@
 import configparser
 import re
+from js9 import j
 
+JSBASE = j.application.jsbase_get_class()
 DEFAULTSECT = "DEFAULT"
 
 """
@@ -8,7 +10,7 @@ Override from https://github.com/enthought/Python-2.7.3/blob/master/Lib/ConfigPa
 """
 
 
-class SambaConfigParser(configparser.ConfigParser):
+class SambaConfigParser(configparser.ConfigParser, JSBASE):
     OPTCRE_SMB = re.compile(
         r'(?P<option>[^=\s][^=]*)'          # very permissive!
         r'\s*(?P<vi>[=])\s*'                 # any number of space/tab,
@@ -17,6 +19,9 @@ class SambaConfigParser(configparser.ConfigParser):
         # by any # space/tab
         r'(?P<value>.*)$'                     # everything up to eol
     )
+
+    def __init__(self):
+        JSBASE.__init__(self)
 
     def _read(self, fp, fpname):
         # override optcre to allow colon on key

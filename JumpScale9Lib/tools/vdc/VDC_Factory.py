@@ -1,10 +1,13 @@
 
 from js9 import j
 
+JSBASE = j.application.jsbase_get_class()
 
-class GCC:
+
+class GCC(JSBASE):
 
     def __init__(self):
+        JSBASE.__init__(self)
 
     def get(self, nodes):
         """
@@ -24,10 +27,11 @@ class GCC:
                                      debug=False, checkok=True, allow_agent=True, look_for_keys=True, pushkey=keyname)
 
 
-class GCC_Mgmt():
+class GCC_Mgmt(JSBASE):
 
     def __init__(self, nodes):
         self.nodes = j.tools.develop.init(nodes=nodes)
+        JSBASE.__init__(self)
 
     def install(self):
         """
@@ -55,26 +59,28 @@ class GCC_Mgmt():
         return
 
 
-class GCC_Nameserver():
+class GCC_Nameserver(JSBASE):
     """
     define easy to use interface on top of nameserver management
     """
 
     def __init__(self, manager):
         self.manager = manager
+        JSBASE.__init__(self)
 
     def ns_addHost(addr, dnsinfo....):  # to be further defined
 
         # TODO: use https over caddy to speak to etcd to configure skydns, maybe clients do already exist?
 
 
-class GCC_aydostor():
+class GCC_aydostor(JSBASE):
     """
     define easy to use interface on top of aydostor (use aydostor client, needs to be separate client in js8)
     """
 
     def __init__(self, manager):
         self.manager = manager
+        JSBASE.__init__(self)
 
     def ns_addHost(addr, dnsinfo....):  # to be further defined
 

@@ -2,18 +2,21 @@ import textwrap
 import json
 import time
 import logging
-
+from js9 import j
 
 logger = logging.getLogger('g8core')
 
+JSBASE = j.application.jsbase_get_class()
 
-class JobNotFoundError(Exception):
-    pass
+class JobNotFoundError(Exception, JSBASE):
+    def __init__(self):
+        JSBASE.__init__(self)
 
 
-class ResultError(RuntimeError):
+class ResultError(RuntimeError, JSBASE):
     def __init__(self, msg, code=0):
         super().__init__(msg)
+        JSBASE.__init__(self)
         self._message = msg
         self._code = code
 
@@ -26,10 +29,11 @@ class ResultError(RuntimeError):
         return self._message
 
 
-class Return:
+class Return(JSBASE):
 
     def __init__(self, payload):
         self._payload = payload
+        JSBASE.__init__(self)
 
     @property
     def payload(self):
@@ -134,11 +138,12 @@ class Return:
         return textwrap.dedent(tmpl).format(code=self.code, state=self.state, stdout=self.stdout, stderr=self.stderr, data=self.data)
 
 
-class Response:
+class Response(JSBASE):
     def __init__(self, client, id):
         self._client = client
         self._id = id
         self._queue = 'result:{}'.format(id)
+        JSBASE.__init__(self)
 
     @property
     def id(self):

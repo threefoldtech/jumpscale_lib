@@ -4,10 +4,13 @@ from MethodDef import MethodDef
 from ClassDef import ClassDef
 from js9 import j
 
+JSBASE = j.application.jsbase_get_class()
 
-class CodeElements:
+
+class CodeElements(JSBASE):
 
     def __init__(self, filepath=""):
+        JSBASE.__init__(self)
         self.body = ""
         self.classDefs = []
         self.methodDefs = []

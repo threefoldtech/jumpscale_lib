@@ -3,13 +3,16 @@ from js9 import j
 import time
 import calendar
 
+JSBASE = j.application.jsbase_get_class()
 
-class MySQLFactory:
+
+class MySQLFactory(JSBASE):
     """
     """
 
     def __init__(self):
         self.__jslocation__ = "j.clients.mysql"
+        JSBASE.__init__(self)
         self.clients = {}
 
     def getClient(self, ipaddr, port, login, passwd, dbname):
@@ -20,9 +23,10 @@ class MySQLFactory:
         return MySQLClient(self.clients[key])
 
 
-class MySQLClient:
+class MySQLClient(JSBASE):
 
     def __init__(self, cl):
+        JSBASE.__init__(self)
         self.client = cl
 
     def _html2text(self, html):

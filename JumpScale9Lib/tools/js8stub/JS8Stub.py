@@ -1,11 +1,14 @@
 from js9 import j
 import pickle
 
+JSBASE = j.application.jsbase_get_class()
 
-class JS8Stub:
+
+class JS8Stub(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.tools.js8stub"
+        JSBASE.__init__(self)
         self.loaded = None
 
     def generateStub(self, pickledfile="", dest="/tmp/jscompl.py"):

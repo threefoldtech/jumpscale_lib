@@ -26,6 +26,8 @@ LEVELS = list(range(1, 10)) + list(range(20, 24)) + [30]
 
 LEVEL_JSON = 20
 
+JSBASE = j.application.jsbase_get_class()
+
 
 def jsonLoads(x):
     if isinstance(x, bytes):
@@ -33,15 +35,16 @@ def jsonLoads(x):
     return j.data.serializer.json.loads(x)
 
 
-class AgentException(Exception):
-    pass
+class AgentException(Exception, JSBASE):
+    def __init__(self):
+        JSBASE.__init__(self)
 
 
 class ResultTimeout(AgentException):
-    pass
+    def __init__(self):
+        AgentException.__init__(self)
 
-
-class RunArgs:
+class RunArgs(JSBASE):
     """
     Creates a new instance of RunArgs
 
@@ -64,6 +67,7 @@ class RunArgs:
     def __init__(self, domain=None, name=None, max_time=0, max_restart=0, working_dir=None,
                  recurring_period=0, stats_interval=0, args=None, loglevels='*',
                  loglevels_db=None, loglevels_ac=None, queue=None):
+        JSBASE.__init__(self)
         self._domain = domain
         self._name = name
         self._max_time = max_time
@@ -195,9 +199,10 @@ class RunArgs:
         return RunArgs(**base)
 
 
-class Base:
+class Base(JSBASE):
 
     def __init__(self, client, id, gid, nid):
+        JSBASE.__init__(self)
         self._client = client
         self._id = id
         self._gid = 0 if gid is None else int(gid)
@@ -395,7 +400,7 @@ class BaseCmd(Base):
         return self._client.get_cmd_jobs(self._id)
 
 
-class Cmd(BaseCmd):
+class Cmd(BaseCmd, JSBASE):
     """
     Child of :class:`acclient.BaseCmd`
 
@@ -515,7 +520,7 @@ class Cmd(BaseCmd):
         return repr(self.dump())
 
 
-class Client:
+class Client(JSBASE):
     """
     Creates a new client instance. You need a client to send jobs to the agent-controller
     and to retrieve results
@@ -526,6 +531,7 @@ class Client:
     """
 
     def __init__(self, address='localhost', port=6379, password=None):
+        JSBASE.__init__(self)
         # Initializing redis client
         self._redis = j.clients.redis.get(
             ipaddr=address, port=port, password=password, fromcache=True)

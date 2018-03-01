@@ -1,9 +1,12 @@
 import json
 
 from . import typchk
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
 
 
-class DiskManager:
+class DiskManager(JSBASE):
     mktable_chk = typchk.Checker({
         'disk': str,
         'table_type': typchk.Enum('aix', 'amiga', 'bsd', 'dvh', 'gpt', 'mac', 'msdos', 'pc98', 'sun', 'loop')
@@ -38,6 +41,7 @@ class DiskManager:
 
     def __init__(self, client):
         self._client = client
+        JSBASE.__init__(self)
 
     def list(self):
         """

@@ -1,4 +1,7 @@
 import netaddr
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
 
 
 def combine(ip1, ip2, mask):
@@ -14,9 +17,10 @@ def combine(ip1, ip2, mask):
     return net
 
 
-class Network:
+class Network(JSBASE):
     def __init__(self, node):
         self.node = node
+        JSBASE.__init__(self)
 
     @property
     def client(self):

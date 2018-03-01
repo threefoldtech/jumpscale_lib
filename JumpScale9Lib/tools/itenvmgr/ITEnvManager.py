@@ -1,11 +1,12 @@
 from js9 import j
 
 
+JSBASE = j.application.jsbase_get_class()
 
-
-class TODO():
+class TODO(JSBASE):
 
     def __init__(self,obj,todo):
+        JSBASE.__init__(self)
         self.obj=obj
         self.path=obj.path
         self.todo=todo
@@ -16,8 +17,9 @@ class TODO():
     __str__=__repr__        
 
 
-class Device():
+class Device(JSBASE):
     def __init__(self,tomlpath):
+        JSBASE.__init__(self)
         tomlpath=tomlpath.replace("//","/")
         self.path=tomlpath
         self.todo = []
@@ -61,7 +63,7 @@ class Device():
 
         #walk over ipaddresses & fix
         if len (self.ipaddr)>1:
-            print("ipaddr")
+            self.logger.debug("ipaddr")
             from IPython import embed;embed(colors='Linux')          
 
     def ip_exists(self,ipaddr):
@@ -114,7 +116,7 @@ class Device():
             
     @property
     def ipAddr(self):
-        print("ipaddr")
+        self.logger.debug("ipaddr")
         from IPython import embed;embed(colors='Linux')
         return self.ipAddrPort[0]
 
@@ -138,8 +140,9 @@ class Device():
 
     __str__=__repr__             
 
-class Client():
+class Client(JSBASE):
     def __init__(self,tomlpath):
+        JSBASE.__init__(self)
         tomlpath=tomlpath.replace("//","/")
         self.path=tomlpath
         self.todo = []
@@ -193,8 +196,9 @@ class Client():
 
     __str__=__repr__   
 
-class itenv():
+class itenv(JSBASE):
     def __init__(self,company,name,path):
+        JSBASE.__init__(self)
         self.company = company
         self.path=path
         self.name=name
@@ -204,7 +208,7 @@ class itenv():
     def addTodo(self,path,todo):
         todo=todo.replace("_","-")
         td=TODO(self,path,todo)
-        print(td)
+        self.logger.debug(td)
         self.todo.append(td)
 
     @property
@@ -235,9 +239,10 @@ class itenv():
     
 
 
-class ITEnvManager:
+class ITEnvManager(JSBASE):
     def __init__(self):
         self.__jslocation__ = "j.tools.itenv_manager"
+        JSBASE.__init__(self)
         self.itenvs = {}
         self.devices = []
         self.clients = []

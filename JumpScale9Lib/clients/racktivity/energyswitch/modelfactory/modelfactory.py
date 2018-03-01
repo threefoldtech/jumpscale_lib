@@ -7,9 +7,12 @@ import zipfile
 
 from JumpScale9Lib.clients.racktivity.energyswitch.common import convert
 from JumpScale9Lib.clients.racktivity.energyswitch.common.GUIDTable import Value
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
 
 
-class ModelFactory:
+class ModelFactory(JSBASE):
     FIRMWARE_ID = (10004, 0, 1, Value(
         u"type='TYPE_STRING'\nsize=8\nlength=8\nunit=''\nscale=0"))
     MODULE_INFO = (40031, 0, 1, Value(
@@ -18,6 +21,7 @@ class ModelFactory:
         u"type='TYPE_VERSION_FULL'\nsize=4\nlength=4\nunit=''\nscale=0"))
 
     def __init__(self, client, rtf=None):
+        JSBASE.__init__(self)
         self._client = client
         if not rtf:
             self._model_dir = self._get_firmware_id()
@@ -199,7 +203,7 @@ class ModelFactory:
                             self._slave_power_models[int_version] = version
 
         # get master models, power models, and sensor models
-        print(os.path.dirname(__file__), "models", self._model_dir)
+        self.logger.debug(os.path.dirname(__file__), "models", self._model_dir)
         model_dir_path = os.path.join(os.path.dirname(
             __file__), "models", self._model_dir)
         match = re.search(r'.*\.egg', model_dir_path)

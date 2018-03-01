@@ -19,9 +19,10 @@ from .models import DirModel
 from .models import DirCollection
 
 from path import Path
+JSBASE = j.application.jsbase_get_class()
 
 
-class FList:
+class FList(JSBASE):
     """
     FList (sometime "plist") files contains a plain/text representation of
     a complete file system tree
@@ -73,6 +74,7 @@ class FList:
     """
 
     def __init__(self, namespace="", rootpath="", dirCollection=None, aciCollection=None, userGroupCollection=None):
+        JSBASE.__init__(self)
         self.namespace = namespace
         self.dirCollection = dirCollection
         self.aciCollection = aciCollection
@@ -136,8 +138,8 @@ class FList:
         for dirpathAbsolute, dirs, files in os.walk(path, topdown=False):
             # dirpath is full path need to bring it to the relative part
             dirRelPath, dirKey = self.path2key(dirpathAbsolute)
-            print("[+]    add: -- /%s" % dirRelPath)
-            print("[+]         \_ %s" % dirKey)
+            self.logger.debug("[+]    add: -- /%s" % dirRelPath)
+            self.logger.debug("[+]         \_ %s" % dirKey)
 
             # invalid directory
             if not self._valid(dirRelPath, _excludes):
@@ -172,7 +174,7 @@ class FList:
                 destlink = os.readlink(pathAbsolute)
                 llinks.append((rawdir, stat, destlink))
 
-                print("[+] dirlnk: -- /%s -> %s" % (rawdir, destlink))
+                self.logger.debug("[+] dirlnk: -- /%s -> %s" % (rawdir, destlink))
 
             for fname in files:
                 relPathWithName = os.path.join(dirRelPath, fname)
@@ -274,8 +276,8 @@ class FList:
                 counter += 1
 
                 dir_sub_relpath, dir_sub_key = self.path2key(absDirPathFull)
-                print("[+] subadd: -- /%s" % dir_sub_relpath)
-                print("[+]         \_ %s" % dir_sub_key)
+                self.logger.debug("[+] subadd: -- /%s" % dir_sub_relpath)
+                self.logger.debug("[+]         \_ %s" % dir_sub_key)
 
                 dbobj.attributes.dir.key = dir_sub_key  # link to directory
                 dbobj.name = j.sal.fs.getBaseName(dirRelPathFull)
@@ -514,16 +516,16 @@ class FList:
 
     def pprint(self, dirRegex=[], fileRegex=[], types="DFLS"):
         def procDir(dirobj, type, name, args, key):
-            print("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
+            self.logger.debug("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
 
         def procFile(dirobj, type, name, subobj, args):
-            print("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
+            self.logger.debug("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
 
         def procLink(dirobj, type, name, subobj, args):
-            print("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
+            self.logger.debug("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
 
         def procSpecial(dirobj, type, name, subobj, args):
-            print("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
+            self.logger.debug("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
 
         result = []
         self.walk(
@@ -610,7 +612,7 @@ class FList:
 
             args.append("|".join(item))
 
-        print("Building old flist format")
+        self.logger.debug("Building old flist format")
         result = []
         self.walk(
             dirFunction=procDir,
@@ -620,7 +622,6 @@ class FList:
             args=result
         )
 
-        # print(result)
         return "\n".join(result) + "\n"
 
     def upload(self, host="127.0.0.1", port=16379):
@@ -630,12 +631,11 @@ class FList:
         import g8storclient
 
         def procDir(dirobj, type, name, args, key):
-            # print("Dir: Ignore")
             pass
 
         def procFile(dirobj, type, name, subobj, args):
             fullpath = "%s/%s/%s" % (self.rootpath, dirobj.dbobj.location, name)
-            print("[+] populating: %s" % fullpath)
+            self.logger.debug("[+] populating: %s" % fullpath)
             hashs = g8storclient.encrypt(fullpath)
 
             if hashs is None:
@@ -647,17 +647,14 @@ class FList:
             subobj.attributes.file.blocks = hashs
             dirobj.save()
 
-            # print(dirobj, name, subobj)
 
         def procLink(dirobj, type, name, subobj, args):
-            # print("Link: Ignore")
             pass
 
         def procSpecial(dirobj, type, name, subobj, args):
-            # print("Special: Ignore")
             pass
 
-        print("Populating")
+        self.logger.debug("Populating")
         result = []
         self.walk(
             dirFunction=procDir,
@@ -671,9 +668,9 @@ class FList:
         self.aciCollection.destroy()
         self.userGroupCollection.destroy()
         self.dirCollection.destroy()
-        print("Special: Ignore")
+        self.logger.debug("Special: Ignore")
 
-        print("Uploading")
+        self.logger.debug("Uploading")
         result = []
         self.walk(
             dirFunction=procDir,

@@ -1,9 +1,12 @@
 from js9 import j
 import JumpScale9Lib.tools.aggregator.Dumper as Dumper
 
+JSBASE = j.application.jsbase_get_class()
 
-class Stats(object):
+
+class Stats(object, JSBASE):
     def __init__(self, node, key, epoch, stat, avg, max, total):
+        JSBASE.__init__(self)
         self.node = node
         self.key = key
         self.epoch = epoch
@@ -91,7 +94,7 @@ class InfluxDumper(Dumper.BaseDumper):
         }
 
     def _dump_hour(self, stats):
-        print(stats)
+        self.logger.debug(stats)
 
     def _flush(self):
         if len(self._points) == 0:

@@ -4,7 +4,6 @@ from pymongo import MongoClient, MongoReplicaSetClient
 
 JSConfigFactory = j.tools.configmanager.base_class_configs
 JSConfigClient = j.tools.configmanager.base_class_config
-
 TEMPLATE = """
 host = "localhost"
 port = 27017

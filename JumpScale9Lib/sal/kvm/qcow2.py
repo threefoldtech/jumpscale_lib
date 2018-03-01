@@ -2,12 +2,16 @@ import sys
 import struct
 import os
 import subprocess
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
 
 
-class Qcow2():
+class Qcow2(JSBASE):
     # object representing a qcow2, at this moment only readonly!
 
     def __init__(self, filename):
+        JSBASE.__init__(self)
         qcow2header = struct.Struct(">IIQIIQIIQQIIQ")
         data = self._read_data(filename, qcow2header.size)
         if (len(data) < qcow2header.size) or not data.startswith(b'QFI'):
