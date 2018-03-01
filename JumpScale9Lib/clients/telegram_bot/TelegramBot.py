@@ -20,10 +20,9 @@ class TelegramBotFactory(JSConfigFactory):
 
 class TelegramBot(JSConfigClient):
 
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigClient.__init__(self, instance=instance,
                                 data=data, parent=parent, template=TEMPLATE)
-        self.logger = j.logger.get("j.clients.telegram_bot")
         self._conn =  HTTPSConnection("api.telegram.org")
 
     def config_check(self):
