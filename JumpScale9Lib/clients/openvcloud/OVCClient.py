@@ -33,7 +33,6 @@ class OVCClient(JSConfigBase):
         JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,
                               template=TEMPLATE, interactive=interactive)
         self._api = None
-
         if "location" not in data or not data["location"]:
             self.config.data = data
             if len(self.locations) == 1:
@@ -186,7 +185,7 @@ class OVCClient(JSConfigBase):
         """
 
         if location == "":
-            location = self.client.config.data["location"]
+            location = self.api.config.data["location"]
 
         account = self.account_get(name=accountName, create=False)
         if account:
