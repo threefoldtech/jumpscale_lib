@@ -2,6 +2,7 @@
 
 from js9 import j
 from .IYOClient import IYOClient
+import requests
 
 DEFAULT_BASE_URL = "https://itsyou.online/api"
 
@@ -18,6 +19,13 @@ class IYOFactory(JSConfigBaseFactory):
 
     def install(self):
         j.tools.prefab.local.runtimes.pip.install("python-jose")
+
+    def refresh_jwt_token(self, token, validity=86400):
+        headers = {'Authorization': 'bearer %s' % token}
+        params = {'validity': validity}
+        resp = requests.get('https://itsyou.online/v1/oauth/jwt/refresh', headers=headers, params=params)
+        resp.raise_for_status()
+        return resp.content.decode()
 
     @property
     def default(self):
