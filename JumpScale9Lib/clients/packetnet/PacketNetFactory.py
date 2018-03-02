@@ -154,8 +154,7 @@ class PacketNet(JSConfigClient):
         return self._startDevice(hostname=hostname, plan=plan, facility=facility, os=os,
                                  wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId=zerotierId, always_pxe=False, sshkey=sshkey)
 
-    def startZeroOS(self, hostname="removeMe", plan='baremetal_0', facility='ams1', zerotierId="",
-                    zerotierAPI="", wait=True, remove=False):
+    def startZeroOS(self, hostname="removeMe", plan='baremetal_0', facility='ams1', zerotierId="", zerotierAPI="", wait=True, remove=False):
         """
         return (zero-os-client,pubIpAddress,zerotierIpAddress)
         """

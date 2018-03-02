@@ -22,7 +22,9 @@ class Machine(JSBASE):
     def refresh(self):
         self._model = None
         self._prefab = None
+        self._prefab_private = None
         self._sshclient = None
+        self._sshclient_private = None
         self.deleted = False
 
     @property
@@ -258,6 +260,10 @@ class Machine(JSBASE):
         return self.model['interfaces'][0]['ipAddress']
 
     @property
+    def ipaddr_public(self):
+        return self.space.model["publicipaddress"]
+
+    @property
     def sshclient(self):
         if self.deleted:
             raise RuntimeError("machine deleted")
@@ -268,6 +274,19 @@ class Machine(JSBASE):
             self._sshclient = j.clients.ssh.new(instance=key, addr=addr, port=port, login="root", passwd="",
                                                 keyname=self.sshkeyname, allow_agent=True, timeout=300, addr_priv=self.ipaddr_priv)
         return self._sshclient
+
+    @property
+    def sshclient_private(self):
+        if self.deleted:
+            raise RuntimeError("machine deleted")
+
+        if self._sshclient_private is None:
+            addr, port = self.ipaddr_priv, 22
+            key = addr.replace(".", "-") + "-%s" % port
+            key += '_private'
+            self._sshclient_private = j.clients.ssh.new(instance=key, addr=self.ipaddr_priv, port=22, login="root", passwd="",
+                                                        keyname=self.sshkeyname, allow_agent=True, timeout=300, addr_priv=self.ipaddr_priv)
+        return self._sshclient_private
 
     def _ssh_info(self):
         sp_pfs = self.space.portforwards
@@ -306,9 +325,27 @@ class Machine(JSBASE):
 
         j.tools.executor.reset()
 
-    @property
-    def ipaddr_public(self):
-        return self.space.model["publicipaddress"]
+    def authorizeSSH_private(self, sshkeyname):
+        login = self.model['accounts'][0]['login']
+        password = self.model['accounts'][0]['password']
+
+        addr, port = self.ipaddr_priv, 22
+        instance = self.ipaddr_public.replace(".", "-") + "-%s" % port + "-%s" % login
+
+        sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login=login, passwd=password,
+                                      keyname="", allow_agent=False, timeout=300)
+        sshclient.connect()
+        sshclient.ssh_authorize(key=sshkeyname, user='root')
+        sshclient.config.delete()  # remove this temp sshconnection
+        sshclient.close()
+
+        # remove bad key from local known hosts file
+        j.clients.sshkey.knownhosts_remove(addr)
+        instance = self.ipaddr_public.replace(".", "-") + "-%s" % port
+        self._sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login="root", passwd="",
+                                            keyname=self.sshkeyname, allow_agent=True, timeout=300, addr_priv=self.ipaddr_priv)
+
+        j.tools.executor.reset()
 
     @property
     def ssh_ipaddr_public(self):
@@ -345,6 +382,12 @@ class Machine(JSBASE):
         return j.tools.executor.ssh_get(self.sshclient)
 
     @property
+    def executor_private(self):
+        if self.deleted:
+            raise RuntimeError("machine deleted")
+        return j.tools.executor.ssh_get(self.sshclient_private)
+
+    @property
     def prefab(self):
         """
         Will get a prefab executor for the machine.
@@ -363,10 +406,35 @@ class Machine(JSBASE):
         return self._prefab
 
     @property
+    def prefab_private(self):
+        """
+        Will get a prefab executor for the machine.
+        Will attempt to create a portforwarding
+
+        the sshkeyname needs to be loaded in local ssh-agent (this is the only supported method!)
+
+        login/passwd has been made obsolete, its too dangerous
+
+        """
+        if self.deleted:
+            raise RuntimeError("machine deleted")
+
+        if self._prefab_private is None:
+            self._prefab_private = j.tools.prefab.get(self.executor_private, usecache=False)
+        return self._prefab_private
+
+    @property
     def node(self):
         if self.deleted:
             raise RuntimeError("machine deleted")
         node = j.tools.nodemgr.get(self.name, create=False)
+        return node
+
+    @property
+    def node_private(self):
+        if self.deleted:
+            raise RuntimeError("machine deleted")
+        node = j.tools.nodemgr.get(self.name+"_private", create=False)
         return node
 
     def __repr__(self):
