@@ -1,9 +1,6 @@
 from js9 import j
-try:
-    from wordpress_json import WordpressJsonWrapper
-except:
-    j.tools.prefab.local.runtimes.pip.install("wordpress-json")
-    from wordpress_json import WordpressJsonWrapper
+    
+from wordpress_json import WordpressJsonWrapper
 
 # this client requires wordpress configurations
 # please follow these instructions https://github.com/stylight/python-wordpress-json
@@ -24,6 +21,9 @@ class WordpressClient(JSConfigBase):
         self.username = c["username"]
         self.password = c["password_"]
         self._api = None
+
+    def install(self):
+        j.tools.prefab.local.runtimes.pip.install("wordpress-json")
     
     @property
     def api(self):

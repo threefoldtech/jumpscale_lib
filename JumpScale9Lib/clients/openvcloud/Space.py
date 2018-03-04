@@ -135,7 +135,8 @@ class Space(Authorizables):
             image="Ubuntu 16.04 x64",
             sizeId=None,
             stackId=None,
-            reset=False):
+            reset=False,
+            managed_private=False):
         """
         Returns the virtual machine with given name, and in case it doesn't exist yet creates the machine if the create argument is set to True.
 
@@ -151,6 +152,9 @@ class Space(Authorizables):
             - sizeId (optional): overrides the value set for memsize, denotes the type or "size" of the virtual machine, actually sets the number of virtual CPU cores and amount of memory, see the sizes property of the cloud space for the sizes available in the cloud space
             - stackId (optional): identifies the grid node on which to create the virtual machine, if nothing specified (recommended) OpenvCloud will decide where to create the virtual machine
             - reset: if True remove if exists
+            - managed_private: if set to true, the access to the VM will be done using the private IP of the vm. Which means the client needs to be execute from a machine that can access the private
+                               network of the cloudspace
+                               if False, use the public IP of the cloudspace to access the VM. It will create a port forward to be able to access the VM
 
         Raises: RuntimeError if machine doesn't exist, and create argument was set to False (default)
         """
@@ -168,19 +172,25 @@ class Space(Authorizables):
                                               datadisks=datadisks,
                                               image=image,
                                               sizeId=sizeId,
-                                              stackId=stackId)
+                                              stackId=stackId,
+                                              managed_private=managed_private)
                 machine.new = True
                 self.machines[name] = machine
             else:
                 raise RuntimeError("Cannot find machine:%s" % name)
 
-        self._node_set(self.machines[name])
-        self.machines[name].new = False
+        machine = self.machines[name]
+        if not managed_private:
+            self._node_set(machine.name, machine.sshclient)
+        else:
+            self._node_set(machine.name+'_private', machine.sshclient_private)
 
-        return self.machines[name]
+        machine.new = False
 
-    def _node_set(self, machine):
-        j.tools.nodemgr.set(machine.name, sshclient=machine.sshclient.instance, selected=False,
+        return machine
+
+    def _node_set(self, name, sshclient):
+        j.tools.nodemgr.set(name, sshclient=sshclient.instance, selected=False,
                             cat="openvcloud", clienttype="j.clients.openvcloud", description="deployment in openvcloud")
 
     def machines_delete(self):
@@ -204,6 +214,7 @@ class Space(Authorizables):
         sizeId=None,
         stackId=None,
         description=None,
+        managed_private=False
     ):
         """
         Creates a new virtual machine.
@@ -219,6 +230,9 @@ class Space(Authorizables):
             - sizeId (optional): overrides the value set for memsize, denotes the type or "size" of the virtual machine, actually sets the number of virtual CPU cores and amount of memory, see the sizes property of the cloud space for the sizes available in the cloud space
             - stackId (optional): identifies the grid node on which to create the virtual machine, if nothing specified (recommended) OpenvCloud will decide where to create the virtual machine
             - description (optional): machine description
+            - managed_private: if set to true, the access to the VM will be done using the private IP of the vm. Which means the client needs to be execute from a machine that can access the private
+                               network of the cloudspace
+                               if False, use the public IP of the cloudspace to access the VM. It will create a port forward to be able to access the VM
 
         Raises:
             - RuntimeError if machine with given name already exists.
@@ -273,14 +287,23 @@ class Space(Authorizables):
         self.logger.info("machine created.")
 
         machine = self.machines[name]
-        machine.portforward_create(None, 22)
+        if not managed_private:
+            machine.portforward_create(None, 22)
 
         if sshkeyname:
-            machine.authorizeSSH(sshkeyname=sshkeyname)
+            if not managed_private:
+                machine.authorizeSSH(sshkeyname=sshkeyname)
+            else:
+                machine.authorizeSSH_private(sshkeyname=sshkeyname)
         else:
             raise RuntimeError("needs to be implemented, no sshkeyname given")
-        machine.prefab.core.hostname = name  # make sure hostname is set
-        self._node_set(machine)
+
+        if not managed_private:
+            machine.prefab.core.hostname = name  # make sure hostname is set
+            self._node_set(machine.name, machine.sshclient)
+        else:
+            machine.prefab_private.core.hostname = name  # make sure hostname is set
+            self._node_set(machine.name+'_private', machine.sshclient_private)
 
         return machine
 
