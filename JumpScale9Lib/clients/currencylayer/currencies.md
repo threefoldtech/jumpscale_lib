@@ -6,7 +6,7 @@ see https://currencylayer.com/
 need to get a key there
 when using the tool it will ask you to configure the client
 
-d0
+do
 ```python
 js9 'j.clients.currencylayer.cur2usd_print()'
 ```
