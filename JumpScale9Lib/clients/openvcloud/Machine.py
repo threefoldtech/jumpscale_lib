@@ -320,9 +320,6 @@ class Machine(JSBASE):
         # remove bad key from local known hosts file
         j.clients.sshkey.knownhosts_remove(addr)
         instance = self.ipaddr_public.replace(".", "-") + "-%s" % port
-        if not self.sshkeyname:
-            import ipdb
-            ipdb.set_trace()
         self._sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login="root", passwd="",
                                             keyname=self.sshkeyname, allow_agent=True, timeout=300, addr_priv=self.ipaddr_priv)
 
