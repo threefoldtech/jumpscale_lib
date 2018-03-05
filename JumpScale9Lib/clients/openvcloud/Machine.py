@@ -320,6 +320,9 @@ class Machine(JSBASE):
         # remove bad key from local known hosts file
         j.clients.sshkey.knownhosts_remove(addr)
         instance = self.ipaddr_public.replace(".", "-") + "-%s" % port
+        if not self.sshkeyname:
+            import ipdb
+            ipdb.set_trace()
         self._sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login="root", passwd="",
                                             keyname=self.sshkeyname, allow_agent=True, timeout=300, addr_priv=self.ipaddr_priv)
 
@@ -434,7 +437,7 @@ class Machine(JSBASE):
     def node_private(self):
         if self.deleted:
             raise RuntimeError("machine deleted")
-        node = j.tools.nodemgr.get(self.name+"_private", create=False)
+        node = j.tools.nodemgr.get(self.name + "_private", create=False)
         return node
 
     def __repr__(self):
