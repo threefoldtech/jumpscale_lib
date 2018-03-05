@@ -180,23 +180,29 @@ class Node:
 
     def partition_and_mount_disks(self, name='fscache'):
         fscache_sp = self.find_persistance(name)
-        devices = fscache_sp.devices if fscache_sp else []
+        cache_devices = fscache_sp.devices if fscache_sp else []
         mounts = {}
 
         for disk in self.disks.list():
-            if disk.partitions:
+            if disk.model == 'QEMU HARDDISK   ':
                 continue
-
-            disk.mktable()
-            disk.mkpart('0', '100%')
+            if not disk.partitions:
+                disk.mktable()
+                disk.mkpart('0', '100%')
 
             for partition in disk.partitions:
-                if partition.devicename in devices:
+                if partition.devicename in cache_devices:
                     continue
-                self.client.btrfs.create(partition.name, [partition.devicename])
-                self.client.filesystem.mkdir('/tmp/{}'.format(partition.name))
+                if not partition.filesystems:
+                    self.client.btrfs.create(partition.name, [partition.devicename])
+
                 mount_point = '/tmp/{}'.format(partition.name)
-                self.client.disk.mount(partition.devicename, mount_point)
+                if partition.mountpoint and partition.mountpoint != mount_point:
+                    raise RuntimeError('Partition {} is mounted to another location {}'.format(partition.name, partition.mountpoint))
+
+                if not partition.mountpoint:
+                    self.client.filesystem.mkdir('/tmp/{}'.format(partition.name))
+                    self.client.disk.mount(partition.devicename, mount_point)
                 mounts[partition.name] = mount_point
 
         return mounts
@@ -285,7 +291,6 @@ class Node:
                 state = self.client.ping()
                 break
             except (RuntimeError, ConnectionError, redis.ConnectionError, redis.TimeoutError, TimeoutError) as error:
-                print("****************** in except")
                 err = error
                 time.sleep(1)
         else:
