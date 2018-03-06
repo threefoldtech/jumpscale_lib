@@ -132,4 +132,4 @@ class SALFactory:
 
     def get_zerodb(self, name, container, addr='0.0.0.0', port=9900, data_dir='/mnt/data',
                    index_dir='/mnt/index', mode='user', sync=False, admin=''):
-        return ZeroDB(name, container, addr, port, data_dir, index_dir, mode, sync)
+        return ZeroDB(name, container, addr, port, data_dir, index_dir, mode, sync, admin)

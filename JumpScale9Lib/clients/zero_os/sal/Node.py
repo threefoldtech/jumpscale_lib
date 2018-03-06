@@ -181,11 +181,13 @@ class Node:
     def partition_and_mount_disks(self, name='fscache'):
         fscache_sp = self.find_persistance(name)
         cache_devices = fscache_sp.devices if fscache_sp else []
-        mounts = {}
+        mounts = []
 
         for disk in self.disks.list():
+            # this check is there to be able to test with a qemu setup
             if disk.model == 'QEMU HARDDISK   ':
                 continue
+
             if not disk.partitions:
                 disk.mktable()
                 disk.mkpart('0', '100%')
@@ -197,13 +199,13 @@ class Node:
                     self.client.btrfs.create(partition.name, [partition.devicename])
 
                 mount_point = '/tmp/{}'.format(partition.name)
-                if partition.mountpoint and partition.mountpoint != mount_point:
-                    raise RuntimeError('Partition {} is mounted to another location {}'.format(partition.name, partition.mountpoint))
+                if partition.mountpoint and partition.mountpoint != mount_point and not partition.mountpoint.startswith('/mnt/container-'):
+                    raise RuntimeError('Unexcpected mountpint {} for partition {}'.format(partition.mountpoint, partition.name))
 
                 if not partition.mountpoint:
                     self.client.filesystem.mkdir('/tmp/{}'.format(partition.name))
                     self.client.disk.mount(partition.devicename, mount_point)
-                mounts[partition.name] = mount_point
+                mounts.append({'partition': partition.name, 'mountpoint': mount_point})
 
         return mounts
 

@@ -65,6 +65,10 @@ class ZeroDB:
         Start zero db server
         :param timeout: time in seconds to wait for the zerodb server to start
         """
+        is_running = self.is_running()
+        if is_running:
+            return
+
         cmd = '/bin/zdb \
             --listen {addr} \
             --port {port} \
