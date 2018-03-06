@@ -434,7 +434,7 @@ class Machine(JSBASE):
     def node_private(self):
         if self.deleted:
             raise RuntimeError("machine deleted")
-        node = j.tools.nodemgr.get(self.name + "_private", create=False)
+        node = j.tools.nodemgr.get(self.name+"_private", create=False)
         return node
 
     def __repr__(self):
