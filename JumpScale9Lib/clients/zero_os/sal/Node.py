@@ -5,15 +5,15 @@ from io import BytesIO
 
 import netaddr
 import redis
-
+from js9 import j
 from JumpScale9Lib.clients.zero_os.Client import Client
 
+from .Capacity import Capacity
 from .Container import Containers
 from .Disk import Disks, DiskType
 from .healthcheck import HealthCheck
 from .Network import Network
 from .StoragePool import StoragePools
-from js9 import j
 
 Mount = namedtuple('Mount', ['device', 'mountpoint', 'fstype', 'options'])
 
@@ -33,6 +33,7 @@ class Node(JSBASE):
         self.containers = Containers(self)
         self.network = Network(self)
         self.healthcheck = HealthCheck(self)
+        self.capacity = Capacity(self)
         self.client = client
         JSBASE.__init__(self)
 
