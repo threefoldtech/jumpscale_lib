@@ -57,11 +57,12 @@ class BaseDumper:
         return self._cidr
 
     def _process(self, ip, port, queue, errorqueue):
-        redis = j.clients.redis.get(ip, port)
-        now = int(time.time())
         try:
+            redis = j.clients.redis.get(ip, port)
+            now = int(time.time())
             logging.info("Processing redis %s:%s" % (ip, port))
             self.dump(redis)
+            queue.put_nowait((ip, port))
         except Exception:
             logging.exception("Failed to process redis '%s:%s'" % (ip, port))
             errorqueue.put_nowait((ip, port))
@@ -71,8 +72,6 @@ class BaseDumper:
             if int(time.time()) - now < 1:
                 # process took very short time. Give worker time to rest
                 time.sleep(1)
-
-        queue.put_nowait((ip, port))
 
     def dump(self, redis):
         """
