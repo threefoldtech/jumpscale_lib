@@ -3,8 +3,10 @@
 import requests
 
 
+
 class HTTPClient:
     def __init__(self, base_uri):
+        pass
         self.base_url = base_uri
         self.session = requests.Session()
 

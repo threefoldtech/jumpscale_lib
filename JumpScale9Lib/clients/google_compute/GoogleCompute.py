@@ -5,12 +5,14 @@ from googleapiclient import discovery
 from oauth2client.client import GoogleCredentials
 
 # https://cloud.google.com/compute/docs/reference/latest/instances/list
+JSBASE = j.application.jsbase_get_class()
 
 
-class GoogleCompute:
+class GoogleCompute(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.google_compute"
+        JSBASE.__init__(self)
         self.zone = 'us-east1-b'
         self.projectName = 'constant-carver-655'
         self.credentials = None
@@ -146,7 +148,7 @@ class GoogleCompute:
             }
         }
 
-        print(config)
+        self.logger.debug(config)
 
         res = self.service.instances().insert(project=self.projectName,
                                               zone=self.zone, body=config).execute()
@@ -163,7 +165,7 @@ class GoogleCompute:
 
         """
         # get pub key from local FS
-        keypath = j.clients.ssh.SSHKeyGetPathFromAgent("kds")
+        keypath = j.clients.ssh.sshkey_path_get("kds")
         key = j.sal.fs.readFile(keypath + ".pub")
 
         # get old instance metadata

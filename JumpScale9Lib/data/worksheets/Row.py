@@ -1,7 +1,9 @@
 
 from js9 import j
+JSBASE = j.application.jsbase_get_class()
 
-class Row():
+
+class Row(JSBASE):
 
     def __init__(self, name="", ttype="float", nrcols=72, aggregate="T", description="", groupname="", groupdescr="",
                  format="", defval="default", nrfloat=None):
@@ -32,6 +34,7 @@ class Row():
         if ttype not in ["int", "perc", "float", "empty", "str", "unknown"]:
             raise j.exceptions.RuntimeError("only support format: int,perc,float,empty,str,unknown")
         self.nrcols = nrcols
+        JSBASE.__init__(self)
 
     def setDefaultValue(self, defval=None, stop=None):
         if defval is None:
@@ -129,8 +132,8 @@ class Row():
         try:
             interpolated = j.tools.numtools.interpolateList(tointerpolate, floatnr=self.nrfloat)
         except Exception as e:
-            print(("could not interpolate row %s" % self.name))
-            print("DEBUG NOW cannot interpolate, explore self & tointerpolate")
+            self.logger.error(("could not interpolate row %s" % self.name))
+            self.logger.error("DEBUG NOW cannot interpolate, explore self & tointerpolate")
         xx = 0
         for x in range(start, stop + 1):
             self.cells[x] = interpolated[xx]
@@ -168,14 +171,12 @@ class Row():
             for xInBlock in range(0, blocksize + 1):
                 x += 1
                 xorg = xInBlock
-                # print "xorg:%s"%xorg
                 if x > self.nrcols:
                     halt = True
                     self.setCell(self.nrcols - 1, lastpos, minvalue, maxvalue)
                     break
                 if self.cells[xorg] is not None:
                     val = self.cells[xorg]
-                    # print val
                     val = val + self._getVariationRelative(vvariation, val)
                     self.setCell(x, val, minvalue, maxvalue)
 
@@ -185,10 +186,9 @@ class Row():
         if maxvalue is not None and value > maxvalue:
             value = maxvalue
         if posx > self.nrcols - 1:
-            print(("out of range: x:%s y:%s" % (posx, value)))
+            self.logger.debug(("out of range: x:%s y:%s" % (posx, value)))
             return None, None
         self.cells[posx] = value
-        # print "x:%s y:%s" % (posx,value)
         return posx, value
 
     def _getVariationAbsoluteInt(self, val, variation):
@@ -299,20 +299,17 @@ class Row():
         nr = val
         if nr is None:
             nr = 0.0
-        # print "%s %s %s" % (self.name,nr,self._cumul)
         if nr + self._cumul > 0.5 and nr + self._cumul < 10:
             self._cumul = nr + self._cumul
             nr2 = j.tools.numtools.roundDown(self._cumul * 2, 0) / 2
             self._cumul += nr - nr2
             self._cumul = self._cumul - nr2
-            # print "<10 %s %s" % (nr2,self._cumul)
             return nr2
         elif nr + self._cumul == 0.5:
             self._cumul = 0.0
             return 0.5
         elif nr + self._cumul < 0.5:
             self._cumul += nr
-            # print "<0.5 %s %s" % (0,self._cumul)
             return 0
         elif nr + self._cumul >= 10:
             nr2 = j.tools.numtools.roundDown(nr, 0)
@@ -388,6 +385,9 @@ class Row():
 
         self.setDefaultValue()
 
+        if self.ttype=="int":
+            self.round(0,0)
+
         if round:
             self._cumul = 0.0
             self.applyFunction(self._roundNrCumul)
@@ -399,7 +399,6 @@ class Row():
         @param churn 2 means 2% churn
         @param delay is different beween selling & being active
         """
-        # print "churn:%s" % churn
         if churn == "1000%":
             row.setDefaultValue(0.0)
             return row
@@ -422,7 +421,8 @@ class Row():
 
     def round(self, nrfloat=None, roundval=None):
         """
-        @param roundval if e.g. 100 means round will be done with values of 10, nr float will then be 0 (automatically)
+        @param roundval if e.g. 10 means round will be done with values of 10
+            nr float will then be 0 (automatically)
         """
         if nrfloat is None:
             nrfloat = self.nrfloat
@@ -465,9 +465,7 @@ class Row():
         delayed = 0.0
         if delay < 0:
             for i in range(-delay + 1):
-                # print "delay: %s %s %s" % (self.name,i,self.cells[i])
                 delayed += self.cells[i]
-            # print delayed
         i = delay
         for cell in self.cells:
             if i < nrmax and i > -1:

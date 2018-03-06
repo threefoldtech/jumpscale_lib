@@ -36,6 +36,7 @@ class Machine(BaseKVMComponent):
         @param cloud_init bool: option to use cloud_init passing creating and passing ssh_keys,
          user name and passwd to the image
         """
+        BaseKVMComponent.__init__(controller=controller)
         self.name = name
         self.disks = disks
         self.nics = nics

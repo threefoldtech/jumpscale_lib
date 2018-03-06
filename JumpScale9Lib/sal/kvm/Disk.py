@@ -21,6 +21,7 @@ class Disk(BaseKVMComponent):
         @param image_name  str: name of image to load on disk  if available.
         @param disk_iops int: total throughput limit in bytes per second.
         """
+        BaseKVMComponent.__init__(controller=controller)
         self.size = size
         self.image_name = image_name
         self.controller = controller

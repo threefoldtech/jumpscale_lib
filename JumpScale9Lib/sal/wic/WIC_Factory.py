@@ -1,11 +1,14 @@
 from js9 import j
 
+JSBASE = j.application.jsbase_get_class()
 
-class WIC_Factory:
+
+class WIC_Factory(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.tools.wic"
         self.defPassword = "rooter"
+        JSBASE.__init__(self)
 
     def get(self, ipaddr, passwd=""):
         return WIC()
@@ -27,7 +30,7 @@ class WIC_Factory:
 
             e = j.tools.executor.getSSHBased(ipaddr, port=22, login="root", passwd="rooter", usecache=False)
 
-            print("##### START UPDATE PROCESS, THIS CAN TAKE 3 MIN")
+            self.logger.debug("##### START UPDATE PROCESS, THIS CAN TAKE 3 MIN")
             cmd = "cd /tmp;wget http://downloads.openwrt.org/chaos_calmer/15.05.1/ar71xx/generic/openwrt-15.05.1-ar71xx-generic-gl-inet-6416A-v1-squashfs-factory.bin;sysupgrade openwrt-15.05.1-ar71xx-generic-gl-inet-6416A-v1-squashfs-factory.bin"
             res = e.sshclient.client.exec_command(cmd)
 
@@ -46,7 +49,7 @@ class WIC_Factory:
 
             e.sshclient.close()
 
-            print("##### WIC IS NOW REBOOTING")
+            self.logger.debug("##### WIC IS NOW REBOOTING")
 
             t = j.data.time.getTimeEpoch()
             timeout = t + 180
@@ -59,7 +62,7 @@ class WIC_Factory:
             if state != "up":
                 raise RuntimeError("cannot update %s, reboot did not happen in 180 sec." % ipaddr)
 
-            print("##### WIC IS LIFE, UPDATE PACKAGES")
+            self.logger.debug("##### WIC IS LIFE, UPDATE PACKAGES")
 
             time.sleep(5)
 
@@ -70,7 +73,7 @@ class WIC_Factory:
         def sw(ipaddr):
 
             e = j.tools.executor.getSSHBased(ipaddr, port=22, login="root", passwd="rooter", usecache=False)
-            print("%s:UPDATE OPKG" % ipaddr)
+            self.logger.debug("%s:UPDATE OPKG" % ipaddr)
             e.sshclient.execute("opkg update")
             e.sshclient.execute("opkg install bash")
             e.sshclient.execute("opkg install fastd")
@@ -87,7 +90,7 @@ class WIC_Factory:
             # wics.append(wic)
 
 
-class WIC:
+class WIC(JSBASE):
     """
     methods to work with console on windows
     """
@@ -95,10 +98,10 @@ class WIC:
     def __init__(self, ipaddr, passwd):
         """
         """
+        JSBASE.__init__(self)
         from IPython import embed
-        print("DEBUG NOW get prefab")
+        self.logger.debug("DEBUG NOW get prefab")
         embed()
-        p
 
         self._prefab
 
@@ -106,3 +109,4 @@ class WIC:
         '''
         opkg update
         '''
+        pass

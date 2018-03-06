@@ -3,11 +3,13 @@ from js9 import j
 import re
 
 #@review [kristof,incubaid] name:codereviewtools tools for codereview, check all new code
+JSBASE = j.application.jsbase_get_class()
 
 
-class CodeManager:
+class CodeManager(JSBASE):
 
     def __init__(self):
+        JSBASE.__init__(self)
         self.ignoreDirs = ["/.hg*"]
         self.users = {}
         self.groups = {}
@@ -80,7 +82,7 @@ class CodeManager:
         for pathItem in files:
             if not self._pathIgnoreCheck(pathItem):
                 path2 = pathItem.replace(path, "")
-                print(("parse %s" % path2))
+                self.logger.debug(("parse %s" % path2))
                 if not path2 == "/apps/incubaiddevelopmentprocess/appserver/service_developmentprocess/extensions/codeparser/Parser.py":
                     if path2[0] == "/":
                         path3 = path2[1:]
@@ -88,12 +90,13 @@ class CodeManager:
                     codemanagerfile.process()
 
 
-class CodeManagerFile:
+class CodeManagerFile(JSBASE):
     """
     manages code for one file
     """
 
     def __init__(self, codemanager, path):
+        JSBASE.__init__(self)
         self.users = j.tools.code.codemanager.users
         self.groups = j.tools.code.codemanager.groups
         self.path = path
@@ -159,7 +162,7 @@ class CodeManagerFile:
         return text, result
 
     def parseTimeInfo(self, timestring, modelobj, defaults=[8, 16, 8, 4, 8]):
-        # print "timestring: %s" % timestring
+        # self.logger.debug "timestring: %s" % timestring
         timeItems = timestring.split("/")
         modelobj.time_architecture = defaults[0]
         modelobj.time_coding = defaults[1]
@@ -255,7 +258,7 @@ class CodeManagerFile:
         descr = ""
         state = "start"
         tags = ""
-        # print "parse task: %s" % text
+        # self.logger.debug "parse task: %s" % text
         text, users = self.getUsers(text)
         text = text.replace("  ", " ")
         text = text.replace("  ", " ")
@@ -263,7 +266,7 @@ class CodeManagerFile:
             return ["", "", "", "", ""]
         usersfound = False
         for item in text.strip().split(" "):
-            # print "item:  %s" % item
+            # self.logger.debug "item:  %s" % item
             if state == "endofmeta":
                 descr += item + " "
             if state == "start":
@@ -566,8 +569,8 @@ class CodeManagerFile:
                 obj.model.context = self._getLinesAround(fullPath, line, 10, 20)
 
                 obj.model.descrshort = self.shortenDescr(descr)
-                print(("tasktext:%s" % line))
-                # print "infotext:%s" % infotext
+                self.logger.debug(("tasktext:%s" % line))
+                # self.logger.debug "infotext:%s" % infotext
                 self._parseTaskInfo(obj.model, infotext)
                 self.parseTimeInfo(timetext, obj.model, defaults=[0, 1, 0, 1, 0])
                 if obj.model.storyid == 0:

@@ -10,9 +10,11 @@ iyoinstance = ""
 """
 
 JSConfigBase = j.tools.configmanager.base_class_config
+JSBASE = j.application.jsbase_get_class()
 
 
-class ApiError(Exception):
+class ApiError(Exception, JSBASE):
+
     def __init__(self, response):
         msg = '%s %s' % (response.status_code, response.reason)
         try:
@@ -24,6 +26,7 @@ class ApiError(Exception):
         elif isinstance(message, dict) and 'errormessage' in message:
             msg += '\n%s' % message['errormessage']
 
+        JSBASE.__init__(self)
         super(ApiError, self).__init__(msg)
         self._response = response
 
@@ -32,11 +35,13 @@ class ApiError(Exception):
         return self._response
 
 
-class BaseResource:
+class BaseResource(JSBASE):
+
     def __init__(self, session, url):
         self._session = session
         self._url = url
         self._method = 'POST'
+        JSBASE.__init__(self)
 
     def __getattr__(self, item):
         url = os.path.join(self._url, item)
@@ -92,10 +97,10 @@ class Resource(BaseResource):
 
 
 class PortalClient(JSConfigBase, Resource):
-    def __init__(self, instance, data=None, parent=None):
+    def __init__(self, instance, data=None, parent=None,interactive=False):
         if not data:
             data = {}
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE)
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE,interactive=interactive)
         cfg = self.config.data
         ip = cfg['ip']
         port = cfg['port']

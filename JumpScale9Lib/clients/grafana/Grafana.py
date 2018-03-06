@@ -5,6 +5,7 @@ import os
 
 JSConfigBaseFactory = j.tools.configmanager.base_class_configs
 
+
 class GrafanaFactory(JSConfigBaseFactory):
 
     def __init__(self):
@@ -20,10 +21,11 @@ verify_ssl = 1
 """
 
 JSConfigBase = j.tools.configmanager.base_class_config
+
+
 class GrafanaClient(JSConfigBase):
 
     def __init__(self, instance, data={}, parent=None):
-    # def __init__(self, url, username, password, verify_ssl=True):
         JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,template=TEMPLATE)
         c = self.config.data
         self._url = c['url']

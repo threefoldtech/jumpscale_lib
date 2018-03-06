@@ -10,6 +10,7 @@ from .unmarshall_error import UnmarshallError
 class AdminService:
     def __init__(self, client):
         self.client = client
+        pass
 
     def adminDeleteUserPublicKey(self, id, username, headers=None, query_params=None, content_type="application/json"):
         """

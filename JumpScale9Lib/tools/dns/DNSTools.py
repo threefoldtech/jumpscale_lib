@@ -9,7 +9,10 @@ import dns.rdatatype
 import dns.query
 import dns.resolver
 
-class DNSTools:
+JSBASE = j.application.jsbase_get_class()
+
+
+class DNSTools(JSBASE):
     """
     to install:
     pip3 install dnspython
@@ -18,6 +21,7 @@ class DNSTools:
 
     def __init__(self):
         self.__jslocation__ = "j.tools.dnstools"
+        JSBASE.__init__(self)
 
     def getNameserversForDomain(self,domain="threefoldtoken.org",nameserver="8.8.8.8"):
 

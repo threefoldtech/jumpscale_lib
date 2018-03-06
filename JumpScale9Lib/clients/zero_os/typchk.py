@@ -1,3 +1,5 @@
+from js9 import j
+
 
 missing = object()
 
@@ -57,7 +59,7 @@ class Tracker(Exception):
         return str(self)
 
 
-class Option:
+class Option():
     def __init__(self):
         raise NotImplementedError()
 
@@ -150,7 +152,7 @@ class Enum(Option):
             raise t.reason('value "{}" not in enum'.format(object))
 
 
-class Checker:
+class Checker():
     """
     Build a type checker to check method inputs
 
@@ -193,6 +195,7 @@ class Checker:
     c.check({'name': 'azmy', children:[{'name': 'yahia', 'age': 4.0}]}) # passes
     c.check({'name': 'azmy', children:[{'name': 'yahia', 'age': 4.0}, {'name': 'yassine'}]}) # does not pass
     """
+
     def __init__(self, tyepdef):
         self._typ = tyepdef
 

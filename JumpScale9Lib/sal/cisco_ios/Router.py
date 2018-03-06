@@ -8,7 +8,7 @@ import pexpect
 import string
 import time
 import os
-
+from js9 import j
 SCRIPT_LOG = 'Script Logs.log'
 IOS = 'IOS'
 IOS_XR = 'IOS XR'
@@ -16,6 +16,8 @@ MORE_OUTPUT_PROMPT = " --More-- "
 STRIP_ASCII_CHAR = '\x08'
 
 # TODO: Fix STRIP_ASCII_CHAR
+
+JSBASE = j.application.jsbase_get_class()
 
 
 def printable_out(str_in):
@@ -27,12 +29,12 @@ def printable_out(str_in):
     return str_out
 
 
-class Router:
+class Router(JSBASE):
 
     def __init__(self, hostname, software=IOS, logfile=None, **kwargs):
+        JSBASE.__init__(self)
         self.hostname = hostname
         self.software = software        # IOS or IOS XR
-        self.logger = kwargs.get('logger')
         self.logged_in = False
 
         self._pexpect_session = None

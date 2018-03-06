@@ -3,11 +3,13 @@ Auto-generated class for UserAPIKey
 """
 from .Label import Label
 from six import string_types
-
+from js9 import j
 from . import client_support
 
 
-class UserAPIKey(object):
+
+
+class UserAPIKey( ):
     """
     auto-generated. don't touch.
     """
@@ -26,6 +28,7 @@ class UserAPIKey(object):
         return UserAPIKey(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

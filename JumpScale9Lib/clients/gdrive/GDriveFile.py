@@ -20,10 +20,13 @@ GOOGLEMIME = ['application/vnd.google-apps.audio',
               'application/vnd.google-apps.video',
               'application/vnd.google-apps.drive-sdk']
 
+JSBASE = j.application.jsbase_get_class()
 
-class GDriveFile():
+
+class GDriveFile(JSBASE):
 
     def __init__(self, id="", json=""):
+        JSBASE.__init__(self)
         self._mime_type = None
         self._gmd = None
 
@@ -162,7 +165,7 @@ class GDriveFile():
                 new_type = self.mimetype
 
             request = j.clients.gdrive.files.export_media(fileId=self.id, mimeType=new_type)
-            print("\033[92m Downloading -- \033[0m" + path)
+            self.logger.debug("\033[92m Downloading -- \033[0m" + path)
             response = request.execute()
             with open(path, "wb") as wer:
                 wer.write(response)
@@ -175,7 +178,7 @@ class GDriveFile():
                 done = False
                 while done is False:
                     status, done = downloader.next_chunk()
-                    print("\033[92m Downloading : \033[0m", " %s -- %d%%. " % (path, int(status.progress() * 100)))
+                    self.logger.debug("\033[92m Downloading : \033[0m", " %s -- %d%%. " % (path, int(status.progress() * 100)))
 
     def save(self):
         if self.changed:

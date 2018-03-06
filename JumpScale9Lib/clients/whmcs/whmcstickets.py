@@ -5,15 +5,17 @@ import xml.etree.cElementTree as et
 
 SSL_VERIFY = False
 
+JSBASE = j.application.jsbase_get_class()
 
-class whmcstickets:
+
+class whmcstickets(JSBASE):
 
     def __init__(self,
                  authenticationparams,
                  url,
                  operations_user_id,
                  operations_department_id):
-
+        JSBASE.__init__(self)
         self._authenticationparams = authenticationparams
         self._url = url
         self._operations_user_id = operations_user_id
@@ -38,7 +40,7 @@ class whmcstickets:
         clientid = clientid or self._operations_user_id
         deptid = deptid or self._operations_department_id
 
-        print(('Creating %s' % subject))
+        self.logger.debug(('Creating %s' % subject))
         create_ticket_request_params = dict(
 
             action='openticket',
@@ -65,7 +67,7 @@ class whmcstickets:
         clientid = clientid or self._operations_user_id
         deptid = deptid or self._operations_department_id
 
-        print(('Updating %s' % ticketid))
+        self.logger.debug(('Updating %s' % ticketid))
         ticket_request_params = dict()
 
         ticket_request_params['action'] = 'updateclient'
@@ -92,7 +94,7 @@ class whmcstickets:
         return response
 
     def close_ticket(self, ticketid):
-        print(('Closing %s' % ticketid))
+        self.logger.debug(('Closing %s' % ticketid))
         ticket_request_params = dict(
 
             action='updateclient',
@@ -112,7 +114,7 @@ class whmcstickets:
         return response.ok
 
     def get_ticket(self, ticketid):
-        print(('Getting %s' % ticketid))
+        self.logger.debug(('Getting %s' % ticketid))
         ticket_request_params = dict(
 
             action='getticket',
@@ -126,7 +128,7 @@ class whmcstickets:
         return ticket
 
     def add_note(self, ticketid, message):
-        print(("Adding note to ticket %s" % ticketid))
+        self.logger.debug(("Adding note to ticket %s" % ticketid))
         ticket_request_params = dict(
             action='addticketnote',
             ticketid=ticketid,

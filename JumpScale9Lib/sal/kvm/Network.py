@@ -16,6 +16,7 @@ class Network(BaseKVMComponent):
         @param interfaces list: interfaces list.
         @param ovs boolean: use ovs to create bridge. if False use ip commands
         """
+        BaseKVMComponent.__init__(controller=controller)
         self.name = name
         self.ovs = ovs
         self.bridge = bridge if bridge else name

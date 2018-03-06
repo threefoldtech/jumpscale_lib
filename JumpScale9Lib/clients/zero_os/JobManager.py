@@ -1,9 +1,12 @@
 import signal
 
 from . import typchk
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
 
 
-class JobManager:
+class JobManager(JSBASE):
     _job_chk = typchk.Checker({
         'id': typchk.Or(str, typchk.IsNone()),
     })
@@ -14,6 +17,7 @@ class JobManager:
     })
     def __init__(self, client):
         self._client = client
+        JSBASE.__init__(self)
 
     def list(self, id=None):
         """

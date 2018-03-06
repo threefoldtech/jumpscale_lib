@@ -78,7 +78,7 @@ setup(
         'netaddr>=0.7.19',
         'netifaces>=0.10.5',
         'ovh>=0.4.7',
-        'paramiko>=2.1.2',
+        'paramiko>=1.15.3,<2.2',  # for parallel-ssh
         'path.py>=10.3.1',
         'peewee>=2.9.2',
         'psutil>=5.2.2 ',
@@ -98,7 +98,7 @@ setup(
         # 'apache_libcloud>=2.0.0',
         'python-etcd>=0.4.5',
         'zerotier>=1.1.2',
-        'packet-python>=1.33',
+        'packet-python>=1.37',
         'blosc>=1.5.1',
         'dnspython',
         'pynacl>=1.1.2',

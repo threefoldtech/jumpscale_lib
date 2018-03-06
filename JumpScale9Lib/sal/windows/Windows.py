@@ -36,8 +36,10 @@ if j.core.platformtype.myplatform.isWindows:
     # from JumpScale9Lib.core.inifile.IniFile import IniFile
     import shutil
 
+JSBASE = j.application.jsbase_get_class()
 
-class WindowsSystem:
+
+class WindowsSystem(JSBASE):
 
     try:
         mythreads = []
@@ -52,7 +54,7 @@ class WindowsSystem:
 
     def __init__(self):
         self.__jslocation__ = "j.sal.windows"
-        self.logger = j .logger.get("j.sal.windows")
+        JSBASE.__init__(self)
         self.__dict__ = self.__shared_state
 
     def checkFileToIgnore(self, path):
@@ -210,7 +212,7 @@ class WindowsSystem:
         if self._isVistaUACEnabled is not None:
             return self._isVistaUACEnabled
 
-        if self.getWindowsVersion() != self.VERSION_VISTA:
+        if self.window_getsVersion() != self.VERSION_VISTA:
             return False
         hkey = reg.HKEY_LOCAL_MACHINE
         key = 'Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System'

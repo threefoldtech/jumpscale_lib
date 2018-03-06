@@ -95,8 +95,8 @@ deployment = kub_client.define_deployment(name, [container],  replicas=2, volume
 For more abstracted view, you can directly deploy an ubuntu1604 image with ssh enabled and your key added directly using
 one command to do that:
 ```python
-ssh_key_path = '%s/.ssh/id_rsa.pub' % j.dirs.HOMEDIR
-prefab_client = kub_client.deploy_ubuntu1604('tester', ssh_key_path=ssh_key_path)
+sshkey_path = '%s/.ssh/id_rsa.pub' % j.dirs.HOMEDIR
+prefab_client = kub_client.deploy_ubuntu1604('tester', sshkey_path=sshkey_path)
 ```
 This method creates the deployment and in turn pods and container, it also creates a load balancing service to expose
 the container ip to a public ip.

@@ -17,13 +17,14 @@ from .models import DirCollection
 from .models import ACIModel
 from .models import ACICollection
 # from .FuseExample import FuseExample
+JSBASE = j.application.jsbase_get_class()
 
-
-class FListFactory:
+class FListFactory(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.tools.flist"
         self.__imports__ = "brotli,pycapnp"
+        JSBASE.__init__(self)
 
     def getCapnpSchema(self):
         return ModelCapnp
@@ -132,7 +133,7 @@ class FListFactory:
         flist.add(testDir)
 
         def pprint(path, ddir, name):
-            print(path)
+            self.logger.debug(path)
 
         flist.walk(fileFunction=pprint, dirFunction=pprint, specialFunction=pprint, linkFunction=pprint)
 
@@ -141,7 +142,7 @@ class FListFactory:
         fl.destroy()
 
 
-class FListArchiver:
+class FListArchiver(JSBASE):
     # This is a not efficient way, the only other possibility
     # is to call brotli binary to compress big file if needed
     # currently, this in-memory way is used
@@ -153,6 +154,7 @@ class FListArchiver:
             self._env = 'IPFS_PATH=%s' % cl.core.replace('$JSCFGDIR/ipfs/main')
         else:
             self._env = 'IPFS_PATH=%s' % ipfs_cfgdir
+        JSBASE.__init__(self)
 
     def _compress(self, source, destination):
         with open(source, 'rb') as content_file:
@@ -186,7 +188,7 @@ class FListArchiver:
             if not flist.isRegular(files[0]):
                 continue
 
-            print("Processing: %s" % hash)
+                self.logger.debug("Processing: %s" % hash)
 
             root = "%s/%s/%s" % (backend, hash[0:2], hash[2:4])
             file = hash
@@ -201,10 +203,10 @@ class FListArchiver:
 
             # adding it to ipfs network
             hash = self.push_to_ipfs(target)
-            print("Network hash: %s" % hash)
+            self.logger.debug("Network hash: %s" % hash)
 
             # updating flist hash with ipfs hash
             for f in files:
                 flist.setHash(f, hash)
 
-        print("Files compressed and shared")
+        self.logger.debug("Files compressed and shared")

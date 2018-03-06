@@ -12,11 +12,12 @@ TEMPLATE = """
 token_ = ""
 networkID_ = ""
 """
+JSBASE = j.application.jsbase_get_class()
 
 
-class ZerotierClientInteral:
-
+class ZerotierClientInteral(JSBASE):
     def __init__(self, apikey):
+        JSBASE.__init__(self)
         self.apikey = apikey
         self.apibase = "https://my.zerotier.com/api"
 
@@ -58,8 +59,8 @@ class ZerotierClientInteral:
 
 class ZerotierClient(JSConfigClient):
 
-    def __init__(self, instance, data={}, parent=None):
-        super().__init__(instance=instance, data=data, parent=parent, template=TEMPLATE)
+    def __init__(self, instance, data={}, parent=None, interactive=False):
+        super().__init__(instance=instance, data=data, parent=parent, template=TEMPLATE, interactive=interactive)
 
         if not self.config.data['token_']:
             self.configure()
@@ -131,6 +132,5 @@ class ZerotierFactory(JSConfigFactory):
     def __init__(self):
         self.__jslocation__ = "j.clients.zerotier"
         self.__imports__ = "zerotier"
-        self.logger = j.logger.get('j.clients.zerotier')
         self.connections = {}
         JSConfigFactory.__init__(self, ZerotierClient)

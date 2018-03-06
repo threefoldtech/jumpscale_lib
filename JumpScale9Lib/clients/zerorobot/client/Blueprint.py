@@ -7,6 +7,8 @@ Auto-generated class for Blueprint
 from . import client_support
 
 
+
+
 class Blueprint(object):
     """
     auto-generated. don't touch.
@@ -22,6 +24,7 @@ class Blueprint(object):
         return Blueprint(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

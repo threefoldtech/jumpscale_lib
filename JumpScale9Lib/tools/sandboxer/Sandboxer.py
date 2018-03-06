@@ -3,10 +3,13 @@ from js9 import j
 import re
 import os
 
+JSBASE = j.application.jsbase_get_class()
 
-class Dep:
+
+class Dep(JSBASE):
 
     def __init__(self, name, path):
+        JSBASE.__init__(self)
         self.name = name
         self.path = path
         if j.sal.fs.isLink(self.path):
@@ -31,7 +34,7 @@ class Dep:
         dest = dest.replace("//", "/")
         j.sal.fs.createDir(j.sal.fs.getDirName(dest))
         if dest != self.path:  # don't copy to myself
-            # print("DEPCOPY: %s %s" % (self.path, dest))
+            # self.logger.debug("DEPCOPY: %s %s" % (self.path, dest))
             if not j.sal.fs.exists(dest):
                 j.sal.fs.copyFile(self.path, dest)
             j.tools.sandboxer._done.append(dest)
@@ -42,13 +45,14 @@ class Dep:
     __repr__ = __str__
 
 
-class Sandboxer:
+class Sandboxer(JSBASE):
     """
     sandbox any linux app
     """
 
     def __init__(self):
         self.__jslocation__ = "j.tools.sandboxer"
+        JSBASE.__init__(self)
         self._done = []
         self.exclude = ["libpthread.so", "libltdl.so", "libm.so", "libresolv.so",
                         "libz.so", "libgcc", "librt", "libstdc++", "libapt", "libdbus", "libselinux"]
@@ -62,7 +66,7 @@ class Sandboxer:
             return result
 
         if path not in self._done:
-            print(("check:%s" % path))
+            self.logger.debug(("check:%s" % path))
 
             cmd = "ldd %s" % path
             rc, out, err = j.sal.process.execute(cmd, die=False)
@@ -90,13 +94,13 @@ class Sandboxer:
                         if name.lower().find(toexeclude.lower()) != -1:
                             excl = True
                     if not excl:
-                        print(("found:%s" % name))
+                        self.logger.debug(("found:%s" % name))
                         try:
                             result[name] = Dep(name, lpath)
                             self._done.append(name)
                             result = self._ldd(lpath, result)
                         except Exception as e:
-                            print(e)
+                            self.logger.debug(e)
 
         self._done.append(path)
         return result
@@ -131,7 +135,7 @@ class Sandboxer:
 
     def copyTo(self, path, dest, excludeFileRegex=[], excludeDirRegex=[], excludeFiltersExt=["pyc", "bak"]):
 
-        print("SANDBOX COPY: %s to %s" % (path, dest))
+        self.logger.debug("SANDBOX COPY: %s to %s" % (path, dest))
 
         excludeFileRegex = [re.compile(r'%s' % item)
                             for item in excludeFileRegex]
@@ -141,14 +145,14 @@ class Sandboxer:
             excludeFileRegex.append(re.compile(r'(\.%s)$' % extregex))
 
         def callbackForMatchDir(path, arg):
-            # print ("P:%s"%path)
+            # self.logger.debug ("P:%s"%path)
             for item in excludeDirRegex:
                 if(len(re.findall(item, path)) > 0):
                     return False
             return True
 
         def callbackForMatchFile(path, arg):
-            # print ("F:%s"%path)
+            # self.logger.debug ("F:%s"%path)
             for item in excludeFileRegex:
                 if(len(re.findall(item, path)) > 0):
                     return False
@@ -164,7 +168,7 @@ class Sandboxer:
 
             dest2 = dest + "/" + subpath
             j.sal.fs.createDir(j.sal.fs.getDirName(dest2))
-            # print ("C:%s"%dest2)
+            # self.logger.debug ("C:%s"%dest2)
             j.sal.fs.copyFile(src, dest2, overwriteFile=True)
 
         j.sal.fswalker.walkFunctional(path, callbackFunctionFile=callbackFile, callbackFunctionDir=None, arg=(
@@ -189,10 +193,10 @@ class Sandboxer:
     #         path_src = j.tools.path.get(srcReal)
     #         self.original_size += path_src.size
     #         if compress:
-    #             print("- %-100s %sMB" % (srcReal, round(path_src.size / 1000000, 1)))
+    #             self.logger.debug("- %-100s %sMB" % (srcReal, round(path_src.size / 1000000, 1)))
     #             if delete or not j.sal.fs.exists(dest2_bro):
     #                 cmd = "bro --quality 7 --input '%s' --output %s" % (srcReal, dest2_bro)
-    #                 # print (cmd)
+    #                 # self.logger.debug (cmd)
     #                 j.sal.process.execute(cmd)
     #                 if not j.sal.fs.exists(dest2_bro):
     #                     raise j.exceptions.RuntimeError("Could not do:%s" % cmd)
@@ -207,7 +211,7 @@ class Sandboxer:
     #                     efficiency_now = round(path_dest.size / path_src.size, 3)
     #                 else:
     #                     efficiency_now = 0
-    #                 print("- %-100s %-6s %-6s %sMB" %
+    #                 self.logger.debug("- %-100s %-6s %-6s %sMB" %
     #                       ("", efficiency, efficiency_now, round(self.original_size / 1000000, 1)))
     #         else:
     #             j.sal.fs.copyFile(srcReal, dest2)
@@ -233,7 +237,7 @@ class Sandboxer:
     #         for i2 in "1234567890abcdef":
     #             j.sal.fs.createDir("%s/%s/%s" % (storpath2, i1, i2))
 
-    #     print("DEDUPE: %s to %s" % (path, storpath))
+    #     self.logger.debug("DEDUPE: %s to %s" % (path, storpath))
 
     #     plistfile = j.sal.fs.joinPaths(storpath, "md", "%s.flist" % name)
 
@@ -275,7 +279,7 @@ class Sandboxer:
     #             if self.exists(link):
     #                 name = os.path.basename(link)
     #                 if name not in deps:
-    #                     print(link)
+    #                     self.logger.debug(link)
     #                     deps[name] = link
     #                     deps = self.findDependencies(link)
     #     return deps

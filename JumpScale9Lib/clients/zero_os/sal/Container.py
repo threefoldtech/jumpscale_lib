@@ -1,14 +1,17 @@
 import logging
 from io import BytesIO
+from js9 import j
 
 logging.basicConfig(level=logging.INFO)
 default_logger = logging.getLogger(__name__)
 
+JSBASE = j.application.jsbase_get_class()
 
-class Containers:
+
+class Containers(JSBASE):
     def __init__(self, node, logger=None):
         self.node = node
-        self.logger = logger if logger else default_logger
+        JSBASE.__init__(self)
 
     def list(self):
         containers = []
@@ -37,7 +40,7 @@ class Containers:
         return container
 
 
-class Container:
+class Container(JSBASE):
     """G8SO Container"""
 
     def __init__(self, name, node, flist, hostname=None, mounts=None, nics=None,
@@ -47,6 +50,7 @@ class Container:
         TODO: write doc string
         filesystems: dict {filesystemObj: target}
         """
+        JSBASE.__init__(self)
         self.name = name
         self.node = node
         self.mounts = mounts or {}
@@ -60,7 +64,6 @@ class Container:
         self.privileged = privileged
         self.identity = identity
         self.env = env or {}
-        self.logger = logger if logger else default_logger
         self._client = None
 
         self._ays = None

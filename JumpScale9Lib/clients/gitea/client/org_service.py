@@ -4,8 +4,9 @@ from .unhandled_api_error import UnhandledAPIError
 from .unmarshall_error import UnmarshallError
 
 
-class OrgService:
+class OrgService():
     def __init__(self, client):
+        pass
         self.client = client
 
     def createOrgRepo(self, data, org, headers=None, query_params=None, content_type="application/json"):

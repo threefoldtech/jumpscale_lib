@@ -91,7 +91,6 @@ class IssueCollection(ModelBaseCollection):
 
         for key, item in args.items():
             if key in obj._data:
-                # print("%s:%s" % (key, item))
                 obj._data[key] = item
 
         obj.save()

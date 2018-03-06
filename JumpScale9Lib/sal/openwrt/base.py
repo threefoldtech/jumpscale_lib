@@ -1,9 +1,12 @@
 import functools
+from js9 import j
+JSBASE = j.application.jsbase_get_class()
 
 
-class BaseService:
+class BaseService(JSBASE):
 
     def __init__(self, wrt):
+        JSBASE.__init__(self)
         self._wrt = wrt
         self._package = None
 
@@ -15,7 +18,7 @@ class BaseService:
         return self._package
 
 
-class BaseServiceSection:
+class BaseServiceSection(JSBASE):
 
     def __new__(cls, *args, **kwargs):
         exposed_fields = cls.EXPOSED_FIELDS \
@@ -51,6 +54,7 @@ class BaseServiceSection:
         self.section[field] = value
 
     def __init__(self, section):
+        JSBASE.__init__(self)
         self._section = section
 
     @property

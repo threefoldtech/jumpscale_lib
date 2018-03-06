@@ -6,8 +6,12 @@ from .unhandled_api_error import UnhandledAPIError
 from .unmarshall_error import UnmarshallError
 
 
-class TeamsService:
+
+
+
+class TeamsService():
     def __init__(self, client):
+        pass
         self.client = client
 
     def orgAddTeamMember(self, username, id, headers=None, query_params=None, content_type="application/json"):

@@ -4,13 +4,16 @@ from .InfluxDumper import InfluxDumper
 from .MongoDumper import MongoDumper
 from .ECODumper import ECODumper
 
+JSBASE = j.application.jsbase_get_class()
 
-class RealitProcess:
+
+class RealitProcess(JSBASE):
     """
     """
 
     def __init__(self):
         self.__jslocation__ = "j.tools.realityprocess"
+        JSBASE.__init__(self)
 
     def influxpump(self, influxdb, cidr='127.0.0.1', ports=[7777], rentention_duration='5d', workers=4):
         """

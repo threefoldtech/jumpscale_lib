@@ -4,11 +4,13 @@ from .Base import Base
 from .Base import replacelabels
 from .Milestone import RepoMilestone
 
+JSBASE = j.application.jsbase_get_class()
+
 
 class Issue(Base):
 
     def __init__(self, repo, ddict={}, githubObj=None):
-        self.logger = j.logger.get('j.clients.github.issue')
+        Base.__init__(self)
         self.repo = repo
         self._ddict = ddict
         self._githubObj = githubObj

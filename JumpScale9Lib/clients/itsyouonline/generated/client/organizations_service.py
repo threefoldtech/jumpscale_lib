@@ -16,10 +16,14 @@ from .ValidityTime import ValidityTime
 from .api_response import APIResponse
 from .unhandled_api_error import UnhandledAPIError
 from .unmarshall_error import UnmarshallError
+from js9 import j
 
 
-class OrganizationsService:
+
+
+class OrganizationsService():
     def __init__(self, client):
+        pass
         self.client = client
 
     def Get2faValidityTime(self, globalid, headers=None, query_params=None, content_type="application/json"):

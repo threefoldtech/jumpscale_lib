@@ -1,7 +1,10 @@
 from . import typchk
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
 
 
-class KvmManager:
+class KvmManager(JSBASE):
     _iotune_dict = {
         'totalbytessecset': typchk.Or(bool, typchk.Missing()),
         'totalbytessec': typchk.Or(int, typchk.Missing()),
@@ -121,6 +124,7 @@ class KvmManager:
 
     def __init__(self, client):
         self._client = client
+        JSBASE.__init__(self)
 
     def create(self, name, media=None, flist=None, cpu=2, memory=512, nics=None, port=None, mount=None, tags=None):
         """

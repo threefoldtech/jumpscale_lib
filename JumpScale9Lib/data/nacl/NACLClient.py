@@ -1,107 +1,43 @@
 from js9 import j
-from nacl.public import PrivateKey, SealedBox, PublicKey
+from nacl.public import PrivateKey, SealedBox
 import nacl.signing
 import nacl.secret
 import nacl.utils
 import nacl.hash
 import nacl.encoding
 import hashlib
-from .AgentWithKeyname import AgentWithName
+# from .AgentWithKeyname import AgentWithName
 import binascii
 
-
-class NACLClientFactory:
-
-    def __init__(self):
-        self.__jslocation__ = "j.data.nacl"
-        self._default = None
-
-    def get(self, name="key", path="", secret="", sshkeyname=""):
-        """
-        will first look if it can find repo's with name: config_...
-        if more than 1 will match ourid (generated from ssh_agent)
-        if path not specified then is ~/.secrets
-        """
-        sshkeyname = sshkeyname
-        if path == "":
-            path = j.tools.configmanager.path_configrepo
-        return NACLClient(name, path, secret, keyname_ssh=sshkeyname)
-
-    @property
-    def default(self):
-        if self._default is None:
-            self._default = self.get()
-        return self._default
-
-    def test(self):
-        cl = self.default  # get's the default location & generate's keys
-
-        a = cl.encryptSymmetric("something")
-        b = cl.decryptSymmetric(a)
-
-        assert b == b"something"
-
-        a = cl.encryptSymmetric("something", "qwerty")
-        b = cl.decryptSymmetric(a, b"qwerty")
-        assert b == b"something"
-
-        a = cl.encryptSymmetric("something", "qwerty")
-        b = cl.decryptSymmetric(a, b"qwerty")
-        assert b == b"something"
-
-        a = cl.encryptSymmetric(b"something", "qwerty")
-        b = cl.decryptSymmetric(a, b"qwerty")
-        assert b == b"something"
-
-        # now with hex
-        a = cl.encryptSymmetric(b"something", "qwerty", hex=True)
-        b = cl.decryptSymmetric(a, b"qwerty", hex=True)
-        assert b == b"something"
-
-        a = cl.encrypt(b"something")
-        b = cl.decrypt(a)
-
-        assert b == b"something"
-
-        a = cl.encrypt("something")  # non binary start
-        b = cl.decrypt(a)
-
-        # now with hex
-        a = cl.encrypt("something", hex=True)  # non binary start
-        b = cl.decrypt(a, hex=True)
-        assert b == b"something"
+JSBASE = j.application.jsbase_get_class()
 
 
 class NACLClient:
 
-    def __init__(self, name, path, secret="", keyname_ssh=""):
+    def __init__(self, name, path, secret="", sshkeyname=""):
         """
         is secret == "" then will use the ssh-agent to generate a secret
         """
-        self.ssh_agent = AgentWithName()
-        if keyname_ssh:
-            keys = {j.sal.fs.getBaseName(k.keyname): k for k in self.ssh_agent.get_keys()}
-            if keyname_ssh not in keys:
-                raise RuntimeError("keyname {} is not loaded in the ssh-agent".format(keyname_ssh))
-            self.ssh_agent_key = keys[keyname_ssh]
-        elif len(self.ssh_agent.get_keys()) == 1:
-            self.ssh_agent_key = self.ssh_agent.get_keys()[0]
+        if sshkeyname:
+            pass
+        elif j.tools.configmanager.keyname:
+            sshkeyname = j.tools.configmanager.keyname
         else:
-            raise RuntimeError("only 1 ssh key supported for now, need to use self.keyname_ssh")
+            sshkeyname = j.core.state.configGetFromDict("myconfig", "sshkeyname")
+
+        self.sshkeyname = sshkeyname
+        self._agent = None
+
         if isinstance(secret, str):
             secret = secret.encode()
-        self.name = name
-        if path == "":
-            self.path = "%s/.secrets" % j.dirs.HOMEDIR
-            j.sal.fs.createDir(self.path)
-        else:
-            self.path = path
 
-        self.keyname_ssh = keyname_ssh
-        self.keyname = name
+        self.name = name
+
+        self.path = j.tools.configmanager.path
 
         # get/create the secret seed
-        self.path_secretseed = "%s/%s.seed" % (self.path, self.keyname)
+        self.path_secretseed = "%s/%s.seed" % (self.path, self.name)
+
         if not j.sal.fs.exists(self.path_secretseed):
             secretseed = self.hash32(nacl.utils.random(
                 nacl.secret.SecretBox.KEY_SIZE))
@@ -125,11 +61,26 @@ class NACLClient:
         secret2 = ""
         secretseed = ""
 
-        self.path_privatekey = "%s/%s.priv" % (self.path, self.keyname)
+        self.path_privatekey = "%s/%s.priv" % (self.path, self.name)
         if not j.sal.fs.exists(self.path_privatekey):
             self._keys_generate()
         self._privkey = ""
         self._pubkey = ""
+
+    @property
+    def agent(self):
+
+        def getagent(name):
+            for item in j.clients.sshkey.sshagent.get_keys():
+                if j.sal.fs.getBaseName(item.keyname) == name:
+                    return item
+            raise RuntimeError("Could not find agent for key with name:%s" % name)
+
+        if self._agent is None:
+            if not j.clients.sshkey.exists(self.sshkeyname):
+                j.clients.sshkey.key_load("%s/.ssh/%s" % (j.dirs.HOMEDIR, self.sshkeyname))
+            self._agent = getagent(self.sshkeyname)
+        return self._agent
 
     @property
     def privkey(self):
@@ -230,17 +181,18 @@ class NACLClient:
 
         self.file_write_hex(path, key3)
 
-        #build in verification
+        # build in verification
         key4 = self.file_read_hex(path)
         assert key3 == key4
 
     def sign_with_ssh_key(self, data):
         """
-        will return 32 byte signature which uses the ssh_agent loaded on your system
-        this can be used to verify data against your own ssh_agent to make sure data has not been tampered with
+        will return 32 byte signature which uses the sshagent loaded on your system
+        this can be used to verify data against your own sshagent to make sure data has not been tampered with
         """
         hash = hashlib.sha1(data).digest()
-        return self.hash32(self.ssh_agent_key.sign_ssh_data(hash))
+        signeddata = self.agent.sign_ssh_data(hash)
+        return self.hash32(signeddata)
 
     def sign(self, data):
         """

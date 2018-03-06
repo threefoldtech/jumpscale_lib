@@ -3,12 +3,14 @@ from js9 import j
 
 # import inspect
 
+JSBASE = j.application.jsbase_get_class()
 
-class ZeroNetConfig():
+
+class ZeroNetConfig(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.zeronetconfig"
-        self.logger = j.logger.get("j.sal.zeronetconfig")
+        JSBASE.__init__(self)
 
     def get(self, addr):
         """
@@ -17,9 +19,10 @@ class ZeroNetConfig():
         return ZeroNetConfigHost(addr)
 
 
-class ZeroNetConfigHost():
+class ZeroNetConfigHost(JSBASE):
 
     def __init__(self, addr):
+        JSBASE.__init__(self)
         self._prefab = j.tools.prefab.get(addr)
 
         # self.db = j.clients.redis.get("localhost", 3629)

@@ -15,12 +15,13 @@ validity = ""
 """
 
 JSConfigBase = j.tools.configmanager.base_class_config
+JSBASE = j.application.jsbase_get_class()
 
 
 class Client(JSConfigBase):
     def __init__(self, instance, data={}, parent=None):
         JSConfigBase.__init__(self, instance=instance,
-                              data=data, parent=parent)
+                              data=data, parent=parent, template=TEMPLATE)
         self._config = j.tools.configmanager._get_for_obj(
             self, instance=instance, data=data, template=TEMPLATE)
 

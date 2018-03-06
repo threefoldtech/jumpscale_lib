@@ -2,10 +2,13 @@
 from js9 import j
 import JumpScale9Lib.tools.codetools.PropertyDef as PropertyDef
 
+JSBASE = j.application.jsbase_get_class()
 
-class ClassDef:
+
+class ClassDef(JSBASE):
 
     def __init__(self, filePath, name="", inheritance="", comments=""):
+        JSBASE.__init__(self)
         self.filePath = filePath
         self.name = name
         self.comment = comments

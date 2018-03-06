@@ -14,8 +14,10 @@ from JumpScale9Lib.tools.issuemanager import model_capnp as ModelCapnp
 from peewee import *
 from playhouse.sqlite_ext import SqliteExtDatabase
 
+JSBASE = j.application.jsbase_get_class()
 
-class IssueManager:
+
+class IssueManager(JSBASE):
 
     """
 
@@ -23,6 +25,7 @@ class IssueManager:
 
     def __init__(self):
         self.__jslocation__ = "j.tools.issuemanager"
+        JSBASE.__init__(self)
         self.__imports__ = "pycapnp,peewee"
         self.namespace = "gogs"
         self.store = "gogs"

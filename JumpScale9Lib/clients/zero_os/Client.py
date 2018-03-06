@@ -44,8 +44,8 @@ class Client(BaseClient, JSConfigClientBase):
         'tags': typchk.Or([str], typchk.IsNone()),
     })
 
-    def __init__(self, instance, data={}, parent=None):
-        JSConfigClientBase.__init__(self, instance=instance, data=data, parent=parent, template=_config_template)
+    def __init__(self, instance="main", data={}, parent=None, template=None, ui=None, interactive=True):
+        JSConfigClientBase.__init__(self, instance=instance, data=data, parent=parent, template=_config_template, ui=ui, interactive=interactive)
         timeout = self.config.data['timeout']
         BaseClient.__init__(self, timeout=timeout)
 

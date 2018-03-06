@@ -5,9 +5,12 @@ import requests
 
 from js9 import j
 
+JSBASE = j.application.jsbase_get_class()
 
-class Grafana:
+
+class Grafana(JSBASE):
     def __init__(self, container, ip, port, url):
+        JSBASE.__init__(self)
         self.container = container
         self.ip = ip
         self.port = port

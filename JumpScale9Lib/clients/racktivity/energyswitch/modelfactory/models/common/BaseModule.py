@@ -1,9 +1,13 @@
 from JumpScale9Lib.clients.racktivity.energyswitch.common import convert
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
 
 
-class BaseModule:
+class BaseModule(JSBASE):
 
     def __init__(self, parent):
+        JSBASE.__init__(self)
         self._parent = parent
         self._guidTable = {}
         self._pointerGuids = []

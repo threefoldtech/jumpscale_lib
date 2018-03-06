@@ -3,6 +3,8 @@ from kubernetes import client, config
 from .Kubernetes import KubernetesMaster
 
 JSConfigBaseFactory = j.tools.configmanager.base_class_configs
+
+
 class KubernetesFactory(JSConfigBaseFactory):
     """
     kubernetes client factory each instance can relate to either a config file or a context or both
@@ -25,7 +27,7 @@ class KubernetesFactory(JSConfigBaseFactory):
             path = j.sal.fs.joinPaths(directory, 'config')
         data = j.data.serializer.yaml.dumps(config)
         j.sal.fs.writeFile(path, data)
-        j.logger.logging.info('file saved at %s' % path)
+        self.logger.info('file saved at %s' % path)
 
     def test(self):
         """

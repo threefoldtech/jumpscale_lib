@@ -2,11 +2,13 @@
 Auto-generated class for UpdateOrganizationApikeyReqBody
 """
 from .OrganizationAPIKey import OrganizationAPIKey
-
+from js9 import j
 from . import client_support
 
 
-class UpdateOrganizationApikeyReqBody(object):
+
+
+class UpdateOrganizationApikeyReqBody( ):
     """
     auto-generated. don't touch.
     """
@@ -21,6 +23,7 @@ class UpdateOrganizationApikeyReqBody(object):
         return UpdateOrganizationApikeyReqBody(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

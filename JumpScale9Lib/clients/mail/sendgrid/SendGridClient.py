@@ -6,13 +6,13 @@ import sendgrid
 from sendgrid.helpers.mail import Email, Content, Mail, Personalization, Attachment as SendGridAttachment
 
 Attachment = namedtuple('Attachment', ['originalfilename', 'binarycontent', 'type'])
+JSBASE = j.application.jsbase_get_class()
 
-
-class SendGridClient:
+class SendGridClient(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.sendgrid"
-        self.logger = j.logger.get("j.clients.sendgrid")
+        JSBASE.__init__(self)
 
     def send(self, sender, subject, message, recipients=None, message_type="text/plain", api_key=None, attachments=None):
         """

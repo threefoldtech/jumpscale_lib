@@ -10,6 +10,8 @@ _formatters = {
     'ntfs': lambda name, fstype: 'mkfs.ntfs -f {name}'.format(name=name)
 }
 
+JSBASE = j.application.jsbase_get_class()
+
 
 def isValidFS(v): return v.startswith('ext') or v in ('btrfs', 'ntfs')
 
@@ -21,19 +23,22 @@ def _default_formatter(name, fstype):
     )
 
 
-class PartitionError(Exception):
-    pass
+class PartitionError(Exception, JSBASE):
+    def __init__(self):
+        JSBASE.__init__(self)
 
 
-class FormatError(Exception):
-    pass
+class FormatError(Exception, JSBASE):
+    def __init__(self):
+        JSBASE.__init__(self)
 
 
-class DiskError(Exception):
-    pass
+class DiskError(Exception, JSBASE):
+    def __init__(self):
+        JSBASE.__init__(self)
 
 
-class BlkInfo:
+class BlkInfo(JSBASE):
 
     def __init__(self, name, type, size, executor):
         self.name = name
@@ -41,6 +46,7 @@ class BlkInfo:
         self.size = int(size)
         self.hrd = None
         self._executor = executor or j.tools.executorLocal
+        JSBASE.__init__(self)
 
     def __str__(self):
         return '%s %s' % (self.name, self.size)

@@ -8,13 +8,15 @@ from datetime import datetime
 from uuid import UUID
 from enum import Enum
 from dateutil import parser
-
+from js9 import j
 
 # python2/3 compatible basestring, for use in to_dict
 try:
     basestring
 except NameError:
     basestring = str
+
+
 
 
 def timestamp_from_datetime(datetime):
@@ -174,10 +176,13 @@ def to_dict(cls, convert_datetime=True):
     return todict(cls)
 
 
-class DatetimeHandler(object):
+class DatetimeHandler( ):
     """
     output datetime objects as iso-8601 compliant strings
     """
+    def __init__(self):
+        pass
+
     @classmethod
     def flatten(cls, obj):
         """flatten"""
@@ -189,10 +194,13 @@ class DatetimeHandler(object):
         return timestamp_to_datetime(data)
 
 
-class UUIDHandler(object):
+class UUIDHandler( ):
     """
     output UUID objects as a string
     """
+    def __init__(self):
+        pass
+
     @classmethod
     def flatten(cls, obj):
         """flatten"""
@@ -204,10 +212,13 @@ class UUIDHandler(object):
         return UUID(data)
 
 
-class EnumHandler(object):
+class EnumHandler( ):
     """
     output Enum objects as their value
     """
+    def __init__(self):
+        pass
+
     @classmethod
     def flatten(cls, obj):
         """flatten"""

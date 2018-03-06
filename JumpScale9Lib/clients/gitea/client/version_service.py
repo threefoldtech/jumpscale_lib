@@ -4,8 +4,9 @@ from .unhandled_api_error import UnhandledAPIError
 from .unmarshall_error import UnmarshallError
 
 
-class VersionService:
+class VersionService():
     def __init__(self, client):
+        pass
         self.client = client
 
     def getVersion(self, headers=None, query_params=None, content_type="application/json"):

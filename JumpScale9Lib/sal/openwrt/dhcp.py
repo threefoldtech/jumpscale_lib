@@ -2,12 +2,19 @@
 
 from base import BaseService, BaseServiceSection
 
+from js9 import j
+JSBASE = j.application.jsbase_get_class()
 
-class DHCPError(Exception):
-    pass
+
+class DHCPError(Exception, JSBASE):
+    def __init__(self):
+        JSBASE.__init__(self)
 
 
-class Interface(BaseServiceSection):
+class Interface(BaseServiceSection, JSBASE):
+
+    def __init__(self):
+        JSBASE.__init__(self)
 
     @property
     def name(self):
@@ -67,7 +74,10 @@ class Interface(BaseServiceSection):
         return str(self)
 
 
-class Host(BaseServiceSection):
+class Host(BaseServiceSection, JSBASE):
+
+    def __init__(self):
+        JSBASE.__init__(self)
 
     @property
     def name(self):
@@ -113,7 +123,10 @@ class Host(BaseServiceSection):
         return str(self)
 
 
-class PXE(BaseServiceSection):
+class PXE(BaseServiceSection, JSBASE):
+
+    def __init__(self):
+        JSBASE.__init__(self)
 
     @property
     def filename(self):
@@ -156,8 +169,11 @@ class PXE(BaseServiceSection):
         return str(self)
 
 
-class DHCP(BaseService):
+class DHCP(BaseService, JSBASE):
     PACKAGE = 'dhcp'
+
+    def __init__(self):
+        JSBASE.__init__(self)
 
     @property
     def pxe(self):

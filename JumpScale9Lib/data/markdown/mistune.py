@@ -10,6 +10,8 @@
 
 import re
 import inspect
+from js9 import j
+
 
 __version__ = '0.7.2'
 __author__ = 'Hsiaoming Yang <me@lepture.com>'
@@ -38,6 +40,8 @@ _valid_end = r'(?!:/|[^\w\s@]*@)\b'
 _valid_attr = r'''"[^"]*"|'[^']*'|[^'">]'''
 _block_tag = r'(?!(?:%s)\b)\w+%s' % ('|'.join(_inline_tags), _valid_end)
 _scheme_blacklist = ('javascript', 'data', 'vbscript')
+
+JSBASE = j.application.jsbase_get_class()
 
 
 def _pure_pattern(regex):
@@ -94,8 +98,11 @@ def preprocessing(text, tab=4):
     return pattern.sub('', text)
 
 
-class BlockGrammar:
+class BlockGrammar(JSBASE):
     """Grammars for block level tokens."""
+
+    def __init__(self):
+        JSBASE.__init__(self)
 
     def_links = re.compile(
         r'^ *\[([^^\]]+)\]: *'  # [key]:
@@ -172,7 +179,7 @@ class BlockGrammar:
     text = re.compile(r'^[^\n]+')
 
 
-class BlockLexer:
+class BlockLexer(JSBASE):
     """Block level lexer for block grammars."""
     grammar_class = BlockGrammar
 
@@ -195,6 +202,7 @@ class BlockLexer:
     )
 
     def __init__(self, rules=None, **kwargs):
+        JSBASE.__init__(self)
         self.tokens = []
         self.def_links = {}
         self.def_footnotes = {}
@@ -442,7 +450,7 @@ class BlockLexer:
         self.tokens.append({'type': 'text', 'text': text})
 
 
-class InlineGrammar:
+class InlineGrammar(JSBASE):
     """Grammars for inline level tokens."""
 
     escape = re.compile(r'^\\([\\`*{}\[\]()#+\-.!_>~|])')  # \* \+ \! ....
@@ -484,6 +492,9 @@ class InlineGrammar:
     footnote = re.compile(r'^\[\^([^\]]+)\]')
     text = re.compile(r'^[\s\S]+?(?=[\\<!\[_*`~]|https?://| {2,}\n|$)')
 
+    def __init__(self):
+        JSBASE.__init__(self)
+
     def hard_wrap(self):
         """Grammar for hard wrap linebreak. You don't need to add two
         spaces at the end of a line.
@@ -494,7 +505,7 @@ class InlineGrammar:
         )
 
 
-class InlineLexer:
+class InlineLexer(JSBASE):
     """Inline level lexer for inline grammars."""
     grammar_class = InlineGrammar
 
@@ -511,6 +522,7 @@ class InlineLexer:
     ]
 
     def __init__(self, renderer, rules=None, **kwargs):
+        JSBASE.__init__(self)
         self.renderer = renderer
         self.links = {}
         self.footnotes = {}
@@ -670,12 +682,13 @@ class InlineLexer:
         return self.renderer.text(text)
 
 
-class Renderer:
+class Renderer(JSBASE):
     """The default HTML renderer for rendering Markdown.
     """
 
     def __init__(self, **kwargs):
         self.options = kwargs
+        JSBASE.__init__(self)
 
     def placeholder(self):
         """Returns the default, empty output value for the renderer.
@@ -928,7 +941,7 @@ class Renderer:
         return html % (self.hrule(), text)
 
 
-class Markdown:
+class Markdown(JSBASE):
     """The Markdown parser.
 
     :param renderer: An instance of ``Renderer``.
@@ -937,6 +950,7 @@ class Markdown:
     """
 
     def __init__(self, renderer=None, inline=None, block=None, **kwargs):
+        JSBASE.__init__(self)
         if not renderer:
             renderer = Renderer(**kwargs)
         else:

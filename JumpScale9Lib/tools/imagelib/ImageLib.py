@@ -2,14 +2,16 @@
 from js9 import j
 
 from PIL import Image
-# print("IMAGELIB LOAD")
+
+JSBASE = j.application.jsbase_get_class()
 
 
-class ImageLib:
+class ImageLib(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.tools.imagelib"
         self.__imports__ = "Pillow"
+        JSBASE.__init__(self)
 
     #     self._initted=False
 

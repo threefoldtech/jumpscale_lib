@@ -10,13 +10,16 @@ CONFIG_FILE = '/etc/samba/smb.conf'
 EXCEPT_SHARES = ['global', 'printers', 'homes']
 BASEPATH = '/VNASSHARE/'
 
+JSBASE = j.application.jsbase_get_class()
 
-class SMBUser:
+
+class SMBUser(JSBASE):
 
     def __init__(self, verbose=False):
         # self._smb = cmd_sambatool(self._stdout, self._stderr)
         self._local = j.tools.executorLocal
         self._verbose = verbose
+        JSBASE.__init__(self)
 
     def _smbrun(self, args):
         output = self._local.execute('samba-tool user %s ' % args)
@@ -27,7 +30,7 @@ class SMBUser:
     def _format(self, output):
         if output[0].startswith("Warning:"):
             if self._verbose:
-                print(output[0])
+                self.logger.debug(output[0])
 
             return False
 
@@ -64,11 +67,12 @@ class SMBUser:
         return True
 
 
-class SMBShare:
+class SMBShare(JSBASE):
 
     def __init__(self):
         self._config = SambaConfigParser()
         self._load()
+        JSBASE.__init__(self)
 
     def _load(self):
         config = j.tools.path.get(CONFIG_FILE)
@@ -144,11 +148,12 @@ class SMBShare:
         return result
 
 
-class SMBSubShare:
+class SMBSubShare(JSBASE):
 
     def __init__(self):
         j.tools.path.get(BASEPATH).mkdir_p()
         self._local = j.tools.executorLocal
+        JSBASE.__init__(self)
 
     def get(self, sharename, sharepath):
         sharepath = j.tools.path.get(BASEPATH).joinpath(sharepath, sharename)
@@ -196,10 +201,11 @@ class SMBSubShare:
         return result
 
 
-class Samba:
+class Samba(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.samba"
+        JSBASE.__init__(self)
         self._local = j.tools.executorLocal
         self._users = SMBUser(True)
         self._shares = SMBShare()

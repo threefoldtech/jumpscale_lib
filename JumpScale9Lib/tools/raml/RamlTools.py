@@ -5,11 +5,13 @@ import sys
 from js9 import j
 
 from .SwaggerSpec import *
+JSBASE = j.application.jsbase_get_class()
 
 
-class RamlTools:
+class RamlTools(JSBASE):
 
     def __init__(self, path):
+        JSBASE.__init__(self)
         self.path = path
         self.goramlpath = j.tools.raml._goramlpath
         if not j.sal.fs.exists("%s/api_spec" % self.path):
@@ -39,7 +41,7 @@ class RamlTools:
             # check is main.raml, if not rename
             sfile = "%s/main.raml" % specpath
             if not j.sal.fs.exists(sfile):
-                print("could not find main raml, file will rename")
+                self.logger.debug("could not find main raml, file will rename")
                 j.sal.fs.renameFile(sfiles[0], sfile)
         else:
             if not j.sal.fs.exists(sfile):

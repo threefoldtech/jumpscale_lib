@@ -1,5 +1,11 @@
-class AysService:
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
+
+
+class AysService(JSBASE):
     def __init__(self, client):
+        JSBASE.__init__(self)
         self.client = client
 
     def reload(self, data, headers=None, query_params=None, content_type="application/json"):

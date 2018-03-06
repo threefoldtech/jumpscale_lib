@@ -7,6 +7,8 @@ Auto-generated class for ServiceFilter
 from . import client_support
 
 
+
+
 class ServiceFilter(object):
     """
     auto-generated. don't touch.
@@ -21,6 +23,7 @@ class ServiceFilter(object):
         return ServiceFilter(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

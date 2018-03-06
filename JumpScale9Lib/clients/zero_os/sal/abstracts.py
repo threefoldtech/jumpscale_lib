@@ -1,8 +1,16 @@
-class Mountable:
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
+
+
+class Mountable(JSBASE):
     """
     Abstract implementation for devices that are mountable.
     Device should have attributes devicename and mountpoint
     """
+
+    def __init__(self):
+        JSBASE.__init__(self)
 
     def mount(self, target, options=['defaults']):
         """

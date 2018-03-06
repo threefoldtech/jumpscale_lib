@@ -26,11 +26,11 @@ class KrakenClient(JSConfigClient):
     def test(self):
 
         k = self.api
-        print ("open orders")
-        print(k.get_open_orders())
+        self.logger.debug ("open orders")
+        self.logger.debug(k.get_open_orders())
 
-        print("get account balance")
-        print(k.get_account_balance())
+        self.logger.debug("get account balance")
+        self.logger.debug(k.get_account_balance())
 
 class Kraken(JSConfigFactory):
     def __init__(self):

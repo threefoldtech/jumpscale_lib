@@ -2,8 +2,10 @@ from js9 import j
 from .TextLineEditor import TextLineEditor
 from .TextCharEditor import TextCharEditor
 
+JSBASE = j.application.jsbase_get_class()
 
-class TextFileEditor:
+
+class TextFileEditor(JSBASE):
     """
     Allow manipulate of a text file
     ideal to manipulate e.g. config files
@@ -11,8 +13,8 @@ class TextFileEditor:
     """
 
     def __init__(self, filepath):
+        JSBASE.__init__(self)
         self.filepath = filepath
-        self.logger = j.logger.get('TextFileEditor')
         self.content = j.sal.fs.fileGetContents(filepath)
 
     def getTextLineEditor(self):
@@ -212,7 +214,7 @@ class TextFileEditor:
                 line = j.data.regex.replace(
                     ignoreRegex, ignoreRegex, "", line).rstrip()
                 line = line + add
-                print(("CH:%s" % line))
+                self.logger.debug(("CH:%s" % line))
                 done = True
             if done is False and line.find(tofind) != -1 and  \
                (ignoreRegex is not None and not j.data.regex.match(ignoreRegex, line)):

@@ -2,11 +2,13 @@
 Auto-generated class for DnsAddress
 """
 from six import string_types
-
+from js9 import j
 from . import client_support
 
 
-class DnsAddress(object):
+
+
+class DnsAddress( ):
     """
     auto-generated. don't touch.
     """
@@ -21,6 +23,7 @@ class DnsAddress(object):
         return DnsAddress(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

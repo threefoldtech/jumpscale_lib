@@ -2,11 +2,13 @@
 Auto-generated class for SeeVersion
 """
 from six import string_types
-
+from js9 import j
 from . import client_support
 
 
-class SeeVersion(object):
+
+
+class SeeVersion( ):
     """
     auto-generated. don't touch.
     """
@@ -31,6 +33,7 @@ class SeeVersion(object):
         return SeeVersion(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

@@ -33,7 +33,7 @@ class Interface(BaseKVMComponent):
         @param interface_rate int: qos interface rate to bound to in Kb
         @param burst str: maximum allowed burst that can be reached in Kb/s
         """
-
+        BaseKVMComponent.__init__(controller=controller)
         self.controller = controller
         self.name = name
         self.ovs = name is not None

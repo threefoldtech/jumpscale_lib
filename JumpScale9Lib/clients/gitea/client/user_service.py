@@ -10,8 +10,9 @@ from .unhandled_api_error import UnhandledAPIError
 from .unmarshall_error import UnmarshallError
 
 
-class UserService:
+class UserService():
     def __init__(self, client):
+        pass
         self.client = client
 
     def userDeleteEmail(self, headers=None, query_params=None, content_type="application/json"):
