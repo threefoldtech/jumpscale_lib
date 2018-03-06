@@ -202,12 +202,12 @@ class Node(JSBASE):
                 if not partition.filesystems:
                     self.client.btrfs.create(partition.name, [partition.devicename])
 
-                mount_point = '/tmp/{}'.format(partition.name)
+                mount_point = '/mnt/zdbs/{}'.format(partition.name)
                 if partition.mountpoint and partition.mountpoint != mount_point and not partition.mountpoint.startswith('/mnt/container-'):
                     raise RuntimeError('Unexcpected mountpint {} for partition {}'.format(partition.mountpoint, partition.name))
 
                 if not partition.mountpoint:
-                    self.client.filesystem.mkdir('/tmp/{}'.format(partition.name))
+                    self.client.filesystem.mkdir(mount_point)
                     self.client.disk.mount(partition.devicename, mount_point)
                 mounts.append({'partition': partition.name, 'mountpoint': mount_point})
 
