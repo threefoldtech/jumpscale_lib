@@ -14,7 +14,6 @@ from .Disk import Disks, DiskType
 from .healthcheck import HealthCheck
 from .Network import Network
 from .StoragePool import StoragePools
-from .StoragePool import  _prepare_device
 
 Mount = namedtuple('Mount', ['device', 'mountpoint', 'fstype', 'options'])
 
