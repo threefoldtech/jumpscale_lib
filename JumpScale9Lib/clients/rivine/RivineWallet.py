@@ -63,14 +63,14 @@ class RivineWallet:
         Retrieves the current chain height
         """
         result = None
-        url = '{}/consensus'.format(self._bc_network)
+        url = '{}/explorer'.format(self._bc_network)
         response = requests.get(url)
-        if response != 200:
+        if response.status_code != 200:
             msg = 'Failed to get current chain height. {}'.format(response.text)
             logger.error(msg)
             raise RESTAPIError(msg)
         else:
-            result = response.json().get('Height', None)
+            result = response.json().get('height', None)
             if result is not None:
                 result = int(result)
         return result
@@ -86,7 +86,7 @@ class RivineWallet:
         result = None
         url = '{}/explorer/hashes/{}'.format(self.__bc_network, address)
         response = requests.get(url)
-        if response != 200:
+        if response.status_code != 200:
             msg = "Failed to retrieve address information. {}".format(response.text)
             logger.error(msg)
             raise RESTAPIError(msg)
@@ -111,6 +111,7 @@ class RivineWallet:
         @TOCHECK: this needs to be synchronized with locks or other primitive
         """
         current_chain_height = self.get_current_chain_height()
+        logger.info('Current chain height is: {}'.format(current_chain_height))
         
 
     
