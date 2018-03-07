@@ -4,7 +4,7 @@ import JumpScale9Lib.tools.aggregator.Dumper as Dumper
 JSBASE = j.application.jsbase_get_class()
 
 
-class Stats(object, JSBASE):
+class Stats(JSBASE):
     def __init__(self, node, key, epoch, stat, avg, max, total):
         JSBASE.__init__(self)
         self.node = node
