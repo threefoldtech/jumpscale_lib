@@ -23,8 +23,8 @@ class Container(JSBASE):
         JSBASE.__init__(self)
 
         self.obj=obj
-        self.name = obj.name
-        self.id = obj.id
+        self.name = obj['Names'][0]
+        self.id = obj['Id']
 
         self._ssh_port = None
         self._sshclient = None
@@ -58,8 +58,7 @@ class Container(JSBASE):
     @property
     def executor(self):
         if self._executor is None:
-            self._executor = j.tools.executor.getSSHBased(
-                addr=self.host, port=self.ssh_port, login='root', passwd="gig1234", usecache=False, allow_agent=True)
+            self._executor = j.tools.executor.ssh_get(self._sshclient)
         return self._executor
 
     @property
@@ -103,13 +102,13 @@ class Container(JSBASE):
 
     @property
     def info(self):
-        return self.obj.attrs
+        return self.obj
 
     def isRunning(self):
         """
         Check conainter is running.
         """
-        return self.info["State"]["Running"] is True
+        return self.info["State"] == 'running'
 
     def getIp(self):
         """
@@ -150,7 +149,7 @@ class Container(JSBASE):
         @param generateSSHKey bool: generate a key called docker_default.
         """
         keys = set()
-
+        import ipdb; ipdb.set_trace()
         home = j.tools.prefab.local.bash.home
         user_info = [j.tools.prefab.local.system.user.check(user) for user in j.tools.prefab.local.system.user.list()]
         user = [i['name'] for i in user_info if i['home'] == home]
@@ -163,9 +162,9 @@ class Container(JSBASE):
                 j.clients.sshkey.sshagent_start()
 
             if keyname != "" and keyname is not None:
-                key = j.clients.ssh.sshkey_pub_get(keyname)
+                key = j.clients.sshkey.sshkey_pub_get(keyname)
             else:
-                key = j.clients.ssh.sshkey_pub_get("docker_default", die=False)
+                key = j.clients.sshkey.sshkey_pub_get("docker_default", die=False)
                 if key is None:
                     dir = j.tools.path.get('%s/.ssh' % home)
                     if dir.listdir("docker_default.pub") == []:
@@ -202,6 +201,31 @@ class Container(JSBASE):
         return list(keys)
 
 
+    def authorizeSSH(self, sshkeyname, password):
+        home = j.tools.prefab.local.bash.home
+        user_info = [j.tools.prefab.local.system.user.check(user) for user in j.tools.prefab.local.system.user.list()]
+        user = [i['name'] for i in user_info if i['home'] == home]
+        user = user[0] if user else 'root'
+        addr = self.info['Ports'][0]['IP']
+        port = self.info['Ports'][0]['PublicPort']
+        if not sshkeyname:
+            sshkeyname = j.tools.configmanager.keyname
+        instance = addr.replace(".", "-") + "-%s" % port + "-%s" % self.name 
+
+        sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login=user, passwd=password,
+                                      keyname=sshkeyname, allow_agent=False, timeout=300)
+        sshclient.connect()
+        sshclient.ssh_authorize(key=j.tools.configmanager.keyname, user='root')
+        sshclient.config.delete()  # remove this temp sshconnection
+        sshclient.close()
+
+        # remove bad key from local known hosts file
+        j.clients.sshkey.knownhosts_remove(addr)
+        instance = addr.replace(".", "-") + "-%s" % port + "-%s" % self.name
+        self._sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login="root", passwd="",
+                                            keyname=j.tools.configmanager.keyname, allow_agent=True, timeout=300, addr_priv=addr)
+
+        j.tools.executor.reset()
     def destroy(self):
         """
         Stop and remove container.
