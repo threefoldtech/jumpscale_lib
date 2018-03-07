@@ -11,7 +11,7 @@ class ZeroDB:
     ZeroDB server
     """
 
-    def __init__(self, container, name, addr='0.0.0.0', port=9900, data_dir='/mnt/data',
+    def __init__(self, name, container, addr='0.0.0.0', port=9900, data_dir='/mnt/data',
                  index_dir='/mnt/index', mode='user', sync=False, admin=''):
         self.name = name
         self.id = 'zerodb.{}'.format(self.name)

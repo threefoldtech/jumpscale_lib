@@ -193,23 +193,29 @@ class Node(JSBASE):
                 continue
 
             if not disk.partitions:
-                disk.mktable()
-                disk.mkpart('0', '100%')
+                sp = self.storagepools.create(disk.name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
+            else:
+                if len(disk.partitions) > 1:
+                    raise RuntimeError('Found more than 1 partition for disk %s' % disk.name)
 
-            for partition in disk.partitions:
-                if partition.devicename in cache_devices:
-                    continue
-                if not partition.filesystems:
-                    self.client.btrfs.create(partition.name, [partition.devicename])
+                partition = disk.partitions[0]
+                sps = self.storagepools.list(partition.devicename)
+                if len(sps) > 1:
+                    raise RuntimeError('Found more than 1 storagepool for device %s' % partition.devicename)
+                elif not sps:
+                    sp = self.storagepools.create(disk.name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
+                else:
+                    sp = sps[0]
 
-                mount_point = '/mnt/zdbs/{}'.format(partition.name)
-                if partition.mountpoint and partition.mountpoint != mount_point and not partition.mountpoint.startswith('/mnt/container-'):
-                    raise RuntimeError('Unexcpected mountpint {} for partition {}'.format(partition.mountpoint, partition.name))
-
-                if not partition.mountpoint:
-                    self.client.filesystem.mkdir(mount_point)
-                    self.client.disk.mount(partition.devicename, mount_point)
-                mounts.append({'partition': partition.name, 'mountpoint': mount_point})
+            sp.mount()
+            if sp.exists(disk.name):
+                fs = sp.get(disk.name)
+            else:
+                fs = sp.create(disk.name)
+            mount_point = '/mnt/zdbs/{}'.format(disk.name)
+            self.client.filesystem.mkdir(mount_point)
+            self.client.disk.mount(sp.devicename, mount_point, ['subvol={}'.format(fs.subvolume)])
+            mounts.append({'disk': disk.name, 'mountpoint': mount_point})
 
         return mounts
 
