@@ -11,7 +11,7 @@ TEMPLATE = """
 host = ""
 port = 8086
 username = "root"
-password_ = ""
+password = ""
 database = ""
 ssl = false
 verify_ssl = false
@@ -58,13 +58,13 @@ class InfluxClient(JSConfigClient, influxdb.InfluxDBClient):
         c = self.config.data
         influxdb.InfluxDBClient.__init__(
             self,
-            host=c['host'],
-            port=c['port'],
-            username=c['username'],
-            password=c['password_'],
-            database=c['database'],
-            ssl=c['ssl'],
-            verify_ssl=c['verify_ssl'],
-            timeout=c['timeout'] if c['timeout'] else None,
-            use_udp=c['use_udp'],
-            udp_port=c['udp_port'])
+            host=c.get('host', 'localhost'),
+            port=c.get('port', 8086),
+            username=c.get('username', 'root'),
+            password=c.get('password', None),
+            database=c.get('database', None),
+            ssl=c.get('ssl', False),
+            verify_ssl=c.get('verify_ssl', False),
+            timeout=c.get('timeout', None),
+            use_udp=c.get('use_udp', False),
+            udp_port=c.get('udp_port', 4444))
