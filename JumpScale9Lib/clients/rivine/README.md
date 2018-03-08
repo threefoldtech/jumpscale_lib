@@ -16,3 +16,41 @@ The client uses the world list proposed in BIP-0039 and depends on the library p
 To generate keypairs we depend on the ed25519 python implementation here: https://github.com/warner/python-ed25519 (pip install ed25519)
 
 To generate UnlockHashes, we use merkletree implementation from here: https://github.com/Tierion/pymerkletools (pip install merkletools) 
+
+# How to use
+Starting from a seed which can be a sentence of [12, 15, 18, 21, 24] words, for more information about the seed please check: https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
+
+You can generate new seed by using the following commands in your js9 shell
+```python
+        from mnemonic import Mnemonic
+        m = Mnemonic('english')
+        seed = m.generate(strength=256)
+```
+
+From a seed you can create new wallet
+```python
+        from JumpScale9Lib.clients.rivine.RivineWallet import RivineWallet
+        rivine_wallet = RivineWallet(seed=seed, bc_network='http://185.69.166.13:2015', nr_keys_per_seed=5)
+        # where seed is the seed you have or generated
+        # bc_network: is the url to the blockchain network explorer node
+        # nr_keys_per_seed: is how many keys to generate per seed
+```
+
+After creating the wallet you can sync the wallet with the blockchain network (this will not build a full node locally)
+```python
+        rivine_wallet.sync_wallet()
+```
+
+You should see something similar to the following output
+```bash
+    * Current chain height is: 1809
+* Found miner output with value 10000000000000000000000000
+* Found miner output with value 10000000000000000000000000
+* Found miner output with value 10000000000000000000000000
+* Found miner output with value 10000000000000000000000000
+* Found miner output with value 11000000000000000000000000
+* Found miner output with value 11000000000000000000000000
+* Found transaction output for address 02b1a92f2cb1b2daec2f650717452367273335263136fae0201ddedbbcfe67648572b069c754
+* Found a spent address 822916455e3bb68ce1c1df5cef08e555b4e5ad153399942d628a0d298398a3fb
+
+```

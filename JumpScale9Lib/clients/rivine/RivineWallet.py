@@ -18,8 +18,8 @@ import requests
 
 from JumpScale9 import j
 
-from .const import SIGEd25519, UNLOCKHASHTYPE
-from .errors import RESTAPIError, BACKENDError, MINERrPAYOUTMATURITYWINDOW
+from .const import SIGEd25519, UNLOCKHASHTYPE, MINERPAYOUTMATURITYWINDOW
+from .errors import RESTAPIError, BACKENDError
 
 logger = j.logger.get(__name__)
 
@@ -37,7 +37,7 @@ class RivineWallet:
         @param nr_keys_per_seed: Number of keys generated from the seed.
         """ 
         self._seed = seed
-        self._outputs = []
+        self._unspent_coins_outputs = {}
         self._keys = {}
         # self._bc_network = '{}/explorer/'.format(bc_network) if \
         #                         not bc_network.endswith('explorer') else bc_network
@@ -47,6 +47,21 @@ class RivineWallet:
             self._keys[key.unlockconditions.unlockhash] = key
     
 
+    @property
+    def keys(self):
+        """
+        Set of SpendableKeys
+        """
+        return self._keys
+
+    @property
+    def unspent_coins_outputs(self):
+        """
+        The unspent coins outputs
+        """
+        return self._unspent_coins_outputs
+    
+    
     def _generate_spendable_key(self, index):
         """
         Generate a @Spendablekey object from the seed and index
@@ -96,14 +111,7 @@ class RivineWallet:
 
 
 
-    @property
-    def keys(self):
-        """
-        Set of SpendableKeys
-        """
-        return self._keys
-
-
+    
     def sync_wallet(self):
         """
         Syncs the wallet with the blockchain
@@ -112,28 +120,72 @@ class RivineWallet:
         """
         current_chain_height = self.get_current_chain_height()
         logger.info('Current chain height is: {}'.format(current_chain_height))
-        for address, key in self._keys.items():
+        for address in self._keys.keys():
             address_info = self.check_address(address=address)
             if address_info.get('hashtype', None) != UNLOCKHASHTYPE:
                 raise BACKENDError('Address is not recognized as an unblock hash')
-            self._collect_miner_fees(blocks=address_info.get('blocks',{}),
+            self._collect_miner_fees(address=address, blocks=address_info.get('blocks',{}),
                                      height=current_chain_height)
-            self._collect_transaction_outputs(address_info=address_info)
-            self._remove_spent_inputs(address_info=address_info)
+            transactions = address_info.get('transactions', {})
+            self._collect_transaction_outputs(address=address, transactions=transactions)
+            self._remove_spent_inputs(transactions=transactions)
 
     
-    def _collect_miner_fees(self, blocks, height):
+    def _collect_miner_fees(self, address, blocks, height):
         """
         Scan the bocks for miner fees and Collects the miner fees But only that have matured already
 
+        @param address: address to collect miner fees for
         @param blocks: Blocks from an address
         @param height: The current chain height
         """
-        for bock_info in blocks:
-            if block.get('height', None) and block['height'] + MINERrPAYOUTMATURITYWINDOW 
+        for block_info in blocks:
+            if block_info.get('height', None) and block_info['height'] + MINERPAYOUTMATURITYWINDOW >= height:
+                logger.info('Ignoring miner payout that has not matured yet')
+                continue
+            # mineroutputs can exist in the dictionary but with value None
+            mineroutputs = block_info.get('rawblock', {}).get('minerpayouts', [])
+            if mineroutputs:
+                for index, minerpayout in enumerate(mineroutputs):
+                    if minerpayout.get('unlockhash') == address:
+                        logger.info('Found miner output with value {}'.format(minerpayout.get('value')))
+                        self._unspent_coins_outputs[block_info['minerpayoutids'][index]] = minerpayout.get('value')
 
 
     
+    def _collect_transaction_outputs(self, address, transactions):
+        """
+        Collects transactions outputs
+
+        @param address: address to collect transactions outputs
+        @param transactions: Details about the transactions
+        """
+        for txn_info in transactions:
+            # coinoutputs can exist in the dictionary but has the value None
+            coinoutputs = txn_info.get('rawtransaction', {}).get('coinoutputs', [])
+            if coinoutputs:
+                for index, utxo in enumerate(coinoutputs):
+                    if utxo.get('unlockhash') == address:
+                        logger.info('Found transaction output for address {}'.format(address))
+                        self._unspent_coins_outputs[txn_info['coinoutputids'][index]] = utxo
+
+    
+    def _remove_spent_inputs(self, transactions):
+        """
+        Remvoes the already spent outputs
+
+        @param transactions: Details about the transactions
+        """
+        for txn_info in transactions:
+            # cointinputs can exist in the dict but have the value None
+            coininputs = txn_info.get('rawtransaction', {}).get('coininputs', [])
+            if coininputs:
+                for coin_input in coininputs:
+                    if coin_input.get('parentid') in self._unspent_coins_outputs:
+                        logger.info('Found a spent address {}'.format(coin_input.get('parentid')))
+                        del self._unspent_coins_outputs[coin_input.get('parentid')]
+
+
     def create_transaction(amount, recipient):
         """
         Creates new transaction and sign it
