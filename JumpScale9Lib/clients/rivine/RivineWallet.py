@@ -18,7 +18,8 @@ import requests
 
 from JumpScale9 import j
 
-from .const import SIGEd25519, UNLOCKHASHTYPE, MINERPAYOUTMATURITYWINDOW
+from .const import SIGEd25519, UNLOCKHASHTYPE, MINERPAYOUTMATURITYWINDOW,\
+InsufficientWalletFundsError, NonExistingOutputError
 from .errors import RESTAPIError, BACKENDError
 
 logger = j.logger.get(__name__)
@@ -110,8 +111,6 @@ class RivineWallet:
         return result
 
 
-
-    
     def sync_wallet(self):
         """
         Syncs the wallet with the blockchain
@@ -149,7 +148,7 @@ class RivineWallet:
                 for index, minerpayout in enumerate(mineroutputs):
                     if minerpayout.get('unlockhash') == address:
                         logger.info('Found miner output with value {}'.format(minerpayout.get('value')))
-                        self._unspent_coins_outputs[block_info['minerpayoutids'][index]] = int(minerpayout.get('value'))
+                        self._unspent_coins_outputs[block_info['minerpayoutids'][index]] = minerpayout
 
 
     
@@ -189,20 +188,68 @@ class RivineWallet:
     def create_transaction(self, amount, recipient, minerfee=10):
         """
         Creates new transaction and sign it
+        creates a new transaction of the specified ammount to a specified address. A remainder address
+        to which the leftover coins will be transfered (if any) is chosen automatically. An error is returned if the coins
+        available in the coininputs are insufficient to cover the amount specified for transfer (+ the miner fee).
 
-        @param amount: The amount needed to be transfered.
+        @param amount: The amount needed to be transfered in hastings
         @param recipient: Address of the recipient.
-        @param minerfee: the minerfee for this transaction.
+        @param minerfee: the minerfee for this transaction in hastings
         """
-        wallet_fund = []
+        wallet_fund = sum(int(value.get('value')) for value in self._unspent_coins_outputs.values())
+        required_funds = amount + minerfee
+        if required_funds > wallet_fund:
+            raise InsufficientWalletFundsError('No sufficient funds to make the transaction')
+        transaction = Transaction()
+        input_value = 0
+        for address, unspent_coin_output in self._unspent_coins_outputs.items():
+            # if we reach the required funds, then break
+            if input_value >= required_funds:
+                break
+            transaction.add_input({'parentid': address,
+                                    'unlockconditions': self._keys[unspent_coin_output['unlockhash']].unlockconditions})
+            input_value = int(unspent_coin_output['value'])
+        
+        for txn_input in transaction.inputs:
+            if self._unspent_coins_outputs[txn_input['parentid']]['unlockhash'] not in self._keys.keys():
+                raise NonExistingOutputError('Trying to spend unexisting output')
+        
+        transaction.add_output({'value': amount, 
+                                'unlockhash': recipient})
+
+        # we need to check if the sum of the inputs is more than the required fund and if so, we need 
+        # to send the remainder back to the original user
+        remainder = input_value - required_funds
+        if remainder > 0:
+            # we have leftover fund, so we create new transaction, and pick on user key that is not used
+            for address in self._keys.keys():
+                used = False
+                for unspent_coint_output in self._unspent_coins_outputs.values():
+                     if unspent_coin_output['unlockhash'] == address:
+                         used = True
+                         break
+                if used is True:
+                    continue
+                transaction.add_output({'value': remainder,
+                                        'unlockhash': address})
+                break 
+
+        # add minerfee to the transaction
+        transaction.minerfee = minerfee
+        
+        # sign the transaction
+        self._sign_transaction(transaction)
+
+        return transaction
 
     
-    def _sing_transaction(self, transaction):
+    def _sign_transaction(self, transaction):
         """
-        Sings a transaction with the existing keys.
+        Signs a transaction with the existing keys.
         
         @param transaction: Transaction object to be signed
         """
+        
 
     
 
@@ -309,3 +356,49 @@ class Transaction:
         """
         self._inputs = []
         self._output = []
+        self._minerfee = 0
+
+    
+    @property
+    def inputs(self):
+        """
+        Inputs of the transactions
+        """
+        self._inputs
+    
+
+    @property
+    def outputs(self):
+        """
+        Outputs of the transactions
+        """
+        self._outputs
+    
+
+    @property
+    def minerfee(self):
+        """
+        The miner fee of the transaction
+        """
+        self._minerfee
+    
+
+    @minerfee.setter
+    def minerfee(self, value):
+        """
+        Sets the miner fee
+        """
+        self._minerfee = value
+
+
+    def add_input(self, input_info):
+        """
+        Adds new input to the transaction
+        """
+        self._inputs.append(input_info)
+    
+    
+    def add_output(self, output_info):
+        """
+        Adds a new output to the transaction 
+        """
