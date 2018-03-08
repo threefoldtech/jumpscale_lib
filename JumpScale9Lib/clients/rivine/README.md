@@ -43,7 +43,7 @@ After creating the wallet you can sync the wallet with the blockchain network (t
 
 You should see something similar to the following output
 ```bash
-    * Current chain height is: 1809
+* Current chain height is: 1809
 * Found miner output with value 10000000000000000000000000
 * Found miner output with value 10000000000000000000000000
 * Found miner output with value 10000000000000000000000000

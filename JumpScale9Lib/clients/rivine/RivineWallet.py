@@ -149,7 +149,7 @@ class RivineWallet:
                 for index, minerpayout in enumerate(mineroutputs):
                     if minerpayout.get('unlockhash') == address:
                         logger.info('Found miner output with value {}'.format(minerpayout.get('value')))
-                        self._unspent_coins_outputs[block_info['minerpayoutids'][index]] = minerpayout.get('value')
+                        self._unspent_coins_outputs[block_info['minerpayoutids'][index]] = int(minerpayout.get('value'))
 
 
     
@@ -186,13 +186,15 @@ class RivineWallet:
                         del self._unspent_coins_outputs[coin_input.get('parentid')]
 
 
-    def create_transaction(amount, recipient):
+    def create_transaction(self, amount, recipient, minerfee=10):
         """
         Creates new transaction and sign it
 
-        @param amount: The amount needed to be transfered
+        @param amount: The amount needed to be transfered.
         @param recipient: Address of the recipient.
+        @param minerfee: the minerfee for this transaction.
         """
+        wallet_fund = []
 
     
     def _sing_transaction(self, transaction):
