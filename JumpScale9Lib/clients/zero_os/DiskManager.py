@@ -5,9 +5,8 @@ from js9 import j
 
 JSBASE = j.application.jsbase_get_class()
 
-
-class DiskManager(JSBASE):
-    mktable_chk = typchk.Checker({
+class DiskManager:
+    _mktable_chk = typchk.Checker({
         'disk': str,
         'table_type': typchk.Enum('aix', 'amiga', 'bsd', 'dvh', 'gpt', 'mac', 'msdos', 'pc98', 'sun', 'loop')
     })

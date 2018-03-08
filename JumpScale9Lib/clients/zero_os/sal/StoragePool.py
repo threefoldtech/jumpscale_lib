@@ -46,14 +46,20 @@ class StoragePools:
     def client(self):
         return self.node.client
 
-    def list(self):
+    def list(self, device=None):
+        """
+        list storage pools in a node
+        :param device: a disk partition. If supplied the function only returns the storagepools that contain this device
+        :return: list of StoragePool
+        """
         storagepools = []
         btrfs_list = self.client.btrfs.list()
         for btrfs in btrfs_list:
             if btrfs['label'].startswith('sp_'):
                 name = btrfs['label'].split('_', 1)[1]
                 devicenames = [device['path'] for device in btrfs['devices']]
-                storagepools.append(StoragePool(self.node, name, devicenames))
+                if (device and device in devicenames) or not device:
+                    storagepools.append(StoragePool(self.node, name, devicenames))
         return storagepools
 
     def get(self, name):

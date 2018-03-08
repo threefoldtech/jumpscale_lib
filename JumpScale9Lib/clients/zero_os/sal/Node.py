@@ -182,6 +182,43 @@ class Node(JSBASE):
             return False
         return bool(fscache_sp.mountpoint)
 
+    def partition_and_mount_disks(self, name='fscache'):
+        fscache_sp = self.find_persistance(name)
+        cache_devices = fscache_sp.devices if fscache_sp else []
+        mounts = []
+
+        for disk in self.disks.list():
+            # this check is there to be able to test with a qemu setup
+            if disk.model == 'QEMU HARDDISK   ':
+                continue
+
+            if not disk.partitions:
+                sp = self.storagepools.create(disk.name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
+            else:
+                if len(disk.partitions) > 1:
+                    raise RuntimeError('Found more than 1 partition for disk %s' % disk.name)
+
+                partition = disk.partitions[0]
+                sps = self.storagepools.list(partition.devicename)
+                if len(sps) > 1:
+                    raise RuntimeError('Found more than 1 storagepool for device %s' % partition.devicename)
+                elif not sps:
+                    sp = self.storagepools.create(disk.name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
+                else:
+                    sp = sps[0]
+
+            sp.mount()
+            if sp.exists(disk.name):
+                fs = sp.get(disk.name)
+            else:
+                fs = sp.create(disk.name)
+            mount_point = '/mnt/zdbs/{}'.format(disk.name)
+            self.client.filesystem.mkdir(mount_point)
+            self.client.disk.mount(sp.devicename, mount_point, ['subvol={}'.format(fs.subvolume)])
+            mounts.append({'disk': disk.name, 'mountpoint': mount_point})
+
+        return mounts
+
     def ensure_persistance(self, name='fscache'):
         """
         look for a disk not used,
