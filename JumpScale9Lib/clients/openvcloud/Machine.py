@@ -270,7 +270,7 @@ class Machine(JSBASE):
 
         if self._sshclient is None:
             addr, port = self._ssh_info()
-            key = addr.replace(".", "-") + "-%s" % port
+            key = self._ssh_client_key(addr, port, "root")
             self._sshclient = j.clients.ssh.new(instance=key, addr=addr, port=port, login="root", passwd="",
                                                 keyname=self.sshkeyname, allow_agent=True, timeout=300, addr_priv=self.ipaddr_priv)
         return self._sshclient
@@ -282,8 +282,7 @@ class Machine(JSBASE):
 
         if self._sshclient_private is None:
             addr, port = self.ipaddr_priv, 22
-            key = addr.replace(".", "-") + "-%s" % port
-            key += '_private'
+            key = self._ssh_client_key(addr, port, "root", True)
             self._sshclient_private = j.clients.ssh.new(instance=key, addr=self.ipaddr_priv, port=22, login="root", passwd="",
                                                         keyname=self.sshkeyname, allow_agent=True, timeout=300, addr_priv=self.ipaddr_priv)
         return self._sshclient_private
@@ -303,45 +302,37 @@ class Machine(JSBASE):
             ipdb.set_trace()
         return addr, port
 
+    def _ssh_client_key(self, addr, port, login, private=False):
+        return "%s-%s-%s-%s" % (addr.replace(".", "-"), port, login, ("private" if private else "public"))
+
     def authorizeSSH(self, sshkeyname):
         login = self.model['accounts'][0]['login']
-        password = self.model['accounts'][0]['password']
-
         addr, port = self._ssh_info()
-        instance = self.ipaddr_public.replace(".", "-") + "-%s" % port + "-%s" % login
-
-        sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login=login, passwd=password,
-                                      keyname="", allow_agent=False, timeout=300)
-        sshclient.connect()
-        sshclient.ssh_authorize(key=sshkeyname, user='root')
-        sshclient.config.delete()  # remove this temp sshconnection
-        sshclient.close()
-
-        # remove bad key from local known hosts file
-        j.clients.sshkey.knownhosts_remove(addr)
-        instance = self.ipaddr_public.replace(".", "-") + "-%s" % port
-        self._sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login="root", passwd="",
-                                            keyname=self.sshkeyname, allow_agent=True, timeout=300, addr_priv=self.ipaddr_priv)
-
-        j.tools.executor.reset()
+        instance = self._ssh_client_key(addr, port, login)
+        self._authorize(sshkeyname, instance, addr, port, None)
 
     def authorizeSSH_private(self, sshkeyname):
         login = self.model['accounts'][0]['login']
-        password = self.model['accounts'][0]['password']
-
         addr, port = self.ipaddr_priv, 22
-        instance = self.ipaddr_public.replace(".", "-") + "-%s" % port + "-%s" % login
+        instance = self._ssh_client_key(addr, port, login, True)
+        self._authorize(sshkeyname, instance, addr, port, None)
 
+    def _authorize(self, sshkeyname, instance, addr, port, priv_addr):
+        login = self.model['accounts'][0]['login']
+        password = self.model['accounts'][0]['password']
+        
         sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login=login, passwd=password,
                                       keyname="", allow_agent=False, timeout=300)
-        sshclient.connect()
-        sshclient.ssh_authorize(key=sshkeyname, user='root')
-        sshclient.config.delete()  # remove this temp sshconnection
-        sshclient.close()
+        try:
+            sshclient.connect()
+            sshclient.ssh_authorize(key=sshkeyname, user='root')
+        finally:
+            sshclient.config.delete()  # remove this temp sshconnection
+            sshclient.close()
+            # remove bad key from local known hosts file
+            j.clients.sshkey.knownhosts_remove(addr)
 
-        # remove bad key from local known hosts file
-        j.clients.sshkey.knownhosts_remove(addr)
-        instance = self.ipaddr_public.replace(".", "-") + "-%s" % port
+        instance = self._ssh_client_key(addr, port, "root", priv_addr)
         self._sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login="root", passwd="",
                                             keyname=self.sshkeyname, allow_agent=True, timeout=300, addr_priv=self.ipaddr_priv)
 

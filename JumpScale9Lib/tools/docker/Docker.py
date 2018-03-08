@@ -26,21 +26,25 @@ class Docker(JSBASE):
         # else:
         #     self.base_url = os.environ['DOCKER_HOST']
         # self.client = docker.Client(base_url=self.base_url, timeout=120)
-        self.client=docker.from_env()
+        self.client=docker.APIClient()
 
     @property
     def containers(self):
         todel=[str(item) for item in self._containers.keys()] #are the id's
-        for item in self.client.containers.list():
-            id = item.id
+        for item in self.client.containers():
+            id = item['Id']
             if id in todel:
-                todel.pop(id)
+                todel.remove(id)
             if id not in self._containers:
                 self._containers[id] = Container(item, self.client)
         for item in todel:
             #this to make sure that id's in mem not in docker any more get removed
-            self._containers.pop(id)
+            self._containers.remove(item)
         return list(self._containers.values())
+
+    @property
+    def docker_host(self):
+        return 'localhost'
 
     @property
     def containerNamesRunning(self):
@@ -52,6 +56,10 @@ class Docker(JSBASE):
             if container.isRunning():
                 res.append(container.name)
         return res
+    
+    @property
+    def weaveIsActive(self):
+        return False
 
     @property
     def containerNames(self):
@@ -426,7 +434,6 @@ class Docker(JSBASE):
             detach=detach,
             stdin_open=False,
             tty=True,
-            mem_limit=mem,
             ports=list(
                 portsdict.keys()),
             environment=None,
@@ -434,26 +441,41 @@ class Docker(JSBASE):
             network_disabled=False,
             name=name,
             entrypoint=None,
-            cpu_shares=cpu,
             working_dir=None,
             domainname=None,
-            memswap_limit=None,
-            host_config=host_config)
+            host_config=host_config,
+            mac_address=None,
+            labels=None,
+            stop_signal=None,
+            networking_config=None, 
+            healthcheck=None, 
+            stop_timeout=None, 
+            runtime=None)
         if res["Warnings"] is not None:
             raise j.exceptions.RuntimeError(
                 "Could not create docker, res:'%s'" % res)
 
         id = res["Id"]
 
-        # TODO: *1 docker module no longer working
-
         res = self.client.start(container=id)
+        obj = None
+        for container in self.client.containers():
+            if container['Id'] == id:
+                obj = container
+                break
 
-        container = Container(name, id, self.client, host=self.docker_host)
+        container = Container(obj, self.client)
         self._containers[id] = container
 
         if ssh:
-            container.pushSSHKey(keyname=sshkeyname, sshpubkey=sshpubkey)
+            if setrootrndpasswd:
+                if rootpasswd is None or rootpasswd == '':
+                    rootpasswd = 'gig1234'
+                # self.logger.info("set root passwd to %s" % rootpasswd)
+                # container.executor.execute(
+                #     "echo \"root:%s\"|chpasswd" % rootpasswd, showout=False)
+
+            container.authorizeSSH(sshkeyname=sshkeyname, password=rootpasswd)
 
             # Make sure docker is ready for executor
             end_time = time.time() + 60
@@ -462,20 +484,8 @@ class Docker(JSBASE):
                 if rc:
                     time.sleep(0.1)
                 break
-
-            if setrootrndpasswd:
-                if rootpasswd is None or rootpasswd == '':
-                    self.logger.info("set default root passwd (gig1234)")
-                    container.executor.execute(
-                        "echo \"root:gig1234\"|chpasswd", showout=False)
-                else:
-                    self.logger.info("set root passwd to %s" % rootpasswd)
-                    container.executor.execute(
-                        "echo \"root:%s\"|chpasswd" % rootpasswd, showout=False)
-
-        if not self.weaveIsActive:
-            container.setHostName(name)
-
+        from IPython import embed
+        embed()
         return container
 
     def getImages(self):
