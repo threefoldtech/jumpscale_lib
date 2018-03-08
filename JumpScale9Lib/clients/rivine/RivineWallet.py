@@ -18,8 +18,8 @@ import requests
 
 from JumpScale9 import j
 
-from .const import SIGEd25519
-from .errors import RESTAPIError
+from .const import SIGEd25519, UNLOCKHASHTYPE
+from .errors import RESTAPIError, BACKENDError, MINERrPAYOUTMATURITYWINDOW
 
 logger = j.logger.get(__name__)
 
@@ -84,7 +84,7 @@ class RivineWallet:
         @param address: Address to check
         """
         result = None
-        url = '{}/explorer/hashes/{}'.format(self.__bc_network, address)
+        url = '{}/explorer/hashes/{}'.format(self._bc_network, address)
         response = requests.get(url)
         if response.status_code != 200:
             msg = "Failed to retrieve address information. {}".format(response.text)
@@ -112,9 +112,27 @@ class RivineWallet:
         """
         current_chain_height = self.get_current_chain_height()
         logger.info('Current chain height is: {}'.format(current_chain_height))
-        
+        for address, key in self._keys.items():
+            address_info = self.check_address(address=address)
+            if address_info.get('hashtype', None) != UNLOCKHASHTYPE:
+                raise BACKENDError('Address is not recognized as an unblock hash')
+            self._collect_miner_fees(blocks=address_info.get('blocks',{}),
+                                     height=current_chain_height)
+            self._collect_transaction_outputs(address_info=address_info)
+            self._remove_spent_inputs(address_info=address_info)
 
     
+    def _collect_miner_fees(self, blocks, height):
+        """
+        Scan the bocks for miner fees and Collects the miner fees But only that have matured already
+
+        @param blocks: Blocks from an address
+        @param height: The current chain height
+        """
+        for bock_info in blocks:
+            if block.get('height', None) and block['height'] + MINERrPAYOUTMATURITYWINDOW 
+
+
     
     def create_transaction(amount, recipient):
         """
