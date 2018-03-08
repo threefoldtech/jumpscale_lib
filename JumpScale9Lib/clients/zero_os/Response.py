@@ -2,6 +2,8 @@ import textwrap
 import json
 import time
 import logging
+import sys
+
 from js9 import j
 
 logger = logging.getLogger('g8core')
@@ -210,10 +212,6 @@ class Response(JSBASE):
 
         queue = 'stream:%s' % self.id
         r = self._client._redis
-
-        # we can terminate quickly by checking if the process is not running and it has no queued output.
-        if not self.running and r.llen(queue) == 0:
-            return
 
         while True:
             data = r.blpop(queue, 10)
