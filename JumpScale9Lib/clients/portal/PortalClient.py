@@ -50,7 +50,7 @@ class BaseResource(JSBASE):
         return resource
 
     def __call__(self, **kwargs):
-        response = self._session.request(self._method, self._url, kwargs)
+        response = self._session.request(self._method, self._url, kwargs, timeout=300)
 
         if not response.ok:
             raise ApiError(response)
