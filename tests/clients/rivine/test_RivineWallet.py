@@ -2,7 +2,7 @@
 Test module for RivineWallet js9 client
 """
 
-
+from js9 import j
 from mnemonic import Mnemonic
 from JumpScale9Lib.clients.rivine.RivineWallet import RivineWallet
 
@@ -13,6 +13,14 @@ seed = m.generate()
 # use specific seed
 seed = 'festival mobile negative nest valid cheese pulp alpha relax language friend vast'
 
+client_data = {'bc_address': 'http://185.69.166.13:2015',
+ 'minerfee': 10,
+ 'nr_keys_per_seed': 5,
+ 'seed_': 'festival mobile negative nest valid cheese pulp alpha relax language friend vast'}
+
+rivine_client = j.clients.rivine.get('mytestwallet', data=client_data)
+rivine_client.config.save()
+
 expected_unlockhashes = [
     '2d85a10ad31f2d505768be5efb417de565a53364d7f0c69a888ca764f4bdbcbb',
     '59e5933416affb97748d5e94fa64f97305075c4ebf971c09a64977839b7087b3',
@@ -22,7 +30,9 @@ expected_unlockhashes = [
 ]
 
 # create a wallet based on the generated Seed
-rivine_wallet = RivineWallet(seed=seed, bc_network='http://185.69.166.13:2015', nr_keys_per_seed=5)
+# rivine_wallet = RivineWallet(seed=seed, bc_network='http://185.69.166.13:2015', nr_keys_per_seed=5)
+rivine_wallet = rivine_client.wallet
+
 actual_unlockhashes = [key for key in rivine_wallet.keys.keys()] 
 
 assert set(expected_unlockhashes) ==  set(actual_unlockhashes), "Unlockhashes do not match" 

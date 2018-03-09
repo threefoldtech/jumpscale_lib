@@ -4,14 +4,14 @@ Rivine Client
 
 from JumpScale9 import j
 
-from .Account import Account
+from .RivineWallet import RivineWallet
 
 
 TEMPLATE = """
 bc_address = ""
-port = 443
 seed_ = ""
 nr_keys_per_seed = 50
+minerfee = 10
 """
 
 
@@ -20,13 +20,13 @@ JSConfigBase = j.tools.configmanager.base_class_config
 
 
 class RivineClient(JSConfigBase):
-     """
-     Rivine client object
-     """
+    """
+    Rivine client object
+    """
     def __init__(self, instance, data=None, parent=None, interactive=False):
-        """"
+        """
         Initializes new Rivine Client
-        """"
+        """
         if not data:
             data = {}
 
@@ -38,7 +38,8 @@ class RivineClient(JSConfigBase):
     @property
     def wallet(self):
         if self._wallet is None:
-            self._wallet = RivineWallet(seed=self.config.data['seed'],
+            self._wallet = RivineWallet(seed=self.config.data['seed_'],
                                         bc_network=self.config.data['bc_address'],
-                                        nr_keys_per_seed=self.config.data['nr_keys_per_seed'])
+                                        nr_keys_per_seed=int(self.config.data['nr_keys_per_seed']),
+                                        minerfee=int(self.config.data['minerfee']))
         return self._wallet

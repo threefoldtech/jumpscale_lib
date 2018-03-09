@@ -18,9 +18,9 @@ import requests
 
 from JumpScale9 import j
 
-from .const import SIGEd25519, UNLOCKHASHTYPE, MINERPAYOUTMATURITYWINDOW,\
-InsufficientWalletFundsError, NonExistingOutputError
-from .errors import RESTAPIError, BACKENDError
+from .const import SIGEd25519, UNLOCKHASHTYPE, MINERPAYOUTMATURITYWINDOW
+
+from .errors import RESTAPIError, BACKENDError, InsufficientWalletFundsError, NonExistingOutputError
 
 logger = j.logger.get(__name__)
 
@@ -28,7 +28,7 @@ class RivineWallet:
     """
     Wallet class
     """
-    def __init__(self, seed, bc_network, nr_keys_per_seed=50):
+    def __init__(self, seed, bc_network, nr_keys_per_seed=50, minerfee=10):
         """
         Creates new wallet
         TODO: check if we need to support multiple seeds from the begining
@@ -43,6 +43,7 @@ class RivineWallet:
         # self._bc_network = '{}/explorer/'.format(bc_network) if \
         #                         not bc_network.endswith('explorer') else bc_network
         self._bc_network = bc_network
+        self._minerfee = minerfee
         for index in range(nr_keys_per_seed):
             key = self._generate_spendable_key(index=index)
             self._keys[key.unlockconditions.unlockhash] = key
@@ -185,7 +186,7 @@ class RivineWallet:
                         del self._unspent_coins_outputs[coin_input.get('parentid')]
 
 
-    def create_transaction(self, amount, recipient, minerfee=10):
+    def create_transaction(self, amount, recipient, minerfee=None):
         """
         Creates new transaction and sign it
         creates a new transaction of the specified ammount to a specified address. A remainder address
@@ -196,6 +197,8 @@ class RivineWallet:
         @param recipient: Address of the recipient.
         @param minerfee: the minerfee for this transaction in hastings
         """
+        if minerfee is None:
+            minerfee = self._minerfee
         wallet_fund = sum(int(value.get('value')) for value in self._unspent_coins_outputs.values())
         required_funds = amount + minerfee
         if required_funds > wallet_fund:
@@ -249,7 +252,7 @@ class RivineWallet:
         
         @param transaction: Transaction object to be signed
         """
-        
+
 
     
 
