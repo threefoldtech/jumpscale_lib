@@ -43,3 +43,13 @@ class AggregatorManager(JSBASE):
         self._query_chk.check(args)
 
         return self._client.json('aggregator.query', args)
+
+    def keys(self):
+        """
+        return a list of all keys available
+        """
+        keys = list(self.query().keys())
+        for i, _ in enumerate(keys):
+            keys[i] = keys[i].split('/')[0]
+        keys.sort()
+        return keys
