@@ -36,6 +36,18 @@ From a seed you can create new wallet
         # nr_keys_per_seed: is how many keys to generate per seed
 ```
 
+Or alternatively you can configure the jumpscale client instance using the following code:
+```python
+    client_data = {'bc_address': 'http://185.69.166.13:2015',
+ 'minerfee': 10,
+ 'nr_keys_per_seed': 5,
+ 'seed_': 'festival mobile negative nest valid cheese pulp alpha relax language friend vast'}
+
+    rivine_client = j.clients.rivine.get('mytestwallet', data=client_data)
+    rivine_client.config.save()
+    rivine_wallet = rivine_client.wallet
+``` 
+
 After creating the wallet you can sync the wallet with the blockchain network (this will not build a full node locally)
 ```python
         rivine_wallet.sync_wallet()
