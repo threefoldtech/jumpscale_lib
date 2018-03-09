@@ -44,4 +44,5 @@ class TelegramBot(JSConfigClient):
         if parse_mode is not None:
             params["parse_mode"] = parse_mode
         url = "/bot{}/sendMessage?{}".format(self.config.data["bot_token_"], urlencode(params))
-        return self._conn.request("GET", url)
+        self._conn.request("GET", url)
+        return self._conn.getresponse().read()
