@@ -5,13 +5,13 @@ from js9 import j
 logging.basicConfig(level=logging.INFO)
 default_logger = logging.getLogger(__name__)
 
-JSBASE = j.application.jsbase_get_class()
 
 
-class Containers(JSBASE):
+
+class Containers():
     def __init__(self, node, logger=None):
         self.node = node
-        JSBASE.__init__(self)
+
 
     def list(self):
         containers = []
@@ -40,7 +40,7 @@ class Containers(JSBASE):
         return container
 
 
-class Container(JSBASE):
+class Container():
     """G8SO Container"""
 
     def __init__(self, name, node, flist, hostname=None, mounts=None, nics=None,
@@ -50,7 +50,7 @@ class Container(JSBASE):
         TODO: write doc string
         filesystems: dict {filesystemObj: target}
         """
-        JSBASE.__init__(self)
+
         self.name = name
         self.node = node
         self.mounts = mounts or {}

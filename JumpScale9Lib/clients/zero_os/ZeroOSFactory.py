@@ -7,7 +7,7 @@ from .sal.Node import Node
 from .sal.ZeroDB import ZeroDB
 
 JSConfigFactoryBase = j.tools.configmanager.base_class_configs
-JSBASE = j.application.jsbase_get_class()
+
 
 class ZeroOSFactory(JSConfigFactoryBase):
     """
@@ -29,7 +29,7 @@ class ZeroOSFactory(JSConfigFactoryBase):
         - OVHClient = j.clients.ovh.get(...)
 
         """
-        
+
         cl = OVHClient
         zt = zerotierClient
 
@@ -120,11 +120,11 @@ class ZeroOSFactory(JSConfigFactoryBase):
         return ip_pub, ipaddr_priv
 
 
-class SALFactory(JSBASE):
+class SALFactory():
 
     def __init__(self, factory):
         self._factory = factory
-        JSBASE.__init__(self)
+
 
     def node_get(self, instance='main'):
         client = self._factory.get(instance)

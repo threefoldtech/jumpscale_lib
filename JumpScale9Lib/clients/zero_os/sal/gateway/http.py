@@ -4,12 +4,12 @@ import time
 from zeroos.orchestrator.sal import templates
 from js9 import j
 
-JSBASE = j.application.jsbase_get_class()
 
 
-class HTTPServer(JSBASE):
+
+class HTTPServer():
     def __init__(self, container, service, httpproxies):
-        JSBASE.__init__(self)
+
         self.container = container
         self.service = service
         self.httpproxies = httpproxies

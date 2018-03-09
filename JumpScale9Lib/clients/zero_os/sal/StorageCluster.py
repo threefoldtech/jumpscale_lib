@@ -11,17 +11,17 @@ from .ZeroStor import ZeroStor
 
 logging.basicConfig(level=logging.INFO)
 default_logger = logging.getLogger(__name__)
-JSBASE = j.application.jsbase_get_class()
 
 
-class BaseStorageCluster(JSBASE):
+
+class BaseStorageCluster():
     def __init__(self, label, nodes, nr_servers, storage_servers=None, logger=None):
         self.label = label
         self.name = label
         self.nodes = nodes or []
         self.nr_servers = nr_servers
         self.storage_servers = storage_servers or []
-        JSBASE.__init__(self)
+
 
     @classmethod
     def from_ays(cls, service, password, logger=None):
@@ -223,14 +223,14 @@ class BlockCluster(BaseStorageCluster):
         return health
 
 
-class StorageServer(JSBASE):
+class StorageServer():
     """StorageEngine servers"""
 
     def __init__(self, cluster, logger=None):
         self.cluster = cluster
         self.container = None
         self.storageEngine = None
-        JSBASE.__init__(self)
+
 
     @classmethod
     def from_ays(cls, storageEngine_services, password=None, logger=None):
@@ -285,11 +285,11 @@ class StorageServer(JSBASE):
         return str(self)
 
 
-class StorageDashboard(JSBASE):
+class StorageDashboard():
     def __init__(self, cluster, logger=None):
         self.cluster = cluster
         self.store = 'statsdb'
-        JSBASE.__init__(self)
+
 
     def build_templating(self):
         templating = {

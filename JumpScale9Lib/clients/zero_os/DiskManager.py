@@ -3,7 +3,7 @@ import json
 from . import typchk
 from js9 import j
 
-JSBASE = j.application.jsbase_get_class()
+
 
 class DiskManager:
     _mktable_chk = typchk.Checker({
@@ -40,7 +40,7 @@ class DiskManager:
 
     def __init__(self, client):
         self._client = client
-        JSBASE.__init__(self)
+
 
     def list(self):
         """

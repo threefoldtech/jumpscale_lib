@@ -1,13 +1,13 @@
 from js9 import j
 
-JSBASE = j.application.jsbase_get_class()
 
 
-class IPManager(JSBASE):
-    class IPBridgeManager(JSBASE):
+
+class IPManager():
+    class IPBridgeManager():
         def __init__(self, client):
             self._client = client
-            JSBASE.__init__(self)
+
 
         def add(self, name, hwaddr=None):
             """
@@ -65,10 +65,10 @@ class IPManager(JSBASE):
 
             return self._client.json('ip.bridge.delif', args)
 
-    class IPLinkManager(JSBASE):
+    class IPLinkManager():
         def __init__(self, client):
             self._client = client
-            JSBASE.__init__(self)
+
 
         def up(self, link):
             """
@@ -111,10 +111,10 @@ class IPManager(JSBASE):
         def list(self):
             return self._client.json('ip.link.list', {})
 
-    class IPAddrManager(JSBASE):
+    class IPAddrManager():
         def __init__(self, client):
             self._client = client
-            JSBASE.__init__(self)
+
 
         def add(self, link, ip):
             """
@@ -156,10 +156,10 @@ class IPManager(JSBASE):
             }
             return self._client.json('ip.addr.list', args)
 
-    class IPRouteManager(JSBASE):
+    class IPRouteManager():
         def __init__(self, client):
             self._client = client
-            JSBASE.__init__(self)
+
 
         def add(self, dev, dst, gw=None):
             """
@@ -197,7 +197,7 @@ class IPManager(JSBASE):
             return self._client.json('ip.route.list', {})
 
     def __init__(self, client):
-        JSBASE.__init__(self)
+
         self._client = client
         self._bridge = IPManager.IPBridgeManager(client)
         self._link = IPManager.IPLinkManager(client)

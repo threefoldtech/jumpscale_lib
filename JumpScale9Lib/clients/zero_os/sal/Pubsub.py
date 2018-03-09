@@ -9,15 +9,15 @@ import uuid
 import aioredis
 from js9 import j
 
-JSBASE = j.application.jsbase_get_class()
 
 
-class Response(JSBASE):
+
+class Response():
     def __init__(self, client, id):
         self._client = client
         self._id = id
         self._queue = 'result:{}'.format(id)
-        JSBASE.__init__(self)
+
 
     async def exists(self):
         r = self._client._redis
@@ -43,7 +43,7 @@ class Response(JSBASE):
         raise TimeoutError()
 
 
-class Pubsub(JSBASE):
+class Pubsub():
     def __init__(self, loop, host, port=6379, password="", db=0, ctx=None, timeout=None, testConnectionAttempts=3, callback=None):
 
         socket_timeout = (timeout + 5) if timeout else 15
@@ -71,7 +71,7 @@ class Pubsub(JSBASE):
         self.callback = callback or default_callback
         if not callable(self.callback):
             raise Exception('callback must be callable')
-        JSBASE.__init__(self)
+
 
     async def get(self):
         if self._redis is not None:
