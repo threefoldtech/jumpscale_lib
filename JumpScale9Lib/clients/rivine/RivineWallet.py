@@ -20,7 +20,9 @@ from JumpScale9 import j
 
 from .const import SIGEd25519, UNLOCKHASHTYPE, MINERPAYOUTMATURITYWINDOW
 
-from .errors import RESTAPIError, BACKENDError, InsufficientWalletFundsError, NonExistingOutputError
+from .errors import RESTAPIError, BACKENDError,\
+InsufficientWalletFundsError, NonExistingOutputError,\
+NotEnoughSignaturesFound
 
 logger = j.logger.get(__name__)
 
@@ -227,7 +229,7 @@ class RivineWallet:
             # we have leftover fund, so we create new transaction, and pick on user key that is not used
             for address in self._keys.keys():
                 used = False
-                for unspent_coint_output in self._unspent_coins_outputs.values():
+                for unspent_coin_output in self._unspent_coins_outputs.values():
                      if unspent_coin_output['unlockhash'] == address:
                          used = True
                          break
@@ -239,7 +241,7 @@ class RivineWallet:
 
         # add minerfee to the transaction
         transaction.minerfee = minerfee
-        
+        import pdb;pdb.set_trace()
         # sign the transaction
         self._sign_transaction(transaction)
 
@@ -252,9 +254,54 @@ class RivineWallet:
         
         @param transaction: Transaction object to be signed
         """
+        covered_fields = {'wholetransaction': True}
+        # add a signature for every input
+        for input_ in transaction.inputs:
+            key = self._keys[input_['unlockconditions'].unlockhash]
+            self._add_signatures(transaction=transaction,
+                                 covered_fields=covered_fields,
+                                 unlock_conditions=input_['unlockconditions'],
+                                 parent_id=input_['parentid'],
+                                 spendable_key=key)
 
 
-    
+    def _add_signatures(self, transaction, covered_fields, unlock_conditions, parent_id, spendable_key):
+        """
+        Add a signture to a transaction using one of the spendable keys
+        with support for multisig spendable keys. Because of the restricted input, the function
+        is compatible with both coin inputs and blockstake inputs.
+        Try to find the matching secret key for each public key - some public
+        keys may not have a match. Some secret keys may be used multiple times,
+	    which is why public keys are used as the outer loop.
+        """
+        total_signatures = 0
+        for index, publickey in enumerate(unlock_conditions.public_keys):
+            # search for the matching secret key to the public key
+            for secret_key, pkey in spendable_key.secretkeys:
+                if pkey != publickey:
+                    continue
+            
+                # found a matching secret key, create a signature and add it
+                signature = {
+                    'parentid': parent_id,
+                    'coveredfields': covered_fields,
+                    'publickeyindex': index,
+                    'timelock': 0,
+                    'signature': bytearray()
+
+                }
+                signature_hash = transaction.get_signature_hash(signature)
+                signature['signature'] = secret_key.sgin(signature_hash)
+                total_signatures += 1
+                transaction.add_signature(signature)
+                break
+            # if we got enough signatrues then we break
+            if total_signatures == unlock_conditions.nr_required_signatures:
+                break
+        if total_signatures < unlock_conditions:
+            raise NotEnoughSignaturesFound('Not enough keys found to satisfy required number of signatures')
+            
+
 
     def commit_transaction(self, transaction):
         """
@@ -284,15 +331,16 @@ class SpendableKey:
         # verification key can be retrieved
         self._seed = seed
         self._sk = ed25519.SigningKey(self._seed)
-        self._pk = self._sk.get_verifying_key()
-        self._unlockconditions = UnlockConditions(pubkey=self._pk)
+        self._keys = [(self._sk,  self._sk.get_verifying_key().to_bytes())]
+        self._unlockconditions = UnlockConditions(pubkey=self._sk.get_verifying_key().to_bytes())
     
+
     @property
     def secretkeys(self):
         """
         Returns the singing keys
         """
-        return [self._sk]
+        return self._keys
     
     @property
     def unlockconditions(self):
@@ -320,8 +368,25 @@ class UnlockConditions:
         self._blockheight = 0
         self._merkletree = merkletools.MerkleTools()
         self._unlockhash = None
+        self._binary = None
     
+    
+    @property
+    def public_keys(self):
+        """
+        Retrieve the public keys of the unlock conditions
+        """
+        return [item['key'] for item in self._keys]
 
+    
+    @property
+    def nr_required_signatures(self):
+        """
+        Number of required singatures
+        """ 
+        return self._nr_required_sigs
+    
+    
     @property
     def unlockhash(self):
         """
@@ -335,15 +400,30 @@ class UnlockConditions:
         """
         if self._unlockhash is None:
             values = []
-            values.append(hashlib.blake2b(self._blockheight.to_bytes(4, byteorder='big')).hexdigest())
+            values.append(hashlib.blake2b(self._blockheight.to_bytes(8, byteorder='little')).hexdigest())
             for key in self._keys:
-                values.append(hashlib.blake2b(key['key'].to_bytes(prefix='')).hexdigest())
-            values.append(hashlib.blake2b(self._nr_required_sigs.to_bytes(4, byteorder='big')).hexdigest())
+                values.append(hashlib.blake2b(key['key']).hexdigest())
+            values.append(hashlib.blake2b(self._nr_required_sigs.to_bytes(8, byteorder='little')).hexdigest())
             self._merkletree.add_leaf(values=values, do_hash=False)
             self._merkletree.make_tree()
             self._unlockhash = self._merkletree.get_merkle_root()
 
         return self._unlockhash
+
+
+    @property
+    def binary(self):
+        """
+        Result of serializing the data attributes to a bytearray
+        """
+        if self._binary is None:
+            self._binary = bytearray()
+            self._binary.extend(self._blockheight.to_bytes(8, byteorder='little'))
+            for key in self._keys:
+                self._binary.extend(bytearray(key['algorithm'], encoding='utf-8'))
+                self._binary.extend(key['key'])
+            self._binary.extend(self._nr_required_sigs.to_bytes(8, byteorder='little'))
+        return bytes(self._binary)
         
 
 
@@ -358,8 +438,20 @@ class Transaction:
         Initialize new transaction
         """
         self._inputs = []
-        self._output = []
+        self._outputs = []
         self._minerfee = 0
+        self._blockstake_inputs = []
+        self._blockstake_outputs = []
+        self._arbitrary_data = bytearray()
+        self._signatrues = []
+
+
+    @property
+    def signatrues(self):
+        """
+        Transaction signatures
+        """
+        return self._signatrues
 
     
     @property
@@ -367,7 +459,7 @@ class Transaction:
         """
         Inputs of the transactions
         """
-        self._inputs
+        return self._inputs
     
 
     @property
@@ -375,7 +467,7 @@ class Transaction:
         """
         Outputs of the transactions
         """
-        self._outputs
+        return self._outputs
     
 
     @property
@@ -383,7 +475,7 @@ class Transaction:
         """
         The miner fee of the transaction
         """
-        self._minerfee
+        return self._minerfee
     
 
     @minerfee.setter
@@ -405,3 +497,42 @@ class Transaction:
         """
         Adds a new output to the transaction 
         """
+        self._outputs.append(output_info)
+
+    
+    def add_signature(self, signature):
+        """
+        Adds a new signature to the transaction
+
+        @param signature: signature details
+        """
+        self._signatrues.append(signature)
+
+
+    def get_signature_hash(self, signature):
+        """
+        Calculates the hash of a signature
+        currently only support whole_transaction: True
+        """
+        signature_hash = bytearray()
+        if signature.get('coveredfields', False):
+            for input_ in self._inputs + self._blockstake_inputs:
+                signature_hash.extend(bytearray(input_['parentid'], encoding='utf-8'))
+                signature_hash.extend(input_['unlockconditions'].binary)
+            for output in self._outputs + self._blockstake_outputs:
+                signature_hash.extend(output['value'].to_bytes(8, byteorder='little'))
+                signature_hash.extend(output['unlockhash'])
+            signature_hash.extend(self._minerfee.to_bytes(8, byteorder='little'))
+            signature_hash.extend(self._arbitrary_data)
+            signature_hash.extend(bytearray(signature['parentid'], encoding='utf-8'))
+            signature_hash.extend(signature['publickeyindex'].to_bytes(8, byteorder='little'))
+            signature_hash.extend(signature['timelock'].to_bytes(8, byteorder='little'))
+        
+        return hashlib.blake2b(data=signature_hash, digest_size=32).digest()
+
+
+
+
+
+
+

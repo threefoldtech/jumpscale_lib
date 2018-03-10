@@ -4,7 +4,7 @@ Test module for RivineWallet js9 client
 
 from js9 import j
 from mnemonic import Mnemonic
-from JumpScale9Lib.clients.rivine.RivineWallet import RivineWallet
+from JumpScale9Lib.clients.rivine.RivineWallet import RivineWallet, SpendableKey
 
 # create a random seed
 m = Mnemonic('english')
@@ -21,13 +21,11 @@ client_data = {'bc_address': 'http://185.69.166.13:2015',
 rivine_client = j.clients.rivine.get('mytestwallet', data=client_data)
 rivine_client.config.save()
 
-expected_unlockhashes = [
-    '2d85a10ad31f2d505768be5efb417de565a53364d7f0c69a888ca764f4bdbcbb',
-    '59e5933416affb97748d5e94fa64f97305075c4ebf971c09a64977839b7087b3',
-    '65e5838cfee444cbf98661e2648918ad7b0d622e9b600f1b8271161874cd1d6c',
-    '7c75ddbfe744022c2b9be8f38b7049e4878b3e5030910447b0083af2ac5e20db',
-    'bc961fa13fd17ea13268d24bf502506325729c07da867d8dc64363a2af9955f6',
-]
+expected_unlockhashes =  ['6b536bc8d98e0736253ced4149833baa9f03bd9466f45ecf94b2502b645aca2b', 
+'d3acc71d720ac6861c9aa310fd5bb8ec7d3782f608d05547fb7edcbb5184310b', 
+'64254b4da2b616b4b405a5a7f378f1a15a144c42ad574f06afaadc3d675cfa82', 
+'cc49249947b47a09612ac05e68b06eba3cf295ca0a53cec91b09eae632f5268e', 
+'63f8f2139c59969e7e2a05ec047f2b88f51e02e21c5a2a27e3c84e81a3933964']
 
 # create a wallet based on the generated Seed
 # rivine_wallet = RivineWallet(seed=seed, bc_network='http://185.69.166.13:2015', nr_keys_per_seed=5)
@@ -1935,10 +1933,19 @@ actual_address_info = rivine_wallet.check_address(address=address)
 assert actual_address_info == expected_address_info, "Expected address info is not the same as check_address found"
 
 
+# import copy
+# original_keys = copy.deepcopy(rivine_wallet._keys)
 # override the keys attribute in the wallet to use our testing address
-rivine_wallet._keys = {address: object}
+rivine_wallet._keys = {address: SpendableKey(m.to_seed(seed))}
 # after overriding the keys attributes we can try to sync the wallet
 rivine_wallet.sync_wallet()
 
 expected_unspent_coins_outputs = {'9e9e509f9d412719ceb0f17ab0a4c950c9a4b2981cd4f9949a2212ec4caa8929': {'value': '10000000000000000000000000', 'unlockhash': '02b1a92f2cb1b2daec2f650717452367273335263136fae0201ddedbbcfe67648572b069c754'}, '099aa602c0073ea278b086712eac30f47c66b624b2f4719e08280cd7a7307857': {'value': '10000000000000000000000000', 'unlockhash': '02b1a92f2cb1b2daec2f650717452367273335263136fae0201ddedbbcfe67648572b069c754'}, '41cda66fcc584d3b266c2c1e54756dd15a2c3c0a29bc8bf5c636177cfd615860': {'value': '10000000000000000000000000', 'unlockhash': '02b1a92f2cb1b2daec2f650717452367273335263136fae0201ddedbbcfe67648572b069c754'}, 'ec7c03c33a1e5adac8770f7c9c963af58497a85d669e88980ac859dcb17a1c58': {'value': '10000000000000000000000000', 'unlockhash': '02b1a92f2cb1b2daec2f650717452367273335263136fae0201ddedbbcfe67648572b069c754'}, '34f3fa16ba1ce28d242cde82b9a3b0f6a530af16ef3f489213f84c380361fee7': {'value': '11000000000000000000000000', 'unlockhash': '02b1a92f2cb1b2daec2f650717452367273335263136fae0201ddedbbcfe67648572b069c754'}, 'd859fa8795103d0b1333c400affbde82639360657ff69dbb8e11b0bf97f56595': {'value': '11000000000000000000000000', 'unlockhash': '02b1a92f2cb1b2daec2f650717452367273335263136fae0201ddedbbcfe67648572b069c754'}}
 assert expected_unspent_coins_outputs == rivine_wallet.unspent_coins_outputs, "Unexpected unspent coins outputs"
+
+
+# set back the original keys 
+# import pdb; pdb.set_trace()
+# rivine_wallet._keys = original_keys
+recipient = 'e5bd83a85e263817e2040054064575066874ee45a7697facca7a2721d4792af374ea35f549a1'
+# transacton = rivine_wallet.create_transaction(amount=10, recipient=recipient)

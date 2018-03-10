@@ -22,3 +22,8 @@ class NonExistingOutputError(Exception):
     """
     Error representing a non-existing output referenced in a transaction
     """
+
+class NotEnoughSignaturesFound(Exception):
+    """
+    Error representing a lack of enough keys to satisfies the number of required signatures 
+    """
