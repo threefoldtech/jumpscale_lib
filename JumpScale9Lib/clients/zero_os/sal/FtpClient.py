@@ -3,13 +3,13 @@ from io import BytesIO
 from urllib.parse import urlparse
 from js9 import j
 
-JSBASE = j.application.jsbase_get_class()
 
 
-class FtpClient(JSBASE):
+
+class FtpClient():
     def __init__(self, url):
         self.parsed_url = urlparse(url)
-        JSBASE.__init__(self)
+
 
     def upload(self, content, filename):
         with FTP() as ftp:

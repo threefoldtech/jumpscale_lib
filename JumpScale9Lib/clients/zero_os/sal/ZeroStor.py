@@ -4,14 +4,14 @@ from js9 import j
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-JSBASE = j.application.jsbase_get_class()
 
 
-class ZeroStor(JSBASE):
+
+class ZeroStor():
     """zerostor server"""
 
     def __init__(self, name, container, bind='0.0.0.0:8080', data_dir='/mnt/data', meta_dir='/mnt/metadata', max_size_msg=64):
-        JSBASE.__init__(self)
+
         self.name = name
         self.container = container
         self.bind = bind

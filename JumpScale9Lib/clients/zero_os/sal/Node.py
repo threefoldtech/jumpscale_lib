@@ -17,10 +17,10 @@ from .StoragePool import StoragePools
 
 Mount = namedtuple('Mount', ['device', 'mountpoint', 'fstype', 'options'])
 
-JSBASE = j.application.jsbase_get_class()
 
 
-class Node(JSBASE):
+
+class Node():
     """Represent a G8OS Server"""
 
     def __init__(self, client):
@@ -35,7 +35,7 @@ class Node(JSBASE):
         self.healthcheck = HealthCheck(self)
         self.capacity = Capacity(self)
         self.client = client
-        JSBASE.__init__(self)
+
 
     @property
     def name(self):

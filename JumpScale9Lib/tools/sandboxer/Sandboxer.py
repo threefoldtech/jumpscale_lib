@@ -5,7 +5,7 @@ import os
 
 JSBASE = j.application.jsbase_get_class()
 
-
+from .SandboxPython import SandboxPython
 class Dep(JSBASE):
 
     def __init__(self, name, path):
@@ -44,7 +44,6 @@ class Dep(JSBASE):
 
     __repr__ = __str__
 
-
 class Sandboxer(JSBASE):
     """
     sandbox any linux app
@@ -58,6 +57,7 @@ class Sandboxer(JSBASE):
                         "libz.so", "libgcc", "librt", "libstdc++", "libapt", "libdbus", "libselinux"]
         self.original_size = 0
         self.new_size = 0
+        self.python = SandboxPython()
 
     def _ldd(self, path, result={}):
 
@@ -121,7 +121,7 @@ class Sandboxer(JSBASE):
             dest = "%s/bin/" % j.dirs.BASEDIR
         if j.sal.fs.isDir(path):
             # do all files in dir
-            for item in j.sal.fs.listFilesInDir(path, recursive=recursive, followSymlinks=True, listSymlinks=False):
+            for item in j.sal.fs.listFilesInDir(path, recursive=False, followSymlinks=True, listSymlinks=False):
                 if j.sal.fs.isExecutable(item) or j.sal.fs.getFileExtension(item) == "so":
                     self.sandboxLibs(item, dest, recursive=False)
             if recursive:
@@ -174,8 +174,7 @@ class Sandboxer(JSBASE):
         j.sal.fswalker.walkFunctional(path, callbackFunctionFile=callbackFile, callbackFunctionDir=None, arg=(
             path, dest), callbackForMatchDir=callbackForMatchDir, callbackForMatchFile=callbackForMatchFile)
 
-    # def sandbox_python3(self):
-    #     j.tools.prefab.local.js9.sandbox_python()
+
 
     # def dedupe(self, path, storpath, name, excludeFiltersExt=[
     #            "pyc", "bak"], append=False, reset=False, removePrefix="", compress=True, delete=False, excludeDirs=[]):
@@ -268,25 +267,3 @@ class Sandboxer(JSBASE):
     #     out = j.data.text.sort(out)
     #     j.sal.fs.writeFile(plistfile, out)
 
-    # def findDependencies(self, path, deps={}):
-    #     excl = ["libc.so", "libpthread.so", "libutil.so"]
-    #     out = self.installtools.execute("ldd %s" % path)
-    #     result = []
-    #     for item in [item.strip() for item in out.split("\n") if item.strip() != ""]:
-    #         if item.find("=>") != -1:
-    #             link = item.split("=>")[1].strip()
-    #             link = link.split("(")[0].strip()
-    #             if self.exists(link):
-    #                 name = os.path.basename(link)
-    #                 if name not in deps:
-    #                     self.logger.debug(link)
-    #                     deps[name] = link
-    #                     deps = self.findDependencies(link)
-    #     return deps
-    #
-    # def copyDependencies(self, path, dest):
-    #     self.installtools.createDir(dest)
-    #     deps = self.findDependencies(path)
-    #     for name in list(deps.keys()):
-    #         path = deps[name]
-    #         self.installtools.copydeletefirst(path, "%s/%s" % (dest, name))

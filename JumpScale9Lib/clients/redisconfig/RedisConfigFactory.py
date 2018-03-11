@@ -14,13 +14,14 @@ class RedisConfigFactory(JSConfigBase):
         JSConfigBase.__init__(self, RedisConfig)
         self._tree = None
 
-    def get_by_params(self, instance="core",ipaddr="localhost", port=6379, password="", unixsocket="", ardb_patch=False):
+    def get_by_params(self, instance="core",ipaddr="localhost", port=6379, password="", unixsocket="", ardb_patch=False, set_patch=False):
         data = {}
         data["addr"] = ipaddr
         data["port"] = port
         data["password_"] = password
         data["unixsocket"] = unixsocket
         data["ardb_patch"] = ardb_patch
+        data["set_patch"] = set_patch
         return self.get(instance=instance, data=data)
 
     def test(self):

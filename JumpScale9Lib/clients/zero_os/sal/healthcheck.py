@@ -4,12 +4,12 @@ import os
 import traceback
 from js9 import j
 
-JSBASE = j.application.jsbase_get_class()
 
 
-class HealthCheckObject(JSBASE):
+
+class HealthCheckObject():
     def __init__(self, id, name, category, resource):
-        JSBASE.__init__(self)
+
         self.id = id
         self.name = name
         self.category = category
@@ -48,13 +48,13 @@ class IPMIHealthCheck(HealthCheckRun):
         return ''
 
 
-class ContainerContext(JSBASE):
+class ContainerContext():
     def __init__(self, node, flist):
         self.node = node
         self.flist = flist
         self.container = None
         self._name = 'healthcheck_{}'.format(hashlib.md5(flist.encode()).hexdigest())
-        JSBASE.__init__(self)
+
 
     def __enter__(self):
         try:
@@ -67,11 +67,11 @@ class ContainerContext(JSBASE):
         return
 
 
-class HealthCheck(JSBASE):
+class HealthCheck():
     def __init__(self, node):
         self.node = node
         self.healtcheckfolder = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'healthchecks')
-        JSBASE.__init__(self)
+
 
     def with_container(self, flist):
         return ContainerContext(self.node, flist)

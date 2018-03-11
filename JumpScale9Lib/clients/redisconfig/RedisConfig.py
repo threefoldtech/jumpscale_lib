@@ -6,6 +6,7 @@ port = 6379
 password_ = ""
 ardb_patch = false
 unixsocket = ""
+set_patch = false
 """
 
 JSConfigBase = j.tools.configmanager.base_class_config
@@ -27,10 +28,11 @@ class RedisConfig(JSConfigBase):
             password = d["password_"]
             unixsocket = d["unixsocket"]
             ardb_patch = d["ardb_patch"]
+            set_patch = d["set_patch"]
             if unixsocket == "":
                 unixsocket = None
             self._redis = j.clients.redis.get(
-                ipaddr=addr, port=port, password=password, unixsocket=unixsocket, ardb_patch=ardb_patch)
+                ipaddr=addr, port=port, password=password, unixsocket=unixsocket, ardb_patch=ardb_patch, set_patch=set_patch)
         return self._redis
 
     def __str__(self):

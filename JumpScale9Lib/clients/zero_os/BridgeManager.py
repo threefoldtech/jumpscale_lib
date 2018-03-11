@@ -3,10 +3,9 @@ import json
 from js9 import j
 
 from . import typchk
-JSBASE = j.application.jsbase_get_class()
 
 
-class BridgeManager(JSBASE):
+class BridgeManager():
     _bridge_create_chk = typchk.Checker({
         'name': str,
         'hwaddr': typchk.Or(str, typchk.IsNone()),
@@ -23,7 +22,6 @@ class BridgeManager(JSBASE):
 
     def __init__(self, client):
         self._client = client
-        JSBASE.__init__(self)
 
     def create(self, name, hwaddr=None, network=None, nat=False, settings={}):
         """
@@ -58,7 +56,7 @@ class BridgeManager(JSBASE):
         }
 
         self._bridge_create_chk.check(args)
-        self.logger.info("bridge.create:%s"%args)
+        self.logger.info("bridge.create:%s" % args)
         response = self._client.raw('bridge.create', args)
 
         result = response.get()
@@ -93,10 +91,9 @@ class BridgeManager(JSBASE):
         }
 
         self._bridge_delete_chk.check(args)
-        self.logger.info("bridge.delete:%s"%bridge)
+        self.logger.info("bridge.delete:%s" % bridge)
         response = self._client.raw('bridge.delete', args)
 
         result = response.get()
         if result.state != 'SUCCESS':
             raise RuntimeError('failed to list delete: %s' % result.data)
-

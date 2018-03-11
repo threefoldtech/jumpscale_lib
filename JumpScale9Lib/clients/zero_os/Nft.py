@@ -1,10 +1,10 @@
 from . import typchk
 from js9 import j
 
-JSBASE = j.application.jsbase_get_class()
 
 
-class Nft(JSBASE):
+
+class Nft():
     _port_chk = typchk.Checker({
         'port': int,
         'interface': typchk.Or(str, typchk.IsNone()),
@@ -13,7 +13,7 @@ class Nft(JSBASE):
 
     def __init__(self, client):
         self._client = client
-        JSBASE.__init__(self)
+
 
     def open_port(self, port, interface=None, subnet=None):
         """

@@ -5,14 +5,14 @@ import yaml
 from js9 import j
 
 
-JSBASE = j.application.jsbase_get_class()
 
 
-class EtcdCluster(JSBASE):
+
+class EtcdCluster():
     """etced server"""
 
     def __init__(self, name, dialstrings, mgmtdialstrings, logger=None):
-        JSBASE.__init__(self)
+
         self.name = name
         self.dialstrings = dialstrings
         self.mgmtdialstrings = mgmtdialstrings
@@ -74,12 +74,12 @@ class EtcdCluster(JSBASE):
             self._connect()
             self.delete(key)
 
-class ETCD(JSBASE):
+class ETCD():
     """etced server"""
 
     def __init__(self, name, container, serverBind, clientBind, peers, mgmtClientBind, data_dir='/mnt/data',
                  password=None, logger=None):
-        JSBASE.__init__(self)
+
         self.name = name
         self.container = container
         self.serverBind = serverBind
