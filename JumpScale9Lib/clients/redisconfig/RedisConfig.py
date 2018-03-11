@@ -6,6 +6,7 @@ port = 6379
 password_ = ""
 ardb_patch = false
 unixsocket = ""
+set_patch = false
 """
 
 JSConfigBase = j.tools.configmanager.base_class_config
