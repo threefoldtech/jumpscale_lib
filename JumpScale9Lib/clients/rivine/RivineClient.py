@@ -12,6 +12,7 @@ bc_address = ""
 seed_ = ""
 nr_keys_per_seed = 50
 minerfee = 10
+password_ = ""
 """
 
 
@@ -40,6 +41,7 @@ class RivineClient(JSConfigBase):
         if self._wallet is None:
             self._wallet = RivineWallet(seed=self.config.data['seed_'],
                                         bc_network=self.config.data['bc_address'],
+                                        bc_network_password=self.config.data['password_'],
                                         nr_keys_per_seed=int(self.config.data['nr_keys_per_seed']),
                                         minerfee=int(self.config.data['minerfee']))
         return self._wallet

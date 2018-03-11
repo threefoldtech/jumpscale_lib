@@ -39,6 +39,7 @@ From a seed you can create new wallet
 Or alternatively you can configure the jumpscale client instance using the following code:
 ```python
     client_data = {'bc_address': 'http://185.69.166.13:2015',
+'password_': 'test123',
  'minerfee': 10,
  'nr_keys_per_seed': 5,
  'seed_': 'festival mobile negative nest valid cheese pulp alpha relax language friend vast'}
@@ -65,4 +66,13 @@ You should see something similar to the following output
 * Found transaction output for address 02b1a92f2cb1b2daec2f650717452367273335263136fae0201ddedbbcfe67648572b069c754
 * Found a spent address 822916455e3bb68ce1c1df5cef08e555b4e5ad153399942d628a0d298398a3fb
 
+```
+
+After syncing your wallet, you can create and commit transactions
+```python
+    recipient = 'e5bd83a85e263817e2040054064575066874ee45a7697facca7a2721d4792af374ea35f549a1'
+    transacton = rivine_wallet.create_transaction(amount=10, recipient=recipient)
+    # you can then review the transaction by calling transaction.json
+    transaction.json
+    rivine_wallet.commit_transaction(transaction=transaction)
 ```

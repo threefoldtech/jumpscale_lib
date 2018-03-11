@@ -14,6 +14,7 @@ seed = m.generate()
 seed = 'festival mobile negative nest valid cheese pulp alpha relax language friend vast'
 
 client_data = {'bc_address': 'http://185.69.166.13:2015',
+'password_': 'test123',
  'minerfee': 10,
  'nr_keys_per_seed': 5,
  'seed_': 'festival mobile negative nest valid cheese pulp alpha relax language friend vast'}

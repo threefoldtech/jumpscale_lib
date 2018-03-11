@@ -15,12 +15,14 @@ import ed25519
 import merkletools
 import hashlib
 import requests
+import base64
+from requests.auth import HTTPBasicAuth
 
 from JumpScale9 import j
 
 from .const import SIGEd25519, UNLOCKHASHTYPE, MINERPAYOUTMATURITYWINDOW
 
-from .errors import RESTAPIError, BACKENDError,\
+from .errors import RESTAPIError, BackendError,\
 InsufficientWalletFundsError, NonExistingOutputError,\
 NotEnoughSignaturesFound
 
@@ -30,14 +32,16 @@ class RivineWallet:
     """
     Wallet class
     """
-    def __init__(self, seed, bc_network, nr_keys_per_seed=50, minerfee=10):
+    def __init__(self, seed, bc_network, bc_network_password, nr_keys_per_seed=50, minerfee=10):
         """
         Creates new wallet
         TODO: check if we need to support multiple seeds from the begining
         
-        @param seed: Starting point seed to generate keys
+        @param seed: Starting point seed to generate keys.
         @param bc_network: Blockchain network to use.
+        @param bc_network_password: Password to send to the explorer node when posting requests.
         @param nr_keys_per_seed: Number of keys generated from the seed.
+        @param minerfee: Amount of hastings that should be minerfee.
         """ 
         self._seed = seed
         self._unspent_coins_outputs = {}
@@ -46,6 +50,7 @@ class RivineWallet:
         #                         not bc_network.endswith('explorer') else bc_network
         self._bc_network = bc_network
         self._minerfee = minerfee
+        self._bc_network_password = bc_network_password
         for index in range(nr_keys_per_seed):
             key = self._generate_spendable_key(index=index)
             self._keys[key.unlockconditions.unlockhash] = key
@@ -125,7 +130,7 @@ class RivineWallet:
         for address in self._keys.keys():
             address_info = self.check_address(address=address)
             if address_info.get('hashtype', None) != UNLOCKHASHTYPE:
-                raise BACKENDError('Address is not recognized as an unblock hash')
+                raise BackendError('Address is not recognized as an unblock hash')
             self._collect_miner_fees(address=address, blocks=address_info.get('blocks',{}),
                                      height=current_chain_height)
             transactions = address_info.get('transactions', {})
@@ -241,7 +246,6 @@ class RivineWallet:
 
         # add minerfee to the transaction
         transaction.minerfee = minerfee
-        import pdb;pdb.set_trace()
         # sign the transaction
         self._sign_transaction(transaction)
 
@@ -309,8 +313,19 @@ class RivineWallet:
 
         @param transaction: Transaction object to be committed
         """
-        
+        data = transaction.json
+        url = '{}/transactionpool/transactions'.format(self._bc_network)
+        headers = {'user-agent': 'Rivine-Agent'}
+        auth = HTTPBasicAuth('', self._bc_network_password)
+        res = requests.post(url, headers=headers, auth=auth, json=data)
+        if res.status_code != 200:
+            msg = 'Faield to commit transaction to chain network.{}'.format(res.text)
+            logger.error(msg)
+            raise BackendError(msg)
+        else:
+            logger.info('Transaction committed successfully')
 
+        
 
 class SpendableKey:
     """
@@ -342,6 +357,7 @@ class SpendableKey:
         """
         return self._keys
     
+
     @property
     def unlockconditions(self):
         return self._unlockconditions
@@ -369,6 +385,7 @@ class UnlockConditions:
         self._merkletree = merkletools.MerkleTools()
         self._unlockhash = None
         self._binary = None
+        self._json = None
     
     
     @property
@@ -424,6 +441,28 @@ class UnlockConditions:
                 self._binary.extend(key['key'])
             self._binary.extend(self._nr_required_sigs.to_bytes(8, byteorder='little'))
         return bytes(self._binary)
+
+    
+    @property
+    def json(self):
+        """
+        Return a json encoded representation of the unlockconditions object
+        """
+        if self._json is None:
+            public_keys = []
+            for pkey in self._keys:
+                public_keys.append({
+                    'algorithm': pkey['algorithm'],
+                    'key': base64.b64encode(pkey['key']).decode('ascii')
+                })
+
+            self._json = {
+                'timelock': self._blockheight,
+                'publickeys': public_keys,
+                'signaturesrequired': self._nr_required_sigs
+            }
+
+        return self._json
         
 
 
@@ -444,6 +483,7 @@ class Transaction:
         self._blockstake_outputs = []
         self._arbitrary_data = bytearray()
         self._signatrues = []
+        self._json = None
 
 
     @property
@@ -484,6 +524,58 @@ class Transaction:
         Sets the miner fee
         """
         self._minerfee = value
+
+
+    @property
+    def json(self):
+        """
+        JSON encoded representation of the transaction
+        For reference: https://github.com/rivine/rivine/blob/40ff7b6bfaba779b90647d572823ea4b5d35601a/doc/api/api.raml#L136-L212
+        """
+        if self._json is None:
+            self._json = {}
+            inputs = []
+            for input_ in self._inputs:
+                inputs.append({
+                    'parentid': input_['parentid'],
+                    'unlockconditions': input_['unlockconditions'].json,
+                })
+            self._json['coininputs'] = inputs
+            outputs = []
+            for output in self._outputs:
+                outputs.append({
+                    'value': str(output['value']),
+                    'unlockhash': output['unlockhash'],
+                })
+            self._json['coinoutputs'] = outputs
+            self._json['minerfees'] = [str(self._minerfee)]
+            self._json['arbitrarydata'] = base64.b64encode(self._arbitrary_data).decode('ascii')
+            self._json['blockstakeinputs'] = ''
+            self._json['blockstakeoutputs'] = ''
+            transaction_signatures = []
+            for txn_sig in self._signatrues:
+                signature = {
+                    'parentid': txn_sig['parentid'],
+                    'publickeyindex': txn_sig['publickeyindex'],
+                    'timelock': txn_sig['timelock'],
+                    'coveredfields':{
+                        'wholetransaction': True,
+                        'coininputs': '',
+                        'coinoutputs': '',
+                        'blockstakeinputs': '',
+                        'blockstakeoutputs': '',
+                        'minerfees': '',
+                        'arbitrarydata': '',
+                        'transactionsignatures': '',
+
+                    },
+                    'signature': txn_sig['signature'],
+                }
+                transaction_signatures.append(signature)
+
+            self._json['transactionsignatures'] = transaction_signatures
+
+        return self._json
 
 
     def add_input(self, input_info):
@@ -529,8 +621,6 @@ class Transaction:
             signature_hash.extend(signature['timelock'].to_bytes(8, byteorder='little'))
         
         return hashlib.blake2b(data=signature_hash, digest_size=32).digest()
-
-
 
 
 

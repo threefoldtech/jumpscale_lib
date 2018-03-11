@@ -8,7 +8,7 @@ class RESTAPIError(Exception):
     """
 
 
-class BACKENDError(Exception):
+class BackendError(Exception):
     """
     Error representing a problem with the content of backend response
     """
