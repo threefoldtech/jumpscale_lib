@@ -1,12 +1,12 @@
 import time
 from js9 import j
 
-JSBASE = j.application.jsbase_get_class()
 
 
-class CloudInit(JSBASE):
+
+class CloudInit():
     def __init__(self, container, config):
-        JSBASE.__init__(self)
+
         self.container = container
         self.config = config
         self.CONFIGPATH = "/etc/cloud-init"

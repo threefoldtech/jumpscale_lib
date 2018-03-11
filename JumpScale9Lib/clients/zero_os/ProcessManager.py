@@ -3,10 +3,10 @@ import signal
 from . import typchk
 from js9 import j
 
-JSBASE = j.application.jsbase_get_class()
 
 
-class ProcessManager(JSBASE):
+
+class ProcessManager():
     _process_chk = typchk.Checker({
         'pid': typchk.Or(int, typchk.IsNone()),
     })
@@ -18,7 +18,7 @@ class ProcessManager(JSBASE):
 
     def __init__(self, client):
         self._client = client
-        JSBASE.__init__(self)
+
 
     def list(self, id=None):
         """

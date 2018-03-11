@@ -4,17 +4,17 @@ import time
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-JSBASE = j.application.jsbase_get_class()
 
 
-class StorageEngine(JSBASE):
+
+class StorageEngine():
     """storageEngine server"""
 
     def __init__(self, name, container, enabled=True, status='running', bind='0.0.0.0:16379', data_dir='/mnt/data', master=None):
         """
         TODO: write doc string
         """
-        JSBASE.__init__(self)
+
         self.name = name
         self.bind = bind
         self.enabled = enabled

@@ -1,10 +1,10 @@
 from . import typchk
 from js9 import j
 
-JSBASE = j.application.jsbase_get_class()
 
 
-class LogManager(JSBASE):
+
+class LogManager():
     _level_chk = typchk.Checker({
         'level': typchk.Enum("CRITICAL", "ERROR", "WARNING", "NOTICE", "INFO", "DEBUG"),
     })
@@ -16,7 +16,7 @@ class LogManager(JSBASE):
 
     def __init__(self, client):
         self._client = client
-        JSBASE.__init__(self)
+
 
     def set_level(self, level):
         """

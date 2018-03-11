@@ -3,13 +3,13 @@ import netaddr
 from zerotier.client import Client
 from js9 import j
 
-JSBASE = j.application.jsbase_get_class()
 
 
-class ZTBootstrap(JSBASE):
+
+class ZTBootstrap():
 
     def __init__(self, token, bootstap_id, grid_id, cidr):
-        JSBASE.__init__(self)
+
         self.bootstap_nwid = bootstap_id
         self.grid_nwid = grid_id
         self._cidr = cidr  # TODO validate format

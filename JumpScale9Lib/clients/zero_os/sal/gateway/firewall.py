@@ -2,24 +2,24 @@ import ipaddress
 from js9 import j
 from zeroos.orchestrator.sal import templates
 
-JSBASE = j.application.jsbase_get_class()
 
 
-class Network(JSBASE):
+
+class Network():
     def __init__(self, iface, cidr):
-        JSBASE.__init__(self)
+
         self.iface = iface
         ipiface = ipaddress.IPv4Interface(cidr)
         self.ipaddress = str(ipiface.ip)
         self.subnet = str(ipiface.network)
 
 
-class Firewall(JSBASE):
+class Firewall():
     def __init__(self, container, publicnetwork, privatenetworks, forwards):
         '''
 
         '''
-        JSBASE.__init__(self)
+
         self.container = container
         self.publicnetwork = publicnetwork
         self.privatenetworks = privatenetworks
