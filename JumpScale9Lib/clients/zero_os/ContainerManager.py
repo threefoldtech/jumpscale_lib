@@ -12,10 +12,10 @@ from . import typchk
 from  js9 import j
 
 DefaultTimeout = 10  # seconds
-JSBASE = j.application.jsbase_get_class()
 
 
-class BaseClient(JSBASE):
+
+class BaseClient():
     _system_chk = typchk.Checker({
         'name': str,
         'args': [str],
@@ -30,7 +30,7 @@ class BaseClient(JSBASE):
     })
 
     def __init__(self, timeout=None):
-        JSBASE.__init__(self)
+
         if timeout is None:
             self.timeout = DefaultTimeout
         else:
@@ -317,7 +317,7 @@ class ContainerClient(BaseClient):
         cmd_id = json.loads(result.data)
         return self._client.response_for(cmd_id)
 
-class ContainerManager(JSBASE):
+class ContainerManager():
     _nic = {
         'type': typchk.Enum('default', 'bridge', 'zerotier', 'vlan', 'vxlan'),
         'id': typchk.Or(str, typchk.Missing()),
@@ -378,7 +378,7 @@ class ContainerManager(JSBASE):
 
     def __init__(self, client):
         self._client = client
-        JSBASE.__init__(self)
+
 
     def create(self, root_url, mount=None, host_network=False, nics=DefaultNetworking, port=None, hostname=None, privileged=False, storage=None, name=None, tags=None, identity=None, env=None):
         """

@@ -1,10 +1,9 @@
 from js9 import j
 
 from . import typchk
-JSBASE = j.application.jsbase_get_class()
 
 
-class BtrfsManager(JSBASE):
+class BtrfsManager():
     _create_chk = typchk.Checker({
         'label': str,
         'metadata': typchk.Enum("raid0", "raid1", "raid5", "raid6", "raid10", "dup", "single", ""),
@@ -35,7 +34,6 @@ class BtrfsManager(JSBASE):
 
     def __init__(self, client):
         self._client = client
-        JSBASE.__init__(self)
 
     def list(self):
         """
@@ -69,7 +67,7 @@ class BtrfsManager(JSBASE):
         }
 
         self._create_chk.check(args)
-        self.logger.info("btrfs.create:%s"%args)
+        self.logger.info("btrfs.create:%s" % args)
         self._client.sync('btrfs.create', args)
 
     def device_add(self, mountpoint, *device):
@@ -87,7 +85,7 @@ class BtrfsManager(JSBASE):
             'mountpoint': mountpoint,
             'devices': device,
         }
-        self.logger.info("btrfs.device_add:%s"%args)
+        self.logger.info("btrfs.device_add:%s" % args)
         self._device_chk.check(args)
         self._client.sync('btrfs.device_add', args)
 
@@ -108,7 +106,7 @@ class BtrfsManager(JSBASE):
         }
 
         self._device_chk.check(args)
-        self.logger.info("btrfs.device_remove:%s"%args)
+        self.logger.info("btrfs.device_remove:%s" % args)
         self._client.sync('btrfs.device_remove', args)
 
     def subvol_create(self, path):
@@ -120,7 +118,7 @@ class BtrfsManager(JSBASE):
             'path': path
         }
         self._subvol_chk.check(args)
-        self.logger.info("btrfs.subvol_create:%s"%args)
+        self.logger.info("btrfs.subvol_create:%s" % args)
         self._client.sync('btrfs.subvol_create', args)
 
     def subvol_list(self, path):
@@ -143,7 +141,7 @@ class BtrfsManager(JSBASE):
         }
 
         self._subvol_chk.check(args)
-        self.logger.info("btrfs.subvol_delete:%s"%path)
+        self.logger.info("btrfs.subvol_delete:%s" % path)
         self._client.sync('btrfs.subvol_delete', args)
 
     def subvol_quota(self, path, limit):
@@ -158,7 +156,7 @@ class BtrfsManager(JSBASE):
         }
 
         self._subvol_quota_chk.check(args)
-        self.logger.info("btrfs.subvol_quota:%s"%args)
+        self.logger.info("btrfs.subvol_quota:%s" % args)
         self._client.sync('btrfs.subvol_quota', args)
 
     def subvol_snapshot(self, source, destination, read_only=False):
@@ -178,6 +176,5 @@ class BtrfsManager(JSBASE):
         }
 
         self._subvol_snapshot_chk.check(args)
-        self.logger.info("btrfs.subvol_snapshot:%s"%source)
+        self.logger.info("btrfs.subvol_snapshot:%s" % source)
         self._client.sync('btrfs.subvol_snapshot', args)
-
