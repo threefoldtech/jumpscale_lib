@@ -39,3 +39,13 @@ class TIMER(JSBASE):
         print(("duration:%s" % TIMER.duration))
         print(("nritems:%s" % TIMER.nritems))
         print(("performance:%s/sec" % int(TIMER.performance)))
+
+    def test(self):
+        """
+        js9 'j.tools.timer.test()'
+        """
+
+        j.tools.timer.start("something")
+        for i in range(20):
+            time.sleep(0.1)
+        j.tools.timer.stop(20)

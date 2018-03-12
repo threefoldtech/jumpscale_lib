@@ -44,6 +44,11 @@ class SandboxPython(JSBASE):
         for item in ["bin", "include", "lib"]:
             j.sal.fs.createDir("%s/%s" % (dest, item))
 
+        for item in ["pip3","python3","ipython"]:
+            src = j.tools.bash.local.cmdGetPath(item)
+            dest = "%s/bin/%s"%(dest,item)
+            j.sal.fs.copyFile(src,dest)
+
         # j.sal.fs.copyFile("%s/bin/python3.6"%path,)
 
         # ignorefiles=['.egg-info',"*test*","*audio*"]
