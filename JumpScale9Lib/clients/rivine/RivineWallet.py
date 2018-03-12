@@ -513,7 +513,7 @@ class Transaction:
         self._minerfee = 0
         self._blockstake_inputs = []
         self._blockstake_outputs = []
-        self._arbitrary_data = bytearray()
+        self._arbitrary_data = None
         self._signatrues = []
         self._json = None
 
@@ -581,9 +581,9 @@ class Transaction:
                 })
             self._json['coinoutputs'] = outputs
             self._json['minerfees'] = [str(self._minerfee)]
-            self._json['arbitrarydata'] = base64.b64encode(self._arbitrary_data).decode('ascii')
-            self._json['blockstakeinputs'] = ''
-            self._json['blockstakeoutputs'] = ''
+            self._json['arbitrarydata'] = self._arbitrary_data
+            self._json['blockstakeinputs'] = []
+            self._json['blockstakeoutputs'] = []
             transaction_signatures = []
             for txn_sig in self._signatrues:
                 signature = {
@@ -592,13 +592,13 @@ class Transaction:
                     'timelock': txn_sig['timelock'],
                     'coveredfields':{
                         'wholetransaction': True,
-                        'coininputs': '',
-                        'coinoutputs': '',
-                        'blockstakeinputs': '',
-                        'blockstakeoutputs': '',
-                        'minerfees': '',
-                        'arbitrarydata': '',
-                        'transactionsignatures': '',
+                        'coininputs': [],
+                        'coinoutputs': [],
+                        'blockstakeinputs': [],
+                        'blockstakeoutputs': [],
+                        'minerfees': [],
+                        'arbitrarydata': None,
+                        'transactionsignatures': [],
 
                     },
                     'signature': txn_sig['signature'],
@@ -647,7 +647,9 @@ class Transaction:
                 signature_hash.extend(big_int_to_binary(output['value']))
                 signature_hash.extend(bytearray.fromhex(output['unlockhash']))
             signature_hash.extend(self._minerfee.to_bytes(8, byteorder='little'))
-            signature_hash.extend(self._arbitrary_data)
+            if self._arbitrary_data is not None:
+                for item in self._arbitrary_data:
+                    signature_hash.extend(bytearray(item))
             signature_hash.extend(bytearray(signature['parentid'], encoding='utf-8'))
             signature_hash.extend(signature['publickeyindex'].to_bytes(8, byteorder='little'))
             signature_hash.extend(signature['timelock'].to_bytes(8, byteorder='little'))

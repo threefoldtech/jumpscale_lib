@@ -2,7 +2,7 @@
 Holds constants values
 """
 
-SIGEd25519 = 'Ed25519'
+SIGEd25519 = 'ed25519'
 UNLOCKHASH_TYPE = 'unlockhash'
 MINER_PAYOUT_MATURITY_WINDOW = 144
 UNLOCKHASH_SIZE = 32
