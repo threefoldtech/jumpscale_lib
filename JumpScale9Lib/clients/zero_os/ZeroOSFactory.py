@@ -5,6 +5,7 @@ from js9 import j
 from .Client import Client
 from .sal.Node import Node
 from .sal.ZeroDB import ZeroDB
+from .sal.Rivine import Rivine
 
 JSConfigFactoryBase = j.tools.configmanager.base_class_configs
 
@@ -125,7 +126,6 @@ class SALFactory():
     def __init__(self, factory):
         self._factory = factory
 
-
     def node_get(self, instance='main'):
         client = self._factory.get(instance)
         return Node(client)
@@ -133,3 +133,6 @@ class SALFactory():
     def get_zerodb(self, name, container, addr='0.0.0.0', port=9900, data_dir='/mnt/data',
                    index_dir='/mnt/index', mode='user', sync=False, admin=''):
         return ZeroDB(name, container, addr, port, data_dir, index_dir, mode, sync, admin)
+
+    def rivine_get(self, name, container, data_dir='/mnt/data', rpc_addr='0.0.0.0:23112', api_addr='0.0.0.0:23110'):
+        return Rivine(name, container, data_dir, rpc_addr, api_addr)
