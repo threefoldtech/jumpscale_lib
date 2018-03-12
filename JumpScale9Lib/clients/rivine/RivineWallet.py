@@ -20,7 +20,8 @@ from requests.auth import HTTPBasicAuth
 
 from JumpScale9 import j
 
-from .const import SIGEd25519, UNLOCKHASHTYPE, MINERPAYOUTMATURITYWINDOW
+from .const import SIGEd25519, UNLOCKHASH_TYPE, MINER_PAYOUT_MATURITY_WINDOW,\
+UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE
 
 from .errors import RESTAPIError, BackendError,\
 InsufficientWalletFundsError, NonExistingOutputError,\
@@ -46,14 +47,35 @@ class RivineWallet:
         self._seed = seed
         self._unspent_coins_outputs = {}
         self._keys = {}
-        # self._bc_network = '{}/explorer/'.format(bc_network) if \
-        #                         not bc_network.endswith('explorer') else bc_network
         self._bc_network = bc_network
         self._minerfee = minerfee
         self._bc_network_password = bc_network_password
+        # needed to avoid calculating addresses from unlock hashes later
+        self._unlockhash_key_map = {}
         for index in range(nr_keys_per_seed):
             key = self._generate_spendable_key(index=index)
-            self._keys[key.unlockconditions.unlockhash] = key
+            self._keys[self._generate_address(key.unlockconditions.unlockhash)] = key
+            self._unlockhash_key_map[key.unlockconditions.unlockhash] = key
+        self._addresses = None
+    
+
+    def _generate_address(self, unlockhash):
+        """
+        Generate a public address from unlockhash
+
+        @param unlockhash: Source unlockhash to create an address from it
+        """
+        key_bytes = bytearray.fromhex(unlockhash)
+        key_hash = hashlib.blake2b(key_bytes, digest_size=UNLOCKHASH_SIZE).digest()
+        return '{}{}'.format(unlockhash, key_hash[:UNLOCKHASH_CHECKSUM_SIZE].hex())
+
+    
+    @property
+    def addresses(self):
+        """
+        Wallet addresses to recieve and send funds
+        """
+        return [key for key in self._keys.keys()]
     
 
     @property
@@ -79,7 +101,8 @@ class RivineWallet:
         """
         # the to_seed function will return a 64 bytes binary seed, we only need 32-bytes
         binary_seed = Mnemonic.to_seed(mnemonic=self._seed, passphrase=str(index))[32:]
-        return SpendableKey(seed=binary_seed)
+        binary_seed_hash = hashlib.blake2b(binary_seed, digest_size=32).digest()
+        return SpendableKey(seed=binary_seed_hash)
 
 
     def get_current_chain_height(self):
@@ -128,14 +151,18 @@ class RivineWallet:
         current_chain_height = self.get_current_chain_height()
         logger.info('Current chain height is: {}'.format(current_chain_height))
         for address in self._keys.keys():
-            address_info = self.check_address(address=address)
-            if address_info.get('hashtype', None) != UNLOCKHASHTYPE:
-                raise BackendError('Address is not recognized as an unblock hash')
-            self._collect_miner_fees(address=address, blocks=address_info.get('blocks',{}),
-                                     height=current_chain_height)
-            transactions = address_info.get('transactions', {})
-            self._collect_transaction_outputs(address=address, transactions=transactions)
-            self._remove_spent_inputs(transactions=transactions)
+            try:
+                address_info = self.check_address(address=address)
+            except RESTAPIError as ex:
+                logger.error('Skipping address: {}'.format(address))
+            else:
+                if address_info.get('hashtype', None) != UNLOCKHASH_TYPE:
+                    raise BackendError('Address is not recognized as an unblock hash')
+                self._collect_miner_fees(address=address, blocks=address_info.get('blocks',{}),
+                                        height=current_chain_height)
+                transactions = address_info.get('transactions', {})
+                self._collect_transaction_outputs(address=address, transactions=transactions)
+                self._remove_spent_inputs(transactions=transactions)
 
     
     def _collect_miner_fees(self, address, blocks, height):
@@ -146,8 +173,10 @@ class RivineWallet:
         @param blocks: Blocks from an address
         @param height: The current chain height
         """
+        if blocks is None:
+            blocks = {}
         for block_info in blocks:
-            if block_info.get('height', None) and block_info['height'] + MINERPAYOUTMATURITYWINDOW >= height:
+            if block_info.get('height', None) and block_info['height'] + MINER_PAYOUT_MATURITY_WINDOW >= height:
                 logger.info('Ignoring miner payout that has not matured yet')
                 continue
             # mineroutputs can exist in the dictionary but with value None
@@ -193,7 +222,7 @@ class RivineWallet:
                         del self._unspent_coins_outputs[coin_input.get('parentid')]
 
 
-    def create_transaction(self, amount, recipient, minerfee=None):
+    def create_transaction(self, amount, recipient, minerfee=None, sign_transaction=True):
         """
         Creates new transaction and sign it
         creates a new transaction of the specified ammount to a specified address. A remainder address
@@ -202,7 +231,8 @@ class RivineWallet:
 
         @param amount: The amount needed to be transfered in hastings
         @param recipient: Address of the recipient.
-        @param minerfee: the minerfee for this transaction in hastings
+        @param minerfee: The minerfee for this transaction in hastings
+        @param sign_transaction: If True, the created transaction will be singed 
         """
         if minerfee is None:
             minerfee = self._minerfee
@@ -246,8 +276,10 @@ class RivineWallet:
 
         # add minerfee to the transaction
         transaction.minerfee = minerfee
-        # sign the transaction
-        self._sign_transaction(transaction)
+
+        if sign_transaction:
+            # sign the transaction
+            self._sign_transaction(transaction)
 
         return transaction
 
@@ -261,7 +293,7 @@ class RivineWallet:
         covered_fields = {'wholetransaction': True}
         # add a signature for every input
         for input_ in transaction.inputs:
-            key = self._keys[input_['unlockconditions'].unlockhash]
+            key = self._unlockhash_key_map[input_['unlockconditions'].unlockhash]
             self._add_signatures(transaction=transaction,
                                  covered_fields=covered_fields,
                                  unlock_conditions=input_['unlockconditions'],
@@ -295,14 +327,14 @@ class RivineWallet:
 
                 }
                 signature_hash = transaction.get_signature_hash(signature)
-                signature['signature'] = secret_key.sgin(signature_hash)
+                signature['signature'] = base64.b64encode(secret_key.sign(signature_hash)).decode('ascii')
                 total_signatures += 1
                 transaction.add_signature(signature)
                 break
             # if we got enough signatrues then we break
             if total_signatures == unlock_conditions.nr_required_signatures:
                 break
-        if total_signatures < unlock_conditions:
+        if total_signatures < unlock_conditions.nr_required_signatures:
             raise NotEnoughSignaturesFound('Not enough keys found to satisfy required number of signatures')
             
 
@@ -407,7 +439,7 @@ class UnlockConditions:
     @property
     def unlockhash(self):
         """
-        Get a lockhash of the current UnlockConditions
+        Get the  unlockhash of the current UnlockConditions
         UnlockHash calculates the root hash of a Merkle tree of the
         UnlockConditions object. The leaves of this tree are formed by taking the
         hash of the timelock, the hash of the public keys (one leaf each), and the
@@ -417,10 +449,10 @@ class UnlockConditions:
         """
         if self._unlockhash is None:
             values = []
-            values.append(hashlib.blake2b(self._blockheight.to_bytes(8, byteorder='little')).hexdigest())
+            values.append(hashlib.blake2b(self._blockheight.to_bytes(8, byteorder='little'), digest_size=UNLOCKHASH_SIZE).hexdigest())
             for key in self._keys:
-                values.append(hashlib.blake2b(key['key']).hexdigest())
-            values.append(hashlib.blake2b(self._nr_required_sigs.to_bytes(8, byteorder='little')).hexdigest())
+                values.append(hashlib.blake2b(key['key'], digest_size=UNLOCKHASH_SIZE).hexdigest())
+            values.append(hashlib.blake2b(self._nr_required_sigs.to_bytes(8, byteorder='little'), digest_size=UNLOCKHASH_SIZE).hexdigest())
             self._merkletree.add_leaf(values=values, do_hash=False)
             self._merkletree.make_tree()
             self._unlockhash = self._merkletree.get_merkle_root()
@@ -612,17 +644,26 @@ class Transaction:
                 signature_hash.extend(bytearray(input_['parentid'], encoding='utf-8'))
                 signature_hash.extend(input_['unlockconditions'].binary)
             for output in self._outputs + self._blockstake_outputs:
-                signature_hash.extend(output['value'].to_bytes(8, byteorder='little'))
-                signature_hash.extend(output['unlockhash'])
+                signature_hash.extend(big_int_to_binary(output['value']))
+                signature_hash.extend(bytearray.fromhex(output['unlockhash']))
             signature_hash.extend(self._minerfee.to_bytes(8, byteorder='little'))
             signature_hash.extend(self._arbitrary_data)
             signature_hash.extend(bytearray(signature['parentid'], encoding='utf-8'))
             signature_hash.extend(signature['publickeyindex'].to_bytes(8, byteorder='little'))
             signature_hash.extend(signature['timelock'].to_bytes(8, byteorder='little'))
         
-        return hashlib.blake2b(data=signature_hash, digest_size=32).digest()
+        return hashlib.blake2b(signature_hash, digest_size=UNLOCKHASH_SIZE).digest()
 
 
 
+# module level helper functions
+def big_int_to_binary(big_int):
+    """
+    Convert a big integer value to a binary array
 
-
+    @param big_int: Integer to convert
+    """
+    nbytes, rem = divmod(big_int.bit_length(), 8)
+    if rem:
+        nbytes += 1
+    return big_int.to_bytes(nbytes, byteorder='little')
