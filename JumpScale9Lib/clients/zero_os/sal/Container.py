@@ -1,4 +1,5 @@
 import logging
+import time
 from io import BytesIO
 from js9 import j
 
@@ -194,17 +195,35 @@ class Container():
 
         containerid = job.get(timeout)
 
-    def is_job_running(self, cmd):
+    def is_job_running(self, id):
         try:
-            for job in self.client.job.list():
-                arguments = job['cmd']['arguments']
-                if 'name' in arguments and arguments['name'] == cmd:
-                    return job
+            for _ in self.client.job.list(id):
+                return True
             return False
         except Exception as err:
             if str(err).find("invalid container id"):
                 return False
             raise
+
+    def stop_job(self, id, timeout=30):
+        is_running = self.is_job_running(id)
+        if not is_running:
+            return
+
+        self.logger.debug('stop job: %s', id)
+
+        self.client.job.kill(self.id)
+
+        # wait for the daemon to stop
+        start = time.time()
+        end = start + timeout
+        is_running = self.is_job_running(id)
+        while is_running and time.time() < end:
+            time.sleep(1)
+            is_running = self.is_job_running(id)
+
+        if is_running:
+            raise RuntimeError('Failed to stop job {}'.format(id))
 
     def is_port_listening(self, port, timeout=60):
         import time
