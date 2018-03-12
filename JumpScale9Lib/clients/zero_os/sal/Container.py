@@ -6,12 +6,9 @@ logging.basicConfig(level=logging.INFO)
 default_logger = logging.getLogger(__name__)
 
 
-
-
 class Containers():
     def __init__(self, node, logger=None):
         self.node = node
-
 
     def list(self):
         containers = []
@@ -33,7 +30,6 @@ class Containers():
 
     def create(self, name, flist, hostname=None, mounts=None, nics=None,
                host_network=False, ports=None, storage=None, init_processes=None, privileged=False, env=None):
-        self.logger.debug("create container %s", name)
         container = Container(name, self.node, flist, hostname, mounts, nics,
                               host_network, ports, storage, init_processes, privileged, env=env)
         container.start()
@@ -65,6 +61,7 @@ class Container():
         self.identity = identity
         self.env = env or {}
         self._client = None
+        self.logger = logger or default_logger
 
         self._ays = None
         for nic in self.nics:

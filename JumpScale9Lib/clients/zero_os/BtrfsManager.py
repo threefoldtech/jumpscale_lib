@@ -39,14 +39,12 @@ class BtrfsManager():
         """
         List all btrfs filesystem
         """
-        self.logger.debug("list")
         return self._client.json('btrfs.list', {})
 
     def info(self, mountpoint):
         """
         Get btrfs fs info
         """
-        self.logger.debug("info")
         return self._client.json('btrfs.info', {'mountpoint': mountpoint})
 
     def create(self, label, devices, metadata_profile="", data_profile="", overwrite=False):
@@ -67,7 +65,6 @@ class BtrfsManager():
         }
 
         self._create_chk.check(args)
-        self.logger.info("btrfs.create:%s" % args)
         self._client.sync('btrfs.create', args)
 
     def device_add(self, mountpoint, *device):
@@ -85,7 +82,6 @@ class BtrfsManager():
             'mountpoint': mountpoint,
             'devices': device,
         }
-        self.logger.info("btrfs.device_add:%s" % args)
         self._device_chk.check(args)
         self._client.sync('btrfs.device_add', args)
 
@@ -106,7 +102,6 @@ class BtrfsManager():
         }
 
         self._device_chk.check(args)
-        self.logger.info("btrfs.device_remove:%s" % args)
         self._client.sync('btrfs.device_remove', args)
 
     def subvol_create(self, path):
@@ -118,7 +113,6 @@ class BtrfsManager():
             'path': path
         }
         self._subvol_chk.check(args)
-        self.logger.info("btrfs.subvol_create:%s" % args)
         self._client.sync('btrfs.subvol_create', args)
 
     def subvol_list(self, path):
@@ -126,7 +120,6 @@ class BtrfsManager():
         List a btrfs subvolume in the specified path
         :param path: path to be listed
         """
-        self.logger.debug("btrfs.subvol_list")
         return self._client.json('btrfs.subvol_list', {
             'path': path
         })
@@ -141,7 +134,6 @@ class BtrfsManager():
         }
 
         self._subvol_chk.check(args)
-        self.logger.info("btrfs.subvol_delete:%s" % path)
         self._client.sync('btrfs.subvol_delete', args)
 
     def subvol_quota(self, path, limit):
@@ -156,7 +148,6 @@ class BtrfsManager():
         }
 
         self._subvol_quota_chk.check(args)
-        self.logger.info("btrfs.subvol_quota:%s" % args)
         self._client.sync('btrfs.subvol_quota', args)
 
     def subvol_snapshot(self, source, destination, read_only=False):
@@ -176,5 +167,4 @@ class BtrfsManager():
         }
 
         self._subvol_snapshot_chk.check(args)
-        self.logger.info("btrfs.subvol_snapshot:%s" % source)
         self._client.sync('btrfs.subvol_snapshot', args)
