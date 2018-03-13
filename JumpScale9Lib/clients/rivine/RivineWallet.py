@@ -21,7 +21,7 @@ from requests.auth import HTTPBasicAuth
 from JumpScale9 import j
 
 from .const import SIGEd25519, UNLOCKHASH_TYPE, MINER_PAYOUT_MATURITY_WINDOW,\
-UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE
+UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE, SPECIFIER_SIZE
 
 from .errors import RESTAPIError, BackendError,\
 InsufficientWalletFundsError, NonExistingOutputError,\
@@ -101,6 +101,9 @@ class RivineWallet:
         """
         # the to_seed function will return a 64 bytes binary seed, we only need 32-bytes
         binary_seed = Mnemonic.to_seed(mnemonic=self._seed, passphrase=str(index))[32:]
+        # binary_seed = Mnemonic.to_seed(mnemonic=self._seed)[32:]
+        # bs = bytearray(binary_seed)
+        # bs.extend(index.to_bytes(8, byteorder='little'))
         binary_seed_hash = hashlib.blake2b(binary_seed, digest_size=32).digest()
         return SpendableKey(seed=binary_seed_hash)
 
@@ -327,6 +330,7 @@ class RivineWallet:
 
                 }
                 signature_hash = transaction.get_signature_hash(signature)
+                # logger.info('Singature_hash is: {}'.format(len(signature_hash)))
                 signature['signature'] = base64.b64encode(secret_key.sign(signature_hash)).decode('ascii')
                 total_signatures += 1
                 transaction.add_signature(signature)
@@ -467,11 +471,18 @@ class UnlockConditions:
         """
         if self._binary is None:
             self._binary = bytearray()
-            self._binary.extend(self._blockheight.to_bytes(8, byteorder='little'))
+            self._binary.extend(int_to_binary(self._blockheight))
+            # encode the number of the keys
+            self._binary.extend(int_to_binary(len(self._keys)))
             for key in self._keys:
-                self._binary.extend(bytearray(key['algorithm'], encoding='utf-8'))
+                # encode specifier
+                s = bytearray(SPECIFIER_SIZE)
+                s[:len(key['algorithm'])] = bytearray(key['algorithm'], encoding='utf-8')
+                self._binary.extend(s)
+                # encode the size of the key
+                self._binary.extend(int_to_binary(len(key['key'])))
                 self._binary.extend(key['key'])
-            self._binary.extend(self._nr_required_sigs.to_bytes(8, byteorder='little'))
+            self._binary.extend(int_to_binary(self._nr_required_sigs))
         return bytes(self._binary)
 
     
@@ -588,6 +599,7 @@ class Transaction:
             for txn_sig in self._signatrues:
                 signature = {
                     'parentid': txn_sig['parentid'],
+                    # 'parentid':  base64.b64encode(txn_sig['parentid']).decode('ascii'),
                     'publickeyindex': txn_sig['publickeyindex'],
                     'timelock': txn_sig['timelock'],
                     'coveredfields':{
@@ -640,20 +652,46 @@ class Transaction:
         """
         signature_hash = bytearray()
         if signature.get('coveredfields', False):
-            for input_ in self._inputs + self._blockstake_inputs:
-                signature_hash.extend(bytearray(input_['parentid'], encoding='utf-8'))
+            # for the inputs we need to encode the lenght first
+            signature_hash.extend(int_to_binary(len(self._inputs)))
+            for input_ in self._inputs:
+                # signature_hash.extend(bytearray(input_['parentid'], encoding='utf-8'))
+                # signature_hash.extend(hashlib.blake2b(bytearray.fromhex(input_['parentid']), digest_size=UNLOCKHASH_SIZE).digest())
+                signature_hash.extend(bytearray.fromhex(input_['parentid']))
                 signature_hash.extend(input_['unlockconditions'].binary)
-            for output in self._outputs + self._blockstake_outputs:
+            # encode the nuber of the outputs
+            signature_hash.extend(int_to_binary(len(self._outputs)))
+            for output in self._outputs:
                 signature_hash.extend(big_int_to_binary(output['value']))
                 signature_hash.extend(bytearray.fromhex(output['unlockhash']))
-            signature_hash.extend(self._minerfee.to_bytes(8, byteorder='little'))
+            # encode the nuber of the blockstake inputs
+            signature_hash.extend(int_to_binary(len(self._blockstake_inputs)))
+            for input_ in self._blockstake_inputs:
+                # signature_hash.extend(bytearray(input_['parentid'], encoding='utf-8'))
+                # signature_hash.extend(hashlib.blake2b(bytearray.fromhex(input_['parentid']), digest_size=UNLOCKHASH_SIZE).digest())
+                signature_hash.extend(bytearray.fromhex(input_['parentid']))
+                signature_hash.extend(input_['unlockconditions'].binary)
+            # encode the nuber of the blockstake outputs
+            signature_hash.extend(int_to_binary(len(self._blockstake_outputs)))
+            for output in self._blockstake_outputs:
+                signature_hash.extend(big_int_to_binary(output['value']))
+                signature_hash.extend(bytearray.fromhex(output['unlockhash']))
+            # for now we only set the nubmer of minerfees to 1
+            signature_hash.extend(int_to_binary(1))
+            signature_hash.extend(big_int_to_binary(self._minerfee))
+            # encode the size of the arbitrary data
             if self._arbitrary_data is not None:
+                signature_hash.extend(int_to_binary(len(self._arbitrary_data)))
                 for item in self._arbitrary_data:
                     signature_hash.extend(bytearray(item))
-            signature_hash.extend(bytearray(signature['parentid'], encoding='utf-8'))
-            signature_hash.extend(signature['publickeyindex'].to_bytes(8, byteorder='little'))
-            signature_hash.extend(signature['timelock'].to_bytes(8, byteorder='little'))
-        
+            else:
+                signature_hash.extend(int_to_binary(0))
+            # signature_hash.extend(bytearray(signature['parentid'], encoding='utf-8'))
+            # signature_hash.extend(hashlib.blake2b(bytearray.fromhex(signature['parentid']), digest_size=UNLOCKHASH_SIZE).digest())
+            signature_hash.extend(bytearray.fromhex(signature['parentid']))
+            signature_hash.extend(int_to_binary(signature['publickeyindex']))
+            signature_hash.extend(int_to_binary(signature['timelock']))
+        logger.info('Signature hash size is {}'.format(len(signature_hash)))
         return hashlib.blake2b(signature_hash, digest_size=UNLOCKHASH_SIZE).digest()
 
 
@@ -665,7 +703,17 @@ def big_int_to_binary(big_int):
 
     @param big_int: Integer to convert
     """
+    result = bytearray()
     nbytes, rem = divmod(big_int.bit_length(), 8)
     if rem:
         nbytes += 1
-    return big_int.to_bytes(nbytes, byteorder='little')
+    result.extend(int_to_binary(nbytes))
+    result.extend(big_int.to_bytes(nbytes, byteorder='big'))
+    return result
+
+
+def int_to_binary(value):
+    """
+    Convert an int to a binary format
+    """
+    return value.to_bytes(8, byteorder='little')
