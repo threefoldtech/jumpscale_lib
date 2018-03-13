@@ -21,30 +21,23 @@ class Docker(JSBASE):
         self._containers = {}
         self._names = []
 
-        # if 'DOCKER_HOST' not in os.environ or os.environ['DOCKER_HOST'] == "":
-        #     self.base_url = 'unix://var/run/docker.sock'
-        # else:
-        #     self.base_url = os.environ['DOCKER_HOST']
-        # self.client = docker.Client(base_url=self.base_url, timeout=120)
-        self.client=docker.APIClient()
+        if 'DOCKER_HOST' not in os.environ or os.environ['DOCKER_HOST'] == "":
+            self.base_url = 'unix://var/run/docker.sock'
+        else:
+            self.base_url = os.environ['DOCKER_HOST']
+        self.client = docker.APIClient(base_url=self.base_url)
 
     @property
     def containers(self):
-        todel=[str(item) for item in self._containers.keys()] #are the id's
-        for item in self.client.containers():
-            id = item['Id']
-            if id in todel:
-                todel.remove(id)
-            if id not in self._containers:
-                self._containers[id] = Container(item, self.client)
-        for item in todel:
-            #this to make sure that id's in mem not in docker any more get removed
-            self._containers.remove(item)
-        return list(self._containers.values())
+        return self.client.containers()
 
     @property
     def docker_host(self):
-        return 'localhost'
+        u = parse.urlparse(self.base_url)
+        if u.scheme == 'unix':
+            return 'localhost'
+        else:
+            return u.hostname
 
     @property
     def containerNamesRunning(self):
@@ -59,6 +52,7 @@ class Docker(JSBASE):
     
     @property
     def weaveIsActive(self):
+        # TODO: suppot weave
         return False
 
     @property
@@ -276,7 +270,8 @@ class Docker(JSBASE):
             aysfs=[],
             detach=False,
             privileged=False,
-            getIfExists=True):
+            getIfExists=True,
+            command=""):
         """
         Creates a new container.
 
@@ -393,10 +388,10 @@ class Docker(JSBASE):
             self.pull(base)
 
         if base.startswith("jumpscale/ubuntu1604") or myinit is True:
-            cmd = "sh -c \"mkdir -p /var/run/screen;chmod 777 /var/run/screen; /var/run/screen;exec >/dev/tty 2>/dev/tty </dev/tty && /sbin/my_init -- /usr/bin/screen -s bash\""
-            cmd = "sh -c \" /sbin/my_init -- bash -l\""
+            command = "sh -c \"mkdir -p /var/run/screen;chmod 777 /var/run/screen; /var/run/screen;exec >/dev/tty 2>/dev/tty </dev/tty && /sbin/my_init -- /usr/bin/screen -s bash\""
+            command = "sh -c \" /sbin/my_init -- bash -l\""
         else:
-            cmd = None
+            command = None
 
         self.logger.info(("install docker with name '%s'" % name))
 
@@ -428,7 +423,7 @@ class Docker(JSBASE):
             network_mode=None)
         res = self.client.create_container(
             image=base,
-            command=cmd,
+            command=command,
             hostname=hostname,
             user="root",
             detach=detach,
@@ -471,9 +466,6 @@ class Docker(JSBASE):
             if setrootrndpasswd:
                 if rootpasswd is None or rootpasswd == '':
                     rootpasswd = 'gig1234'
-                # self.logger.info("set root passwd to %s" % rootpasswd)
-                # container.executor.execute(
-                #     "echo \"root:%s\"|chpasswd" % rootpasswd, showout=False)
 
             container.authorizeSSH(sshkeyname=sshkeyname, password=rootpasswd)
 
@@ -484,8 +476,7 @@ class Docker(JSBASE):
                 if rc:
                     time.sleep(0.1)
                 break
-        from IPython import embed
-        embed()
+        
         return container
 
     def getImages(self):
@@ -700,20 +691,6 @@ class Docker(JSBASE):
     # def connectRemoteTCP(self, base_url):
     #     self.base_url = base_url
     #     self.client = docker.Client(base_url=weavesocket)
-
-
-
-    # @property
-    # def docker_host(self):
-    #     """
-    #     Get the docker hostname.
-    #     """
-
-    #     u = parse.urlparse(self.base_url)
-    #     if u.scheme == 'unix':
-    #         return 'localhost'
-    #     else:
-    #         return u.hostname
 
     # def _execute(self, command):
     #     env = os.environ.copy()

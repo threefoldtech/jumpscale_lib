@@ -58,7 +58,7 @@ class Container(JSBASE):
     @property
     def executor(self):
         if self._executor is None:
-            self._executor = j.tools.executor.ssh_get(self._sshclient)
+            self._executor = j.tools.executor.getLocalDocker(self.id)
         return self._executor
 
     @property
@@ -204,8 +204,8 @@ class Container(JSBASE):
     def authorizeSSH(self, sshkeyname, password):
         home = j.tools.prefab.local.bash.home
         user_info = [j.tools.prefab.local.system.user.check(user) for user in j.tools.prefab.local.system.user.list()]
-        user = [i['name'] for i in user_info if i['home'] == home]
-        user = user[0] if user else 'root'
+        users = [i['name'] for i in user_info if i['home'] == home]
+        user = user[0] if users else 'root'
         addr = self.info['Ports'][0]['IP']
         port = self.info['Ports'][0]['PublicPort']
         if not sshkeyname:
@@ -230,11 +230,11 @@ class Container(JSBASE):
         """
         Stop and remove container.
         """
-        self.cleanAysfs()
+        # self.cleanAysfs()
 
         try:
             if self.isRunning():
-                self.client.kill(self.id)
+                self.stop()
             self.client.remove_container(self.id)
         except Exception as e:
             self.logger.error("could not kill:%s" % self.id)
@@ -242,12 +242,17 @@ class Container(JSBASE):
             if self.id in j.sal.docker._containers:
                 del j.sal.docker._containers[self.id]
 
+    def start(self):
+        """
+        start instance of the container.
+        """
+        self.client.start(self.id)
+
     def stop(self):
         """
         Stop running instance of container.
         """
-        self.cleanAysfs()
-        self.client.kill(self.id)
+        self.client.stop(self.id)
 
     def restart(self):
         """
