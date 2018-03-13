@@ -138,3 +138,10 @@ class RivineClient:
         output = output.stdout.split('Wallet encrypted with password:\n')
         self._recovery_seed = output[0].split('Recovery seed:\n')[1].strip()
         self._wallet_password = output[1].strip()
+
+    def wallet_unlock(self):
+        self.container.client.bash(
+            'echo %s | /tfchainc --addr %s wallet unlock' % (
+                self.wallet_password, self.addr),
+            id='%s.wallet_unlock' % self.id
+        ).get()
