@@ -1,15 +1,14 @@
 import re as _re
 import io
 import json
-import humanfriendly
 
 _handle_re = _re.compile("^Handle\\s+(.+),\\s+DMI\\s+type\\s+(\\d+),\\s+(\\d+)\\s+bytes$")
 _in_block_re = _re.compile("^\\t\\t(.+)$")
 _record_re = _re.compile("\\t(.+):\\s+(.+)$")
 _record2_re = _re.compile("\\t(.+):$")
 
-GIB = 1024*1024*1024
-GB = 1000*1000*1000
+GIB = 1024 * 1024 * 1024
+GB = 1000 * 1000 * 1000
 
 
 class Capacity:
