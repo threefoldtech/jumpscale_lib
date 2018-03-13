@@ -2,6 +2,7 @@ import logging
 import time
 from io import BytesIO
 from js9 import j
+import signal
 
 logging.basicConfig(level=logging.INFO)
 default_logger = logging.getLogger(__name__)
@@ -205,7 +206,7 @@ class Container():
                 return False
             raise
 
-    def stop_job(self, id, timeout=30):
+    def stop_job(self, id, signal=signal.SIGTERM, timeout=30):
         is_running = self.is_job_running(id)
         if not is_running:
             return

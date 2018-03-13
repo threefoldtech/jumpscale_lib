@@ -1,5 +1,6 @@
 import logging
 import time
+import signal
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -101,7 +102,7 @@ class RivineDaemon:
             return
 
         logger.debug('stop %s', self)
-        self.container.stop_job(self.id, timeout)
+        self.container.stop_job(self.id, signal=signal.SIGINT, timeout=timeout)
 
     def is_running(self):
         return self.container.is_job_running(self.id)
@@ -137,9 +138,3 @@ class RivineClient:
         output = output.stdout.split('Wallet encrypted with password:\n')
         self._recovery_seed = output[0].split('Recovery seed:\n')[1].strip()
         self._wallet_password = output[1].strip()
-
-    def wallet_stop(self):
-        self.container.client.system(
-            '/tfchainc --addr %s wallet stop' % self.addr,
-            id='%s.wallet_stop' % self.id
-        ).get()
