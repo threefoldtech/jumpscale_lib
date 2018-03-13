@@ -24,7 +24,6 @@ class Action(object):
         return Action(**kwargs)
 
     def __init__(self, json=None, **kwargs):
-        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

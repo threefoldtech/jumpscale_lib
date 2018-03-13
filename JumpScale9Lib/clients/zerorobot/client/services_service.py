@@ -7,12 +7,9 @@ from .unhandled_api_error import UnhandledAPIError
 from .unmarshall_error import UnmarshallError
 
 
-
-
 class ServicesService:
     def __init__(self, client):
         self.client = client
-        pass
 
     def ListActions(self, service_guid, headers=None, query_params=None, content_type="application/json"):
         """

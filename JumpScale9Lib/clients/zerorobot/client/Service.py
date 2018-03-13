@@ -9,18 +9,16 @@ from six import string_types
 from . import client_support
 
 
-
-
 class Service(object):
     """
     auto-generated. don't touch.
     """
+
     @staticmethod
     def create(**kwargs):
         """
         :type guid: string_types
         :type name: string_types
-        :type parent: string_types
         :type state: list[ServiceState]
         :type template: string_types
         :type version: string_types
@@ -30,7 +28,6 @@ class Service(object):
         return Service(**kwargs)
 
     def __init__(self, json=None, **kwargs):
-        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 
@@ -42,8 +39,6 @@ class Service(object):
         self.guid = client_support.set_property('guid', data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
         self.name = client_support.set_property('name', data, data_types, False, [], False, True, class_name)
-        data_types = [string_types]
-        self.parent = client_support.set_property('parent', data, data_types, False, [], False, False, class_name)
         data_types = [ServiceState]
         self.state = client_support.set_property('state', data, data_types, False, [], True, True, class_name)
         data_types = [string_types]

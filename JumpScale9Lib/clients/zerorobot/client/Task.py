@@ -10,8 +10,6 @@ from six import string_types
 from . import client_support
 
 
-
-
 class Task(object):
     """
     auto-generated. don't touch.
@@ -37,7 +35,6 @@ class Task(object):
         return Task(**kwargs)
 
     def __init__(self, json=None, **kwargs):
-        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 
