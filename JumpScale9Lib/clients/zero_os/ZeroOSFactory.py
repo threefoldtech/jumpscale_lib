@@ -5,7 +5,7 @@ from js9 import j
 from .Client import Client
 from .sal.Node import Node
 from .sal.ZeroDB import ZeroDB
-from .sal.Rivine import Rivine
+from .sal.TfCain import TfCain
 
 JSConfigFactoryBase = j.tools.configmanager.base_class_configs
 
@@ -134,5 +134,5 @@ class SALFactory():
                    index_dir='/mnt/index', mode='user', sync=False, admin=''):
         return ZeroDB(name, container, addr, port, data_dir, index_dir, mode, sync, admin)
 
-    def rivine_get(self, name, container, data_dir='/mnt/data', rpc_addr='0.0.0.0:23112', api_addr='0.0.0.0:23110'):
-        return Rivine(name, container, data_dir, rpc_addr, api_addr)
+    def tfcain_get(self, name, container, data_dir='/mnt/data', rpc_addr='0.0.0.0:23112', api_addr='0.0.0.0:23110'):
+        return TfCain(name, container, data_dir, rpc_addr, api_addr)
