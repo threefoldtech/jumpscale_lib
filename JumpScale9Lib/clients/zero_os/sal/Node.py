@@ -192,6 +192,10 @@ class Node():
             if disk.model == 'QEMU HARDDISK   ':
                 continue
 
+            # temporary fix to ommit overwriting the usb boot disk
+            if disk.transport == 'usb':
+                continue
+
             if not disk.partitions:
                 sp = self.storagepools.create(disk.name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
             else:

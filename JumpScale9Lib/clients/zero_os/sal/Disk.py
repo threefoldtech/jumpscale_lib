@@ -70,6 +70,7 @@ class Disk(Mountable):
         self._filesystems = []
         self.type = None
         self.partitions = []
+        self.transport = None
 
         self._load(disk_info)
 
@@ -96,6 +97,7 @@ class Disk(Mountable):
         self.mountpoint = disk_info['mountpoint']
         self.model = disk_info['model']
         self.type = self._disk_type(disk_info)
+        self.transport = disk_info['tran']
         for partition_info in disk_info.get('children', []) or []:
             self.partitions.append(
                 Partition(
