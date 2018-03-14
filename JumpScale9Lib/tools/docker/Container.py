@@ -140,66 +140,6 @@ class Container(JSBASE):
 
         raise j.exceptions.Input("cannot find publicport for ssh?")
 
-    def pushSSHKey(self, keyname="", sshpubkey="", generateSSHKey=True):
-        """
-        Push ssh keys onto container, the params are mutually exclusive.
-
-        @param keyname str: path to key or just keyname in /root/.ssh/keyname.
-        @param sshpubkey str: actual key content.
-        @param generateSSHKey bool: generate a key called docker_default.
-        """
-        keys = set()
-        import ipdb; ipdb.set_trace()
-        home = j.tools.prefab.local.bash.home
-        user_info = [j.tools.prefab.local.system.user.check(user) for user in j.tools.prefab.local.system.user.list()]
-        user = [i['name'] for i in user_info if i['home'] == home]
-        user = user[0] if user else 'root'
-
-        if sshpubkey != "" and sshpubkey is not None:
-            key = sshpubkey
-        else:
-            if not j.clients.sshkey.sshagent_available():
-                j.clients.sshkey.sshagent_start()
-
-            if keyname != "" and keyname is not None:
-                key = j.clients.sshkey.sshkey_pub_get(keyname)
-            else:
-                key = j.clients.sshkey.sshkey_pub_get("docker_default", die=False)
-                if key is None:
-                    dir = j.tools.path.get('%s/.ssh' % home)
-                    if dir.listdir("docker_default.pub") == []:
-                        # key does not exist, lets create one
-                        j.tools.prefab.local.system.ssh.keygen(user=user, name="docker_default")
-                    key = j.sal.fs.readFile(
-                        filename="%s/.ssh/docker_default.pub" % home)
-                    # load the key
-                    j.tools.executorLocal.execute(
-                        "ssh-add %s/.ssh/docker_default" % home)
-
-        j.sal.fs.writeFile(filename="%s/.ssh/known_hosts" % home, contents="")
-
-        if key is None or key.strip() == "":
-            raise j.exceptions.Input("ssh key cannot be empty (None)")
-
-        self.prefab.system.ssh.authorize("root", key)
-
-        # IS THERE A REASON TO DO IT THE LONG WAY BELOW?
-        # key_tarstream = BytesIO()
-        # key_tar = tarfile.TarFile(fileobj=key_tarstream, mode='w')
-        # tarinfo = tarfile.TarInfo(name='authorized_keys')
-        # tarinfo.size = len(key)
-        # tarinfo.mtime = time.time()
-        # tarinfo.mode = 0o600
-        # key_tar.addfile(tarinfo, BytesIO(key.encode()))
-        # key_tar.close()
-        #
-        # key_tarstream.seek(0)
-        # exec_id = self.client.exec_create(self.id, "mkdir -p /root/.ssh/")
-        # self.client.exec_start(exec_id['Id'])
-        # self.client.put_archive(self.id, '/root/.ssh/', data=key_tarstream)
-
-        return list(keys)
-
 
     def authorizeSSH(self, sshkeyname, password):
         home = j.tools.prefab.local.bash.home
