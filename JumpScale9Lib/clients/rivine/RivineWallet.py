@@ -454,14 +454,35 @@ class UnlockConditions:
         Timelock and SignaturesRequired are both low entropy fields; they can bee
         protected by having random public keys next to them.
         """
+        # dirty hack since merkle tree library doesnt support blake2b hashing
+        from functools import partial
+        hashlib.sha256 = partial(hashlib.blake2b, digest_size=UNLOCKHASH_SIZE)
+        
         if self._unlockhash is None:
             values = []
-            values.append(hashlib.blake2b(self._blockheight.to_bytes(8, byteorder='little'), digest_size=UNLOCKHASH_SIZE).hexdigest())
+            values_binary = []
+            values.append(int_to_binary(self._blockheight).hex())
+            values_binary.append(bytes(int_to_binary(self._blockheight)))
+            logger.info("Pushing {}".format(int_to_binary(self._blockheight).hex()))
             for key in self._keys:
-                values.append(hashlib.blake2b(key['key'], digest_size=UNLOCKHASH_SIZE).hexdigest())
-            values.append(hashlib.blake2b(self._nr_required_sigs.to_bytes(8, byteorder='little'), digest_size=UNLOCKHASH_SIZE).hexdigest())
-            self._merkletree.add_leaf(values=values, do_hash=False)
+                key_value = bytearray()
+                s = bytearray(SPECIFIER_SIZE)
+                s[:len(key['algorithm'])] = bytearray(key['algorithm'], encoding='utf-8')
+                key_value.extend(s)
+                key_value.extend(int_to_binary(len(key['key'])))
+                key_value.extend(key['key'])
+                # values.append(s.hex())
+                # values.append(int_to_binary(len(key['key'])).hex())
+                # values.append(key['key'].hex())
+                values.append(key_value.hex())
+                values_binary.append(bytes(key_value))
+                logger.info('Pushing {}'.format(key_value.hex()))
+            values.append(int_to_binary(self._nr_required_sigs).hex())
+            values_binary.append(bytes(int_to_binary(self._nr_required_sigs)))
+            logger.info('Pushing {}'.format(int_to_binary(self._nr_required_sigs).hex()))
+            self._merkletree.add_leaf(values=values, do_hash=True)
             self._merkletree.make_tree()
+            # import pdb; pdb.set_trace() 
             self._unlockhash = self._merkletree.get_merkle_root()
 
         return self._unlockhash
@@ -740,3 +761,7 @@ def get_unlockhash_from_address(address):
     if sum_bytes != expected_checksum[:UNLOCKHASH_CHECKSUM_SIZE]:
         raise InvalidUnlockHashChecksumError("Cannot decode address to unlockhash")
     return key_hex
+
+
+
+
