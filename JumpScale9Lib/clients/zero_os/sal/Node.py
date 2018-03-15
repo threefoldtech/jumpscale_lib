@@ -218,7 +218,10 @@ class Node():
                 fs = sp.create(disk.name)
             mount_point = '/mnt/zdbs/{}'.format(disk.name)
             self.client.filesystem.mkdir(mount_point)
-            self.client.disk.mount(sp.devicename, mount_point, ['subvol={}'.format(fs.subvolume)])
+            mounted = self.client.system("mount").get().stdout
+            subvol = 'subvol={}'.format(fs.subvolume)
+            if not mount_point in mounted:
+                self.client.disk.mount(sp.devicename, mount_point, [subvol])
             mounts.append({'disk': disk.name, 'mountpoint': mount_point})
 
         return mounts
