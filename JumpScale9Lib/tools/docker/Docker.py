@@ -27,6 +27,11 @@ class Docker(JSBASE):
             self.base_url = os.environ['DOCKER_HOST']
         self.client = docker.APIClient(base_url=self.base_url)
 
+
+    def _node_set(self, name, sshclient):
+        j.tools.nodemgr.set(name, sshclient=sshclient.instance, selected=False,
+                            cat="docker", clienttype="j.sal.docker", description="deployment on docker")
+
     @property
     def containers(self):
         self._containers = []
@@ -487,7 +492,10 @@ class Docker(JSBASE):
                 if rc:
                     time.sleep(0.1)
                 break
-        
+
+            self._node_set(name, container.sshclient)
+        else:
+            self._node_set(name)
         return container
 
     def getImages(self):
