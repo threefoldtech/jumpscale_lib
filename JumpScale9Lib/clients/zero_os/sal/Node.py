@@ -16,8 +16,7 @@ from .Network import Network
 from .StoragePool import StoragePools
 
 Mount = namedtuple('Mount', ['device', 'mountpoint', 'fstype', 'options'])
-
-
+logger = j.logger.get(__name__)
 
 
 class Node():
@@ -186,6 +185,7 @@ class Node():
         fscache_sp = self.find_persistance(name)
         cache_devices = fscache_sp.devices if fscache_sp else []
         mounts = []
+        node_mountpoints = self.client.disk.mounts()
 
         for disk in self.disks.list():
             # this check is there to be able to test with a qemu setup
@@ -198,16 +198,18 @@ class Node():
 
             if not disk.partitions:
                 sp = self.storagepools.create(disk.name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
+                devicename = sp.devices[0]
             else:
                 if len(disk.partitions) > 1:
                     raise RuntimeError('Found more than 1 partition for disk %s' % disk.name)
 
                 partition = disk.partitions[0]
-                sps = self.storagepools.list(partition.devicename)
+                devicename = partition.devicename
+                sps = self.storagepools.list(devicename)
                 if len(sps) > 1:
-                    raise RuntimeError('Found more than 1 storagepool for device %s' % partition.devicename)
+                    raise RuntimeError('Found more than 1 storagepool for device %s' % devicename)
                 elif not sps:
-                    sp = self.storagepools.create(disk.name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
+                    sp = self.storagepools.create(disk.name, devices=[devicename], metadata_profile='single', data_profile='single', overwrite=True)
                 else:
                     sp = sps[0]
 
@@ -216,12 +218,18 @@ class Node():
                 fs = sp.get(disk.name)
             else:
                 fs = sp.create(disk.name)
+
             mount_point = '/mnt/zdbs/{}'.format(disk.name)
             self.client.filesystem.mkdir(mount_point)
-            mounted = self.client.system("mount").get().stdout
-            subvol = 'subvol={}'.format(fs.subvolume)
-            if not mount_point in mounted:
+
+            device_mountpoints = node_mountpoints.get(devicename, [])
+            for device_mountpoint in device_mountpoints:
+                if device_mountpoint['mountpoint'] == mount_point:
+                    break
+            else:
+                subvol = 'subvol={}'.format(fs.subvolume)
                 self.client.disk.mount(sp.devicename, mount_point, [subvol])
+
             mounts.append({'disk': disk.name, 'mountpoint': mount_point})
 
         return mounts
@@ -266,7 +274,7 @@ class Node():
         self.client.filesystem.upload(remote, bytes)
 
     def wipedisks(self):
-        self.logger.debug('Wiping node {hostname}'.format(**self.client.info.os()))
+        logger.debug('Wiping node {hostname}'.format(**self.client.info.os()))
         mounteddevices = {mount['device']: mount for mount in self.client.info.disk()}
 
         def getmountpoint(device):
@@ -278,14 +286,14 @@ class Node():
         for disk in self.client.disk.list()['blockdevices']:
             devicename = '/dev/{}'.format(disk['kname'])
             if disk['tran'] == 'usb':
-                self.logger.debug('   * Not wiping usb {kname} {model}'.format(**disk))
+                logger.debug('   * Not wiping usb {kname} {model}'.format(**disk))
                 continue
             mount = getmountpoint(devicename)
             if not mount:
-                self.logger.debug('   * Wiping disk {kname}'.format(**disk))
+                logger.debug('   * Wiping disk {kname}'.format(**disk))
                 jobs.append(self.client.system('dd if=/dev/zero of={} bs=1M count=50'.format(devicename)))
             else:
-                self.logger.debug('   * Not wiping {device} mounted at {mountpoint}'.format(device=devicename, mountpoint=mount['mountpoint']))
+                logger.debug('   * Not wiping {device} mounted at {mountpoint}'.format(device=devicename, mountpoint=mount['mountpoint']))
 
         # wait for wiping to complete
         for job in jobs:
@@ -313,7 +321,7 @@ class Node():
                 err = error
                 time.sleep(1)
         else:
-            self.logger.debug("Could not ping %s within 30 seconds due to %s" % (self.addr, err))
+            logger.debug("Could not ping %s within 30 seconds due to %s" % (self.addr, err))
 
         return state
 
