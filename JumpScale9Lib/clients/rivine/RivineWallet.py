@@ -142,7 +142,7 @@ class RivineWallet:
         url = '{}/explorer/hashes/{}'.format(self._bc_network, address)
         response = requests.get(url)
         if response.status_code != 200:
-            msg = "Failed to retrieve address information. {}".format(response.text)
+            msg = "Failed to retrieve address information. {}".format(response.text.strip('\n'))
             logger.error(msg)
             raise RESTAPIError(msg)
         else:

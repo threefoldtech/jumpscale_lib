@@ -79,6 +79,11 @@ You should see something similar to the following output
 
 ```
 
+You can check the addresses of in your wallet
+```python
+rivine_wallet.addresses
+```
+
 After syncing your wallet, you can create and commit transactions
 ```python
     recipient = 'e5bd83a85e263817e2040054064575066874ee45a7697facca7a2721d4792af374ea35f549a1'
