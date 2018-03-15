@@ -4,16 +4,12 @@ from .abstracts import Mountable
 from .Partition import Partition
 from js9 import j
 
-
-
-
-class DiskType(Enum):
-    ssd = "ssd"
-    hdd = "hdd"
-    nvme = "nvme"
-    archive = "archive"
-    cdrom = 'cdrom'
-
+class StorageType(Enum):
+    SSD = "SSH"
+    HDD = "HDD"
+    NVME = "NVME"
+    ARCHIVE = "ARCHIVE"
+    CDROM = "CDROM"
 
 class Disks():
 
@@ -124,17 +120,17 @@ class Disk(Mountable):
         """
         if disk_info['rota'] == "1":
             if disk_info['type'] == 'rom':
-                return DiskType.cdrom
+                return StorageType.CDROM
             # assume that if a disk is more than 7TB it's a SMR disk
             elif int(disk_info['size']) > (1024 * 1024 * 1024 * 1024 * 7):
-                return DiskType.archive
+                return StorageType.ARCHIVE
             else:
-                return DiskType.hdd
+                return StorageType.HDD
         else:
             if "nvme" in disk_info['name']:
-                return DiskType.nvme
+                return StorageType.NVME
             else:
-                return DiskType.ssd
+                return StorageType.SSD
 
     def mktable(self, table_type='gpt', overwrite=False):
         """
