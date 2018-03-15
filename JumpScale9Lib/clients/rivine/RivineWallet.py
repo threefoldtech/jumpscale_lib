@@ -12,8 +12,10 @@ the wallet will need the following functionality:
 
 from mnemonic import Mnemonic
 import ed25519
-import merkletools
-import hashlib
+# import merkletools
+from .merkletree import Tree
+from pyblak2 import blake2b
+from functools import partial
 import requests
 import base64
 from requests.auth import HTTPBasicAuth
@@ -69,7 +71,7 @@ class RivineWallet:
         @param unlockhash: Source unlockhash to create an address from it
         """
         key_bytes = bytearray.fromhex(unlockhash)
-        key_hash = hashlib.blake2b(key_bytes, digest_size=UNLOCKHASH_SIZE).digest()
+        key_hash = blake2b(key_bytes, digest_size=UNLOCKHASH_SIZE).digest()
         return '{}{}'.format(unlockhash, key_hash[:UNLOCKHASH_CHECKSUM_SIZE].hex())
 
     
@@ -107,7 +109,7 @@ class RivineWallet:
         # binary_seed = Mnemonic.to_seed(mnemonic=self._seed)[32:]
         # bs = bytearray(binary_seed)
         # bs.extend(index.to_bytes(8, byteorder='little'))
-        binary_seed_hash = hashlib.blake2b(binary_seed, digest_size=32).digest()
+        binary_seed_hash = blake2b(binary_seed, digest_size=32).digest()
         return SpendableKey(seed=binary_seed_hash)
 
 
@@ -421,7 +423,7 @@ class UnlockConditions:
         }]
         self._nr_required_sigs = nr_required_sigs
         self._blockheight = 0
-        self._merkletree = merkletools.MerkleTools()
+        self._merkletree = Tree(hash_func=partial(blake2b, digest_size=UNLOCKHASH_SIZE))
         self._unlockhash = None
         self._binary = None
         self._json = None
@@ -453,17 +455,10 @@ class UnlockConditions:
         hash of the number of signatures. The keys are put in the middle because
         Timelock and SignaturesRequired are both low entropy fields; they can bee
         protected by having random public keys next to them.
-        """
-        # dirty hack since merkle tree library doesnt support blake2b hashing
-        from functools import partial
-        hashlib.sha256 = partial(hashlib.blake2b, digest_size=UNLOCKHASH_SIZE)
-        
+        """     
         if self._unlockhash is None:
-            values = []
-            values_binary = []
-            values.append(int_to_binary(self._blockheight).hex())
-            values_binary.append(bytes(int_to_binary(self._blockheight)))
-            logger.info("Pushing {}".format(int_to_binary(self._blockheight).hex()))
+            self._merkletree.push(int_to_binary(self._blockheight))
+            # logger.info("Pushing {}".format(int_to_binary(self._blockheight).hex()))
             for key in self._keys:
                 key_value = bytearray()
                 s = bytearray(SPECIFIER_SIZE)
@@ -471,19 +466,11 @@ class UnlockConditions:
                 key_value.extend(s)
                 key_value.extend(int_to_binary(len(key['key'])))
                 key_value.extend(key['key'])
-                # values.append(s.hex())
-                # values.append(int_to_binary(len(key['key'])).hex())
-                # values.append(key['key'].hex())
-                values.append(key_value.hex())
-                values_binary.append(bytes(key_value))
-                logger.info('Pushing {}'.format(key_value.hex()))
-            values.append(int_to_binary(self._nr_required_sigs).hex())
-            values_binary.append(bytes(int_to_binary(self._nr_required_sigs)))
-            logger.info('Pushing {}'.format(int_to_binary(self._nr_required_sigs).hex()))
-            self._merkletree.add_leaf(values=values, do_hash=True)
-            self._merkletree.make_tree()
-            # import pdb; pdb.set_trace() 
-            self._unlockhash = self._merkletree.get_merkle_root()
+                self._merkletree.push(bytes(key_value))
+                # logger.info('Pushing {}'.format(key_value.hex()))
+            self._merkletree.push(bytes(int_to_binary(self._nr_required_sigs)))
+            # logger.info('Pushing {}'.format(int_to_binary(self._nr_required_sigs).hex()))
+            self._unlockhash = self._merkletree.root().hex()
 
         return self._unlockhash
 
@@ -722,7 +709,7 @@ class Transaction:
             signature_hash.extend(int_to_binary(signature['publickeyindex']))
             signature_hash.extend(int_to_binary(signature['timelock']))
         logger.debug('Signature hash size is {}'.format(len(signature_hash)))
-        return hashlib.blake2b(signature_hash, digest_size=UNLOCKHASH_SIZE).digest()
+        return blake2b(signature_hash, digest_size=UNLOCKHASH_SIZE).digest()
 
 
 
@@ -757,7 +744,7 @@ def get_unlockhash_from_address(address):
     key_hex, sum_hex = address[:UNLOCKHASH_SIZE*2], address[UNLOCKHASH_SIZE*2:]
     unlockhash_bytes = bytearray.fromhex(key_hex)
     sum_bytes = bytearray.fromhex(sum_hex)
-    expected_checksum = hashlib.blake2b(unlockhash_bytes, digest_size=UNLOCKHASH_SIZE).digest()
+    expected_checksum = blake2b(unlockhash_bytes, digest_size=UNLOCKHASH_SIZE).digest()
     if sum_bytes != expected_checksum[:UNLOCKHASH_CHECKSUM_SIZE]:
         raise InvalidUnlockHashChecksumError("Cannot decode address to unlockhash")
     return key_hex

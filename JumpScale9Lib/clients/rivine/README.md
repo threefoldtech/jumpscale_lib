@@ -15,7 +15,7 @@ It supports the following functionalities:
 The client uses the world list proposed in BIP-0039 and depends on the library provided them: https://github.com/trezor/python-mnemonic (pip install git+https://github.com/trezor/python-mnemonic.git)
 To generate keypairs we depend on the ed25519 python implementation here: https://github.com/warner/python-ed25519 (pip install ed25519)
 
-To generate UnlockHashes, we use merkletree implementation from here: https://github.com/Tierion/pymerkletools (pip install merkletools) 
+To generate UnlockHashes, we use merkletree a custom port implementation from the golang library implementation from here: https://github.com/NebulousLabs/merkletree 
 
 # How to use
 Starting from a seed which can be a sentence of [12, 15, 18, 21, 24] words, for more information about the seed please check: https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
@@ -25,6 +25,11 @@ You can generate new seed by using the following commands in your js9 shell
         from mnemonic import Mnemonic
         m = Mnemonic('english')
         seed = m.generate(strength=256)
+```
+
+Alternativly, you can generate a seed from the client factory
+```python
+seed = j.clients.rivine.generate_seed()
 ```
 
 From a seed you can create new wallet
