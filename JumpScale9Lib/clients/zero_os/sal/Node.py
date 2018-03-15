@@ -21,7 +21,7 @@ Mount = namedtuple('Mount', ['device', 'mountpoint', 'fstype', 'options'])
 
 
 class Node():
-    """Represent a G8OS Server"""
+    """Represent a Zero-OS Server"""
 
     def __init__(self, client):
         # g8os client to talk to the node

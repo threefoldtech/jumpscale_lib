@@ -52,7 +52,7 @@ class Disks():
 
 
 class Disk(Mountable):
-    """Disk in a G8OS"""
+    """Disk in a Zero-OS"""
 
     def __init__(self, node, disk_info):
         """

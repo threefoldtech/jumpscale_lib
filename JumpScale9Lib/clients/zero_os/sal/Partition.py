@@ -2,7 +2,7 @@ from .abstracts import Mountable
 
 
 class Partition(Mountable):
-    """Partition of a disk in a G8OS"""
+    """Partition of a disk in a Zero-OS"""
 
     def __init__(self, disk, part_info):
         """
