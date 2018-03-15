@@ -18,5 +18,5 @@ class ZeroRobotFactory(JSConfigFactoryBase):
         """
         path = j.sal.fs.getDirName(os.path.abspath(__file__)).rstrip("/")
         c = j.tools.raml.get(path)
-        c.specs_get('https://github.com/Jumpscale/0-robot/blob/master/raml')
+        # c.specs_get('https://github.com/Jumpscale/0-robot/blob/master/raml')
         c.client_python_generate()

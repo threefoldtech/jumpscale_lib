@@ -2,6 +2,7 @@ from js9 import j
 
 JSBaseConfigClient = j.tools.configmanager.base_class_config
 
+# You can either fill username and password to login with or leave them empty to login with itsyouonline credentials
 TEMPLATE = """
 base_url = ""
 user = ""
@@ -39,7 +40,15 @@ class MatrixClient(JSBaseConfigClient):
                 raise ModuleNotFoundError("No matrix client module found, please run j.clients.matrix.install() first")
 
             self._client = MatrixClient(base_url=self.config.data['base_url'])
-            self._client.login_with_password(username=self.config.data['user'], password=self.config.data['password_'])
+            if self.config.data['user'] and self.config.data['password_']:
+                self._client.login_with_password(username=self.config.data['user'], password=self.config.data['password_'])
+            else:
+                jwt = j.clients.itsyouonline.get().jwt
+                response = self._client.api.login(login_type="m.login.jwt", token=jwt)
+                self._client.user_id = response["user_id"]
+                self._client.token = response["access_token"]
+                self._client.hs = response["home_server"]
+                self._client.api.token = self._client.token
         return self._client
 
     def create_user(self, username, password):

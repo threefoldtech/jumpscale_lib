@@ -1,10 +1,14 @@
 import re as _re
 import io
+import json
 
 _handle_re = _re.compile("^Handle\\s+(.+),\\s+DMI\\s+type\\s+(\\d+),\\s+(\\d+)\\s+bytes$")
 _in_block_re = _re.compile("^\\t\\t(.+)$")
 _record_re = _re.compile("\\t(.+):\\s+(.+)$")
 _record2_re = _re.compile("\\t(.+):$")
+
+GIB = 1024 * 1024 * 1024
+GB = 1000 * 1000 * 1000
 
 
 class Capacity:
@@ -37,7 +41,9 @@ class Capacity:
                     out.write(msg)
                     out.write('\n')
                 self._node.client.system('smartctl -i %s' % disk.devicename, stream=True).stream(cb)
-            self._disk_info[disk.devicename] = _parse_smarctl(out.getvalue())
+                self._disk_info[disk.devicename] = _parse_smarctl(out.getvalue())
+                self._disk_info[disk.devicename]['size'] = disk.size
+                self._disk_info[disk.devicename]['type'] = disk.type.name
         return self._disk_info
 
     def report(self):
@@ -45,13 +51,68 @@ class Capacity:
         create a report of the hardware capacity for
         processor, memory, motherboard and disks
         """
-        report = {
-            "processor": _cpu_info(self.hw_info),
-            "memory": _memory_info(self.hw_info),
-            "motherboard": _mobo_info(self.hw_info),
-            "disk": _disks_info(self.disk_info),
-        }
-        return report
+        return Report(self._node, self.hw_info, self.disk_info)
+
+
+class Report:
+
+    def __init__(self, node, hw_info, disk_info):
+        self._node = node
+        self.processor = _cpu_info(hw_info)
+        self.memory = _memory_info(hw_info)
+        self.motherboard = _mobo_info(hw_info)
+        self.disk = _disks_info(disk_info)
+
+    @property
+    def CRU(self):
+        """
+        return the number of core units
+        """
+        unit = 0
+        for cpu in self.processor:
+            unit += int(cpu.get('thread_nr', 0))
+        return unit
+
+    @property
+    def MRU(self):
+        """
+        return the number of memory units in GB
+        """
+        size = (self._node.client.info.mem()['total'] / GIB)
+        return round(size, 2)
+
+    @property
+    def HRU(self):
+        """
+        return the number of hd units in GB
+        """
+        unit = 0
+        for disk in self.disk:
+            if disk['type'] in ['hdd', 'archive']:
+                unit += disk['size'] / GIB
+        return round(unit, 2)
+
+    @property
+    def SRU(self):
+        """
+        return the number of ssd units in GB
+        """
+        unit = 0
+        for disk in self.disk:
+            if disk['type'] in ['ssd', 'nvme']:
+                unit += disk['size'] / GIB
+        return round(unit, 2)
+
+    def __repr__(self):
+        return json.dumps({
+            "processor": self.processor,
+            "memory": self.memory,
+            "motherboard": self.motherboard,
+            "disk": self.disk,
+        })
+
+    def __str__(self):
+        return repr(self)
 
 
 def _cpu_info(data):
@@ -113,8 +174,10 @@ def _disks_info(data):
             'device_id': entry.get('LU WWN Device Id'),
             'rotation_state': entry.get('Rotation Rate'),
             'serial': entry.get('Serial Number'),
-            'size': entry.get('User Capacity'),
-            'sector_size': entry.get('Sector Sizes')
+            'user_capacity': entry.get('User Capacity'),
+            'sector_size': entry.get('Sector Sizes'),
+            'size': entry.get('size'),
+            'type': entry.get('type'),
         }
         result.append(info)
     return result

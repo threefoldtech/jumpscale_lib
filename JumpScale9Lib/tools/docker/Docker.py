@@ -18,33 +18,34 @@ class Docker(JSBASE):
         JSBASE.__init__(self)
         self._basepath = "/storage/docker"
         self._prefix = ""
-        self._containers = {}
+        self._containers = None
         self._names = []
 
-        # if 'DOCKER_HOST' not in os.environ or os.environ['DOCKER_HOST'] == "":
-        #     self.base_url = 'unix://var/run/docker.sock'
-        # else:
-        #     self.base_url = os.environ['DOCKER_HOST']
-        # self.client = docker.Client(base_url=self.base_url, timeout=120)
-        self.client=docker.APIClient()
+        if 'DOCKER_HOST' not in os.environ or os.environ['DOCKER_HOST'] == "":
+            self.base_url = 'unix://var/run/docker.sock'
+        else:
+            self.base_url = os.environ['DOCKER_HOST']
+        self.client = docker.APIClient(base_url=self.base_url)
+
+
+    def _node_set(self, name, sshclient):
+        j.tools.nodemgr.set(name, sshclient=sshclient.instance, selected=False,
+                            cat="docker", clienttype="j.sal.docker", description="deployment on docker")
 
     @property
     def containers(self):
-        todel=[str(item) for item in self._containers.keys()] #are the id's
-        for item in self.client.containers():
-            id = item['Id']
-            if id in todel:
-                todel.remove(id)
-            if id not in self._containers:
-                self._containers[id] = Container(item, self.client)
-        for item in todel:
-            #this to make sure that id's in mem not in docker any more get removed
-            self._containers.remove(item)
-        return list(self._containers.values())
+        self._containers = []
+        for obj in self.client.containers():
+            self._containers.append(Container(obj,self.client))
+        return self._containers
 
     @property
     def docker_host(self):
-        return 'localhost'
+        u = parse.urlparse(self.base_url)
+        if u.scheme == 'unix':
+            return 'localhost'
+        else:
+            return u.hostname
 
     @property
     def containerNamesRunning(self):
@@ -59,6 +60,7 @@ class Docker(JSBASE):
     
     @property
     def weaveIsActive(self):
+        # TODO: suppot weave
         return False
 
     @property
@@ -145,6 +147,20 @@ class Docker(JSBASE):
         """
         for container in self.containers:
             if container.name == name:
+                return container
+        if die:
+            raise j.exceptions.RuntimeError(
+                "Container with name %s doesn't exists" % name)
+        else:
+            return None
+
+    def get_container_by_id(self, id, die=True):
+        """
+        Get a container object by name
+        @param name string: container name
+        """
+        for container in self.containers:
+            if container.id == id:
                 return container
         if die:
             raise j.exceptions.RuntimeError(
@@ -276,7 +292,8 @@ class Docker(JSBASE):
             aysfs=[],
             detach=False,
             privileged=False,
-            getIfExists=True):
+            getIfExists=True,
+            command=""):
         """
         Creates a new container.
 
@@ -393,10 +410,10 @@ class Docker(JSBASE):
             self.pull(base)
 
         if base.startswith("jumpscale/ubuntu1604") or myinit is True:
-            cmd = "sh -c \"mkdir -p /var/run/screen;chmod 777 /var/run/screen; /var/run/screen;exec >/dev/tty 2>/dev/tty </dev/tty && /sbin/my_init -- /usr/bin/screen -s bash\""
-            cmd = "sh -c \" /sbin/my_init -- bash -l\""
+            command = "sh -c \"mkdir -p /var/run/screen;chmod 777 /var/run/screen; /var/run/screen;exec >/dev/tty 2>/dev/tty </dev/tty && /sbin/my_init -- /usr/bin/screen -s bash\""
+            command = "sh -c \" /sbin/my_init -- bash -l\""
         else:
-            cmd = None
+            command = None
 
         self.logger.info(("install docker with name '%s'" % name))
 
@@ -428,7 +445,7 @@ class Docker(JSBASE):
             network_mode=None)
         res = self.client.create_container(
             image=base,
-            command=cmd,
+            command=command,
             hostname=hostname,
             user="root",
             detach=detach,
@@ -458,22 +475,13 @@ class Docker(JSBASE):
         id = res["Id"]
 
         res = self.client.start(container=id)
-        obj = None
-        for container in self.client.containers():
-            if container['Id'] == id:
-                obj = container
-                break
 
-        container = Container(obj, self.client)
-        self._containers[id] = container
+        container = self.get_container_by_id(id)
 
         if ssh:
             if setrootrndpasswd:
                 if rootpasswd is None or rootpasswd == '':
                     rootpasswd = 'gig1234'
-                # self.logger.info("set root passwd to %s" % rootpasswd)
-                # container.executor.execute(
-                #     "echo \"root:%s\"|chpasswd" % rootpasswd, showout=False)
 
             container.authorizeSSH(sshkeyname=sshkeyname, password=rootpasswd)
 
@@ -484,8 +492,10 @@ class Docker(JSBASE):
                 if rc:
                     time.sleep(0.1)
                 break
-        from IPython import embed
-        embed()
+
+            self._node_set(name, container.sshclient)
+        else:
+            self._node_set(name)
         return container
 
     def getImages(self):
@@ -700,20 +710,6 @@ class Docker(JSBASE):
     # def connectRemoteTCP(self, base_url):
     #     self.base_url = base_url
     #     self.client = docker.Client(base_url=weavesocket)
-
-
-
-    # @property
-    # def docker_host(self):
-    #     """
-    #     Get the docker hostname.
-    #     """
-
-    #     u = parse.urlparse(self.base_url)
-    #     if u.scheme == 'unix':
-    #         return 'localhost'
-    #     else:
-    #         return u.hostname
 
     # def _execute(self, command):
     #     env = os.environ.copy()

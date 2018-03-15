@@ -4,12 +4,9 @@ from .unhandled_api_error import UnhandledAPIError
 from .unmarshall_error import UnmarshallError
 
 
-
-
 class BlueprintsService:
     def __init__(self, client):
         self.client = client
-        pass
 
     def ExecuteBlueprint(self, data, headers=None, query_params=None, content_type="application/json"):
         """
