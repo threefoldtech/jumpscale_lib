@@ -79,7 +79,7 @@ class Node():
         return the first disk that is eligible to be used as filesystem cache
         First try to find a ssd disk, otherwise return a HDD
         """
-        priorities = [StorageType.SSD, StorageType.DISK, StorageType.NVME]
+        priorities = [StorageType.SSD, StorageType.HDD, StorageType.NVME]
         eligible = {t: [] for t in priorities}
         # Pick up the first ssd
         usedisks = []
