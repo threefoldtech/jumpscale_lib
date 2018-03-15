@@ -32,7 +32,8 @@ class Authorizables(JSBASE):
         if username not in self.authorized_users:
             self._addUser(username, right)
             self.refresh()
-        return True
+            return True
+        return False
 
     def unauthorize_user(self, username):
         canBeDeleted = [u['userGroupId']
@@ -40,7 +41,8 @@ class Authorizables(JSBASE):
         if username in self.authorized_users and username in canBeDeleted:
             self._deleteUser(username)
             self.refresh()
-        return True
+            return True
+        return False
 
     def update_access(self, username, right=""):
         if not right:
@@ -48,4 +50,5 @@ class Authorizables(JSBASE):
         if username in self.authorized_users:
             self._updateUser(username, right)
             self.refresh()
-        return True
+            return True
+        return False
