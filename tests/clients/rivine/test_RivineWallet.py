@@ -202,3 +202,11 @@ expected_transaction_json = {'arbitrarydata': '',
 
 assert transaction.json == expected_transaction_json, "Wrong transaction json was generated"
 print('Transaction created!')
+
+rivine_wallet.commit_transaction(transaction) 
+print('Transaction pushed to chain')
+
+# create transaction with custom data
+custom_data = bytearray("hello from Dresden", encoding='utf-8')
+
+transaction = rivine_wallet.create_transaction(amount=500, recipient=recipient, custom_data=custom_data)

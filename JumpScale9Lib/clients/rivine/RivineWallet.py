@@ -15,6 +15,7 @@ import ed25519
 # import merkletools
 from .merkletree import Tree
 from pyblake2 import blake2b
+# from hashlib import blake2b
 from functools import partial
 import requests
 import base64
@@ -23,7 +24,7 @@ from requests.auth import HTTPBasicAuth
 from JumpScale9 import j
 
 from .const import SIGEd25519, UNLOCKHASH_TYPE, MINER_PAYOUT_MATURITY_WINDOW,\
-UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE, SPECIFIER_SIZE
+UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE, SPECIFIER_SIZE, NON_SIA_SPECIFIER
 
 from .errors import RESTAPIError, BackendError,\
 InsufficientWalletFundsError, NonExistingOutputError,\
@@ -106,9 +107,6 @@ class RivineWallet:
         """
         # the to_seed function will return a 64 bytes binary seed, we only need 32-bytes
         binary_seed = Mnemonic.to_seed(mnemonic=self._seed, passphrase=str(index))[32:]
-        # binary_seed = Mnemonic.to_seed(mnemonic=self._seed)[32:]
-        # bs = bytearray(binary_seed)
-        # bs.extend(index.to_bytes(8, byteorder='little'))
         binary_seed_hash = blake2b(binary_seed, digest_size=32).digest()
         return SpendableKey(seed=binary_seed_hash)
 
@@ -230,7 +228,7 @@ class RivineWallet:
                         del self._unspent_coins_outputs[coin_input.get('parentid')]
 
 
-    def create_transaction(self, amount, recipient, minerfee=None, sign_transaction=True):
+    def create_transaction(self, amount, recipient, minerfee=None, sign_transaction=True, custom_data=None):
         """
         Creates new transaction and sign it
         creates a new transaction of the specified ammount to a specified address. A remainder address
@@ -240,7 +238,9 @@ class RivineWallet:
         @param amount: The amount needed to be transfered in hastings
         @param recipient: Address of the recipient.
         @param minerfee: The minerfee for this transaction in hastings
-        @param sign_transaction: If True, the created transaction will be singed 
+        @param sign_transaction: If True, the created transaction will be singed
+        @param custom_data: Custom data to add to the transaction record
+        @type custom_data: bytearray
         """
         if minerfee is None:
             minerfee = self._minerfee
@@ -249,6 +249,11 @@ class RivineWallet:
         if required_funds > wallet_fund:
             raise InsufficientWalletFundsError('No sufficient funds to make the transaction')
         transaction = Transaction()
+
+        # set the the custom data on the transaction
+        if custom_data is not None:
+            transaction.custom_data = custom_data
+
         input_value = 0
         for address, unspent_coin_output in self._unspent_coins_outputs.items():
             # if we reach the required funds, then break
@@ -578,6 +583,26 @@ class Transaction:
         Sets the miner fee
         """
         self._minerfee = value
+    
+    @property
+    def custom_data(self):
+        """
+        Transaction custom data
+        """
+        return self._arbitrary_data
+
+
+    @custom_data.setter
+    def custom_data(self, data):
+        """
+        Set the transaction cutom data
+        """
+        # eventually aribitrary data should be a 2d array
+        # we also need to to prepend the data with a nonsia specificer
+        data_ = bytearray(SPECIFIER_SIZE)
+        data_[:len(NON_SIA_SPECIFIER)] = bytearray(NON_SIA_SPECIFIER, encoding='utf-8')
+        data_.extend(data)
+        self._arbitrary_data = [data_]
 
 
     @property
@@ -603,7 +628,13 @@ class Transaction:
                 })
             self._json['coinoutputs'] = outputs
             self._json['minerfees'] = [str(self._minerfee)]
-            self._json['arbitrarydata'] = self._arbitrary_data
+            if self._arbitrary_data is not None:
+                arbitrary_data_json = []
+                for item in self._arbitrary_data:
+                    arbitrary_data_json.append(base64.b64encode(item).decode('ascii'))
+                self._json['arbitrarydata'] = arbitrary_data_json
+            else:    
+                self._json['arbitrarydata'] = self._arbitrary_data
             self._json['blockstakeinputs'] = None
             self._json['blockstakeoutputs'] = None
             transaction_signatures = []
@@ -668,7 +699,7 @@ class Transaction:
             for input_ in self._inputs:
                 signature_hash.extend(bytearray.fromhex(input_['parentid']))
                 signature_hash.extend(input_['unlockconditions'].binary)
-            # encode the nuber of the outputs
+            # encode the number of the outputs
             signature_hash.extend(int_to_binary(len(self._outputs)))
             for output in self._outputs:
                 signature_hash.extend(big_int_to_binary(output['value']))
@@ -678,13 +709,13 @@ class Transaction:
                 unlockhash = unlockhash_address_map.get(output['unlockhash'], get_unlockhash_from_address(output['unlockhash']))
                 signature_hash.extend(bytearray.fromhex(unlockhash))
 
-            # encode the nuber of the blockstake inputs
+            # encode the number of the blockstake inputs
             signature_hash.extend(int_to_binary(len(self._blockstake_inputs)))
             for input_ in self._blockstake_inputs:
                 signature_hash.extend(bytearray.fromhex(input_['parentid']))
                 signature_hash.extend(input_['unlockconditions'].binary)
             
-            # encode the nuber of the blockstake outputs
+            # encode the number of the blockstake outputs
             signature_hash.extend(int_to_binary(len(self._blockstake_outputs)))
             for output in self._blockstake_outputs:
                 signature_hash.extend(big_int_to_binary(output['value']))
