@@ -14,7 +14,7 @@ from mnemonic import Mnemonic
 import ed25519
 # import merkletools
 from .merkletree import Tree
-from pyblak2 import blake2b
+from pyblake2 import blake2b
 from functools import partial
 import requests
 import base64
