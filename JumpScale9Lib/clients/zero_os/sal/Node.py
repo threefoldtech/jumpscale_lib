@@ -10,7 +10,7 @@ from JumpScale9Lib.clients.zero_os.Client import Client
 
 from .Capacity import Capacity
 from .Container import Containers
-from .Disk import Disks, DiskType
+from .Disk import Disks, StorageType
 from .healthcheck import HealthCheck
 from .Network import Network
 from .StoragePool import StoragePools
