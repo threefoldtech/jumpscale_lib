@@ -14,8 +14,7 @@ class Container(JSBASE):
         """
         Container object instance.
 
-        @param name str: name of conainter.
-        @param id  int: id of container.
+        @param obj str: obj of conainter as returned from the api.
         @param client obj(docker.Client()): client object from docker library.
         """
 
@@ -34,7 +33,7 @@ class Container(JSBASE):
     @property
     def ssh_port(self):
         if self._ssh_port is None:
-            self._ssh_port = self.getPubPortForInternalPort(22)
+            self._ssh_port = self.get_public_port(22)
         return self._ssh_port
 
     @property
@@ -72,13 +71,6 @@ class Container(JSBASE):
     @property
     def status(self):
         return self.info["State"]["Status"]
-        # if self.info["State"]["Running"]:
-        #     return "running"
-        # if self.info["State"]["Restarting"]:
-        #     return "restarting"
-        # if self.info["State"]["Paused"]:
-        #     return "paused"
-        # return "error"
 
     def prefab(self):
         if self._prefab is None:
@@ -114,29 +106,25 @@ class Container(JSBASE):
         """
         Return ip of docker on hostmachine.
         """
-        return self.info['NetworkSettings']['IPAddress']
+        return self.info['NetworkSettings']['Networks']['bridge']['IPAddress']
 
-    def getPubPortForInternalPort(self, port):
+    def get_public_port(self, private_port):
         """
         Return public port that is forwarded to a port inside docker,
         this will only work if container has port forwarded the ports during
         run time.
 
-        @param port int: port number inside docker to use.
+        @param private_port int: private port number to look for its public port
         """
-
-        if not self.info["NetworkSettings"]["Ports"] is None:
-            for key, portsDict in self.info["NetworkSettings"]["Ports"].items():
-                if key.startswith(str(port)) and portsDict is not None:
-                    # if "PublicPort" not in port2:
-                    #     raise j.exceptions.Input("cannot find publicport for ssh?")
-                    portsfound = [int(item['HostPort']) for item in portsDict]
-                    if len(portsfound) > 0:
-                        return portsfound[0]
 
         if self.isRunning() is False:
             raise j.exceptions.RuntimeError(
                 "docker %s is not running cannot get pub port." % self)
+
+        if not self.info["Ports"] is None:
+            for port in self.info['Ports']:
+                if port['PrivatePort'] == private_port:
+                    return port['PublicPort']
 
         raise j.exceptions.Input("cannot find publicport for ssh?")
 
@@ -226,93 +214,3 @@ class Container(JSBASE):
         return "docker:%s" % self.name
 
     __repr__ = __str__
-
-    # def setHostName(self,name,hostname):
-    #     return # TODO:
-    #     c=self.getSSH(name)
-    #     # TODO:
-    #     # c.run("echo '%s' > /etc/hostname;hostname %s"%(hostname,hostname))
-    #
-
-    # def _btrfsExecute(self,cmd):
-    #     cmd="btrfs %s"%cmd
-    #     print(cmd)
-    #     return self._execute(cmd)
-
-    # def btrfsSubvolList(self):
-    #     raise j.exceptions.RuntimeError("not implemented")
-    #     out=self._btrfsExecute("subvolume list %s"%self.basepath)
-    #     res=[]
-    #     for line in out.split("\n"):
-    #         if line.strip()=="":
-    #             continue
-    #         if line.find("path ")!=-1:
-    #             path=line.split("path ")[-1]
-    #             path=path.strip("/")
-    #             path=path.replace("lxc/","")
-    #             res.append(path)
-    #     return res
-
-    # def btrfsSubvolNew(self,name):
-    #     raise j.exceptions.RuntimeError("not implemented")
-    #     if not self.btrfsSubvolExists(name):
-    #         cmd="subvolume create %s/%s"%(self.basepath,name)
-    #         self._btrfsExecute(cmd)
-
-    # def btrfsSubvolCopy(self,nameFrom,NameDest):
-    #     raise j.exceptions.RuntimeError("not implemented")
-    #     if not self.btrfsSubvolExists(nameFrom):
-    #         raise j.exceptions.RuntimeError("could not find vol for %s"%nameFrom)
-    #     if j.sal.fs.exists(path="%s/%s"%(self.basepath,NameDest)):
-    #         raise j.exceptions.RuntimeError("path %s exists, cannot copy to existing destination, destroy first."%nameFrom)
-    #     cmd="subvolume snapshot %s/%s %s/%s"%(self.basepath,nameFrom,self.basepath,NameDest)
-    #     self._btrfsExecute(cmd)
-
-    # def btrfsSubvolExists(self,name):
-    #     raise j.exceptions.RuntimeError("not implemented")
-    #     subvols=self.btrfsSubvolList()
-    #     # print subvols
-    #     return name in subvols
-
-    # def btrfsSubvolDelete(self,name):
-    #     raise j.exceptions.RuntimeError("not implemented")
-    #     if self.btrfsSubvolExists(name):
-    #         cmd="subvolume delete %s/%s"%(self.basepath,name)
-    #         self._btrfsExecute(cmd)
-    #     path="%s/%s"%(self.basepath,name)
-    #     if j.sal.fs.exists(path=path):
-    #         j.sal.fs.removeDirTree(path)
-    #     if self.btrfsSubvolExists(name):
-    #         raise j.exceptions.RuntimeError("vol cannot exist:%s"%name)
-
-    # def getProcessList(self, stdout=True):
-    #     """
-    #     @return [["$name",$pid,$mem,$parent],....,[$mem,$cpu]]
-    #     last one is sum of mem & cpu
-    #     """
-    #     raise j.exceptions.RuntimeError("not implemented")
-    #     pid = self.getPid()
-    #     children = list()
-    #     children = self._getChildren(pid, children)
-    #     result = list()
-    #     pre = ""
-    #     mem = 0.0
-    #     cpu = 0.0
-    #     cpu0 = 0.0
-    #     prevparent = ""
-    #     for child in children:
-    #         if child.parent.name != prevparent:
-    #             pre += ".."
-    #             prevparent = child.parent.name
-    #         # cpu0=child.get_cpu_percent()
-    #         mem0 = int(round(child.get_memory_info().rss / 1024, 0))
-    #         mem += mem0
-    #         cpu += cpu0
-    #         if stdout:
-    #             self.logger.info(("%s%-35s %-5s mem:%-8s" % (pre, child.name, child.pid, mem0)))
-    #         result.append([child.name, child.pid, mem0, child.parent.name])
-    #     cpu = children[0].get_cpu_percent()
-    #     result.append([mem, cpu])
-    #     if stdout:
-    #         self.logger.info(("TOTAL: mem:%-8s cpu:%-8s" % (mem, cpu)))
-    #     return result
