@@ -10,7 +10,6 @@ try:
     )
 except:
     print("WARNING: s3 pip client (minio) not found please install do j.clients.s3.install()")
-    # OVHFactory().install()
 
 
 TEMPLATE = """
