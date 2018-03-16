@@ -1,9 +1,9 @@
-import logging
 import redis
 import time
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from js9 import j
+
+logger = j.logger.get(__name__)
 
 
 class ZeroDB:
@@ -11,12 +11,11 @@ class ZeroDB:
     ZeroDB server
     """
 
-    def __init__(self, name, container, addr='0.0.0.0', port=9900, data_dir='/mnt/data',
+    def __init__(self, name, container, port=9900, data_dir='/mnt/data',
                  index_dir='/mnt/index', mode='user', sync=False, admin=''):
         self.name = name
         self.id = 'zerodb.{}'.format(self.name)
         self.container = container
-        self.addr = addr
         self.port = port
         self.data_dir = data_dir
         self.index_dir = index_dir
@@ -28,7 +27,7 @@ class ZeroDB:
     @property
     def _redis(self):
         if self.__redis is None:
-            self.__redis = redis.Redis(host=self.addr, port=self.port, password=self.admin)
+            self.__redis = redis.Redis(host=self.container.node.addr, port=self.port, password=self.admin)
         return self.__redis
 
     def stop(self, timeout=30):
@@ -43,7 +42,7 @@ class ZeroDB:
         if not is_running:
             return
 
-        logger.debug('stop %s', self)
+        logger.info('stop zerodb %s' % self.name)
 
         self.container.client.job.kill(self.id)
 
@@ -69,13 +68,14 @@ class ZeroDB:
         if is_running:
             return
 
+        logger.info('start zerodb %s' % self.name)
+
         cmd = '/bin/zdb \
-            --listen {addr} \
             --port {port} \
             --data {data_dir} \
             --index {index_dir} \
             --mode {mode} \
-            '.format(addr=self.addr, port=self.port, data_dir=self.data_dir, index_dir=self.index_dir, mode=self.mode)
+            '.format(port=self.port, data_dir=self.data_dir, index_dir=self.index_dir, mode=self.mode)
         if self.sync:
             cmd += ' --sync'
         if self.admin:
@@ -106,10 +106,14 @@ class ZeroDB:
             raise
 
     def list_namespaces(self):
+        logger.info('listing namespaces for zerodb %s' % self.name)
+
         namespaces = self._redis.execute_command('NSLIST')
         return [namespace.decode('utf-8') for namespace in namespaces]
 
     def get_namespace_info(self, namespace):
+        logger.info('get namespace %s info for zerodb %s' % (namespace, self.name))
+
         info = self._redis.execute_command('NSINFO', namespace).decode('utf-8')
         info = info.replace('# namespace\n', '')
         info_lines = info.splitlines()
@@ -121,9 +125,12 @@ class ZeroDB:
         return result
 
     def create_namespace(self, namespace):
+        logger.info('create namespace %s for zerodb %s' % (namespace, self.name))
         self._redis.execute_command('NSNEW', namespace)
 
     def set_namespace_property(self, namespace, prop, value):
+        logger.info('set namespace %s property for zerodb %s' % (namespace, self.name))
+
         if prop not in ['maxsize', 'password', 'public']:
             raise ValueError('Namespace property must be maxsize, password or public')
         self._redis.execute_command('NSSET', namespace, prop, value)

@@ -4,16 +4,12 @@ from .abstracts import Mountable
 from .Partition import Partition
 from js9 import j
 
-
-
-
-class DiskType(Enum):
-    ssd = "ssd"
-    hdd = "hdd"
-    nvme = "nvme"
-    archive = "archive"
-    cdrom = 'cdrom'
-
+class StorageType(Enum):
+    SSD = "SSH"
+    HDD = "HDD"
+    NVME = "NVME"
+    ARCHIVE = "ARCHIVE"
+    CDROM = "CDROM"
 
 class Disks():
 
@@ -52,7 +48,7 @@ class Disks():
 
 
 class Disk(Mountable):
-    """Disk in a G8OS"""
+    """Disk in a Zero-OS"""
 
     def __init__(self, node, disk_info):
         """
@@ -70,6 +66,7 @@ class Disk(Mountable):
         self._filesystems = []
         self.type = None
         self.partitions = []
+        self.transport = None
 
         self._load(disk_info)
 
@@ -96,6 +93,7 @@ class Disk(Mountable):
         self.mountpoint = disk_info['mountpoint']
         self.model = disk_info['model']
         self.type = self._disk_type(disk_info)
+        self.transport = disk_info['tran']
         for partition_info in disk_info.get('children', []) or []:
             self.partitions.append(
                 Partition(
@@ -122,17 +120,17 @@ class Disk(Mountable):
         """
         if disk_info['rota'] == "1":
             if disk_info['type'] == 'rom':
-                return DiskType.cdrom
+                return StorageType.CDROM
             # assume that if a disk is more than 7TB it's a SMR disk
             elif int(disk_info['size']) > (1024 * 1024 * 1024 * 1024 * 7):
-                return DiskType.archive
+                return StorageType.ARCHIVE
             else:
-                return DiskType.hdd
+                return StorageType.HDD
         else:
             if "nvme" in disk_info['name']:
-                return DiskType.nvme
+                return StorageType.NVME
             else:
-                return DiskType.ssd
+                return StorageType.SSD
 
     def mktable(self, table_type='gpt', overwrite=False):
         """

@@ -2,8 +2,6 @@ from . import typchk
 from js9 import j
 
 
-
-
 class Nft():
     _port_chk = typchk.Checker({
         'port': int,
@@ -13,7 +11,6 @@ class Nft():
 
     def __init__(self, client):
         self._client = client
-
 
     def open_port(self, port, interface=None, subnet=None):
         """
@@ -28,6 +25,9 @@ class Nft():
             'subnet': subnet,
         }
         self._port_chk.check(args)
+
+        if self.rule_exists(port, interface, subnet):
+            return
 
         return self._client.json('nft.open_port', args)
 
@@ -44,6 +44,9 @@ class Nft():
             'subnet': subnet,
         }
         self._port_chk.check(args)
+
+        if not self.rule_exists(port, interface, subnet):
+            return
 
         return self._client.json('nft.drop_port', args)
 
@@ -68,4 +71,3 @@ class Nft():
         self._port_chk.check(args)
 
         return self._client.json('nft.rule_exists', args)
-

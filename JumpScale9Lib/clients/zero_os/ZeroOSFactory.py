@@ -3,9 +3,12 @@ import time
 from js9 import j
 
 from .Client import Client
+from .sal.Minio import Minio
 from .sal.Node import Node
+from .sal.Restic import Restic
+from .sal.TfChain import TfChain
 from .sal.ZeroDB import ZeroDB
-from .sal.TfCain import TfCain
+
 
 JSConfigFactoryBase = j.tools.configmanager.base_class_configs
 
@@ -130,9 +133,15 @@ class SALFactory():
         client = self._factory.get(instance)
         return Node(client)
 
-    def get_zerodb(self, name, container, addr='0.0.0.0', port=9900, data_dir='/mnt/data',
+    def get_zerodb(self, name, container, port=9900, data_dir='/mnt/data',
                    index_dir='/mnt/index', mode='user', sync=False, admin=''):
-        return ZeroDB(name, container, addr, port, data_dir, index_dir, mode, sync, admin)
+        return ZeroDB(name, container, port, data_dir, index_dir, mode, sync, admin)
 
-    def tfcain_get(self, name, container, data_dir='/mnt/data', rpc_addr='0.0.0.0:23112', api_addr='0.0.0.0:23110'):
-        return TfCain(name, container, data_dir, rpc_addr, api_addr)
+    def tfchain_get(self, name, container, data_dir='/mnt/data', rpc_addr='0.0.0.0:23112', api_addr='0.0.0.0:23110'):
+        return TfChain(name, container, data_dir, rpc_addr, api_addr)
+
+    def get_minio(self, name, container, zdbs, namespace, private_key, namespace_secret='', addr='0.0.0.0', port=9000):
+        return Minio(name, container, zdbs, namespace, private_key, namespace_secret, addr, port)
+
+    def get_restic(self, container, repo):
+        return Restic(container, repo)

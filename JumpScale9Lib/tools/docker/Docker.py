@@ -18,7 +18,7 @@ class Docker(JSBASE):
         JSBASE.__init__(self)
         self._basepath = "/storage/docker"
         self._prefix = ""
-        self._containers = {}
+        self._containers = None
         self._names = []
 
         if 'DOCKER_HOST' not in os.environ or os.environ['DOCKER_HOST'] == "":
@@ -27,9 +27,17 @@ class Docker(JSBASE):
             self.base_url = os.environ['DOCKER_HOST']
         self.client = docker.APIClient(base_url=self.base_url)
 
+
+    def _node_set(self, name, sshclient):
+        j.tools.nodemgr.set(name, sshclient=sshclient.instance, selected=False,
+                            cat="docker", clienttype="j.sal.docker", description="deployment on docker")
+
     @property
     def containers(self):
-        return self.client.containers()
+        self._containers = []
+        for obj in self.client.containers():
+            self._containers.append(Container(obj,self.client))
+        return self._containers
 
     @property
     def docker_host(self):
@@ -139,6 +147,20 @@ class Docker(JSBASE):
         """
         for container in self.containers:
             if container.name == name:
+                return container
+        if die:
+            raise j.exceptions.RuntimeError(
+                "Container with name %s doesn't exists" % name)
+        else:
+            return None
+
+    def get_container_by_id(self, id, die=True):
+        """
+        Get a container object by name
+        @param name string: container name
+        """
+        for container in self.containers:
+            if container.id == id:
                 return container
         if die:
             raise j.exceptions.RuntimeError(
@@ -453,14 +475,8 @@ class Docker(JSBASE):
         id = res["Id"]
 
         res = self.client.start(container=id)
-        obj = None
-        for container in self.client.containers():
-            if container['Id'] == id:
-                obj = container
-                break
 
-        container = Container(obj, self.client)
-        self._containers[id] = container
+        container = self.get_container_by_id(id)
 
         if ssh:
             if setrootrndpasswd:
@@ -476,7 +492,8 @@ class Docker(JSBASE):
                 if rc:
                     time.sleep(0.1)
                 break
-        
+
+            self._node_set(name, container.sshclient)
         return container
 
     def getImages(self):
