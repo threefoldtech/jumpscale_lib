@@ -12,7 +12,6 @@ the wallet will need the following functionality:
 
 from mnemonic import Mnemonic
 import ed25519
-# import merkletools
 from .merkletree import Tree
 from pyblake2 import blake2b
 # from hashlib import blake2b
@@ -601,6 +600,7 @@ class Transaction:
         # we also need to to prepend the data with a nonsia specificer
         data_ = bytearray(SPECIFIER_SIZE)
         data_[:len(NON_SIA_SPECIFIER)] = bytearray(NON_SIA_SPECIFIER, encoding='utf-8')
+        # data_ = bytearray(NON_SIA_SPECIFIER, encoding='utf-8')
         data_.extend(data)
         self._arbitrary_data = [data_]
 
@@ -732,7 +732,8 @@ class Transaction:
             if self._arbitrary_data is not None:
                 signature_hash.extend(int_to_binary(len(self._arbitrary_data)))
                 for item in self._arbitrary_data:
-                    signature_hash.extend(bytearray(item))
+                    signature_hash.extend(int_to_binary(len(item)))
+                    signature_hash.extend(item)
             else:
                 signature_hash.extend(int_to_binary(0))
 
