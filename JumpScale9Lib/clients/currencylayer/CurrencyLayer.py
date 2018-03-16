@@ -22,7 +22,7 @@ class CurrencyLayer(JSConfigBase):
         self._data_cur = {}
         self._id2cur = {}
         self._cur2id = {}
-        self.fallback = False
+        self.fallback = True
         self.fake = False
 
     def load(self):
@@ -39,14 +39,13 @@ class CurrencyLayer(JSConfigBase):
                 if self.fake or self.fallback:
                     self.logger.warning("cannot reach: currencylayer.com, use fake local data.")
                     from .currencies import currencies
-                    return currencies
+                    return False,currencies
 
         data = self.cache.get("currency_data", get, expire=3600 * 24)
 
         for key, item in data.items():
-            if not key.startswith("USD"):
-                raise RuntimeError("data not ok, needs to start from USD")
-            key = key[3:]
+            if key.startswith("USD"):
+                key = key[3:]
             self._data_cur[key.lower()] = item
 
     @property
