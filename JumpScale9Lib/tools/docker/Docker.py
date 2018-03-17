@@ -494,8 +494,6 @@ class Docker(JSBASE):
                 break
 
             self._node_set(name, container.sshclient)
-        else:
-            self._node_set(name)
         return container
 
     def getImages(self):
