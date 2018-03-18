@@ -20,6 +20,7 @@ from .LogManager import LogManager
 from .Nft import Nft
 from .Response import Response
 from .ZerotierManager import ZerotierManager
+from .WebManager import WebManager
 
 DefaultTimeout = 10  # seconds
 
@@ -64,6 +65,7 @@ class Client(BaseClient, JSConfigClientBase):
         self._config_manager = Config(self)
         self._aggregator = AggregatorManager(self)
         self._jwt_expire_timestamp = 0
+        self._web = WebManager(self)
 
     @property
     def _redis(self):
@@ -180,6 +182,14 @@ class Client(BaseClient, JSConfigClientBase):
         :return:
         """
         return self._aggregator
+
+    @property
+    def web(self):
+        """
+        Web manager
+        :return:
+        """
+        return self._web
 
     def raw(self, command, arguments, queue=None, max_time=None, stream=False, tags=None, id=None):
         """

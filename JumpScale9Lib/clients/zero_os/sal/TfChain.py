@@ -6,9 +6,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class TfCain:
+class TfChain:
     """
-    TfCain server
+    TfChain server
     """
 
     def __init__(self, name, container, data_dir='/mnt/data',
@@ -144,3 +144,44 @@ class TfChainClient:
             'echo %s | /tfchainc --addr %s wallet unlock' % (self.wallet_password, self.addr),
             id='%s.wallet_unlock' % self.id
         ).get()
+
+
+class TfChainExplorer:
+    """
+    TfChain Explorer
+    """
+
+    def __init__(self, name, container):
+        self.name = name
+        self.id = 'tfchainc.{}'.format(self.name)
+        self.container = container
+
+    def start(self, timeout=15):
+        """
+        Start tfchain daemon
+        :param timeout: time in seconds to wait for the tfchain daemon to start
+        """
+        is_running = self.is_running()
+        if is_running:
+            return
+
+        cmd = '/tfchaind \
+            --rpc-addr {rpc_addr} \
+            --api-addr {api_addr} \
+            --tfchain-directory {data_dir} \
+            '.format(rpc_addr=self.rpc_addr,
+                     api_addr=self.api_addr,
+                     data_dir=self.data_dir)
+
+        # wait for tfchain daemon to start
+        self.container.client.system(cmd, id=self.id)
+        start = time.time()
+        end = start + timeout
+        is_running = self.is_running()
+        while not is_running and time.time() < end:
+            time.sleep(1)
+            is_running = self.is_running()
+
+        if not self.is_running():
+            raise RuntimeError(
+                'Failed to start tfchain daemon: {}'.format(self.name))

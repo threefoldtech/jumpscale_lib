@@ -4,7 +4,6 @@ from . import typchk
 from js9 import j
 
 
-
 class DiskManager:
     _mktable_chk = typchk.Checker({
         'disk': str,
@@ -40,7 +39,6 @@ class DiskManager:
 
     def __init__(self, client):
         self._client = client
-
 
     def list(self):
         """
@@ -200,3 +198,22 @@ class DiskManager:
         if result.state != 'SUCCESS':
             raise RuntimeError('failed to umount partition: %s' % result.stderr)
 
+    def mounts(self):
+        """
+        Get all devices and their mountpoints
+        """
+        response = self._client.raw('disk.mounts', {})
+
+        result = response.get()
+
+        if result.state != 'SUCCESS':
+            raise RuntimeError('failed to list disks: %s' % result.stderr)
+
+        if result.level != 20:  # 20 is JSON output.
+            raise RuntimeError('invalid response type from disk.list command')
+
+        data = result.data.strip()
+        if data:
+            return json.loads(data)
+        else:
+            return {}

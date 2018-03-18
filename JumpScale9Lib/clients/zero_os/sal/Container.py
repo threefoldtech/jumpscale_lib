@@ -232,7 +232,7 @@ class Container():
         while start + timeout > time.time():
             if port not in self.node.freeports(port, nrports=3):
                 return True
-            time.sleep(0.2)
+            time.sleep(1)
         return False
 
     def start(self):
