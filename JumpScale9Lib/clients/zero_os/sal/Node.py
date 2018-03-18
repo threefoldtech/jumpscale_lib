@@ -35,7 +35,6 @@ class Node():
         self.capacity = Capacity(self)
         self.client = client
 
-
     @property
     def name(self):
         def get_nic_hwaddr(nics, name):
@@ -275,25 +274,23 @@ class Node():
 
     def wipedisks(self):
         logger.debug('Wiping node {hostname}'.format(**self.client.info.os()))
-        mounteddevices = {mount['device']: mount for mount in self.client.info.disk()}
-
-        def getmountpoint(device):
-            for mounteddevice, mount in mounteddevices.items():
-                if mounteddevice.startswith(device):
-                    return mount
 
         jobs = []
-        for disk in self.client.disk.list()['blockdevices']:
-            devicename = '/dev/{}'.format(disk['kname'])
-            if disk['tran'] == 'usb':
-                logger.debug('   * Not wiping usb {kname} {model}'.format(**disk))
+        # for disk in self.client.disk.list():
+        for disk in self.disks.list():
+            if disk.type == StorageType.CDROM:
+                logger.debug('   * Not wiping cdrom {kname} {model}'.format(**disk._disk_info))
                 continue
-            mount = getmountpoint(devicename)
-            if not mount:
-                logger.debug('   * Wiping disk {kname}'.format(**disk))
-                jobs.append(self.client.system('dd if=/dev/zero of={} bs=1M count=50'.format(devicename)))
+
+            if disk.transport == 'usb':
+                logger.debug('   * Not wiping usb {kname} {model}'.format(**disk._disk_info))
+                continue
+
+            if not disk.mountpoint:
+                logger.debug('   * Wiping disk {kname}'.format(**disk._disk_info))
+                jobs.append(self.client.system('dd if=/dev/zero of={} bs=1M count=50'.format(disk.devicename)))
             else:
-                logger.debug('   * Not wiping {device} mounted at {mountpoint}'.format(device=devicename, mountpoint=mount['mountpoint']))
+                logger.debug('   * Not wiping {device} mounted at {mountpoint}'.format(device=disk.devicename, mountpoint=disk.mountpoint))
 
         # wait for wiping to complete
         for job in jobs:

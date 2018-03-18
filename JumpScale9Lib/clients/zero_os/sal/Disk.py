@@ -16,9 +16,9 @@ class StorageType(Enum):
 class Disks():
 
     """Subobject to list disks"""
+
     def __init__(self, node):
         self.node = node
-
 
     @property
     def client(self):
@@ -29,13 +29,11 @@ class Disks():
         List of disks on the node
         """
         disks = []
-        disk_list = self.client.disk.list()
-        if 'blockdevices' in disk_list:
-            for disk_info in self.client.disk.list()['blockdevices']:
-                disks.append(Disk(
-                    node=self.node,
-                    disk_info=disk_info
-                ))
+        for disk_info in self.client.disk.list():
+            disks.append(Disk(
+                node=self.node,
+                disk_info=disk_info
+            ))
         return disks
 
     def get(self, name):
@@ -69,6 +67,7 @@ class Disk(Mountable):
         self.type = None
         self.partitions = []
         self.transport = None
+        self._disk_info = disk_info
 
         self._load(disk_info)
 
@@ -87,11 +86,10 @@ class Disk(Mountable):
 
     def _load(self, disk_info):
         self.name = disk_info['name']
-        detail = self.client.disk.getinfo(self.name)
         self.size = int(disk_info['size'])
-        self.blocksize = detail['blocksize']
-        if detail['table'] != 'unknown':
-            self.partition_table = detail['table']
+        self.blocksize = disk_info['blocksize']
+        if disk_info['table'] != 'unknown':
+            self.partition_table = disk_info['table']
         self.mountpoint = disk_info['mountpoint']
         self.model = disk_info['model']
         self.type = self._disk_type(disk_info)
@@ -163,7 +161,7 @@ class Disk(Mountable):
             part_type=part_type,
         )
         after = {}
-        for disk in self.client.disk.list()['blockdevices']:
+        for disk in self.client.disk.list():
             if disk['name'] != self.name:
                 continue
             for part in disk.get('children', []):
