@@ -2,8 +2,6 @@ from . import typchk
 from js9 import j
 
 
-
-
 class KvmManager():
     _iotune_dict = {
         'totalbytessecset': typchk.Or(bool, typchk.Missing()),
@@ -117,6 +115,17 @@ class KvmManager():
         'uuid': str,
         'media': _media_dict,
     }
+    _create_image_chk = typchk.Checker({
+        'file_name': str,
+        'format': str,
+        'size': str,
+    })
+
+    _convert_image_chk = typchk.Checker({
+        'output_file': str,
+        'input_file': str,
+        'output_format': str,
+    })
 
     _limit_disk_io_dict.update(_iotune_dict)
 
@@ -124,7 +133,6 @@ class KvmManager():
 
     def __init__(self, client):
         self._client = client
-
 
     def create(self, name, media=None, flist=None, cpu=2, memory=512, nics=None, port=None, mount=None, tags=None):
         """
@@ -462,3 +470,37 @@ class KvmManager():
         :return:
         """
         return self._client.json('kvm.list', {})
+
+    def create_image(self, file_name, size, format='qcow2'):
+        """
+        Create disk image
+        :param file_name: disk image file name
+        :param size: is the disk image size in bytes. Optional suffixes
+                'k' or 'K' (kilobyte, 1024), 'M' (megabyte, 1024k), 'G' (gigabyte, 1024M),
+                'T' (terabyte, 1024G), 'P' (petabyte, 1024T) and 'E' (exabyte, 1024P)  are
+                supported. 'b' is ignored.
+        :param format: disk image format
+        """
+        args = {
+            'file_name': file_name,
+            'size': size,
+            'format': format,
+        }
+        self._create_image_chk.check(args)
+        return self._client.sync('kvm.create-image', args)
+
+    def convert_image(self, input_file, output_file, output_format):
+        """
+        Convert disk image
+        :param input_file: image to convert
+        :param output_file: output of the conversion
+        :param output_format: outpput image format
+        :return:
+        """
+        args = {
+            'input_file': input_file,
+            'output_file': output_file,
+            'output_format': output_format,
+        }
+        self._convert_image_chk.check(args)
+        return self._client.sync('kvm.convert-image', args)

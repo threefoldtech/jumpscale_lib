@@ -4,12 +4,14 @@ from .abstracts import Mountable
 from .Partition import Partition
 from js9 import j
 
+
 class StorageType(Enum):
     SSD = "SSH"
     HDD = "HDD"
     NVME = "NVME"
     ARCHIVE = "ARCHIVE"
     CDROM = "CDROM"
+
 
 class Disks():
 
