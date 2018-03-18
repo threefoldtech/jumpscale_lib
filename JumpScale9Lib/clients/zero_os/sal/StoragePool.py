@@ -39,6 +39,7 @@ def _prepare_device(node, devicename):
 
 
 class StoragePools:
+
     def __init__(self, node):
         self.node = node
 
@@ -69,6 +70,9 @@ class StoragePools:
         raise ValueError("Could not find StoragePool with name {}".format(name))
 
     def create(self, name, devices, metadata_profile, data_profile, overwrite=False):
+        if not isinstance(devices, list):
+            raise ValueError("devices must be a list not %s" % type(devices))
+
         label = 'sp_{}'.format(name)
         logger.debug("create storagepool %s", label)
 
@@ -206,7 +210,7 @@ class StoragePool(Mountable):
 
     def get_devices_and_status(self):
         device_map = []
-        disks = self.client.disk.list()['blockdevices']
+        disks = self.client.disk.list()
         pool_status = 'healthy'
         for device in self.devices:
             info = None
@@ -320,6 +324,7 @@ class StoragePool(Mountable):
 
 
 class FileSystem():
+
     def __init__(self, name, pool):
 
         self.name = name
@@ -398,6 +403,7 @@ class FileSystem():
 
 
 class Snapshot():
+
     def __init__(self, name, filesystem):
 
         self.filesystem = filesystem

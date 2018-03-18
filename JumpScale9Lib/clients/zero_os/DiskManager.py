@@ -4,7 +4,6 @@ from . import typchk
 from js9 import j
 
 
-
 class DiskManager:
     _mktable_chk = typchk.Checker({
         'disk': str,
