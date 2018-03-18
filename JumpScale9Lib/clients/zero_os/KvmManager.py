@@ -487,7 +487,7 @@ class KvmManager():
             'format': format,
         }
         self._create_image_chk.check(args)
-        return self._client.sync('kvm.create_image', args)
+        return self._client.sync('kvm.create-image', args)
 
     def convert_image(self, input_file, output_file, output_format):
         """
@@ -503,4 +503,4 @@ class KvmManager():
             'output_format': output_format,
         }
         self._convert_image_chk.check(args)
-        return self._client.sync('kvm.convert_image', args)
+        return self._client.sync('kvm.convert-image', args)
