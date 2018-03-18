@@ -117,7 +117,6 @@ class BaseClient():
                 result.code = 500
             raise ResultError(msg='%s' % result.data, code=result.code)
 
-
         return result
 
     def json(self, command, arguments, tags=None, id=None):
