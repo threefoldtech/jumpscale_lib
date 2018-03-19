@@ -60,7 +60,6 @@ class Sandboxer(JSBASE):
         self.python = SandboxPython()
 
     def _ldd(self, path, result={}):
-
         if j.sal.fs.getFileExtension(path) in ["py", "pyc", "cfg", "hrd", "bak", "txt",
                                                "png", "gif", "css", "js", "wiki", "spec", "sh", "jar", "xml", "lua"]:
             return result
@@ -119,6 +118,8 @@ class Sandboxer(JSBASE):
         """
         if dest is None:
             dest = "%s/bin/" % j.dirs.BASEDIR
+
+        j.sal.fs.createDir(dest)
         if j.sal.fs.isDir(path):
             # do all files in dir
             for item in j.sal.fs.listFilesInDir(path, recursive=False, followSymlinks=True, listSymlinks=False):
@@ -173,8 +174,6 @@ class Sandboxer(JSBASE):
 
         j.sal.fswalker.walkFunctional(path, callbackFunctionFile=callbackFile, callbackFunctionDir=None, arg=(
             path, dest), callbackForMatchDir=callbackForMatchDir, callbackForMatchFile=callbackForMatchFile)
-
-
 
     # def dedupe(self, path, storpath, name, excludeFiltersExt=[
     #            "pyc", "bak"], append=False, reset=False, removePrefix="", compress=True, delete=False, excludeDirs=[]):
@@ -266,4 +265,3 @@ class Sandboxer(JSBASE):
 
     #     out = j.data.text.sort(out)
     #     j.sal.fs.writeFile(plistfile, out)
-

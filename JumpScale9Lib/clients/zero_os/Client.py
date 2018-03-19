@@ -4,6 +4,8 @@ import socket
 import uuid
 
 import redis
+import jwt
+import time
 from js9 import j
 
 from . import typchk
@@ -62,10 +64,24 @@ class Client(BaseClient, JSConfigClientBase):
         self._nft = Nft(self)
         self._config_manager = Config(self)
         self._aggregator = AggregatorManager(self)
+        self._jwt_expire_timestamp = 0
         self._web = WebManager(self)
 
     @property
     def _redis(self):
+        password = self.config.data['password_']
+        if password and not self._jwt_expire_timestamp:
+            jwt_data = jwt.decode(password, verify=False)
+            self._jwt_expire_timestamp = jwt_data['exp']
+        if self._jwt_expire_timestamp and self._jwt_expire_timestamp - 300 < time.time():
+            password = j.clients.itsyouonline.refresh_jwt_token(password, validity=3600)
+            self.config.data_set('password_', password)
+            self.config.save()
+            if self.__redis:
+                self.__redis = None
+            jwt_data = jwt.decode(password, verify=False)
+            self._jwt_expire_timestamp = jwt_data['exp']
+
         if self.__redis is None:
             timeout = self.config.data['timeout']
             socket_timeout = (timeout + 5) if timeout else 15
@@ -76,6 +92,7 @@ class Client(BaseClient, JSConfigClientBase):
                 socket_keepalive_options[socket.TCP_KEEPINTVL] = 1
             if hasattr(socket, 'TCP_KEEPIDLE'):
                 socket_keepalive_options[socket.TCP_KEEPIDLE] = 1
+
 
             self.__redis = redis.Redis(host=self.config.data['host'],
                                        port=self.config.data['port'],
