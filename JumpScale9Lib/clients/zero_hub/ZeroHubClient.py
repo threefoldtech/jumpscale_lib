@@ -14,9 +14,9 @@ class ZeroHubClient(JSConfigClient):
     Provide an easy way to communicate and do some actions on the ZeroHub
     """
 
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=None):
         JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE)
+                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         self.token = self.config.data['token_']
         self.username = self.config.data['username']
         self.client = ZHubClient("https://staging.hub.gig.tech/api")
@@ -114,3 +114,8 @@ class ZeroHubClient(JSConfigClient):
 
         """
         pass
+
+    def exists(self, chunks):
+        import ipdb
+        ipdb.set_trace()
+        self.api.exists.exists_post(chunks).json()

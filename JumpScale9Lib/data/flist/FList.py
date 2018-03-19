@@ -14,6 +14,7 @@ import re
 import pyblake2
 import capnp
 from . import model_capnp as ModelCapnp
+import base64
 
 from .models import DirModel
 from .models import DirCollection
@@ -647,7 +648,6 @@ class FList(JSBASE):
             subobj.attributes.file.blocks = hashs
             dirobj.save()
 
-
         def procLink(dirobj, type, name, subobj, args):
             pass
 
@@ -663,6 +663,78 @@ class FList(JSBASE):
             linkFunction=procLink,
             args=result
         )
+
+    def populate_missing_chunks(self, hubdirect_instance='main'):
+        import g8storclient
+
+        directclient = j.clients.hubdirect.get(hubdirect_instance)
+
+        all_files = {}
+        bykeys = {}
+        to_upload = []
+
+        for source, _, files in os.walk(self.rootpath):
+            for f in files:
+                path = os.path.join(source, f)
+                data = g8storclient.encrypt(path) or []
+                all_files[f] = data
+
+                # keeping a way to find the chunk back from it's hash
+                for id, chunk in enumerate(data):
+                    bykeys[chunk['hash']] = {'file': f, 'index': id}
+
+        # exists_post now wants binary keys
+        # we know we are dealing with strings hash, let's simply encode them before
+        for file in all_files:
+            for id, chunk in enumerate(all_files[file]):
+                all_files[file][id]['bhash'] = chunk['hash'].encode('utf-8')
+
+        for path, chunks in all_files.items():
+            res = directclient.exists.exists_post(set([chunk['bhash'] for chunk in chunks]))
+            keys = res.json()
+
+            # let's adding all missing keys
+            # to_upload += [base64.b64decode(key).decode('utf-8') for key in keys]
+            to_upload += keys
+
+        self.logger.info("[+] %d chunks to upload" % len(to_upload))
+
+        if len(to_upload) == 0:
+            return
+
+        upload = ()
+        currentsize = 0
+
+        for bhash in to_upload:
+            # we will upload all theses chunks, we decode them because we know
+            # theses are string hashs
+            hash = base64.b64decode(bhash).decode('utf-8')
+
+            if not bykeys.get(hash):
+                raise RuntimeError("Key not indexed, this should not happend")
+
+            filename = bykeys[hash]['file']
+            chunkindex = bykeys[hash]['index']
+
+            chunk = all_files[filename][chunkindex]
+            payload = base64.b64encode(chunk['data'])
+
+            upload += (('files[]', (bhash, payload)),)
+
+            currentsize += len(payload)
+
+            # if this pack is more than 20MB, uploading it
+            if currentsize > 20 * 1024 * 1024:
+                self.logger.info("[+] uploading part of the data...")
+                try:
+                    directclient.insert.insert_put(upload)
+                    currentsize = 0
+                except Exception as e:
+                    # weird error. could be an existing chunk undetected by previous check
+                    self.logger.error(e)
+
+        self.logger.info("[+] uploading last data...")
+        directclient.insert.insert_put(upload)
 
     def destroy(self):
         self.aciCollection.destroy()

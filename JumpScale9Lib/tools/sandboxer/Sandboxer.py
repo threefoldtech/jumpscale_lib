@@ -109,6 +109,7 @@ class Sandboxer(JSBASE):
         not needed to use manually, is basically ldd
         """
         result = self._ldd(path)
+        result.append(path)
         return result
 
     def sandboxLibs(self, path, dest=None, recursive=False):
@@ -126,13 +127,14 @@ class Sandboxer(JSBASE):
                 if j.sal.fs.isExecutable(item) or j.sal.fs.getFileExtension(item) == "so":
                     self.sandboxLibs(item, dest, recursive=False)
             if recursive:
-                for item in j.sal.fs.listDirsInDir(path, recursive=False):
+                for item in j.sal.fs.listFilesAndDirsInDir(path, recursive=False):
                     self.sandboxLibs(item, dest, recursive)
 
         else:
-            result = self.findLibs(path)
-            for name, deb in list(result.items()):
-                deb.copyTo(dest)
+            if j.sal.fs.isExecutable(item) or j.sal.fs.getFileExtension(item) == "so":
+                result = self.findLibs(path)
+                for _, deb in list(result.items()):
+                    deb.copyTo(dest)
 
     def copyTo(self, path, dest, excludeFileRegex=[], excludeDirRegex=[], excludeFiltersExt=["pyc", "bak"]):
 
