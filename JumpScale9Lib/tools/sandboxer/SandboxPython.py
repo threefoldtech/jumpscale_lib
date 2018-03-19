@@ -146,6 +146,12 @@ class SandboxPython(JSBASE):
         self._zip(dest=dest)
         self.env_write(dest=dest)
 
+        j.tools.sandboxer.sandboxLibs("%s/bin"%self.PACKAGEDIR,"%s/lib",True)
+        j.tools.sandboxer.sandboxLibs("%s/lib"%self.PACKAGEDIR,"%s/lib",True)
+
+        print("to test do:")
+        print("'cd %s;source env.sh;js9"%self.PACKAGEDIR)
+
     def _zip(self,dest=""):
         if dest == "":
             dest = j.dirs.BUILDDIR + "/sandbox/python3/"                
