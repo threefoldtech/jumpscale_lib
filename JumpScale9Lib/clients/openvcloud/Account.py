@@ -70,6 +70,11 @@ class Account(Authorizables):
         """
         if not location:
             location = self.client.config.data["location"]
+        if location == "":
+            self.client.config.data = {"location":self.client.locations[0]["name"]}
+            self.client.config.save()
+            location = self.client.config.data["location"]
+
         for space in self.spaces:
             if space.model['name'] == name and space.model['location'] == location:
                 return space
