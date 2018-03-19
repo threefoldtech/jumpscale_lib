@@ -109,7 +109,9 @@ class Sandboxer(JSBASE):
         not needed to use manually, is basically ldd
         """
         result = self._ldd(path)
-        result.append(path)
+        name = j.sal.fs.getBaseName(path)
+        result[name] = Dep(name, path)
+        self._done.append(path)
         return result
 
     def sandboxLibs(self, path, dest=None, recursive=False):
@@ -119,19 +121,19 @@ class Sandboxer(JSBASE):
         """
         if dest is None:
             dest = "%s/bin/" % j.dirs.BASEDIR
-
         j.sal.fs.createDir(dest)
+
         if j.sal.fs.isDir(path):
             # do all files in dir
             for item in j.sal.fs.listFilesInDir(path, recursive=False, followSymlinks=True, listSymlinks=False):
-                if j.sal.fs.isExecutable(item) or j.sal.fs.getFileExtension(item) == "so":
+                if (j.sal.fs.isFile(item) and j.sal.fs.isExecutable(item)) or j.sal.fs.getFileExtension(item) == "so":
                     self.sandboxLibs(item, dest, recursive=False)
             if recursive:
                 for item in j.sal.fs.listFilesAndDirsInDir(path, recursive=False):
                     self.sandboxLibs(item, dest, recursive)
 
         else:
-            if j.sal.fs.isExecutable(item) or j.sal.fs.getFileExtension(item) == "so":
+            if (j.sal.fs.isFile(path) and j.sal.fs.isExecutable(path)) or j.sal.fs.getFileExtension(path) == "so":
                 result = self.findLibs(path)
                 for _, deb in list(result.items()):
                     deb.copyTo(dest)
