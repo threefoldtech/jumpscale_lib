@@ -305,11 +305,11 @@ class Node():
                                    mount['opts']))
         return allmounts
 
-    def is_running(self):
+    def is_running(self, timeout=30):
         state = False
         start = time.time()
         err = None
-        while time.time() < start + 30:
+        while time.time() < start + timeout:
             try:
                 self.client.testConnectionAttempts = 0
                 state = self.client.ping()
