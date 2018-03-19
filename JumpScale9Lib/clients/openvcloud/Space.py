@@ -56,7 +56,7 @@ class Space(Authorizables):
 
         while self._model["status"] == 'DEPLOYING' and j.data.time.epoch < timeout:
             self.logger.info(
-                "Cloudspace is still deploying, checking again in 2 second"
+                "Cloudspace is still deploying, checking again in a second"
             )
             time.sleep(1)
             self.refresh()
