@@ -33,7 +33,7 @@ class Container(JSBASE):
     @property
     def ssh_port(self):
         if self._ssh_port is None:
-            self._ssh_port = self.get_public_port(22)
+            self._ssh_port = self.public_port_get(22)
         return self._ssh_port
 
     @property
@@ -96,19 +96,19 @@ class Container(JSBASE):
     def info(self):
         return self.obj
 
-    def isRunning(self):
+    def is_running(self):
         """
         Check conainter is running.
         """
         return self.info["State"] == 'running'
 
-    def getIp(self):
+    def ip_get(self):
         """
         Return ip of docker on hostmachine.
         """
         return self.info['NetworkSettings']['Networks']['bridge']['IPAddress']
 
-    def get_public_port(self, private_port):
+    def public_port_get(self, private_port):
         """
         Return public port that is forwarded to a port inside docker,
         this will only work if container has port forwarded the ports during
@@ -117,7 +117,7 @@ class Container(JSBASE):
         @param private_port int: private port number to look for its public port
         """
 
-        if self.isRunning() is False:
+        if self.is_running() is False:
             raise j.exceptions.RuntimeError(
                 "docker %s is not running cannot get pub port." % self)
 
@@ -129,7 +129,7 @@ class Container(JSBASE):
         raise j.exceptions.Input("cannot find publicport for ssh?")
 
 
-    def authorizeSSH(self, sshkeyname, password):
+    def ssh_authorize(self, sshkeyname, password):
         home = j.tools.prefab.local.bash.home
         user_info = [j.tools.prefab.local.system.user.check(user) for user in j.tools.prefab.local.system.user.list()]
         users = [i['name'] for i in user_info if i['home'] == home]
@@ -161,7 +161,7 @@ class Container(JSBASE):
         # self.cleanAysfs()
 
         try:
-            if self.isRunning():
+            if self.is_running():
                 self.stop()
             self.client.remove_container(self.id)
         except Exception as e:

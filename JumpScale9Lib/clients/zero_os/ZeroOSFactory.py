@@ -145,3 +145,16 @@ class SALFactory():
 
     def get_restic(self, container, repo):
         return Restic(container, repo)
+
+    def format_ports(self, ports):
+        """
+        Formats ports from ["80:8080"] to {80: 8080}
+        :param ports: list of ports to format
+        :return: formated ports dict
+        """
+        formatted_ports = {}
+        for p in ports:
+            src, dst = p.split(":")
+            formatted_ports[int(src)] = int(dst)
+
+        return formatted_ports

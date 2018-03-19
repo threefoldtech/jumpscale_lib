@@ -226,13 +226,14 @@ class Container():
         if is_running:
             raise RuntimeError('Failed to stop job {}'.format(id))
 
-    def is_port_listening(self, port, timeout=60):
+    def is_port_listening(self, port, timeout=60, network=('tcp', 'tcp6')):
         import time
         start = time.time()
         while start + timeout > time.time():
-            if port not in self.node.freeports(port, nrports=3):
-                return True
-            time.sleep(0.2)
+            for lport in self.client.info.port():
+                if lport['network'] in network and lport['port'] == port:
+                    return True
+            time.sleep(1)
         return False
 
     def start(self):
