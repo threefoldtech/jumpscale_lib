@@ -52,7 +52,7 @@ class Space(Authorizables):
     @property
     def model(self):
 
-        timeout = j.data.time.epoch + 20
+        timeout = j.data.time.epoch + 50
 
         while self._model["status"] == 'DEPLOYING' and j.data.time.epoch < timeout:
             self.logger.info(
