@@ -17,14 +17,15 @@ from .models import DirCollection
 from .models import ACIModel
 from .models import ACICollection
 # from .FuseExample import FuseExample
-JSBASE = j.application.jsbase_get_class()
 
-class FListFactory(JSBASE):
+logger = j.logger.get('j.tools.flist.merger')
+
+
+class FListFactory:
 
     def __init__(self):
         self.__jslocation__ = "j.tools.flist"
         self.__imports__ = "brotli,pycapnp"
-        JSBASE.__init__(self)
 
     def getCapnpSchema(self):
         return ModelCapnp
@@ -39,8 +40,8 @@ class FListFactory(JSBASE):
         # now default is mem, if we want redis as default store uncomment next, but leave for now, think mem here ok
         if kvs is None:
             kvs = j.data.kvs.getRedisStore(name="flist",
-                                              namespace=name,
-                                              unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
+                                           namespace=name,
+                                           unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
 
         collection = j.data.capnp.getModelCollection(schema.Dir,
                                                      category="flist_%s" % name,
@@ -59,8 +60,8 @@ class FListFactory(JSBASE):
 
         if kvs is None:
             kvs = j.data.kvs.getRedisStore(name="flist",
-                                              namespace=name,
-                                              unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
+                                           namespace=name,
+                                           unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
 
         collection = j.data.capnp.getModelCollection(schema.ACI,
                                                      category="ACI_%s" % name,
@@ -103,14 +104,8 @@ class FListFactory(JSBASE):
         @param namespace, this normally is some name you cannot guess, important otherwise no security
         Return a FlistMetadata object
         """
-        dirCollection = self.getDirCollectionFromDB(name="%s:dir" % namespace, kvs=kvs)
-        aciCollection = self.getACICollectionFromDB(name="%s:aci" % namespace, kvs=kvs)
-        userGroupCollection = self.getUserGroupCollectionFromDB(name="%s:users" % namespace, kvs=kvs)
-        return FListMetadata(rootpath=rootpath,
-                             namespace=namespace,
-                             dirCollection=dirCollection,
-                             aciCollection=aciCollection,
-                             userGroupCollection=userGroupCollection)
+        flist = self.getFlist(rootpath=rootpath, namespace=namespace, kvs=kvs)
+        return FListMetadata(flist)
 
     def get_archiver(self):
         """
@@ -133,7 +128,7 @@ class FListFactory(JSBASE):
         flist.add(testDir)
 
         def pprint(path, ddir, name):
-            self.logger.debug(path)
+            logger.debug(path)
 
         flist.walk(fileFunction=pprint, dirFunction=pprint, specialFunction=pprint, linkFunction=pprint)
 
@@ -142,7 +137,7 @@ class FListFactory(JSBASE):
         fl.destroy()
 
 
-class FListArchiver(JSBASE):
+class FListArchiver:
     # This is a not efficient way, the only other possibility
     # is to call brotli binary to compress big file if needed
     # currently, this in-memory way is used
@@ -154,7 +149,6 @@ class FListArchiver(JSBASE):
             self._env = 'IPFS_PATH=%s' % cl.core.replace('$JSCFGDIR/ipfs/main')
         else:
             self._env = 'IPFS_PATH=%s' % ipfs_cfgdir
-        JSBASE.__init__(self)
 
     def _compress(self, source, destination):
         with open(source, 'rb') as content_file:
@@ -188,7 +182,7 @@ class FListArchiver(JSBASE):
             if not flist.isRegular(files[0]):
                 continue
 
-                self.logger.debug("Processing: %s" % hash)
+                logger.debug("Processing: %s" % hash)
 
             root = "%s/%s/%s" % (backend, hash[0:2], hash[2:4])
             file = hash
@@ -203,10 +197,10 @@ class FListArchiver(JSBASE):
 
             # adding it to ipfs network
             hash = self.push_to_ipfs(target)
-            self.logger.debug("Network hash: %s" % hash)
+            logger.debug("Network hash: %s" % hash)
 
             # updating flist hash with ipfs hash
             for f in files:
                 flist.setHash(f, hash)
 
-        self.logger.debug("Files compressed and shared")
+        logger.debug("Files compressed and shared")
