@@ -1,13 +1,9 @@
 import ipaddress
 from js9 import j
-from zeroos.orchestrator.sal import templates
-
-
-
+from .. import templates
 
 class Network():
     def __init__(self, iface, cidr):
-
         self.iface = iface
         ipiface = ipaddress.IPv4Interface(cidr)
         self.ipaddress = str(ipiface.ip)
@@ -19,7 +15,6 @@ class Firewall():
         '''
 
         '''
-
         self.container = container
         self.publicnetwork = publicnetwork
         self.privatenetworks = privatenetworks

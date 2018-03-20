@@ -93,7 +93,6 @@ class Client(BaseClient, JSConfigClientBase):
             if hasattr(socket, 'TCP_KEEPIDLE'):
                 socket_keepalive_options[socket.TCP_KEEPIDLE] = 1
 
-
             self.__redis = redis.Redis(host=self.config.data['host'],
                                        port=self.config.data['port'],
                                        password=self.config.data['password_'],

@@ -6,7 +6,6 @@ from io import BytesIO
 import netaddr
 import redis
 from js9 import j
-from JumpScale9Lib.clients.zero_os.Client import Client
 
 from .Capacity import Capacity
 from .Container import Containers
@@ -14,12 +13,13 @@ from .Disk import Disks, StorageType
 from .healthcheck import HealthCheck
 from .Network import Network
 from .StoragePool import StoragePools
+from .gateway import Gateways
 
 Mount = namedtuple('Mount', ['device', 'mountpoint', 'fstype', 'options'])
 logger = j.logger.get(__name__)
 
 
-class Node():
+class Node:
     """Represent a Zero-OS Server"""
 
     def __init__(self, client):
@@ -30,6 +30,7 @@ class Node():
         self.disks = Disks(self)
         self.storagepools = StoragePools(self)
         self.containers = Containers(self)
+        self.gateways = Gateways()
         self.network = Network(self)
         self.healthcheck = HealthCheck(self)
         self.capacity = Capacity(self)
@@ -187,8 +188,8 @@ class Node():
         node_mountpoints = self.client.disk.mounts()
 
         for disk in self.disks.list():
-            # this check is there to be able to test with a qemu setup
-            if disk.model == 'QEMU HARDDISK   ':
+            # this check is there to be able to test with a qemu setup. Not needed if you start qemu with --nodefaults
+            if disk.model in ['QEMU HARDDISK   ', 'QEMU DVD-ROM    ']:
                 continue
 
             # temporary fix to ommit overwriting the usb boot disk
@@ -208,7 +209,7 @@ class Node():
                 if len(sps) > 1:
                     raise RuntimeError('Found more than 1 storagepool for device %s' % devicename)
                 elif not sps:
-                    sp = self.storagepools.create(disk.name, devices=[devicename], metadata_profile='single', data_profile='single', overwrite=True)
+                    sp = self.storagepools.create(disk.name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
                 else:
                     sp = sps[0]
 
@@ -305,11 +306,11 @@ class Node():
                                    mount['opts']))
         return allmounts
 
-    def is_running(self):
+    def is_running(self, timeout=30):
         state = False
         start = time.time()
         err = None
-        while time.time() < start + 30:
+        while time.time() < start + timeout:
             try:
                 self.client.testConnectionAttempts = 0
                 state = self.client.ping()

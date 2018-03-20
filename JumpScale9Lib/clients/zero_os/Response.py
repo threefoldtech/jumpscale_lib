@@ -173,7 +173,8 @@ class Response():
         r = self._client._redis
         flag = '{}:flag'.format(self._queue)
         if bool(r.execute_command('LKEYEXISTS', flag)):
-            return r.execute_command('LTTL', flag) == -1
+            ttl = r.execute_command('LTTL', flag)
+            return ttl == -1 or ttl is None
 
         return False
 
@@ -250,13 +251,16 @@ class Response():
         while maxwait > 0:
             if not self.exists:
                 raise JobNotFoundError(self.id)
-            v = r.brpoplpush(self._queue, self._queue, min(maxwait, 10))
-            if v is not None:
-                payload = json.loads(v.decode())
-                r = Return(payload)
-                logger.debug('%s << %s, stdout="%s", stderr="%s", data="%s"',
-                             self._id, r.state, r.stdout, r.stderr, r.data[:1000])
-                return r
+            try:
+                v = r.brpoplpush(self._queue, self._queue, min(maxwait, 10))
+                if not v is None:
+                    payload = json.loads(v.decode())
+                    r = Return(payload)
+                    logger.debug('%s << %s, stdout="%s", stderr="%s", data="%s"',
+                                self._id, r.state, r.stdout, r.stderr, r.data[:1000])
+                    return r
+            except TimeoutError:
+                pass
             logger.debug('%s still waiting (%ss)', self._id, int(time.time() - start))
             maxwait -= 10
         raise TimeoutError()
