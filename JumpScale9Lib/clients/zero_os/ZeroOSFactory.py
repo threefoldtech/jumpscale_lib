@@ -8,6 +8,8 @@ from .sal.Node import Node
 from .sal.Restic import Restic
 from .sal.TfChain import TfChain
 from .sal.ZeroDB import ZeroDB
+from .sal.VM import VM
+from .sal.Hypervisor import Hypervisor
 
 
 JSConfigFactoryBase = j.tools.configmanager.base_class_configs
@@ -145,6 +147,12 @@ class SALFactory():
 
     def get_restic(self, container, repo):
         return Restic(container, repo)
+
+    def get_vm(self, hypervisor_name, node):
+        return VM(hypervisor_name, node)
+
+    def get_hypervisor(self, name, uuid, node):
+        return Hypervisor(name, uuid, node)
 
     def format_ports(self, ports):
         """
