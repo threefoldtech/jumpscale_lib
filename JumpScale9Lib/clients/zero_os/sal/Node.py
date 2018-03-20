@@ -6,7 +6,6 @@ from io import BytesIO
 import netaddr
 import redis
 from js9 import j
-from JumpScale9Lib.clients.zero_os.Client import Client
 
 from .Capacity import Capacity
 from .Container import Containers
@@ -14,12 +13,13 @@ from .Disk import Disks, StorageType
 from .healthcheck import HealthCheck
 from .Network import Network
 from .StoragePool import StoragePools
+from .gateway import Gateways
 
 Mount = namedtuple('Mount', ['device', 'mountpoint', 'fstype', 'options'])
 logger = j.logger.get(__name__)
 
 
-class Node():
+class Node:
     """Represent a Zero-OS Server"""
 
     def __init__(self, client):
@@ -30,6 +30,7 @@ class Node():
         self.disks = Disks(self)
         self.storagepools = StoragePools(self)
         self.containers = Containers(self)
+        self.gateways = Gateways()
         self.network = Network(self)
         self.healthcheck = HealthCheck(self)
         self.capacity = Capacity(self)

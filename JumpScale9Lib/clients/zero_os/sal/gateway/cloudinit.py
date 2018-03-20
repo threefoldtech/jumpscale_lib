@@ -2,8 +2,6 @@ import time
 from js9 import j
 
 
-
-
 class CloudInit():
     def __init__(self, container, config):
 

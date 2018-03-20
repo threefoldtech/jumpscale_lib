@@ -1,7 +1,6 @@
 import logging
 import time
 from io import BytesIO
-from js9 import j
 import signal
 
 logging.basicConfig(level=logging.INFO)
@@ -65,7 +64,6 @@ class Container():
         self._client = None
         self.logger = logger or default_logger
 
-        self._ays = None
         for nic in self.nics:
             nic.pop('token', None)
             if nic.get('config', {}).get('gateway', ''):
@@ -94,39 +92,6 @@ class Container():
                    arguments['env'],
                    logger=logger)
 
-    @classmethod
-    def from_ays(cls, service, password=None, logger=None, timeout=120):
-        logger = logger or default_logger
-        logger.debug("create container from service (%s)", service)
-        from .Node import Node
-        node = Node.from_ays(service.parent, password, timeout)
-        ports = {}
-        for portmap in service.model.data.ports:
-            source, dest = portmap.split(':')
-            ports[int(source)] = int(dest)
-        nics = [nic.to_dict() for nic in service.model.data.nics]
-        mounts = service.model.data.to_dict().get('mounts', [])
-        for mount in mounts:
-            fs_service = service.aysrepo.serviceGet('filesystem', mount['filesystem'])
-            mount['storagepool'] = fs_service.parent.name
-
-        container = cls(
-            name=service.name,
-            node=node,
-            mounts=mounts,
-            nics=nics,
-            hostname=service.model.data.hostname,
-            flist=service.model.data.flist,
-            ports=ports,
-            host_network=service.model.data.hostNetworking,
-            storage=service.model.data.storage,
-            init_processes=[p.to_dict() for p in service.model.data.initProcesses],
-            privileged=service.model.data.privileged,
-            identity=service.model.data.identity,
-            logger=logger
-        )
-        return container
-
     @property
     def id(self):
         self.logger.debug("get container id")
@@ -143,6 +108,17 @@ class Container():
                 container['container']['id'] = int(containerid)
                 return container
         return
+
+    def add_nic(self, nic):
+        self.node.client.container.nic_add(self.id, nic)
+
+    def remove_nic(self, nicname):
+        for idx, nic in enumerate(self.info['info']):
+            if nic['name'] == nicname:
+                break
+        else:
+            return
+        self.node.client.container.nic_remove(self.id, idx)
 
     @property
     def client(self):
@@ -167,7 +143,7 @@ class Container():
         if self.hostname and self.hostname != self.name:
             tags.append(self.hostname)
 
-        # Populate the correct mounts dict if this instance was created using the `from_ays` function.
+        # Populate the correct mounts dict
         if type(self.mounts) == list:
             mounts = {}
             for mount in self.mounts:
@@ -260,13 +236,6 @@ class Container():
 
     def is_running(self):
         return self.node.is_running() and self.id is not None
-
-    @property
-    def ays(self):
-        if self._ays is None:
-            from JumpScale.sal.g8os.atyourservice.StorageCluster import ContainerAYS
-            self._ays = ContainerAYS(self)
-        return self._ays
 
     def waitOnJob(self, job):
         MAX_LOG = 15

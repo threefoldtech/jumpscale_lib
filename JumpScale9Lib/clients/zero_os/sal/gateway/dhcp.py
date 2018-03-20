@@ -1,13 +1,12 @@
 import signal
 import time
-from js9 import j
 from zeroos.orchestrator.sal import templates
 
 DNSMASQ = '/bin/dnsmasq --conf-file=/etc/dnsmasq.conf -d'
 
 
 
-class DHCP():
+class DHCP:
     def __init__(self, container, domain, dhcps):
 
         self.container = container
