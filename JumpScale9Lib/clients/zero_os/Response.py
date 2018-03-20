@@ -173,7 +173,8 @@ class Response():
         r = self._client._redis
         flag = '{}:flag'.format(self._queue)
         if bool(r.execute_command('LKEYEXISTS', flag)):
-            return r.execute_command('LTTL', flag) == -1
+            ttl = r.execute_command('LTTL', flag)
+            return ttl == -1 or ttl is None
 
         return False
 
