@@ -209,7 +209,7 @@ class Node:
                 if len(sps) > 1:
                     raise RuntimeError('Found more than 1 storagepool for device %s' % devicename)
                 elif not sps:
-                    sp = self.storagepools.create(disk.name, devices=[devicename], metadata_profile='single', data_profile='single', overwrite=True)
+                    sp = self.storagepools.create(disk.name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
                 else:
                     sp = sps[0]
 
