@@ -14,7 +14,7 @@ class ZeroHubClient(JSConfigClient):
     Provide an easy way to communicate and do some actions on the ZeroHub
     """
 
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=None):
         JSConfigClient.__init__(self, instance=instance,
                                 data=data, parent=parent, template=TEMPLATE)
         self.token = self.config.data['token_']
