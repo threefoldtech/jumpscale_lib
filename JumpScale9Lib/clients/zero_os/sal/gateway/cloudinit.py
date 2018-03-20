@@ -1,5 +1,4 @@
 import time
-from js9 import j
 
 
 class CloudInit():
