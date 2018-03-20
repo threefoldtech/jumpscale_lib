@@ -2,10 +2,10 @@ from js9 import j
 
 import re
 import os
+from .SandboxPython import SandboxPython
 
 JSBASE = j.application.jsbase_get_class()
 
-from .SandboxPython import SandboxPython
 class Dep(JSBASE):
 
     def __init__(self, name, path):
@@ -37,7 +37,6 @@ class Dep(JSBASE):
             # self.logger.debug("DEPCOPY: %s %s" % (self.path, dest))
             if not j.sal.fs.exists(dest):
                 j.sal.fs.copyFile(self.path, dest)
-            j.tools.sandboxer._done.append(dest)
 
     def __str__(self):
         return "%-40s %s" % (self.name, self.path)
@@ -52,23 +51,22 @@ class Sandboxer(JSBASE):
     def __init__(self):
         self.__jslocation__ = "j.tools.sandboxer"
         JSBASE.__init__(self)
-        self._done = []
         self.exclude = ["libpthread.so", "libltdl.so", "libm.so", "libresolv.so",
                         "libz.so", "libgcc", "librt", "libstdc++", "libapt", "libdbus", "libselinux"]
         self.original_size = 0
         self.new_size = 0
         self.python = SandboxPython()
 
-    def _ldd(self, path, result={}):
+    def _ldd(self, path, result={}, done=[]):
         if j.sal.fs.getFileExtension(path) in ["py", "pyc", "cfg", "hrd", "bak", "txt",
                                                "png", "gif", "css", "js", "wiki", "spec", "sh", "jar", "xml", "lua"]:
             return result
 
-        if path not in self._done:
+        if path not in done:
             self.logger.debug(("check:%s" % path))
 
             cmd = "ldd %s" % path
-            rc, out, err = j.sal.process.execute(cmd, die=False)
+            rc, out, _ = j.sal.process.execute(cmd, die=False)
             if rc > 0:
                 if out.find("not a dynamic executable") != -1:
                     return result
@@ -86,7 +84,7 @@ class Sandboxer(JSBASE):
                 lpath = lpath.strip()
                 if lpath == "":
                     continue
-                if name.find("libc.so") != 0 and name.lower().find("libx") != 0 and name not in self._done \
+                if name.find("libc.so") != 0 and name.lower().find("libx") != 0 and name not in done \
                         and name.find("libdl.so") != 0:
                     excl = False
                     for toexeclude in self.exclude:
@@ -96,12 +94,12 @@ class Sandboxer(JSBASE):
                         self.logger.debug(("found:%s" % name))
                         try:
                             result[name] = Dep(name, lpath)
-                            self._done.append(name)
-                            result = self._ldd(lpath, result)
+                            done.append(name)
+                            result = self._ldd(lpath, result, done=done)
                         except Exception as e:
                             self.logger.debug(e)
 
-        self._done.append(path)
+        done.append(path)
         return result
 
     def findLibs(self, path):
@@ -111,7 +109,6 @@ class Sandboxer(JSBASE):
         result = self._ldd(path)
         name = j.sal.fs.getBaseName(path)
         result[name] = Dep(name, path)
-        self._done.append(path)
         return result
 
     def sandboxLibs(self, path, dest=None, recursive=False):
