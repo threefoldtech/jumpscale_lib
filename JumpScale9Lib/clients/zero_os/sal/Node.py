@@ -188,8 +188,8 @@ class Node:
         node_mountpoints = self.client.disk.mounts()
 
         for disk in self.disks.list():
-            # this check is there to be able to test with a qemu setup
-            if disk.model == 'QEMU HARDDISK   ':
+            # this check is there to be able to test with a qemu setup. Not needed if you start qemu with --nodefaults
+            if disk.model in ['QEMU HARDDISK   ', 'QEMU DVD-ROM    ']:
                 continue
 
             # temporary fix to ommit overwriting the usb boot disk
