@@ -41,3 +41,7 @@ class Hypervisor:
     def reset(self):
         logger.info('Reseting kvm with uuid %s' % self.uuid)
         self.node.client.kvm.reset(self.uuid)
+
+    def resume(self):
+        logger.info('Resuming kvm with uuid %s' % self.uuid)
+        self.node.client.kvm.resume(self.uuid)
