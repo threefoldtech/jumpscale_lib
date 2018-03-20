@@ -1,6 +1,6 @@
 import signal
 import time
-from zeroos.orchestrator.sal import templates
+from .. import templates
 
 DNSMASQ = '/bin/dnsmasq --conf-file=/etc/dnsmasq.conf -d'
 

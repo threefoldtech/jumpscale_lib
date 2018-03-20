@@ -1,8 +1,6 @@
 import signal
 import time
-
 from .. import templates
-from js9 import j
 
 class HTTPServer():
     def __init__(self, container, httpproxies, type):

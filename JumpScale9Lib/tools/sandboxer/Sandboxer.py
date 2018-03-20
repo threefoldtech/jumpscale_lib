@@ -57,7 +57,7 @@ class Sandboxer(JSBASE):
         self.new_size = 0
         self.python = SandboxPython()
 
-    def _ldd(self, path, result={}, done=[]):
+    def _ldd(self, path, result=dict(), done=list()):
         if j.sal.fs.getFileExtension(path) in ["py", "pyc", "cfg", "hrd", "bak", "txt",
                                                "png", "gif", "css", "js", "wiki", "spec", "sh", "jar", "xml", "lua"]:
             return result
@@ -106,7 +106,7 @@ class Sandboxer(JSBASE):
         """
         not needed to use manually, is basically ldd
         """
-        result = self._ldd(path)
+        result = self._ldd(path, result=dict(), done=list())
         name = j.sal.fs.getBaseName(path)
         result[name] = Dep(name, path)
         return result
