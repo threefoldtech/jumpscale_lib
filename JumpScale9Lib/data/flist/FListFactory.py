@@ -11,6 +11,7 @@ from . import model_capnp as ModelCapnp
 from .FList import FList
 from .FListMetadata import FListMetadata
 from .FlistMerger import FlistMerger
+from .manipulator.flist_manipulator import FlistManipulatorFactory
 
 from .models import DirModel
 from .models import DirCollection
@@ -26,6 +27,7 @@ class FListFactory:
     def __init__(self):
         self.__jslocation__ = "j.tools.flist"
         self.__imports__ = "brotli,pycapnp"
+        self.manipulator = FlistManipulatorFactory()
 
     def getCapnpSchema(self):
         return ModelCapnp

@@ -82,6 +82,7 @@ class FList:
         self.aciCollection = aciCollection
         self.userGroupCollection = userGroupCollection
         self.rootpath = rootpath
+        self._added_files = set()
 
     def _valid(self, fpath, excludes):
         """
@@ -636,7 +637,7 @@ class FList:
         """
         uploads directly using a backend client.
         @param client: backend client. Can be a redis client or ardb client
-            - example: j.clients.redis.get(ipaddr=<ipaddr>, port=<port>, ardb_patch=True)) 
+            - example: j.clients.redis.get(ipaddr=<ipaddr>, port=<port>, ardb_patch=True))
         """
         import g8storclient
         self.populate()
@@ -726,7 +727,7 @@ class FList:
                 all_files[file][id]['bhash'] = chunk['hash'].encode('utf-8')
 
         for path, chunks in all_files.items():
-            res = directclient.exists.exists_post(set([chunk['bhash'] for chunk in chunks]))
+            res = directclient.api.exists.exists_post(set([chunk['bhash'] for chunk in chunks]))
             keys = res.json()
 
             # let's adding all missing keys
@@ -770,7 +771,7 @@ class FList:
                     self.logger.error(e)
 
         self.logger.info("[+] uploading last data...")
-        directclient.insert.insert_put(upload)
+        directclient.api.insert.insert_put(upload)
 
     def destroy(self):
         self.aciCollection.destroy()
