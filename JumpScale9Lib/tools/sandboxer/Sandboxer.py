@@ -102,6 +102,66 @@ class Sandboxer(JSBASE):
         done.append(path)
         return result
 
+
+    def sandboxBinWithPrefab(self, prefab, bin_path, sandbox_dir):
+        """
+        Sandbox a binary located in `bin_path` into a sandbox / filesystem 
+
+        @param prefab Prefab: prefab either local or remote on a machine.
+        @param bin_path string: binary full path to sandbox.
+        @param sandbox_dir string: where to create the sandbox. 
+
+        """
+
+        prefab.core.dir_remove(sandbox_dir)
+        prefab.core.dir_ensure(sandbox_dir)
+
+        LIBSDIR = j.sal.fs.joinPaths(sandbox_dir, 'lib')
+        BINDIR = j.sal.fs.joinPaths(sandbox_dir, 'bin')
+        prefab.core.dir_ensure(LIBSDIR)
+        prefab.core.dir_ensure(BINDIR)
+        prefab.core.dir_ensure(j.sal.fs.joinPaths(sandbox_dir, 'usr'))
+
+
+        for directory in ['opt', 'var', 'tmp', 'root']:
+            prefab.core.dir_ensure(j.sal.fs.joinPaths(sandbox_dir, directory))
+
+        # copy needed binaries and required libs
+        prefab.core.execute_bash("""js9 'j.tools.sandboxer.sandboxLibs("{}", dest="{}")'""".format(bin_path, LIBSDIR))
+
+        prefab.core.file_copy(bin_path, BINDIR+'/')
+
+    def sandboxBinLocal(self, bin_path, sandbox_dir):
+        """
+        Sandbox a binary located in `bin_path` into a sandbox / filesystem 
+
+        @param bin_path string: binary full path to sandbox.
+        @param sandbox_dir string: where to create the sandbox. 
+
+        """
+        try:
+            j.sal.fs.removeDir(sandbox_dir)
+        except Exception as e:
+            pass
+
+        
+        j.sal.fs.createDir(sandbox_dir)
+
+        LIBSDIR = j.sal.fs.joinPaths(sandbox_dir, 'lib')
+        BINDIR = j.sal.fs.joinPaths(sandbox_dir, 'bin')
+        j.sal.fs.createDir(LIBSDIR)
+        j.sal.fs.createDir(BINDIR)
+        j.sal.fs.createDir(j.sal.fs.joinPaths(sandbox_dir, 'usr'))
+
+        for directory in ['opt', 'var', 'tmp', 'root']:
+            j.sal.fs.createDir(j.sal.fs.joinPaths(sandbox_dir, directory))
+
+        # copy needed binaries and required libs
+        j.tools.sandboxer.sandboxLibs(bin_path, dest=LIBSDIR)
+        j.sal.fs.copyFile(bin_path, BINDIR+'/')
+
+
+
     def findLibs(self, path):
         """
         not needed to use manually, is basically ldd
