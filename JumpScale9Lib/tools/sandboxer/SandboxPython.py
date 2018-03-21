@@ -133,7 +133,7 @@ class SandboxPython(JSBASE):
 
         #remove some stuff we don't need
         for item in  j.sal.fs.listFilesInDir("%s/lib"%(dest), recursive=True):
-            if item.endswith(".c") or item.endswith(".h"):
+            if item.endswith(".c") or item.endswith(".h") or item.endswith(".pyc"):
                 j.sal.fs.remove(item)
                 pass
             for x in remove:
