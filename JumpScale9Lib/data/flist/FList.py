@@ -632,6 +632,11 @@ class FList(JSBASE):
         pass
 
     def upload_to_backend(self, backend):
+        """
+        uploads directly using a backend client.
+        @param client: backend client. Can be a redis client or ardb client
+            - example: j.clients.redis.get(ipaddr=<ipaddr>, port=<port>, ardb_patch=True)) 
+        """
         import g8storclient
         self.populate()
 
@@ -639,20 +644,7 @@ class FList(JSBASE):
 
         def procFile(dirobj, type, name, subobj, args):
             fullpath = "%s/%s/%s" % (self.rootpath, dirobj.dbobj.location, name)
-            print("[+] uploading: %s" % fullpath)
-
-            """
-            import hashlib
-            m = hashlib.md5()
-            with open(fullpath, "rb") as x:
-                data = x.read()
-            print(len(data))
-            m.update(data)
-            key = m.hexdigest()
-            print(key)
-            backend.set(key, data)
-            """
-
+            self.logger.info("[+] uploading: %s" % fullpath)
             hashs = g8storclient.encrypt(fullpath)
 
             if hashs is None:
