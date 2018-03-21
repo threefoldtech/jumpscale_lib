@@ -13,9 +13,9 @@ replicaset = ""
 
 class MongoDBClient(JSConfigClient):
 
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE)
+                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         c = self.config.data
         host = c['host']
         port = c['port']

@@ -12,7 +12,8 @@ class GrafanaFactory(JSConfigBaseFactory):
         self.__jslocation__ = "j.clients.grafana"
         self.__imports__ = "requests"
         JSConfigBaseFactory.__init__(self, GrafanaClient)
-        
+
+
 TEMPLATE = """
 url = ""
 username = ""
@@ -25,8 +26,8 @@ JSConfigBase = j.tools.configmanager.base_class_config
 
 class GrafanaClient(JSConfigBase):
 
-    def __init__(self, instance, data={}, parent=None):
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,template=TEMPLATE)
+    def __init__(self, instance, data={}, parent=None, interactive=False):
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         c = self.config.data
         self._url = c['url']
         self.setAuth(c['username'], c['password_'])

@@ -19,9 +19,9 @@ JSBASE = j.application.jsbase_get_class()
 
 
 class Client(JSConfigBase):
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigBase.__init__(self, instance=instance,
-                              data=data, parent=parent, template=TEMPLATE)
+                              data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         self._config = j.tools.configmanager._get_for_obj(
             self, instance=instance, data=data, template=TEMPLATE)
 

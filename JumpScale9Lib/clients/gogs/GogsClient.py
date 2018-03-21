@@ -65,8 +65,8 @@ JSConfigBase = j.tools.configmanager.base_class_config
 class GogsClient(JSConfigBase):
 
     # def __init__(self, addr, login="root", passwd="root", port=3000, accesstoken=None):
-    def __init__(self, instance, data={}, parent=None):
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,template=TEMPLATE)
+    def __init__(self, instance, data={}, parent=None, interactive=False):
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         c = self.config.data
         addr = c["addr"]
         if not addr.startswith("http"):

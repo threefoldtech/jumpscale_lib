@@ -65,9 +65,9 @@ class PostgresqlFactory(JSConfigFactory):
 
 class PostgresClient(JSConfigClient):
 
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE)
+                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         c = self.config.data
 
         self.ipaddr = c['ipaddr']
@@ -160,7 +160,7 @@ class PostgresClient(JSConfigClient):
                     args)
                 j.sal.process.execute(cmd, showout=False)
 
-    def exportToYAML(self,path):
+    def exportToYAML(self, path):
         """
         TODO: export
 
@@ -174,12 +174,11 @@ class PostgresClient(JSConfigClient):
         """
         pass
 
-    def importFromYAML(self,path):
+    def importFromYAML(self, path):
         """
         TODO:
         """
         pass
-
 
     # def dumpall2hrd(self, path, tablesIgnore=[], fieldsIgnore={}, fieldsId={}, fieldRewriteRules={}, fieldsBinary={}):
     #     """
