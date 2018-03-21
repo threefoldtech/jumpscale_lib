@@ -25,9 +25,9 @@ client_instance = "github"
 
 
 class OauthClient(JSConfigClient):
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE)
+                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         c = self.config.data
         self.addr = c['addr']
         self.accesstokenaddr = c['accesstokenaddr']
@@ -47,11 +47,11 @@ class OauthClient(JSConfigClient):
 
         if self.client_instance in ('itsyouonline', 'itsyou.online'):
             self._client = ItsYouOnline(self.addr, self.accesstokenaddr, self.client_id, self.secret, self.scope,
-                                self.redirect_url, self.user_info_url, self.logout_url, self.instance)
+                                        self.redirect_url, self.user_info_url, self.logout_url, self.instance)
         else:
             self._client = OauthInstance(self.addr, self.accesstokenaddr, self.client_id, self.secret, self.scope,
-                                self.redirect_url, self.user_info_url, self.logout_url, self.instance)
-        
+                                         self.redirect_url, self.user_info_url, self.logout_url, self.instance)
+
         return self._client
 
 

@@ -18,9 +18,9 @@ operations_department_id = ""
 """
 class WhmcsInstance(JSConfigClient):
 
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE)
+                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
 
         c = self.config.data
         self._username = c['username']

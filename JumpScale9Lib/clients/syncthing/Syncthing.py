@@ -27,9 +27,9 @@ class SyncthingFactory(JSConfigFactory):
 
 class SyncthingClient(JSConfigClient):
 
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE)
+                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         c = self.config.data
         self._session = requests.session()
         addr = c['addr'].lower()
@@ -104,7 +104,7 @@ class SyncthingClient(JSConfigClient):
         res = self.executeBashScript(C)
 
         self.logger.debug("check if we can find syncthing on right port: %s:%s" %
-              (self.addr, self.port))
+                          (self.addr, self.port))
         if j.sal.nettools.waitConnectionTest(self.addr, self.port, timeout=10) is False:
             raise j.exceptions.RuntimeError(
                 "Could not find syncthing on %s:%s, tcp port test" % (self.addr, self.port))

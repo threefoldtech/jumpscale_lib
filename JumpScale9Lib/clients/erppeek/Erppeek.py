@@ -24,9 +24,9 @@ class ErppeekFactory(JSConfigFactory):
 
 class Erppeek(JSConfigClient):
 
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE)
+                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         self.logger = j.logger.get("j.clients.erppeek")
         self._client = erppeek.Client(self.config.data["url"], self.config.data["db"],
                                       self.config.data["username"], self.config.data["password_"])

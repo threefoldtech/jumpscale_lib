@@ -48,9 +48,9 @@ class PeeweeFactory(JSConfigFactory):
             j.core.db.delete(item)
 
 class PeeweeClient(JSConfigClient):
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE)
+                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         c = self.config.data
         self.ipaddr = c['ipaddr']
         self.port = c['port']
@@ -61,7 +61,6 @@ class PeeweeClient(JSConfigClient):
         self.schema = c['schema']
         self.cache = c['cache']
         self._model = None
-
 
     @property
     def model(self):
@@ -84,5 +83,3 @@ class PeeweeClient(JSConfigClient):
 
         self._model = module
         return module
-
-        

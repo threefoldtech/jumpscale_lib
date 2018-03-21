@@ -43,9 +43,9 @@ class Rogerthat(JSConfigClient):
 
     FLAG_WAIT_FOR_NEXT_MESSAGE = 1
 
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE)
+                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         self._api_key = self.config.data['api_key_']
         self._url = 'https://rogerth.at/api/1'
 

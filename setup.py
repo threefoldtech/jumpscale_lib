@@ -84,6 +84,7 @@ setup(
         'psutil>=5.2.2 ',
         'psycopg2>=2.7.1',
         'pudb>=2017.1.2',
+        'cryptography>=2.2.0',
         'pyOpenSSL>=17.0.0',
         'pyblake2>=0.9.3',
         'pycapnp>=0.5.12',
@@ -100,7 +101,6 @@ setup(
         'zerotier>=1.1.2',
         'packet-python>=1.37',
         'blosc>=1.5.1',
-        'dnspython',
         'pynacl>=1.1.2',
     ],
     dependency_links=[

@@ -182,8 +182,6 @@ class Node:
         return bool(fscache_sp.mountpoint)
 
     def partition_and_mount_disks(self, name='fscache'):
-        fscache_sp = self.find_persistance(name)
-        cache_devices = fscache_sp.devices if fscache_sp else []
         mounts = []
         node_mountpoints = self.client.disk.mounts()
 
