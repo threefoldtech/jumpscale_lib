@@ -160,6 +160,8 @@ class SALFactory():
         :param ports: list of ports to format
         :return: formated ports dict
         """
+        if ports is None:
+            return {}
         formatted_ports = {}
         for p in ports:
             src, dst = p.split(":")

@@ -1,5 +1,4 @@
 from . import typchk
-from js9 import j
 
 
 class KvmManager():
@@ -182,7 +181,7 @@ class KvmManager():
         if media is None and flist is None:
             raise ValueError('need at least one boot media via media or an flist')
 
-        return self._client.sync('kvm.create', args, tags=tags)
+        return self._client.json('kvm.create', args, tags=tags)
 
     def prepare_migration_target(self, uuid, nics=None, port=None, tags=None):
         """
