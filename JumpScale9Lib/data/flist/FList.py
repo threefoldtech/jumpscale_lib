@@ -628,6 +628,49 @@ class FList(JSBASE):
     def upload(self, host="127.0.0.1", port=16379):
         raise RuntimeError("Upload is not supported anymore, please check 'populate' method")
 
+    def _dummy(self, **kwargs):
+        pass
+
+    def upload_to_backend(self, backend):
+        import g8storclient
+        self.populate()
+
+        self.dirCollection._db.rocksdb.compact_range()
+
+        def procFile(dirobj, type, name, subobj, args):
+            fullpath = "%s/%s/%s" % (self.rootpath, dirobj.dbobj.location, name)
+            print("[+] uploading: %s" % fullpath)
+
+            """
+            import hashlib
+            m = hashlib.md5()
+            with open(fullpath, "rb") as x:
+                data = x.read()
+            print(len(data))
+            m.update(data)
+            key = m.hexdigest()
+            print(key)
+            backend.set(key, data)
+            """
+
+            hashs = g8storclient.encrypt(fullpath)
+
+            if hashs is None:
+                return
+
+            for hash in hashs:
+                if not backend.exists(hash['hash']):
+                    backend.set(hash['hash'], hash['data'])
+
+        result = []
+        self.walk(
+            dirFunction=self._dummy,
+            fileFunction=procFile,
+            specialFunction=self._dummy,
+            linkFunction=self._dummy,
+            args=result
+        )
+
     def populate(self):
         import g8storclient
 
@@ -642,7 +685,7 @@ class FList(JSBASE):
             if hashs is None:
                 return
 
-            for index, value in enumerate(hashs):
+            for index, _ in enumerate(hashs):
                 hashs[index].pop('data', None)
 
             subobj.attributes.file.blocks = hashs
