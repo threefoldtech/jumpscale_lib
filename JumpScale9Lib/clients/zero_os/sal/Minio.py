@@ -14,7 +14,7 @@ class Minio:
     Minio gateway
     """
 
-    def __init__(self, name, container, zdbs, namespace, private_key, namespace_secret='', addr='0.0.0.0', port=9000):
+    def __init__(self, name, container, zdbs, namespace, private_key, namespace_secret='', addr='0.0.0.0', port=9000, block_size=1048576):
         """
 
         :param name: instance name
@@ -35,6 +35,7 @@ class Minio:
         self.namespace = namespace
         self.private_key = private_key
         self.namespace_secret = namespace_secret
+        self.block_size = block_size
         self._config_dir = '/bin'
         self._config_name = 'zerostor.yaml'
 
@@ -109,5 +110,5 @@ class Minio:
         logger.info('Creating minio config for %s' % self.name)
         config = templates.render(
             'minio.conf', namespace=self.namespace, namespace_secret=self.namespace_secret,
-            zdbs=self.zdbs, private_key=self.private_key).strip()
+            zdbs=self.zdbs, private_key=self.private_key, block_size=self.block_size, nr_shards=len(self.zdbs)).strip()
         self.container.upload_content(j.sal.fs.joinPaths(self._config_dir, self._config_name), config)

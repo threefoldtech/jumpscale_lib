@@ -142,8 +142,8 @@ class SALFactory():
     def tfchain_get(self, name, container, data_dir='/mnt/data', rpc_addr='0.0.0.0:23112', api_addr='0.0.0.0:23110'):
         return TfChain(name, container, data_dir, rpc_addr, api_addr)
 
-    def get_minio(self, name, container, zdbs, namespace, private_key, namespace_secret='', addr='0.0.0.0', port=9000):
-        return Minio(name, container, zdbs, namespace, private_key, namespace_secret, addr, port)
+    def get_minio(self, name, container, zdbs, namespace, private_key, namespace_secret='', addr='0.0.0.0', port=9000,  block_size=1048576):
+        return Minio(name, container, zdbs, namespace, private_key, namespace_secret, addr, port, block_size=block_size)
 
     def get_restic(self, container, repo):
         return Restic(container, repo)
