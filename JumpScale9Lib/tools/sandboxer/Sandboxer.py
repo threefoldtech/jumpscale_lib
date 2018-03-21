@@ -26,8 +26,7 @@ class Dep(JSBASE):
         else:
             if j.sal.fs.exists(self.path):
                 return
-        raise j.exceptions.RuntimeError(
-            "could not find lib (dep): '%s'" % self.path)
+        raise j.exceptions.RuntimeError("could not find lib (dep): '%s'" % self.path)
 
     def copyTo(self, path):
         dest = j.sal.fs.joinPaths(path, self.name)
@@ -235,6 +234,35 @@ class Sandboxer(JSBASE):
 
         j.sal.fswalker.walkFunctional(path, callbackFunctionFile=callbackFile, callbackFunctionDir=None, arg=(
             path, dest), callbackForMatchDir=callbackForMatchDir, callbackForMatchFile=callbackForMatchFile)
+
+    def _copy_chroot(self, path, dest):
+        cmd = 'cp --parents -v "{}" "{}"'.format(path, dest)
+        _, out, _ = j.sal.process.execute(cmd, die=False)
+        return out
+
+    def sandbox_chroot(self, path, dest=None):
+        if dest is None:
+            dest = "%s/bin/" % j.dirs.BASEDIR
+        j.sal.fs.createDir(dest)
+
+        if not j.sal.fs.exists(path):
+            raise RuntimeError('bin path "{}" not found'.format(path))
+        self._copy_chroot(path, dest)
+
+        cmd = 'ldd "{}"'.format(path)
+        _, out, _ = j.sal.process.execute(cmd)
+
+        for line in out.splitlines():
+            dep = line.strip()
+            if ' => ' in dep:
+                dep = dep.split(" => ")[1].strip()
+            if dep.startswith('('):
+                continue
+            dep = dep.split('(')[0].strip()
+            self._copy_chroot(dep, dest)
+
+        if not j.sal.fs.exists(j.sal.fs.joinPaths(dest, 'lib64')):
+            j.sal.fs.createDir(j.sal.fs.joinPaths(dest, 'lib64'))
 
     # def dedupe(self, path, storpath, name, excludeFiltersExt=[
     #            "pyc", "bak"], append=False, reset=False, removePrefix="", compress=True, delete=False, excludeDirs=[]):
