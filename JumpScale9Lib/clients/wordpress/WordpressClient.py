@@ -29,6 +29,7 @@ class WordpressClient(JSConfigBase):
     def api(self):
         if not self._api:
             api_url = self.url + "/?rest_route=/wp/v2"
+            self.logger.debug("api_url:%s"%api_url)
             self._api = WordpressJsonWrapper(api_url, self.username, self.password)
         return self._api
     
