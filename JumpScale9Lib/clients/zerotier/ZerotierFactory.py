@@ -12,8 +12,6 @@ mymember.deauthorize()
 from js9 import j
 
 import zerotier
-import requests
-import json
 import copy
 import time
 import ipcalc
@@ -25,49 +23,6 @@ TEMPLATE = """
 token_ = ""
 """
 JSBASE = j.application.jsbase_get_class()
-
-
-class ZerotierClientInteral(JSBASE):
-    def __init__(self, apikey):
-        JSBASE.__init__(self)
-        self.apikey = apikey
-        self.apibase = "https://my.zerotier.com/api"
-
-
-    def request(self, path, data=None):
-        if data is None:
-            return requests.get(self.apibase + path, headers={'Authorization': 'Bearer ' + self.apikey})
-
-        else:
-            return requests.post(self.apibase + path, headers={'Authorization': 'Bearer ' + self.apikey}, json=data)
-
-    def delete(self, path):
-        return requests.delete(self.apibase + path, headers={'Authorization': 'Bearer ' + self.apikey})
-
-    def status(self):
-        return self.request("/status").json()
-
-    def user(self, id):
-        return self.request("/user/%s" % id).json()
-
-    def networks(self):
-        return self.request("/network").json()
-
-    # def network_create(self, name):
-    #     data = {
-    #         "config": {
-    #             "name": name,
-    #             "rules": [{"ruleNo": 1, "action": "accept"}],
-    #             "v4AssignMode": "zt",
-    #             "routes": [{"target": "10.147.17.0/24", "via": None, "flags": 0, "metric": 0}],
-    #             "ipAssignmentPools": [{"ipRangeStart": "10.147.17.1", "ipRangeEnd": "10.147.17.254"}]
-    #         }
-    #     }
-
-    #     return self.request("/network", data).json()
-
-    def network_delete(self, id):
-        return self.delete("/network/%s" % id)
 
 
 class NetworkMember(JSBASE):
@@ -92,30 +47,38 @@ class NetworkMember(JSBASE):
         self.data = member.data
 
 
+    def _update_authorization(self, authorize=True, timeout=30):
+        """
+        Update authorization setting
+        """
+        # check if the network is private/public, it does not make sense to authorize on public nets
+        if self._network.config['private'] is False:
+            self.logger.warn('Cannot authorize on public network.')
+            return
+        if self.data['config']['authorized'] != authorize:
+            data = copy.deepcopy(self.data)
+            data['config']['authorized'] = authorize
+            self._network._client.network.updateMember(data=data, address=self.address, id=self._network.id)
+            self._refresh()
+            timeout_ = timeout
+            while self.data['config']['authorized'] != authorize and timeout_:
+                self._refresh()
+                time.sleep(2)
+                timeout_ -= 2
+            if self.data['config']['authorized'] != authorize:
+                self.logger.warn('{}uthorization request sent but data is not updated after {} seconds'.format('A' if authorize else 'Dea', timeout))
+        else:
+            self.logger.info("Member {}/{} already {}".format(self._network.id, self.address, 'authorized' if authorize else 'deauthorized'))
+
+
+
     def authorize(self, timeout=30):
         """
         Authorize the member if not already authorized
 
         @param timeout: Timeout to wait until giving up updating the current state of the member
         """
-        # check if the network is private/public, it does not make sense to authorize on public nets
-        if self._network.config['private'] is False:
-            self.logger.warn('Cannot authorize on public network.')
-            return
-        if self.data['config']['authorized'] is False:
-            data = copy.deepcopy(self.data)
-            data['config']['authorized'] = True
-            self._network._client.network.updateMember(data=data, address=self.address, id=self._network.id)
-            self._refresh()
-            timeout_ = timeout
-            while self.data['config']['authorized'] is False and timeout_:
-                self._refresh()
-                time.sleep(2)
-                timeout_ -= 2
-            if self.data['config']['authorized'] is False:
-                self.logger.warn('Authorization request sent but data is not updated after {} seconds'.format(timeout))
-        else:
-            self.logger.info("Member {}/{} already authorized".format(self._network.id, self.address))
+        self._update_authorization(authorize=True, timeout=timeout)
 
 
     def deauthorize(self, timeout=30):
@@ -124,25 +87,7 @@ class NetworkMember(JSBASE):
 
         @param timeout: Timeout to wait until giving up updating the current state of the member
         """
-        # check if the network is private/public, it does not make sense to authorize on public nets
-        if self._network.config['private'] is False:
-            self.logger.warn('Cannot deauthorize on public network.')
-            return
-        if self.data['config']['authorized'] is True:
-            data = copy.deepcopy(self.data)
-            data['config']['authorized'] = False
-            self._network._client.network.updateMember(data=data, address=self.address, id=self._network.id)
-            self._refresh()
-            timeout_ = timeout
-            while self.data['config']['authorized'] is True and timeout_:
-                self._refresh()
-                time.sleep(2)
-                timeout_ -= 2
-            if self.data['config']['authorized'] is True:
-                self.logger.warn('Deauthorization request sent but data is not updated after {} seconds'.format(timeout))
-        else:
-            self.logger.info("Member {}/{} is not authorized".format(self._network.id, self.address))
-
+        self._update_authorization(authorize=False, timeout=timeout)
 
 
 
@@ -231,7 +176,6 @@ class ZeroTierNetwork(JSBASE):
         return True
 
 
-
 class ZerotierClient(JSConfigClient):
 
     def __init__(self, instance, data={}, parent=None, interactive=False):
@@ -283,12 +227,25 @@ class ZerotierClient(JSConfigClient):
         return result
 
 
-    def create_network(self, public, subnet, auto_assign=True, routes=None):
+    def create_network(self, public, subnet=None, name=None, auto_assign=True, routes=None):
         """
         Create new network
         """
+
         if routes is None:
             routes = []
+        subnet_info = None
+        if subnet is not None:
+            net = ipcalc.Network(subnet)
+            routes.append({
+                'target': subnet,
+                'via': None,
+            })
+            subnet_info = [{
+                'ipRangeStart': net.host_first().dq,
+                'ipRangeEnd': net.host_last().dq,
+            }]
+
         config = {
             'private': not public,
             'v4AssignMode': {
@@ -296,66 +253,37 @@ class ZerotierClient(JSConfigClient):
             },
             'routes': routes,
         }
+        if subnet_info:
+            config.update({
+                'ipAssignmentPools': subnet_info,
+            })
+
+        if name:
+            config.update({'name': name})
+
         data = {
-            ''
+            'config': config,
         }
+        resp = self.client.network.createNetwork(data=data)
+        if resp.status_code != 200:
+            msg = "Failed to create network. Error: {}".format(resp.text)
+            self.logger.error(msg)
+            j.exceptions.RuntimeError(msg)
+        return self._create_networks_from_dict([resp.json()])[0]
 
 
-    def memberAuthorize(self, zerotierNetworkId, ip_pub):
-        res = self.client.network.listMembers(id=zerotierNetworkId).json()
-        members = [item for item in res if item['physicalAddress'] == ip_pub]
-        if not members:
-            raise RuntimeError('no such memeber as %s' % zerotierNetworkId)
-        member = members[0]
-        if member['config']["authorized"] is False:
-            id = member["nodeId"]
-            member['config']['authorized'] = True
-            data = json.dumps(member)
-            self._client.request("/network/%s/member/%s" % (zerotierNetworkId, id), member)
-            self.logger.info('[+] authorized %s on %s' % (member['physicalAddress'], zerotierNetworkId))
-
-    def networksGet(self):
+    def delete_network(self, network_id):
         """
-        returns [(id,name,onlinecount)]
+        Delete netowrk
+
+        @param network_id: ID of the network to delete
         """
-        res0 = self.client.network.listNetworks().json()
-        res = []
-        for item in res0:
-            res.append((item["id"], item["config"]["name"],
-                        item["onlineMemberCount"]))
-        return res
-
-    def networkMembersGet(self, networkId, online=True):
-        res = self.client.network.listMembers(id=networkId).json()
-        result = []
-        for item in res:
-            res2 = {}
-            res2["authorized"] = item["config"]["authorized"]
-            # item["creationTime"]
-            res2["name"] = item["name"]
-            res2["id"] = item["id"]
-            if online and item["online"] is False:
-                continue
-            res2["online"] = item["online"]
-            res2["lastOnlineHR"] = j.data.time.epoch2HRDateTime(
-                item["lastOnline"] / 1000)
-            res2["lastOnline"] = item["lastOnline"]
-            res2["ipaddr_priv"] = item["config"]["ipAssignments"]
-            res2["ipaddr_pub"] = item["physicalAddress"].split(
-                "/")[0] if item["physicalAddress"] else None
-            result.append(res2)
-        return result
-
-    def networkMemberGetFromIPPub(self, ip_pub, networkId, online=True):
-        res = self.networkMembersGet(networkId, online)
-
-        res = [item for item in res if item['ipaddr_pub'] == ip_pub]
-
-        if len(res) is 0:
-            raise RuntimeError(
-                "Did not find network member with ipaddr:%s" % ip_pub)
-
-        return res[0]
+        resp = self.client.network.deleteNetwork(id=network_id)
+        if resp.status_code != 200:
+            msg = "Failed to delete network. Error: {}".format(resp.text)
+            self.logger.error(msg)
+            j.exceptions.RuntimeError(msg)
+        return True
 
 
 class ZerotierFactory(JSConfigFactory):
