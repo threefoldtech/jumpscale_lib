@@ -102,6 +102,7 @@ setup(
         'packet-python>=1.37',
         'blosc>=1.5.1',
         'pynacl>=1.1.2',
+        'ipcalc>=1.99.0',
     ],
     dependency_links=[
         "git+https://github.com/pyca/pynacl"
