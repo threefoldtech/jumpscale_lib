@@ -10,6 +10,7 @@ class VirtualboxVM(JSBASE):
         self.client = client
         self.name = name
         self._guid = ""
+        self._zerotier = None
 
     def _cmd(self,cmd):
         cmd = "VBoxManage %s"%cmd
@@ -62,6 +63,10 @@ class VirtualboxVM(JSBASE):
         d=self.client.disk_get(path=path)
         d.create(size=size,reset=reset)
         return d
+
+
+    def ping(self):
+        member_authorize
 
                 
     def create(self,reset=True,isopath="",datadisksize=10000,memory=1000):
