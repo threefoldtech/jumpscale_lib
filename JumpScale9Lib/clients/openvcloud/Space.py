@@ -55,15 +55,15 @@ class Space(Authorizables):
         timeout = j.data.time.epoch + 100
 
         while self._model["status"] == 'DEPLOYING' and j.data.time.epoch < timeout:
-            self.logger.info(
+            self.logger.debug(
                 "Cloudspace is still deploying, checking again in a second"
             )
             time.sleep(1)
             self.refresh()
 
         while not self._model['publicipaddress'] and j.data.time.epoch < timeout:
-            self.logger.info(
-                "Cloudspace still in deployment, waiting for pub ip addr."
+            self.logger.debug(
+                "Cloudspace is still deploying, waiting for pub ip addr."
             )
             time.sleep(1)
             self.refresh()
