@@ -16,11 +16,12 @@ JSBASE = j.application.jsbase_get_class()
 class ApiError(Exception, JSBASE):
 
     def __init__(self, response):
+        message = None
         msg = '%s %s' % (response.status_code, response.reason)
         try:
             message = response.json()
         except BaseException:
-            message = response.content
+            pass
         if isinstance(message, (str, bytes)):
             msg += '\n%s' % message
         elif isinstance(message, dict) and 'errormessage' in message:
