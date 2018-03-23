@@ -216,8 +216,6 @@ class Machine(JSBASE):
             while candidate in unavailable_ports:
                 candidate += 1
 
-            publicport = candidate
-
         try:
             self.client.api.cloudapi.portforwarding.create(
                 cloudspaceId=self.space.id,
@@ -225,7 +223,7 @@ class Machine(JSBASE):
                 localPort=localport,
                 machineId=self.id,
                 publicIp=self.ipaddr_public,
-                publicPort=publicport
+                publicPort=publicport if publicport is not None else candidate
             )
 
         except Exception as e:
@@ -235,10 +233,11 @@ class Machine(JSBASE):
             if str(e).startswith("409 Conflict") and publicport is None:
                 return self.portforward_create(None, localport, protocol)
             raise j.exceptions.RuntimeError(
-                "Port forward already exists. Please specify another port forwarding.\nerrormsg:%s" % e)
+                "Error while creating portforwarding: %s" % e)
 
         self.cache.reset()
 
+        publicport = publicport if publicport is not None else candidate
         return (publicport, localport)
 
     def portforward_delete(self, publicport):
