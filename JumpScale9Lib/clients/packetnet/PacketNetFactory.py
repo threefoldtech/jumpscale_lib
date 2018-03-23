@@ -174,14 +174,16 @@ class PacketNet(JSConfigClient):
         node = self._startDevice(hostname=hostname, plan=plan, facility=facility, os="",
                                  wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId=zerotierId, always_pxe=True)
 
-        data = {'token_': zerotierAPI, 'networkID_': zerotierId}
+        # data = {'token_': zerotierAPI, 'networkID_': zerotierId}
+        data = {'token_': zerotierAPI}
         zerotierClient = j.clients.zerotier.get(self.instance, data=data)
 
         while True:
             try:
-                member = zerotierClient.networkMemberGetFromIPPub(node.addr, networkId=zerotierId, online=True)
-                ipaddr_priv = member["ipaddr_priv"][0]
-                zerotierClient.memberAuthorize(zerotierNetworkId=zerotierId, ip_pub=node.addr)
+                network = zerotierClient.get_network(network_id=zerotierId)
+                member = network.get_member(public_ip=node.addr)
+                member.authorize()
+                ipaddr_priv = member.private_ip
                 break
             except RuntimeError as e:
                 # case where we don't find the member in zerotier
@@ -255,6 +257,7 @@ class PacketNet(JSConfigClient):
                 sshclient = j.clients.ssh.get(instance=sshkey.instance,
                                               data={'addr': ipaddr, 'login': 'root', 'sshkey': sshkey})
             sshclient.connect()
+            sshinstance = sshclient.instance
 
         conf = {}
         conf["facility"] = facility
@@ -265,7 +268,7 @@ class PacketNet(JSConfigClient):
         conf["os"] = os
         conf["ipxeUrl"] = ipxeUrl
         node = j.tools.nodemgr.set(name=hostname,
-                                   sshclient=sshclient.instance,
+                                   sshclient=sshinstance,
                                    cat='packet',
                                    description='',
                                    selected=True,

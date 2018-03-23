@@ -39,6 +39,15 @@ class NetworkMember(JSBASE):
         self.address = address
 
 
+    @property
+    def private_ip(self):
+        """
+        Returns the private ip address of the current member
+        """
+        if self.data:
+            return self.data['config']['ipAssignments'][0]
+            
+
     def _refresh(self):
         """
         Refresh the data of the member by querying the lastest info from the server
