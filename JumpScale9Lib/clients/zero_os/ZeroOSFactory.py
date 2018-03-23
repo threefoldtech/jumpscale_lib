@@ -8,6 +8,7 @@ from .sal.Node import Node
 from .sal.Restic import Restic
 from .sal.TfChain import TfChain
 from .sal.ZeroDB import ZeroDB
+from .sal.ZeroRobot import ZeroRobot
 from .sal.VM import VM
 from .sal.Hypervisor import Hypervisor
 
@@ -153,6 +154,9 @@ class SALFactory():
 
     def get_hypervisor(self, name, uuid, node):
         return Hypervisor(name, uuid, node)
+
+    def get_zerorobot(self, container, port=6600, telegram_bot_token=None, telegram_chat_id=0, template_repos=None):
+        return ZeroRobot(container, port, telegram_bot_token, telegram_chat_id, template_repos)
 
     def format_ports(self, ports):
         """

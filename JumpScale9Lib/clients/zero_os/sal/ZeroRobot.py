@@ -6,14 +6,13 @@ class ZeroRobot:
     Zero robot
     """
 
-    def __init__(self, name, container, port=6600, telegramBotToken=None, telegramChatId=0, templateRepos=None):
-        self.name = name
-        self.id = 'zbot.{}'.format(self.name)
+    def __init__(self, container, port=6600, telegram_bot_token=None, telegram_chat_id=0, template_repos=None):
+        self.id = 'zbot.{}'.format(container.name)
         self.container = container
         self.port = port
-        self.telegramBotToken = telegramBotToken
-        self.telegramChatId = telegramChatId
-        self.templateRepos = templateRepos if templateRepos else list()
+        self.telegram_bot_token = telegram_bot_token
+        self.telegram_chat_id = telegram_chat_id
+        self.template_repos = template_repos if template_repos else list()
 
     def start(self, timeout=120):
         if self.is_running():
@@ -51,12 +50,12 @@ class ZeroRobot:
             container_client.system("touch %s" % init_done_file)
         
         cmd_line = "zrobot server start --listen :%s --data-repo git@local/local/zbot_data --config-repo git@local/local/zbot_config" % self.port
-        for templateRepo in self.templateRepos:
+        for templateRepo in self.template_repos:
             cmd_line += " --template-repo %s" % templateRepo
-        if self.telegramBotToken:
-            cmd_line += " --telegram-bot-token %s" % self.telegramBotToken
-        if self.telegramChatId:
-            cmd_line += " --telegram-chat-id %s" % self.telegramChatId
+        if self.telegram_bot_token:
+            cmd_line += " --telegram-bot-token %s" % self.telegram_bot_token
+        if self.telegram_chat_id:
+            cmd_line += " --telegram-chat-id %s" % self.telegram_chat_id
         cmd = container_client.system(cmd_line, id=self.id)
         start = time.time()
         while not self.container.is_port_listening(self.port, 2):
