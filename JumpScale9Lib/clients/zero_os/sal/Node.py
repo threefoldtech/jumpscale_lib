@@ -14,6 +14,7 @@ from .healthcheck import HealthCheck
 from .Network import Network
 from .StoragePool import StoragePools
 from .gateway import Gateways
+from .Hypervisor import Hypervisor
 
 Mount = namedtuple('Mount', ['device', 'mountpoint', 'fstype', 'options'])
 logger = j.logger.get(__name__)
@@ -31,6 +32,7 @@ class Node:
         self.storagepools = StoragePools(self)
         self.containers = Containers(self)
         self.gateways = Gateways()
+        self.hypervisor = Hypervisor(self)
         self.network = Network(self)
         self.healthcheck = HealthCheck(self)
         self.capacity = Capacity(self)

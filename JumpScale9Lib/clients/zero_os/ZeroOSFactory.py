@@ -13,7 +13,7 @@ from .sal.Hypervisor import Hypervisor
 
 
 JSConfigFactoryBase = j.tools.configmanager.base_class_configs
-
+logger = j.logger.get(__name__)
 
 class ZeroOSFactory(JSConfigFactoryBase):
     """
@@ -131,7 +131,7 @@ class SALFactory():
     def __init__(self, factory):
         self._factory = factory
 
-    def node_get(self, instance='main'):
+    def get_node(self, instance='main'):
         client = self._factory.get(instance)
         return Node(client)
 
@@ -160,9 +160,21 @@ class SALFactory():
         :param ports: list of ports to format
         :return: formated ports dict
         """
+        if ports is None:
+            return {}
         formatted_ports = {}
         for p in ports:
             src, dst = p.split(":")
             formatted_ports[int(src)] = int(dst)
 
         return formatted_ports
+
+    def __getattr__(self, name):
+        if name == 'node_get':
+            def wrapper(*args, **kwargs):
+                return self.get_node(*args, **kwargs)
+
+            logger.warning("'node_get' is deprecated, please use 'get_node'")
+            return wrapper
+
+        return self.__getattribute__(name)
