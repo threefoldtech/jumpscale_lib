@@ -74,7 +74,7 @@ class VirtualboxVM(JSBASE):
             self.delete()
         cmd = "createvm --name %s  --ostype \"Linux_64\" --register"%(self.name)
         self._cmd(cmd)
-        self._cmd2("--memory=%s "%(memory)
+        self._cmd2("--memory=%s "%(memory))
         self._cmd2("--ioapic on")
         self._cmd2("--boot1 dvd --boot2 disk")
         # self._cmd2("--nic1 bridged --bridgeadapter1 e1000g0")

@@ -38,6 +38,5 @@ class VirtualboxFactory(JSConfigBase):
         cl = self.client
         cl.reset_all()
 
-        cl.
 
         from IPython import embed;embed(colors='Linux')

@@ -2,17 +2,18 @@ from js9 import j
 
 from .OVHClient import OVHClient
 
-JSConfigBase = j.tools.configmanager.base_class_configs
+JSConfigBaseFactory = j.tools.configmanager.base_class_configs
 
 
-class OVHFactory(JSConfigBase):
+class OVHFactory(JSConfigBaseFactory):
     """
     """
 
     def __init__(self):
         self.__jslocation__ = "j.clients.ovh"
         self.__imports__ = "ovh"
-        JSConfigBase.__init__(self, OVHClient)
+
+        JSConfigBaseFactory.__init__(self, OVHClient)
 
     def install(self):
         p = j.tools.prefab.local

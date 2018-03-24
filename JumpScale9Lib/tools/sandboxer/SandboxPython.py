@@ -28,14 +28,14 @@ class SandboxPython(JSBASE):
     def PACKAGEDIR(self):
         return  j.dirs.BUILDDIR + "/sandbox/python3/"
 
-    def build(self):
+    def build(self,reset=False):
         """
         builds python and returns the build dir
         """
-        path = j.tools.prefab.local.runtimes.python.build()
+        path = j.tools.prefab.local.runtimes.python.build(reset=reset)
         return path
 
-    def do(self, path="", dest="", build=True):
+    def do(self, path="", dest="", build=True ,reset=False):
         """
         js9 'j.tools.sandboxer.python.do()'
 
@@ -46,7 +46,7 @@ class SandboxPython(JSBASE):
         j.tools.prefab.local.system.package.install("zip")
 
         if build:
-            path = self.build()
+            path = self.build(reset=reset)
 
         if path == "":
             path =  self.BUILDDIRL
@@ -234,3 +234,10 @@ class SandboxPython(JSBASE):
 
         print("to test:\ncd %s;source env.sh"%dest)
 
+    def upload(self):
+        """
+        """
+        if self.core.isMac:  
+            cmd = "cd %s/sandbox;scp -P 1022 js9_sandbox.zip root@download.gig.tech:js9_sandbox_osx.zip"%j.dirs.BUILDDIR
+        else:
+            cmd = "cd %s/sandbox;scp -P 1022 js9_sandbox.zip root@download.gig.tech:js9_sandbox_linux64.zip"%j.dirs.BUILDDIR

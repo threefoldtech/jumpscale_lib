@@ -24,7 +24,7 @@ from .WebManager import WebManager
 
 DefaultTimeout = 10  # seconds
 
-_config_template = {
+TEMPLATE = {
     'host': "127.0.0.1",
     'port': 6379,
     'password_': "",
@@ -48,7 +48,7 @@ class Client(BaseClient, JSConfigClientBase):
     })
 
     def __init__(self, instance="main", data={}, parent=None, template=None, ui=None, interactive=True):
-        JSConfigClientBase.__init__(self, instance=instance, data=data, parent=parent, template=_config_template, ui=ui, interactive=interactive)
+        JSConfigClientBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE, ui=ui, interactive=interactive)
         timeout = self.config.data['timeout']
         BaseClient.__init__(self, timeout=timeout)
 

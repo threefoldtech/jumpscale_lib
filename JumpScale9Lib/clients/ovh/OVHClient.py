@@ -27,7 +27,8 @@ class OVHClient(JSConfigBase):
 
     def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigBase.__init__(self, instance=instance,
-                              data=data, parent=parent, template=TEMPLATE)
+                              data=data, parent=parent, template=TEMPLATE,interactive=interactive)
+
         c = self.config.data
         self.client = ovh.Client(
             endpoint=c["endpoint"],
