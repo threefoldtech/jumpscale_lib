@@ -18,6 +18,7 @@ import ipcalc
 
 JSConfigFactory = j.tools.configmanager.base_class_configs
 
+
 from .ZerotierClient import ZerotierClient
 
 

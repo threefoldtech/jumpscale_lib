@@ -8,6 +8,7 @@ from .sal.Node import Node
 from .sal.Restic import Restic
 from .sal.TfChain import TfChain
 from .sal.ZeroDB import ZeroDB
+from .sal.ZeroRobot import ZeroRobot
 from .sal.VM import VM
 from .sal.Hypervisor import Hypervisor
 
@@ -31,13 +32,12 @@ class ZeroOSFactory(JSConfigFactoryBase):
         OVHHostName is server name as known by OVH
 
         get clients as follows:
-        - zerotierClient = j.clients.zerotier.get(ZT_API_TOKEN)
+        - zerotierClient = j.clients.zerotier.get(instance='main', data={'data': ZT_API_TOKEN})
         - OVHClient = j.clients.ovh.get(...)
 
         """
 
         cl = OVHClient
-        zt = zerotierClient
 
         self.logger.debug("booting server {} to zero-os".format(OVHHostName))
         task = cl.zero_os_boot(target=OVHHostName, zerotierNetworkID=zerotierNetworkID)
@@ -48,9 +48,9 @@ class ZeroOSFactory(JSConfigFactoryBase):
 
         while True:
             try:
-                member = zt.networkMemberGetFromIPPub(
-                    ip_pub, networkId=zerotierNetworkID, online=True)
-                ipaddr_priv = member["ipaddr_priv"][0]
+                network = zerotierClient.get_network(network_id=zerotierNetworkID)
+                member = network.get_member(public_ip=ip_pub)
+                ipaddr_priv = member.private_ip
                 break
             except RuntimeError as e:
                 # case where we don't find the member in zerotier
@@ -70,7 +70,7 @@ class ZeroOSFactory(JSConfigFactoryBase):
                                   plan_type, location, server_name, zerotierNetworkID, ipxe_base='https://bootstrap.gig.tech/ipxe/master'):
         """
         packetnetClient = j.clients.packetnet.get('TOKEN')
-        zerotierClient = j.clients.zerotier.get('TOKEN')
+        zerotierClient = j.clients.zerotier.get(instance='main', data={'token': 'TOKEN'})
         project_name = packet.net project
         plan_type: one of "Type 0", "Type 1", "Type 2" ,"Type 2A", "Type 3", "Type S"
         location: one of "Amsterdam", "Tokyo", "Synnuvale", "Parsippany"
@@ -108,8 +108,9 @@ class ZeroOSFactory(JSConfigFactoryBase):
 
         while True:
             try:
-                member = zerotierClient.networkMemberGetFromIPPub(ip_pub[0], networkId=zerotierNetworkID, online=True)
-                ipaddr_priv = member["ipaddr_priv"][0]
+                network = zerotierClient.get_network(network_id=zerotierNetworkID)
+                member = network.get_member(public_ip=ip_pub[0])
+                ipaddr_priv = member.private_ip
                 break
             except RuntimeError as e:
                 # case where we don't find the member in zerotier
@@ -153,6 +154,9 @@ class SALFactory():
 
     def get_hypervisor(self, name, uuid, node):
         return Hypervisor(name, uuid, node)
+
+    def get_zerorobot(self, container, port=6600, telegram_bot_token=None, telegram_chat_id=0, template_repos=None):
+        return ZeroRobot(container, port, telegram_bot_token, telegram_chat_id, template_repos)
 
     def format_ports(self, ports):
         """
