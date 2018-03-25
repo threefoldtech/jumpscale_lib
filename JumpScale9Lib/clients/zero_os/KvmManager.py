@@ -95,6 +95,7 @@ class KvmManager():
 
     _domain_get_chk = typchk.Checker({
         'name': str,
+        'uuid': str,
     })
 
     _man_disk_action_chk = typchk.Checker({
@@ -511,14 +512,16 @@ class KvmManager():
         self._convert_image_chk.check(args)
         return self._client.sync('kvm.convert-image', args)
 
-    def get(self, name):
+    def get(self, name='', uuid=''):
         """
-        Get kvm domain by name
+        Get kvm domain by name or uuid
         :param name: name of the kvm container
+        :param uuid: uuid of the kvm container
         :return:
         """
         args = {
             'name': name,
+            'uuid': uuid
         }
         self._domain_get_chk.check(args)
 

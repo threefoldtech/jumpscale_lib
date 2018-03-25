@@ -30,7 +30,7 @@ TEMPLATE = {
     'password_': "",
     'db': 0,
     'ssl': True,
-    'timeout': 5,
+    'timeout': 120,
 }
 
 JSConfigClientBase = j.tools.configmanager.base_class_config
