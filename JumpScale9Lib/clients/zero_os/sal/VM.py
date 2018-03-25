@@ -35,9 +35,7 @@ class VM:
     @property
     def info(self):
         if self._info is None:
-            for vminfo in self.node.client.kvm.list():
-                if vminfo['uuid'] == self.uuid:
-                    self._info = vminfo
+            self._info = self.node.client.kvm.get(uuid=self.uuid)
         return self._info
 
     def enable_vnc(self):
