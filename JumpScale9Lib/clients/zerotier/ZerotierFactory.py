@@ -11,11 +11,6 @@ mymember.deauthorize()
 
 from js9 import j
 
-import zerotier
-import copy
-import time
-import ipcalc
-
 JSConfigFactory = j.tools.configmanager.base_class_configs
 
 
@@ -81,4 +76,3 @@ class ZerotierFactory(JSConfigFactory):
 
         # now lets delete the testnetwork we created
         zt_client.delete_network(network_id=network.id)
-                
