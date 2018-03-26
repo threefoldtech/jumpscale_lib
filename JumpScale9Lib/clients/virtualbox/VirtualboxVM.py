@@ -15,7 +15,7 @@ class VirtualboxVM(JSBASE):
     def _cmd(self,cmd):
         cmd = "VBoxManage %s"%cmd
         self.logger.debug("vb cmd:%s"%cmd)
-        rc,out,err=j.sal.process.execute(cmd)
+        rc, out, err=j.sal.process.execute(cmd)
         return out
 
     def _cmd2(self,cmd):
@@ -23,7 +23,6 @@ class VirtualboxVM(JSBASE):
         self.logger.debug("vb2 cmd:%s"%cmd)
         rc,out,err=j.sal.process.execute(cmd)
         return out
-        
 
     def delete(self):
         while self.name in self.client.vm_list():
@@ -43,8 +42,6 @@ class VirtualboxVM(JSBASE):
     def guid(self):
         print("guid")
         from IPython import embed;embed(colors='Linux')
-        s
-
 
     @property
     def disks(self):
@@ -55,20 +52,17 @@ class VirtualboxVM(JSBASE):
         return res
         print("vm disks")
         from IPython import embed;embed(colors='Linux')
-        s
 
-
-    def disk_create(self,name="main",size=10000,reset=True):
-        path="%s/%s.vdi"%(self.path,name)
-        d=self.client.disk_get(path=path)
-        d.create(size=size,reset=reset)
+    def disk_create(self,name="main", size=10000,reset=True):
+        path="%s/%s.vdi"%(self.path, name)
+        d = self.client.disk_get(path=path)
+        d.create(size=size, reset=reset)
         return d
 
-
     def ping(self):
-        member_authorize
+        pass
+        # member_authorize
 
-                
     def create(self,reset=True,isopath="",datadisksize=10000,memory=1000):
         if reset:
             self.delete()
@@ -97,5 +91,3 @@ class VirtualboxVM(JSBASE):
         return "vm: %-20s%s"%(self.name,self.path)
 
     __str__ = __repr__
-
-            
