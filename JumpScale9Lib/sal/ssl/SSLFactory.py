@@ -16,7 +16,7 @@ class SSLFactory(JSBASE):
     def ca_cert_generate(self, cert_dir=""):
         """
         is for CA
-        If datacard.crt and datacard.key don't exist in cert_dir, create a new ??? #TODO: *1 this is not right I think
+        If ca.crt and ca.key don't exist in cert_dir, create a new ??? #TODO: *1 this is not right I think
         self-signed cert and keypair and write them into that directory.
 
         js9 'j.sal.ssl.ca_cert_generate()'
@@ -52,21 +52,18 @@ class SSLFactory(JSBASE):
             cert.gmtime_adj_notAfter(10 * 365 * 24 * 60 * 60)
             cert.set_issuer(cert.get_subject())
             cert.set_pubkey(k)
-
             cert.add_extensions([
-                OpenSSL.crypto.X509Extension("basicConstraints", True,"CA:TRUE, pathlen:0"),
-                OpenSSL.crypto.X509Extension("keyUsage", True,"keyCertSign, cRLSign"),
-                OpenSSL.crypto.X509Extension("subjectKeyIdentifier", False, "hash",
+                OpenSSL.crypto.X509Extension(b"basicConstraints", True, b"CA:TRUE, pathlen:0"),
+                OpenSSL.crypto.X509Extension(b"keyUsage", True, b"keyCertSign, cRLSign"),
+                OpenSSL.crypto.X509Extension(b"subjectKeyIdentifier", False, b"hash",
                                              subject=cert),
             ])
-
-            from IPython import embed;embed(colors='Linux')
             cert.sign(k, 'sha1')
 
-            CERT_FILE.write_text(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
-            KEY_FILE.write_text(crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
+            CERT_FILE.write_text(crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode())
+            KEY_FILE.write_text(crypto.dump_privatekey(crypto.FILETYPE_PEM, k).decode())
 
-    def createSignedCert(self, path, keyname):
+    def create_signed_cert(self, path, keyname):
         """
         Signing X509 certificate using CA
         The following code sample shows how to sign an X509 certificate using a CA:
@@ -97,7 +94,7 @@ class SSLFactory(JSBASE):
         path.joinpath("%s.crt" % keyname).write_text(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
         path.joinpath("%s.key" % keyname).write_text(crypto.dump_privatekey(crypto.FILETYPE_PEM, key))
 
-    def createCertificateSigningRequest(self, common_name):
+    def create_certificate_signing_request(self, common_name):
         key = OpenSSL.crypto.PKey()
         key.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
 
@@ -115,7 +112,7 @@ class SSLFactory(JSBASE):
             OpenSSL.crypto.FILETYPE_PEM, req)
         return key, req
 
-    def signRequest(self, req, ca_cert, ca_key):
+    def sign_request(self, req, ca_cert, ca_key):
 
         req = OpenSSL.crypto.load_certificate_request(
             OpenSSL.crypto.FILETYPE_PEM, req)
