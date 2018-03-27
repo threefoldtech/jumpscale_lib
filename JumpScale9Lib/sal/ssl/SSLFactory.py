@@ -6,19 +6,26 @@ from socket import gethostname
 JSBASE = j.application.jsbase_get_class()
 
 
-class SSLSigning(JSBASE):
+class SSLFactory(JSBASE):
 
     def __init__(self):
-        self.__jslocation__ = "j.sal.ssl_signing"
+        self.__jslocation__ = "j.sal.ssl"
         self.__imports__ = "pyopenssl"
         JSBASE.__init__(self)
 
-    def create_self_signed_ca_cert(self, cert_dir):
+    def ca_cert_generate(self, cert_dir=""):
         """
         is for CA
-        If datacard.crt and datacard.key don't exist in cert_dir, create a new
+        If datacard.crt and datacard.key don't exist in cert_dir, create a new ??? #TODO: *1 this is not right I think
         self-signed cert and keypair and write them into that directory.
+
+        js9 'j.sal.ssl.ca_cert_generate()'
         """
+        if cert_dir == "":
+            cert_dir = j.dirs.CFGDIR+"/ssl"
+            
+        j.sal.fs.createDir(cert_dir)
+            
         cert_dir = j.tools.path.get(cert_dir)
         CERT_FILE = cert_dir.joinpath("ca.crt")  # info (certificaat) (pub is inhere + other info)
         KEY_FILE = cert_dir.joinpath("ca.key")  # private key
@@ -32,9 +39,9 @@ class SSLSigning(JSBASE):
             # create a self-signed cert
             cert = crypto.X509()
             cert.set_version(3)
-            cert.get_subject().C = "US"
-            cert.get_subject().ST = "Minnesota"
-            cert.get_subject().L = "Minnetonka"
+            cert.get_subject().C = "BE"
+            cert.get_subject().ST = "OV"
+            cert.get_subject().L = "Ghent"
             cert.get_subject().O = "my company"
             cert.get_subject().OU = "my organization"
             cert.get_subject().CN = gethostname()
@@ -47,14 +54,13 @@ class SSLSigning(JSBASE):
             cert.set_pubkey(k)
 
             cert.add_extensions([
-                OpenSSL.crypto.X509Extension("basicConstraints", True,
-                                             "CA:TRUE, pathlen:0"),
-                OpenSSL.crypto.X509Extension("keyUsage", True,
-                                             "keyCertSign, cRLSign"),
+                OpenSSL.crypto.X509Extension("basicConstraints", True,"CA:TRUE, pathlen:0"),
+                OpenSSL.crypto.X509Extension("keyUsage", True,"keyCertSign, cRLSign"),
                 OpenSSL.crypto.X509Extension("subjectKeyIdentifier", False, "hash",
                                              subject=cert),
             ])
 
+            from IPython import embed;embed(colors='Linux')
             cert.sign(k, 'sha1')
 
             CERT_FILE.write_text(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
@@ -64,6 +70,8 @@ class SSLSigning(JSBASE):
         """
         Signing X509 certificate using CA
         The following code sample shows how to sign an X509 certificate using a CA:
+
+        #TODO:*1 which ca, own CA, more doc please or external one
         """
         path = j.tools.path.get(path)
         cacert = path.joinpath("%s/ca.crt").text()
