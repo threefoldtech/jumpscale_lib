@@ -14,7 +14,11 @@ class RedisConfigFactory(JSConfigBase):
         JSConfigBase.__init__(self, RedisConfig)
         self._tree = None
 
-    def get_by_params(self, instance="core",ipaddr="localhost", port=6379, password="", unixsocket="", ardb_patch=False, set_patch=False):
+    def configure(self, instance="core",ipaddr="localhost", \
+            port=6379, password="", unixsocket="", 
+            ardb_patch=False, set_patch=False,
+            ssl=False, ssl_keyfile=None, ssl_certfile=None):
+            
         data = {}
         data["addr"] = ipaddr
         data["port"] = port
@@ -22,10 +26,22 @@ class RedisConfigFactory(JSConfigBase):
         data["unixsocket"] = unixsocket
         data["ardb_patch"] = ardb_patch
         data["set_patch"] = set_patch
-        return self.get(instance=instance, data=data)
+        data["ssl"] = ssl
+        if ssl_keyfile and ssl_certfile:
+            #check if its a path, if yes load
+            data["ssl"] = True 
+            data["sslkey"] = True #means path will be used for sslkey at redis client
+            
+        r =  self.get(instance=instance, data=data)
+
+        if ssl_keyfile and ssl_certfile:
+            #check if its a path, if yes safe the key paths into config
+            r.ssl_keys_save(ssl_keyfile,ssl_certfile)
+
+        return r
 
     def test(self):
         j.clients.redis.core_start()
-        cl = self.get_by_params(port=6379)
+        cl = self.configure(instance="test", port=6379)
         assert cl.redis.ping() == True
         
