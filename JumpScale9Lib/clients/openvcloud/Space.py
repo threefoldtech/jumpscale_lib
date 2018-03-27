@@ -293,20 +293,22 @@ class Space(Authorizables):
         if not managed_private:
             machine.portforward_create(None, 22)
 
-        if sshkeyname:
+        if sshkeyname and "zero" not in image:
             if not managed_private:
                 machine.authorizeSSH(sshkeyname=sshkeyname)
             else:
                 machine.authorizeSSH_private(sshkeyname=sshkeyname)
         else:
-            raise RuntimeError("needs to be implemented, no sshkeyname given")
+            if "zero" not in image:
+                raise RuntimeError("needs to be implemented, no sshkeyname given")
 
-        if not managed_private:
-            machine.prefab.core.hostname = name  # make sure hostname is set
-            self._node_set(machine.name, machine.sshclient)
-        else:
-            machine.prefab_private.core.hostname = name  # make sure hostname is set
-            self._node_set(machine.name+'_private', machine.sshclient_private)
+        if "zero" not in image:
+            if not managed_private:
+                machine.prefab.core.hostname = name  # make sure hostname is set
+                self._node_set(machine.name, machine.sshclient)
+            else:
+                machine.prefab_private.core.hostname = name  # make sure hostname is set
+                self._node_set(machine.name + '_private', machine.sshclient_private)
 
         return machine
 
