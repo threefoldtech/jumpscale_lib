@@ -198,7 +198,7 @@ class Container(JSBASE):
         self.client.timeout = 3600
 
         if delete:
-            res = j.sal.docker.client.images(imagename)
+            res = j.sal.docker.client.images.list(imagename)
             if len(res) > 0:
                 self.client.remove_image(imagename, force=force)
         self.client.commit(self.id, imagename, message=msg, **kwargs)
