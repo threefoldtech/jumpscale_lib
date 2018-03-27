@@ -27,7 +27,6 @@ class Empty(JSBASE):
 # class SSL:
 #
 #     def __init__(self):
-#         self.__jslocation__ = "j.sal.ssl"
 #         self.__imports__ = "M2Crypto"
 #
 #     def getSSLHandler(self, keyvaluestor=None):
