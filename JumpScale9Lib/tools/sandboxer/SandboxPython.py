@@ -238,6 +238,6 @@ class SandboxPython(JSBASE):
         """
         """
         if self.core.isMac:  
-            cmd = "cd %s/sandbox;scp -P 1022 js9_sandbox.zip root@download.gig.tech:js9_sandbox_osx.zip"%j.dirs.BUILDDIR
+            cmd = "cd %s/sandbox;scp -P 1022 js9_sandbox.zip root@download.gig.tech:data/js9_sandbox_osx.zip"%j.dirs.BUILDDIR
         else:
-            cmd = "cd %s/sandbox;scp -P 1022 js9_sandbox.zip root@download.gig.tech:js9_sandbox_linux64.zip"%j.dirs.BUILDDIR
+            cmd = "cd %s/sandbox;scp -P 1022 js9_sandbox.zip root@download.gig.tech:data/js9_sandbox_linux64.zip"%j.dirs.BUILDDIR

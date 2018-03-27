@@ -16,6 +16,8 @@ address = ""
 port = 443
 jwt_ = ""
 location = ""
+account = ""
+space = ""
 """
 
 # appkey_ = ""
@@ -75,6 +77,7 @@ class OVCClient(JSConfigBase):
         if not self.config.data["jwt_"].strip():
             self.config.data = {"jwt_": j.clients.itsyouonline.default.jwt}
 
+
         # if not self.config.data.get("login"):
         #     raise RuntimeError("login cannot be empty")
 
@@ -117,7 +120,7 @@ class OVCClient(JSConfigBase):
     def locations(self):
         return self.api.cloudapi.locations.list()
 
-    def account_get(self, name, create=True,
+    def account_get(self, name="", create=True,
                     maxMemoryCapacity=-1, maxVDiskCapacity=-1, maxCPUCapacity=-1, maxNASCapacity=-1,
                     maxNetworkOptTransfer=-1, maxNetworkPeerTransfer=-1, maxNumPublicIP=-1):
         """
@@ -136,6 +139,10 @@ class OVCClient(JSConfigBase):
 
         Raises: KeyError if account doesn't exist, and create argument was set to False
         """
+        if name == "":
+            name = self.config.data["account"]
+        if not name:
+            raise RuntimeError("name needs to be specified in account in config or on method.")
         for account in self.accounts:
             if account.model['name'] == name:
                 return account
@@ -154,8 +161,8 @@ class OVCClient(JSConfigBase):
             return self.account_get(name, False)
 
     def space_get(self,
-                  accountName,
-                  spaceName,
+                  accountName="",
+                  spaceName="",
                   location="",
                   createSpace=True,
                   maxMemoryCapacity=-1,
@@ -185,6 +192,13 @@ class OVCClient(JSConfigBase):
 
         if location == "":
             location = self.config.data["location"]
+
+        if spaceName == "":
+            spaceName = self.config.data["space"]
+
+        if not spaceName:
+            raise RuntimeError("name needs to be specified in account in config or on method.")
+            
 
         account = self.account_get(name=accountName, create=False)
         if account:
