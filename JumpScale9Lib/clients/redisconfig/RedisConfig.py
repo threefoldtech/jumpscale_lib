@@ -24,14 +24,14 @@ class RedisConfig(JSConfigBase):
     @property
     def ssl_certfile_path(self):
         p = self.config.path + "/cert.pem"
-        if j.sal.fs.exists(p) and self.config.data["sslkey"]:
-            return self.config.path + "/cert.pem"
-            
+        if self.config.data["sslkey"]:
+            return p
+
     @property
     def ssl_keyfile_path(self):
         p = self.config.path + "/key.pem"
-        if j.sal.fs.exists(p) and self.config.data["sslkey"]:
-            return self.config.path + "/key.pem"
+        if self.config.data["sslkey"]:
+            return p
 
     @property
     def redis(self):
@@ -44,7 +44,7 @@ class RedisConfig(JSConfigBase):
             ardb_patch = d["ardb_patch"]
             set_patch = d["set_patch"]
 
-            #NO PATHS IN CONFIG !!!!!!!, needs to come from properties above (convention over configuration)
+            # NO PATHS IN CONFIG !!!!!!!, needs to come from properties above (convention over configuration)
 
             if unixsocket == "":
                 unixsocket = None
@@ -52,18 +52,18 @@ class RedisConfig(JSConfigBase):
             self._redis = j.clients.redis.get(
                 ipaddr=addr, port=port, password=password, unixsocket=unixsocket,
                 ardb_patch=ardb_patch, set_patch=set_patch, ssl=d["ssl"],
-                ssl_keyfile=ssl_keyfile_path, ssl_certfile=self.ssl_certfile_path, \
+                ssl_keyfile=ssl_keyfile_path, ssl_certfile=self.ssl_certfile_path,
                 ssl_cert_reqs=None, ssl_ca_certs=None)
 
         return self._redis
 
-    def ssl_keys_save(self,ssl_keyfile,ssl_certfile):
+    def ssl_keys_save(self, ssl_keyfile, ssl_certfile):
         if j.sal.fs.exists(ssl_keyfile):
             ssl_keyfile = j.sal.fs.readFile(ssl_keyfile)
         if j.sal.fs.exists(ssl_certfile):
-            ssl_certfile = j.sal.fs.readFile(ssl_certfile)                        
-        j.sal.fs.writeFile(self.config.path + "/cert.pem",ssl_certfile)
-        j.sal.fs.writeFile(self.config.path + "/key.pem",ssl_keyfile)
+            ssl_certfile = j.sal.fs.readFile(ssl_certfile)
+        j.sal.fs.writeFile(self.ssl_certfile_path, ssl_certfile)
+        j.sal.fs.writeFile(self.ssl_keyfile_path, ssl_keyfile)
 
     def __str__(self):
         return "redis:%-14s %-25s:%-4s (ssl:%s)" % (self.instance, self.config.data["addr"],  self.config.data["port"], self.config.data["ssl"])
