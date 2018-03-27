@@ -10,7 +10,6 @@ import g8os_stor  # nim module to talk to ardb
 from llfuse import FUSEError
 
 from js9 import j
-JSBASE = j.application.jsbase_get_class()
 
 
 try:
@@ -21,7 +20,7 @@ else:
     faulthandler.enable()
 
 
-class FuseOperations(llfuse.Operations, JSBASE):
+class FuseOperations(llfuse.Operations):
     # {name: '', parent_inode: int, inode: int}
     contents = []
     # {inode: path}
@@ -31,7 +30,7 @@ class FuseOperations(llfuse.Operations, JSBASE):
 
     def __init__(self, rootpath):
         super().__init__()
-        JSBASE.__init__(self)
+
         self.rootpath = rootpath
         self._flistmeta = j.tools.flist.getFlistMetadata(rootpath)
         self.init_data()
@@ -214,10 +213,9 @@ class FuseOperations(llfuse.Operations, JSBASE):
             j.sal.fs.remove(ppath)
 
 
-class FuseExample(llfuse.Operations, JSBASE):
+class FuseExample(llfuse.Operations):
 
     def __init__(self, rootpath):
-        JSBASE.__init__(self)
         MOUNT_POINT = '/tmp/mountpoint'
         ops = FuseOperations(rootpath)
         fuse_options = set(llfuse.default_options)

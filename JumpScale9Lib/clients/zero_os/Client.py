@@ -24,14 +24,14 @@ from .WebManager import WebManager
 
 DefaultTimeout = 10  # seconds
 
-TEMPLATE = {
-    'host': "127.0.0.1",
-    'port': 6379,
-    'password_': "",
-    'db': 0,
-    'ssl': True,
-    'timeout': 5,
-}
+TEMPLATE = """
+host = "127.0.0.1"
+port = 6379
+password_ = ""
+db = 0
+ssl = true
+timeout = 120
+"""
 
 JSConfigClientBase = j.tools.configmanager.base_class_config
 

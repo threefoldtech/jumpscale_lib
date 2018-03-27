@@ -20,13 +20,20 @@ from .blueprints_service import BlueprintsService
 from .services_service import ServicesService
 from .templates_service import TemplatesService
 
+from .passthrough_client_iyo import PassThroughClientIyo
 from .http_client import HTTPClient
 
 
 class Client:
     def __init__(self, base_uri=""):
         http_client = HTTPClient(base_uri)
+        self.security_schemes = Security(http_client)
         self.blueprints = BlueprintsService(http_client)
         self.services = ServicesService(http_client)
         self.templates = TemplatesService(http_client)
         self.close = http_client.close
+
+
+class Security:
+    def __init__(self, http_client):
+        self.passthrough_client_iyo = PassThroughClientIyo(http_client)

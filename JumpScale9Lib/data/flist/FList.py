@@ -20,10 +20,12 @@ from .models import DirModel
 from .models import DirCollection
 
 from path import Path
-JSBASE = j.application.jsbase_get_class()
 
 
-class FList(JSBASE):
+logger = j.logger.get(__name__)
+
+
+class FList:
     """
     FList (sometime "plist") files contains a plain/text representation of
     a complete file system tree
@@ -75,12 +77,12 @@ class FList(JSBASE):
     """
 
     def __init__(self, namespace="", rootpath="", dirCollection=None, aciCollection=None, userGroupCollection=None):
-        JSBASE.__init__(self)
         self.namespace = namespace
         self.dirCollection = dirCollection
         self.aciCollection = aciCollection
         self.userGroupCollection = userGroupCollection
         self.rootpath = rootpath
+        self._added_files = set()
 
     def _valid(self, fpath, excludes):
         """
@@ -139,8 +141,8 @@ class FList(JSBASE):
         for dirpathAbsolute, dirs, files in os.walk(path, topdown=False):
             # dirpath is full path need to bring it to the relative part
             dirRelPath, dirKey = self.path2key(dirpathAbsolute)
-            self.logger.debug("[+]    add: -- /%s" % dirRelPath)
-            self.logger.debug("[+]         \_ %s" % dirKey)
+            logger.debug("[+]    add: -- /%s" % dirRelPath)
+            logger.debug("[+]         \_ %s" % dirKey)
 
             # invalid directory
             if not self._valid(dirRelPath, _excludes):
@@ -175,7 +177,7 @@ class FList(JSBASE):
                 destlink = os.readlink(pathAbsolute)
                 llinks.append((rawdir, stat, destlink))
 
-                self.logger.debug("[+] dirlnk: -- /%s -> %s" % (rawdir, destlink))
+                logger.debug("[+] dirlnk: -- /%s -> %s" % (rawdir, destlink))
 
             for fname in files:
                 relPathWithName = os.path.join(dirRelPath, fname)
@@ -277,8 +279,8 @@ class FList(JSBASE):
                 counter += 1
 
                 dir_sub_relpath, dir_sub_key = self.path2key(absDirPathFull)
-                self.logger.debug("[+] subadd: -- /%s" % dir_sub_relpath)
-                self.logger.debug("[+]         \_ %s" % dir_sub_key)
+                logger.debug("[+] subadd: -- /%s" % dir_sub_relpath)
+                logger.debug("[+]         \_ %s" % dir_sub_key)
 
                 dbobj.attributes.dir.key = dir_sub_key  # link to directory
                 dbobj.name = j.sal.fs.getBaseName(dirRelPathFull)
@@ -517,16 +519,16 @@ class FList(JSBASE):
 
     def pprint(self, dirRegex=[], fileRegex=[], types="DFLS"):
         def procDir(dirobj, type, name, args, key):
-            self.logger.debug("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
+            logger.debug("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
 
         def procFile(dirobj, type, name, subobj, args):
-            self.logger.debug("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
+            logger.debug("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
 
         def procLink(dirobj, type, name, subobj, args):
-            self.logger.debug("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
+            logger.debug("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
 
         def procSpecial(dirobj, type, name, subobj, args):
-            self.logger.debug("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
+            logger.debug("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
 
         result = []
         self.walk(
@@ -613,7 +615,7 @@ class FList(JSBASE):
 
             args.append("|".join(item))
 
-        self.logger.debug("Building old flist format")
+        logger.debug("Building old flist format")
         result = []
         self.walk(
             dirFunction=procDir,
@@ -635,7 +637,7 @@ class FList(JSBASE):
         """
         uploads directly using a backend client.
         @param client: backend client. Can be a redis client or ardb client
-            - example: j.clients.redis.get(ipaddr=<ipaddr>, port=<port>, ardb_patch=True)) 
+            - example: j.clients.redis.get(ipaddr=<ipaddr>, port=<port>, ardb_patch=True))
         """
         import g8storclient
         self.populate()
@@ -671,7 +673,7 @@ class FList(JSBASE):
 
         def procFile(dirobj, type, name, subobj, args):
             fullpath = "%s/%s/%s" % (self.rootpath, dirobj.dbobj.location, name)
-            self.logger.debug("[+] populating: %s" % fullpath)
+            logger.debug("[+] populating: %s" % fullpath)
             hashs = g8storclient.encrypt(fullpath)
 
             if hashs is None:
@@ -689,7 +691,7 @@ class FList(JSBASE):
         def procSpecial(dirobj, type, name, subobj, args):
             pass
 
-        self.logger.debug("Populating")
+        logger.debug("Populating")
         result = []
         self.walk(
             dirFunction=procDir,
@@ -725,7 +727,7 @@ class FList(JSBASE):
                 all_files[file][id]['bhash'] = chunk['hash'].encode('utf-8')
 
         for path, chunks in all_files.items():
-            res = directclient.exists.exists_post(set([chunk['bhash'] for chunk in chunks]))
+            res = directclient.api.exists.exists_post(set([chunk['bhash'] for chunk in chunks]))
             keys = res.json()
 
             # let's adding all missing keys
@@ -769,15 +771,15 @@ class FList(JSBASE):
                     self.logger.error(e)
 
         self.logger.info("[+] uploading last data...")
-        directclient.insert.insert_put(upload)
+        directclient.api.insert.insert_put(upload)
 
     def destroy(self):
         self.aciCollection.destroy()
         self.userGroupCollection.destroy()
         self.dirCollection.destroy()
-        self.logger.debug("Special: Ignore")
+        logger.debug("Special: Ignore")
 
-        self.logger.debug("Uploading")
+        logger.debug("Uploading")
         result = []
         self.walk(
             dirFunction=procDir,

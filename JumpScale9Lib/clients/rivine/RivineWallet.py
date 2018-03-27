@@ -13,8 +13,8 @@ the wallet will need the following functionality:
 from mnemonic import Mnemonic
 import ed25519
 from .merkletree import Tree
-from pyblake2 import blake2b
-# from hashlib import blake2b
+# from pyblake2 import blake2b
+from hashlib import blake2b
 from functools import partial
 import requests
 import base64
@@ -39,13 +39,13 @@ class RivineWallet:
         """
         Creates new wallet
         TODO: check if we need to support multiple seeds from the begining
-        
+
         @param seed: Starting point seed to generate keys.
         @param bc_network: Blockchain network to use.
         @param bc_network_password: Password to send to the explorer node when posting requests.
         @param nr_keys_per_seed: Number of keys generated from the seed.
         @param minerfee: Amount of hastings that should be minerfee.
-        """ 
+        """
         self._seed = seed
         self._unspent_coins_outputs = {}
         self._keys = {}
@@ -62,7 +62,7 @@ class RivineWallet:
             self._unlockhash_key_map[key.unlockconditions.unlockhash] = key
             self._unlockhash_address_map[address] = key.unlockconditions.unlockhash
         self._addresses = None
-    
+
 
     def _generate_address(self, unlockhash):
         """
@@ -74,14 +74,14 @@ class RivineWallet:
         key_hash = blake2b(key_bytes, digest_size=UNLOCKHASH_SIZE).digest()
         return '{}{}'.format(unlockhash, key_hash[:UNLOCKHASH_CHECKSUM_SIZE].hex())
 
-    
+
     @property
     def addresses(self):
         """
         Wallet addresses to recieve and send funds
         """
         return [key for key in self._keys.keys()]
-    
+
 
     @property
     def keys(self):
@@ -96,12 +96,12 @@ class RivineWallet:
         The unspent coins outputs
         """
         return self._unspent_coins_outputs
-    
-    
+
+
     def _generate_spendable_key(self, index):
         """
         Generate a @Spendablekey object from the seed and index
-        
+
         @param index: Index from the seed
         """
         # the to_seed function will return a 64 bytes binary seed, we only need 32-bytes
@@ -116,7 +116,8 @@ class RivineWallet:
         """
         result = None
         url = '{}/explorer'.format(self._bc_network)
-        response = requests.get(url)
+        headers = {'user-agent': 'Rivine-Agent'}
+        response = requests.get(url, headers=headers)
         if response.status_code != 200:
             msg = 'Failed to get current chain height. {}'.format(response.text)
             logger.error(msg)
@@ -137,7 +138,8 @@ class RivineWallet:
         """
         result = None
         url = '{}/explorer/hashes/{}'.format(self._bc_network, address)
-        response = requests.get(url)
+        headers = {'user-agent': 'Rivine-Agent'}
+        response = requests.get(url, headers=headers)
         if response.status_code != 200:
             msg = "Failed to retrieve address information. {}".format(response.text.strip('\n'))
             logger.error(msg)
@@ -169,7 +171,7 @@ class RivineWallet:
                 self._collect_transaction_outputs(address=address, transactions=transactions)
                 self._remove_spent_inputs(transactions=transactions)
 
-    
+
     def _collect_miner_fees(self, address, blocks, height):
         """
         Scan the bocks for miner fees and Collects the miner fees But only that have matured already
@@ -193,7 +195,7 @@ class RivineWallet:
                         self._unspent_coins_outputs[block_info['minerpayoutids'][index]] = minerpayout
 
 
-    
+
     def _collect_transaction_outputs(self, address, transactions):
         """
         Collects transactions outputs
@@ -210,7 +212,7 @@ class RivineWallet:
                         logger.info('Found transaction output for address {}'.format(address))
                         self._unspent_coins_outputs[txn_info['coinoutputids'][index]] = utxo
 
-    
+
     def _remove_spent_inputs(self, transactions):
         """
         Remvoes the already spent outputs
@@ -261,15 +263,15 @@ class RivineWallet:
             transaction.add_input({'parentid': address,
                                     'unlockconditions': self._keys[unspent_coin_output['unlockhash']].unlockconditions})
             input_value = int(unspent_coin_output['value'])
-        
+
         for txn_input in transaction.inputs:
             if self._unspent_coins_outputs[txn_input['parentid']]['unlockhash'] not in self._keys.keys():
                 raise NonExistingOutputError('Trying to spend unexisting output')
-        
-        transaction.add_output({'value': amount, 
+
+        transaction.add_output({'value': amount,
                                 'unlockhash': recipient})
 
-        # we need to check if the sum of the inputs is more than the required fund and if so, we need 
+        # we need to check if the sum of the inputs is more than the required fund and if so, we need
         # to send the remainder back to the original user
         remainder = input_value - required_funds
         if remainder > 0:
@@ -284,7 +286,7 @@ class RivineWallet:
                     continue
                 transaction.add_output({'value': remainder,
                                         'unlockhash': address})
-                break 
+                break
 
         # add minerfee to the transaction
         transaction.minerfee = minerfee
@@ -295,11 +297,11 @@ class RivineWallet:
 
         return transaction
 
-    
+
     def _sign_transaction(self, transaction):
         """
         Signs a transaction with the existing keys.
-        
+
         @param transaction: Transaction object to be signed
         """
         covered_fields = {'wholetransaction': True}
@@ -328,7 +330,7 @@ class RivineWallet:
             for secret_key, pkey in spendable_key.secretkeys:
                 if pkey != publickey:
                     continue
-            
+
                 # found a matching secret key, create a signature and add it
                 signature = {
                     'parentid': parent_id,
@@ -349,7 +351,7 @@ class RivineWallet:
                 break
         if total_signatures < unlock_conditions.nr_required_signatures:
             raise NotEnoughSignaturesFound('Not enough keys found to satisfy required number of signatures')
-            
+
 
 
     def commit_transaction(self, transaction):
@@ -370,7 +372,6 @@ class RivineWallet:
         else:
             logger.info('Transaction committed successfully')
 
-        
 
 class SpendableKey:
     """
@@ -381,7 +382,7 @@ class SpendableKey:
 
     def __init__(self, seed):
         """
-        Creates new SpendableKey 
+        Creates new SpendableKey
         creates the keys and unlock conditions for 32-bytes seed
 
         @param seed: A 32-bytes binary seed
@@ -393,7 +394,7 @@ class SpendableKey:
         self._sk = ed25519.SigningKey(self._seed)
         self._keys = [(self._sk,  self._sk.get_verifying_key().to_bytes())]
         self._unlockconditions = UnlockConditions(pubkey=self._sk.get_verifying_key().to_bytes())
-    
+
 
     @property
     def secretkeys(self):
@@ -401,7 +402,7 @@ class SpendableKey:
         Returns the singing keys
         """
         return self._keys
-    
+
 
     @property
     def unlockconditions(self):
@@ -431,8 +432,8 @@ class UnlockConditions:
         self._unlockhash = None
         self._binary = None
         self._json = None
-    
-    
+
+
     @property
     def public_keys(self):
         """
@@ -440,15 +441,15 @@ class UnlockConditions:
         """
         return [item['key'] for item in self._keys]
 
-    
+
     @property
     def nr_required_signatures(self):
         """
         Number of required singatures
-        """ 
+        """
         return self._nr_required_sigs
-    
-    
+
+
     @property
     def unlockhash(self):
         """
@@ -459,7 +460,7 @@ class UnlockConditions:
         hash of the number of signatures. The keys are put in the middle because
         Timelock and SignaturesRequired are both low entropy fields; they can bee
         protected by having random public keys next to them.
-        """     
+        """
         if self._unlockhash is None:
             self._merkletree.push(int_to_binary(self._blockheight))
             # logger.info("Pushing {}".format(int_to_binary(self._blockheight).hex()))
@@ -500,7 +501,7 @@ class UnlockConditions:
             self._binary.extend(int_to_binary(self._nr_required_sigs))
         return bytes(self._binary)
 
-    
+
     @property
     def json(self):
         """
@@ -521,8 +522,6 @@ class UnlockConditions:
             }
 
         return self._json
-        
-
 
 
 class Transaction:
@@ -551,14 +550,14 @@ class Transaction:
         """
         return self._signatrues
 
-    
+
     @property
     def inputs(self):
         """
         Inputs of the transactions
         """
         return self._inputs
-    
+
 
     @property
     def outputs(self):
@@ -566,7 +565,7 @@ class Transaction:
         Outputs of the transactions
         """
         return self._outputs
-    
+
 
     @property
     def minerfee(self):
@@ -574,7 +573,7 @@ class Transaction:
         The miner fee of the transaction
         """
         return self._minerfee
-    
+
 
     @minerfee.setter
     def minerfee(self, value):
@@ -582,7 +581,7 @@ class Transaction:
         Sets the miner fee
         """
         self._minerfee = value
-    
+
     @property
     def custom_data(self):
         """
@@ -633,7 +632,7 @@ class Transaction:
                 for item in self._arbitrary_data:
                     arbitrary_data_json.append(base64.b64encode(item).decode('ascii'))
                 self._json['arbitrarydata'] = arbitrary_data_json
-            else:    
+            else:
                 self._json['arbitrarydata'] = self._arbitrary_data
             self._json['blockstakeinputs'] = None
             self._json['blockstakeoutputs'] = None
@@ -669,15 +668,15 @@ class Transaction:
         Adds new input to the transaction
         """
         self._inputs.append(input_info)
-    
-    
+
+
     def add_output(self, output_info):
         """
-        Adds a new output to the transaction 
+        Adds a new output to the transaction
         """
         self._outputs.append(output_info)
 
-    
+
     def add_signature(self, signature):
         """
         Adds a new signature to the transaction
@@ -704,7 +703,7 @@ class Transaction:
             for output in self._outputs:
                 signature_hash.extend(big_int_to_binary(output['value']))
 
-                # check if the unlockhash already exist in the caching map, otherwise generate 
+                # check if the unlockhash already exist in the caching map, otherwise generate
                 # an unlock hash without the checksum
                 unlockhash = unlockhash_address_map.get(output['unlockhash'], get_unlockhash_from_address(output['unlockhash']))
                 signature_hash.extend(bytearray.fromhex(unlockhash))
@@ -714,12 +713,12 @@ class Transaction:
             for input_ in self._blockstake_inputs:
                 signature_hash.extend(bytearray.fromhex(input_['parentid']))
                 signature_hash.extend(input_['unlockconditions'].binary)
-            
+
             # encode the number of the blockstake outputs
             signature_hash.extend(int_to_binary(len(self._blockstake_outputs)))
             for output in self._blockstake_outputs:
                 signature_hash.extend(big_int_to_binary(output['value']))
-                # check if the unlockhash already exist in the caching map, otherwise generate 
+                # check if the unlockhash already exist in the caching map, otherwise generate
                 # an unlock hash without the checksum
                 unlockhash = unlockhash_address_map.get(output['unlockhash'], get_unlockhash_from_address(output['unlockhash']))
                 signature_hash.extend(bytearray.fromhex(unlockhash))
@@ -727,7 +726,7 @@ class Transaction:
             # for now we only set the nubmer of minerfees to 1
             signature_hash.extend(int_to_binary(1))
             signature_hash.extend(big_int_to_binary(self._minerfee))
-            
+
             # encode the size of the arbitrary data
             if self._arbitrary_data is not None:
                 signature_hash.extend(int_to_binary(len(self._arbitrary_data)))
@@ -780,7 +779,3 @@ def get_unlockhash_from_address(address):
     if sum_bytes != expected_checksum[:UNLOCKHASH_CHECKSUM_SIZE]:
         raise InvalidUnlockHashChecksumError("Cannot decode address to unlockhash")
     return key_hex
-
-
-
-

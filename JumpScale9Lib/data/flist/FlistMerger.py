@@ -1,12 +1,11 @@
 from js9 import j
 import capnp
 from . import model_capnp as ModelCapnp
-JSBASE = j.application.jsbase_get_class()
 
-logger = j.logger.get('j.tools.flist.merger')
+logger = j.logger.get(__name__)
 
 
-class FlistMerger(JSBASE):
+class FlistMerger:
     """
         Tool to merge multiple flist into one
 
@@ -35,7 +34,6 @@ class FlistMerger(JSBASE):
     def __init__(self):
         self._sources = []
         self._dest = None
-        JSBASE.__init__(self)
 
     def add_source(self, flist):
         self._sources.append(flist)
@@ -137,7 +135,6 @@ def fileFunction(dirobj, type, name, args, subobj):
 
     dest_dir = dest_current_dir(dest_fs, dirobj)
     dest_dir.fileReplace(subobj, create=True)
-
 
     # copy aci
     if not dest_fs.aciCollection.exists(subobj.aclkey):
