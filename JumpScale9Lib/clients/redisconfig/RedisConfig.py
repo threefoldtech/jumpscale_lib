@@ -23,13 +23,13 @@ class RedisConfig(JSConfigBase):
 
     @property
     def ssl_certfile_path(self):
-        p = self.config.path + "/cert.pem"
+        p = j.sal.fs.getDirName(self.config.path) + "cert.pem"
         if self.config.data["sslkey"]:
             return p
 
     @property
     def ssl_keyfile_path(self):
-        p = self.config.path + "/key.pem"
+        p = j.sal.fs.getDirName(self.config.path) + "key.pem"
         if self.config.data["sslkey"]:
             return p
 
@@ -52,7 +52,7 @@ class RedisConfig(JSConfigBase):
             self._redis = j.clients.redis.get(
                 ipaddr=addr, port=port, password=password, unixsocket=unixsocket,
                 ardb_patch=ardb_patch, set_patch=set_patch, ssl=d["ssl"],
-                ssl_keyfile=ssl_keyfile_path, ssl_certfile=self.ssl_certfile_path,
+                ssl_keyfile=self.ssl_keyfile_path, ssl_certfile=self.ssl_certfile_path,
                 ssl_cert_reqs=None, ssl_ca_certs=None)
 
         return self._redis
