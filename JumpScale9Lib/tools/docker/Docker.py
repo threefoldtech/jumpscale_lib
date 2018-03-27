@@ -25,8 +25,7 @@ class Docker(JSBASE):
             self.base_url = 'unix://var/run/docker.sock'
         else:
             self.base_url = os.environ['DOCKER_HOST']
-        self.client = docker.APIClient(base_url=self.base_url)
-
+        self.client = docker.DockerClient(base_url=self.base_url)
 
     def _node_set(self, name, sshclient):
         j.tools.nodemgr.set(name, sshclient=sshclient.instance, selected=False,
