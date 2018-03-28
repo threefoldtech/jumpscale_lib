@@ -15,7 +15,7 @@ It supports the following functionalities:
 The client uses the world list proposed in BIP-0039 and depends on the library provided them: https://github.com/trezor/python-mnemonic (pip install git+https://github.com/trezor/python-mnemonic.git)
 To generate keypairs we depend on the ed25519 python implementation here: https://github.com/warner/python-ed25519 (pip install ed25519)
 
-To generate UnlockHashes, we use merkletree a custom port implementation from the golang library implementation from here: https://github.com/NebulousLabs/merkletree 
+To generate UnlockHashes, we use merkletree a custom port implementation from the golang library implementation from here: https://github.com/NebulousLabs/merkletree
 
 # How to use
 Starting from a seed which can be a sentence of [12, 15, 18, 21, 24] words, for more information about the seed please check: https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
@@ -35,7 +35,7 @@ seed = j.clients.rivine.generate_seed()
 From a seed you can create new wallet
 ```python
         from JumpScale9Lib.clients.rivine.RivineWallet import RivineWallet
-        rivine_wallet = RivineWallet(seed=seed, 
+        rivine_wallet = RivineWallet(seed=seed,
                                     bc_network='http://185.69.166.13:2015',
                                     bc_network_password='test123',
                                     nr_keys_per_seed=5,
@@ -49,7 +49,7 @@ From a seed you can create new wallet
 
 Or alternatively you can configure the jumpscale client instance using the following code:
 ```python
-    client_data = {'bc_address': 'http://185.69.166.13:2015',
+    client_data = {'bc_address': 'https://explorer.testnet.threefoldtoken.com/',
 'password_': 'test123',
  'minerfee': 10,
  'nr_keys_per_seed': 5,
@@ -58,7 +58,7 @@ Or alternatively you can configure the jumpscale client instance using the follo
     rivine_client = j.clients.rivine.get('mytestwallet', data=client_data)
     rivine_client.config.save()
     rivine_wallet = rivine_client.wallet
-``` 
+```
 
 After creating the wallet you can sync the wallet with the blockchain network (this will not build a full node locally)
 ```python
@@ -86,8 +86,8 @@ rivine_wallet.addresses
 
 After syncing your wallet, you can create and commit transactions
 ```python
-    recipient = 'e5bd83a85e263817e2040054064575066874ee45a7697facca7a2721d4792af374ea35f549a1'
-    transacton = rivine_wallet.create_transaction(amount=10, recipient=recipient)
+    recipient = '01e5bd83a85e263817e2040054064575066874ee45a7697facca7a2721d4792af374ea35f549a1'
+    transacton = rivine_wallet.create_transaction(amount=500, recipient=recipient)
     # you can then review the transaction by calling transaction.json
     transaction.json
     rivine_wallet.commit_transaction(transaction=transaction)
@@ -100,6 +100,6 @@ custom_data = bytearray("hello from Dresden", encoding='utf-8')
 
 transaction = rivine_wallet.create_transaction(amount=500, recipient=recipient, custom_data=custom_data)
 
-rivine_wallet.commit_transaction(transaction) 
+rivine_wallet.commit_transaction(transaction)
 print('Transaction pushed to chain')
 ```
