@@ -87,8 +87,8 @@ class Disk(Mountable):
     def _load(self, disk_info):
         self.name = disk_info['name']
         self.size = int(disk_info['size'])
-        self.blocksize = disk_info['blocksize']
-        if disk_info['table'] != 'unknown':
+        self.blocksize = disk_info['blocksize'] if 'blocksize' in disk_info else None
+        if 'table' in disk_info and disk_info['table'] != 'unknown':
             self.partition_table = disk_info['table']
         self.mountpoint = disk_info['mountpoint']
         self.model = disk_info['model']
