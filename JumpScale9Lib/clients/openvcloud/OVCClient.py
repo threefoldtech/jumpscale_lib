@@ -1,8 +1,8 @@
-from js9 import j
 import time
-import datetime
+import jwt
 import jose.jwt
 from paramiko.ssh_exception import BadAuthenticationType
+from js9 import j
 
 from .Account import Account
 from .Machine import Machine
@@ -35,12 +35,31 @@ class OVCClient(JSConfigBase):
         JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,
                               template=TEMPLATE, interactive=interactive)
         self._api = None
-        if "location" not in self.config.data or not self.config.data["location"]:
+        self._jwt_expire_timestamp = None
+        
+        if not self.config.data.get("location"):
             if len(self.locations) == 1:
-                self.config.data["location"] = self.locations[0]["locationCode"]
+                self.config.data_set("location", self.locations[0]["locationCode"])
+                self.config.save()
+
+    def jwt_refresh(self):
+        '''
+        Refresh jwt token is expired or expires within 300s
+        '''
+
+        if not self._jwt_expire_timestamp and self.config.data.get('jwt_'):
+            self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(self.config.data['jwt_'])
+
+        if self._jwt_expire_timestamp and self._jwt_expire_timestamp - 300 < time.time():
+            token = j.clients.itsyouonline.refresh_jwt_token( self.config.data['jwt_'], validity=3600)
+            self.config.data['jwt_'] = token
+            self.config.save()
 
     @property
     def api(self):
+        # before using api refresh jwt token if needed
+        self.jwt_refresh()
+
         if self._api is None:
 
             self._config_check()
