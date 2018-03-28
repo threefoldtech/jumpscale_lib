@@ -1,5 +1,7 @@
 from js9 import j
 
+from .Capacity import Capacity
+
 JSBASE = j.application.jsbase_get_class()
 
 
@@ -13,6 +15,8 @@ class Ubuntu(JSBASE):
         self._cache = None
         self.installedPackageNames = []
         self._local = j.tools.executorLocal
+        self.capacity = Capacity(self)
+
 
     def apt_init(self):
         try:
