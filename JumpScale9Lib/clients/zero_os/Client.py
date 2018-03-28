@@ -71,16 +71,14 @@ class Client(BaseClient, JSConfigClientBase):
     def _redis(self):
         password = self.config.data['password_']
         if password and not self._jwt_expire_timestamp:
-            jwt_data = jwt.decode(password, verify=False)
-            self._jwt_expire_timestamp = jwt_data['exp']
+            self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(password)
         if self._jwt_expire_timestamp and self._jwt_expire_timestamp - 300 < time.time():
             password = j.clients.itsyouonline.refresh_jwt_token(password, validity=3600)
             self.config.data_set('password_', password)
             self.config.save()
             if self.__redis:
                 self.__redis = None
-            jwt_data = jwt.decode(password, verify=False)
-            self._jwt_expire_timestamp = jwt_data['exp']
+            self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(password)
 
         if self.__redis is None:
             timeout = self.config.data['timeout']
@@ -205,6 +203,7 @@ class Client(BaseClient, JSConfigClientBase):
         :param id: job id. Generated if not supplied
         :return: Response object
         """
+
         if not id:
             id = str(uuid.uuid4())
 
