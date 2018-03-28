@@ -9,7 +9,7 @@ from JumpScale9Lib.clients.rivine.RivineWallet import RivineWallet, SpendableKey
 # use specific seed that has some funds
 seed = 'siren own oil clean often undo castle sure creek squirrel group income size boost cart picture wing cram candy dutch congress actor taxi prosper'
 
-client_data = {'bc_address': 'http://185.69.166.13:2015',
+client_data = {'bc_address': 'https://explorer.testnet.threefoldtoken.com/',
                'password_': 'test123',
                'minerfee': 10,
                'nr_keys_per_seed': 10,
@@ -157,7 +157,7 @@ assert actual_address_info == expected_address_info, "Expected address info is n
 rivine_wallet.sync_wallet()
 
 # create transaction
-recipient = 'e5bd83a85e263817e2040054064575066874ee45a7697facca7a2721d4792af374ea35f549a1'
+recipient = '01e5bd83a85e263817e2040054064575066874ee45a7697facca7a2721d4792af374ea35f549a1'
 transaction = rivine_wallet.create_transaction(amount=500, recipient=recipient)
 
 

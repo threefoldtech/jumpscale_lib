@@ -16,6 +16,8 @@ def _post_install(libname, libpath):
     j.core.state.configSet('plugins', c)
     j.sal.process.execute(
         "pip3 install 'git+https://github.com/zero-os/0-core#egg=0-core-client&subdirectory=client/py-client'")
+    j.sal.process.execute(
+        "pip3 install 'git+https://github.com/trezor/python-mnemonic.git'")
     j.tools.jsloader.generate()
 
 
@@ -103,9 +105,11 @@ setup(
         'blosc>=1.5.1',
         'pynacl>=1.1.2',
         'ipcalc>=1.99.0',
+        'ed25519>=1.4',
     ],
     dependency_links=[
-        "git+https://github.com/pyca/pynacl"
+        "git+https://github.com/pyca/pynacl",
+        "git+https://github.com/trezor/python-mnemonic.git"
     ],
     cmdclass={
         'install': install,
