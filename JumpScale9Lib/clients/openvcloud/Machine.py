@@ -298,7 +298,7 @@ class Machine(JSBASE):
 
         # error if port 22 is not found
         if not addr or not port:
-            raise RuntimeError('VM "%s" must have ssh port 22' % self.name)
+            raise RuntimeError("VM '%s' doesn't have ssh port 22 exposed" % self.name)
 
         return addr, port
 
