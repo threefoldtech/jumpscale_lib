@@ -296,9 +296,10 @@ class Machine(JSBASE):
                 addr = pf['publicIp']
                 port = pf['publicPort']
 
+        # error if port 22 is not found
         if not addr or not port:
-            import ipdb
-            ipdb.set_trace()
+            raise RuntimeError('VM "%s" must have ssh port 22' % self.name)
+
         return addr, port
 
     def _ssh_client_key(self, addr, port, login, private=False):
