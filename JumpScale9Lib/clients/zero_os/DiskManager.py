@@ -56,9 +56,13 @@ class DiskManager:
 
         data = result.data.strip()
         if data:
-            return json.loads(data)
-        else:
-            return {}
+            js_data = json.loads(data)
+            if "blockdevices" in js_data:
+                return js_data["blockdevices"]
+
+            return js_data
+
+        return {}
 
     def mktable(self, disk, table_type='gpt'):
         """
