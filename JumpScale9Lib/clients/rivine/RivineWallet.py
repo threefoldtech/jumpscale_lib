@@ -13,17 +13,17 @@ the wallet will need the following functionality:
 from mnemonic import Mnemonic
 import ed25519
 from .merkletree import Tree
-# from pyblake2 import blake2b
-from hashlib import blake2b
+from pyblake2 import blake2b
 from functools import partial
 import requests
 import base64
 from requests.auth import HTTPBasicAuth
+from .utils import big_int_to_binary, int_to_binary, get_unlockhash_from_address
 
 from JumpScale9 import j
 
 from .const import SIGEd25519, UNLOCKHASH_TYPE, MINER_PAYOUT_MATURITY_WINDOW,\
-UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE, SPECIFIER_SIZE, NON_SIA_SPECIFIER
+UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE, SPECIFIER_SIZE, NON_SIA_SPECIFIER, WALLET_ADDRESS_TYPE, ADDRESS_TYPE_SIZE
 
 from .errors import RESTAPIError, BackendError,\
 InsufficientWalletFundsError, NonExistingOutputError,\
@@ -70,9 +70,10 @@ class RivineWallet:
 
         @param unlockhash: Source unlockhash to create an address from it
         """
+
         key_bytes = bytearray.fromhex(unlockhash)
         key_hash = blake2b(key_bytes, digest_size=UNLOCKHASH_SIZE).digest()
-        return '{}{}'.format(unlockhash, key_hash[:UNLOCKHASH_CHECKSUM_SIZE].hex())
+        return '{}{}{}'.format(WALLET_ADDRESS_TYPE.hex(), unlockhash, key_hash[:UNLOCKHASH_CHECKSUM_SIZE].hex())
 
 
     @property
@@ -205,7 +206,7 @@ class RivineWallet:
         """
         for txn_info in transactions:
             # coinoutputs can exist in the dictionary but has the value None
-            coinoutputs = txn_info.get('rawtransaction', {}).get('coinoutputs', [])
+            coinoutputs = txn_info.get('rawtransaction', {}).get('data', {}).get('coinoutputs', [])
             if coinoutputs:
                 for index, utxo in enumerate(coinoutputs):
                     if utxo.get('unlockhash') == address:
@@ -741,41 +742,3 @@ class Transaction:
             signature_hash.extend(int_to_binary(signature['timelock']))
         logger.debug('Signature hash size is {}'.format(len(signature_hash)))
         return blake2b(signature_hash, digest_size=UNLOCKHASH_SIZE).digest()
-
-
-
-# module level helper functions
-def big_int_to_binary(big_int):
-    """
-    Convert a big integer value to a binary array
-
-    @param big_int: Integer to convert
-    """
-    result = bytearray()
-    nbytes, rem = divmod(big_int.bit_length(), 8)
-    if rem:
-        nbytes += 1
-    result.extend(int_to_binary(nbytes))
-    result.extend(big_int.to_bytes(nbytes, byteorder='big'))
-    return result
-
-
-def int_to_binary(value):
-    """
-    Convert an int to a binary format
-    """
-    return value.to_bytes(8, byteorder='little')
-
-
-
-def get_unlockhash_from_address(address):
-    """
-    Construct an unlock hash [32]byte array from an address
-    """
-    key_hex, sum_hex = address[:UNLOCKHASH_SIZE*2], address[UNLOCKHASH_SIZE*2:]
-    unlockhash_bytes = bytearray.fromhex(key_hex)
-    sum_bytes = bytearray.fromhex(sum_hex)
-    expected_checksum = blake2b(unlockhash_bytes, digest_size=UNLOCKHASH_SIZE).digest()
-    if sum_bytes != expected_checksum[:UNLOCKHASH_CHECKSUM_SIZE]:
-        raise InvalidUnlockHashChecksumError("Cannot decode address to unlockhash")
-    return key_hex

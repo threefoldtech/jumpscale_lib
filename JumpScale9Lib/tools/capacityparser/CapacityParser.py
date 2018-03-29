@@ -110,7 +110,7 @@ class Report():
         """
         unit = 0
         for disk in self.disk:
-            if disk['type'] in [StorageType.HDD, StorageType.ARCHIVE]:
+            if disk['type'] in [StorageType.HDD.name, StorageType.ARCHIVE.name]:
                 unit += disk['size'] / GIB
         return round(unit, 2)
 
@@ -121,7 +121,7 @@ class Report():
         """
         unit = 0
         for disk in self.disk:
-            if disk['type'] in [StorageType.SSD, StorageType.NVME]:
+            if disk['type'] in [StorageType.SSD.name, StorageType.NVME.name]:
                 unit += disk['size'] / GIB
         return round(unit, 2)
 
