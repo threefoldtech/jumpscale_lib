@@ -164,7 +164,6 @@ class RivineWallet:
             except RESTAPIError as ex:
                 logger.error('Skipping address: {}'.format(address))
             else:
-                import pdb; pdb.set_trace()
                 if address_info.get('hashtype', None) != UNLOCKHASH_TYPE:
                     raise BackendError('Address is not recognized as an unblock hash')
                 self._collect_miner_fees(address=address, blocks=address_info.get('blocks',{}),
