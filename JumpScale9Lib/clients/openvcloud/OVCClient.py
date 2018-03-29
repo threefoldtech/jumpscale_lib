@@ -51,9 +51,10 @@ class OVCClient(JSConfigBase):
             self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(self.config.data['jwt_'])
 
         if self._jwt_expire_timestamp and self._jwt_expire_timestamp - 300 < time.time():
-            token = j.clients.itsyouonline.refresh_jwt_token( self.config.data['jwt_'], validity=3600)
+            token = j.clients.itsyouonline.refresh_jwt_token(self.config.data['jwt_'], validity=3600)
             self.config.data_set('jwt_', token)
             self.config.save()
+            self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(self.config.data['jwt_'])
 
     @property
     def api(self):
