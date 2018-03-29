@@ -75,7 +75,7 @@ class Node:
         except StopIteration:
             return None
 
-    def _eligible_fscache_disk(self, disks):
+    def _eligible_zeroos_cache_disk(self, disks):
         """
         return the first disk that is eligible to be used as filesystem cache
         First try to find a ssd disk, otherwise return a HDD
@@ -119,9 +119,9 @@ class Node:
 
         return available_disks
 
-    def _mount_fscache(self, storagepool):
+    def _mount_zeroos_cache(self, storagepool):
         """
-        mount the fscache storage pool and copy the content of the in memmory fs inside
+        mount the zeroos_cache storage pool and copy the content of the in memmory fs inside
         """
         mountedpaths = [mount.mountpoint for mount in self.list_mounts()]
 
@@ -166,24 +166,21 @@ class Node:
                     return freeports
             baseport += 1
 
-    def find_persistance(self, name='fscache'):
-        fscache_sp = None
+    def find_persistance(self, name='zos-cache'):
+        zeroos_cache_sp = None
         for sp in self.storagepools.list():
             if sp.name == name:
-                fscache_sp = sp
+                zeroos_cache_sp = sp
                 break
-        return fscache_sp
+        return zeroos_cache_sp
 
-    def is_configured(self, name=None):
-        if not name:
-            name = self.name
-        poolname = '{}_fscache'.format(name)
-        fscache_sp = self.find_persistance(poolname)
-        if fscache_sp is None:
+    def is_configured(self, name='zos-cache'):
+        zeroos_cache_sp = self.find_persistance(name)
+        if zeroos_cache_sp is None:
             return False
-        return bool(fscache_sp.mountpoint)
+        return bool(zeroos_cache_sp.mountpoint)
 
-    def partition_and_mount_disks(self, name='fscache'):
+    def partition_and_mount_disks(self):
         mounts = []
         node_mountpoints = self.client.disk.mounts()
 
@@ -234,11 +231,11 @@ class Node:
 
         return mounts
 
-    def ensure_persistance(self, name='fscache'):
+    def ensure_persistance(self, name='zos-cache'):
         """
         look for a disk not used,
         create a partition and mount it to be used as cache for the g8ufs
-        set the label `fs_cache` to the partition
+        set the label `zos-cache` to the partition
         """
         disks = self.disks.list()
         if len(disks) <= 0:
@@ -246,21 +243,21 @@ class Node:
             return
 
         # check if there is already a storage pool with the fs_cache label
-        fscache_sp = self.find_persistance(name)
+        zeroos_cache_sp = self.find_persistance(name)
 
         # create the storage pool if we don't have one yet
-        if fscache_sp is None:
-            disk = self._eligible_fscache_disk(disks)
-            fscache_sp = self.storagepools.create(name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
-        fscache_sp.mount()
+        if zeroos_cache_sp is None:
+            disk = self._eligible_zeroos_cache_disk(disks)
+            zeroos_cache_sp = self.storagepools.create(name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
+        zeroos_cache_sp.mount()
         try:
-            fscache_sp.get('logs')
+            zeroos_cache_sp.get('logs')
         except ValueError:
-            fscache_sp.create('logs')
+            zeroos_cache_sp.create('logs')
 
         # mount the storage pool
-        self._mount_fscache(fscache_sp)
-        return fscache_sp
+        self._mount_zeroos_cache(zeroos_cache_sp)
+        return zeroos_cache_sp
 
     def download_content(self, remote):
         buff = BytesIO()
@@ -322,6 +319,11 @@ class Node:
             logger.debug("Could not ping %s within 30 seconds due to %s" % (self.addr, err))
 
         return state
+
+    def uptime(self):
+        response = self.client.system('cat /proc/uptime').get()
+        output = response.stdout.split(' ')
+        return float(output[0])
 
     def __str__(self):
         return "Node <{host}:{port}>".format(
