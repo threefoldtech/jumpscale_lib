@@ -67,12 +67,13 @@ class SSLFactory(JSBASE):
         """
         Signing X509 certificate using CA
         The following code sample shows how to sign an X509 certificate using a CA:
-
-        #TODO:*1 which ca, own CA, more doc please or external one
+        THis is usually done by the certificate authority it self like verisign, GODaddy, ... etc
+        :param path: Path to the certificate and key that will be used in signing the new certificate
+        :param keyname: the new certficate and key name
         """
         path = j.tools.path.get(path)
-        cacert = path.joinpath("%s/ca.crt").text()
-        cakey = path.joinpath("%s/ca.key").text()
+        cacert = path.joinpath("ca.crt").text()
+        cakey = path.joinpath("ca.key").text()
         ca_cert = OpenSSL.crypto.load_certificate(
             OpenSSL.crypto.FILETYPE_PEM, cacert)
         ca_key = OpenSSL.crypto.load_privatekey(
@@ -91,10 +92,15 @@ class SSLFactory(JSBASE):
         cert.set_pubkey(key)
         cert.sign(ca_key, "sha1")
 
-        path.joinpath("%s.crt" % keyname).write_text(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
-        path.joinpath("%s.key" % keyname).write_text(crypto.dump_privatekey(crypto.FILETYPE_PEM, key))
+        path.joinpath("%s.crt" % keyname).write_text(crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode())
+        path.joinpath("%s.key" % keyname).write_text(crypto.dump_privatekey(crypto.FILETYPE_PEM, key).decode())
 
     def create_certificate_signing_request(self, common_name):
+        """
+        Creating CSR (Certificate Signing Request)
+        this CSR normally passed to the CA (Certificate Authority) to create a signed certificate
+        :param common_name: common_name to be used in subject
+        """
         key = OpenSSL.crypto.PKey()
         key.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
 
@@ -112,8 +118,23 @@ class SSLFactory(JSBASE):
             OpenSSL.crypto.FILETYPE_PEM, req)
         return key, req
 
-    def sign_request(self, req, ca_cert, ca_key):
+    def sign_request(self, req, path):
+        """
+        Processes a CSR (Certificate Signning Request)
+        issues a certificate based on the CSR data and signit
+        :param req: CSR
+        :param path: path to the key and certificate that will be used in signning this request
+        """
 
+        path = j.tools.path.get(path)
+        cacert = path.joinpath("ca.crt").text()
+        cakey = path.joinpath("ca.key").text()
+        
+        ca_cert = OpenSSL.crypto.load_certificate(
+            OpenSSL.crypto.FILETYPE_PEM, cacert)
+        ca_key = OpenSSL.crypto.load_privatekey(
+            OpenSSL.crypto.FILETYPE_PEM, cakey)
+            
         req = OpenSSL.crypto.load_certificate_request(
             OpenSSL.crypto.FILETYPE_PEM, req)
 
@@ -127,9 +148,9 @@ class SSLFactory(JSBASE):
         cert.set_pubkey(req.get_pubkey())
         cert.sign(ca_key, "sha1")
 
-        pubkey = OpenSSL.crypto.dump_certificate(
+        certificate = OpenSSL.crypto.dump_certificate(
             OpenSSL.crypto.FILETYPE_PEM, cert)
-        return pubkey
+        return certificate
 
     def _verify(self, certificate, key):
         """

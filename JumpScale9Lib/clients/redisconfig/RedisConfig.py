@@ -46,13 +46,16 @@ class RedisConfig(JSConfigBase):
 
             # NO PATHS IN CONFIG !!!!!!!, needs to come from properties above (convention over configuration)
 
+            ssl_certfile = self.ssl_certfile_path if d['ssl'] else None
+            ssl_keyfile = self.ssl_keyfile_path if d['ssl'] else None
+
             if unixsocket == "":
                 unixsocket = None
 
             self._redis = j.clients.redis.get(
                 ipaddr=addr, port=port, password=password, unixsocket=unixsocket,
                 ardb_patch=ardb_patch, set_patch=set_patch, ssl=d["ssl"],
-                ssl_keyfile=self.ssl_keyfile_path, ssl_certfile=self.ssl_certfile_path,
+                ssl_keyfile=ssl_keyfile, ssl_certfile=ssl_certfile,
                 ssl_cert_reqs=None, ssl_ca_certs=None)
 
         return self._redis
