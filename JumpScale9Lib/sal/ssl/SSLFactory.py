@@ -152,10 +152,10 @@ class SSLFactory(JSBASE):
             OpenSSL.crypto.FILETYPE_PEM, cert)
         return certificate
 
-    def _verify(self, certificate, key):
+    def verify(self, certificate, key):
         """
         It reads the pathes of certificate and key files of an X509 certificate
-        and verify wif certificate matches private key
+        and verify if certificate matches private key
 
         :param certificate (string): path to the certificate file
         :param key (string): path to the key file
