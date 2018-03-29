@@ -2,7 +2,7 @@
 
 ## Step 1: Attach your host to the ZeroTier network of the Zero-OS node
 
-Zero-OS nodes will run inside a ZeroTier network. To access them, the host needs to have access to that network.
+Zero-OS nodes will run inside a [ZeroTier](https://www.zerotier.com/) network. To access them, the host needs to have access to that network.
 
 Install the ZeroTier tools [from here](https://www.zerotier.com/download.shtml)
 
@@ -17,7 +17,7 @@ Make sure the host is authorized on the network. (https://my.zerotier.com/networ
 
 ## Step 2: Get the Zero-OS client in Jumpscale9
 
-Start the Jumpscale9 interpreter.
+Start the Jumpscale9 Python interpreter.
 If not installed, you can use the bash utilities to install JS9 (https://github.com/Jumpscale/bash)
 ```bash
 js9
@@ -28,7 +28,7 @@ Get the Zero-OS client
 # Omit data when using the config manager
 # The config manager will then prompt for the necessary client data.
 # In fact this step (step 2) can be skipped when using the config manager
-# It will ask for for the client data when `get_node` is called and there is no client for the instance
+# It will ask for for the client data when `get_node` is called when there is no client for the instance
 data = {
     # host is the internal ZeroTier address of the Zero-OS node
     "host": "192.168.191.191"
@@ -44,7 +44,7 @@ cl = j.clients.zero_os.get(instance="node1", data=data)
 
 ## Step 3: Get the Zero-OS sal
 
-Jumpscale provides a System Abstraction Layer (sal) for Zero-OS which we can use to get the capacity report from the node.
+Jumpscale provides a System Abstraction Layer (sal) for Zero-OS which can be used to get the capacity report from the node.
 
 ```python
 node = j.clients.zero_os.sal.get_node(instance="node1")
@@ -52,6 +52,7 @@ node = j.clients.zero_os.sal.get_node(instance="node1")
 
 The sal will look for a Zero-OS client with the instance name of `node1` and use that to interact with the Zero-OS node.
 When only using a single node, `instance` can be omitted and the default instance `main` will be used.
+If no Zero-OS client is found for that instance, the config manager will prompt for the client data and create a client for the sal.
 
 ## Step 4: Get the report
 
