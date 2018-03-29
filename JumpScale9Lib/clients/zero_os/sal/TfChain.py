@@ -73,7 +73,7 @@ class TfChainDaemon:
         cmd_line = '/bin/tfchaind \
             --rpc-addr {rpc_addr} \
             --api-addr {api_addr} \
-            --tfchain-directory {data_dir} \
+            --persistent-directory {data_dir} \
             '.format(rpc_addr=self.rpc_addr,
                      api_addr=self.api_addr,
                      data_dir=self.data_dir)
