@@ -75,6 +75,30 @@ class Node:
         except StopIteration:
             return None
 
+    def _eligible_zeroos_cache_disk(self, disks):
+        """
+        return the first disk that is eligible to be used as filesystem cache
+        First try to find a ssd disk, otherwise return a HDD
+        """
+        priorities = [StorageType.SSD, StorageType.HDD, StorageType.NVME]
+        eligible = {t: [] for t in priorities}
+        # Pick up the first ssd
+        usedisks = []
+        for pool in (self.client.btrfs.list() or []):
+            for device in pool['devices']:
+                usedisks.append(device['path'])
+        for disk in disks[::-1]:
+            if disk.devicename in usedisks or len(disk.partitions) > 0:
+                continue
+            if disk.type in priorities:
+                eligible[disk.type].append(disk)
+        # pick up the first disk according to priorities
+        for t in priorities:
+            if eligible[t]:
+                return eligible[t][0]
+        else:
+            raise RuntimeError("cannot find eligible disks for the fs cache")
+
     def find_disks(self, disk_type):
         """
         return a list of disk that are not used by storage pool
@@ -95,6 +119,37 @@ class Node:
 
         return available_disks
 
+    def _mount_zeroos_cache(self, storagepool):
+        """
+        mount the zeroos_cache storage pool and copy the content of the in memmory fs inside
+        """
+        mountedpaths = [mount.mountpoint for mount in self.list_mounts()]
+
+        def create_cache_dir(path, name):
+            self.client.filesystem.mkdir(path)
+            if path not in mountedpaths:
+                if storagepool.exists(name):
+                    storagepool.get(name).delete()
+                fs = storagepool.create(name)
+                self.client.disk.mount(storagepool.devicename, path, ['subvol={}'.format(fs.subvolume)])
+
+        create_cache_dir('/var/cache/containers', 'containercache')
+        create_cache_dir('/var/cache/vm', 'vmcache')
+
+        logpath = '/var/log'
+        if logpath not in mountedpaths:
+            # logs is empty filesystem which we create a snapshot on to store logs of current boot
+            snapname = '{:%Y-%m-%d-%H-%M}'.format(datetime.now())
+            fs = storagepool.get('logs')
+            snapshot = fs.create(snapname)
+            self.client.bash('mkdir /tmp/log && mv /var/log/* /tmp/log/')
+            self.client.disk.mount(storagepool.devicename, logpath, ['subvol={}'.format(snapshot.subvolume)])
+            self.client.bash('mv /tmp/log/* /var/log/').get()
+            self.client.log_manager.reopen()
+            # startup syslogd and klogd
+            self.client.system('syslogd -n -O /var/log/messages')
+            self.client.system('klogd -n')
+
     def freeports(self, baseport=2000, nrports=3):
         ports = self.client.info.port()
         usedports = set()
@@ -110,6 +165,20 @@ class Node:
                 if len(freeports) >= nrports:
                     return freeports
             baseport += 1
+
+    def find_persistance(self, name='zos-cache'):
+        zeroos_cache_sp = None
+        for sp in self.storagepools.list():
+            if sp.name == name:
+                zeroos_cache_sp = sp
+                break
+        return zeroos_cache_sp
+
+    def is_configured(self, name='zos-cache'):
+        zeroos_cache_sp = self.find_persistance(name)
+        if zeroos_cache_sp is None:
+            return False
+        return bool(zeroos_cache_sp.mountpoint)
 
     def partition_and_mount_disks(self):
         mounts = []
@@ -161,6 +230,34 @@ class Node:
             mounts.append({'disk': disk.name, 'mountpoint': mount_point})
 
         return mounts
+
+    def ensure_persistance(self, name='zos-cache'):
+        """
+        look for a disk not used,
+        create a partition and mount it to be used as cache for the g8ufs
+        set the label `zos-cache` to the partition
+        """
+        disks = self.disks.list()
+        if len(disks) <= 0:
+            # if no disks, we can't do anything
+            return
+
+        # check if there is already a storage pool with the fs_cache label
+        zeroos_cache_sp = self.find_persistance(name)
+
+        # create the storage pool if we don't have one yet
+        if zeroos_cache_sp is None:
+            disk = self._eligible_zeroos_cache_disk(disks)
+            zeroos_cache_sp = self.storagepools.create(name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
+        zeroos_cache_sp.mount()
+        try:
+            zeroos_cache_sp.get('logs')
+        except ValueError:
+            zeroos_cache_sp.create('logs')
+
+        # mount the storage pool
+        self._mount_zeroos_cache(zeroos_cache_sp)
+        return zeroos_cache_sp
 
     def download_content(self, remote):
         buff = BytesIO()
