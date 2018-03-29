@@ -67,12 +67,13 @@ class SSLFactory(JSBASE):
         """
         Signing X509 certificate using CA
         The following code sample shows how to sign an X509 certificate using a CA:
-
-        #TODO:*1 which ca, own CA, more doc please or external one
+        THis is usually done by the certificate authority it self like verisign, GODaddy, ... etc
+        :param path: Path to the certificate and key that will be used in signing the new certificate
+        :param keyname: the new certficate and key name
         """
         path = j.tools.path.get(path)
-        cacert = path.joinpath("%s/ca.crt").text()
-        cakey = path.joinpath("%s/ca.key").text()
+        cacert = path.joinpath("ca.crt").text()
+        cakey = path.joinpath("ca.key").text()
         ca_cert = OpenSSL.crypto.load_certificate(
             OpenSSL.crypto.FILETYPE_PEM, cacert)
         ca_key = OpenSSL.crypto.load_privatekey(
@@ -91,10 +92,15 @@ class SSLFactory(JSBASE):
         cert.set_pubkey(key)
         cert.sign(ca_key, "sha1")
 
-        path.joinpath("%s.crt" % keyname).write_text(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
-        path.joinpath("%s.key" % keyname).write_text(crypto.dump_privatekey(crypto.FILETYPE_PEM, key))
+        path.joinpath("%s.crt" % keyname).write_text(crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode())
+        path.joinpath("%s.key" % keyname).write_text(crypto.dump_privatekey(crypto.FILETYPE_PEM, key).decode())
 
     def create_certificate_signing_request(self, common_name):
+        """
+        Creating CSR (Certificate Signing Request)
+        this CSR normally passed to the CA (Certificate Authority) to create a signed certificate
+        :param common_name: common_name to be used in subject
+        """
         key = OpenSSL.crypto.PKey()
         key.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
 
@@ -112,8 +118,23 @@ class SSLFactory(JSBASE):
             OpenSSL.crypto.FILETYPE_PEM, req)
         return key, req
 
-    def sign_request(self, req, ca_cert, ca_key):
+    def sign_request(self, req, path):
+        """
+        Processes a CSR (Certificate Signning Request)
+        issues a certificate based on the CSR data and signit
+        :param req: CSR
+        :param path: path to the key and certificate that will be used in signning this request
+        """
 
+        path = j.tools.path.get(path)
+        cacert = path.joinpath("ca.crt").text()
+        cakey = path.joinpath("ca.key").text()
+        
+        ca_cert = OpenSSL.crypto.load_certificate(
+            OpenSSL.crypto.FILETYPE_PEM, cacert)
+        ca_key = OpenSSL.crypto.load_privatekey(
+            OpenSSL.crypto.FILETYPE_PEM, cakey)
+            
         req = OpenSSL.crypto.load_certificate_request(
             OpenSSL.crypto.FILETYPE_PEM, req)
 
@@ -127,39 +148,74 @@ class SSLFactory(JSBASE):
         cert.set_pubkey(req.get_pubkey())
         cert.sign(ca_key, "sha1")
 
-        pubkey = OpenSSL.crypto.dump_certificate(
+        certificate = OpenSSL.crypto.dump_certificate(
             OpenSSL.crypto.FILETYPE_PEM, cert)
-        return pubkey
+        return certificate
 
-    def _verify(self, path):
-        # Verify whether X509 certificate matches private key
-        # The code sample below shows how to check whether a certificate matches with a certain private key.
-        # OpenSSL has a function for this, X509_check_private_key, but
-        # pyOpenSSL provides no access to it.
+    def verify(self, certificate, key):
+        """
+        It reads the pathes of certificate and key files of an X509 certificate
+        and verify if certificate matches private key
+
+        :param certificate (string): path to the certificate file
+        :param key (string): path to the key file
+        :return (boolean): True only if certificate matches the private key
+        """
+        key = self._load_privatekey(key)
+        certificate = self._load_certificate(certificate)
 
         ctx = OpenSSL.SSL.Context(OpenSSL.SSL.TLSv1_METHOD)
         ctx.use_privatekey(key)
-        ctx.use_certificate(cert)
+        ctx.use_certificate(certificate)
         try:
             ctx.check_privatekey()
         except OpenSSL.SSL.Error:
             self.logger.debug("Incorrect key")
+            return False
         else:
             self.logger.debug("Key matches certificate")
+            return True
 
     def bundle(self, certificate, key, certification_chain=(), passphrase=None):
         """
         Bundles a certificate with it's private key (if any) and it's chain of trust.
         Optionally secures it with a passphrase.
-        """
-        key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
 
-        x509 = OpenSSL.crypto.load_certificate(
-            OpenSSL.crypto.FILETYPE_PEM, certificate)
+        :param certificate (string): path to the certificate file
+        :param key (string): path to the key file
+        :param certification_chain (tuple): certification chain, by default it is an empty tuple
+        :param passphrase (string): passpharse for the bundle, by default it is None
+        :return: PKCS12 object
+        """
+        key = self._load_privatekey(key)
+        x509 = self._load_certificate(certificate)
 
         p12 = OpenSSL.crypto.PKCS12()
         p12.set_privatekey(key)
         p12.set_certificate(x509)
         p12.set_ca_certificates(certification_chain)
-        p12.set_friendlyname('Jumpscale client authentication')
+        p12.set_friendlyname(b'Jumpscaleclientauthentication')
         return p12.export(passphrase=passphrase)
+
+
+    def _load_privatekey(self, path):
+        """
+        load a private key content from a path
+
+        :param path: path to the key file
+        :return: content of the file
+        """
+        key = j.tools.path.get(path).text()
+        key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
+        return key
+
+    def _load_certificate(self, path):
+        """
+        load certifcate content from a path
+
+        :param path: path to the certificate
+        :return: content of the certificate
+        """
+        certificate = j.tools.path.get(path).text()
+        x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, certificate)
+        return x509
