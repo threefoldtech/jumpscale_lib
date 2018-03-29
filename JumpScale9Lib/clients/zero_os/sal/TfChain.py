@@ -53,7 +53,7 @@ class TfChainDaemon:
     """
 
     def __init__(self, name, container, data_dir='/mnt/data',
-                 rpc_addr='0.0.0.0:23112', api_addr='localhost:23110'):
+                 rpc_addr='localhost:23112', api_addr='localhost:23110'):
         self.name = name
         self.id = 'tfchaind.{}'.format(self.name)
         self.container = container
@@ -117,6 +117,7 @@ class TfChainClient:
         self.container = container
         self.addr = addr
         self._recovery_seed = None
+        self._wallet_address = None
         self._wallet_password = wallet_passphrase
 
     @property
@@ -127,16 +128,29 @@ class TfChainClient:
     def wallet_password(self):
         return self._wallet_password
 
+    @property
+    def wallet_address(self):
+        if self._wallet_address is None:
+            cmd = '/bin/tfchainc --addr {} wallet address'.format(self.addr)
+            result = self.container.client.bash(cmd, id='%s.wallet_init' % self.id).get()
+
+            if result.state != 'SUCCESS':
+                raise RuntimeError("Could not initialize wallet.\nstdout: %s\nstderr: %s" % (
+                        result.stdout, result.stderr))
+
+            self._wallet_address = result.stdout.split('Created new address: ')[-1].strip()
+
+        return self._wallet_address
+
     def wallet_init(self):
         cmd = '(echo "{0}" && echo "{0}") | /bin/tfchainc --addr {1} wallet init'.format(self.wallet_password, self.addr)
-        response = self.container.client.bash(cmd, id='%s.wallet_init' % self.id).get()
+        result = self.container.client.bash(cmd, id='%s.wallet_init' % self.id).get()
 
-        result = response.get()
         if result.state != 'SUCCESS':
             raise RuntimeError("Could not initialize wallet.\nstdout: %s\nstderr: %s" % (
                     result.stdout, result.stderr))
 
-        self._recovery_seed = result.stdout.split('Recovery seed:\n')[-1].split('\n\nWallet encrypted with given passphrase\n')[0]
+        self._recovery_seed = result.stdout.split('Recovery seed:\n')[-1].split('\n\nWallet encrypted with given passphrase\n')[0].strip()
 
     def wallet_unlock(self):
         cmd = 'echo "%s" | /bin/tfchainc --addr %s wallet unlock' % (self.wallet_password, self.addr)
