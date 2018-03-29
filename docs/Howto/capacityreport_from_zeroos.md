@@ -65,15 +65,15 @@ report = node.capacity.report()
 print(report.CRU)
 4
 
-# Print the MRU (total memory in gibi)
+# Print the MRU (total memory in GiB)
 print(report.MRU)
 15.65
 
-# Print the HRU (total hard drive capacity in gibi)
+# Print the HRU (total hard drive capacity in GiB)
 print(report.HRU)
 1870.56
 
-# Print the SRU (total solid state capacity in gibi)
+# Print the SRU (total solid state capacity in GiB)
 print(report.SRU)
 119.24
 
