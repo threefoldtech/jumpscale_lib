@@ -131,35 +131,70 @@ class SSLFactory(JSBASE):
             OpenSSL.crypto.FILETYPE_PEM, cert)
         return pubkey
 
-    def _verify(self, path):
-        # Verify whether X509 certificate matches private key
-        # The code sample below shows how to check whether a certificate matches with a certain private key.
-        # OpenSSL has a function for this, X509_check_private_key, but
-        # pyOpenSSL provides no access to it.
+    def _verify(self, certificate, key):
+        """
+        It reads the pathes of certificate and key files of an X509 certificate
+        and verify wif certificate matches private key
+
+        :param certificate (string): path to the certificate file
+        :param key (string): path to the key file
+        :return (boolean): True only if certificate matches the private key
+        """
+        key = self._load_privatekey(key)
+        certificate = self._load_certificate(certificate)
 
         ctx = OpenSSL.SSL.Context(OpenSSL.SSL.TLSv1_METHOD)
         ctx.use_privatekey(key)
-        ctx.use_certificate(cert)
+        ctx.use_certificate(certificate)
         try:
             ctx.check_privatekey()
         except OpenSSL.SSL.Error:
             self.logger.debug("Incorrect key")
+            return False
         else:
             self.logger.debug("Key matches certificate")
+            return True
 
     def bundle(self, certificate, key, certification_chain=(), passphrase=None):
         """
         Bundles a certificate with it's private key (if any) and it's chain of trust.
         Optionally secures it with a passphrase.
-        """
-        key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
 
-        x509 = OpenSSL.crypto.load_certificate(
-            OpenSSL.crypto.FILETYPE_PEM, certificate)
+        :param certificate (string): path to the certificate file
+        :param key (string): path to the key file
+        :param certification_chain (tuple): certification chain, by default it is an empty tuple
+        :param passphrase (string): passpharse for the bundle, by default it is None
+        :return: PKCS12 object
+        """
+        key = self._load_privatekey(key)
+        x509 = self._load_certificate(certificate)
 
         p12 = OpenSSL.crypto.PKCS12()
         p12.set_privatekey(key)
         p12.set_certificate(x509)
         p12.set_ca_certificates(certification_chain)
-        p12.set_friendlyname('Jumpscale client authentication')
+        p12.set_friendlyname(b'Jumpscaleclientauthentication')
         return p12.export(passphrase=passphrase)
+
+
+    def _load_privatekey(self, path):
+        """
+        load a private key content from a path
+
+        :param path: path to the key file
+        :return: content of the file
+        """
+        key = j.tools.path.get(path).text()
+        key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
+        return key
+
+    def _load_certificate(self, path):
+        """
+        load certifcate content from a path
+
+        :param path: path to the certificate
+        :return: content of the certificate
+        """
+        certificate = j.tools.path.get(path).text()
+        x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, certificate)
+        return x509
