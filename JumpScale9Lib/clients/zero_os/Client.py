@@ -27,6 +27,7 @@ DefaultTimeout = 10  # seconds
 TEMPLATE = """
 host = "127.0.0.1"
 port = 6379
+unixsocket = ""
 password_ = ""
 db = 0
 ssl = true
@@ -81,22 +82,25 @@ class Client(BaseClient, JSConfigClientBase):
             self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(password)
 
         if self.__redis is None:
-            timeout = self.config.data['timeout']
-            socket_timeout = (timeout + 5) if timeout else 15
-            socket_keepalive_options = dict()
-            if hasattr(socket, 'TCP_KEEPIDLE'):
-                socket_keepalive_options[socket.TCP_KEEPIDLE] = 1
-            if hasattr(socket, 'TCP_KEEPINTVL'):
-                socket_keepalive_options[socket.TCP_KEEPINTVL] = 1
-            if hasattr(socket, 'TCP_KEEPIDLE'):
-                socket_keepalive_options[socket.TCP_KEEPIDLE] = 1
+            if self.config.data['unixsocket']:
+                self.__redis = redis.Redis(unix_socket_path=self.config.data['unixsocket'], db=self.config.data['db'])
+            else:
+                timeout = self.config.data['timeout']
+                socket_timeout = (timeout + 5) if timeout else 15
+                socket_keepalive_options = dict()
+                if hasattr(socket, 'TCP_KEEPIDLE'):
+                    socket_keepalive_options[socket.TCP_KEEPIDLE] = 1
+                if hasattr(socket, 'TCP_KEEPINTVL'):
+                    socket_keepalive_options[socket.TCP_KEEPINTVL] = 1
+                if hasattr(socket, 'TCP_KEEPIDLE'):
+                    socket_keepalive_options[socket.TCP_KEEPIDLE] = 1
 
-            self.__redis = redis.Redis(host=self.config.data['host'],
-                                       port=self.config.data['port'],
-                                       password=self.config.data['password_'],
-                                       db=self.config.data['db'], ssl=self.config.data['ssl'],
-                                       socket_timeout=socket_timeout,
-                                       socket_keepalive=True, socket_keepalive_options=socket_keepalive_options)
+                self.__redis = redis.Redis(host=self.config.data['host'],
+                                           port=self.config.data['port'],
+                                           password=self.config.data['password_'],
+                                           db=self.config.data['db'], ssl=self.config.data['ssl'],
+                                           socket_timeout=socket_timeout,
+                                           socket_keepalive=True, socket_keepalive_options=socket_keepalive_options)
 
         return self.__redis
 
