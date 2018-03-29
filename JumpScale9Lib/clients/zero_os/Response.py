@@ -14,6 +14,7 @@ class JobNotFoundError(Exception):
 
 
 class ResultError(RuntimeError):
+
     def __init__(self, msg, code=0):
         super().__init__(msg)
 
@@ -138,6 +139,7 @@ class Return():
 
 
 class Response():
+
     def __init__(self, client, id):
         self._client = client
         self._id = id
@@ -162,7 +164,7 @@ class Response():
         """
         r = self._client._redis
         flag = '{}:flag'.format(self._queue)
-        return bool(r.execute_command('LKEYEXISTS', flag))
+        return bool(r.exists(flag))
 
     @property
     def running(self):
@@ -172,8 +174,8 @@ class Response():
         """
         r = self._client._redis
         flag = '{}:flag'.format(self._queue)
-        if bool(r.execute_command('LKEYEXISTS', flag)):
-            ttl = r.execute_command('LTTL', flag)
+        if bool(r.exists(flag)):
+            ttl = r.ttl(flag)
             return ttl == -1 or ttl is None
 
         return False
@@ -257,7 +259,7 @@ class Response():
                     payload = json.loads(v.decode())
                     r = Return(payload)
                     logger.debug('%s << %s, stdout="%s", stderr="%s", data="%s"',
-                                self._id, r.state, r.stdout, r.stderr, r.data[:1000])
+                                 self._id, r.state, r.stdout, r.stderr, r.data[:1000])
                     return r
             except TimeoutError:
                 pass
@@ -267,6 +269,7 @@ class Response():
 
 
 class JSONResponse(Response):
+
     def __init__(self, response):
         super().__init__(response._client, response.id)
 
