@@ -164,6 +164,7 @@ class RivineWallet:
             except RESTAPIError as ex:
                 logger.error('Skipping address: {}'.format(address))
             else:
+                import pdb; pdb.set_trace()
                 if address_info.get('hashtype', None) != UNLOCKHASH_TYPE:
                     raise BackendError('Address is not recognized as an unblock hash')
                 self._collect_miner_fees(address=address, blocks=address_info.get('blocks',{}),
@@ -222,7 +223,7 @@ class RivineWallet:
         """
         for txn_info in transactions:
             # cointinputs can exist in the dict but have the value None
-            coininputs = txn_info.get('rawtransaction', {}).get('coininputs', [])
+            coininputs = txn_info.get('rawtransaction', {}).get('data', {}).get('coininputs', [])
             if coininputs:
                 for coin_input in coininputs:
                     if coin_input.get('parentid') in self._unspent_coins_outputs:
