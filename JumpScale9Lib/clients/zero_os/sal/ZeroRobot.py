@@ -6,7 +6,7 @@ class ZeroRobot:
     Zero robot
     """
 
-    def __init__(self, container, port=6600, telegram_bot_token=None, telegram_chat_id=0, template_repos=None, data_repo=None, config_repo=None):
+    def __init__(self, container, port=6600, telegram_bot_token=None, telegram_chat_id=0, template_repos=None, data_repo=None, config_repo=None, organization=None):
         self.id = 'zbot.{}'.format(container.name)
         self.container = container
         self.port = port
@@ -15,6 +15,7 @@ class ZeroRobot:
         self.template_repos = template_repos if template_repos else list()
         self.data_repo = data_repo or '/opt/code/zrobot'
         self.config_repo = config_repo or '/opt/code/zrobot/config'
+        self.organization = organization
 
     def start(self, timeout=120):
         if self.is_running():
@@ -37,6 +38,9 @@ class ZeroRobot:
 
         if self.telegram_chat_id:
             cmd_line += " --telegram-chat-id %s" % self.telegram_chat_id
+
+        if self.organization:
+            cmd_line += " --organization %s" % self.organization
 
         cmd = container_client.system(cmd_line, id=self.id)
 
