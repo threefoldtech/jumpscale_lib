@@ -159,7 +159,16 @@ class Machine(JSBASE):
         return [disk for disk in machine_data['disks'] if disk['type'] != 'M']
 
     def disk_detach(self, disk_id):
+        """
+        Detach disk from the machine
+        """
         return self.client.api.cloudapi.machines.detachDisk(machineId=self.id, diskId=disk_id)
+
+    def disk_attach(self, disk_id):
+        """
+        Attach disk to the machine
+        """        
+        return self.client.api.cloudapi.machines.attachDisk(machineId=self.id, diskId=disk_id)
 
     def disk_limit_io(self, disk_id, total_bytes_sec, read_bytes_sec, write_bytes_sec, total_iops_sec,
                       read_iops_sec, write_iops_sec, total_bytes_sec_max, read_bytes_sec_max,
