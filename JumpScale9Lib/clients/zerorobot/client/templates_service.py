@@ -5,6 +5,7 @@ from .unmarshall_error import UnmarshallError
 
 
 class TemplatesService:
+
     def __init__(self, client):
         self.client = client
 
@@ -55,3 +56,14 @@ class TemplatesService:
             raise uae
         except Exception as e:
             raise UnmarshallError(resp, e.message)
+
+    def CheckoutVersionTemplateRepo(self, data, headers=None, query_params=None, content_type="application/json"):
+        """
+        Checkout a certain branch/tag/revision of a template repository
+        It is method for PUT /templates
+        """
+        if query_params is None:
+            query_params = {}
+
+        uri = self.client.base_url + "/templates"
+        resp = self.client.put(uri, data, headers, query_params, content_type)
