@@ -8,6 +8,7 @@ default_logger = logging.getLogger(__name__)
 
 
 class Containers():
+
     def __init__(self, node, logger=None):
         self.node = node
 
@@ -189,7 +190,7 @@ class Container():
 
         self.logger.debug('stop job: %s', id)
 
-        self.client.job.kill(self.id)
+        self.client.job.kill(id)
 
         # wait for the daemon to stop
         start = time.time()
@@ -203,7 +204,6 @@ class Container():
             raise RuntimeError('Failed to stop job {}'.format(id))
 
     def is_port_listening(self, port, timeout=60, network=('tcp', 'tcp6')):
-        import time
         start = time.time()
         while start + timeout > time.time():
             for lport in self.client.info.port():
