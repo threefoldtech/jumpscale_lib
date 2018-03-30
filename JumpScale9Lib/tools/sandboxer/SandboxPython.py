@@ -46,7 +46,7 @@ class SandboxPython(JSBASE):
             path = self.build(reset=reset)
 
         if path == "":
-            path = self.BUILDDIRL
+            path = self.BUILDDIR
 
         if not j.sal.fs.exists("%s/bin/python3.6" % path):
             raise RuntimeError(
