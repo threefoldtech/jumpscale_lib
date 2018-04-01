@@ -31,8 +31,11 @@ class IYOFactory(JSConfigBaseFactory):
     @property
     def default(self):
         if self._default == None:
-            self._default = self.get()
+            if j.tools.configmanager.sandbox_check():
+                raise RuntimeError("should not call IYO client in sandbox!")
+            self._default = self.get(interactive=False)
         return self._default
+
 
     def test(self):
         """

@@ -48,9 +48,20 @@ class OVCClient(JSConfigBase):
         '''
 
         if not self._jwt_expire_timestamp and self.config.data.get('jwt_'):
+            #means there is a jwt token specified, need to see if it did not expire yet
             self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(self.config.data['jwt_'])
 
         if self._jwt_expire_timestamp and self._jwt_expire_timestamp - 300 < time.time():
+            if j.tools.configmanager.sandbox_check():
+                if j.tools.configmanager.interactive:
+                    print("Get your jwt client (in another shell, not in this sandbox)")
+                    print("DO:  js9 'print(j.clients.itsyouonline.default.jwt)'")
+                    jwt=j.tools.console.askString("give your jwt code, you got from the other shell:")
+                    self.config.data_set('jwt_', jwt)
+                    self.config.save()
+                    self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(token)
+                    return
+                raise j.exceptions.Input("please refresh your jwt token in your openvcloud config.\n")
             token = j.clients.itsyouonline.refresh_jwt_token(self.config.data['jwt_'], validity=3600)
             self.config.data_set('jwt_', token)
             self.config.save()
@@ -58,12 +69,14 @@ class OVCClient(JSConfigBase):
 
     @property
     def api(self):
-        # before using api refresh jwt token if needed
         self.jwt_refresh()
 
         if self._api is None:
-
+            
             self._config_check()
+
+            # before using api refresh jwt token if needed
+            self.jwt_refresh()
 
             self._api = j.clients.portal.get(data={'ip': self.config.data.get("address"),
                                                    'port': self.config.data.get("port")}, interactive=False)

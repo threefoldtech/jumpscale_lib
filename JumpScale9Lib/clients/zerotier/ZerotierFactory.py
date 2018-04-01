@@ -36,7 +36,7 @@ class ZerotierFactory(JSConfigFactory):
         data={}
         data["token_"]=token
         data["networkid"]=networkid
-        return self.get(instance=instane,data=data,interactive=interactive)
+        return self.get(instance=instance,data=data,interactive=interactive)
 
     def test(self):
         """
