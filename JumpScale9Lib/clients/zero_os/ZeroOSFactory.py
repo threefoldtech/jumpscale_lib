@@ -50,7 +50,7 @@ class ZeroOSFactory(JSConfigFactoryBase):
         while True:
             try:
                 network = zerotierClient.get_network(network_id=zerotierNetworkID)
-                member = network.get_member(public_ip=ip_pub)
+                member = network.member_get(public_ip=ip_pub)
                 ipaddr_priv = member.private_ip
                 break
             except RuntimeError as e:
@@ -110,7 +110,7 @@ class ZeroOSFactory(JSConfigFactoryBase):
         while True:
             try:
                 network = zerotierClient.get_network(network_id=zerotierNetworkID)
-                member = network.get_member(public_ip=ip_pub[0])
+                member = network.member_get(public_ip=ip_pub[0])
                 ipaddr_priv = member.private_ip
                 break
             except RuntimeError as e:

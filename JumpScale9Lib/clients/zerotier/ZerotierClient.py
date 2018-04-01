@@ -27,7 +27,7 @@ class NetworkMember(JSBASE):
         """
         Refresh the data of the member by querying the lastest info from the server
         """
-        member = self._network.get_member(address=self.address)
+        member = self._network.member_get(address=self.address)
         self.data = member.data
 
 
@@ -91,7 +91,7 @@ class ZeroTierNetwork(JSBASE):
         self._client = client
 
 
-    def list_members(self, raw=False):
+    def members_list(self, raw=False):
         """
         Lists the members of the current network
 
@@ -107,7 +107,7 @@ class ZeroTierNetwork(JSBASE):
         return items if raw else self._create_netork_memebers_from_dict(items=items)
 
 
-    def get_member(self, address='', name='', public_ip='', private_ip=''):
+    def member_get(self, address='', name='', public_ip='', private_ip=''):
         """
         Retrieves a member of the network that match the given filter
         @TODO: handle conflict between filters like providing two filters that conflict with each other
@@ -119,7 +119,7 @@ class ZeroTierNetwork(JSBASE):
             raise j.exceptions.RuntimeError(msg)
 
         filters_map = dict(zip(['nodeId', 'name', 'physicalAddress', 'private_ip'], filters))
-        members = self.list_members(raw=True)
+        members = self.members_list(raw=True)
         result = None
         for member in members:
             for filter_name, filter_value in filters_map.items():
@@ -147,7 +147,7 @@ class ZeroTierNetwork(JSBASE):
         return result
 
 
-    def delete_member(self, address):
+    def member_delete(self, address):
         """
         Deletes a member from the network
         """
@@ -161,6 +161,7 @@ class ZeroTierNetwork(JSBASE):
 
 TEMPLATE = """
 token_ = ""
+networkid = ""
 """
 
 class ZerotierClient(JSConfigClient):
@@ -175,9 +176,10 @@ class ZerotierClient(JSConfigClient):
         self.client = zerotier.client.Client()
         self.client.set_auth_header("Bearer " + self.config.data['token_'])
         # self._client = ZerotierClientInteral(self.config.data['token_'])
+        self._defaultnet = None
 
 
-    def list_networks(self):
+    def networks_list(self):
         """
         Lists all the networks for that belongs to the current instance
         """
@@ -186,10 +188,21 @@ class ZerotierClient(JSConfigClient):
             msg = 'Failed to list networks. Error: {}'.format(resp.text)
             self.logger.error(msg)
             raise j.exceptions.RuntimeError(msg)
-        return self._create_networks_from_dict(items=resp.json())
+        return self._network_creates_from_dict(items=resp.json())
 
 
-    def get_network(self, network_id):
+    @property
+    def network(self):
+        """
+        default network if configure din the configuration info
+        """
+        if not self._defaultnet:
+            if self.config.data["networkid"]=="":
+                raise RuntimeError("network id cannot be empty")
+            self._defaultnet =  self.network_get(self.config.data["networkid"])
+        return self._defaultnet
+
+    def network_get(self, network_id):
         """
         Retrieves details information about a netowrk
 
@@ -200,10 +213,10 @@ class ZerotierClient(JSConfigClient):
             msg = 'Failed to retrieve network. Error: {}'.format(resp.text)
             self.logger.error(msg)
             raise j.exceptions.RuntimeError(msg)
-        return self._create_networks_from_dict(items=[resp.json()])[0]
+        return self._network_creates_from_dict(items=[resp.json()])[0]
 
 
-    def _create_networks_from_dict(self, items):
+    def _network_creates_from_dict(self, items):
         """
         Will create network objects from a dictionary format
         """
@@ -214,7 +227,7 @@ class ZerotierClient(JSConfigClient):
         return result
 
 
-    def create_network(self, public, subnet=None, name=None, auto_assign=True, routes=None):
+    def network_create(self, public, subnet=None, name=None, auto_assign=True, routes=None):
         """
         Create new network
         """
@@ -256,10 +269,10 @@ class ZerotierClient(JSConfigClient):
             msg = "Failed to create network. Error: {}".format(resp.text)
             self.logger.error(msg)
             j.exceptions.RuntimeError(msg)
-        return self._create_networks_from_dict([resp.json()])[0]
+        return self._network_creates_from_dict([resp.json()])[0]
 
 
-    def delete_network(self, network_id):
+    def network_delete(self, network_id):
         """
         Delete netowrk
 
