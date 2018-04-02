@@ -3,6 +3,7 @@
 from js9 import j
 from .IYOClient import IYOClient
 import requests
+import jwt
 
 DEFAULT_BASE_URL = "https://itsyou.online/api"
 
@@ -30,8 +31,11 @@ class IYOFactory(JSConfigBaseFactory):
     @property
     def default(self):
         if self._default == None:
-            self._default = self.get()
+            if j.tools.configmanager.sandbox_check():
+                raise RuntimeError("should not call IYO client in sandbox!")
+            self._default = self.get(interactive=False)
         return self._default
+
 
     def test(self):
         """
@@ -77,3 +81,11 @@ class IYOFactory(JSConfigBaseFactory):
 
         key_labels = [k.label for k in client.api.users.ListAPIKeys(username).data]
         assert 'test' not in key_labels
+
+    def jwt_expire_timestamp(self, token):
+        '''
+        Get expiration date of jwt token
+        '''
+
+        jwt_data = jwt.decode(token, verify=False)
+        return jwt_data['exp']

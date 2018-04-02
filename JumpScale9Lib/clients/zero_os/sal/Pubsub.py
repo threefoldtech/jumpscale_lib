@@ -10,19 +10,17 @@ import aioredis
 from js9 import j
 
 
-
-
 class Response():
+
     def __init__(self, client, id):
         self._client = client
         self._id = id
         self._queue = 'result:{}'.format(id)
 
-
     async def exists(self):
         r = self._client._redis
         flag = '{}:flag'.format(self._queue)
-        key_exists = await r.connection.execute('LKEYEXISTS', flag)
+        key_exists = await r.exists(flag)
         return bool(key_exists)
 
     async def get(self, timeout=None):
@@ -44,6 +42,7 @@ class Response():
 
 
 class Pubsub():
+
     def __init__(self, loop, host, port=6379, password="", db=0, ctx=None, timeout=None, testConnectionAttempts=3, callback=None):
 
         socket_timeout = (timeout + 5) if timeout else 15
@@ -71,7 +70,6 @@ class Pubsub():
         self.callback = callback or default_callback
         if not callable(self.callback):
             raise Exception('callback must be callable')
-
 
     async def get(self):
         if self._redis is not None:

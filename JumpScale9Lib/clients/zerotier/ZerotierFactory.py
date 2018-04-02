@@ -1,10 +1,10 @@
 """
 zc = j.clients.zerotier.get(name="geert", data={'token_':"jkhljhbljb"})
-mynetworks = zc.list_networks()-> [ZerotierNetwork]
-mynetwork = zc.get_network(networkid='khgfghvhgv') -> ZerotierNetwork
-zc.create_network(public=True, subnet="10.0.0.0/24", auto_assign=True, routes=[])
-mymembers = mynetwork.list_members() -> [ZerotierNetworkMember]
-mymember = mynetwork.get_member(address='hfivivk' || name='geert' || public_ip='...' || private_ip='...')
+mynetworks = zc.networks_list()-> [ZerotierNetwork]
+mynetwork = zc.network_get(networkid='khgfghvhgv') -> ZerotierNetwork
+zc.network_create(public=True, subnet="10.0.0.0/24", auto_assign=True, routes=[])
+mymembers = mynetwork.members_list() -> [ZerotierNetworkMember]
+mymember = mynetwork.member_get(address='hfivivk' || name='geert' || public_ip='...' || private_ip='...')
 mymember.authorize()
 mymember.deauthorize()
 """
@@ -29,6 +29,15 @@ class ZerotierFactory(JSConfigFactory):
         self.connections = {}
         JSConfigFactory.__init__(self, ZerotierClient)
 
+    def configure(self,instance,token,networkid="",interactive=False):
+        """
+        @PARAM networkid is optional
+        """
+        data={}
+        data["token_"]=token
+        data["networkid"]=networkid
+        return self.get(instance=instance,data=data,interactive=interactive)
+
     def test(self):
         """
         j.clients.zerotier.test()
@@ -47,14 +56,14 @@ class ZerotierFactory(JSConfigFactory):
         # j.tools.prefab.local.network.zerotier.start()
 
         # create a new test network
-        network = zt_client.create_network(public=True, name='mytestnet', subnet='10.0.0.0/24')
+        network = zt_client.network_create(public=True, name='mytestnet', subnet='10.0.0.0/24')
 
         # try to make the the current machine join the new network
-        j.tools.prefab.local.network.zerotier.join_network(network_id=network.id)
+        j.tools.prefab.local.network.zerotier.network_join(network_id=network.id)
         time.sleep(20)
 
         # lets list the members then
-        members = network.list_members()
+        members = network.members_list()
 
         assert len(members) == 1, "Unexpected number of members. Expected 1 found {}".format(len(members))
 
@@ -68,11 +77,11 @@ class ZerotierFactory(JSConfigFactory):
         assert member.data['config']['authorized'] == True, "Members of public networks should be authorized"
 
         # lets list all the networks for our current user
-        networks = zt_client.list_networks()
+        networks = zt_client.networks_list()
 
         # lets get the network object using the network id we just created
-        network = zt_client.get_network(network_id=network.id)
+        network = zt_client.network_get(network_id=network.id)
         assert network.name == 'mytestnet'
 
         # now lets delete the testnetwork we created
-        zt_client.delete_network(network_id=network.id)
+        zt_client.network_delete(network_id=network.id)

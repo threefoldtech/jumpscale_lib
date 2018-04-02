@@ -285,8 +285,14 @@ class Node:
                 continue
 
             if not disk.mountpoint:
-                logger.debug('   * Wiping disk {kname}'.format(**disk._disk_info))
-                jobs.append(self.client.system('dd if=/dev/zero of={} bs=1M count=50'.format(disk.devicename)))
+                for part in disk.partitions:
+                    if part.mountpoint:
+                        logger.debug('   * Not wiping {device} because {part} is mounted at {mountpoint}'\
+                            .format(device=disk.devicename, part=part.devicename,  mountpoint=part.mountpoint))
+                        break
+                else:
+                    logger.debug('   * Wiping disk {kname}'.format(**disk._disk_info))
+                    jobs.append(self.client.system('dd if=/dev/zero of={} bs=1M count=50'.format(disk.devicename)))
             else:
                 logger.debug('   * Not wiping {device} mounted at {mountpoint}'.format(device=disk.devicename, mountpoint=disk.mountpoint))
 

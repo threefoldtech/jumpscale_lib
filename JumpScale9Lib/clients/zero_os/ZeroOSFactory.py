@@ -16,6 +16,7 @@ from .sal.Hypervisor import Hypervisor
 JSConfigFactoryBase = j.tools.configmanager.base_class_configs
 logger = j.logger.get(__name__)
 
+
 class ZeroOSFactory(JSConfigFactoryBase):
     """
     """
@@ -49,7 +50,7 @@ class ZeroOSFactory(JSConfigFactoryBase):
         while True:
             try:
                 network = zerotierClient.get_network(network_id=zerotierNetworkID)
-                member = network.get_member(public_ip=ip_pub)
+                member = network.member_get(public_ip=ip_pub)
                 ipaddr_priv = member.private_ip
                 break
             except RuntimeError as e:
@@ -109,7 +110,7 @@ class ZeroOSFactory(JSConfigFactoryBase):
         while True:
             try:
                 network = zerotierClient.get_network(network_id=zerotierNetworkID)
-                member = network.get_member(public_ip=ip_pub[0])
+                member = network.member_get(public_ip=ip_pub[0])
                 ipaddr_priv = member.private_ip
                 break
             except RuntimeError as e:
@@ -155,8 +156,8 @@ class SALFactory():
     def get_hypervisor(self, name, uuid, node):
         return Hypervisor(name, uuid, node)
 
-    def get_zerorobot(self, container, port=6600, telegram_bot_token=None, telegram_chat_id=0, template_repos=None):
-        return ZeroRobot(container, port, telegram_bot_token, telegram_chat_id, template_repos)
+    def get_zerorobot(self, container, port=6600, telegram_bot_token=None, telegram_chat_id=0, template_repos=None, organization=None):
+        return ZeroRobot(container, port, telegram_bot_token, telegram_chat_id, template_repos, organization=organization)
 
     def format_ports(self, ports):
         """

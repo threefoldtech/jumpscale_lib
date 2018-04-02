@@ -13,13 +13,16 @@ class SSLFactory(JSBASE):
         self.__imports__ = "pyopenssl"
         JSBASE.__init__(self)
 
-    def ca_cert_generate(self, cert_dir=""):
+    def ca_cert_generate(self, cert_dir="",reset=False):
         """
         is for CA
         If ca.crt and ca.key don't exist in cert_dir, create a new ??? #TODO: *1 this is not right I think
         self-signed cert and keypair and write them into that directory.
 
         js9 'j.sal.ssl.ca_cert_generate()'
+
+        returns True if generation happened
+
         """
         if cert_dir == "":
             cert_dir = j.dirs.CFGDIR+"/ssl"
@@ -30,7 +33,7 @@ class SSLFactory(JSBASE):
         CERT_FILE = cert_dir.joinpath("ca.crt")  # info (certificaat) (pub is inhere + other info)
         KEY_FILE = cert_dir.joinpath("ca.key")  # private key
 
-        if not CERT_FILE.exists() or not KEY_FILE.exists():
+        if reset or not CERT_FILE.exists() or not KEY_FILE.exists():
 
             # create a key pair
             k = crypto.PKey()
@@ -62,6 +65,10 @@ class SSLFactory(JSBASE):
 
             CERT_FILE.write_text(crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode())
             KEY_FILE.write_text(crypto.dump_privatekey(crypto.FILETYPE_PEM, k).decode())
+
+            return True
+        else:
+            return False
 
     def create_signed_cert(self, path, keyname):
         """

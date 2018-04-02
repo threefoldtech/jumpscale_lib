@@ -18,7 +18,7 @@ class S3Factory(JSConfigBase):
         p = j.tools.prefab.local
         p.runtimes.pip.install("minio")
 
-    def get_manual(self, instance, address, port, accesskey, secretkey, bucket="main"):
+    def configure(self, instance, address, port, accesskey, secretkey, bucket="main"):
         """
         """
         data = {}

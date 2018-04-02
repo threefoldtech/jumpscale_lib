@@ -66,14 +66,13 @@ class TfChainDaemon:
         Start tfchain daemon
         :param timeout: time in seconds to wait for the tfchain daemon to start
         """
-        is_running = self.is_running()
-        if is_running:
+        if self.is_running():
             return
 
-        cmd_line = '/bin/tfchaind \
+        cmd_line = '/tfchaind \
             --rpc-addr {rpc_addr} \
             --api-addr {api_addr} \
-            --tfchain-directory {data_dir} \
+            --persistent-directory {data_dir} \
             '.format(rpc_addr=self.rpc_addr,
                      api_addr=self.api_addr,
                      data_dir=self.data_dir)
@@ -92,11 +91,7 @@ class TfChainDaemon:
         Stop the tfchain daemon
         :param timeout: time in seconds to wait for the daemon to stop
         """
-        if not self.container.is_running():
-            return
-
-        is_running = self.is_running()
-        if not is_running:
+        if not self.is_running():
             return
 
         logger.debug('stop %s', self)
@@ -113,7 +108,6 @@ class TfChainClient:
 
     def __init__(self, name, container, wallet_passphrase, addr='localhost:23110'):
         self.name = name
-        self.id = 'tfchainc.{}'.format(self.name)
         self.container = container
         self.addr = addr
         self._recovery_seed = None
@@ -131,75 +125,38 @@ class TfChainClient:
     @property
     def wallet_address(self):
         if self._wallet_address is None:
-            cmd = '/bin/tfchainc --addr {} wallet address'.format(self.addr)
-            result = self.container.client.bash(cmd, id='%s.wallet_init' % self.id).get()
+            cmd = '/tfchainc --addr {} wallet address'.format(self.addr)
+            result = self.container.client.bash(cmd).get()
 
             if result.state != 'SUCCESS':
-                raise RuntimeError("Could not initialize wallet.\nstdout: %s\nstderr: %s" % (
-                        result.stdout, result.stderr))
+                raise RuntimeError("Could not get wallet address: %s" % result.stderr.splitlines()[-1])
 
             self._wallet_address = result.stdout.split('Created new address: ')[-1].strip()
 
         return self._wallet_address
 
     def wallet_init(self):
-        cmd = '(echo "{0}" && echo "{0}") | /bin/tfchainc --addr {1} wallet init'.format(self.wallet_password, self.addr)
-        result = self.container.client.bash(cmd, id='%s.wallet_init' % self.id).get()
+        cmd = '/tfchainc --addr %s wallet init' % self.addr
+        result = self.container.client.system(cmd, stdin='{0}\n{0}'.format(self.wallet_password)).get()
 
         if result.state != 'SUCCESS':
-            raise RuntimeError("Could not initialize wallet.\nstdout: %s\nstderr: %s" % (
-                    result.stdout, result.stderr))
+            raise RuntimeError("Could not initialize wallet: %s" % result.stderr.splitlines()[-1])
 
         self._recovery_seed = result.stdout.split('Recovery seed:\n')[-1].split('\n\nWallet encrypted with given passphrase\n')[0].strip()
 
     def wallet_unlock(self):
-        cmd = 'echo "%s" | /bin/tfchainc --addr %s wallet unlock' % (self.wallet_password, self.addr)
-        response = self.container.client.bash(cmd, id='%s.wallet_unlock' % self.id)
-
-        result = response.get()
+        cmd = '/tfchainc --addr %s wallet unlock' % self.addr
+        result = self.container.client.system(cmd, stdin=self.wallet_password).get()
         if result.state != 'SUCCESS':
-            raise RuntimeError("Could not unlock wallet.\nstdout: %s\nstderr: %s" % (
-                    result.stdout, result.stderr))
+            raise RuntimeError("Could not unlock wallet: %s" % result.stderr.splitlines()[-1])
 
-
-class TfChainExplorer:
-    """
-    TfChain Explorer
-    """
-
-    def __init__(self, name, container):
-        self.name = name
-        self.id = 'tfchainc.{}'.format(self.name)
-        self.container = container
-
-    def start(self, timeout=15):
-        """
-        Start tfchain daemon
-        :param timeout: time in seconds to wait for the tfchain daemon to start
-        """
-        is_running = self.is_running()
-        if is_running:
-            return
-
-        cmd_line = '/tfchaind \
-            --rpc-addr {rpc_addr} \
-            --api-addr {api_addr} \
-            --tfchain-directory {data_dir} \
-            '.format(rpc_addr=self.rpc_addr,
-                     api_addr=self.api_addr,
-                     data_dir=self.data_dir)
-
-        cmd = self.container.client.system(cmd_line, id=self.id)
-
-        # wait for tfchain daemon to start
-        start = time.time()
-        while not self.container.is_port_listening(int(self.api_addr.split(":")[1]), timeout):
-            if not self.is_running():
-                result = cmd.get()
-                raise RuntimeError("Could not start tfchain explorer.\nstdout: %s\nstderr: %s" % (
-                    result.stdout, result.stderr))
-            if time.time() > start + timeout:
-                self.container.client.job.kill(self.id, signal=9)
-                result = cmd.get()
-                raise RuntimeError("tfchain explorer failed to start within %s seconds!\nstdout: %s\nstderr: %s", (
-                    timeout, result.stdout, result.stdout))
+    def consensus_stat(self):
+        cmd = '/tfchainc --addr %s consensus' % self.addr
+        result = self.container.client.system(cmd, stdin=self.wallet_password).get()
+        if result.state != 'SUCCESS':
+            raise RuntimeError("Could not unlock wallet: %s" % result.stderr.splitlines()[-1])
+        stats = {}
+        for line in result.stdout.splitlines():
+            ss = line.split(':')
+            stats[ss[0].strip()] = ss[1].strip()
+        return stats

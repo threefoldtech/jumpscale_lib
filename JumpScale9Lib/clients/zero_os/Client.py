@@ -27,6 +27,7 @@ DefaultTimeout = 10  # seconds
 TEMPLATE = """
 host = "127.0.0.1"
 port = 6379
+unixsocket = ""
 password_ = ""
 db = 0
 ssl = true
@@ -71,34 +72,35 @@ class Client(BaseClient, JSConfigClientBase):
     def _redis(self):
         password = self.config.data['password_']
         if password and not self._jwt_expire_timestamp:
-            jwt_data = jwt.decode(password, verify=False)
-            self._jwt_expire_timestamp = jwt_data['exp']
+            self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(password)
         if self._jwt_expire_timestamp and self._jwt_expire_timestamp - 300 < time.time():
             password = j.clients.itsyouonline.refresh_jwt_token(password, validity=3600)
             self.config.data_set('password_', password)
             self.config.save()
             if self.__redis:
                 self.__redis = None
-            jwt_data = jwt.decode(password, verify=False)
-            self._jwt_expire_timestamp = jwt_data['exp']
+            self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(password)
 
         if self.__redis is None:
-            timeout = self.config.data['timeout']
-            socket_timeout = (timeout + 5) if timeout else 15
-            socket_keepalive_options = dict()
-            if hasattr(socket, 'TCP_KEEPIDLE'):
-                socket_keepalive_options[socket.TCP_KEEPIDLE] = 1
-            if hasattr(socket, 'TCP_KEEPINTVL'):
-                socket_keepalive_options[socket.TCP_KEEPINTVL] = 1
-            if hasattr(socket, 'TCP_KEEPIDLE'):
-                socket_keepalive_options[socket.TCP_KEEPIDLE] = 1
+            if self.config.data['unixsocket']:
+                self.__redis = redis.Redis(unix_socket_path=self.config.data['unixsocket'], db=self.config.data['db'])
+            else:
+                timeout = self.config.data['timeout']
+                socket_timeout = (timeout + 5) if timeout else 15
+                socket_keepalive_options = dict()
+                if hasattr(socket, 'TCP_KEEPIDLE'):
+                    socket_keepalive_options[socket.TCP_KEEPIDLE] = 1
+                if hasattr(socket, 'TCP_KEEPINTVL'):
+                    socket_keepalive_options[socket.TCP_KEEPINTVL] = 1
+                if hasattr(socket, 'TCP_KEEPIDLE'):
+                    socket_keepalive_options[socket.TCP_KEEPIDLE] = 1
 
-            self.__redis = redis.Redis(host=self.config.data['host'],
-                                       port=self.config.data['port'],
-                                       password=self.config.data['password_'],
-                                       db=self.config.data['db'], ssl=self.config.data['ssl'],
-                                       socket_timeout=socket_timeout,
-                                       socket_keepalive=True, socket_keepalive_options=socket_keepalive_options)
+                self.__redis = redis.Redis(host=self.config.data['host'],
+                                           port=self.config.data['port'],
+                                           password=self.config.data['password_'],
+                                           db=self.config.data['db'], ssl=self.config.data['ssl'],
+                                           socket_timeout=socket_timeout,
+                                           socket_keepalive=True, socket_keepalive_options=socket_keepalive_options)
 
         return self.__redis
 
@@ -205,6 +207,7 @@ class Client(BaseClient, JSConfigClientBase):
         :param id: job id. Generated if not supplied
         :return: Response object
         """
+
         if not id:
             id = str(uuid.uuid4())
 
