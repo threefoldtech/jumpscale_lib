@@ -70,8 +70,8 @@ class RivineWallet:
 
         @param unlockhash: Source unlockhash to create an address from it
         """
-
         key_bytes = bytearray.fromhex(unlockhash)
+        key_bytes = int_to_binary(int(WALLET_ADDRESS_TYPE.hex(), 16)) + key_bytes 
         key_hash = blake2b(key_bytes, digest_size=UNLOCKHASH_SIZE).digest()
         return '{}{}{}'.format(WALLET_ADDRESS_TYPE.hex(), unlockhash, key_hash[:UNLOCKHASH_CHECKSUM_SIZE].hex())
 
@@ -164,7 +164,6 @@ class RivineWallet:
             except RESTAPIError as ex:
                 logger.error('Skipping address: {}'.format(address))
             else:
-                import pdb; pdb.set_trace()
                 if address_info.get('hashtype', None) != UNLOCKHASH_TYPE:
                     raise BackendError('Address is not recognized as an unblock hash')
                 self._collect_miner_fees(address=address, blocks=address_info.get('blocks',{}),
