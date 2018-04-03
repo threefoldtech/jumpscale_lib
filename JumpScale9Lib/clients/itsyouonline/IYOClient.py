@@ -1,7 +1,8 @@
-from js9 import j
+import time
 import urllib
 import requests
 
+from js9 import j
 from JumpScale9Lib.clients.itsyouonline.generated.client import Client
 
 TEMPLATE = """
@@ -63,8 +64,9 @@ class IYOClient(JSConfigBase):
         self._client = None
         self._api = None
         self._oauth2_client = None
+        self._tagged_jwts = {}
 
-    def jwt_get(self, validity=None, refreshable=False, scope=None):
+    def jwt_get(self, validity=None, refreshable=False, scope=None, tag=None):
         """
         Get a a JSON Web token for an ItsYou.online organization or user.
 
@@ -72,8 +74,19 @@ class IYOClient(JSConfigBase):
             validity: time in seconds after which the JWT will become invalid; defaults to 3600
             refreshable (True/False): If true the JWT can be refreshed; defaults to False
             scope: defaults to None
-            base_url: base url of the ItsYou.online service; defaults to https://itsyou.online
+            tag: tag that will be used to store the JWT in the client for later use.
+                If a jwt with tag 'tag' is already present, it will just return this one and not generate a new one.
         """
+
+        if tag:
+            jwt = self._tagged_jwts.get(tag)
+            if jwt:
+                jwt, expires = jwt
+                if refreshable and time.time() + 300 > expires:
+                    jwt = j.clients.itsyouonline.refresh_jwt_token(jwt, validity)
+                    expires = j.clients.itsyouonline.jwt_expire_timestamp(jwt)
+                    self._tagged_jwts[tag] = [jwt, expires]
+                return jwt
 
         base_url = self.config.data["baseurl"]
 
@@ -100,4 +113,9 @@ class IYOClient(JSConfigBase):
         resp = requests.post(url, params=params)
         resp.raise_for_status()
         jwt = resp.content.decode('utf8')
+
+        if tag:
+            expires = j.clients.itsyouonline.jwt_expire_timestamp(jwt)
+            self._tagged_jwts[tag] = [jwt, expires]
+
         return jwt
