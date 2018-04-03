@@ -36,7 +36,7 @@ class OVCClient(JSConfigBase):
                               template=TEMPLATE, interactive=interactive)
         self._api = None
         self._jwt_expire_timestamp = None
-        
+
         if not self.config.data.get("location"):
             if len(self.locations) == 1:
                 self.config.data_set("location", self.locations[0]["locationCode"])
@@ -59,7 +59,7 @@ class OVCClient(JSConfigBase):
                     jwt=j.tools.console.askString("give your jwt code, you got from the other shell:")
                     self.config.data_set('jwt_', jwt)
                     self.config.save()
-                    self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(token)
+                    self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(jwt)
                     return
                 raise j.exceptions.Input("please refresh your jwt token in your openvcloud config.\n")
             token = j.clients.itsyouonline.refresh_jwt_token(self.config.data['jwt_'], validity=3600)
@@ -72,7 +72,7 @@ class OVCClient(JSConfigBase):
         self.jwt_refresh()
 
         if self._api is None:
-            
+
             self._config_check()
 
             # before using api refresh jwt token if needed
@@ -231,7 +231,7 @@ class OVCClient(JSConfigBase):
 
         if not spaceName:
             raise RuntimeError("name needs to be specified in account in config or on method.")
-            
+
 
         account = self.account_get(name=accountName, create=False)
         if account:
