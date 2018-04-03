@@ -150,6 +150,23 @@ class TfChainClient:
         if result.state != 'SUCCESS':
             raise RuntimeError("Could not unlock wallet: %s" % result.stderr.splitlines()[-1])
 
+    def wallet_amount(self):
+        """
+        return the amount of token and block stake in the wallet
+        """
+        cmd = '/tfchainc --addr %s wallet' % self.addr
+        result = self.container.client.system(cmd).get()
+        if result.state != 'SUCCESS':
+            raise RuntimeError("Could not unlock wallet: %s" % result.stderr.splitlines()[-1])
+
+        args = {}
+        for line in result.stdout.splitlines()[2:]:
+            k, v = line.split(':')
+            k = k.strip()
+            v = v.strip()
+            args[k] = v
+        return args
+
     def consensus_stat(self):
         cmd = '/tfchainc --addr %s consensus' % self.addr
         result = self.container.client.system(cmd, stdin=self.wallet_password).get()
