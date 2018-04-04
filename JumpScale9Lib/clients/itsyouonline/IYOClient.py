@@ -1,4 +1,3 @@
-import time
 import urllib
 import requests
 
@@ -94,7 +93,7 @@ class IYOClient(JSConfigBase):
             if self.cache.exists(key):
                 jwt = self.cache.get(key)
                 jwt, expires = jwt
-                if time.time() + 300 > expires:
+                if j.clients.itsyouonline.jwt_is_expired(expires):
                     if refreshable:
                         jwt = j.clients.itsyouonline.refresh_jwt_token(jwt, validity)
                         self._add_jwt_to_cache(key, jwt)

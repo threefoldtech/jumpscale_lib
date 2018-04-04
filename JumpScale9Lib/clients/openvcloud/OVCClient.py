@@ -34,13 +34,22 @@ class OVCClient(JSConfigBase):
         JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,
                               template=TEMPLATE, interactive=interactive)
         self._api = None
-        self.iyo_client = j.clients.itsyouonline.default
         self._config_check()
 
         if not self.config.data.get("location"):
             if len(self.locations) == 1:
                 self.config.data_set("location", self.locations[0]["locationCode"])
                 self.config.save()
+
+
+    @property
+    def jwt(self):
+        if j.tools.configmanager.sandbox_check():
+            jwt =  self.config.data["jwt_"].strip()
+            j.clients.itsyouonline.refresh_jwt_token(jwt, validity=3600)
+        else:
+            jwt = j.clients.itsyouonline.default.jwt_get(refreshable=True, use_cache=True)
+        return jwt
 
     @property
     def api(self):
@@ -75,9 +84,9 @@ class OVCClient(JSConfigBase):
             raise RuntimeError(
                 "please specify address to OpenvCloud server (address) e.g. se-gen-1.demo.greenitglobe.com")
 
-        if self.config.data["jwt_"].strip():
-            self.iyo_client._add_jwt_to_cache(key='jwt_True', jwt=self.config.data["jwt_"])
-
+        if not self.config.data["jwt_"].strip() and j.tools.configmanager.sandbox_check():
+            raise RuntimeError(
+                "When in a sandbox, jwt is required")
 
         # if not self.config.data.get("login"):
         #     raise RuntimeError("login cannot be empty")
@@ -100,13 +109,12 @@ class OVCClient(JSConfigBase):
         api.__call__ = patch_call
 
     def __login(self):
-        jwt = self.iyo_client.jwt_get(refreshable=True, use_cache=True)
-        payload = jose.jwt.get_unverified_claims(jwt)
+        payload = jose.jwt.get_unverified_claims(self.jwt)
         # if payload['exp'] < time.time():
         #     j.clients.itsyouonline.reset()
         #     # Regenerate jwt after resetting the expired one
         #     self.config.data = {"jwt_": j.clients.itsyouonline.default.jwt}
-        self.api._session.headers['Authorization'] = 'bearer {}'.format(jwt)
+        self.api._session.headers['Authorization'] = 'bearer {}'.format(self.jwt)
         self._login = '{}@{}'.format(payload['username'], payload['iss'])
 
     @property
