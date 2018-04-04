@@ -4,6 +4,8 @@ from js9 import j
 from .IYOClient import IYOClient
 import requests
 import jwt
+import jose.jwt
+import time
 
 DEFAULT_BASE_URL = "https://itsyou.online/api"
 
@@ -22,11 +24,21 @@ class IYOFactory(JSConfigBaseFactory):
         j.tools.prefab.local.runtimes.pip.install("python-jose")
 
     def refresh_jwt_token(self, token, validity=86400):
-        headers = {'Authorization': 'bearer %s' % token}
-        params = {'validity': validity}
-        resp = requests.get('https://itsyou.online/v1/oauth/jwt/refresh', headers=headers, params=params)
-        resp.raise_for_status()
-        return resp.content.decode()
+        if 'refresh_token' not in jose.jwt.get_unverified_claims(token):
+            self.logger.info("Specified token can't be refreshed. Please choose another refreshable token")
+            return token
+        expires = self.jwt_expire_timestamp(token)
+        if self.jwt_is_expired(expires):
+            headers = {'Authorization': 'bearer %s' % token}
+            params = {'validity': validity}
+            resp = requests.get('https://itsyou.online/v1/oauth/jwt/refresh', headers=headers, params=params)
+            resp.raise_for_status()
+            return resp.content.decode()
+
+    def jwt_is_expired(self, expiration):
+        if time.time() + 300 > expiration:
+            return True
+        return False
 
     @property
     def default(self):
