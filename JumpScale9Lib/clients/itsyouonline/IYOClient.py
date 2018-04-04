@@ -83,8 +83,8 @@ class IYOClient(JSConfigBase):
             validity: time in seconds after which the JWT will become invalid; defaults to 3600
             refreshable (True/False): If true the JWT can be refreshed; defaults to False
             scope: defaults to None
-            tag: tag that will be used to store the JWT in the client for later use.
-                If a jwt with tag 'tag' is already present, it will just return this one and not generate a new one.
+            use_cache: if true will add the jwt to cache and retrieve required jwt if it exists
+                    if refreshable is true will refresh the cached jwt
         """
 
         if use_cache:
