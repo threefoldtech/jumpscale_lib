@@ -46,7 +46,10 @@ class OVCClient(JSConfigBase):
     def jwt(self):
         if j.tools.configmanager.sandbox_check():
             jwt =  self.config.data["jwt_"].strip()
-            j.clients.itsyouonline.refresh_jwt_token(jwt, validity=3600)
+            jwt = j.clients.itsyouonline.refresh_jwt_token(jwt, validity=3600)
+            expires = j.clients.itsyouonline.jwt_expire_timestamp(jwt)
+            if 'refresh_token' not in jose.jwt.get_unverified_claims(jwt) and j.clients.itsyouonline.jwt_is_expired(expires):
+                raise RuntimeError("JWT expired and can't be refreshed, please choose another token.")
         else:
             jwt = j.clients.itsyouonline.default.jwt_get(refreshable=True, use_cache=True)
         return jwt

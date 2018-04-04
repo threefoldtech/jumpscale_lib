@@ -24,16 +24,16 @@ class IYOFactory(JSConfigBaseFactory):
         j.tools.prefab.local.runtimes.pip.install("python-jose")
 
     def refresh_jwt_token(self, token, validity=86400):
+        expires = self.jwt_expire_timestamp(token)
         if 'refresh_token' not in jose.jwt.get_unverified_claims(token):
             self.logger.info("Specified token can't be refreshed. Please choose another refreshable token")
-            return token
-        expires = self.jwt_expire_timestamp(token)
-        if self.jwt_is_expired(expires):
+        elif self.jwt_is_expired(expires):
             headers = {'Authorization': 'bearer %s' % token}
             params = {'validity': validity}
             resp = requests.get('https://itsyou.online/v1/oauth/jwt/refresh', headers=headers, params=params)
             resp.raise_for_status()
             return resp.content.decode()
+        return token
 
     def jwt_is_expired(self, expiration):
         if time.time() + 300 > expiration:
