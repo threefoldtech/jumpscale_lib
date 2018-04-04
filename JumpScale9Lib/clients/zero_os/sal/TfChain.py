@@ -9,26 +9,14 @@ logger = logging.getLogger(__name__)
 
 class TfChain:
 
-    def daemon(self, name, container, data_dir='/mnt/data', rpc_addr='0.0.0.0:23112', api_addr='localhost:23110'):
-        return TfChainDaemon(name=name,
-                             container=container,
-                             data_dir=data_dir,
-                             rpc_addr=rpc_addr,
-                             api_addr=api_addr)
+    def daemon(self, name, container, data_dir='/mnt/data', rpc_addr='0.0.0.0:23112', api_addr='localhost:23110', network='standard'):
+        return TfChainDaemon(name=name, container=container, data_dir=data_dir, rpc_addr=rpc_addr, api_addr=api_addr, network=network)
 
-    def explorer(self, name, container, domain, data_dir='/mnt/data', rpc_addr='0.0.0.0:23112', api_addr='localhost:23110'):
-        return TfChainExplorer(name=name,
-                               container=container,
-                               data_dir=data_dir,
-                               rpc_addr=rpc_addr,
-                               api_addr=api_addr,
-                               domain=domain)
+    def explorer(self, name, container, domain, data_dir='/mnt/data', rpc_addr='0.0.0.0:23112', api_addr='localhost:23110', network='standard'):
+        return TfChainExplorer(name=name, container=container, data_dir=data_dir, rpc_addr=rpc_addr, api_addr=api_addr, domain=domain, network=network)
 
     def client(self, name, container, wallet_passphrase, api_addr='localhost:23110'):
-        return TfChainClient(name=name,
-                             container=container,
-                             addr=api_addr,
-                             wallet_passphrase=wallet_passphrase)
+        return TfChainClient(name=name, container=container, addr=api_addr, wallet_passphrase=wallet_passphrase)
 
 
 class TfChainDaemon:
@@ -36,14 +24,14 @@ class TfChainDaemon:
     TfChain Daemon
     """
 
-    def __init__(self, name, container, data_dir='/mnt/data',
-                 rpc_addr='localhost:23112', api_addr='localhost:23110'):
+    def __init__(self, name, container, data_dir='/mnt/data', rpc_addr='localhost:23112', api_addr='localhost:23110', network='standard'):
         self.name = name
         self.id = 'tfchaind.{}'.format(self.name)
         self.container = container
         self.data_dir = data_dir
         self.rpc_addr = rpc_addr
         self.api_addr = api_addr
+        self.network = network
 
     def start(self, timeout=150):
         """
@@ -57,9 +45,11 @@ class TfChainDaemon:
             --rpc-addr {rpc_addr} \
             --api-addr {api_addr} \
             --persistent-directory {data_dir} \
+            --network {network} \
             '.format(rpc_addr=self.rpc_addr,
                      api_addr=self.api_addr,
-                     data_dir=self.data_dir)
+                     data_dir=self.data_dir,
+                     network=self.network)
 
         cmd = self.container.client.system(cmd_line, id=self.id)
 
@@ -90,7 +80,7 @@ class TfChainExplorer:
     TfChain Explorer Daemon
     """
 
-    def __init__(self, name, container, domain, data_dir='/mnt/data', rpc_addr='localhost:23112', api_addr='localhost:23110'):
+    def __init__(self, name, container, domain, data_dir='/mnt/data', rpc_addr='localhost:23112', api_addr='localhost:23110', network='standard'):
         self.name = name
         self.domain = domain
         self.tf_ps_id = 'tfchaind.{}'.format(self.name)
@@ -99,6 +89,7 @@ class TfChainExplorer:
         self.data_dir = data_dir
         self.rpc_addr = rpc_addr
         self.api_addr = api_addr
+        self.network = network
 
     def start(self, timeout=30):
         """
@@ -121,9 +112,11 @@ class TfChainExplorer:
             --api-addr {api_addr} \
             --persistent-directory {data_dir} \
             --modules gcte \
+            --network {network} \
             '.format(rpc_addr=self.rpc_addr,
                      api_addr=self.api_addr,
-                     data_dir=self.data_dir)
+                     data_dir=self.data_dir,
+                     network=self.network)
 
         cmd = self.container.client.system(cmd_line, id=self.tf_ps_id)
 
