@@ -14,7 +14,6 @@ from  js9 import j
 DefaultTimeout = 10  # seconds
 
 
-
 class BaseClient():
     _system_chk = typchk.Checker({
         'name': str,
@@ -371,13 +370,16 @@ class ContainerManager():
         'index': int,
     })
 
+    _portforward_chk = typchk.Checker({
+        'container': int,
+        'host_port': int,
+        'container_port': int,
+    })
+
     DefaultNetworking = object()
-
-
 
     def __init__(self, client):
         self._client = client
-
 
     def create(self, root_url, mount=None, host_network=False, nics=DefaultNetworking, port=None, hostname=None, privileged=False, storage=None, name=None, tags=None, identity=None, env=None):
         """
@@ -576,3 +578,36 @@ class ContainerManager():
 
         return JSONResponse(self._client.raw('corex.restore', args, tags=tags))
 
+    def add_portfoward(self, container, host_port, container_port):
+        """
+        Add portforward from host to kvm container
+        :param container: id of the container
+        :param host_port: port on host to forward from
+        :param container_port: port on container to forward to
+        :return:
+        """
+        args = {
+            'container': container,
+            'host_port': host_port,
+            'container_port': container_port,
+        }
+        self._portforward_chk.check(args)
+
+        return self._client.sync('corex.portforward-add', args)
+
+    def remove_portfoward(self, container, host_port, container_port):
+        """
+        Remove portforward from host to kvm container
+        :param container: id of the container
+        :param host_port: port on host forwarded from
+        :param container_port: port on container forwarded to
+        :return:
+        """
+        args = {
+            'container': container,
+            'host_port': host_port,
+            'container_port': container_port,
+        }
+        self._portforward_chk.check(args)
+
+        return self._client.sync('corex.portforward-remove', args)
