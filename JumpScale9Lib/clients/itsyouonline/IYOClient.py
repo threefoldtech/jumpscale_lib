@@ -64,9 +64,18 @@ class IYOClient(JSConfigBase):
         self._client = None
         self._api = None
         self._oauth2_client = None
-        self._tagged_jwts = {}
 
-    def jwt_get(self, validity=None, refreshable=False, scope=None, tag=None):
+    def _add_jwt_to_cache(self, key, jwt):
+        """
+        Add a new jwt to the client cache
+        Args:
+            key: key string
+            jwt: jwt string
+        """
+        expires = j.clients.itsyouonline.jwt_expire_timestamp(jwt)
+        self.cache.set(key, [jwt, expires])
+
+    def jwt_get(self, validity=None, refreshable=False, scope=None, use_cache=False):
         """
         Get a a JSON Web token for an ItsYou.online organization or user.
 
@@ -78,15 +87,21 @@ class IYOClient(JSConfigBase):
                 If a jwt with tag 'tag' is already present, it will just return this one and not generate a new one.
         """
 
-        if tag:
-            jwt = self._tagged_jwts.get(tag)
-            if jwt:
+        if use_cache:
+            key = 'jwt_' + str(refreshable)
+            if scope:
+                key +=  '_' + scope
+            if self.cache.exists(key):
+                jwt = self.cache.get(key)
                 jwt, expires = jwt
-                if refreshable and time.time() + 300 > expires:
-                    jwt = j.clients.itsyouonline.refresh_jwt_token(jwt, validity)
-                    expires = j.clients.itsyouonline.jwt_expire_timestamp(jwt)
-                    self._tagged_jwts[tag] = [jwt, expires]
-                return jwt
+                if time.time() + 300 > expires:
+                    if refreshable:
+                        jwt = j.clients.itsyouonline.refresh_jwt_token(jwt, validity)
+                        self._add_jwt_to_cache(key, jwt)
+                        return jwt
+                else:
+                    return jwt
+
 
         base_url = self.config.data["baseurl"]
 
@@ -114,8 +129,7 @@ class IYOClient(JSConfigBase):
         resp.raise_for_status()
         jwt = resp.content.decode('utf8')
 
-        if tag:
-            expires = j.clients.itsyouonline.jwt_expire_timestamp(jwt)
-            self._tagged_jwts[tag] = [jwt, expires]
+        if use_cache:
+            self._add_jwt_to_cache(key, jwt)
 
         return jwt
