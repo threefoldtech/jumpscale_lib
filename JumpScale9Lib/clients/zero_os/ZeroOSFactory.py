@@ -132,6 +132,7 @@ class SALFactory():
 
     def __init__(self, factory):
         self._factory = factory
+        self.tfchain = TfChain()
 
     def get_node(self, instance='main'):
         client = self._factory.get(instance)
@@ -141,9 +142,6 @@ class SALFactory():
                    index_dir='/mnt/index', mode='user', sync=False, admin=''):
         return ZeroDB(name, container, port, data_dir, index_dir, mode, sync, admin)
 
-    def get_tfchain(self, name, container, wallet_passphrase, data_dir='/mnt/data', rpc_addr='0.0.0.0:23112', api_addr='0.0.0.0:23110'):
-        return TfChain(name, container, wallet_passphrase, data_dir, rpc_addr, api_addr)
-
     def get_minio(self, name, container, zdbs, namespace, private_key, namespace_secret='', addr='0.0.0.0', port=9000,  block_size=1048576):
         return Minio(name, container, zdbs, namespace, private_key, namespace_secret, addr, port, block_size=block_size)
 
@@ -152,9 +150,6 @@ class SALFactory():
 
     def get_vm(self, hypervisor_name, node):
         return VM(hypervisor_name, node)
-
-    def get_hypervisor(self, name, uuid, node):
-        return Hypervisor(name, uuid, node)
 
     def get_zerorobot(self, container, port=6600, telegram_bot_token=None, telegram_chat_id=0, template_repos=None, organization=None):
         return ZeroRobot(container, port, telegram_bot_token, telegram_chat_id, template_repos, organization=organization)

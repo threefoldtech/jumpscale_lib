@@ -1,50 +1,34 @@
 import logging
 import time
 import signal
+from . import templates
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class TfChain:
-    """
-    TfChain server
-    """
 
-    def __init__(self, name, container, wallet_passphrase, data_dir='/mnt/data',
-                 rpc_addr='0.0.0.0:23112', api_addr='localhost:23110'):
-        self.name = name
-        self.id = 'tfchain.{}'.format(self.name)
-        self.container = container
-        self.data_dir = data_dir
-        self.rpc_addr = rpc_addr
-        self.api_addr = api_addr
-        self._daemon = None
-        self._client = None
-        self.wallet_passphrase = wallet_passphrase
+    def daemon(self, name, container, data_dir='/mnt/data', rpc_addr='0.0.0.0:23112', api_addr='localhost:23110'):
+        return TfChainDaemon(name=name,
+                             container=container,
+                             data_dir=data_dir,
+                             rpc_addr=rpc_addr,
+                             api_addr=api_addr)
 
-    @property
-    def daemon(self):
-        if self._daemon is None:
-            self._daemon = TfChainDaemon(
-                name=self.name,
-                container=self.container,
-                data_dir=self.data_dir,
-                rpc_addr=self.rpc_addr,
-                api_addr=self.api_addr,
-            )
-        return self._daemon
+    def explorer(self, name, container, domain, data_dir='/mnt/data', rpc_addr='0.0.0.0:23112', api_addr='localhost:23110'):
+        return TfChainExplorer(name=name,
+                               container=container,
+                               data_dir=data_dir,
+                               rpc_addr=rpc_addr,
+                               api_addr=api_addr,
+                               domain=domain)
 
-    @property
-    def client(self):
-        if self._client is None:
-            self._client = TfChainClient(
-                name=self.name,
-                container=self.container,
-                addr=self.api_addr,
-                wallet_passphrase=self.wallet_passphrase,
-            )
-        return self._client
+    def client(self, name, container, wallet_passphrase, api_addr='localhost:23110'):
+        return TfChainClient(name=name,
+                             container=container,
+                             addr=api_addr,
+                             wallet_passphrase=wallet_passphrase)
 
 
 class TfChainDaemon:
@@ -99,6 +83,116 @@ class TfChainDaemon:
 
     def is_running(self):
         return self.container.is_job_running(self.id)
+
+
+class TfChainExplorer:
+    """
+    TfChain Explorer Daemon
+    """
+
+    def __init__(self, name, container, domain, data_dir='/mnt/data', rpc_addr='localhost:23112', api_addr='localhost:23110'):
+        self.name = name
+        self.domain = domain
+        self.tf_ps_id = 'tfchaind.{}'.format(self.name)
+        self.caddy_ps_id = 'caddy.{}'.format(self.name)
+        self.container = container
+        self.data_dir = data_dir
+        self.rpc_addr = rpc_addr
+        self.api_addr = api_addr
+
+    def start(self, timeout=30):
+        """
+        Start tfchain explorer daemon and caddy as reverse proxy
+        :param timeout: time in seconds to wait for the both process to start
+        """
+        self._start_tf_deamon(timeout=timeout)
+        self._start_caddy(timeout=timeout)
+
+    def _start_tf_deamon(self, timeout=150):
+        """
+        Start tfchain daemon
+        :param timeout: time in seconds to wait for the tfchain daemon to start
+        """
+        if self.is_running():
+            return
+
+        cmd_line = '/tfchaind \
+            --rpc-addr {rpc_addr} \
+            --api-addr {api_addr} \
+            --persistent-directory {data_dir} \
+            --modules gcte \
+            '.format(rpc_addr=self.rpc_addr,
+                     api_addr=self.api_addr,
+                     data_dir=self.data_dir)
+
+        cmd = self.container.client.system(cmd_line, id=self.tf_ps_id)
+
+        port = int(self.api_addr.split(":")[1])
+        while not self.container.is_port_listening(port, timeout):
+            if not self.is_running():
+                result = cmd.get()
+                raise RuntimeError("Could not start tfchaind.\nstdout: %s\nstderr: %s" % (result.stdout, result.stderr))
+
+    def _start_caddy(self, timeout=150):
+        """
+        Start caddy
+        :param timeout: time in seconds to wait for caddy to start
+        """
+        if self.is_running():
+            return
+
+        logger.info('Creating caddy config for %s' % self.name)
+        config = templates.render('tf_explorer_caddy.conf', domain=self.domain)
+        self.container.upload_content('/mnt/explorer/explorer/Caddyfile', config)
+
+        cmd_line = '/mnt/explorer/bin/caddy -conf /mnt/explorer/explorer/Caddyfile'.format(rpc_addr=self.rpc_addr,
+                                                                                           api_addr=self.api_addr,
+                                                                                           data_dir=self.data_dir)
+        self.container.client.system('apt-get install -y ca-certificates').get()
+        cmd = self.container.client.system(cmd_line, id=self.caddy_ps_id)
+
+        port = 443
+        while not self.container.is_port_listening(port, timeout):
+            if not self.is_running():
+                result = cmd.get()
+                raise RuntimeError("Could not start caddy.\nstdout: %s\nstderr: %s" % (result.stdout, result.stderr))
+
+    def stop(self, timeout=30):
+        """
+        Stop the tfchain daemon
+        :param timeout: time in seconds to wait for the daemon to stop
+        """
+        self._stop_caddy_daemon(timeout)
+        self._stop_tf_daemon(timeout)
+
+    def _stop_tf_daemon(self, timeout=30):
+        if not self._is_tf_running():
+            return
+
+        logger.debug('stop tf daemon %s', self)
+        self.container.stop_job(self.tf_ps_id, signal=signal.SIGINT, timeout=timeout)
+
+    def _stop_caddy_daemon(self, timeout=30):
+        if not self._is_caddy_running():
+            return
+
+        logger.debug('stop caddy %s', self)
+        self.container.stop_job(self.caddy_ps_id, signal=signal.SIGINT, timeout=timeout)
+
+    def is_running(self):
+        return self._is_tf_running() and self._is_caddy_running()
+
+    def _is_tf_running(self):
+        return self.container.is_job_running(self.tf_ps_id)
+
+    def _is_caddy_running(self):
+        return self.container.is_job_running(self.caddy_ps_id)
+
+    def consensus_stat(self):
+        return consensus_stat(self.container, self.api_addr)
+
+    def gateway_stat(self):
+        return gateway_stat(self.container, self.api_addr)
 
 
 class TfChainClient:
@@ -168,12 +262,28 @@ class TfChainClient:
         return args
 
     def consensus_stat(self):
-        cmd = '/tfchainc --addr %s consensus' % self.addr
-        result = self.container.client.system(cmd, stdin=self.wallet_password).get()
-        if result.state != 'SUCCESS':
-            raise RuntimeError("Could not unlock wallet: %s" % result.stderr.splitlines()[-1])
-        stats = {}
-        for line in result.stdout.splitlines():
-            ss = line.split(':')
-            stats[ss[0].strip()] = ss[1].strip()
-        return stats
+        return consensus_stat(self.container, self.addr)
+
+
+def consensus_stat(container, addr):
+    cmd = '/tfchainc --addr %s consensus' % addr
+    result = container.client.system(cmd).get()
+    if result.state != 'SUCCESS':
+        raise RuntimeError("Could not unlock wallet: %s" % result.stderr.splitlines()[-1])
+    stats = {}
+    for line in result.stdout.splitlines():
+        ss = line.split(':')
+        stats[ss[0].strip()] = ss[1].strip()
+    return stats
+
+
+def gateway_stat(container, addr):
+    cmd = '/tfchainc --addr %s gateway' % addr
+    result = container.client.system(cmd).get()
+    if result.state != 'SUCCESS':
+        raise RuntimeError("Could not unlock wallet: %s" % result.stderr.splitlines()[-1])
+    stats = {}
+    for line in result.stdout.splitlines():
+        ss = line.split(':')
+        stats[ss[0].strip()] = ss[1].strip()
+    return stats
