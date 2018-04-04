@@ -1,7 +1,8 @@
-from js9 import j
+import time
 import urllib
 import requests
 
+from js9 import j
 from JumpScale9Lib.clients.itsyouonline.generated.client import Client
 
 TEMPLATE = """
@@ -64,7 +65,17 @@ class IYOClient(JSConfigBase):
         self._api = None
         self._oauth2_client = None
 
-    def jwt_get(self, validity=None, refreshable=False, scope=None):
+    def _add_jwt_to_cache(self, key, jwt):
+        """
+        Add a new jwt to the client cache
+        Args:
+            key: key string
+            jwt: jwt string
+        """
+        expires = j.clients.itsyouonline.jwt_expire_timestamp(jwt)
+        self.cache.set(key, [jwt, expires])
+
+    def jwt_get(self, validity=None, refreshable=False, scope=None, use_cache=False):
         """
         Get a a JSON Web token for an ItsYou.online organization or user.
 
@@ -72,8 +83,25 @@ class IYOClient(JSConfigBase):
             validity: time in seconds after which the JWT will become invalid; defaults to 3600
             refreshable (True/False): If true the JWT can be refreshed; defaults to False
             scope: defaults to None
-            base_url: base url of the ItsYou.online service; defaults to https://itsyou.online
+            use_cache: if true will add the jwt to cache and retrieve required jwt if it exists
+                    if refreshable is true will refresh the cached jwt
         """
+
+        if use_cache:
+            key = 'jwt_' + str(refreshable)
+            if scope:
+                key +=  '_' + scope
+            if self.cache.exists(key):
+                jwt = self.cache.get(key)
+                jwt, expires = jwt
+                if time.time() + 300 > expires:
+                    if refreshable:
+                        jwt = j.clients.itsyouonline.refresh_jwt_token(jwt, validity)
+                        self._add_jwt_to_cache(key, jwt)
+                        return jwt
+                else:
+                    return jwt
+
 
         base_url = self.config.data["baseurl"]
 
@@ -100,4 +128,8 @@ class IYOClient(JSConfigBase):
         resp = requests.post(url, params=params)
         resp.raise_for_status()
         jwt = resp.content.decode('utf8')
+
+        if use_cache:
+            self._add_jwt_to_cache(key, jwt)
+
         return jwt
