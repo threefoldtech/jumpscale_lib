@@ -70,8 +70,8 @@ class RivineWallet:
 
         @param unlockhash: Source unlockhash to create an address from it
         """
-
         key_bytes = bytearray.fromhex(unlockhash)
+        key_bytes = WALLET_ADDRESS_TYPE + key_bytes 
         key_hash = blake2b(key_bytes, digest_size=UNLOCKHASH_SIZE).digest()
         return '{}{}{}'.format(WALLET_ADDRESS_TYPE.hex(), unlockhash, key_hash[:UNLOCKHASH_CHECKSUM_SIZE].hex())
 
