@@ -29,9 +29,13 @@ class CurrencyLayer(JSConfigBase):
         def get():
             if self.fake==False and j.sal.nettools.tcpPortConnectionTest("currencylayer.com", 443):
                 key = self.config.data["api_key_"]
+                if key.strip()=="":
+                    raise RuntimeError("api key for currency layer needs to be specified")
                 url = "http://www.apilayer.net/api/live?access_key=%s" % key
                 c = j.clients.http.getConnection()
                 r = c.get(url).readlines()
+                from IPython import embed;embed(colors='Linux')
+                l
                 data = j.data.serializer.json.loads(r[0].decode())["quotes"]
                 self.logger.error("fetch currency from internet")
                 return data
@@ -39,10 +43,10 @@ class CurrencyLayer(JSConfigBase):
                 if self.fake or self.fallback:
                     self.logger.warning("cannot reach: currencylayer.com, use fake local data.")
                     from .currencies import currencies
-                    return False,currencies
+                    return currencies
 
         data = self.cache.get("currency_data", get, expire=3600 * 24)
-
+        from IPython import embed;embed(colors='Linux')
         for key, item in data.items():
             if key.startswith("USD"):
                 key = key[3:]
