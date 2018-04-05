@@ -49,12 +49,12 @@ class Capacity:
                 )
         return self._disk_info
 
-    def report(self):
+    def report(self, indent=None):
         """
         create a report of the hardware capacity for
         processor, memory, motherboard and disks
         """
-        return j.tools.capacityparser.get_report(psutil.virtual_memory().total, self.hw_info, self.disk_info)
+        return j.tools.capacityparser.get_report(psutil.virtual_memory().total, self.hw_info, self.disk_info, indent=indent)
 
 
 def _disk_type(disk_info):
