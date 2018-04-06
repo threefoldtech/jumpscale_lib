@@ -110,22 +110,24 @@ class Report():
     def HRU(self):
         """
         return the number of hd units in GB
+        size field of disks is expected to be in bytes
         """
         unit = 0
         for disk in self.disk:
             if disk['type'] in [StorageType.HDD.name, StorageType.ARCHIVE.name]:
-                unit += disk['size'] / GIB
+                unit += int(disk['size']) / GIB
         return round(unit, 2)
 
     @property
     def SRU(self):
         """
         return the number of ssd units in GB
+        size field of disks is expected to be in bytes
         """
         unit = 0
         for disk in self.disk:
             if disk['type'] in [StorageType.SSD.name, StorageType.NVME.name]:
-                unit += disk['size'] / GIB
+                unit += int(disk['size']) / GIB
         return round(unit, 2)
 
     def __repr__(self):

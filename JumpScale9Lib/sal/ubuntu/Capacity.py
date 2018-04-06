@@ -30,14 +30,16 @@ class Capacity:
             self._disk_info = {}
 
             rc, out, err = self._node._local.execute(
-                "lsblk -J -o NAME,SIZE,ROTA,TYPE", die=False)
+                "lsblk -Jb -o NAME,SIZE,ROTA,TYPE", die=False)
             if rc != 0:
                 raise RuntimeError("Error getting disks:\n%s" % (err))
 
             disks = json.loads(out)["blockdevices"]
             for disk in disks:
+                if not disk["name"].startswith("/dev/"):
+                    disk["name"] = "/dev/%s" % disk["name"]
                 rc, out, err = self._node._local.execute(
-                    "smartctl -T permissive -i /dev/%s" % disk["name"], die=False)
+                    "smartctl -T permissive -i %s" % disk["name"], die=False)
                 if rc != 0:
                     # smartctl prints error on stdout
                     raise RuntimeError("Error getting disk data for %s:\n%s\n\n%s" % (disk["name"], out, err))
