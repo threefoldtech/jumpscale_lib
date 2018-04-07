@@ -21,6 +21,25 @@ class NetworkMember(JSBASE):
         self.data = data
         self._network = network
         self.address = address
+        self._private_ip = None
+
+
+
+    @property
+    def private_ip():
+        """
+        Gets the private ip address of the member node
+        """
+        if not self._private_ip:
+            timeout = 120
+            while not self.data['config']['ipAssignments'] and timeout:
+                timeout -= 2
+                time.sleep(2)
+                self._refresh()
+            if not not self.data['config']['ipAssignments']:
+                raise ValueError('Cannot get private ip address for zerotier member')
+            self._private_ip = self.data['config']['ipAssignments'][0]
+        return self._private_ip
 
 
     def _refresh(self):
@@ -101,7 +120,7 @@ class ZeroTierNetwork(JSBASE):
         if resp.status_code != 200:
             msg = 'Failed to list network memebers. Error: {}'.format(resp.text)
             self.logger.error(msg)
-            raise j.exceptions.RuntimeError(msg)
+            raise RuntimeError(msg)
         items=resp.json()
 
         return items if raw else self._create_netork_memebers_from_dict(items=items)
@@ -116,7 +135,7 @@ class ZeroTierNetwork(JSBASE):
         if not any(filters):
             msg = 'At least one filter need to be specified'
             self.logger.error(msg)
-            raise j.exceptions.RuntimeError(msg)
+            raise RuntimeError(msg)
 
         filters_map = dict(zip(['nodeId', 'name', 'physicalAddress', 'private_ip'], filters))
         members = self.members_list(raw=True)
@@ -133,7 +152,7 @@ class ZeroTierNetwork(JSBASE):
         if result is None:
             msg = 'Cannot find a member that match the provided filters'
             self.logger.error(msg)
-            raise j.exceptions.RuntimeError(msg)
+            raise RuntimeError(msg)
         return result
 
 
@@ -155,7 +174,7 @@ class ZeroTierNetwork(JSBASE):
         if resp.status_code != 200:
             msg = 'Failed to delete member. Error: {}'.format(resp.text)
             self.logger.error(msg)
-            raise j.exceptions.RuntimeError(msg)
+            raise RuntimeError(msg)
 
         return True
 
@@ -187,7 +206,7 @@ class ZerotierClient(JSConfigClient):
         if resp.status_code != 200:
             msg = 'Failed to list networks. Error: {}'.format(resp.text)
             self.logger.error(msg)
-            raise j.exceptions.RuntimeError(msg)
+            raise RuntimeError(msg)
         return self._network_creates_from_dict(items=resp.json())
 
 
@@ -212,7 +231,7 @@ class ZerotierClient(JSConfigClient):
         if resp.status_code != 200:
             msg = 'Failed to retrieve network. Error: {}'.format(resp.text)
             self.logger.error(msg)
-            raise j.exceptions.RuntimeError(msg)
+            raise RuntimeError(msg)
         return self._network_creates_from_dict(items=[resp.json()])[0]
 
 
@@ -268,7 +287,7 @@ class ZerotierClient(JSConfigClient):
         if resp.status_code != 200:
             msg = "Failed to create network. Error: {}".format(resp.text)
             self.logger.error(msg)
-            j.exceptions.RuntimeError(msg)
+            raise RuntimeError(msg)
         return self._network_creates_from_dict([resp.json()])[0]
 
 
@@ -282,5 +301,5 @@ class ZerotierClient(JSConfigClient):
         if resp.status_code != 200:
             msg = "Failed to delete network. Error: {}".format(resp.text)
             self.logger.error(msg)
-            j.exceptions.RuntimeError(msg)
+            raise RuntimeError(msg)
         return True
