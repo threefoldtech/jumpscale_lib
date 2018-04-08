@@ -49,7 +49,7 @@ class RivineWallet:
         self._seed = seed
         self._unspent_coins_outputs = {}
         self._keys = {}
-        self._bc_network = bc_network
+        self._bc_network = bc_network.strip("/")
         self._minerfee = minerfee
         self._bc_network_password = bc_network_password
         # needed to avoid calculating addresses from unlock hashes later
@@ -71,7 +71,7 @@ class RivineWallet:
         @param unlockhash: Source unlockhash to create an address from it
         """
         key_bytes = bytearray.fromhex(unlockhash)
-        key_bytes = WALLET_ADDRESS_TYPE + key_bytes 
+        key_bytes = WALLET_ADDRESS_TYPE + key_bytes
         key_hash = blake2b(key_bytes, digest_size=UNLOCKHASH_SIZE).digest()
         return '{}{}{}'.format(WALLET_ADDRESS_TYPE.hex(), unlockhash, key_hash[:UNLOCKHASH_CHECKSUM_SIZE].hex())
 
