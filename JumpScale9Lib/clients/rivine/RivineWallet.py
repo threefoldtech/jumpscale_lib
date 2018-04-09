@@ -507,20 +507,33 @@ class UnlockConditions:
     def json(self):
         """
         Return a json encoded representation of the unlockconditions object
+        This will return a presentation of the unlocker attribute of the transaction as a singleSingatureInputLock
         """
         if self._json is None:
             public_keys = []
-            for pkey in self._keys:
-                public_keys.append({
-                    'algorithm': pkey['algorithm'],
-                    'key': base64.b64encode(pkey['key']).decode('ascii')
-                })
-
-            self._json = {
-                'timelock': self._blockheight,
-                'publickeys': public_keys,
-                'signaturesrequired': self._nr_required_sigs
+            condition = {
+                'publickey': '{}:{}'.format(self._keys[0]['algorithm'],
+                                            base64.b64encode(self._keys[0]['key']).decode('ascii'))
             }
+            self._json = {
+                'type': 1,
+                'condition': condition,
+                'fulfillment': {
+                    'signature': ''
+                }
+            }
+
+            # for pkey in self._keys:
+            #     public_keys.append({
+            #         'algorithm': pkey['algorithm'],
+            #         'key': base64.b64encode(pkey['key']).decode('ascii')
+            #     })
+            #
+            # self._json = {
+            #     'timelock': self._blockheight,
+            #     'publickeys': public_keys,
+            #     'signaturesrequired': self._nr_required_sigs
+            # }
 
         return self._json
 
@@ -609,34 +622,37 @@ class Transaction:
     def json(self):
         """
         JSON encoded representation of the transaction
-        For reference: https://github.com/rivine/rivine/blob/40ff7b6bfaba779b90647d572823ea4b5d35601a/doc/api/api.raml#L136-L212
+        For reference: https://github.com/rivine/rivine/blob/master/doc/transactions/transaction.md
         """
         if self._json is None:
-            self._json = {}
+            self._json = {
+            'version': 0,
+            'data': {}
+            }
             inputs = []
             for input_ in self._inputs:
                 inputs.append({
                     'parentid': input_['parentid'],
-                    'unlockconditions': input_['unlockconditions'].json,
+                    'unlocker': input_['unlockconditions'].json,
                 })
-            self._json['coininputs'] = inputs
+            self._json['data']['coininputs'] = inputs
             outputs = []
             for output in self._outputs:
                 outputs.append({
                     'value': str(output['value']),
                     'unlockhash': output['unlockhash'],
                 })
-            self._json['coinoutputs'] = outputs
-            self._json['minerfees'] = [str(self._minerfee)]
+            self._json['data']['coinoutputs'] = outputs
+            self._json['data']['minerfees'] = [str(self._minerfee)]
             if self._arbitrary_data is not None:
                 arbitrary_data_json = []
                 for item in self._arbitrary_data:
                     arbitrary_data_json.append(base64.b64encode(item).decode('ascii'))
-                self._json['arbitrarydata'] = arbitrary_data_json
+                self._json['data']['arbitrarydata'] = arbitrary_data_json
             else:
-                self._json['arbitrarydata'] = self._arbitrary_data
-            self._json['blockstakeinputs'] = None
-            self._json['blockstakeoutputs'] = None
+                self._json['data']['arbitrarydata'] = self._arbitrary_data
+            self._json['data']['blockstakeinputs'] = None
+            self._json['data']['blockstakeoutputs'] = None
             transaction_signatures = []
             for txn_sig in self._signatrues:
                 signature = {
@@ -659,7 +675,7 @@ class Transaction:
                 }
                 transaction_signatures.append(signature)
 
-            self._json['transactionsignatures'] = transaction_signatures
+            self._json['data']['transactionsignatures'] = transaction_signatures
 
         return self._json
 
