@@ -84,6 +84,8 @@ print(report)
 
 
 # prettified report
+report = node.capacity.report(indent=2)
+print(report)
 {
   "disk": [
     {
