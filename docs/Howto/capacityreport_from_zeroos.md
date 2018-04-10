@@ -1,12 +1,14 @@
 # Get a capacity report from a Zero-OS node
 
-## Step 1: Attach your host to the ZeroTier network of the Zero-OS node
+## Step 1: Attach host to the ZeroTier network of the Zero-OS node
 
-Zero-OS nodes will run inside a [ZeroTier](https://www.zerotier.com/) network. To access them, the host needs to have access to that network.
+Make sure the Zero-OS node is running. On how to start a Zero-OS node, check the [Zero-OS boot docs](https://github.com/zero-os/0-core/blob/development/docs/booting/README.md)
+
+Zero-OS nodes will run inside a [ZeroTier](https://www.zerotier.com/) network. To access them, the host needs to have access to that ZeroTier network.
 
 Install the ZeroTier tools [from here](https://www.zerotier.com/download.shtml)
 
-Get the network-ID of the ZeroTier network (Can be seen on the Zero-OS main screen)
+Get the network-ID of the ZeroTier network (Can be seen on the Zero-OS main screen).
 
 Join the ZeroTier netwerk
 ```bash
@@ -18,7 +20,7 @@ Make sure the host is authorized on the network. (https://my.zerotier.com/networ
 ## Step 2: Get the Zero-OS client in Jumpscale9
 
 Start the Jumpscale9 Python interpreter.
-If not installed, you can use the bash utilities to install JS9 (https://github.com/Jumpscale/bash)
+If not installed, the jumpscale bash utilities can be used to install JS9 (https://github.com/Jumpscale/bash)
 ```bash
 js9
 ```

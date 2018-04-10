@@ -5,7 +5,7 @@
 Jumpscale provides a System Abstraction Layer (sal) for Ubuntu. In that sal a property is provided from which the report can be generated.
 
 Start the Jumpscale9 Python interpreter.
-If not installed, you can use the bash utilities to install JS9 (https://github.com/Jumpscale/bash)
+If not installed, the jumpscale bash utilities can be used to install JS9 (https://github.com/Jumpscale/bash)
 ```bash
 js9
 ```
