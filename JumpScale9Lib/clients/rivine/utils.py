@@ -4,7 +4,7 @@ Modules for common utilites
 
 from pyblake2 import blake2b
 
-from .const import ADDRESS_TYPE_SIZE, UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE
+from .const import ADDRESS_TYPE_SIZE, UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE, WALLET_ADDRESS_TYPE
 from .errors import InvalidUnlockHashChecksumError
 
 def big_int_to_binary(big_int):
@@ -37,7 +37,7 @@ def get_unlockhash_from_address(address):
     _, key_hex, sum_hex = address[:indexes[0]], address[indexes[0]:indexes[1]], address[indexes[1]:]
     unlockhash_bytes = bytearray.fromhex(key_hex)
     sum_bytes = bytearray.fromhex(sum_hex)
-    expected_checksum = blake2b(unlockhash_bytes, digest_size=UNLOCKHASH_SIZE).digest()
+    expected_checksum = blake2b(WALLET_ADDRESS_TYPE + unlockhash_bytes, digest_size=UNLOCKHASH_SIZE).digest()
     if sum_bytes != expected_checksum[:UNLOCKHASH_CHECKSUM_SIZE]:
         raise InvalidUnlockHashChecksumError("Cannot decode address to unlockhash")
     return key_hex

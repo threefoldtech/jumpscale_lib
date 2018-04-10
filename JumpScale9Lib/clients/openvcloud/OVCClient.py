@@ -25,7 +25,6 @@ space = ""
 
 JSConfigBase = j.tools.configmanager.base_class_config
 
-
 class OVCClient(JSConfigBase):
 
     def __init__(self, instance, data=None, parent=None, interactive=False):
@@ -35,48 +34,32 @@ class OVCClient(JSConfigBase):
         JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,
                               template=TEMPLATE, interactive=interactive)
         self._api = None
-        self._jwt_expire_timestamp = None
-        
+        self._config_check()
+
         if not self.config.data.get("location"):
             if len(self.locations) == 1:
                 self.config.data_set("location", self.locations[0]["locationCode"])
                 self.config.save()
 
-    def jwt_refresh(self):
-        '''
-        Refresh jwt token is expired or expires within 300s
-        '''
 
-        if not self._jwt_expire_timestamp and self.config.data.get('jwt_'):
-            #means there is a jwt token specified, need to see if it did not expire yet
-            self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(self.config.data['jwt_'])
-
-        if self._jwt_expire_timestamp and self._jwt_expire_timestamp - 300 < time.time():
+    @property
+    def jwt(self):
+        if self.config.data.get('jwt_', None):
+            jwt =  self.config.data["jwt_"].strip()
+            jwt = j.clients.itsyouonline.refresh_jwt_token(jwt, validity=3600)
+            expires = j.clients.itsyouonline.jwt_expire_timestamp(jwt)
+            if 'refresh_token' not in jose.jwt.get_unverified_claims(jwt) and j.clients.itsyouonline.jwt_is_expired(expires):
+                raise RuntimeError("JWT expired and can't be refreshed, please choose another token.")
+        else:
             if j.tools.configmanager.sandbox_check():
-                if j.tools.configmanager.interactive:
-                    print("Get your jwt client (in another shell, not in this sandbox)")
-                    print("DO:  js9 'print(j.clients.itsyouonline.default.jwt)'")
-                    jwt=j.tools.console.askString("give your jwt code, you got from the other shell:")
-                    self.config.data_set('jwt_', jwt)
-                    self.config.save()
-                    self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(token)
-                    return
-                raise j.exceptions.Input("please refresh your jwt token in your openvcloud config.\n")
-            token = j.clients.itsyouonline.refresh_jwt_token(self.config.data['jwt_'], validity=3600)
-            self.config.data_set('jwt_', token)
-            self.config.save()
-            self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(token)
+                raise RuntimeError(
+                    "When in a sandbox, jwt is required")                
+            jwt = j.clients.itsyouonline.default.jwt_get(refreshable=True, use_cache=True)
+        return jwt
 
     @property
     def api(self):
-        self.jwt_refresh()
-
         if self._api is None:
-            
-            self._config_check()
-
-            # before using api refresh jwt token if needed
-            self.jwt_refresh()
 
             self._api = j.clients.portal.get(data={'ip': self.config.data.get("address"),
                                                    'port': self.config.data.get("port")}, interactive=False)
@@ -107,9 +90,9 @@ class OVCClient(JSConfigBase):
             raise RuntimeError(
                 "please specify address to OpenvCloud server (address) e.g. se-gen-1.demo.greenitglobe.com")
 
-        if not self.config.data["jwt_"].strip():
-            self.config.data = {"jwt_": j.clients.itsyouonline.default.jwt}
-
+        if not self.config.data["jwt_"].strip() and j.tools.configmanager.sandbox_check():
+            raise RuntimeError(
+                "When in a sandbox, jwt is required")
 
         # if not self.config.data.get("login"):
         #     raise RuntimeError("login cannot be empty")
@@ -132,13 +115,12 @@ class OVCClient(JSConfigBase):
         api.__call__ = patch_call
 
     def __login(self):
-        jwt = self.config.data.get("jwt_")
-        payload = jose.jwt.get_unverified_claims(jwt)
+        payload = jose.jwt.get_unverified_claims(self.jwt)
         # if payload['exp'] < time.time():
         #     j.clients.itsyouonline.reset()
         #     # Regenerate jwt after resetting the expired one
         #     self.config.data = {"jwt_": j.clients.itsyouonline.default.jwt}
-        self.api._session.headers['Authorization'] = 'bearer {}'.format(jwt)
+        self.api._session.headers['Authorization'] = 'bearer {}'.format(self.jwt)
         self._login = '{}@{}'.format(payload['username'], payload['iss'])
 
     @property
@@ -231,7 +213,7 @@ class OVCClient(JSConfigBase):
 
         if not spaceName:
             raise RuntimeError("name needs to be specified in account in config or on method.")
-            
+
 
         account = self.account_get(name=accountName, create=False)
         if account:

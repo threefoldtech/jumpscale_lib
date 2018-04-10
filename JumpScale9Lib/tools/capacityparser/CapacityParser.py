@@ -56,7 +56,7 @@ class CapacityParser(JSBASE):
         """
         return _parse_dmi(dmi_data)
 
-    def get_report(self, total_mem, hw_info, disk_info):
+    def get_report(self, total_mem, hw_info, disk_info, indent=None):
         """
         Takes in hardware info and parses it into a report
 
@@ -66,14 +66,14 @@ class CapacityParser(JSBASE):
 
         @return Report of the capacity
         """
-        return Report(total_mem, hw_info, disk_info)
+        return Report(total_mem, hw_info, disk_info, indent=indent)
 
 class Report():
     """
         Report takes in hardware information and parses it into a report.    
     """
     
-    def __init__(self, total_mem, hw_info, disk_info):
+    def __init__(self, total_mem, hw_info, disk_info, indent=None):
         """
         @param total_mem: total system memory in bytes
         @param hw_info: hardware information
@@ -84,6 +84,9 @@ class Report():
         self.memory = _memory_info(hw_info)
         self.motherboard = _mobo_info(hw_info)
         self.disk = _disks_info(disk_info)
+
+        # json indent for pretty printing
+        self.indent = indent
 
     @property
     def CRU(self):
@@ -107,22 +110,24 @@ class Report():
     def HRU(self):
         """
         return the number of hd units in GB
+        size field of disks is expected to be in bytes
         """
         unit = 0
         for disk in self.disk:
             if disk['type'] in [StorageType.HDD.name, StorageType.ARCHIVE.name]:
-                unit += disk['size'] / GIB
+                unit += int(disk['size']) / GIB
         return round(unit, 2)
 
     @property
     def SRU(self):
         """
         return the number of ssd units in GB
+        size field of disks is expected to be in bytes
         """
         unit = 0
         for disk in self.disk:
             if disk['type'] in [StorageType.SSD.name, StorageType.NVME.name]:
-                unit += disk['size'] / GIB
+                unit += int(disk['size']) / GIB
         return round(unit, 2)
 
     def __repr__(self):
@@ -131,7 +136,7 @@ class Report():
             "memory": self.memory,
             "motherboard": self.motherboard,
             "disk": self.disk,
-        })
+        },indent=self.indent)
 
     def __str__(self):
         return repr(self)

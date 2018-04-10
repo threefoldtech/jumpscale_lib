@@ -151,10 +151,9 @@ class SandboxPython(JSBASE):
     def _zip(self, dest=""):
         if dest == "":
             dest = j.dirs.BUILDDIR + "/sandbox/python3/"
-        cmd = "cd %s/lib/python;zip -r ../python.zip *;cd %s/lib;rm -rf python" % (dest, dest)
+        cmd = "cd %s;rm -f ../js9_sandbox.tar.gz;tar -czf ../js9_sandbox.tar.gz *;" % dest
         j.sal.process.execute(cmd)
-        cmd = "cd %s;rm -f ../js9_sandbox.zip;zip -r ../js9_sandbox.zip *" % (dest)
-        j.sal.process.execute(cmd)
+
 
     def jumpscale_add(self, dest=""):
         """
@@ -221,7 +220,7 @@ class SandboxPython(JSBASE):
         export LC_ALL=en_US.UTF-8
         export LANG=en_US.UTF-8
 
-        export PS1="JS9: "        
+        export PS1="JS9: "
 
         """
         j.sal.fs.writeFile("%s/env.sh" % dest, j.data.text.strip(C))

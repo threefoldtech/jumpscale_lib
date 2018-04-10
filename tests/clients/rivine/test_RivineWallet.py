@@ -18,16 +18,16 @@ client_data = {'bc_address': 'https://explorer.testnet.threefoldtoken.com/',
 rivine_client = j.clients.rivine.get('mytestwallet', data=client_data)
 rivine_client.config.save()
 
-expected_unlockhashes = ['fa8ee5ecf2551f9a5a8cdc338ad6ef781d53929d712ebbe25b93a1ff4c89584d6a430fd60874',
- '3e47b15d4a1d3974a326556cd127d5b86d607cb8726165bb4c9a3515a98b2ba1982a35939c7f',
- '573cbb732e4a075c3b95103efce8dbc479cc79d2ac9ad917c0c1f5facfbfa6648366a0735080',
- 'f65988eefa5f76d0d73f9879e91772e709faa947d1d6f03a2e36b554698594bf07738072f6bb',
- '1c0baae330902503bbdaa945be3d8f6359c0f21bdba392046c7507992aa900ba0df185208b15',
- '27ac47fda7f5ac7f3eeb83a29e26aeb9f82d14dd9b74d7ec277af90d2f90d8b97f8ca7b9f4a9',
- '45df536e9ad219fcfa9b2cd295d3499e59ced97e6cbed30d81373444db01acd586e8f302d602',
- '62c3980953d55d7670859f474aec7a8caeb1517421c0e744a6c7c8e4ad00a6db043c35d0c0e6',
- 'dd6b2cb6098f301d6928041d58119c5c9cc62be4a6ba797c8f8a510cd3b0c5bd38bec968e62b',
- '9d0e215e29a548bb3aca345eeffe7a47d4bb49e7ecae29d5bd548632b1829559c283fe00bf6c']
+expected_unlockhashes = ['0145df536e9ad219fcfa9b2cd295d3499e59ced97e6cbed30d81373444db01acd563a402d9690c',
+ '01dd6b2cb6098f301d6928041d58119c5c9cc62be4a6ba797c8f8a510cd3b0c5bd5d9459988e17',
+ '0127ac47fda7f5ac7f3eeb83a29e26aeb9f82d14dd9b74d7ec277af90d2f90d8b90f54416d7a80',
+ '019d0e215e29a548bb3aca345eeffe7a47d4bb49e7ecae29d5bd548632b182955950f1f7bd7bd7',
+ '011c0baae330902503bbdaa945be3d8f6359c0f21bdba392046c7507992aa900ba31c7654f510c',
+ '0162c3980953d55d7670859f474aec7a8caeb1517421c0e744a6c7c8e4ad00a6dbb0b9c7fef482',
+ '01fa8ee5ecf2551f9a5a8cdc338ad6ef781d53929d712ebbe25b93a1ff4c89584d0365dededa12',
+ '013e47b15d4a1d3974a326556cd127d5b86d607cb8726165bb4c9a3515a98b2ba1bdd01de70c5e',
+ '01f65988eefa5f76d0d73f9879e91772e709faa947d1d6f03a2e36b554698594bf656867d297d6',
+ '01573cbb732e4a075c3b95103efce8dbc479cc79d2ac9ad917c0c1f5facfbfa664831397a2c28f']
 
 # create a wallet based on the generated Seed
 # rivine_wallet = RivineWallet(seed=seed, bc_network='http://185.69.166.13:2015', nr_keys_per_seed=5)
@@ -148,7 +148,7 @@ expected_address_info =\
       'timelock': 0}]}}]}
 
 
-address = '20f4c5d518839b61a2a704bd45d47e25a319df75c1fa18c01856440079d34b0b0181076ce5c2'
+address = '0145df536e9ad219fcfa9b2cd295d3499e59ced97e6cbed30d81373444db01acd563a402d9690c'
 actual_address_info = rivine_wallet.check_address(address=address)
 assert actual_address_info == expected_address_info, "Expected address info is not the same as check_address found"
 
@@ -157,7 +157,7 @@ assert actual_address_info == expected_address_info, "Expected address info is n
 rivine_wallet.sync_wallet()
 
 # create transaction
-recipient = '01e5bd83a85e263817e2040054064575066874ee45a7697facca7a2721d4792af374ea35f549a1'
+recipient = '01e5bd83a85e263817e2040054064575066874ee45a7697facca7a2721d4792af3a9dc35a09c2e'
 transaction = rivine_wallet.create_transaction(amount=500, recipient=recipient)
 
 
