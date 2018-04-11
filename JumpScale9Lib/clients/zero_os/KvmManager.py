@@ -131,6 +131,13 @@ class KvmManager():
         'output_format': str,
     })
 
+    _portforward_chk = typchk.Checker({
+        'uuid': str,
+        'host_port': int,
+        'container_port': int,
+    })
+
+
     _limit_disk_io_dict.update(_iotune_dict)
 
     _limit_disk_io_action_chk = typchk.Checker(_limit_disk_io_dict)
@@ -526,3 +533,37 @@ class KvmManager():
         self._domain_get_chk.check(args)
 
         return self._client.json('kvm.get', args)
+
+    def add_portfoward(self, uuid, host_port, container_port):
+        """
+        Add portforward from host to kvm container
+        :param uuid: uuid of the kvm container
+        :param host_port: port on host to forward from
+        :param machine_port: port on container to forward to
+        :return:
+        """
+        args = {
+            'uuid': uuid,
+            'host_port': host_port,
+            'container_port': container_port,
+        }
+        self._portforward_chk.check(args)
+
+        return self._client.sync('kvm.portforward-add', args)
+
+    def remove_portfoward(self, uuid, host_port, container_port):
+        """
+        Remove portforward from host to kvm container
+        :param uuid: uuid of the kvm container
+        :param host_port: port on host forwarded from
+        :param machine_port: port on container forwarded to
+        :return:
+        """
+        args = {
+            'uuid': uuid,
+            'host_port': host_port,
+            'container_port': container_port,
+        }
+        self._portforward_chk.check(args)
+
+        return self._client.sync('kvm.portforward-remove', args)
