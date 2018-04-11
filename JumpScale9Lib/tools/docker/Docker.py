@@ -414,6 +414,9 @@ class Docker(JSBASE):
         container = self.container_get_by_id(id)
 
         if ssh:
+            exec = j.sal.docker.client.exec_create(name, 'apt-get update')
+            exec = j.sal.docker.client.exec_create(name, 'apt-get install openssh-server -y')
+            exec = j.sal.docker.client.exec_create(name, 'service ssh start')
             if setrootrndpasswd:
                 if rootpasswd is None or rootpasswd == '':
                     rootpasswd = 'gig1234'
