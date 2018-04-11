@@ -349,12 +349,10 @@ class Docker(JSBASE):
             self.logger.info("download docker image %s" % base)
             self.pull(base)
 
-        if base.startswith("jumpscale/ubuntu1604") or myinit is True:
-            command = "sh -c \"mkdir -p /var/run/screen;chmod 777 /var/run/screen; /var/run/screen;exec >/dev/tty 2>/dev/tty </dev/tty && /sbin/my_init -- /usr/bin/screen -s bash\""
+        if command == "" and (base.startswith("jumpscale/ubuntu1604") or myinit is True):
             command = "sh -c \" /sbin/my_init -- bash -l\""
         else:
             command = None
-
         self.logger.info(("install docker with name '%s'" % name))
 
         if vols != "":
