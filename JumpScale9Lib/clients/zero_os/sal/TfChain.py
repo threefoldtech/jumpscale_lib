@@ -135,13 +135,11 @@ class TfChainExplorer:
             return
 
         logger.info('Creating caddy config for %s' % self.name)
+        config_location = '/mnt/explorer/explorer/caddy/Caddyfile'
         config = templates.render('tf_explorer_caddy.conf', domain=self.domain)
-        self.container.upload_content('/mnt/explorer/explorer/Caddyfile', config)
+        self.container.upload_content(config_location, config)
 
-        cmd_line = '/mnt/explorer/bin/caddy -conf /mnt/explorer/explorer/Caddyfile'.format(rpc_addr=self.rpc_addr,
-                                                                                           api_addr=self.api_addr,
-                                                                                           data_dir=self.data_dir)
-        self.container.client.system('apt-get install -y ca-certificates').get()
+        cmd_line = '/mnt/explorer/bin/caddy -conf %s' % config_location
         cmd = self.container.client.system(cmd_line, id=self.caddy_ps_id)
 
         port = 443

@@ -167,9 +167,9 @@ class PacketNet(JSConfigClient):
             raise RuntimeError("zerotierAPI needs to be specified")
         ipxeUrl = "https://bootstrap.gig.tech/ipxe/master/%s" % zerotierId
 
-        if params is not None:
-            pstring = '%20'.join(params)
-            ipxeUrl = ipxeUrl + '/' + pstring
+        # if params is not None:
+        #     pstring = '%20'.join(params)
+        #     ipxeUrl = ipxeUrl + '/' + pstring
 
         node = self._startDevice(hostname=hostname, plan=plan, facility=facility, os="",
                                  wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId=zerotierId, always_pxe=True)
@@ -178,23 +178,24 @@ class PacketNet(JSConfigClient):
         data = {'token_': zerotierAPI}
         zerotierClient = j.clients.zerotier.get(self.instance, data=data)
 
+
+        public_ip = node.addr
+        if not public_ip:
+            ipaddr = [netinfo['address']
+                      for netinfo in node.pubconfig['netinfo'] if netinfo['public'] and netinfo['address_family'] == 4]
+            public_ip = ipaddr[0]
+
         while True:
             try:
-                network = zerotierClient.get_network(network_id=zerotierId)
-                member = network.get_member(public_ip=node.addr)
+                network = zerotierClient.network_get(network_id=zerotierId)
+                member = network.member_get(public_ip=public_ip)
                 member.authorize()
                 ipaddr_priv = member.private_ip
                 break
             except RuntimeError as e:
                 # case where we don't find the member in zerotier
                 self.logger.info("[-] %s" % e)
-                time.sleep(1)
-            except IndexError as e:
-                # case were we the member doesn't have a private ip
-                self.logger.error(
-                    "[+] please authorize the server with the public ip %s in the zerotier network" % node.addr
-                )
-                time.sleep(1)
+                time.sleep(5)
 
         self.logger.info("[+] zerotier IP: %s" % ipaddr_priv)
         data = {'host': ipaddr_priv, 'timeout': 10, 'port': 6379, 'password_': '', 'db': 0, 'ssl': True}
@@ -255,7 +256,7 @@ class PacketNet(JSConfigClient):
             else:
                 self.addSSHKey(sshkey, hostname)
                 sshclient = j.clients.ssh.get(instance=sshkey.instance,
-                                              data={'addr': ipaddr, 'login': 'root', 'sshkey': sshkey})
+                                              data={'addr': ipaddr, 'login': 'root', 'sshkey': sshkey.instance})
             sshclient.connect()
             sshinstance = sshclient.instance
 

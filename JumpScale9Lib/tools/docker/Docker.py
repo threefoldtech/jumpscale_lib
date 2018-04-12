@@ -349,12 +349,10 @@ class Docker(JSBASE):
             self.logger.info("download docker image %s" % base)
             self.pull(base)
 
-        if base.startswith("jumpscale/ubuntu1604") or myinit is True:
-            command = "sh -c \"mkdir -p /var/run/screen;chmod 777 /var/run/screen; /var/run/screen;exec >/dev/tty 2>/dev/tty </dev/tty && /sbin/my_init -- /usr/bin/screen -s bash\""
+        if command == "" and (base.startswith("jumpscale/ubuntu1604") or myinit is True):
             command = "sh -c \" /sbin/my_init -- bash -l\""
         else:
             command = None
-
         self.logger.info(("install docker with name '%s'" % name))
 
         if vols != "":
@@ -416,6 +414,9 @@ class Docker(JSBASE):
         container = self.container_get_by_id(id)
 
         if ssh:
+            exec = j.sal.docker.client.exec_create(name, 'apt-get update')
+            exec = j.sal.docker.client.exec_create(name, 'apt-get install openssh-server -y')
+            exec = j.sal.docker.client.exec_create(name, 'service ssh start')
             if setrootrndpasswd:
                 if rootpasswd is None or rootpasswd == '':
                     rootpasswd = 'gig1234'

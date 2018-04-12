@@ -157,7 +157,7 @@ assert actual_address_info == expected_address_info, "Expected address info is n
 rivine_wallet.sync_wallet()
 
 # create transaction
-recipient = '01e5bd83a85e263817e2040054064575066874ee45a7697facca7a2721d4792af374ea35f549a1'
+recipient = '01e5bd83a85e263817e2040054064575066874ee45a7697facca7a2721d4792af3a9dc35a09c2e'
 transaction = rivine_wallet.create_transaction(amount=500, recipient=recipient)
 
 

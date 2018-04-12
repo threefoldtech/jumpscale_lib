@@ -1,5 +1,6 @@
 import json
 import psutil
+import os
 
 from js9 import j
 from JumpScale9Lib.tools.capacityparser.CapacityParser import StorageType
@@ -10,6 +11,7 @@ class Capacity:
         self._node = node
         self._hw_info = None
         self._disk_info = None
+        self._smartmontools_installed = False
 
     @property
     def hw_info(self):
@@ -26,18 +28,22 @@ class Capacity:
     @property
     def disk_info(self):
         if self._disk_info is None:
-            self._node.apt_install_check("smartmontools", "smartctl")
+            j.tools.prefab.local.monitoring.smartmontools.install()
+
             self._disk_info = {}
 
             rc, out, err = self._node._local.execute(
-                "lsblk -J -o NAME,SIZE,ROTA,TYPE", die=False)
+                "lsblk -Jb -o NAME,SIZE,ROTA,TYPE", die=False)
             if rc != 0:
                 raise RuntimeError("Error getting disks:\n%s" % (err))
 
             disks = json.loads(out)["blockdevices"]
             for disk in disks:
+                if not disk["name"].startswith("/dev/"):
+                    disk["name"] = "/dev/%s" % disk["name"]
+
                 rc, out, err = self._node._local.execute(
-                    "smartctl -T permissive -i /dev/%s" % disk["name"], die=False)
+                    "smartctl -T permissive -i %s" % disk["name"], die=False)
                 if rc != 0:
                     # smartctl prints error on stdout
                     raise RuntimeError("Error getting disk data for %s:\n%s\n\n%s" % (disk["name"], out, err))
@@ -49,13 +55,12 @@ class Capacity:
                 )
         return self._disk_info
 
-    def report(self):
+    def report(self, indent=None):
         """
         create a report of the hardware capacity for
         processor, memory, motherboard and disks
         """
-        return j.tools.capacityparser.get_report(psutil.virtual_memory().total, self.hw_info, self.disk_info)
-
+        return j.tools.capacityparser.get_report(psutil.virtual_memory().total, self.hw_info, self.disk_info, indent=indent)
 
 def _disk_type(disk_info):
     """
