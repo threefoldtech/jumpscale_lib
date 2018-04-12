@@ -1,12 +1,11 @@
 from js9 import j
+
 from .User import User
 from .Issue import Issue
 
-# pygithub is for pip3
 import github
 NotSet = github.GithubObject.NotSet
 
-JSConfigFactory = j.tools.configmanager.base_class_configs
 JSConfigClient = j.tools.configmanager.base_class_config
 
 TEMPLATE = """
@@ -14,30 +13,6 @@ login = ""
 token_ = ""
 password_ = ""
 """
-
-JSBASE = j.application.jsbase_get_class()
-
-
-class GitHubFactory(JSConfigFactory):
-
-    def __init__(self):
-        self.__jslocation__ = "j.clients.github"
-        self.__imports__ = "PyGithub"
-        self._clients = {}
-        JSConfigFactory.__init__(self, GitHubClient)
-
-    # def getRepoClient(self, account, reponame):
-    #     return GitHubRepoClient(account, reponame)
-
-    # def get(self, login_or_token, password=None):
-    #     if login_or_token not in self._clients:
-    #         self._clients[login_or_token] = GitHubClient(
-    #             login_or_token, password)
-    #     return self._clients[login_or_token]
-
-    def issue_get(self):
-        # return Issue
-        return Issue
 
 
 class GitHubClient(JSConfigClient):

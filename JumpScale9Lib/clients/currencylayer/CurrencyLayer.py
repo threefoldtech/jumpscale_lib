@@ -34,8 +34,6 @@ class CurrencyLayer(JSConfigBase):
                 url = "http://www.apilayer.net/api/live?access_key=%s" % key
                 c = j.clients.http.getConnection()
                 r = c.get(url).readlines()
-                from IPython import embed;embed(colors='Linux')
-                l
                 data = j.data.serializer.json.loads(r[0].decode())["quotes"]
                 self.logger.error("fetch currency from internet")
                 return data
@@ -44,9 +42,9 @@ class CurrencyLayer(JSConfigBase):
                     self.logger.warning("cannot reach: currencylayer.com, use fake local data.")
                     from .currencies import currencies
                     return currencies
+                raise RuntimeError("could not data from currencylayers")
 
         data = self.cache.get("currency_data", get, expire=3600 * 24)
-        from IPython import embed;embed(colors='Linux')
         for key, item in data.items():
             if key.startswith("USD"):
                 key = key[3:]

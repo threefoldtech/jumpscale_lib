@@ -33,6 +33,9 @@ class GiteaFactory(JSConfigBase):
     def generate(self):
         """
         generate the client out of the raml specs
+
+        get your token from https://docs.grid.tf/user/settings/applications
+
         """
         c = j.tools.raml.get(self._path)
         c.client_python_generate()
