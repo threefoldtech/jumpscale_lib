@@ -43,7 +43,7 @@ class Container(JSBASE):
     @property
     def sshclient(self):
         if self._sshclient is None:
-            sshclient = j.clients.ssh.new(addr='localhost', port=9022, login="root", passwd="gig1234", timeout=10, allow_agent=True)
+            sshclient = j.clients.ssh.new(addr=self.host, port=self.ssh_port, login="root", passwd="gig1234", timeout=10, allow_agent=True)
             self._sshclient = sshclient
         return self._sshclient
 
