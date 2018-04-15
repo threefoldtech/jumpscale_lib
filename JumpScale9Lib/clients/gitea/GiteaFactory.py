@@ -68,11 +68,10 @@ class GiteaFactory(JSConfigBase):
 
 
         print(org.repos_list())
-
-        repo_name = [item for item in org.repos_list().keys()][0]  # first reponame
+        repo_name = [item for item in org.repos_list(refresh=True).keys()][0]  # first reponame
 
         repo = org.repo_get(repo_name)
 
         print(repo.issues_get())
 
-        org.labels_milestones_add()
+        org.labels_milestones_add(remove_old=True)

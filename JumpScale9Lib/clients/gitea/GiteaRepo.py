@@ -32,8 +32,8 @@ class GiteaRepo(JSBASE):
 
         self.logger.info("labels add")
 
-        if labels == None:
-            labels_default = self.org.labels_default_get()
+
+        labels_default = self.org.labels_default_get() if labels is None else []
 
         repo_labels = self.api.issueListLabels(self.name, self.owner)[0]
         # @TODO: change the way we check on label name when this is fixed
@@ -46,7 +46,7 @@ class GiteaRepo(JSBASE):
         def get_label_id(name):
             for item in repo_labels:
                 if item.name == name:
-                    return str(item["id"])
+                    return str(item.id)
 
         if remove_old:
             labels_on_repo = [item.name for item in repo_labels]
@@ -79,7 +79,7 @@ class GiteaRepo(JSBASE):
 
         repo_milestones = self.client.api.repos.issueGetMilestones(self.name, self.owner)[0]
         # @TODO: change the way we check on milestone title when this is fixed https://github.com/Jumpscale/go-raml/issues/396
-        names = [m['title'] for m in repo_milestones]
+        names = [m.title for m in repo_milestones]
         for title, deadline in milestones:
             if title in names:
                 continue
@@ -92,8 +92,8 @@ class GiteaRepo(JSBASE):
         if remove_old:
             milestones_default = [item[0] for item in milestones]
             for item in repo_milestones:
-                if item["title"] not in milestones_default:
-                    self.client.api.repos.issueDeleteMilestone(str(item["id"]), self.name, self.owner)
+                if item.title not in milestones_default:
+                    self.client.api.repos.issueDeleteMilestone(str(item.id), self.name, self.owner)
 
     @property
     def milestones_default(self):
