@@ -180,7 +180,6 @@ class ZeroTierNetwork(JSBASE):
 
 TEMPLATE = """
 token_ = ""
-networkid = ""
 """
 
 class ZerotierClient(JSConfigClient):
@@ -209,17 +208,6 @@ class ZerotierClient(JSConfigClient):
             raise RuntimeError(msg)
         return self._network_creates_from_dict(items=resp.json())
 
-
-    @property
-    def network(self):
-        """
-        default network if configure din the configuration info
-        """
-        if not self._defaultnet:
-            if self.config.data["networkid"]=="":
-                raise RuntimeError("network id cannot be empty")
-            self._defaultnet =  self.network_get(self.config.data["networkid"])
-        return self._defaultnet
 
     def network_get(self, network_id):
         """
