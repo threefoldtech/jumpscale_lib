@@ -57,8 +57,11 @@ class GiteaOrg(JSBASE):
         self.logger.info("repo:new:%s" % name)
         if name in self._repos_get().keys():
             self.logger.debug("no need to create repo on gitea, exists:%s"%name)
-        self.client.api.org.createOrgRepo(data, org)#TODO:*1
-        raise RuntimeError("NEED TO IMPLEMENT THIS")
+        data = {
+            'name' : name
+        }
+        self.client.api.org.createOrgRepo(data, org=self.name)
+
         return GiteaRepo(self, name, data)
 
     def labels_milestones_add(self, labels=default_labels, remove_old=False):
