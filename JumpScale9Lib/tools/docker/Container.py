@@ -43,15 +43,8 @@ class Container(JSBASE):
     @property
     def sshclient(self):
         if self._sshclient is None:
-            self.executor.sshclient.get(
-                addr=self.host,
-                port=self.ssh_port,
-                login='root',
-                passwd="gig1234",
-                timeout=10,
-                usecache=False,
-                allow_agent=True)
-            self._sshclient = self.executor.sshclient
+            sshclient = j.clients.ssh.new(addr='localhost', port=9022, login="root", passwd="gig1234", timeout=10, allow_agent=True)
+            self._sshclient = sshclient
         return self._sshclient
 
     @property
@@ -141,7 +134,7 @@ class Container(JSBASE):
         instance = addr.replace(".", "-") + "-%s" % port + "-%s" % self.name 
 
         sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login=user, passwd=password,
-                                      keyname=sshkeyname, allow_agent=False, timeout=300)
+                                       timeout=300)
         sshclient.connect()
         sshclient.ssh_authorize(key=j.tools.configmanager.keyname, user='root')
         sshclient.config.delete()  # remove this temp sshconnection

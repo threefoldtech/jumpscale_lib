@@ -414,13 +414,17 @@ class Docker(JSBASE):
         container = self.container_get_by_id(id)
 
         if ssh:
-            exec = j.sal.docker.client.exec_create(name, 'apt-get update')
-            exec = j.sal.docker.client.exec_create(name, 'apt-get install openssh-server -y')
-            exec = j.sal.docker.client.exec_create(name, 'service ssh start')
             if setrootrndpasswd:
                 if rootpasswd is None or rootpasswd == '':
                     rootpasswd = 'gig1234'
-
+            ex = j.tools.executor.getLocalDocker(name)
+            ex.execute("apt-get update")
+            ex.execute("apt-get install sudo")
+            ex.execute("apt-get install openssh-server -y")
+            ex.execute("apt-get install sed")
+            ex.execute("sed -i 's/prohibit-password/yes/' /etc/ssh/sshd_config")
+            ex.execute("service ssh start")
+            result = ex.prefab.system.user.passwd("root", rootpasswd)
             container.ssh_authorize(sshkeyname=sshkeyname, password=rootpasswd)
 
             # Make sure docker is ready for executor
