@@ -2,7 +2,7 @@
 
 A System Abstraction Layer (SAL) is a thin abstraction layer making it easy for developers to interact with a system component locally or (partly) remotely.
 
-As part of JumpScale 8 following SALs are included:
+Some of `JumpScale9` SALs:
 
 - [DiskLayout](Disklayout.md)
 - [FS](FS.md)
@@ -12,11 +12,9 @@ As part of JumpScale 8 following SALs are included:
 - [SSHD](SSHD.md)
 - [Tmux](Tmux.md)
 - [Ubuntu](Ubuntu.md)
+  - [capacity report](capacityreport_from_ubuntu.md)
 - [UFW](UFW.md)
 
-There are many more SALs, for Windows, Unix, SSL, SSL Signing, TLS, NGINX and QEMU images.
-
-The full list of all SALs can be found in the [JumpScale API](../JumpscaleAPI/SUMMARY.md) section.
 
 ```
 !!!

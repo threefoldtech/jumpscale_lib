@@ -16,6 +16,10 @@ This is the controller that will be used by all other classes to manage objects 
 
 It takes an executor as an argument and it uses it to connect to the host and uses the info of the host to establesh a qemu connection over ssh.
 
+See [here](https://github.com/Jumpscale/core9/blob/master/docs/Internals/Executors.md) for how to get an executor object.
+
+Example using a local executor:
+
 ```py
 ex = j.tools.executorLocal
 co = j.sal.kvm.KVMController(ex)

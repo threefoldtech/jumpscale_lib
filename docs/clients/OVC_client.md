@@ -1,23 +1,18 @@
 # How to use the JumpScale client for OpenvCloud
 
-there are 2 ways you can connect to an openvcloud
 
-## use itsyou.online (PREFERRED)
+To use the client you need to have a client instance. See [here](https://github.com/Jumpscale/core9/blob/master/docs/config/configmanager.md) for how to configure an instance. Client can then be used as follows:
 
-@QUESTION: can this be done by endusers as well?
+```python
+client = j.clients.openvcloud.get('myinstance')
+```
 
 only need to fill in:
 - address e.g. se-gen-1.demo.greenitglobe.com
 
-if your itsyou.online has not been configured yet then it will ask these questions as well.
+The jwt necessary for connecting to the api is genereated using the default itsyou.online [client](IYO_client.md).if your itsyou.online has not been configured yet then it will ask these questions as well.
 
-## use secret api key from portal
-
-need to fill in:
-- address e.g. se-gen-1.demo.greenitglobe.com
-- appkey_ which can be found in your portal page under settings is e.g. 5db1ed6b-1111-407c-8f62-11113566a22c
-
-## further info 
+## Example usage
 
 - [Cloud API](#cloud-api)
 - [Accounts](#accounts)
@@ -77,7 +72,7 @@ The above code will create a new cloud space if the cloud space doesn't exist ye
 vdc = account.space_get(cloud_space_name, location, create=False)
 ```
 
-Also note that we specified the first available location to create to cloud space in.
+Also note that we specified the first available location to create the cloud space in.
 
 List all available images that are available in a cloud space:
 ```python
