@@ -125,6 +125,7 @@ class OVCClient(JSConfigBase):
 
     @property
     def accounts(self):
+        """Gets accounts to current user"""
         ovc_accounts = self.api.cloudapi.accounts.list()
         accounts = list()
         for account in ovc_accounts:
@@ -133,27 +134,38 @@ class OVCClient(JSConfigBase):
 
     @property
     def locations(self):
+        """Gets available locations"""
         return self.api.cloudapi.locations.list()
 
     def account_get(self, name="", create=True,
                     maxMemoryCapacity=-1, maxVDiskCapacity=-1, maxCPUCapacity=-1, maxNASCapacity=-1,
                     maxNetworkOptTransfer=-1, maxNetworkPeerTransfer=-1, maxNumPublicIP=-1):
-        """
-        Returns the OpenvCloud account with the given name, and in case it doesn't exist yet the account will be created.
+        """Returns the OpenvCloud account with the given name, and in case it doesn't exist yet the account will be created.
 
-        Args:
-            - name (required): name of the account to lookup or create if it doesn't exist yet, e.g. "myaccount"
-            - create (defaults to True): if set to True the account is created in case it doesn't exist yet
-            - maxMemoryCapacity (defaults to -1: unlimited): available memory in GB for all virtual machines in the account
-            - maxVDiskCapacity (defaults to -1: unlimited): available disk capacity in GiB for all virtual disks in the account
-            - maxCPUCapacity (defaults to -1: unlimited): total number of available virtual CPU core that can be used by the virtual machines in the account
-            - maxNASCapacity (defaults to -1: unlimited): not implemented
-            - maxNetworkOptTransfer (defaults to -1: unlimited): not implemented
-            - maxNetworkPeerTransfer (defaults to -1: unlimited): not implemented
-            - maxNumPublicIP (defaults to -1: unlimited): number of external IP addresses that can be used in the account
-
-        Raises: KeyError if account doesn't exist, and create argument was set to False
+        :param name: name of the account to lookup or create if it doesn't exist yet, e.g. "myaccount" if not set will get it from config manager data, defaults to ""
+        :param name: str, optional
+        :param create: if set to True the account is created in case it doesn't exist yet, defaults to True
+        :param create: bool, optional
+        :param maxMemoryCapacity: available memory in GB for all virtual machines in the account, defaults to -1(unlimited)
+        :param maxMemoryCapacity: int, optional
+        :param maxVDiskCapacity: available disk capacity in GiB for all virtual disks in the account, defaults to -1(unlimited)
+        :param maxVDiskCapacity: int, optional
+        :param maxCPUCapacity: total number of available virtual CPU core that can be used by the virtual machines in the account, defaults to -1(unlimited)
+        :param maxCPUCapacity: int, optional
+        :param maxNASCapacity: not implemented, defaults to -1(unlimited)
+        :param maxNASCapacity: int, optional
+        :param maxNetworkOptTransfer: not implemented, defaults to -1(unlimited)
+        :param maxNetworkOptTransfer: int, optional
+        :param maxNetworkPeerTransfer: not implemented, defaults to -1(unlimited)
+        :param maxNetworkPeerTransfer: int, optional
+        :param maxNumPublicIP: number of external IP addresses that can be used in the account, defaults to -1(unlimited)
+        :param maxNumPublicIP: int, optional
+        :raises RuntimeError: if name not specified and no acount name in config manager instance
+        :raises KeyError: if account doesn't exist, and create argument was set to False
+        :return: account data
+        :rtype: object
         """
+
         if name == "":
             name = self.config.data["account"]
         if not name:
@@ -188,22 +200,38 @@ class OVCClient(JSConfigBase):
                   maxNetworkPeerTransfer=-1,
                   maxNumPublicIP=-1,
                   externalnetworkId=None):
-        """
-        Returns the OpenvCloud space with the given account_name, space_name, space_location and in case the account doesn't exist yet it will be created.
+        """ Returns the OpenvCloud space with the given account_name, space_name, space_location and in case the account doesn't exist yet it will be created.
 
-        Args:
-            - accountName (required): name of the account to lookup, e.g. "myaccount"
-            - spaceName (required): name of the cloud space to lookup or create if it doesn't exist yet, e.g. "myvdc"
-            - location (only required when cloud space needs to be created): location when the cloud space needs to be created
-            - createSpace (defaults to True): if set to True the account is created in case it doesn't exist yet
-            - maxMemoryCapacity (defaults to -1: unlimited): available memory in GB for all virtual machines in the cloud space
-            - maxVDiskCapacity (defaults to -1: unlimited): available disk capacity in GiB for all virtual disks in the cloud space
-            - maxCPUCapacity (defaults to -1: unlimited): total number of available virtual CPU core that can be used by the virtual machines in the cloud space
-            - maxNASCapacity (defaults to -1: unlimited): not implemented
-            - maxNetworkOptTransfer (defaults to -1: unlimited): not implemented
-            - maxNetworkPeerTransfer (defaults to -1: unlimited): not implemented
-            - maxNumPublicIP (defaults to -1: unlimited): number of external IP addresses that can be used in the cloud space
+        :param accountName: name of the account to lookup, e.g. "myaccount", defaults to ""
+        :param accountName: str, optional
+        :param spaceName: name of the cloud space to lookup or create if it doesn't exist yet, e.g. "myvdc", defaults to ""
+        :param spaceName: str, optional
+        :param location: location when the cloud space needs to be created(only required when cloud space needs to be created), defaults to ""
+        :param location: str, optional
+        :param createSpace: if set to True the account is created in case it doesn't exist yet, defaults to True
+        :param createSpace: bool, optional
+        :param maxMemoryCapacity: available memory in GB for all virtual machines in the cloud space, defaults to -1(unlimited)
+        :param maxMemoryCapacity: int, optional
+        :param maxVDiskCapacity: available disk capacity in GiB for all virtual disks in the cloud space, defaults to -1(unlimited)
+        :param maxVDiskCapacity: int, optional
+        :param maxCPUCapacity: total number of available virtual CPU core that can be used by the virtual machines in the cloud space, defaults to -1(unlimited)
+        :param maxCPUCapacity: int, optional
+        :param maxNASCapacity: not implemented, defaults to -1(unlimited)
+        :param maxNASCapacity: int, optional
+        :param maxNetworkOptTransfer: not implemented, defaults to -1(unlimited)
+        :param maxNetworkOptTransfer: int, optional
+        :param maxNetworkPeerTransfer: not implemented, defaults to -1(unlimited)
+        :param maxNetworkPeerTransfer: int, optional
+        :param maxNumPublicIP: number of external IP addresses that can be used in the cloud space, defaults to -1(unlimited)
+        :param maxNumPublicIP: int, optional
+        :param externalnetworkId: id of the external network to attach to, defaults to None
+        :param externalnetworkId: int, optional
+        :raises RuntimeError: if name not specified and no acount name in config manager instance
+        :raises j.exceptions.RuntimeError: if specified account can't be found
+        :return: cloudspace data
+        :rtype: object
         """
+
 
         if location == "":
             location = self.config.data["location"]
@@ -234,13 +262,16 @@ class OVCClient(JSConfigBase):
                 "Could not find account with name %s" % accountName)
 
     def get_available_images(self, cloudspaceId=None, accountId=None):
-        """
-        lists all available images for a cloud space
+        """[summary]
 
-        Args:
-            - cloudspaceId (optional): cloud space Id
-            - accountId (optional): account Id
+        :param cloudspaceId: cloudspace Id, defaults to None
+        :param cloudspaceId: int, optional
+        :param accountId: account Id, defaults to None
+        :param accountId: int, optional
+        :return: list of dict representing image info
+        :rtype: list
         """
+
         return self.api.cloudapi.images.list(cloudspaceId=cloudspaceId, accountId=accountId)
 
     @property
