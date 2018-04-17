@@ -242,7 +242,7 @@ class TfChainClient:
         cmd = '/tfchainc --addr %s wallet' % self.addr
         result = self.container.client.system(cmd).get()
         if result.state != 'SUCCESS':
-            raise RuntimeError("Could not unlock wallet: %s" % result.stderr.splitlines()[-1])
+            raise RuntimeError("Could not get wallet amount: %s" % result.stderr.splitlines()[-1])
 
         args = {}
         for line in result.stdout.splitlines()[2:]:
