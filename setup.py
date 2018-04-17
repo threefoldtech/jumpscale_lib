@@ -14,8 +14,7 @@ def _post_install(libname, libpath):
     c[libname] = "%s/github/jumpscale/lib9/JumpScale9Lib" % j.dirs.CODEDIR
     # c[libname] = libpath
     j.core.state.configSet('plugins', c)
-    j.sal.process.execute(
-        "pip3 install 'git+https://github.com/zero-os/0-core#egg=0-core-client&subdirectory=client/py-client'")
+    j.sal.process.execute("pip3 install 'git+https://github.com/zero-os/0-core#egg=0-core-client&subdirectory=client/py-client' --no-cache")
     j.sal.process.execute(
         "pip3 install 'git+https://github.com/trezor/python-mnemonic.git'")
     j.tools.jsloader.generate()
@@ -83,7 +82,6 @@ setup(
         'paramiko>=1.15.3,<2.2',  # for parallel-ssh
         'path.py>=10.3.1',
         'peewee>=2.9.2',
-        'psutil>=5.2.2 ',
         'psycopg2>=2.7.1',
         'pudb>=2017.1.2',
         'cryptography>=2.2.0',
@@ -97,8 +95,6 @@ setup(
         'uvloop>=0.8.0',
         'watchdog>=0.8.3',
         'dnspython>=1.15.0',
-        # 'libvirt-python>=3.3.0',
-        # 'apache_libcloud>=2.0.0',
         'python-etcd>=0.4.5',
         'zerotier>=1.1.2',
         'packet-python>=1.37',
