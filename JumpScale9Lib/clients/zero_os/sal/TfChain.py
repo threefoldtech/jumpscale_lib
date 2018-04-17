@@ -251,6 +251,17 @@ class TfChainClient:
             v = v.strip()
             args[k] = v
         return args
+    
+    def wallet_status(self):
+        """
+        return the status of the wallet [locked/unlocked]
+        """
+        cmd = '/tfchainc --addr %s wallet' % self.addr
+        result = self.container.client.system(cmd).get()
+        if result.state != 'SUCCESS':
+            raise RuntimeError("Could not get wallet status: %s" % result.stderr.splitlines()[-1])
+        
+        return "locked" if "Locked" in result.stdout else "unlocked"
 
     def consensus_stat(self):
         return consensus_stat(self.container, self.addr)
