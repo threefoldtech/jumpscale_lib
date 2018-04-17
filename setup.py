@@ -14,8 +14,8 @@ def _post_install(libname, libpath):
     c[libname] = "%s/github/jumpscale/lib9/JumpScale9Lib" % j.dirs.CODEDIR
     # c[libname] = libpath
     j.core.state.configSet('plugins', c)
-    # j.sal.process.execute(
-    #     "pip3 install 'git+https://github.com/trezor/python-mnemonic.git'")
+    j.sal.process.execute(
+        "pip3 install 'git+https://github.com/trezor/python-mnemonic.git'")
     j.tools.jsloader.generate()
 
 
@@ -101,10 +101,6 @@ setup(
         'pynacl>=1.1.2',
         'ipcalc>=1.99.0',
         'ed25519>=1.4',
-    ],
-    dependency_links=[
-        "git+https://github.com/pyca/pynacl",
-        "git+https://github.com/trezor/python-mnemonic.git"
     ],
     cmdclass={
         'install': install,
