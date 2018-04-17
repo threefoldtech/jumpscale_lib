@@ -4,7 +4,6 @@ from js9 import j
 from .IYOClient import IYOClient
 import requests
 import jwt
-import jose.jwt
 import time
 
 DEFAULT_BASE_URL = "https://itsyou.online/api"
@@ -38,6 +37,11 @@ class IYOFactory(JSConfigBaseFactory):
         :rtype: str
         """
 
+        try:
+            import jose.jwt
+        except ImportError:
+            self.logger.info('jose not installed please use install method to get jose')
+            return
         expires = self.jwt_expire_timestamp(token)
         if 'refresh_token' not in jose.jwt.get_unverified_claims(token):
             self.logger.info("Specified token can't be refreshed. Please choose another refreshable token")

@@ -2,17 +2,15 @@
 
 ## js
 
-In order to start the JumpScale shell just type 'js'.
+In order to start the JumpScale shell just type `js9`.
 
-There are many more command line tools installed for you to explore, type 'js' and hit the tab key and you will see...
+There are many more command line tools installed for you to explore, type `js9` to see available modules.
 
 ```python
-# js
-IPython ? -- An enhanced Interactive Python.
-?         -> Introduction and overview of IPython's features.
-%quickref -> Quick reference.
-help      -> Python's own help system.
-object?   -> Details about 'object', use 'object??' for extra details.
+* ***Application started***: jsshell
+Python 3.5.2 (default, Nov 23 2017, 16:37:01) 
+Type 'copyright', 'credits' or 'license' for more information
+IPython 6.1.0 -- An enhanced Interactive Python. Type '?' for help.
 
 In [1]:
 ```
@@ -55,7 +53,6 @@ print "Debug point for checking ...."
 import ipdb; ipdb.set_trace()
 
  ipdb.set_trace()
---Call--
 > /usr/lib/python2.7/dist-packages/IPython/core/displayhook.py(228)__call__()
     227 
 --> 228     def __call__(self, result=None):
@@ -65,12 +62,12 @@ ipdb> help
 
 Documented commands (type help <topic>):
 ========================================
-EOF    bt         cont      enable  jump  pdef   r        tbreak   w     
+EOF    bt         cont      enable  jump  pdef   r        tbreak   w
 a      c          continue  exit    l     pdoc   restart  u        whatis
-alias  cl         d         h       list  pinfo  return   unalias  where 
-args   clear      debug     help    n     pp     run      unt    
-b      commands   disable   ignore  next  q      s        until  
-break  condition  down      j       p     quit   step     up     
+alias  cl         d         h       list  pinfo  return   unalias  where
+args   clear      debug     help    n     pp     run      unt
+b      commands   disable   ignore  next  q      s        until
+break  condition  down      j       p     quit   step     up
 
 Miscellaneous help topics:
 ==========================

@@ -10,6 +10,12 @@ iyo_cl = j.clients.itsyouonline.get('myinstance')
 
 The client instance is mainly used to retrieve a jwt. It also allows direct interaction with itsyouonline api.
 
+Before using the client make sure that `python-jose` librabry is  installed, this can be done as follows"
+
+```python
+j.clients.itsyouonline.install()
+```
+
 ## Getting a jwt
 
 The client method `jwt_get` will fetch a jwt which can be used to authenticate against various services like Openvcloud and gittea for instance.
