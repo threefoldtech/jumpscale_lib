@@ -25,11 +25,11 @@ class SandboxPython(JSBASE):
     def PACKAGEDIR(self):
         return j.dirs.BUILDDIR + "/sandbox/python3/"
 
-    def build(self, reset=False):
+    def build(self, js9_branch='development', include_js9=True, reset=False):
         """
         builds python and returns the build dir
         """
-        path = j.tools.prefab.local.runtimes.python.build(reset=reset)
+        path = j.tools.prefab.local.runtimes.python.build(reset=reset, js9_branch=js9_branch, include_js9=include_js9)
         return path
 
     def do(self, path="", dest="", build=True, reset=False):
