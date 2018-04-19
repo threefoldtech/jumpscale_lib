@@ -4,7 +4,6 @@ from js9 import j
 from .IYOClient import IYOClient
 import requests
 import jwt
-import jose.jwt
 import time
 
 DEFAULT_BASE_URL = "https://itsyou.online/api"
@@ -21,9 +20,28 @@ class IYOFactory(JSConfigBaseFactory):
         self._default = None
 
     def install(self):
+        """installs python-jose library locally
+        
+        """
+
         j.tools.prefab.local.runtimes.pip.install("python-jose")
 
     def refresh_jwt_token(self, token, validity=86400):
+        """refresh a jwt if expired, needs to be refreshable
+        
+        :param token: refreshable jwt token
+        :type token: str
+        :param validity: expiration time of the refreshed jwt, defaults to 86400
+        :param validity: int, optional
+        :return: refreshed token
+        :rtype: str
+        """
+
+        try:
+            import jose.jwt
+        except ImportError:
+            self.logger.info('jose not installed please use install method to get jose')
+            return
         expires = self.jwt_expire_timestamp(token)
         if 'refresh_token' not in jose.jwt.get_unverified_claims(token):
             self.logger.info("Specified token can't be refreshed. Please choose another refreshable token")
@@ -36,12 +54,22 @@ class IYOFactory(JSConfigBaseFactory):
         return token
 
     def jwt_is_expired(self, expiration):
+        """check if jwt is expired
+        
+        :param expiration: jwt expiration timestamp
+        :type expiration: int
+        :return: true if expired
+        :rtype: bool
+        """
+
         if time.time() + 300 > expiration:
             return True
         return False
 
     @property
     def default(self):
+        """ return default itsyou.online instance"""
+
         if self._default == None:
             if j.tools.configmanager.sandbox_check():
                 raise RuntimeError("should not call IYO client in sandbox!")
@@ -95,9 +123,13 @@ class IYOFactory(JSConfigBaseFactory):
         assert 'test' not in key_labels
 
     def jwt_expire_timestamp(self, token):
-        '''
-        Get expiration date of jwt token
-        '''
+        """Get expiration date of jwt token
+
+        :param token: jwt token
+        :type token: str
+        :return: return expiration date(timestamp) for the token
+        :rtype: int
+        """
 
         jwt_data = jwt.decode(token, verify=False)
         return jwt_data['exp']

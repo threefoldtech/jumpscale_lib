@@ -19,6 +19,8 @@ headers={'Authorization': 'bearer ' + jwt}
 
 Here's an example on how to list all OpenvCloud accounts you have access to based on the JWT, in this case for an OpenvCloud active on `be-gen-1`:
 ```python
+import requests
+
 base_url = "https://be-gen-1.demo.greenitglobe.com/restmachine/"
 
 requests.post(base_url + "cloudapi/cloudspaces/list", headers=headers).json()

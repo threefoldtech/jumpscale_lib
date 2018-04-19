@@ -10,13 +10,7 @@ To create a JWT you always need an application ID and secret. You get this appli
 
 ![](images/iyo_jwt.png)
 
-Once you have an application ID and secret, you can use the OpenvCloud client to create the JWT:
-
-```python
-jwt = j.clients.openvcloud.getJWTTokenFromItsYouOnline(applicationId, secret, validity=3600)
-```
-
-Alternatively you can also create a JWT by interacting directly with the ItsYou.online RESTful API using:
+You can also create a JWT by interacting directly with the ItsYou.online RESTful API using:
 
 - [JumpScale client for ItsYou.online](#jumpscale)
 - [Python](#python)

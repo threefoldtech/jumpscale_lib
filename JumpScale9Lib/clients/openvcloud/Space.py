@@ -19,6 +19,24 @@ class Space(Authorizables):
         self.id = model["id"]
 
     def externalnetwork_add(self, name, subnet, gateway, startip, endip, gid, vlan):
+        """Adds a external network range to be used for cloudspaces
+
+        :param name: the subnet to add in CIDR notation (x.x.x.x/y)
+        :type name: str
+        :param subnet: the subnet to add in CIDR notation (x.x.x.x/y)
+        :type subnet: str
+        :param gateway: gateway of the subnet
+        :type gateway: [type]
+        :param startip: First IP Address from the range to add
+        :type startip: str
+        :param endip: Last IP Address from the range to add
+        :type endip: str
+        :param gid: id of the grid
+        :type gid: int
+        :param vlan: VLAN Tag
+        :type vlan: int
+        """
+
         self.client.api.cloudbroker.iaas.addExternalNetwork(cloudspaceId=self.id,
                                                             name=name,
                                                             subnet=subnet,
@@ -30,6 +48,7 @@ class Space(Authorizables):
         self.refresh()
 
     def save(self):
+        """Update space on env with current space object data"""
         self.client.api.cloudapi.cloudspaces.update(cloudspaceId=self.model['id'],
                                                     name=self.model['name'],
                                                     maxMemoryCapacity=self.model.get(
@@ -98,17 +117,20 @@ class Space(Authorizables):
             cloudspaceId=self.id, userId=username, accesstype=right)
 
     def enable(self, reason):
+        """Will enable the cloud space.
+
+        :param reason: The reason why the cloud space should be enabled.
+        :type reason: str
         """
-        Will enable the cloud space.
-        : param reason: string: The reason why the cloud space should be enabled.
-        """
+
         self.client.api.cloudapi.cloudspaces.enable(
             cloudspaceId=self.id, reason=reason)
 
     def disable(self, reason):
-        """
-        Will disable the cloud space.
-        : param reason: string: The reason why the cloud space should be disabled.
+        """Will disable the cloud space.
+        
+        :param reason: The reason why the cloud space should be disabled.
+        :type reason: str
         """
         self.client.api.cloudapi.cloudspaces.disable(
             cloudspaceId=self.id, reason=reason)

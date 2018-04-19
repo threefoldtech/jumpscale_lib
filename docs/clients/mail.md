@@ -1,12 +1,14 @@
-# Send Mail
+# mail client
 
-## Install
+This client can be used to send emails from the specified smtp server.
 
-```
-ays install -n mailclient
-```
+Using [config manager](https://github.com/Jumpscale/core9/blob/master/docs/config/configmanager.md), user needs to specify the following data:
 
-This will ask for appropriate info about mail server.
+- smtp_server: server address
+- smtp_port: server port
+- login: user login to the smtp server
+- password: password login to the smtp server
+- from: sender name
 
 ## Usage
 
@@ -30,7 +32,6 @@ Docstring:
 ## Example
 
 ```
-import JumpScale9Lib.baselib.mailclient
 j.clients.email.send("kristof@incubaid.com","kristof@incubaid.com","test","test")
 ```
 

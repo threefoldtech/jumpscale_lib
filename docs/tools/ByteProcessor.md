@@ -13,13 +13,13 @@ j.tools.byteprocessor.decompress(output)
 Other compression algorithms are also available:
 
 ```python
-j.tools.byteprocessor.compress                 
-j.tools.byteprocessor.disperse                 
-j.tools.byteprocessor.hashMd5                  
-j.tools.byteprocessor.hashTiger192             
-j.tools.byteprocessor.decompress               
-j.tools.byteprocessor.getDispersedBlockObject  
-j.tools.byteprocessor.hashTiger160             
+j.tools.byteprocessor.compress
+j.tools.byteprocessor.disperse
+j.tools.byteprocessor.hashMd5
+j.tools.byteprocessor.hashTiger192
+j.tools.byteprocessor.decompress
+j.tools.byteprocessor.getDispersedBlockObject
+j.tools.byteprocessor.hashTiger160
 j.tools.byteprocessor.undisperse
 ```
 

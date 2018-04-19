@@ -18,16 +18,13 @@ class GiteaRepo(JSBASE):
         self.api = self.client.api.repos
 
     def labels_add(self, labels=None, remove_old=False):
-        """
-        Add multiple labels to 1 or more repo's
-
+        """Add multiple labels to 1 or more repo's.
         If a label with the same name exists on a repo, it won't be added.
 
-        :param labels: a list of labels  ex: [{'color': '#fef2c0', 'name': 'state_blocked'}]
-
-
-        default goes over all repo's
-
+        :param labels: a list of labels  ex: [{'color': '#fef2c0', 'name': 'state_blocked'}] if none will use default org labels, defaults to None
+        :param labels: list, optional
+        :param remove_old: removes old labels if true, defaults to False
+        :param remove_old: bool, optional
         """
 
         self.logger.info("labels add")
@@ -56,14 +53,16 @@ class GiteaRepo(JSBASE):
                     self.client.api.repos.issueDeleteLabel(get_label_id(label), self.name, self.owner)
 
     def milestones_add(self, milestones=None, remove_old=False):
-        """
-        Add multiple milestones to multiple repos.
+        """Add multiple milestones to multiple repos.
         If a milestone with the same title exists on a repo, it won't be added.
         If no milestones are supplied, the default milestones for the current quarter will be added.
 
-        :param milestones: a list of milestones ex: [['Q1','2018-03-31'],...]
-        :return:
+        :param milestones: a list of milestones ex: [['Q1','2018-03-31'],...], defaults to None
+        :param milestones: list, optional
+        :param remove_old: removes old milestones if true, defaults to False
+        :param remove_old: bool, optional
         """
+
         self.logger.info("milestones add")
 
         if not milestones:
@@ -97,8 +96,12 @@ class GiteaRepo(JSBASE):
 
     @property
     def milestones_default(self):
+        """property for generating default milestones
+
+        :return: default milestones according to the cuurent quarter
+        :rtype: list
         """
-        """
+
 
         today = datetime.today()
         thismonth = today.month
@@ -149,6 +152,12 @@ class GiteaRepo(JSBASE):
         return milestones
 
     def issues_get(self):
+        """used to get issues in the repo
+
+        :return: a list of issue objects from the generated client
+        :rtype: list
+        """
+
         return self.api.issueListIssues(self.name, self.owner)[0]
 
     def __repr__(self):
