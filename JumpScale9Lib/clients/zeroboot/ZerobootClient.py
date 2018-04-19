@@ -1,10 +1,37 @@
+import re
+import netaddr
+import time
 from js9 import j
 
 JSConfigBase = j.tools.configmanager.base_class_config
 
 TEMPLATE = """
 racktivity_instance = ""
+sshclient_instance = ""
+zerotier_instance = ""
+network_id = ""
 """
+
+def apply_changes(sshclient, network=False):
+    sshclient.execute('uci commit')
+    if network:
+        try:
+            sshclient.execute('/etc/init.d/network restart && sleep 3 && /etc/init.d/zerotier restart', timeout=12) # added sleep to prevent race condition
+        except j.exceptions.SSHTimeout:
+            pass
+        code, _, _ = j.sal.process.execute('ping -c 2 {}'.format(sshclient.addr), die=False)
+        timeout_limit = time.time() + 70
+        while time.time() < timeout_limit:
+            if code == 0:
+                break
+            time.sleep(5)
+            code, _, _ = j.sal.process.execute('ping -c 2 {}'.format(sshclient.addr), die=False)
+        else:
+            raise j.exceptions.RuntimeError('Lost connection to the router')
+    else:
+        sshclient.execute('/etc/init.d/dnsmasq restart')
+
+
 class ZerobootClient(JSConfigBase):
     """Zeroboot client
     using racktivity
@@ -13,6 +40,14 @@ class ZerobootClient(JSConfigBase):
     def __init__(self, instance, data={}, parent=None, interactive=None):
         JSConfigBase.__init__(self, instance=instance,
                               data=data, parent=parent, template=TEMPLATE)
+        self.sshclient = j.clients.ssh.get(instance=self.config.data['sshclient_instance'], interactive=True)
+        self.ztier = j.clients.zerotier.get(instance=self.config.data['zerotier_instance'])
+        self.networks = Networks(self.sshclient)
+        network = self.networks.get()
+        cidr = str(netaddr.IPNetwork(network.subnet).cidr)
+        route = {'target': cidr, 'via': self.sshclient.addr}
+        znetwork = self.ztier.network_get(self.config.data['network_id'])
+        znetwork.add_route(route)
         self.client = j.clients.racktivity.get(instance=self.config.data['racktivity_instance'])
 
     def power_info_get(self):
@@ -33,8 +68,218 @@ class ZerobootClient(JSConfigBase):
 
         return self.client.power.setPortState(0, portnumber=port_number)
 
+    def port_power_cycle(self, port_numbers):
+        """
+        Power off, wait 5 sec then turn on again.
+        :param port_numbers: ports to power cycle on
+        :type port_numbers: list
+        """
+        for port_number in port_numbers:
+            self.port_power_off(port_number)
+            time.sleep(5)
+            self.port_power_on(port_number)
+
     def port_info(self, port_number):
         """get port info
         """
-        return self.power.getStatePortCur(portnumber=port_number)
+        return self.client.power.getStatePortCur(portnumber=port_number)
 
+class Network:
+    def __init__(self, subnet, sshclient):
+        self.subnet = subnet
+        self.sshclient = sshclient
+        self.leasetime = '5m'
+        self.hosts = Hosts(self.sshclient, self.subnet, self.leasetime)
+
+    def configure_lease_time(self, leasetime):
+        """configure expiration time for all lan leases
+
+        :param leasetime: follows the format h for hours m for minutes ex: 5m
+        :type leasetime: str
+        """
+        self.sshclient.execute("uci set dhcp.lan.leasetime='{}'".format(leasetime))
+        apply_changes(self.sshclient)
+        self.leasetime = leasetime
+
+    def add(self):
+        raise NotImplementedError()
+
+    def configure(self, subnet):
+        """
+        Configure the subnet of the network
+        """
+        net = netaddr.IPNetwork(subnet)
+        self.sshclient.execute("uci set network.lan.ipaddr='{}'".format(str(net.ip)))
+        self.sshclient.execute("uci set network.lan.netmask='{}'".format(str(net.netmask)))
+        apply_changes(self.sshclient, network=True)
+        self.subnet = subnet
+        for host in self.hosts.list():
+            self.hosts.remove(host)
+        self.hosts = Hosts(self.sshclient, self.subnet, self.leasetime)
+
+    def remove(self):
+        raise NotImplementedError()
+
+class Networks:
+    def __init__(self, sshclient):
+        self._networks = {}
+        self.sshclient = sshclient
+        self._populate()
+
+    def _populate(self):
+        _, ipaddr, _ = self.sshclient.execute('uci get network.lan.ipaddr')
+        _, netmask, _ = self.sshclient.execute('uci get network.lan.netmask')
+        subnet = str(netaddr.IPNetwork("{ip}/{net}".format(ip=ipaddr.strip(), net=netmask.strip())))
+        self._networks[subnet] = Network(subnet, self.sshclient)
+
+    def add(self, subnet, list_of_dns):
+        raise NotImplementedError()
+
+    def list(self):
+        return list(self._networks.keys())
+
+    def get(self, subnet=None):
+        if not subnet:
+            subnet = self.list()[0]
+        if subnet not in self._networks:
+            raise KeyError("Network with specified subnet: %s doesn't exist" % subnet)
+        return self._networks[subnet]
+
+    def remove(self, subnet):
+        raise NotImplementedError()
+
+    def __repr__(self):
+        return str(self.list())
+
+class Host:
+    def __init__(self, mac, address, hostname, sshclient, index):
+        self.mac = mac
+        self.address = address
+        self.hostname = hostname
+        self.sshclient = sshclient
+        self.index = index
+
+    def configure_ipxe_boot(self, boot_url, tftp_root='/opt/storage'):
+        """[summary]
+
+        :param boot_url: url to boot from includes zerotier netowrk id ex: http://unsecure.bootstrap.gig.tech/ipxe/zero-os-master/a84ac5c10a670ca3
+        :type boot_url: str
+        :param tftp_root: tftp root location where pxe config are stored, defaults to '/opt/storage'
+        :param tftp_root: str, optional
+        """
+
+        file_name = '01-{}'.format(str(netaddr.EUI(self.mac)))
+        executor = j.tools.executor.ssh_get(self.sshclient)
+        pxe_config_file = '{root}/pxelinux.cfg/{file}'.format(root=tftp_root, file=file_name)
+        pxe_config_data = (
+        "default 1\n"
+        "timeout 100\n"
+        "prompt 1\n"
+        "ipappend 2\n\n"
+        "label 1\n"
+        "\tKERNEL ipxe.krn dhcp && chain {}".format(boot_url))
+
+        executor.file_write(pxe_config_file, pxe_config_data)
+
+    def _hostname_set(self, option, value):
+        self.sshclient.execute("uci set dhcp.@host[{idx}].{opt}='{val}'".format(idx=self.index, opt=option, val=value))
+
+    def _register(self):
+        self.sshclient.execute('uci add dhcp host')
+        self._hostname_set('ip', self.address)
+        self._hostname_set('mac', self.mac)
+        self._hostname_set('name', self.hostname)
+        apply_changes(self.sshclient)
+
+    def _unregister(self):
+        self.sshclient.execute('uci delete dhcp.@host[{}]'.format(self.index))
+        apply_changes(self.sshclient)
+
+class Hosts:
+    def __init__(self, sshclient, subnet, leasetime):
+        self._hosts = {}
+        self.sshclient = sshclient
+        self.subnet = subnet
+        self._populate()
+        self._last_index = -1
+        self.leasetime = leasetime
+
+    def _hosts_chunks(self, l, n):
+        """Yield successive n-sized chunks from l."""
+        for i in range(0, len(l), n):
+            yield l[i:i + n]
+
+    def _populate(self):
+        """
+        example hosts_data:
+        [('0', 'ip', "'192.168.1.2'"),
+        ('0', 'mac', "'00:11:22:33:44:55'"),
+        ('0', 'name', "'mypc'"),
+        ('1', 'ip', "'192.168.1.3'"),
+        ('1', 'mac', "'00:11:22:33:44:55'"),
+        ('1', 'name', "'myhost'")]
+        """
+        _, out, _ = self.sshclient.execute('uci show dhcp')
+        hosts_data = re.findall("dhcp.@host\[(\d+)\]\.(ip|mac|name)=(.+)", out)
+        if hosts_data:
+            self._last_index = int(hosts_data[-1][0])
+            for host_data in self._hosts_chunks(hosts_data, 3):
+                index = host_data[0][0]
+                ip, mac, name = map(lambda x: x[2].replace("'", ""), host_data)
+                self._hosts[name] = Host(mac, ip, name, self.sshclient, index)
+        else:
+            self._last_index = -1
+
+    def add(self, mac, address, hostname):
+        """Adds a static lease to machine with the specified mac address
+
+        :param mac: required mac address
+        :type mac: str
+        :param address: static ip to give to machine
+        :type address: str
+        :param hostname: hostname
+        :type hostname: str
+        :raises RuntimeError: if specified address not in network range
+        :raises RuntimeError: if host name already exists
+        :raises RuntimeError: if mac address and/or ip are already registered
+        :return: object representing the host
+        :rtype: object
+        """
+
+        if netaddr.IPAddress(address) not in netaddr.IPNetwork(self.subnet):
+            raise RuntimeError("specified address: {addr} not in network: {net}".format(addr=address, net=self.subnet))
+        if hostname in self._hosts:
+            raise RuntimeError("Host with hostname: %s already registered to the network" % hostname)
+        for host in self._hosts.values():
+            if host.mac == mac or host.address == address:
+                raise RuntimeError("Host with specified mac: {mac} and/or address: {addr} already registered".format(mac=mac, addr=address))
+        self._last_index += 1
+        host = Host(mac, address, hostname, self.sshclient, self._last_index)
+        self.sshclient.execute("uci set dhcp.lan.dynamicdhcp='0'")
+        self.sshclient.execute("uci set dhcp.lan.leasetime='{}'".format(self.leasetime))
+        host._register()
+        self._hosts[hostname] = host
+        return host
+
+    def list(self):
+        return list(self._hosts.keys())
+
+    def get(self, hostname):
+        if hostname not in self._hosts:
+            raise KeyError("Host: %s doesn't exist" % hostname)
+        return self._hosts[hostname]
+
+    def remove(self, hostname):
+        """removes static lease
+
+        :param hostname: hostname specified in the lease
+        :type hostname: str
+        """
+
+        host = self.get(hostname)
+        host._unregister()
+        self._hosts = {}
+        self._populate() # To fetch correct indexes
+
+    def __repr__(self):
+        return str(self.list())

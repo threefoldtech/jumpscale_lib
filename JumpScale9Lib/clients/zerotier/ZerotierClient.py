@@ -178,6 +178,69 @@ class ZeroTierNetwork(JSBASE):
 
         return True
 
+    def list_routes(self):
+        """list available routes on the network
+
+        :raises j.exceptions.RuntimeError: if it fails to list routes of the network
+        :return: routes available
+        :rtype: list
+        """
+
+        resp = self._client.network.getNetwork(id=self.id)
+        if resp.status_code != 200:
+            msg = 'Failed to retrieve network routes. Error: {}'.format(resp.text)
+            self.logger.error(msg)
+            raise j.exceptions.RuntimeError(msg)
+        return resp.json()['config']['routes']
+
+    def check_route(self, route):
+        """check if route data already exists and returns necessary information
+
+        :param route: contains the target and the host that will do the routing
+        :type route: dict
+        :return: true if router with correct configuration exists, returns idx and all routes
+        :rtype: bool
+        """
+        routes = self.list_routes()
+        for idx, item in enumerate(routes):
+            if item['target'] == route['target'] and item['via'] == route['via']:
+                return True, idx, routes
+        return False, -1, routes
+
+    def remove_route(self, route):
+        """remove route with same data
+
+        :param route: target and route data
+        :type route: dict
+        :raises j.exceptions.RuntimeError: if removing it fails
+        """
+        exists, idx, routes = self.check_route(route)
+        if exists:
+            routes.pop(idx)
+            config = {'config': {'routes': routes}}
+            resp = self._client.network.updateNetwork(data=config, id=self.id)
+            if resp.status_code != 200:
+                msg = 'Failed to remove route. Error: {}'.format(resp.text)
+                self.logger.error(msg)
+                raise j.exceptions.RuntimeError(msg)
+
+    def add_route(self, route):
+        """add a managed route to the network
+
+        :param route: contains the target and the host that will do the routing
+        :type route: dict
+        """
+        exists, _, routes = self.check_route(route)
+        if not exists:
+            routes.append(route)
+            config = {'config': {'routes': routes}}
+            resp = self._client.network.updateNetwork(data=config, id=self.id)
+            if resp.status_code != 200:
+                msg = 'Failed to add route. Error: {}'.format(resp.text)
+                self.logger.error(msg)
+                raise j.exceptions.RuntimeError(msg)
+
+
 TEMPLATE = """
 token_ = ""
 """
