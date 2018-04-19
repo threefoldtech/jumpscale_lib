@@ -41,6 +41,12 @@ class DiskManager:
         'disk': str,
     })
 
+    _spindown_chk = typchk.Checker({
+        'disk': str,
+        'spindown': int,
+    })
+
+
     def __init__(self, client):
         self._client = client
 
@@ -279,3 +285,21 @@ class DiskManager:
             return json.loads(data)
         else:
             return {}
+
+    def spindown(self, disk, spindown=1):
+        """
+        Spindown a disk
+        :param disk str: Full path to a disk like /dev/sda
+        :param spindown int: spindown value should be in [1, 240]
+        """
+        args = {
+            "disk": disk,
+            "spindown": spindown
+        }
+        self._spindown_chk.check(args)
+        response = self._client.raw('disk.spindown', args)
+
+        result = response.get()
+        if result.state != 'SUCCESS':
+            raise RuntimeError("Failed to spindown disk {} to {}.".format(disk, spindown))
+
