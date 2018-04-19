@@ -134,3 +134,9 @@ class ZeroDB:
         if prop not in ['maxsize', 'password', 'public']:
             raise ValueError('Namespace property must be maxsize, password or public')
         self._redis.execute_command('NSSET', namespace, prop, value)
+
+    def delete_namespace(self, namespace):
+        self.container.client.filesystem.remove(j.sal.fs.joinPaths(self.data_dir, namespace))
+        self.container.client.filesystem.remove(j.sal.fs.joinPaths(self.index_dir, namespace))
+        self.stop()
+        self.start()
