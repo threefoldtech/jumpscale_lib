@@ -1,5 +1,7 @@
 from .utils import _find_second
 
+from js9 import j
+
 class Story():
     """Represents a story
     """
@@ -30,6 +32,7 @@ class Story():
         self.url = url
         self.description = description
         self.state = state
+        self.logger = j.logger.get("j.tools.StoryBot")
         self._update_list_func = update_list_func
 
     def __repr__(self):
@@ -83,7 +86,7 @@ class Story():
             # get title from line and compare
             title_start = _find_second(line, char="[")
             if title_start == -1:
-                logger.warning("List item is could be wrongly formatted: '%s'" % line)
+                self.logger.warning("List item is could be wrongly formatted: '%s'" % line)
             line_title = line[title_start: line.find(":")]
             if line_title == self.title:
                 return i

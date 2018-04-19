@@ -1,11 +1,13 @@
 from .GithubBot import GithubBot
+from .GiteaBot import GiteaBot
 
 from js9 import j
 
 TEMPLATE =  """
 github_token_ = ""
 github_repos = ""
-gitea_url = "https://docs.greenitglobe.com/api/v1"
+gitea_api_url = "https://docs.greenitglobe.com/api/v1"
+gitea_base_url = "https://docs.greenitglobe.com/"
 gitea_token_ = ""
 gitea_repos = ""
 """
@@ -25,8 +27,6 @@ class StoryBot(JSConfigBase):
         Keyword Arguments:
             data {data} -- StoryBot data matching the TEMPLATE(default: None)
         """
-        if not data:
-            data = {}
 
         JSConfigBase.__init__(self, instance=instance,
                                     data=data,
@@ -34,7 +34,6 @@ class StoryBot(JSConfigBase):
                                     template=TEMPLATE,
                                     interactive=interactive)
 
-        #self.logger = j.logger.get("j.tools.StoryBot")
         # check configuration of the bot
 
     def run(self):
@@ -52,13 +51,17 @@ class StoryBot(JSConfigBase):
 
         if self.config.data["gitea_repos"] != "":
             # create gitea bot
-            pass
+            token = self.config.data["gitea_token_"]
+            api_url = self.config.data["gitea_api_url"]
+            base_url = self.config.data["gitea_base_url"]
+            repos = [item.strip() for item in self.config.data["gitea_repos"].split(",")]
+            gitea_bot = GiteaBot(token=token, api_url=api_url, base_url=base_url, repos=repos)
 
         # ask stories from bots
-        if github_bot is not None:
+        if github_bot:
             stories.extend(github_bot.get_stories())
 
-        if gitea_bot is not None:
+        if gitea_bot:
             stories.extend(gitea_bot.get_stories())
 
         # link task with stories with stories from bot bots if bots not None

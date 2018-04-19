@@ -35,8 +35,9 @@ class GithubBot:
         Returns:
             [Story] -- A list of stories (Story) on the provided github repos
         """
-        stories = []
         self.logger.info("Checking for stories on github...")
+        
+        stories = []
         if not self.repos:
             self.logger.info("No repos provided to the Github bot")
             return stories
