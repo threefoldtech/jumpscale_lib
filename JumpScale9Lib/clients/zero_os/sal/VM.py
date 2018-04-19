@@ -8,6 +8,13 @@ class VM:
         self.uuid = uuid
         self._info = info
 
+    def is_running(self):
+        try:
+            info = self.node.client.kvm.get(uuid=self.uuid)
+            return info['state'] == 'running'
+        except:
+            return False
+
     def destroy(self):
         logger.info('Destroying kvm with uuid %s' % self.uuid)
         self.node.client.kvm.destroy(self.uuid)
