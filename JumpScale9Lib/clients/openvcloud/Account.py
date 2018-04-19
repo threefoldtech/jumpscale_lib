@@ -21,6 +21,7 @@ class Account(Authorizables):
 
     @property
     def spaces(self):
+        """returns all cloudspaces in the account"""
         ovc_spaces = self.client.api.cloudapi.cloudspaces.list()
         spaces = list()
         for space in ovc_spaces:
@@ -37,37 +38,51 @@ class Account(Authorizables):
         return self.client.api.cloudapi.disks.list(accountId=self.id)
 
     def disk_delete(self, disk_id, detach=True):
+        """delete disk by its id. I think there should be a class for disks to list all its wrappers
+
+        :param disk_id: The disk id that needs to be removed
+        :type disk_id: int
+        :param detach: detach the disk from the machine first, defaults to True
+        :param detach: bool, optional
+        :return: true if deleted
+        :rtype: bool
         """
-        Wrapper to delete disk by its id. I think there should be a class for disks to list all its wrappers
-        : param disk_id: integer: The disk id need to be removed
-        : param detach: boolean: detach the disk from the machine first
-        : return:
-        """
+
         return self.client.api.cloudapi.disks.delete(diskId=disk_id, detach=detach)
 
     def space_get(self, name, location="", create=True,
                   maxMemoryCapacity=-1, maxVDiskCapacity=-1, maxCPUCapacity=-1, maxNASCapacity=-1,
                   maxNetworkOptTransfer=-1, maxNetworkPeerTransfer=-1, maxNumPublicIP=-1,
                   externalnetworkId=None):
-        """
-        Returns the cloud space with the given name, and in case it doesn't exist yet the account will be created.
+        """Returns the cloud space with the given name, and in case it doesn't exist yet the account will be created.
 
-        Args:
-            - name (required): name of the cloud space to lookup or create if it doesn't exist yet, e.g. "myvdc"
-            - location (only required when cloud space needs to be created): location when the cloud space needs to be created
-            - create (defaults to True): if set to True the account is created in case it doesn't exist yet
-            - maxMemoryCapacity (defaults to -1: unlimited): available memory in GB for all virtual machines in the cloud space
-            - maxVDiskCapacity (defaults to -1: unlimited): available disk capacity in GiB for all virtual disks in the cloud space
-            - maxCPUCapacity (defaults to -1: unlimited): total number of available virtual CPU core that can be used by the virtual machines in the cloud space
-            - maxNASCapacity (defaults to -1: unlimited): not implemented
-            - maxNetworkOptTransfer (defaults to -1: unlimited): not implemented
-            - maxNetworkPeerTransfer (defaults to -1: unlimited): not implemented
-            - maxNumPublicIP (defaults to -1: unlimited): number of external IP addresses that can be used in the cloud space
-
-        Raises:
-            - RuntimeError is no location was specified
-            - RuntimeError if cloud space doesn't exist, and create argument was set to False
+        :param name: name of the cloud space to lookup or create if it doesn't exist yet, e.g. "myvdc"
+        :type name: [type]
+        :param location: location when the cloud space needs to be created, defaults to ""
+        :param location: str, optional only required when cloud space needs to be created
+        :param create: if set to True the cloudspace is created in case it doesn't exist yet, defaults to True
+        :param create: bool, optional 
+        :param maxMemoryCapacity: available memory in GB for all virtual machines in the cloud space, defaults to -1
+        :param maxMemoryCapacity: int, optional
+        :param maxVDiskCapacity: available disk capacity in GiB for all virtual disks in the cloud space, defaults to -1(unlimited)
+        :param maxVDiskCapacity: int, optional
+        :param maxCPUCapacity: total number of available virtual CPU core that can be used by the virtual machines in the cloud space, defaults to -1(unlimited)
+        :param maxCPUCapacity: int, optional
+        :param maxNASCapacity: not implemented, defaults to -1(unlimited)
+        :param maxNASCapacity: int, optional
+        :param maxNetworkOptTransfer: not implemented, defaults to -1(unlimited)
+        :param maxNetworkOptTransfer: int, optional
+        :param maxNetworkPeerTransfer: maximum sent/received network transfer peer, defaults to -1(unlimited)
+        :param maxNetworkPeerTransfer: int, optional
+        :param maxNumPublicIP: number of external IP addresses that can be used in the cloud space, defaults to -1(unlimited)
+        :param maxNumPublicIP: int, optional
+        :param externalnetworkId: id of external network to connect to, defaults to None
+        :param externalnetworkId: int, optional
+        :raises j.exceptions.RuntimeError: if cloud space doesn't exist, and create argument was set to False
+        :return: space object
+        :rtype: object
         """
+
         if not location:
             location = self.client.config.data["location"]
         if location == "":
@@ -98,6 +113,24 @@ class Account(Authorizables):
                     "Could not find space with name %s" % name)
 
     def disk_create(self, name, gid, description, size=0, type="B", ssd_size=0):
+        """create a new disk in the account
+
+        :param name: name of the disk
+        :type name: str
+        :param gid: grid id to create the disk on
+        :type gid: int
+        :param description: description info of the disk
+        :type description: str
+        :param size: size of the disk in Gbytes, defaults to 0
+        :param size: int, optional
+        :param type: type of the disk: B for boot disk D for data disk and T for temp, defaults to "B"
+        :param type: str, optional
+        :param ssd_size: not implemented, defaults to 0
+        :param ssd_size: int, optional
+        :return: created disk id
+        :rtype: int
+        """
+
         res = self.client.api.cloudapi.disks.create(accountId=self.id,
                                                     name=name,
                                                     gid=gid,
@@ -120,9 +153,20 @@ class Account(Authorizables):
             accountId=self.id, userId=username, recursivedelete=True)
 
     def get_consumption(self, start, end):
+        """download the resources traking files for an account within a given period
+
+        :param start: epoch representing the start time
+        :type start: int
+        :param end: epoch representing the end time
+        :type end: int
+        :return: consumption data
+        :rtype: str
+        """
+
         return self.client.api.cloudapi.accounts.getConsumption(accountId=self.id, start=start, end=end)
 
     def save(self):
+        """Update account on env with current account object data"""
         self.client.api.cloudapi.accounts.update(accountId=self.model['id'],
                                                  name=self.model['name'],
                                                  maxMemoryCapacity=self.model.get(
@@ -142,6 +186,7 @@ class Account(Authorizables):
                                                  )
 
     def refresh(self):
+        """refresh current account object"""
         accounts = self.client.api.cloudapi.accounts.list()
         found = False
         for account in accounts:
@@ -154,16 +199,19 @@ class Account(Authorizables):
                 "No account found with name %s. The user doesn't have access to the account or it is been deleted." % self.model['name'])
 
     def delete(self):
+        """Delete current account"""
         self.client.api.cloudbroker.account.delete(
             accountId=self.id, reason='API request')
 
     def get_available_images(self, cloudspaceId=None):
-        """
-        lists all available images for a cloud space
+        """lists all available images for a cloud space
 
-        Args:
-            - cloudspaceId (optional): cloud space Id
+        :param cloudspaceId: if specified will list images only for specified cloudspace, defaults to None
+        :param cloudspaceId: int, optional
+        :return: list of dict representing image info
+        :rtype: list
         """
+
 
         return self.client.api.cloudapi.images.list(cloudspaceId=cloudspaceId, accountId=self.id)
 

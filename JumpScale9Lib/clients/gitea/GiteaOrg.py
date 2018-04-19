@@ -41,12 +41,29 @@ class GiteaOrg(JSBASE):
         return self.cache.get("orgs", method=do, refresh=refresh, expire=60)
 
     def repos_list(self, refresh=False):
+        """list repos in that organization
+
+        :param refresh: if true will not use value in cache, defaults to False
+        :param refresh: bool, optional
+        :return: key-value of repo name and id
+        :rtype: dict
+        """
+
         res = {}
         for name, item in self._repos_get(refresh=refresh).items():
             res[name] = item.id
         return res
 
     def repo_get(self, name):
+        """returns a gitea repo object
+
+        :param name: name of the repo
+        :type name: str
+        :raises RuntimeError: if soecified name not in org's repos
+        :return: gitea object
+        :rtype: object
+        """
+
         self.logger.info("repo:get:%s" % name)
         if name not in self._repos_get().keys():
             raise RuntimeError("cannot find repo with name:%s in %s" % (name, self))
@@ -54,6 +71,14 @@ class GiteaOrg(JSBASE):
         return GiteaRepo(self, name, data)
 
     def repo_new(self, name):
+        """create a new repo if it doesn't exist
+
+        :param name: name of the new repo
+        :type name: str
+        :return: response data which includes repo info and repo object from generated client
+        :rtype: tuple
+        """
+
         self.logger.info("repo:new:%s" % name)
         if name in self._repos_get().keys():
             self.logger.debug("no need to create repo on gitea, exists:%s"%name)
@@ -64,14 +89,14 @@ class GiteaOrg(JSBASE):
             return self.client.api.org.createOrgRepo(data, org=self.name)
 
     def labels_milestones_add(self, labels=default_labels, remove_old=False):
+        """Adds new labels to the organization. If a label with the same name exists on a repo, it won't be added.
+
+        :param labels: list of dict representing labels ex {'color': '#e11d21', 'name': 'priority_critical'}, defaults to default_labels
+        :param labels: list, optional
+        :param remove_old: removes old labels if true, defaults to False
+        :param remove_old: bool, optional
         """
-        If a label with the same name exists on a repo, it won't be added.
 
-        :param labels: a list of labels  ex: [{'color': '#fef2c0', 'name': 'state_blocked'}]
-
-        goes over all repo's in this org
-
-        """
         for repo_name in self.repos_list():
             repo = self.repo_get(repo_name)
 

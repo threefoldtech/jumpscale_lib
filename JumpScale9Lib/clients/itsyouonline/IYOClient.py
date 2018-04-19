@@ -32,24 +32,28 @@ class IYOClient(JSConfigBase):
 
     @property
     def client(self):
+        """Generated itsyou.onine client"""
         if self._client is None:
             self._client = Client( base_uri=self.config.data['baseurl'])
         return self._client
 
     @property
     def api(self):
+        """Generated itsyou.onine client api"""
         if self._api is None:
             self._api = self.client.api
         return self._api
 
     @property
     def oauth2_client(self):
+        """Generated itsyou.onine client oauth2 client"""
         if self._oauth2_client is None:
             self._oauth2_client = self.client.Oauth2ClientOauth_2_0  #WEIRD NAME???
         return self._oauth2_client
 
     @property
     def jwt(self):
+        """returns a jwt if not set and update authorization header with that jwt"""
         if self.config.data["application_id_"] == "":
             raise RuntimeError("Please configure your itsyou.online, do this by calling js9 "
                                "'j.tools.configmanager.configure(j.clients.itsyouonline,...)'")
@@ -75,16 +79,21 @@ class IYOClient(JSConfigBase):
         self.cache.set(key, [jwt, expires])
 
     def jwt_get(self, validity=None, refreshable=False, scope=None, use_cache=False):
-        """
-        Get a a JSON Web token for an ItsYou.online organization or user.
+        """Get a a JSON Web token for an ItsYou.online organization or user.
 
-        Args:
-            validity: time in seconds after which the JWT will become invalid; defaults to 3600
-            refreshable (True/False): If true the JWT can be refreshed; defaults to False
-            scope: defaults to None
-            use_cache: if true will add the jwt to cache and retrieve required jwt if it exists
-                    if refreshable is true will refresh the cached jwt
+        :param validity: time in seconds after which the JWT will become invalid, defaults to 3600
+        :param validity: int, optional
+        :param refreshable: If true the JWT can be refreshed, defaults to False
+        :param refreshable: bool, optional
+        :param scope: define scope of the jwt, defaults to None
+        :param scope: str, optional
+        :param use_cache: if true will add the jwt to cache and retrieve required jwt if it exists
+                    if refreshable is true will refresh the cached jwt, defaults to False
+        :param use_cache: bool, optional
+        :return: jwt token
+        :rtype: str
         """
+
 
         if use_cache:
             key = 'jwt_' + str(refreshable)

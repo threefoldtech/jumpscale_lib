@@ -42,13 +42,14 @@ class Machine(JSBASE):
 
     @property
     def model(self):
+        """gets image model if it is not already in the cache"""
 
         def do():
             timeout = j.data.time.epoch + 20
             model = self.client.api.cloudapi.machines.get(machineId=self.id)
             while len(model['interfaces']) == 0 or model['interfaces'][0]['ipAddress'] == 'Undefined':
                 if j.data.time.epoch > timeout:
-                    raise j.exceptions.RuntimeError("Could not get IP Address for machine %(name)s" % machine)
+                    raise j.exceptions.RuntimeError("Could not get IP Address for machine %(name)s" % model)
                 time.sleep(1)
                 model = self.client.api.cloudapi.machines.get(machineId=self.id)
             return model
@@ -83,23 +84,30 @@ class Machine(JSBASE):
         self.refresh()
 
     def clone(self, name, cloudspaceId=None, snapshotTimestamp=None):
+        """Will create a new machine that is a clone of this one.
+
+        :param name: the name of the clone that will be created.
+        :type name: str
+        :param cloudspaceId: id of the cloud space in which the machine should be put., defaults to None
+        :param cloudspaceId: int, optional
+        :param snapshotTimestamp: snapshot to base the clone upon., defaults to None
+        :param snapshotTimestamp: int, optional
+        :return: the id of the created machine
+        :rtype: int
         """
-        Will create a new machine that is a clone of this one.
-        : param name: the name of the clone that will be created.
-        : param cloudspaceId: optional id of the cloud space in which the machine should be put.
-        : param snapshotTimestamp: optional snapshot to base the clone upon.
-        : return: the id of the created machine
-        """
+
         return self.client.api.cloudapi.machines.clone(machineId=self.id,
                                                        name=name,
                                                        cloudspaceId=cloudspaceId,
                                                        snapshotTimestamp=snapshotTimestamp)
 
     def snapshot_create(self, name=None):
+        """Will create a snapshot of the machine.
+
+        :param name: date time string representing name of the snapshot that will be created, if none will use current time, defaults to None
+        :param name: str, optional
         """
-        Will create a snapshot of the machine.
-        : param name: the name of the snapshot that will be created. Default: creation time
-        """
+
         if name is None:
             name = str(datetime.datetime.now())
         self.client.api.cloudapi.machines.snapshot(
@@ -109,14 +117,14 @@ class Machine(JSBASE):
     def snapshots(self):
         """
         Will return a list of snapshots of the machine.
-        : return: the list of snapshots
+        :return: the list of snapshots
         """
         return self.client.api.cloudapi.machines.listSnapshots(machineId=self.id)
 
     def snapshot_delete(self, epoch):
         """
         Will delete a snapshot of the machine.
-        : param epoch: the epoch of the snapshot to be deleted.
+        :param epoch: the epoch of the snapshot to be deleted.
         """
         self.client.api.cloudapi.machines.deleteSnapshot(
             machineId=self.id, epoch=epoch)
@@ -124,12 +132,20 @@ class Machine(JSBASE):
     def snapshot_rollback(self, epoch):
         """
         Will rollback a snapshot of the machine.
-        : param epoch: the epoch of the snapshot to be rollbacked.
+        :param epoch: the epoch of the snapshot to be rollbacked.
         """
         self.client.api.cloudapi.machines.rollbackSnapshot(
             machineId=self.id, epoch=epoch)
 
     def history_get(self, size):
+        """get machine history
+
+        :param size: number of entries to return
+        :type size: int
+        :return: list of dict containing actions on the machine
+        :rtype: list
+        """
+
         return self.client.api.cloudapi.machines.getHistory(machineId=self.id, size=size)
 
     def externalnetwork_attach(self):
@@ -141,6 +157,22 @@ class Machine(JSBASE):
             machineId=self.id)
 
     def disk_add(self, name, description, size=10, type='D', ssdSize=0):
+        """attach disk to the machine
+
+        :param name: name of the disk
+        :type name: str
+        :param description: description info of the disk
+        :type description: str
+        :param size: size of the disk in Gbytes, defaults to 10
+        :param size: int, optional
+        :param type: type of the disk: B for boot disk D for data disk and T for temp, defaults to 'D'
+        :param type: str, optional
+        :param ssdSize: not implemented, defaults to 0
+        :param ssdSize: int, optional
+        :return: id of the attached disk
+        :rtype: int
+        """
+
         disk_id = self.client.api.cloudapi.machines.addDisk(machineId=self.id,
                                                             diskName=name,
                                                             description=description,
@@ -205,6 +237,23 @@ class Machine(JSBASE):
         return False
 
     def portforward_create(self, publicport, localport, protocol='tcp', overwrite=True):
+        """create portforward exposing specified port of the machine
+
+        :param publicport: The exposed public port if none will select first available port in the cloudspace beginning with 2200
+        :type publicport: int
+        :param localport: machine port to expose
+        :type localport: int
+        :param protocol: protocol to use(tcp, udp), defaults to 'tcp'
+        :param protocol: str, optional
+        :param overwrite: delete public port if exists, defaults to True
+        :param overwrite: bool, optional
+        :raises RuntimeError: if machine is deleted
+        :raises j.exceptions.RuntimeError: if protocol not udp or tcp
+        :raises j.exceptions.RuntimeError: if creating a portforward fails
+        :return: public and localport
+        :rtype: tuple
+        """
+
         if self.deleted:
             raise RuntimeError("machine deleted cannot create portforward")
 
@@ -250,6 +299,12 @@ class Machine(JSBASE):
         return (publicport, localport)
 
     def portforward_delete(self, publicport):
+        """delete portforward
+
+        :param publicport: public port to be deleted
+        :type publicport: int
+        """
+
         if self.portforward_exist(publicport):
             self.client.api.cloudapi.portforwarding.deleteByPort(
                 cloudspaceId=self.space.id,
@@ -260,6 +315,11 @@ class Machine(JSBASE):
         self.cache.reset()
 
     def portforward_delete_by_id(self, pfid):
+        """delete portforward by its id
+
+        :param pfid: id of public port to be deleted
+        :type pfid: int
+        """
         self.cache.reset()
         self.client.api.cloudapi.portforwarding.delete(cloudspaceid=self.space.id, id=pfid)
 
@@ -315,12 +375,23 @@ class Machine(JSBASE):
         return "%s-%s-%s-%s" % (addr.replace(".", "-"), port, login, ("private" if private else "public"))
 
     def authorizeSSH(self, sshkeyname):
+        """authorize specified sshkey to the machine
+
+        :param sshkeyname: public sshkey string
+        :type sshkeyname: str
+        """
+
         login = self.model['accounts'][0]['login']
         addr, port = self._ssh_info()
         instance = self._ssh_client_key(addr, port, login)
         self._authorize(sshkeyname, instance, addr, port, None)
 
     def authorizeSSH_private(self, sshkeyname):
+        """authorize specified sshkey to the machine over the private network
+
+        :param sshkeyname: public sshkey string
+        :type sshkeyname: str
+        """
         login = self.model['accounts'][0]['login']
         addr, port = self.ipaddr_priv, 22
         instance = self._ssh_client_key(addr, port, login, True)
@@ -377,12 +448,25 @@ class Machine(JSBASE):
 
     @property
     def executor(self):
+        """gets an executor object
+
+        :raises RuntimeError: in case the machine is deleted
+        :return: executor object
+        :rtype: object
+        """
+
         if self.deleted:
             raise RuntimeError("machine deleted")
         return j.tools.executor.ssh_get(self.sshclient)
 
     @property
     def executor_private(self):
+        """gets an executor object to the private network
+
+        :raises RuntimeError: in case the machine is deleted
+        :return: executor object
+        :rtype: object
+        """
         if self.deleted:
             raise RuntimeError("machine deleted")
         return j.tools.executor.ssh_get(self.sshclient_private)

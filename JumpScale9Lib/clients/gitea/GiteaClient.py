@@ -37,6 +37,10 @@ class GiteaClient(JSConfigBase):
 
     @property
     def api(self):
+        """
+        Return a generated gitea client to connect to the api
+        """
+
         if not self._api:
             self._api = Client(base_uri=self.config.data["url"])
             self._api.security_schemes.passthrough_client_token.set_authorization_header(
@@ -44,8 +48,12 @@ class GiteaClient(JSConfigBase):
         return self._api
 
     def orgs_currentuser_list(self, refresh=False):
-        """
-        returns [(id,name)]
+        """lists all user's organizations
+
+        :param refresh: if true will not use value in cache, defaults to False
+        :param refresh: bool, optional
+        :return: key-value of org name and id
+        :rtype: dict
         """
         def do():
             res = {}
@@ -55,18 +63,30 @@ class GiteaClient(JSConfigBase):
         return self.cache.get("orgs", method=do, refresh=refresh, expire=60)
 
     def org_get(self, name):
+        """returns a gitea org object
+
+        :param name: name of the organization
+        :type name: str
+        :raises RuntimeError: if couldn't find specified org in current user's orgs
+        :return: gitea org object
+        :rtype: object
+        """
         self.logger.info("org:get:%s" % name)
         if name not in self.orgs_currentuser_list().keys():
             raise RuntimeError("Could not find %s in orgs on gitea" % name)
         return GiteaOrg(self, name)
 
     def labels_milestones_set(self, orgname="*", reponame="*", remove_old=False):
-        """
-        * means all in the selection
+        """set default labels to specified repo
 
-        @PARAM remove_old if True will select labels/milestones which are old & need to be removed
-
+        :param orgname: name of the organization, defaults to "*" meaning all user's orgs
+        :param orgname: str, optional
+        :param reponame: [description], defaults to "*" meaning all user's repos in that org
+        :param reponame: str, optional
+        :param remove_old: removes old labels if true, defaults to False
+        :param remove_old: bool, optional
         """
+
         self.logger.info("labels_milestones_set:%s:%s" % (orgname, reponame))
         if orgname == "*":
             for orgname0 in self.orgs_currentuser_list():

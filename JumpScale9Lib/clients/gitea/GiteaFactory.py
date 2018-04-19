@@ -25,6 +25,15 @@ class GiteaFactory(JSConfigBase):
         return j.sal.fs.getDirName(os.path.abspath(__file__)).rstrip("/")
 
     def get_by_params(self,instance,url,gitea_token):
+        """get gitea client instance without using config manager
+
+        :param instance: name of the instance
+        :type instance: str
+        :param url: url of gitea server
+        :type url: str
+        :param gitea_token: generated gittea user token
+        :type gitea_token: str
+        """
         data={}
         data["url"]=instance
         data["gitea_token_"]=gitea_token
