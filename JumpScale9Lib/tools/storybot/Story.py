@@ -1,4 +1,4 @@
-from .utils import _second_char
+from .utils import _find_second
 
 class Story():
     """Represents a story
@@ -81,7 +81,7 @@ class Story():
             if not line.startswith("- ["):
                 continue
             # get title from line and compare
-            title_start = _second_char(line, char="[")
+            title_start = _find_second(line, char="[")
             if title_start == -1:
                 logger.warning("List item is could be wrongly formatted: '%s'" % line)
             line_title = line[title_start: line.find(":")]

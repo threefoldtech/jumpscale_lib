@@ -1,5 +1,4 @@
 from .GithubBot import GithubBot
-from .utils import _comma_to_list
 
 from js9 import j
 
@@ -48,7 +47,7 @@ class StoryBot(JSConfigBase):
         if self.config.data["github_repos"] != "":
             # create github bot
             token = self.config.data["github_token_"]
-            repos = _comma_to_list(self.config.data["github_repos"])
+            repos = [item.strip() for item in self.config.data["github_repos"].split(",")]
             github_bot = GithubBot(token=token, repos=repos)
 
         if self.config.data["gitea_repos"] != "":
@@ -63,13 +62,13 @@ class StoryBot(JSConfigBase):
             stories.extend(gitea_bot.get_stories())
 
         # link task with stories with stories from bot bots if bots not None
-        if len(stories) == 0:
+        if not stories:
             self.logger.debug("No stories were found, skipping linking task to stories")
             return
         self.logger.debug("Found stories: %s", stories)
 
-        if github_bot is not None:
+        if github_bot:
             github_bot.link_issues_to_stories(stories=stories)
 
-        if gitea_bot is not None:
+        if gitea_bot:
             gitea_bot.link_issues_to_stories(stories=stories)

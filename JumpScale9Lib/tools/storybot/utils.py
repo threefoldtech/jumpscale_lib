@@ -16,9 +16,9 @@ def _parse_body(body, item):
     start_list, end_list = _get_indexes_list(body, title=item.LIST_TITLE)
     if start_list == -1:
         logger.debug("list not found, adding one")
-        if not body.endswith("\n"):
+        if not body.endswith("\n\n") and not body.endswith("\r\n"):
             body += "\n"
-        body +="## %s\n\n%s" % (item.LIST_TITLE, item.md_item)
+        body +="\n## %s\n\n%s" % (item.LIST_TITLE, item.md_item)
 
     elif end_list == -1:
         item_i = item.index_in_body(body, start_i=start_list, end_i=end_list)
@@ -74,6 +74,7 @@ def _get_indexes_list(body, title="Stories"):
         if line.strip() == "" and start_index == -1:
             continue
 
+        # find end of list (empty line after list item)
         elif line.strip() == "" and start_index != -1:
             end_index = i - 1
             break
@@ -128,28 +129,12 @@ def _index_story(stories, title):
             return i
     return -1
 
-def _comma_to_list(comma_list=""):
-    """Returns a string list from a str that contains a comma seperated list
-    Also trims whitespaces on each list item
-    
-    Keyword Arguments:
-        comma_list str -- comma seperated list (default: "")
-    
-    Returns:
-        [str] -- A str list of each comma seperated item in comma_list
-    """
-    items = comma_list.split(",")
-    for i, _ in enumerate(items):
-        items[i] = items[i].strip()
-
-    return items
-
 def _repoowner_reponame(repo_str, username):
-    """Returns a username and repo from a repo string (username(or org)/repo)
+    """Returns a repo owner and repo name from a repo string (owner username(or org)/repo name)
     If only repo is given, username will be provided username who's using the API
     
     Arguments:
-        repo_str str -- Full repo string (username(or org)/repo)
+        repo_str str -- Full repo string (owner username(or org)/repo name)
         username str -- Username of current user
     
     Raises:
@@ -170,7 +155,7 @@ def _repoowner_reponame(repo_str, username):
 
     return user, repo
 
-def _second_char(str, char="["):
+def _find_second(str, char="["):
     """Returns index of second occurrence of char in line
     
     Arguments:

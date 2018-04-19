@@ -1,4 +1,4 @@
-from .utils import _second_char
+from .utils import _find_second
 
 class Task():
     """Represents a task
@@ -86,8 +86,8 @@ def _desc_in_line(line):
     Returns:
         string -- description
     """
-    start_i = _second_char(line, "[")
-    end_i = _second_char(line, "]")
+    start_i = _find_second(line, "[")
+    end_i = _find_second(line, "]")
 
     if start_i != -1 and end_i != -1:
         return line[start_i:end_i - 1].strip()

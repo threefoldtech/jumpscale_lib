@@ -4,11 +4,11 @@ from .utils import _index_story, _parse_body, _repoowner_reponame
 
 from js9 import j
 
-class GithubBot():
+class GithubBot:
     """Github specific bot for Storybot
     """
 
-    def __init__(self, token=None, repos=[]):
+    def __init__(self, token=None, repos=None):
         """Github bot constructor
         
         Keyword Arguments:
@@ -23,7 +23,7 @@ class GithubBot():
         if not token:
             raise ValueError("Token was not provided and is mandatory")
 
-        data["token_"]=token
+        data["token_"] = token
         self.client = j.clients.github.get(data=data, interactive=False)
         self.username = self.client.api.get_user().login
         self.repos = repos
@@ -35,8 +35,12 @@ class GithubBot():
         Returns:
             [Story] -- A list of stories (Story) on the provided github repos
         """
-        self.logger.info("Checking for stories on github...")
         stories = []
+        self.logger.info("Checking for stories on github...")
+        if not self.repos:
+            self.logger.info("No repos provided to the Github bot")
+            return stories
+
         for repo in self.repos:
             self.logger.debug("checking repo '%s'" % repo)
             repoowner, reponame = _repoowner_reponame(repo, self.username)
@@ -76,14 +80,22 @@ class GithubBot():
         self.logger.info("Done checking for stories on github!")
         return stories
 
-    def link_issues_to_stories(self, stories=[]):
+    def link_issues_to_stories(self, stories=None):
         """Loop over all provided repos and see if there are any issues related to provided stories.
         Link them if so.
 
         Keyword Arguments:
-            stories [Story] -- List of stories (default: {[]})
+            stories [Story] -- List of stories (default: None)
         """
         self.logger.info("Linking tasks on github to stories...")
+
+        if not stories:
+            self.logger.info("No stories provided to link Github issues with")
+            return
+        if not self.repos:
+            self.logger.info("No repos provided to the Github bot")
+            return
+
         for repo in self.repos:
             self.logger.debug("Repo: %s" % repo)
             repoowner, reponame = _repoowner_reponame(repo, self.username)
@@ -115,12 +127,12 @@ class GithubBot():
                         self.logger.debug("Story title was not in story list")
                         continue
                     # update task body
-                    self.logger.debug("Updating task issue body")
+                    self.logger.debug("Parsing task issue body")
                     new_iss_body = _parse_body(iss.body, story)
                     iss.edit(body=new_iss_body)
 
                     # update story with task
-                    self.logger.debug("Updating story issue body")
+                    self.logger.debug("Parsing story issue body")
                     desc = title[end_i +1 :].strip()
                     task = Task(iss.html_url, desc, iss.state)
                     story.update_list(task)
