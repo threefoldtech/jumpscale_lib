@@ -8,7 +8,7 @@ class Hypervisor:
     def __init__(self, node):
         self.node = node
 
-    def create(self, name, media=None, flist=None, cpu=2, memory=512, nics=None, ports=None, mounts=None, tags=None):
+    def create(self, name, media=None, flist=None, cpu=2, memory=512, nics=None, ports=None, mounts=None, tags=None, config=None):
         logger.info('Creating kvm %s' % name)
         portmap = j.clients.zero_os.sal.format_ports(ports)
         uuid = self.node.client.kvm.create(name=name,
@@ -19,7 +19,8 @@ class Hypervisor:
                                            nics=nics,
                                            port=portmap,
                                            mount=mounts,
-                                           tags=tags)
+                                           tags=tags,
+                                           config=config)
         return VM(uuid, self.node)
 
     def list(self):

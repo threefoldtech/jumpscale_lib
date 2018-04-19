@@ -37,6 +37,16 @@ class DiskManager:
         'source': str,
     })
 
+    _smartctl_chk = typchk.Checker({
+        'disk': str,
+    })
+
+    _spindown_chk = typchk.Checker({
+        'disk': str,
+        'spindown': int,
+    })
+
+
     def __init__(self, client):
         self._client = client
 
@@ -221,3 +231,75 @@ class DiskManager:
             return json.loads(data)
         else:
             return {}
+
+    def smartctl_info(self, disk):
+        """
+        Info from running smartctl -i <disk>
+        :param disk: disk path
+        """
+
+        args = {
+            'disk': disk,
+        }
+        self._smartctl_chk.check(args)
+
+        response = self._client.raw('disk.smartctl-info', args)
+
+        result = response.get()
+
+        if result.state != 'SUCCESS':
+            raise RuntimeError('failed to get smartctl info: %s' % result.stderr)
+
+        if result.level != 20:  # 20 is JSON output.
+            raise RuntimeError('invalid response type from disk.list command')
+
+        data = result.data.strip()
+        if data:
+            return json.loads(data)
+        else:
+            return {}
+
+    def smartctl_health(self, disk):
+        """
+        Info from running smartctl -H <disk>
+        :param disk: disk path
+        """
+
+        args = {
+            'disk': disk,
+        }
+        self._smartctl_chk.check(args)
+
+        response = self._client.raw('disk.smartctl-health', args)
+
+        result = response.get()
+
+        if result.state != 'SUCCESS':
+            raise RuntimeError('failed to get smartctl info: %s' % result.stderr)
+
+        if result.level != 20:  # 20 is JSON output.
+            raise RuntimeError('invalid response type from disk.list command')
+
+        data = result.data.strip()
+        if data:
+            return json.loads(data)
+        else:
+            return {}
+
+    def spindown(self, disk, spindown=1):
+        """
+        Spindown a disk
+        :param disk str: Full path to a disk like /dev/sda
+        :param spindown int: spindown value should be in [1, 240]
+        """
+        args = {
+            "disk": disk,
+            "spindown": spindown
+        }
+        self._spindown_chk.check(args)
+        response = self._client.raw('disk.spindown', args)
+
+        result = response.get()
+        if result.state != 'SUCCESS':
+            raise RuntimeError("Failed to spindown disk {} to {}.".format(disk, spindown))
+
