@@ -1,3 +1,5 @@
+# Docs can be found at docs/tools/StoryBot.md
+
 import time
 import gevent
 import signal
@@ -31,14 +33,11 @@ class StoryBot(JSConfigBase):
         Keyword Arguments:
             data {data} -- StoryBot data matching the TEMPLATE(default: None)
         """
-
         JSConfigBase.__init__(self, instance=instance,
                                     data=data,
                                     parent=parent,
                                     template=TEMPLATE,
                                     interactive=interactive)
-
-        # check configuration of the bot
 
     def run(self):
         """Run the StoryBot
