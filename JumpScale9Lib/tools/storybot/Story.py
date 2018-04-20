@@ -60,9 +60,8 @@ class Story():
         """Updated task list of story with provided task
         
         Arguments:
-            task {[type]} -- [description]
+            task Task -- Task to add to Story
         """
-
         self._body = self._update_list_func(self._body, task)
 
     def index_in_body(self, body, start_i=0, end_i=-1):

@@ -1,3 +1,5 @@
+import gevent
+
 from .Task import Task
 from .Story import Story
 from .utils import _parse_body, _repoowner_reponame, _index_story
@@ -50,32 +52,53 @@ class GiteaBot:
             self.logger.info("No repos provided to the Gitea bot")
             return stories
 
+        gls = []
         for repo in self.repos:
-            self.logger.debug("checking repo '%s'" % repo)
-            repoowner, reponame = _repoowner_reponame(repo, self.username)
+            gls.append(gevent.spawn(self._get_story_repo, repo))
 
-            issues = self.client.api.repos.issueListIssues(reponame, repoowner, query_params={"state":"all"})[0]
-            for iss in issues:
-                title = iss.title
-                html_url = self._issue_url(repoowner,reponame,iss.number)
-
-                self.logger.debug("checking issue '%s'" % html_url)
-                if title[-1:] == ")":
-                        # get story title
-                        start_i = title.rfind("(")
-                        if start_i == -1:
-                            self.logger.error("issue title of %s has a closeing bracket, but no opening bracket", html_url)
-                            continue
-                        story_title = title[start_i + 1:-1]
-                        story_desc = title[:start_i].strip()
-                        stories.append(Story(
-                            title=story_title,
-                            url=html_url,
-                            description=story_desc,
-                            state=iss.state,
-                            update_list_func=self._story_update_func(iss, reponame, repoowner)))
+        gevent.joinall(gls)
+        for gl in gls:
+            stories.extend(gl.value)
 
         self.logger.info("Done checking for stories on Gitea!")
+        return stories
+    
+    def _get_story_repo(self, repo):
+        """Get stories from a single repo
+        
+        Arguments:
+            repo str -- Name of Gitea repo
+        
+        Returns:
+            [Story] -- List of stories (Story) found in repo
+        """
+        self.logger.debug("checking repo '%s'" % repo)
+        stories = []
+
+        repoowner, reponame = _repoowner_reponame(repo, self.username)
+
+        issues = self.client.api.repos.issueListIssues(reponame, repoowner, query_params={"state":"all"})[0]
+        for iss in issues:
+            title = iss.title
+            html_url = self._issue_url(repoowner,reponame,iss.number)
+
+            self.logger.debug("checking issue '%s'" % html_url)
+            if title[-1:] == ")":
+                    # get story title
+                    start_i = title.rfind("(")
+                    if start_i == -1:
+                        self.logger.error("issue title of %s has a closeing bracket, but no opening bracket", html_url)
+                        continue
+                    story_title = title[start_i + 1:-1]
+                    story_desc = title[:start_i].strip()
+                    stories.append(Story(
+                        title=story_title,
+                        url=html_url,
+                        description=story_desc,
+                        state=iss.state,
+                        update_list_func=self._story_update_func(iss, reponame, repoowner),
+                        body=iss.body
+                    ))
 
         return stories
 
@@ -86,7 +109,7 @@ class GiteaBot:
         Keyword Arguments:
             stories [Story] -- List of stories (default: None)
         """
-        self.logger.info("Checking for stories on gitea...")
+        self.logger.info("Linking tasks on Gitea to stories...")
 
         if not stories:
             self.logger.info("No stories provided to link Gitea issues with")
@@ -95,42 +118,53 @@ class GiteaBot:
             self.logger.info("No repos provided to the Gitea bot")
             return
 
+        gls = []
         for repo in self.repos:
-            self.logger.debug("checking repo '%s'" % repo)
-            repoowner, reponame = _repoowner_reponame(repo, self.username)
+            gls.append(gevent.spawn(self._link_issues_stories_repo, repo, stories))
 
-            issues = self.client.api.repos.issueListIssues(reponame, repoowner, query_params={"state":"all"})[0]
-            for iss in issues:
-                title = iss.title
-                html_url = self._issue_url(repoowner, reponame, iss.number)
-
-                self.logger.debug("checking issue: %s" % html_url)
-                end_i = title.find(":")
-                if end_i == -1:
-                    self.logger.debug("issue is not a story task")
-                    continue
-                found_titles = [item.strip() for item in title[:end_i].split(",")]
-                print(found_titles)
-                data = {}
-                data["body"] = iss.body
-                for story_title in found_titles:
-                    story_i = _index_story(stories, story_title)
-                    story = stories[story_i]
-                    if story_i == -1:
-                        self.logger.debug("Story title was not in story list")
-                        continue
-                    # update task body
-                    self.logger.debug("Parsing task issue body")
-                    data["body"] = _parse_body(data["body"], story)
-                    self.client.api.repos.issueEditIssue(data, str(iss.number), reponame, repoowner)
-
-                    # update story with task
-                    self.logger.debug("Parsing story issue body")
-                    desc = title[end_i +1 :].strip()
-                    task = Task(html_url, desc, iss.state)
-                    story.update_list(task)
+        gevent.joinall(gls)
 
         self.logger.info("Done linking tasks on Gitea to stories!")    
+    
+    def _link_issues_stories_repo(self, repo, stories):
+        """links issues from a single repo with stories
+
+        Arguments:
+            repo str -- Name of Gitea repo
+            stories [Story] --List of stories (Story) to link with
+        """
+        self.logger.debug("checking repo '%s'" % repo)
+        repoowner, reponame = _repoowner_reponame(repo, self.username)
+
+        issues = self.client.api.repos.issueListIssues(reponame, repoowner, query_params={"state":"all"})[0]
+        for iss in issues:
+            title = iss.title
+            html_url = self._issue_url(repoowner, reponame, iss.number)
+
+            self.logger.debug("checking issue: %s" % html_url)
+            end_i = title.find(":")
+            if end_i == -1:
+                self.logger.debug("issue is not a story task")
+                continue
+            found_titles = [item.strip() for item in title[:end_i].split(",")]
+            data = {}
+            data["body"] = iss.body
+            for story_title in found_titles:
+                story_i = _index_story(stories, story_title)
+                story = stories[story_i]
+                if story_i == -1:
+                    self.logger.debug("Story title was not in story list")
+                    continue
+                # update task body
+                self.logger.debug("Parsing task issue body")
+                data["body"] = _parse_body(data["body"], story)
+                self.client.api.repos.issueEditIssue(data, str(iss.number), reponame, repoowner)
+
+                # update story with task
+                self.logger.debug("Parsing story issue body")
+                desc = title[end_i +1 :].strip()
+                task = Task(html_url, desc, iss.state)
+                story.update_list(task)
 
     def _story_update_func(self, issue, repo, owner):
         """returns iss updating function

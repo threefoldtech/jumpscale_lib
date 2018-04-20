@@ -1,3 +1,7 @@
+import time
+import gevent
+import signal
+
 from .GithubBot import GithubBot
 from .GiteaBot import GiteaBot
 
@@ -39,10 +43,10 @@ class StoryBot(JSConfigBase):
     def run(self):
         """Run the StoryBot
         """
-        stories = []
+        gevent.signal(signal.SIGQUIT, gevent.kill)
+
         github_bot = None
         gitea_bot = None
-
         if self.config.data["github_repos"] != "":
             # create github bot
             token = self.config.data["github_token_"]
@@ -58,20 +62,37 @@ class StoryBot(JSConfigBase):
             gitea_bot = GiteaBot(token=token, api_url=api_url, base_url=base_url, repos=repos)
 
         # ask stories from bots
+        start = time.time()
+        gls = []
         if github_bot:
-            stories.extend(github_bot.get_stories())
-
+            gls.append(gevent.spawn(github_bot.get_stories))
         if gitea_bot:
-            stories.extend(gitea_bot.get_stories())
+            gls.append(gevent.spawn(gitea_bot.get_stories))
 
-        # link task with stories with stories from bot bots if bots not None
+        # collect stories
+        stories = []
+        gevent.joinall(gls)
+        for gl in gls:
+            stories.extend(gl.value)
+        end = time.time()
+        self.logger.debug("Fetching stories took %ss" % (end-start))
+        
         if not stories:
             self.logger.debug("No stories were found, skipping linking task to stories")
             return
         self.logger.debug("Found stories: %s", stories)
 
+        # link task with stories with stories
+        start = time.time()
+        gls = []
         if github_bot:
-            github_bot.link_issues_to_stories(stories=stories)
+            #github_bot.link_issues_to_stories(stories=stories)
+            gls.append(gevent.spawn(github_bot.link_issues_to_stories, stories=stories))
 
         if gitea_bot:
-            gitea_bot.link_issues_to_stories(stories=stories)
+            #github_bot.link_issues_to_stories(stories=stories)
+            gls.append(gevent.spawn(gitea_bot.link_issues_to_stories, stories=stories))
+
+        gevent.joinall(gls)
+        end = time.time()
+        self.logger.debug("Linking stories took %ss" % (end-start))
