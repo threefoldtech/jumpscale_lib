@@ -23,7 +23,7 @@ def _parse_body(body, item):
     elif end_list == -1:
         item_i = item.index_in_body(body, start_i=start_list, end_i=end_list)
         if item_i != -1 :
-            logger.debug("Item already in list")
+            logger.debug("Item already in list at index %s" % str(item_i))
             body = _update_done_item(body,item_i, item.done_char)
         else:
             if not body.endswith("\n"):

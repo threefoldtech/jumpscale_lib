@@ -121,22 +121,25 @@ class GithubBot:
                     if end_i == -1:
                         self.logger.debug("issue is not a story task")
                         continue
-                    story_title = title[:end_i]
-                    story_i = _index_story(stories, story_title)
-                    story = stories[story_i]
-                    if story_i == -1:
-                        self.logger.debug("Story title was not in story list")
-                        continue
-                    # update task body
-                    self.logger.debug("Parsing task issue body")
-                    new_iss_body = _parse_body(iss.body, story)
-                    iss.edit(body=new_iss_body)
+                    found_titles = [item.strip() for item in title[:end_i].split(",")]
+                    print(found_titles)
+                    body = iss.body
+                    for story_title in found_titles:
+                        story_i = _index_story(stories, story_title)
+                        story = stories[story_i]
+                        if story_i == -1:
+                            self.logger.debug("Story title was not in story list")
+                            continue
+                        # update task body
+                        self.logger.debug("Parsing task issue body")
+                        body = _parse_body(body, story)
+                        iss.edit(body=body)
 
-                    # update story with task
-                    self.logger.debug("Parsing story issue body")
-                    desc = title[end_i +1 :].strip()
-                    task = Task(iss.html_url, desc, iss.state)
-                    story.update_list(task)
+                        # update story with task
+                        self.logger.debug("Parsing story issue body")
+                        desc = title[end_i +1 :].strip()
+                        task = Task(iss.html_url, desc, iss.state)
+                        story.update_list(task)
         
         self.logger.info("Done linking tasks on github to stories!")
 
@@ -149,8 +152,21 @@ class GithubBot:
         Returns:
             func(Task) -- A function that accepts a task (Task) to update the task list with
         """
-        def updater(task):
-            new_body = _parse_body(issue.body, task)
-            issue.edit(body=new_body)
+        def updater(body, task):
+            """Updates issue with provided task and body
+            Returns updated body
+            
+            Arguments:
+                body Str -- body to update and write to the issue
+                task Task -- Task to update the body with
+
+            Returns:
+                str -- updated body
+            """
+
+            body = _parse_body(body, task)
+            issue.edit(body=body)
+
+            return body
         
         return updater

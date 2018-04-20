@@ -8,7 +8,7 @@ class Story():
 
     LIST_TITLE = "Stories"
 
-    def __init__(self, title="", url="", description="", state="open", update_list_func=None):
+    def __init__(self, title="", url="", description="", state="open", body="", update_list_func=None):
         """Constructor of a Story
         
         Keyword Arguments:
@@ -16,6 +16,7 @@ class Story():
             url str -- URL to the story issue (default: "")
             description str -- description of the story (default: "")
             state str -- state of the story ("open", "closed") (default: "open")
+            body str -- Current body of the story issue (default: "")
             update_list_func func -- function that updates the task list on the story (default: None)
         
         Raises:
@@ -33,6 +34,7 @@ class Story():
         self.description = description
         self.state = state
         self.logger = j.logger.get("j.tools.StoryBot")
+        self._body = body
         self._update_list_func = update_list_func
 
     def __repr__(self):
@@ -55,7 +57,13 @@ class Story():
         return "- [%s] [%s: %s](%s)" % (self.done_char, self.title, self.description, self.url)
 
     def update_list(self, task):
-        self._update_list_func(task)
+        """Updated task list of story with provided task
+        
+        Arguments:
+            task {[type]} -- [description]
+        """
+
+        self._body = self._update_list_func(self._body, task)
 
     def index_in_body(self, body, start_i=0, end_i=-1):
         """Returns index of item in body
