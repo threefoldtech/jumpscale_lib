@@ -11,12 +11,12 @@ class ZeroDB:
     ZeroDB server
     """
 
-    def __init__(self, name, container, port=9900, data_dir='/mnt/data',
+    def __init__(self, name, container, node_port=9900, data_dir='/mnt/data',
                  index_dir='/mnt/index', mode='user', sync=False, admin=''):
         self.name = name
         self.id = 'zerodb.{}'.format(self.name)
         self.container = container
-        self.port = port
+        self.node_port = node_port
         self.data_dir = data_dir
         self.index_dir = index_dir
         self.mode = mode
@@ -27,7 +27,10 @@ class ZeroDB:
     @property
     def _redis(self):
         if self.__redis is None:
-            self.__redis = redis.Redis(host=self.container.node.addr, port=self.port, password=self.admin)
+            self.__redis = redis.Redis(host='172.18.0.1', port=self.node_port, password=self.admin)
+            # use the connection below if you want to test a dev setup and to execute it from outside the node
+            # self.__redis = redis.Redis(host=self.container.node.addr, port=self.node_port, password=self.admin)
+
         return self.__redis
 
     def stop(self, timeout=30):
@@ -57,7 +60,7 @@ class ZeroDB:
         if is_running:
             raise RuntimeError('Failed to stop zerodb server: {}'.format(self.name))
 
-        self.container.node.client.nft.drop_port(self.port)
+        self.container.node.client.nft.drop_port(self.node_port)
 
     def start(self, timeout=15):
         """
@@ -71,11 +74,11 @@ class ZeroDB:
         logger.info('start zerodb %s' % self.name)
 
         cmd = '/bin/zdb \
-            --port {port} \
+            --port 9900 \
             --data {data_dir} \
             --index {index_dir} \
             --mode {mode} \
-            '.format(port=self.port, data_dir=self.data_dir, index_dir=self.index_dir, mode=self.mode)
+            '.format(data_dir=self.data_dir, index_dir=self.index_dir, mode=self.mode)
         if self.sync:
             cmd += ' --sync'
         if self.admin:
@@ -93,7 +96,7 @@ class ZeroDB:
         if not is_running:
             raise RuntimeError('Failed to start zerodb server: {}'.format(self.name))
 
-        self.container.node.client.nft.open_port(self.port)
+        self.container.node.client.nft.open_port(self.node_port)
 
     def is_running(self):
         try:

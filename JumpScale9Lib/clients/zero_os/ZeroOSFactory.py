@@ -138,9 +138,9 @@ class SALFactory():
         client = self._factory.get(instance)
         return Node(client)
 
-    def get_zerodb(self, name, container, port=9900, data_dir='/mnt/data',
+    def get_zerodb(self, name, container, node_port=9900, data_dir='/mnt/data',
                    index_dir='/mnt/index', mode='user', sync=False, admin=''):
-        return ZeroDB(name, container, port, data_dir, index_dir, mode, sync, admin)
+        return ZeroDB(name, container, node_port, data_dir, index_dir, mode, sync, admin)
 
     def get_minio(self, name, container, zdbs, namespace, private_key, namespace_secret='', addr='0.0.0.0', port=9000,  block_size=1048576):
         return Minio(name, container, zdbs, namespace, private_key, namespace_secret, addr, port, block_size=block_size)
