@@ -26,7 +26,7 @@ class NetworkMember(JSBASE):
 
 
     @property
-    def private_ip():
+    def private_ip(self):
         """
         Gets the private ip address of the member node
         """
@@ -36,7 +36,7 @@ class NetworkMember(JSBASE):
                 timeout -= 2
                 time.sleep(2)
                 self._refresh()
-            if not not self.data['config']['ipAssignments']:
+            if not self.data['config']['ipAssignments']:
                 raise ValueError('Cannot get private ip address for zerotier member')
             self._private_ip = self.data['config']['ipAssignments'][0]
         return self._private_ip

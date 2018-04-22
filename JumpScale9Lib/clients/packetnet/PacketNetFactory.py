@@ -154,9 +154,12 @@ class PacketNet(JSConfigClient):
         return self._startDevice(hostname=hostname, plan=plan, facility=facility, os=os,
                                  wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId=zerotierId, always_pxe=False, sshkey=sshkey)
 
-    def startZeroOS(self, hostname="removeMe", plan='baremetal_0', facility='ams1', zerotierId="", zerotierAPI="", wait=True, remove=False):
+    def startZeroOS(self, hostname="removeMe", plan='baremetal_0', facility='ams1', zerotierId="",
+                    zerotierAPI="", wait=True, remove=False, params=None):
         """
         return (zero-os-client,pubIpAddress,zerotierIpAddress)
+
+        @param development: If True, development argument will be added to the ipxe command
         """
         self.logger.info(
             "start device:%s plan:%s facility:%s zerotierId:%s wait:%s" % (hostname, plan, facility, zerotierId, wait)
@@ -167,9 +170,10 @@ class PacketNet(JSConfigClient):
             raise RuntimeError("zerotierAPI needs to be specified")
         ipxeUrl = "https://bootstrap.gig.tech/ipxe/master/%s" % zerotierId
 
-        # if params is not None:
-        #     pstring = '%20'.join(params)
-        #     ipxeUrl = ipxeUrl + '/' + pstring
+
+        if params is not None:
+            pstring = '%20'.join(params)
+            ipxeUrl = ipxeUrl + '/' + pstring
 
         node = self._startDevice(hostname=hostname, plan=plan, facility=facility, os="",
                                  wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId=zerotierId, always_pxe=True)
