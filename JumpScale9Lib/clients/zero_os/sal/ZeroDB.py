@@ -99,6 +99,10 @@ class ZeroDB:
         self.container.node.client.nft.open_port(self.node_port)
 
     def is_running(self):
+        """
+        Check if zerodb process is running
+        :return: True if running, False if halted
+        """
         try:
             for _ in self.container.client.job.list(self.id):
                 return True
@@ -109,12 +113,21 @@ class ZeroDB:
             raise
 
     def list_namespaces(self):
+        """
+        List namespaces in a zerodb
+        :return: list of namespaces names
+        """
         logger.info('listing namespaces for zerodb %s' % self.name)
 
         namespaces = self._redis.execute_command('NSLIST')
         return [namespace.decode('utf-8') for namespace in namespaces]
 
     def get_namespace_info(self, namespace):
+        """
+        Return namespace info
+        :param namespace: the name of the namespace
+        :return: dict of namespace info
+        """
         logger.info('get namespace %s info for zerodb %s' % (namespace, self.name))
 
         info = self._redis.execute_command('NSINFO', namespace).decode('utf-8')
@@ -128,10 +141,20 @@ class ZeroDB:
         return result
 
     def create_namespace(self, namespace):
+        """
+        Create namespace
+        :param namespace: name of the namespace
+        """
         logger.info('create namespace %s for zerodb %s' % (namespace, self.name))
         self._redis.execute_command('NSNEW', namespace)
 
     def set_namespace_property(self, namespace, prop, value):
+        """
+        Set the value of a property on the namespace. Only supports setting values for maxsize, password and public properties/
+        :param namespace: the name of the namespace
+        :param prop: the property
+        :param value: the value of the property.
+        """
         logger.info('set namespace %s property for zerodb %s' % (namespace, self.name))
 
         if prop not in ['maxsize', 'password', 'public']:
@@ -139,7 +162,9 @@ class ZeroDB:
         self._redis.execute_command('NSSET', namespace, prop, value)
 
     def delete_namespace(self, namespace):
-        self.container.client.filesystem.remove(j.sal.fs.joinPaths(self.data_dir, namespace))
-        self.container.client.filesystem.remove(j.sal.fs.joinPaths(self.index_dir, namespace))
-        self.stop()
-        self.start()
+        """
+        Delete a namespace
+        :param namespace: the name of the namespace
+        """
+        logger.info('delete namespace %s for zerodb %s' % (namespace, self.name))
+        self._redis.execute_command('NSDEL', namespace)
