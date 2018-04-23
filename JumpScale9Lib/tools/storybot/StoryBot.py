@@ -36,6 +36,108 @@ class StoryBot(JSConfigBase):
                                     template=TEMPLATE,
                                     interactive=interactive)
 
+    @property
+    def github_repos(self):
+        """Returns the Github repositories as comma seperated string
+        (Returned directly from config)
+        
+        Returns:
+            str -- Comma seperated list of Github repositories
+        """
+        return self.config.data["github_repos"]
+
+    @property
+    def github_repos_list(self):
+        """Returns the Github repositories as list
+
+        Returns:
+            [str] -- List of Github repositories
+        """
+        return [item.strip() for item in self.config.data["github_repos"].split(",")]
+    
+    def add_github_repos(self, repos=""):
+        """Add new Github repositories to the configuration
+        
+        Keyword Arguments:
+            repos str -- comma seperated string of repositories (default: "")
+        """
+        repos = repos.strip()
+        if not repos.startswith(","):
+            repos = "," + repos
+
+        self.config.data["github_repos"] += repos
+
+    def remove_github_repos(self, repos=""):
+        """Remove Github repositories from the configuration
+        
+        Keyword Arguments:
+            repos str -- comma seperated string of repositories (default: "")
+        """
+        repos_list = [x.strip() for x in repos.split(",")]
+        new_list  = self.github_repos_list
+
+        for repo_to_remove in repos_list:
+            # loop till all items are removed, just to make sure doubles are removed
+            while True:
+                try:
+                    new_list.remove(repo_to_remove)
+                # this is thrown when item was no in list
+                except ValueError:
+                    break
+        
+        self.config.data["github_repos"] = ",".join(new_list)
+
+    @property
+    def gitea_repos(self):
+        """Returns the Gitea repositories as comma seperated string
+        (Returned directly from config)
+        
+        Returns:
+            str -- Comma seperated list of Gitea repositories
+        """
+        return self.config.data["gitea_repos"]
+
+    @property
+    def gitea_repos_list(self):
+        """Returns the Gitea repositories as list
+
+        Returns:
+            [str] -- List of Gitea repositories
+        """
+        return [item.strip() for item in self.config.data["gitea_repos"].split(",")]
+
+    def add_gitea_repos(self, repos=""):
+        """Add new Gitea repositories to the configuration
+        
+        Keyword Arguments:
+            repos str -- comma seperated string of repositories (default: "")
+        """
+        repos = repos.strip()
+        if not repos.startswith(","):
+            repos = "," + repos
+
+        self.config.data["gitearepos"] += repos
+
+    def remove_gitea_repos(self, repos=""):
+        """Remove Gitea repositories from the configuration
+        
+        Keyword Arguments:
+            repos str -- comma seperated string of repositories (default: "")
+        """
+        repos_list = [x.strip() for x in repos.split(",")]
+        new_list  = self.gitea_repos_list
+
+        for repo_to_remove in repos_list:
+            # loop till all items are removed, just to make sure doubles are removed
+            while True:
+                try:
+                    new_list.remove(repo_to_remove)
+                # this is thrown when item was no in list
+                except ValueError:
+                    break
+        
+        self.config.data["gitea_repos"] = ",".join(new_list)
+
     def link_stories(self):
         """Link stories and tasks from all repos to eachother.
         Single run.
@@ -47,7 +149,7 @@ class StoryBot(JSConfigBase):
         if self.config.data["github_repos"] != "":
             # create github bot
             token = self.config.data["github_token_"]
-            repos = [item.strip() for item in self.config.data["github_repos"].split(",")]
+            repos = self.github_repos_list
             github_bot = GithubBot(token=token, repos=repos)
 
         if self.config.data["gitea_repos"] != "":
@@ -55,7 +157,7 @@ class StoryBot(JSConfigBase):
             token = self.config.data["gitea_token_"]
             api_url = self.config.data["gitea_api_url"]
             base_url = self.config.data["gitea_base_url"]
-            repos = [item.strip() for item in self.config.data["gitea_repos"].split(",")]
+            repos = self.gitea_repos_list
             gitea_bot = GiteaBot(token=token, api_url=api_url, base_url=base_url, repos=repos)
 
         # ask stories from bots
