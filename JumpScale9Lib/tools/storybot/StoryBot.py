@@ -65,7 +65,9 @@ class StoryBot(JSConfigBase):
         if not repos.startswith(","):
             repos = "," + repos
 
-        self.config.data["github_repos"] += repos
+        data = self.config.data
+        data["github_repos"] += repos
+        self.config = data
 
     def remove_github_repos(self, repos=""):
         """Remove Github repositories from the configuration
@@ -85,7 +87,9 @@ class StoryBot(JSConfigBase):
                 except ValueError:
                     break
         
-        self.config.data["github_repos"] = ",".join(new_list)
+        data = self.config.data
+        data["github_repos"] = ",".join(new_list)
+        self.config = data
 
     @property
     def gitea_repos(self):
@@ -116,7 +120,9 @@ class StoryBot(JSConfigBase):
         if not repos.startswith(","):
             repos = "," + repos
 
-        self.config.data["gitearepos"] += repos
+        data = self.config.data
+        data["gitea_repos"] += repos
+        self.config = data
 
     def remove_gitea_repos(self, repos=""):
         """Remove Gitea repositories from the configuration
@@ -135,13 +141,19 @@ class StoryBot(JSConfigBase):
                 # this is thrown when item was no in list
                 except ValueError:
                     break
-        
-        self.config.data["gitea_repos"] = ",".join(new_list)
 
-    def link_stories(self):
+        data = self.config.data
+        data["gitea_repos"] = ",".join(new_list)
+        self.config = data
+
+    def link_stories(self, check_broken_urls=False):
         """Link stories and tasks from all repos to eachother.
         Single run.
+        
+        Keyword Arguments:
+            check_broken_urls bool -- Check the story/task lists from broken links/URLs (default: False)
         """
+
         gevent.signal(signal.SIGQUIT, gevent.kill)
 
         github_bot = None
@@ -195,3 +207,14 @@ class StoryBot(JSConfigBase):
         gevent.joinall(gls)
         end = time.time()
         self.logger.debug("Linking stories took %ss" % (end-start))
+
+        if check_broken_urls:
+            self.logger.debug("checking lists for broken urls")
+
+            # check story bodies
+
+            # update stories when needed
+
+            # check task bodies
+
+            # update task when needed

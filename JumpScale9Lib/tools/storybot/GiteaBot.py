@@ -81,7 +81,7 @@ class GiteaBot:
 
         issues = self.client.api.repos.issueListIssues(reponame, repoowner, query_params={"state":"all"})[0]
         for iss in issues:
-            html_url = self._issue_url(repoowner,reponame,iss.number)
+            html_url = self._parse_html_url(repoowner,reponame,iss.number)
 
             self.logger.debug("checking issue '%s'" % html_url)
             # not a story if no type story label
@@ -144,7 +144,7 @@ class GiteaBot:
         issues = self.client.api.repos.issueListIssues(reponame, repoowner, query_params={"state":"all"})[0]
         for iss in issues:
             title = iss.title
-            html_url = self._issue_url(repoowner, reponame, iss.number)
+            html_url = self._parse_html_url(repoowner, reponame, iss.number)
 
             self.logger.debug("checking issue: %s" % html_url)
             end_i = title.find(":")
@@ -208,7 +208,7 @@ class GiteaBot:
         
         return updater
 
-    def _issue_url(self, owner, repo, iss_number):
+    def _parse_html_url(self, owner, repo, iss_number):
         """Tries to parse a html page url for a Gitea issue
         
         Arguments:
