@@ -17,7 +17,24 @@ For Github an API key can be created here: https://github.com/settings/tokens
 
 Either click on `Generate new token` or use a token previously created.
 
-### Step 2: Setup StoryBot
+### Step 2: Setup Repositories
+
+List the repositories the bot should use.  
+The list of repos provided to the StoryBot is a comma separated list that should have the following format:
+
+`<owner_username>/<repository_name>`
+
+Or:
+
+`<repository_name>`
+
+The StoryBot will then look at the API token owner's account for these repositories.
+
+Then make sure the issues of those repo are properly formatted for the StoryBot.  
+For story issues formatting, checkout the [Story formatting](#Story-formatting) chapter.  
+For task issues formatting, checkout the [Task formatting](#Task-formatting) chapter.
+
+### Step 3: Setup StoryBot
 
 Enter the Jumpscale interpreter from the terminal
 
@@ -45,16 +62,6 @@ data = {
 
 If only Github or Gitea should be used, leave the fields of the unused git provider empty.
 
-The list of repos provided to the StoryBot is a comma separated list that should have the following format:
-
-`<owner_username>/<repository_name>`
-
-Or:
-
-`<repository_name>`
-
-The StoryBot will then look at the API token owner's account for these repositories.
-
 Create the client:
 ```py
 bot = j.tools.storybot.get(data=data)
@@ -62,7 +69,7 @@ bot = j.tools.storybot.get(data=data)
 
 If the Jumpscale config manager should be used, omit the data variable and the config manager will interactively ask for the required config variables.
 
-### Step3: Run StoryBot
+### Step 4: Run StoryBot
 
 To link the tasks and stories together, call the `link_stories` method of the bot:
 
@@ -72,9 +79,16 @@ bot.link_stories()
 
 This will run the bot a single time to go through all the provided repos to fetch all the stories and link found tasks in those repos.
 
+At the end of a successful run, the story and task issues should contain lists that link stories to tasks and tasks to stories.  
+The resulting list in stories are described in the [Generated task list in stories](#Generated-task-list-in-stories) chapter.  
+The resulting list in tasks are described in the [Generated story list in tasks](#Generated-story-list-in-tasks) chapter.
+
 ## Story formatting
 
-Titles of story issues should be formatted in the following way:
+Stories are detected by their label and the format of their title. 
+
+Story issues should have the label `type_story`.  
+And the titles of the story issues should be formatted in the following way:
 
 `$STORY_DESCRIPTION ($STORY_NAME)`
 
@@ -85,7 +99,7 @@ e.g.:
 
 `Do something useful (useful)`
 
-## Tasks formatting
+## Task formatting
 
 Titles of task issues should be formatted in the following way:
 

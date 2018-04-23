@@ -10,6 +10,8 @@ class GiteaBot:
     """Gitea specific bot for Storybot
     """
 
+    LABEL_STORY = "type_story"
+
     def __init__(self, token=None, api_url="", base_url = "", repos=None):
         """GiteaBot constructor
         
@@ -79,26 +81,29 @@ class GiteaBot:
 
         issues = self.client.api.repos.issueListIssues(reponame, repoowner, query_params={"state":"all"})[0]
         for iss in issues:
-            title = iss.title
             html_url = self._issue_url(repoowner,reponame,iss.number)
 
             self.logger.debug("checking issue '%s'" % html_url)
+            # not a story if no type story label
+            if not self.LABEL_STORY in [label.name for label in iss.labels]:
+                continue
+            # check title format
+            title = iss.title
             if title[-1:] == ")":
-                    # get story title
-                    start_i = title.rfind("(")
-                    if start_i == -1:
-                        self.logger.error("issue title of %s has a closeing bracket, but no opening bracket", html_url)
-                        continue
-                    story_title = title[start_i + 1:-1]
-                    story_desc = title[:start_i].strip()
-                    stories.append(Story(
-                        title=story_title,
-                        url=html_url,
-                        description=story_desc,
-                        state=iss.state,
-                        update_list_func=self._story_update_func(iss, reponame, repoowner),
-                        body=iss.body
-                    ))
+                start_i = title.rfind("(")
+                if start_i == -1:
+                    self.logger.error("issue title of %s has a closeing bracket, but no opening bracket", html_url)
+                    continue
+                story_title = title[start_i + 1:-1]
+                story_desc = title[:start_i].strip()
+                stories.append(Story(
+                    title=story_title,
+                    url=html_url,
+                    description=story_desc,
+                    state=iss.state,
+                    update_list_func=self._story_update_func(iss, reponame, repoowner),
+                    body=iss.body
+                ))
 
         return stories
 

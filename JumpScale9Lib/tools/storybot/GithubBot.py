@@ -10,6 +10,8 @@ class GithubBot:
     """Github specific bot for Storybot
     """
 
+    LABEL_STORY = "type_story"
+
     def __init__(self, token=None, repos=None):
         """Github bot constructor
         
@@ -85,7 +87,10 @@ class GithubBot:
 
             for iss in page:
                 self.logger.debug("checking issue '%s'" % iss.html_url)
-                # check if story. Should labels also be checked for 'type_story'?
+                # not a story if no type story label
+                if not self.LABEL_STORY in [label.name for label in iss.labels]:
+                    continue
+                # check title format
                 title = iss.title
                 if title[-1:] == ")":
                     # get story title
