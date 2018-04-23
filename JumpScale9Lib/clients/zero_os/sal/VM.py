@@ -2,6 +2,7 @@ from js9 import j
 
 logger = j.logger.get(__name__)
 
+
 class VM:
     def __init__(self, uuid, node, info=None):
         self.node = node
@@ -15,13 +16,20 @@ class VM:
         except:
             return False
 
-    def destroy(self):
+    def drop_ports(self, ports):
+        portmap = j.clients.zero_os.sal.format_ports(ports)
+        for port in portmap:
+            self.node.client.nft.drop_port(port)
+
+    def destroy(self, ports=None):
         logger.info('Destroying kvm with uuid %s' % self.uuid)
         self.node.client.kvm.destroy(self.uuid)
+        self.drop_ports(ports)
 
-    def shutdown(self):
+    def shutdown(self, ports=None):
         logger.info('Shuting down kvm with uuid %s' % self.uuid)
         self.node.client.kvm.shutdown(self.uuid)
+        self.drop_ports(ports)
 
     def pause(self):
         logger.info('Pausing kvm with uuid %s' % self.uuid)

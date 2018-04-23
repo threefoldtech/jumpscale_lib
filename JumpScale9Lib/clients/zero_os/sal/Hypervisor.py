@@ -21,6 +21,9 @@ class Hypervisor:
                                            mount=mounts,
                                            tags=tags,
                                            config=config)
+        for port in portmap:
+            self.node.client.nft.open_port(port)
+
         return VM(uuid, self.node)
 
     def list(self):
