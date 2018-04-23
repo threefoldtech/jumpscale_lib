@@ -40,18 +40,10 @@ class Node:
 
     @property
     def name(self):
-        def get_nic_hwaddr(nics, name):
-            for nic in nics:
-                if nic['name'] == name:
-                    return nic['hardwareaddr']
-
-        defaultgwdev = self.client.bash("ip route | grep default | awk '{print $5}'", max_time=60).get().stdout.strip()
         nics = self.client.info.nic()
-        macgwdev = None
-        if defaultgwdev:
-            macgwdev = get_nic_hwaddr(nics, defaultgwdev)
+        macgwdev, _ = self.get_nic_hwaddr_and_ip(nics)
         if not macgwdev:
-            raise AttributeError("name not find for node {}".format(self))
+            raise AttributeError("name not found for node {}".format(self))
         return macgwdev.replace(":", '')
 
     @property
@@ -60,13 +52,33 @@ class Node:
             nic_data = self.client.info.nic()
             for nic in nic_data:
                 if nic['name'] == 'backplane':
-                    for ip in nic['addrs']:
-                        network = netaddr.IPNetwork(ip['addr'])
-                        if network.version == 4:
-                            self._storageAddr = network.ip.format()
-                            return self._storageAddr
+                    self._storageAddr = self.get_ip_from_nic(nic['addrs'])
+                    return self._storageAddr
             self._storageAddr = self.addr
         return self._storageAddr
+
+    @property
+    def public_addr(self):
+        nics = self.client.info.nic()
+        for nic in nics:
+            if nic['name'].startswith('zt'):
+                return self.get_ip_from_nic(nic['addrs'])
+        _, ip = self.get_nic_hwaddr_and_ip(nics)
+        return ip
+
+    def get_nic_hwaddr_and_ip(self, nics, name=None):
+        if not name:
+            name = self.client.bash("ip route | grep default | awk '{print $5}'", max_time=60).get().stdout.strip()
+        for nic in nics:
+            if nic['name'] == name:
+                return nic['hardwareaddr'], self.get_ip_from_nic(nic['addrs'])
+        return '', ''
+
+    def get_ip_from_nic(self, addrs):
+        for ip in addrs:
+            network = netaddr.IPNetwork(ip['addr'])
+            if network.version == 4:
+                return network.ip.format()
 
     def get_nic_by_ip(self, addr):
         try:
