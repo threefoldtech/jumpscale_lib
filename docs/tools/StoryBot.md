@@ -64,11 +64,13 @@ If the Jumpscale config manager should be used, omit the data variable and the c
 
 ### Step3: Run StoryBot
 
-To link the tasks and stories together, call the `run` method of the bot:
+To link the tasks and stories together, call the `link_stories` method of the bot:
 
 ```py
-bot.run()
+bot.link_stories()
 ```
+
+This will run the bot a single time to go through all the provided repos to fetch all the stories and link found tasks in those repos.
 
 ## Story formatting
 

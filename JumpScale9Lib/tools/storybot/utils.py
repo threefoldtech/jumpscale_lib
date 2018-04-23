@@ -11,6 +11,9 @@ def _parse_body(body, item):
     
     Returns:
         str -- Updated body
+
+    Raises:
+        RuntimeError -- wrongfully formatted list
     """
 
     start_list, end_list = _get_indexes_list(body, title=item.LIST_TITLE)
@@ -55,6 +58,9 @@ def _get_indexes_list(body, title="Stories"):
     Returns:
         int -- start index
         int -- end index
+
+    Raises:
+        RuntimeError -- wrongfully formatted list
     """
     start_index = -1
     end_index = -1

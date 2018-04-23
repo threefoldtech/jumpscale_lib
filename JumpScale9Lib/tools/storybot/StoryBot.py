@@ -29,9 +29,6 @@ class StoryBot(JSConfigBase):
 
     def __init__(self, instance, data=None, parent=None, interactive=False):
         """StoryBot constructor
-        
-        Keyword Arguments:
-            data {data} -- StoryBot data matching the TEMPLATE(default: None)
         """
         JSConfigBase.__init__(self, instance=instance,
                                     data=data,
@@ -39,8 +36,9 @@ class StoryBot(JSConfigBase):
                                     template=TEMPLATE,
                                     interactive=interactive)
 
-    def run(self):
-        """Run the StoryBot
+    def link_stories(self):
+        """Link stories and tasks from all repos to eachother.
+        Single run.
         """
         gevent.signal(signal.SIGQUIT, gevent.kill)
 

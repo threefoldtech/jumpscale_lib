@@ -157,14 +157,22 @@ class GiteaBot:
                     continue
                 # update task body
                 self.logger.debug("Parsing task issue body")
-                data["body"] = _parse_body(data["body"], story)
+                try:
+                    data["body"] = _parse_body(data["body"], story)
+                except RuntimeError as err:
+                    self.logger.error("Something went wrong parsing body for %s:\n%s" % (html_url, err))
+                    continue
                 self.client.api.repos.issueEditIssue(data, str(iss.number), reponame, repoowner)
 
                 # update story with task
                 self.logger.debug("Parsing story issue body")
                 desc = title[end_i +1 :].strip()
                 task = Task(html_url, desc, iss.state)
-                story.update_list(task)
+                try:
+                    story.update_list(task)
+                except RuntimeError as err:
+                    self.logger.error("Something went wrong parsing body for %s:\n%s" % (task.url, err))
+                    continue
 
     def _story_update_func(self, issue, repo, owner):
         """returns iss updating function
