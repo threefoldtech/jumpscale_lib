@@ -196,10 +196,10 @@ class ZeroTierNetwork(JSBASE):
     def check_route(self, route):
         """check if route data already exists and returns necessary information
 
-        :param route: contains the target and the host that will do the routing
+        :param route: contains the target and the host that will do the routing, eg: {'target': '10.111.1.0/24', 'via': '10.126.112.302'}
         :type route: dict
-        :return: true if router with correct configuration exists, returns idx and all routes
-        :rtype: bool
+        :return: true if router with correct configuration exists, returns list of routes and the index of that route in the list
+        :rtype: tuple
         """
         routes = self.list_routes()
         for idx, item in enumerate(routes):
@@ -210,7 +210,7 @@ class ZeroTierNetwork(JSBASE):
     def remove_route(self, route):
         """remove route with same data
 
-        :param route: target and route data
+        :param route: target and route data, eg: {'target': '10.111.1.0/24', 'via': '10.126.112.302'}
         :type route: dict
         :raises j.exceptions.RuntimeError: if removing it fails
         """
@@ -227,7 +227,7 @@ class ZeroTierNetwork(JSBASE):
     def add_route(self, route):
         """add a managed route to the network
 
-        :param route: contains the target and the host that will do the routing
+        :param route: contains the target and the host that will do the routing, eg: {'target': '10.111.1.0/24', 'via': '10.126.112.302'}
         :type route: dict
         """
         exists, _, routes = self.check_route(route)
