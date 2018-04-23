@@ -21,12 +21,12 @@ class VM:
         for port in portmap:
             self.node.client.nft.drop_port(port)
 
-    def destroy(self, ports={}):
+    def destroy(self, ports=None):
         logger.info('Destroying kvm with uuid %s' % self.uuid)
         self.node.client.kvm.destroy(self.uuid)
         self.drop_ports(ports)
 
-    def shutdown(self, ports={}):
+    def shutdown(self, ports=None):
         logger.info('Shuting down kvm with uuid %s' % self.uuid)
         self.node.client.kvm.shutdown(self.uuid)
         self.drop_ports(ports)
