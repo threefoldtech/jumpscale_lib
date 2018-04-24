@@ -233,3 +233,24 @@ def _check_broken_links(body, title, iss_url):
         body_lines[i] = line
 
     return "\n".join(body_lines)
+
+def _extend_stories(story_list_1, story_list_2):
+    """Uniquely extends a list of Stories with another list of Stories
+
+    Logs error when duplicates are found and duplicate will be ommited from being added to the list
+    
+    Arguments:
+        story_list_1 [Story] -- A list of stories
+        story_list_2 [Story] -- A list of stories that needs to be added to the first one
+    
+    Returns:
+        [Story] -- Resulting list of stories
+    """
+
+    for s in story_list_2:
+        if s in story_list_1:
+            logger.error("Story with id '%s' already exists! (%s)" % (s.title, s.url))
+            continue
+        story_list_1.append(s)
+
+    return story_list_1

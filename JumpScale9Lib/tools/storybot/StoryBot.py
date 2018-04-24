@@ -6,6 +6,7 @@ import signal
 
 from .GithubBot import GithubBot
 from .GiteaBot import GiteaBot
+from .utils import _extend_stories
 
 from js9 import j
 
@@ -190,7 +191,7 @@ class StoryBot(JSConfigBase):
         stories = []
         gevent.joinall(gls)
         for gl in gls:
-            stories.extend(gl.value)
+            stories = _extend_stories(stories, gl.value)
         end = time.time()
         self.logger.debug("Fetching stories took %ss" % (end-start))
         
