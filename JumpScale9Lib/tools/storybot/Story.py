@@ -105,7 +105,11 @@ class Story():
         """Iterates over story list, marks broken links (or unmark fixed links)
         Update body of issue if needed.
         """
-        new_body = _check_broken_links(self._body, self.LIST_TITLE, self.url)
+        try:
+            new_body = _check_broken_links(self._body, self.LIST_TITLE, self.url)
+        except RuntimeError as err:
+            self.logger.error("Something went wrong checking for broken urls: %s" % err)
+            return self._body
 
         if self._body != new_body:
             self._update_func(new_body)

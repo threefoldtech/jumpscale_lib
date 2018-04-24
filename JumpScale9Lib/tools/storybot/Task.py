@@ -1,5 +1,7 @@
 from .utils import _find_second, _check_broken_links
 
+from js9 import j
+
 class Task():
     """Represents a task
     """
@@ -30,6 +32,7 @@ class Task():
         self.state = state
         self.body = body
         self._update_func = update_func
+        self.logger = j.logger.get("j.tools.StoryBot")
 
     def __repr__(self):
         return self.description
@@ -96,7 +99,11 @@ class Task():
         """Iterates over story list, marks broken links (or unmark fixed links)
         Update body of issue if needed.
         """
-        new_body = _check_broken_links(self.body, self.LIST_TITLE, self.url)
+        try:
+            new_body = _check_broken_links(self.body, self.LIST_TITLE, self.url)
+        except RuntimeError as err:
+            self.logger.error("Something went wrong checking for broken urls: %s" % err)
+            return self.body
 
         if self.body != new_body:
             self._update_func(new_body)

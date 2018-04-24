@@ -223,7 +223,6 @@ class GithubBot:
             [type] -- [description]
         """
         def updater(body):
-            print("\ngithub: " + str(issue.number) + "\n" + body + "\n")
             issue.edit(body=body)
 
         return updater

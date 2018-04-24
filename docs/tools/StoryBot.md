@@ -83,6 +83,20 @@ At the end of a successful run, the story and task issues should contain lists t
 The resulting list in stories are described in the [Generated task list in stories](#Generated-task-list-in-stories) chapter.  
 The resulting list in tasks are described in the [Generated story list in tasks](#Generated-story-list-in-tasks) chapter.
 
+#### url checking
+
+The `link_stories` method has the `check_broken_urls` parameter, which when `True` will loop over all tasks and stories after they have been linked and check their lists to see if the urls in those lists are still working or not.
+
+```py
+bot.link_stories(check_broken_urls=True)
+```
+
+If links turn out to be broken, the list item will be appended with: `***Broken url***`  
+Which on Github results into:
+
+!["Broken url"](images/storybot_5.png "Broken url")
+
+
 ## Story formatting
 
 Stories are detected by their label and the format of their title. 

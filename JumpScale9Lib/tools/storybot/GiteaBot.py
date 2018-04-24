@@ -202,7 +202,6 @@ class GiteaBot:
     def _update_iss_func(self, iss_number, repo, owner):
         
         def updater(body):
-            print("\ngitea: " + str(iss_number) + "\n" + body + "\n")
             data = {}
             data["body"] = body
             self.client.api.repos.issueEditIssue(data, str(iss_number), repo, owner)

@@ -215,14 +215,17 @@ class StoryBot(JSConfigBase):
         self.logger.debug("Linking stories took %ss" % (end-start))
         self.logger.debug("Found tasks: %s", tasks)
 
-        for t in tasks:
-            print("\n" + t.description + "\n" + t.body + "\n-----")
-
         if check_broken_urls:
-            self.logger.debug("Checking lists for broken urls")
+            start = time.time()
+            gls = []
+            self.logger.debug("Checking lists for broken urls...")
             # check story bodies
             for s in stories:
-                s.check_broken_urls()
+                gls.append(gevent.spawn(s.check_broken_urls))
             # check task bodies
             for t in tasks:
-                t.check_broken_urls()
+                gls.append(gevent.spawn(t.check_broken_urls))
+
+            gevent.joinall(gls)
+            end = time.time()
+            self.logger.debug("Checking lists for broken urls took %ss" % (end-start))
