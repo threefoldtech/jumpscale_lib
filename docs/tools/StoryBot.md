@@ -64,10 +64,10 @@ If only Github or Gitea should be used, leave the fields of the unused git provi
 
 Create the client:
 ```py
-bot = j.tools.storybot.get(data=data)
+bot = j.tools.storybot.get(data=data, interactive=False)
 ```
 
-If the Jumpscale config manager should be used, omit the data variable and the config manager will interactively ask for the required config variables.
+If the Jumpscale config manager should be used, omit the `data` and `interactive` variable and the config manager will interactively ask for the required configuration variables.
 
 ### Step 4: Run StoryBot
 
