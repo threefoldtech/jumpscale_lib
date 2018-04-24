@@ -73,7 +73,12 @@ class GithubBot:
         repoowner, reponame = _repoowner_reponame(repo, self.username)
 
         # get issues
-        repo = self.client.api.get_user(repoowner).get_repo(reponame)
+        try:
+            repo = self.client.api.get_user(repoowner).get_repo(reponame)
+        except Exception as err:
+            self.logger.error("Could not fetch Github repo '%s': %s" % (repo, err))
+            return stories
+
         issues = repo.get_issues(state="all")
         # loop issue pages
         i = 0
@@ -160,7 +165,11 @@ class GithubBot:
         tasks = []
 
         # get issues
-        repo = self.client.api.get_user(repoowner).get_repo(reponame)
+        try:
+            repo = self.client.api.get_user(repoowner).get_repo(reponame)
+        except Exception as err:
+            self.logger.error("Could not fetch Github repo '%s': %s" % (repo, err))
+            return tasks
         issues = repo.get_issues(state="all")
         # loop issue pages
         i = 0

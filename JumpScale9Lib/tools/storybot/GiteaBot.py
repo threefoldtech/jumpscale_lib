@@ -79,7 +79,12 @@ class GiteaBot:
 
         repoowner, reponame = _repoowner_reponame(repo, self.username)
 
-        issues = self.client.api.repos.issueListIssues(reponame, repoowner, query_params={"state":"all"})[0]
+        try:
+            issues = self.client.api.repos.issueListIssues(reponame, repoowner, query_params={"state":"all"})[0]
+        except Exception as err:
+            self.logger.error("Could not fetch Gitea repo '%s': %s" % (repo, err))
+            return stories
+
         for iss in issues:
             html_url = self._parse_html_url(repoowner,reponame,iss.number)
 
@@ -152,7 +157,12 @@ class GiteaBot:
         repoowner, reponame = _repoowner_reponame(repo, self.username)
         tasks = []
 
-        issues = self.client.api.repos.issueListIssues(reponame, repoowner, query_params={"state":"all"})[0]
+        try:
+            issues = self.client.api.repos.issueListIssues(reponame, repoowner, query_params={"state":"all"})[0]
+        except Exception as err:
+            self.logger.error("Could not fetch Gitea repo '%s': %s" % (repo, err))
+            return stories
+
         for iss in issues:
             title = iss.title
             html_url = self._parse_html_url(repoowner, reponame, iss.number)
