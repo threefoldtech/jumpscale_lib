@@ -1,4 +1,4 @@
-from .utils import _find_second
+from .utils import _find_second, _check_broken_links
 
 class Task():
     """Represents a task
@@ -6,13 +6,14 @@ class Task():
 
     LIST_TITLE = "Tasks"
 
-    def __init__(self, url="", description="", state="open"):
+    def __init__(self, url="", description="", state="open", body="", update_func=None):
         """Task constructor
         
         Keyword Arguments:
             url str -- URL to task page (default: "")
             description str -- Task description (default: "")
-            state {str} -- state of the story ("open", "closed") (default: "open")
+            state str -- state of the story ("open", "closed") (default: "open")
+
         
         Raises:
             ValueError -- Empty description  
@@ -27,6 +28,14 @@ class Task():
         self.url = url
         self.description = description
         self.state = state
+        self.body = body
+        self._update_func = update_func
+
+    def __repr__(self):
+        return self.description
+
+    def __eq__(self, other):
+        return self.url == other
 
     @property
     def done_char(self):
@@ -35,7 +44,6 @@ class Task():
         Returns:
             str -- char that defines the item done or not for markdown files
         """
-
         return "x" if self.state == "closed" else " "
 
     @property
@@ -75,6 +83,24 @@ class Task():
                 return i
 
         return -1
+
+    def update_body(self, body):
+        """Update the body of a task
+        
+        Arguments:
+            body str -- Updated body for the task's issue
+        """
+        self._update_func(body)
+
+    def check_broken_urls(self):
+        """Iterates over story list, marks broken links (or unmark fixed links)
+        Update body of issue if needed.
+        """
+        new_body = _check_broken_links(self.body, self.LIST_TITLE, self.url)
+
+        if self.body != new_body:
+            self._update_func(new_body)
+            self._body = new_body
 
 def _desc_in_line(line):
     """Returns task description from provided list line

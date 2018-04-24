@@ -37,7 +37,7 @@ class GithubBot:
         """Loop over all provided repos return a list of stories found in the issues
 
         Returns:
-            [Story] -- A list of stories (Story) on the provided github repos
+            [Story] -- A list of stories (Story) found in the provided github repos
         """
         self.logger.info("Checking for stories on github...")
         stories = []
@@ -105,19 +105,24 @@ class GithubBot:
                         url=iss.html_url,
                         description=story_desc,
                         state=iss.state,
-                        update_list_func=self._story_update_func(iss),
+                        update_func=self._update_iss_func(iss),
                         body=iss.body,
                     ))
 
         return stories
 
 
-    def link_issues_to_stories(self, stories=None):
+    def find_tasks_and_link(self, stories=None):
         """Loop over all provided repos and see if there are any issues related to provided stories.
         Link them if so.
 
+        Returns a list of found tasks.
+
         Keyword Arguments:
             stories [Story] -- List of stories (default: None)
+
+        Returns:
+            [Task] -- List of tasks (Task) found in the provided Github repos
         """
         self.logger.info("Linking tasks on github to stories...")
 
@@ -131,10 +136,14 @@ class GithubBot:
         gls = []
         for repo in self.repos:
             gls.append(gevent.spawn(self._link_issues_stories_repo, repo, stories))
-
         gevent.joinall(gls)
+        tasks = []
+        for gl in gls:
+            tasks.extend(gl.value)
 
         self.logger.info("Done linking tasks on github to stories!")
+
+        return tasks
 
     def _link_issues_stories_repo(self, repo, stories):
         """links issues from a single repo with stories
@@ -142,9 +151,13 @@ class GithubBot:
         Arguments:
             repo str -- Name of Github repo
             stories [Story] --List of stories (Story) to link with
+
+        Returns:
+            [Task] -- List of tasks (Task) found in the provided repo
         """
         self.logger.debug("Repo: %s" % repo)
         repoowner, reponame = _repoowner_reponame(repo, self.username)
+        tasks = []
 
         # get issues
         repo = self.client.api.get_user(repoowner).get_repo(reponame)
@@ -186,37 +199,31 @@ class GithubBot:
                     # update story with task
                     self.logger.debug("Parsing story issue body")
                     desc = title[end_i +1 :].strip()
-                    task = Task(iss.html_url, desc, iss.state)
+                    task = Task(url=iss.html_url, description=desc, state=iss.state,body=body,
+                        update_func=self._update_iss_func(iss))
                     try:
                         story.update_list(task)
                     except RuntimeError as err:
                         self.logger.error("Something went wrong parsing body for %s:\n%s" % (task.url, err))
                         continue
+                    if task in tasks:
+                        tasks[tasks.index(task)] = task
+                    else:
+                        tasks.append(task)
 
-    def _story_update_func(self, issue):
-        """Returns a function that can update the task list of a story issue
+        return tasks
+    
+    def _update_iss_func(self, issue):
+        """Returns a function that can update a task issue with provided body
         
         Arguments:
             issue github.Issue.Issue -- Github issue
         
         Returns:
-            func(Task) -- A function that accepts a task (Task) to update the task list with
+            [type] -- [description]
         """
-        def updater(body, task):
-            """Updates issue with provided task and body
-            Returns updated body
-            
-            Arguments:
-                body Str -- body to update and write to the issue
-                task Task -- Task to update the body with
-
-            Returns:
-                str -- updated body
-            """
-
-            body = _parse_body(body, task)
+        def updater(body):
+            print("\ngithub: " + str(issue.number) + "\n" + body + "\n")
             issue.edit(body=body)
 
-            return body
-        
         return updater

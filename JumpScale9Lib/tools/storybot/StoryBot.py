@@ -66,7 +66,10 @@ class StoryBot(JSConfigBase):
             repos = "," + repos
 
         data = self.config.data
-        data["github_repos"] += repos
+        if data["github_repos"] != "":
+            data["github_repos"] += repos
+        else:
+            data["github_repos"] += repos[1:]
         self.config = data
 
     def remove_github_repos(self, repos=""):
@@ -121,7 +124,10 @@ class StoryBot(JSConfigBase):
             repos = "," + repos
 
         data = self.config.data
-        data["gitea_repos"] += repos
+        if data["gitea_repos"] != "":
+            data["gitea_repos"] += repos
+        else:
+            data["gitea_repos"] = repos[1:]
         self.config = data
 
     def remove_gitea_repos(self, repos=""):
@@ -197,24 +203,26 @@ class StoryBot(JSConfigBase):
         start = time.time()
         gls = []
         if github_bot:
-            #github_bot.link_issues_to_stories(stories=stories)
-            gls.append(gevent.spawn(github_bot.link_issues_to_stories, stories=stories))
+            gls.append(gevent.spawn(github_bot.find_tasks_and_link, stories=stories))
 
         if gitea_bot:
-            #github_bot.link_issues_to_stories(stories=stories)
-            gls.append(gevent.spawn(gitea_bot.link_issues_to_stories, stories=stories))
-
+            gls.append(gevent.spawn(gitea_bot.find_tasks_and_link, stories=stories))
+        tasks = []
         gevent.joinall(gls)
+        for gl in gls:
+            tasks.extend(gl.value)
         end = time.time()
         self.logger.debug("Linking stories took %ss" % (end-start))
+        self.logger.debug("Found tasks: %s", tasks)
+
+        for t in tasks:
+            print("\n" + t.description + "\n" + t.body + "\n-----")
 
         if check_broken_urls:
-            self.logger.debug("checking lists for broken urls")
-
+            self.logger.debug("Checking lists for broken urls")
             # check story bodies
-
-            # update stories when needed
-
+            for s in stories:
+                s.check_broken_urls()
             # check task bodies
-
-            # update task when needed
+            for t in tasks:
+                t.check_broken_urls()

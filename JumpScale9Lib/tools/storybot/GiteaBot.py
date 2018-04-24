@@ -101,18 +101,21 @@ class GiteaBot:
                     url=html_url,
                     description=story_desc,
                     state=iss.state,
-                    update_list_func=self._story_update_func(iss, reponame, repoowner),
+                    update_func=self._update_iss_func(iss.number, reponame, repoowner),
                     body=iss.body
                 ))
 
         return stories
 
-    def link_issues_to_stories(self, stories=None):
+    def find_tasks_and_link(self, stories=None):
         """Loop over all provided repos and see if there are any issues related to provided stories.
         Link them if so.
 
         Keyword Arguments:
             stories [Story] -- List of stories (default: None)
+
+        Returns:
+            [Task] -- List of tasks (Task) found in the provided Gitea repos
         """
         self.logger.info("Linking tasks on Gitea to stories...")
 
@@ -126,10 +129,14 @@ class GiteaBot:
         gls = []
         for repo in self.repos:
             gls.append(gevent.spawn(self._link_issues_stories_repo, repo, stories))
-
         gevent.joinall(gls)
+        tasks = []
+        for gl in gls:
+            tasks.extend(gl.value)
 
         self.logger.info("Done linking tasks on Gitea to stories!")    
+
+        return tasks
     
     def _link_issues_stories_repo(self, repo, stories):
         """links issues from a single repo with stories
@@ -137,9 +144,13 @@ class GiteaBot:
         Arguments:
             repo str -- Name of Gitea repo
             stories [Story] --List of stories (Story) to link with
+
+        Returns:
+            [Task] -- List of tasks (Task) found in the provided repo
         """
         self.logger.debug("checking repo '%s'" % repo)
         repoowner, reponame = _repoowner_reponame(repo, self.username)
+        tasks = []
 
         issues = self.client.api.repos.issueListIssues(reponame, repoowner, query_params={"state":"all"})[0]
         for iss in issues:
@@ -172,40 +183,30 @@ class GiteaBot:
                 # update story with task
                 self.logger.debug("Parsing story issue body")
                 desc = title[end_i +1 :].strip()
-                task = Task(html_url, desc, iss.state)
+                task = Task(url=html_url, description=desc, state=iss.state,body=data["body"], 
+                    update_func=self._update_iss_func(iss.number, reponame, repoowner))
                 try:
                     story.update_list(task)
                 except RuntimeError as err:
                     self.logger.error("Something went wrong parsing body for %s:\n%s" % (task.url, err))
                     continue
+                # if task already present replace it with current task
+                if task in tasks:
+                    tasks[tasks.index(task)] = task
+                # if not, add task to list
+                else:
+                    tasks.append(task)
 
-    def _story_update_func(self, issue, repo, owner):
-        """returns iss updating function
+        return tasks
+
+    def _update_iss_func(self, iss_number, repo, owner):
         
-        Arguments:
-            issue JumpScale9Lib.clients.gitea.client.Issue.Issue -- Gitea Issue
-
-        Returns:
-            func(Task) -- A function that accepts a task (Task) to update the task list with
-        """
-
-        def updater(body, task):
-            """Updates issue with provided task and body
-            Returns updated body
-            
-            Arguments:
-                body Str -- body to update and write to the issue
-                task Task -- Task to update the body with
-
-            Returns:
-                str -- updated body
-            """
+        def updater(body):
+            print("\ngitea: " + str(iss_number) + "\n" + body + "\n")
             data = {}
-            data["body"] = _parse_body(body, task)
-            self.client.api.repos.issueEditIssue(data, str(issue.number), repo, owner)
+            data["body"] = body
+            self.client.api.repos.issueEditIssue(data, str(iss_number), repo, owner)
 
-            return data["body"]
-        
         return updater
 
     def _parse_html_url(self, owner, repo, iss_number):

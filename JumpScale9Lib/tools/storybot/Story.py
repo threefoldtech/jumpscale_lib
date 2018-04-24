@@ -1,4 +1,4 @@
-from .utils import _find_second
+from .utils import _find_second, _parse_body, _check_broken_links
 
 from js9 import j
 
@@ -8,7 +8,7 @@ class Story():
 
     LIST_TITLE = "Stories"
 
-    def __init__(self, title="", url="", description="", state="open", body="", update_list_func=None):
+    def __init__(self, title="", url="", description="", state="open", body="", update_func=None):
         """Constructor of a Story
         
         Keyword Arguments:
@@ -17,7 +17,7 @@ class Story():
             description str -- description of the story (default: "")
             state str -- state of the story ("open", "closed") (default: "open")
             body str -- Current body of the story issue (default: "")
-            update_list_func func -- function that updates the task list on the story (default: None)
+            update_func func -- function that updates the Stories body (default: None)
         
         Raises:
             ValueError -- if title was not provided
@@ -35,7 +35,7 @@ class Story():
         self.state = state
         self.logger = j.logger.get("j.tools.StoryBot")
         self._body = body
-        self._update_list_func = update_list_func
+        self._update_func = update_func
 
     def __repr__(self):
         return self.title
@@ -62,10 +62,11 @@ class Story():
         Arguments:
             task Task -- Task to add to Story
         """
-        self._body = self._update_list_func(self._body, task)
+        self._body = _parse_body(self._body, task)
+        self._update_func(self._body)
 
     def index_in_body(self, body, start_i=0, end_i=-1):
-        """Returns index of item in body
+        """Returns index of this Story item in body
         Starting and ending from provided indexes
 
         Returns -1 if not found
@@ -99,3 +100,13 @@ class Story():
                 return i
 
         return -1
+
+    def check_broken_urls(self):
+        """Iterates over story list, marks broken links (or unmark fixed links)
+        Update body of issue if needed.
+        """
+        new_body = _check_broken_links(self._body, self.LIST_TITLE, self.url)
+
+        if self._body != new_body:
+            self._update_func(new_body)
+            self._body = new_body

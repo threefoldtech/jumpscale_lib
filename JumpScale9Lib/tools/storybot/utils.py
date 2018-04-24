@@ -1,3 +1,5 @@
+import requests
+
 from js9 import j
 
 logger = j.logger.get("j.tools.StoryBot")
@@ -175,3 +177,59 @@ def _find_second(str, char="["):
     """
     start = str.find(char)
     return str.find(char, start +1) + 1
+
+def _check_url(url):
+    """Checks if a url is alive
+    
+    Arguments:
+        url str -- url to check
+    
+    Returns:
+        bool -- True if url exists
+    """
+    r = requests.head(url)
+    # If repo is private, it will return 401 for issue links, 
+    # we can't fully check if the issue exists or not then though.
+    return r.status_code == 200 or r.status_code == 401
+
+def _check_broken_links(body, title, iss_url):
+    """Loops the list between provided indexes and checks if the list items have valid links.
+    
+    Arguments:
+        body str -- Full body that contains the list to check
+        title str -- Title of the list to check
+        iss_url str -- html url to the issue that's being updating (used for error message)
+    
+    Raises:
+        RuntimeError -- Wrongly formatted list item
+        RuntimeError -- List item does not contain url
+    
+    Returns:
+        str -- Updated body
+    """
+    start_i, end_i = _get_indexes_list(body, title=title)
+    body_lines = body.splitlines()
+    list_lines = body_lines[start_i: end_i + 1 if end_i != -1 else None]
+    for i, line in enumerate(list_lines, start=start_i):
+        # There could still be empty lines in the list
+        if line == "":
+            continue
+        # if not empty line, it should be  a list item
+        if not line.startswith("- ["):
+            raise RuntimeError("List item is could be wrongly formatted: '%s'\n At: %s" % (line, iss_url))
+
+        # get url
+        try:
+            url = line[line.index("(") + 1:line.index(")")]
+        except ValueError:
+            raise RuntimeError("List item does not contain an url: '%s'\n At: %s" % (line, iss_url))
+
+        # remove broken flag if present
+        line = line.replace("***Broken url***", "")
+        line = line.strip()
+        # check url
+        if not _check_url(url):
+            line = line + " ***Broken url***"
+        body_lines[i] = line
+
+    return "\n".join(body_lines)
