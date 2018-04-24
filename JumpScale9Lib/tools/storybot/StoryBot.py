@@ -65,12 +65,12 @@ class StoryBot(JSConfigBase):
         if not repos.startswith(","):
             repos = "," + repos
 
-        data = self.config.data
-        if data["github_repos"] != "":
-            data["github_repos"] += repos
+        data = self.config.data["github_repos"]
+        if data != "":
+            data += repos
         else:
-            data["github_repos"] += repos[1:]
-        self.config = data
+            data += repos[1:]
+        self.config.data_set("github_repos", data)
 
     def remove_github_repos(self, repos=""):
         """Remove Github repositories from the configuration
@@ -89,10 +89,10 @@ class StoryBot(JSConfigBase):
                 # this is thrown when item was no in list
                 except ValueError:
                     break
-        
-        data = self.config.data
-        data["github_repos"] = ",".join(new_list)
-        self.config = data
+
+        data = self.config.data["github_repos"]
+        data = ",".join(new_list)
+        self.config.data_set("github_repos", data)
 
     @property
     def gitea_repos(self):
@@ -123,12 +123,12 @@ class StoryBot(JSConfigBase):
         if not repos.startswith(","):
             repos = "," + repos
 
-        data = self.config.data
-        if data["gitea_repos"] != "":
-            data["gitea_repos"] += repos
+        data = self.config.data["gitea_repos"]
+        if data != "":
+            data += repos
         else:
-            data["gitea_repos"] = repos[1:]
-        self.config = data
+            data += repos[1:]
+        self.config.data_set("gitea_repos", data)
 
     def remove_gitea_repos(self, repos=""):
         """Remove Gitea repositories from the configuration
@@ -148,9 +148,9 @@ class StoryBot(JSConfigBase):
                 except ValueError:
                     break
 
-        data = self.config.data
-        data["gitea_repos"] = ",".join(new_list)
-        self.config = data
+        data = self.config.data["gitea_repos"]
+        data = ",".join(new_list)
+        self.config.data_set("gitea_repos", data)
 
     def link_stories(self, check_broken_urls=False):
         """Link stories and tasks from all repos to eachother.
@@ -218,7 +218,7 @@ class StoryBot(JSConfigBase):
         if check_broken_urls:
             start = time.time()
             gls = []
-            self.logger.debug("Checking lists for broken urls...")
+            self.logger.Info("Checking lists for broken urls...")
             # check story bodies
             for s in stories:
                 gls.append(gevent.spawn(s.check_broken_urls))
@@ -228,4 +228,5 @@ class StoryBot(JSConfigBase):
 
             gevent.joinall(gls)
             end = time.time()
+            self.logger.Info("Done checking lists for broken urls")
             self.logger.debug("Checking lists for broken urls took %ss" % (end-start))

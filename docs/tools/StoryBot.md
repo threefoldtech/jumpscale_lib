@@ -96,7 +96,6 @@ Which on Github results into:
 
 !["Broken url"](images/storybot_5.png "Broken url")
 
-
 ## Story formatting
 
 Stories are detected by their label and the format of their title. 
