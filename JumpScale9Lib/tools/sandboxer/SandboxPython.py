@@ -140,7 +140,6 @@ class SandboxPython(JSBASE):
         j.tools.sandboxer.python.jumpscale_add()
 
         self._zip(dest=dest)
-        self.env_write(dest=dest)
 
         j.tools.sandboxer.sandboxLibs("%s/bin" % self.PACKAGEDIR, "%s/lib", True)
         j.tools.sandboxer.sandboxLibs("%s/lib" % self.PACKAGEDIR, "%s/lib", True)
@@ -224,6 +223,9 @@ class SandboxPython(JSBASE):
 
         """
         j.sal.fs.writeFile("%s/env.sh" % dest, j.data.text.strip(C))
+        # make sure to make the env.sh file executable
+        j.sal.process.execute('chmod +x %s/env.sh' % dest)
+
 
         print("to test:\ncd %s;source env.sh" % dest)
 
