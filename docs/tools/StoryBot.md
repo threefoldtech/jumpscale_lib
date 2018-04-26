@@ -57,7 +57,8 @@ from js9 import j
 Prepare the data for StoryBot
 
 ```py
-data = {                                     
+data = {
+    "gitea_base_url": "https://docs.greenitglobe.com"         # base url for gitea (used for creating issue urls)
     "gitea_api_url": "https://docs.greenitglobe.com/api/v1",  # base url for the Gitea API
     "gitea_token_": "<your Gitea api token>",                 # Gitea api access token
     "gitea_repos": "hello_world, gig/org_development",        # list of repos on Gitea the StoryBot needs to check
