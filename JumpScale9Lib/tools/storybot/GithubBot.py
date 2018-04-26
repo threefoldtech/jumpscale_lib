@@ -30,8 +30,70 @@ class GithubBot:
         data["token_"] = token
         self.client = j.clients.github.get(data=data, interactive=False)
         self.username = self.client.api.get_user().login
-        self.repos = repos
+        self._repos = repos
         self.logger = j.logger.get("j.tools.StoryBot")
+
+    @property
+    def repos(self):
+        """Returns a list of repos
+
+        Returns
+            [str] -- String list of repositories
+
+        Raises:
+            ValueError -- Invalid repo name in provided repo list
+        """
+        repos = []
+
+        # Get the repo owner and repo name and uniquely add them to the repos list
+        for r in self._repos:
+            repoowner, reponame = _repoowner_reponame(r, self.username)
+            r = repoowner + "/" + reponame
+            if r not in repos:
+                repos.append(r)
+
+        self._repos = repos
+
+        # If wildcard reponame, fetch all repos from repoowner
+        gls = []
+        for r in repos:
+             repoowner, reponame = _repoowner_reponame(r, self.username)
+             if reponame == "*":
+                 # fetch all repos from repoowner
+                 gls.append(gevent.spawn(self._get_all_repos_user, repoowner))
+
+        gevent.joinall(gls)
+
+        # add found repositories uniquely
+        # these are not added to the local repo list as this property would fetch the wildcard repos at the time of call
+        for gl in gls:
+            to_add = gl.value
+            for r in to_add:
+                if r not in repos:
+                    repos.append(r)
+
+        return repos
+
+    def _get_all_repos_user(self, user):
+        """Returns list of repositories from provided user
+        
+        Arguments:
+            user str -- username/owner of repositories to fetch from
+
+        Returns:
+            [str] -- String list of repositories
+        """
+        repos = []
+        try:
+            repos_l = self.client.api.get_user(user).get_repos()
+        except Exception as err:
+            self.logger.error("Something went wrong getting Github repos from user '%s': %s" % (user, err))
+            return repos
+
+        for r in repos_l:
+            repos.append(user + "/" + r.name)
+
+        return repos
 
     def get_stories(self):
         """Loop over all provided repos return a list of stories found in the issues
@@ -66,11 +128,12 @@ class GithubBot:
         Returns:
             [Story] -- List of stories (Story) found in repo
         """
-
-        stories = []
-
         self.logger.debug("checking repo '%s'" % repo)
+        stories = []
         repoowner, reponame = _repoowner_reponame(repo, self.username)
+         # skip wildcard repos
+        if reponame == "*":
+            return stories
 
         # get issues
         try:
@@ -161,8 +224,11 @@ class GithubBot:
             [Task] -- List of tasks (Task) found in the provided repo
         """
         self.logger.debug("Repo: %s" % repo)
-        repoowner, reponame = _repoowner_reponame(repo, self.username)
         tasks = []
+        repoowner, reponame = _repoowner_reponame(repo, self.username)
+         # skip wildcard repos
+        if reponame == "*":
+            return tasks
 
         # get issues
         try:

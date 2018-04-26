@@ -30,6 +30,12 @@ Or:
 
 The StoryBot will then look at the API token owner's account for these repositories.
 
+Or:
+
+`<owner_username>/*`
+
+The StoryBot will then use all the repositories from the user at the time it needs it.
+
 Then make sure the issues of those repo are properly formatted for the StoryBot.  
 For story issues formatting, checkout the [Story formatting](#Story-formatting) chapter.  
 For task issues formatting, checkout the [Task formatting](#Task-formatting) chapter.
@@ -56,7 +62,7 @@ data = {
     "gitea_token_": "<your Gitea api token>",                 # Gitea api access token
     "gitea_repos": "hello_world, gig/org_development",        # list of repos on Gitea the StoryBot needs to check
     "github_token_" : "<your Github api token>",              # Github api access token
-    "github_repos": "some_user/some_repo, storybot_test",     # list of repos on Github the StoryBot needs to check
+    "github_repos": "test, some_user/some_repo, zero-os/*",   # list of repos on Github the StoryBot needs to check
 }
 ```
 

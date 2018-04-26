@@ -208,6 +208,8 @@ def _check_broken_links(body, title, iss_url):
         str -- Updated body
     """
     start_i, end_i = _get_indexes_list(body, title=title)
+    if start_i == -1:
+        return body
     body_lines = body.splitlines()
     list_lines = body_lines[start_i: end_i + 1 if end_i != -1 else None]
     for i, line in enumerate(list_lines, start=start_i):
