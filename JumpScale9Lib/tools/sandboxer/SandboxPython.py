@@ -207,7 +207,7 @@ class SandboxPython(JSBASE):
         C = """
         export PBASE=`pwd`
 
-        export PATH=$PBASE/bin:/bin:/usr/local/bin:/usr/bin
+        export PATH=$PBASE/bin:/bin:/usr/local/bin:/usr/bin:$PATH
         export PYTHONPATH=$PBASE/lib/python:$PBASE/lib/pythonbin:$PBASE/lib/python.zip:$PBASE/lib/jumpscale:$PBASE/lib/pythonbin/lib-dynload:$PBASE/bin
         export PYTHONHOME=$PBASE
 

@@ -89,7 +89,7 @@ class Ubuntu(JSBASE):
                     "Could not install package %s and check for command %s." % (packagename, cmdname))
 
     def apt_install(self, packagename):
-
+        self.apt_update()
         cmd = 'apt-get install %s --force-yes -y' % packagename
         self._local.execute(cmd)
 
