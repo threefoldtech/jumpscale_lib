@@ -219,7 +219,10 @@ stop on runlevel [016]
         self.check()
         if self._cache is None:
             self.apt_init()
-        self._cache.update()
+        if self._cache:
+            self._cache.update()
+        else:
+            self._local.execute("apt-get update", False)
 
     def apt_upgrade(self, force=True):
         self.check()
