@@ -315,9 +315,10 @@ class ContainerClient(BaseClient):
         cmd_id = json.loads(result.data)
         return self._client.response_for(cmd_id)
 
+
 class ContainerManager():
     _nic = {
-        'type': typchk.Enum('default', 'bridge', 'zerotier', 'vlan', 'vxlan'),
+        'type': typchk.Enum('default', 'bridge', 'zerotier', 'vlan', 'vxlan', 'macvlan'),
         'id': typchk.Or(str, typchk.Missing()),
         'name': typchk.Or(str, typchk.Missing()),
         'hwaddr': typchk.Or(str, typchk.Missing()),
@@ -343,6 +344,7 @@ class ContainerManager():
         'nics': [_nic],
         'port': typchk.Or(
             typchk.Map(int, int),
+            typchk.Map(str, int),
             typchk.IsNone()
         ),
         'privileged': bool,
@@ -372,7 +374,7 @@ class ContainerManager():
 
     _portforward_chk = typchk.Checker({
         'container': int,
-        'host_port': int,
+        'host_port': str,
         'container_port': int,
     })
 
@@ -395,8 +397,8 @@ class ContainerManager():
         :param nics: Configure the attached nics to the container
                      each nic object is a dict of the format
                      {
-                        'type': nic_type # default, bridge, zerotier, vlan, or vxlan (note, vlan and vxlan only supported by ovs)
-                        'id': id # depends on the type, bridge name, zerotier network id, the vlan tag or the vxlan id
+                        'type': nic_type # default, bridge, zerotier, macvlan, vlan, or vxlan (note, vlan and vxlan only supported by ovs)
+                        'id': id # depends on the type, bridge name, zerotier network id, the parent link (macvlan), the vlan tag or the vxlan id
                         'name': name of the nic inside the container (ignored in zerotier type)
                         'hwaddr': Mac address of nic.
                         'config': { # config is only honored for bridge, vlan, and vxlan types
@@ -409,6 +411,7 @@ class ContainerManager():
         :param port: A dict of host_port: container_port pairs (only if default networking is enabled)
                        Example:
                         `port={8080: 80, 7000:7000}`
+                       Source Format: NUMBER, IP:NUMBER, IP/MAST:NUMBER, or DEV:NUMBER
         :param hostname: Specific hostname you want to give to the container.
                          if None it will automatically be set to core-x,
                          x beeing the ID of the container
@@ -485,8 +488,8 @@ class ContainerManager():
 
         :param container: container ID
         :param nic: {
-                        'type': nic_type # default, bridge, zerotier, vlan, or vxlan (note, vlan and vxlan only supported by ovs)
-                        'id': id # depends on the type, bridge name, zerotier network id, the vlan tag or the vxlan id
+                        'type': nic_type # default, bridge, zerotier, macvlan, vlan, or vxlan (note, vlan and vxlan only supported by ovs)
+                        'id': id # depends on the type, bridge name, zerotier network id, the parent link (macvlan), the vlan tag or the vxlan id
                         'name': name of the nic inside the container (ignored in zerotier type)
                         'hwaddr': Mac address of nic.
                         'config': { # config is only honored for bridge, vlan, and vxlan types
@@ -582,7 +585,8 @@ class ContainerManager():
         """
         Add portforward from host to kvm container
         :param container: id of the container
-        :param host_port: port on host to forward from
+        :param host_port: port on host to forward from (string)
+                          format: NUMBER, IP:NUMBER, IP/MAST:NUMBER, or DEV:NUMBER
         :param container_port: port on container to forward to
         :return:
         """

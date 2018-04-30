@@ -92,6 +92,7 @@ class KvmManager():
         }],
         'port': typchk.Or(
             typchk.Map(int, int),
+            typchk.Map(str, int),
             typchk.IsNone()
         ),
         'uuid': str
@@ -141,10 +142,9 @@ class KvmManager():
 
     _portforward_chk = typchk.Checker({
         'uuid': str,
-        'host_port': int,
+        'host_port': str,
         'container_port': int,
     })
-
 
     _limit_disk_io_dict.update(_iotune_dict)
 
@@ -169,6 +169,7 @@ class KvmManager():
         :param port: A dict of host_port: container_port pairs
                        Example:
                         `port={8080: 80, 7000:7000}`
+                       Source Format:  NUMBER, IP:NUMBER, IP/MAST:NUMBER, or DEV:NUMBER
                      Only supported if default network is used
         :param nics: Configure the attached nics to the container
                      each nic object is a dict of the format
@@ -555,7 +556,8 @@ class KvmManager():
         """
         Add portforward from host to kvm container
         :param uuid: uuid of the kvm container
-        :param host_port: port on host to forward from
+        :param host_port: port on host to forward from (string)
+                         format: NUMBER, IP:NUMBER, IP/MAST:NUMBER, or DEV:NUMBER
         :param machine_port: port on container to forward to
         :return:
         """
@@ -572,7 +574,7 @@ class KvmManager():
         """
         Remove portforward from host to kvm container
         :param uuid: uuid of the kvm container
-        :param host_port: port on host forwarded from
+        :param host_port: port on host forwarded from (string)
         :param machine_port: port on container forwarded to
         :return:
         """
