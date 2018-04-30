@@ -597,7 +597,7 @@ class ContainerManager():
         }
         self._portforward_chk.check(args)
 
-        return self._client.sync('corex.portforward-add', args)
+        return self._client.json('corex.portforward-add', args)
 
     def remove_portfoward(self, container, host_port, container_port):
         """
@@ -614,4 +614,4 @@ class ContainerManager():
         }
         self._portforward_chk.check(args)
 
-        return self._client.sync('corex.portforward-remove', args)
+        return self._client.json('corex.portforward-remove', args)

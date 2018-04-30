@@ -568,7 +568,7 @@ class KvmManager():
         }
         self._portforward_chk.check(args)
 
-        return self._client.sync('kvm.portforward-add', args)
+        return self._client.json('kvm.portforward-add', args)
 
     def remove_portfoward(self, uuid, host_port, container_port):
         """
@@ -585,4 +585,4 @@ class KvmManager():
         }
         self._portforward_chk.check(args)
 
-        return self._client.sync('kvm.portforward-remove', args)
+        return self._client.json('kvm.portforward-remove', args)
