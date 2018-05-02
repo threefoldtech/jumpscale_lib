@@ -239,11 +239,10 @@ class TfChainClient:
         """
         return the amount of token and block stake in the wallet
         """
-        cmd = '/tfchainc --addr %s wallet' % self.addr
-        result = self.container.client.system(cmd).get()
-        if result.state != 'SUCCESS':
-            raise RuntimeError("Could not get wallet amount: %s" % result.stderr.splitlines()[-1])
+        result = self._get_wallet_info()
+        return self._parse_wallet_info(result)
 
+    def _parse_wallet_info(self, result):
         args = {}
         for line in result.stdout.splitlines()[2:]:
             k, v = line.split(':')
@@ -251,20 +250,51 @@ class TfChainClient:
             v = v.strip()
             args[k] = v
         return args
-    
-    def wallet_status(self):
-        """
-        return the status of the wallet [locked/unlocked]
-        """
+
+    def _get_wallet_info(self):
         cmd = '/tfchainc --addr %s wallet' % self.addr
         result = self.container.client.system(cmd).get()
         if result.state != 'SUCCESS':
-            raise RuntimeError("Could not get wallet status: %s" % result.stderr.splitlines()[-1])
-        
+            raise RuntimeError("Could not get wallet amount: %s" % result.stderr.splitlines()[-1])
+        return result
+    
+    def wallet_status(self, wallet_info=None):
+        """
+        Returns the wallet status [locked/unlocked]
+
+        parameters:
+        - wallet_info: Optional parameter containing the result of the _get_wallet_info method
+
+        return the status of the wallet [locked/unlocked]
+        """
+        result = wallet_info or self._get_wallet_info()
         return "locked" if "Locked" in result.stdout else "unlocked"
 
     def consensus_stat(self):
         return consensus_stat(self.container, self.addr)
+
+    def gateway_stat(self):
+        return gateway_stat(self.container, self.addr)
+
+    def get_report(self):
+        result = dict()
+        wallet_info = self._get_wallet_info()
+        wallet_status = self.wallet_status(wallet_info=wallet_info)
+        result["wallet_status"] = wallet_status
+        if wallet_status == "unlocked":
+            wallet_amount = self._parse_wallet_info(wallet_info)
+            result["active_blockstakes"] = int(wallet_amount['BlockStakes'].split(" ",1)[0])
+            result["confirmed_balance"] = int(wallet_amount['Confirmed Balance'].split(" ",1)[0])
+            result["address"] = self.wallet_address
+        else:
+            result["active_blockstakes"] = -1
+            result["confirmed_balance"] = -1
+            result["address"] = ""
+        consensus = self.consensus_stat()
+        result["block_height"] = int(consensus["Height"])
+        gateways = self.gateway_stat()
+        result["connected_peers"] = int(gateways["Active peers"])
+        return result
 
 
 def consensus_stat(container, addr):
@@ -272,11 +302,7 @@ def consensus_stat(container, addr):
     result = container.client.system(cmd).get()
     if result.state != 'SUCCESS':
         raise RuntimeError("Could not unlock wallet: %s" % result.stderr.splitlines()[-1])
-    stats = {}
-    for line in result.stdout.splitlines():
-        ss = line.split(':')
-        stats[ss[0].strip()] = ss[1].strip()
-    return stats
+    return _parse(result.stdout)
 
 
 def gateway_stat(container, addr):
@@ -284,8 +310,12 @@ def gateway_stat(container, addr):
     result = container.client.system(cmd).get()
     if result.state != 'SUCCESS':
         raise RuntimeError("Could not unlock wallet: %s" % result.stderr.splitlines()[-1])
-    stats = {}
-    for line in result.stdout.splitlines():
-        ss = line.split(':')
-        stats[ss[0].strip()] = ss[1].strip()
-    return stats
+    return _parse(result.stdout)
+
+def _parse(value):
+    result = dict()
+    for line in value.splitlines():
+        key, value = line.split(':', 1)
+        result[key.strip()] = value.strip()
+    return result
+    
