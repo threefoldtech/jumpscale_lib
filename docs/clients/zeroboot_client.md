@@ -1,6 +1,7 @@
 # Zeroboot client
 
-![](images/zeroboot-arch.png)
+![diagram picture](https://docs.google.com/drawings/d/e/2PACX-1vS19x58a_V6ulx1PzdmyrAHqIxnOOrVzNIYji6_CklosivjrZVOkW2534LWgFmTDVAxpq6vmzPeN7Cy/pub?w=960&h=720)
+[edit picture](https://docs.google.com/drawings/d/1t5qFq8DfJfLGW-IdeO2llEPwFQc-ckR3RUo2YjxFni4/edit)
 
 ## Prerequisites
 
