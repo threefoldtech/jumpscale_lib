@@ -17,7 +17,6 @@ class Machine(JSBASE):
         self.id = machine['id']
         self._ssh_enabled = None
         self.refresh()
-        self.new = False
 
     def refresh(self):
         self._model = None

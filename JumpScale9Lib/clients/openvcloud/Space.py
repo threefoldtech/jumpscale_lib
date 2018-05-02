@@ -158,14 +158,15 @@ class Space(Authorizables):
             sizeId=None,
             stackId=None,
             reset=False,
-            managed_private=False):
+            managed_private=False,
+            authorize_ssh=True):
         """
         Returns the virtual machine with given name, and in case it doesn't exist yet creates the machine if the create argument is set to True.
 
         Args:
             - name: (required) name of the virtual machine to lookup or create if it doesn't exist yet, e.g. "My first VM"
             - create (defaults to False): if set to true the machine is created in case it doesn't exist yet
-            - sshkeyname (only required for creating new machine): name of the private key loaded by ssh-agent that will get copied into authorized_keys
+            - sshkeyname (used only for creating new machine): name of the private key loaded by ssh-agent that will get copied into authorized_keys
             - memsize (defaults to 2): memory size in MB or in GB, e.g. 4096
             - vcpus (defaults to 1): number of virtual CPU cores; value is ignored in versions prior to 3.x, use sizeId in order to set the number of virtual CPU cores
             - disksize (default to 10): boot disk size in MB
@@ -177,7 +178,7 @@ class Space(Authorizables):
             - managed_private: if set to true, the access to the VM will be done using the private IP of the vm. Which means the client needs to be execute from a machine that can access the private
                                network of the cloudspace
                                if False, use the public IP of the cloudspace to access the VM. It will create a port forward to be able to access the VM
-
+            - authorize_ssh: if set to true, authorizes ssh and gets prefab
         Raises: RuntimeError if machine doesn't exist, and create argument was set to False (default)
         """
 
@@ -195,19 +196,19 @@ class Space(Authorizables):
                                               image=image,
                                               sizeId=sizeId,
                                               stackId=stackId,
-                                              managed_private=managed_private)
-                machine.new = True
-                self.machines[name] = machine
+                                              managed_private=managed_private,
+                                              authorize_ssh=authorize_ssh
+                                              )
             else:
                 raise RuntimeError("Cannot find machine:%s" % name)
 
         machine = self.machines[name]
-        if not managed_private:
-            self._node_set(machine.name, machine.sshclient)
-        else:
-            self._node_set(machine.name+'_private', machine.sshclient_private)
 
-        machine.new = False
+        if authorize_ssh:
+            if not managed_private:
+                self._node_set(machine.name, machine.sshclient)
+            else:
+                self._node_set(machine.name+'_private', machine.sshclient_private)
 
         return machine
 
@@ -235,15 +236,16 @@ class Space(Authorizables):
         image="Ubuntu 16.04 x64",
         sizeId=None,
         stackId=None,
-        description=None,
-        managed_private=False
+        description="",
+        managed_private=False,
+        authorize_ssh=True
     ):
         """
         Creates a new virtual machine.
 
         Args:
             - name (required): name of the virtual machine, e.g. "MyFirstVM"
-            - sshkeyname (required): name of instance of sshkey's which need to be pre-configured
+            - sshkeyname: name of instance of sshkey's which need to be pre-configured. Loaded only if authorize_ssh=True.
             - memsize (defaults to 2): memory size in MB or in GB, e.g. 4096
             - vcpus (defaults to 1): number of virtual CPU cores; value is ignored in versions prior to 3.x, use sizeId in order to set the number of virtual CPU cores
             - disksize (default to 10): boot disk size in MB
@@ -255,7 +257,7 @@ class Space(Authorizables):
             - managed_private: if set to true, the access to the VM will be done using the private IP of the vm. Which means the client needs to be execute from a machine that can access the private
                                network of the cloudspace
                                if False, use the public IP of the cloudspace to access the VM. It will create a port forward to be able to access the VM
-
+            - authorize_ssh: if set to true, authorizes ssh and gets prefab
         Raises:
             - RuntimeError if machine with given name already exists.
             - RuntimeError if machine name contains spaces
@@ -268,69 +270,67 @@ class Space(Authorizables):
         if '_' in name:
             raise RuntimeError('Name cannot contain underscores (_)')
 
-        if not sshkeyname:
-            sshkeyname=j.tools.configmanager.keyname
-
         imageId = self.image_find_id(image)
         if sizeId is None:
             sizeId = self.size_find_id(memsize, vcpus)
-        if name in self.machines:
-            raise j.exceptions.RuntimeError(
-                "Name is not unique, already exists in %s" % self)
+        
         self.logger.info("Cloud space ID:%s name:%s size:%s image:%s disksize:%s" %
                          (self.id, name, sizeId, imageId, disksize))
 
-        if description is None:
-            description = ""
+        if authorize_ssh:
+            if not sshkeyname:
+                # if sshkey is not provided, use sshkey configured in the config manager 
+                sshkeyname=j.tools.configmanager.keyname
 
-        if sshkeyname and "sshkeyname:" not in description:
-            description += "\nsshkeyname: %s" % sshkeyname
+            if "sshkeyname:" not in description:
+                description += "\nsshkeyname: %s" % sshkeyname
 
-        if stackId:
-            self.client.api.cloudbroker.machine.createOnStack(
-                cloudspaceId=self.id,
-                name=name,
-                sizeId=sizeId,
-                imageId=imageId,
-                disksize=disksize,
-                datadisks=datadisks,
-                stackid=stackId,
-                description=description)
-            machine = self.machines[name]
-            machine.new = True
-        else:
-            self.client.api.cloudapi.machines.create(cloudspaceId=self.id,
-                                                     name=name,
-                                                     sizeId=sizeId,
-                                                     imageId=imageId,
-                                                     disksize=disksize,
-                                                     datadisks=datadisks,
-                                                     description=description)
-            machine = self.machines[name]
-            machine.new = True
-
-        self.logger.info("machine created.")
+        try:
+            # if machine does not exist it will be created
+            if stackId:
+                self.client.api.cloudbroker.machine.createOnStack(
+                    cloudspaceId=self.id,
+                    name=name,
+                    sizeId=sizeId,
+                    imageId=imageId,
+                    disksize=disksize,
+                    datadisks=datadisks,
+                    stackid=stackId,
+                    description=description)
+            else:
+                self.client.api.cloudapi.machines.create(cloudspaceId=self.id,
+                                                        name=name,
+                                                        sizeId=sizeId,
+                                                        imageId=imageId,
+                                                        disksize=disksize,
+                                                        datadisks=datadisks,
+                                                        description=description)
+            self.logger.info("machine created.")
+        except Exception as err:
+            if err.response.status_code == 409:
+                # machine already exist, continue to the next step
+                pass
+            else:
+                raise err
 
         machine = self.machines[name]
-        if not managed_private:
-            machine.portforward_create(None, 22)
 
-        if sshkeyname and "zero" not in image:
-            if not managed_private:
-                machine.authorizeSSH(sshkeyname=sshkeyname)
+        if authorize_ssh:
+            # check if ssh port already exposed
+            for portforward in machine.portforwards:
+                if portforward['localPort'] == '22':
+                    break
             else:
+                machine.portforward_create(None, 22)
+
+            if managed_private:
                 machine.authorizeSSH_private(sshkeyname=sshkeyname)
-        else:
-            if "zero" not in image:
-                raise RuntimeError("needs to be implemented, no sshkeyname given")
-
-        if "zero" not in image:
-            if not managed_private:
-                machine.prefab.core.hostname = name  # make sure hostname is set
-                self._node_set(machine.name, machine.sshclient)
-            else:
                 machine.prefab_private.core.hostname = name  # make sure hostname is set
                 self._node_set(machine.name + '_private', machine.sshclient_private)
+            else:
+                machine.authorizeSSH(sshkeyname=sshkeyname)
+                machine.prefab.core.hostname = name  # make sure hostname is set
+                self._node_set(machine.name, machine.sshclient)
 
         return machine
 
