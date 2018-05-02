@@ -10,7 +10,7 @@ The router needs first to be installed check the docs [here](https://github.com/
 Zeroboot client requires instances of the following clients before it can be used:
 
 - `j.clients.sshclient`: to connect to the router
-- `j.clients.racktivity`: to connect to the racktivity device and perform required operations
+- `j.clients.racktivity`: to connect to the racktivity device and perform required operations, if no power options are required not necessary
 - `j.clients.zerotier`: to setup a route on the router to allow connection to the racktivity device. The client should have access to the same zerotier network id used to setup the router.
 
 ### Configuring the clients
@@ -45,12 +45,26 @@ For a typical use case the following need to be configured:
 - `login`: username on the router
 - `passwd_`: password of that username
 
+```python
+sshclient = j.clients.ssh.get('instance_name', interactive=True)
+```
+
+The above will prompt the user to enter the necessary data.
+
 #### Racktivity client
+
+Is not necessary in order to use the zeroboot client. Needed only for power operations. 
 
 - `hostname`: address of the racktivity device in the internal router network
 - `port`: connection port
 - `username`: user login for the racktivity device
 - `password_`: password for user login
+
+```python
+rack = j.clients.racktivity.get('instance_name')
+```
+
+The above will prompt the user to enter the necessary data.
 
 #### Zerotier client
 
@@ -58,11 +72,16 @@ The client only needs a user token for authentication. The user needs to have ac
 
 - `token_`: zerotier user token
 
+```python
+ztier = j.clients.zerotier.get('instance_name')
+```
+
+The above will prompt the user to enter the necessary data.
+
 ## Usage
 
 To get an instance of the client you need to specify the following:
 
-- `racktivity_instance`: instance name of the required racktivity client
 - `sshclient_instance`: instance name of the required ssh client
 - `zerotier_instance`: instance name of the required zerotier client
 - `network_id`: zerotier network id to connect to the router
@@ -84,18 +103,24 @@ The above will list all the availble networks object. In most cases only one net
 
 ### Racktivity operations
 
+First you need to get a racktivity client instance see above for how to get it:
+
+```python
+rack = j.clients.racktivity.get('instance_name')
+```
+
 #### Power info
 
 To get the power info for opened ports:
 
 ```python
-zboot.power_info_get()
+zboot.power_info_get(rack)
 ```
 
 To get information about an open port:
 
 ```python
-zboot.port_info(portnumber)
+zboot.port_info(portnumber, rack)
 ```
 
 #### Power operations
@@ -103,20 +128,20 @@ zboot.port_info(portnumber)
 To turn the power off for a port:
 
 ```python
-zboot.port_power_off(portnumber)
+zboot.port_power_off(portnumber, rack)
 ```
 
 To turn on:
 
 ```python
-zboot.port_power_on(portnumber)
+zboot.port_power_on(portnumber, rack)
 ```
 
 It is possible to power cycle ports, where a port will be shut down and then powered on again after 5 seconds. This is useful to make a host rejoin the network with the new network configuration.
 
 ```python
 list_of_ports = [20,22,24]  # port numbers
-zboot.port_power_cycle(list_of_ports)
+zboot.port_power_cycle(list_of_ports, rack)
 ```
 
 ### Network information

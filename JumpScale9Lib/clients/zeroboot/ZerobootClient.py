@@ -6,7 +6,6 @@ from js9 import j
 JSConfigBase = j.tools.configmanager.base_class_config
 
 TEMPLATE = """
-racktivity_instance = ""
 sshclient_instance = ""
 zerotier_instance = ""
 network_id = ""
@@ -48,41 +47,46 @@ class ZerobootClient(JSConfigBase):
         route = {'target': cidr, 'via': self.sshclient.addr}
         znetwork = self.ztier.network_get(self.config.data['network_id'])
         znetwork.add_route(route)
-        self.client = j.clients.racktivity.get(instance=self.config.data['racktivity_instance'])
 
-    def power_info_get(self):
+    def power_info_get(self, rack_client):
         """gets power info for opened ports
+        :param rack_client: racktivity client
         """
 
-        return self.client.power.getPower()
 
-    def port_power_on(self, port_number):
+        return rack_client.power.getPower()
+
+    def port_power_on(self, port_number, rack_client):
         """turn port on
+        :param rack_client: racktivity client
         """
 
-        return self.client.power.setPortState(1, portnumber=port_number)
+        return rack_client.power.setPortState(1, portnumber=port_number)
 
-    def port_power_off(self, port_number):
+    def port_power_off(self, port_number, rack_client):
         """turn port off
+        :param rack_client: racktivity client
         """
 
-        return self.client.power.setPortState(0, portnumber=port_number)
+        return rack_client.power.setPortState(0, portnumber=port_number)
 
-    def port_power_cycle(self, port_numbers):
+    def port_power_cycle(self, port_numbers, rack_client):
         """
         Power off, wait 5 sec then turn on again.
         :param port_numbers: ports to power cycle on
         :type port_numbers: list
+        :param rack_client: racktivity client
         """
         for port_number in port_numbers:
-            self.port_power_off(port_number)
+            self.port_power_off(port_number, rack_client)
             time.sleep(5)
-            self.port_power_on(port_number)
+            self.port_power_on(port_number, rack_client)
 
-    def port_info(self, port_number):
+    def port_info(self, port_number, rack_client):
         """get port info
+        :param rack_client: racktivity client
         """
-        return self.client.power.getStatePortCur(portnumber=port_number)
+        return rack_client.power.getStatePortCur(portnumber=port_number)
 
 class Network:
     def __init__(self, subnet, sshclient):
