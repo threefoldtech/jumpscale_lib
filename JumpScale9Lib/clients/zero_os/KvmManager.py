@@ -561,6 +561,9 @@ class KvmManager():
         :param machine_port: port on container to forward to
         :return:
         """
+        if isinstance(host_port, int):
+            host_port = str(host_port)
+
         args = {
             'uuid': uuid,
             'host_port': host_port,
