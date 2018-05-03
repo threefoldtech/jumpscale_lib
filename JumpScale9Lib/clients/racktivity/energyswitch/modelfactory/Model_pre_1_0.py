@@ -60,7 +60,7 @@ class Power(JSBASE):
         self._parent.client.setAttribute(self._moduleID, guid)
         return 0
 
-    def getStatePortCur(self, portnumber=1, length=1):
+    def getStatePortCur(self, portnumber=1, length=1, **kwargs):
         val = ord(self._parent.client.getAttribute(
             self._moduleID, "F00241000010000000001"))
 
@@ -69,7 +69,7 @@ class Power(JSBASE):
             result.append(bool(val & 1 << (8 - i)))
         return 0, result
 
-    def setPortState(self, value, portnumber=1):
+    def setPortState(self, value, portnumber=1, **kwargs):
         if value == 1:  # power on
             val = 1 << (8 - portnumber)
             self._parent.client.resetAttribute(
@@ -209,7 +209,7 @@ class Power(JSBASE):
 
         return result
 
-    def getPower(self):
+    def getPower(self, **kwargs):
         powerPointers = self.getPowerPointer()
         pointerMeaning = {
             1: "GeneralModuleStatus",

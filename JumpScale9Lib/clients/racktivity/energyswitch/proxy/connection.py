@@ -27,7 +27,7 @@ class BlockingConnection(JSBASE):
                 raise Exception("Invalid username or password")
             self.basicAuth = False
         except urllib.error.HTTPError as error:
-            if error.code == 501:  # not Implemented, treat it as an old device
+            if error.code in [501, 401]:  # not Implemented, treat it as an old device
                 url = "http://%s:%s@%s:%s" % (username,
                                               password, hostname, port)
                 self.urlopener = urllib.request.FancyURLopener()

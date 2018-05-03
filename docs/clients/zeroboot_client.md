@@ -109,18 +109,50 @@ First you need to get a racktivity client instance see above for how to get it:
 rack = j.clients.racktivity.get('instance_name')
 ```
 
+Depending on the model you might need to specify the power module when specifying the port, since depending on the model it might have multiple power modules. For example `P1` refers to the first power module available.
+
 #### Power info
 
-To get the power info for opened ports:
+To get the power info for the device:
 
 ```python
 zboot.power_info_get(rack)
 ```
 
-To get information about an open port:
+To check the status of all ports check the value in `StatePortCur`, where `True` means open:
+
+```python
+{'ActiveEnergy': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+ 'ApparentEnergy': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+ 'ApparentPower': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+ 'Current': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+ 'Frequency': 49.94,
+ 'GeneralModuleStatus': 0,
+ 'MaxCurrent': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+ 'Power': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+ 'PowerFactor': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+ 'StatePortCur': [True, True, False, False, False, False, False, False],
+ 'Temperature': 20.0,
+ 'TotalActiveEnergy': 0.0,
+ 'TotalApparentEnergy': 0.0,
+ 'TotalApparentPower': 0.0,
+ 'TotalCurrent': 0.0,
+ 'TotalPowerFactor': 0.0,
+ 'TotalRealPower': 0.0,
+ 'Voltage': 239.38}
+```
+
+To check if port open or not:
 
 ```python
 zboot.port_info(portnumber, rack)
+```
+
+For the same examples but with models that requires power module to be specified:
+
+```python
+zboot.power_info_get(rack, 'P1')
+zboot.port_info(portnumber, rack, 'P1')
 ```
 
 #### Power operations
@@ -140,8 +172,17 @@ zboot.port_power_on(portnumber, rack)
 It is possible to power cycle ports, where a port will be shut down and then powered on again after 5 seconds. This is useful to make a host rejoin the network with the new network configuration.
 
 ```python
-list_of_ports = [20,22,24]  # port numbers
+list_of_ports = [1,3,4]  # port numbers
 zboot.port_power_cycle(list_of_ports, rack)
+```
+
+For the same examples but with models that requires power module to be specified:
+
+```python
+zboot.port_power_off(portnumber, rack, 'P1')
+zboot.port_power_on(portnumber, rack, 'P1')
+list_of_ports = [1,3,4]
+zboot.port_power_cycle(list_of_ports, rack, 'P1')
 ```
 
 ### Network information

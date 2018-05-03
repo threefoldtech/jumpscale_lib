@@ -30,7 +30,6 @@ def apply_changes(sshclient, network=False):
     else:
         sshclient.execute('/etc/init.d/dnsmasq restart')
 
-
 class ZerobootClient(JSConfigBase):
     """Zeroboot client
     using racktivity
@@ -48,45 +47,52 @@ class ZerobootClient(JSConfigBase):
         znetwork = self.ztier.network_get(self.config.data['network_id'])
         znetwork.add_route(route)
 
-    def power_info_get(self, rack_client):
+    def power_info_get(self, rack_client, module_id=None):
         """gets power info for opened ports
         :param rack_client: racktivity client
+        :param module_id: power module id if racktivity model has multiple power modules ex: P1, won't be used if None
+        :type module_id: str
         """
+        return rack_client.power.getPower(moduleID=module_id)
 
-
-        return rack_client.power.getPower()
-
-    def port_power_on(self, port_number, rack_client):
+    def port_power_on(self, port_number, rack_client, module_id=None):
         """turn port on
         :param rack_client: racktivity client
+        :param module_id: power module id if racktivity model has multiple power modules ex: P1, won't be used if None
+        :type module_id: str
         """
+        return rack_client.power.setPortState(moduleID=module_id, value=1, portnumber=port_number)
 
-        return rack_client.power.setPortState(1, portnumber=port_number)
-
-    def port_power_off(self, port_number, rack_client):
+    def port_power_off(self, port_number, rack_client, module_id=None):
         """turn port off
         :param rack_client: racktivity client
+        :param module_id: power module id if racktivity model has multiple power modules ex: P1, won't be used if None
+        :type module_id: str
         """
 
-        return rack_client.power.setPortState(0, portnumber=port_number)
+        return rack_client.power.setPortState(moduleID=module_id, value=0, portnumber=port_number)
 
-    def port_power_cycle(self, port_numbers, rack_client):
+    def port_power_cycle(self, port_numbers, rack_client, module_id=None):
         """
         Power off, wait 5 sec then turn on again.
         :param port_numbers: ports to power cycle on
         :type port_numbers: list
         :param rack_client: racktivity client
+        :param module_id: power module id if racktivity model has multiple power modules ex: P1, won't be used if None
+        :type module_id: str
         """
         for port_number in port_numbers:
-            self.port_power_off(port_number, rack_client)
+            self.port_power_off(port_number, rack_client, module_id)
             time.sleep(5)
-            self.port_power_on(port_number, rack_client)
+            self.port_power_on(port_number, rack_client, module_id)
 
-    def port_info(self, port_number, rack_client):
+    def port_info(self, port_number, rack_client, module_id=None):
         """get port info
         :param rack_client: racktivity client
+        :param module_id: power module id if racktivity model has multiple power modules ex: P1, won't be used if None
+        :type module_id: str
         """
-        return rack_client.power.getStatePortCur(portnumber=port_number)
+        return rack_client.power.getStatePortCur(moduleID=module_id, portnumber=port_number)
 
 class Network:
     def __init__(self, subnet, sshclient):
@@ -140,9 +146,22 @@ class Networks:
         raise NotImplementedError()
 
     def list(self):
+        """list all subnets
+
+        :return: list of subnets
+        :rtype: list
+        """
         return list(self._networks.keys())
 
     def get(self, subnet=None):
+        """get network object from its subnet
+
+        :param subnet: subnet required, defaults to None in that case will get first in the list
+        :type subnet: str
+        :raises KeyError: if subnet doesn't exist in available subnets
+        :return: network object
+        :rtype: object
+        """
         if not subnet:
             subnet = self.list()[0]
         if subnet not in self._networks:
@@ -172,7 +191,7 @@ class Host:
         :param tftp_root: str, optional
         """
 
-        file_name = '01-{}'.format(str(netaddr.EUI(self.mac)))
+        file_name = '01-{}'.format(str(netaddr.EUI(self.mac)).lower())
         executor = j.tools.executor.ssh_get(self.sshclient)
         pxe_config_file = '{root}/pxelinux.cfg/{file}'.format(root=tftp_root, file=file_name)
         pxe_config_data = (
@@ -266,9 +285,24 @@ class Hosts:
         return host
 
     def list(self):
+        """list all hostnames
+
+        :return: list of hostnames
+        :rtype: list
+        """
+
         return list(self._hosts.keys())
 
     def get(self, hostname):
+        """get host object from hostname
+
+        :param hostname: hostname required
+        :type hostname: str
+        :raises KeyError: if hostname doesn't exist in available hostnames
+        :return: host object
+        :rtype: object
+        """
+
         if hostname not in self._hosts:
             raise KeyError("Host: %s doesn't exist" % hostname)
         return self._hosts[hostname]
