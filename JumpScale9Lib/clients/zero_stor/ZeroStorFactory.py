@@ -7,7 +7,7 @@ JSBASE = j.application.jsbase_get_class()
 class ZeroStorFactory(JSBASE):
 
     def __init__(self):
-        self.__jslocation__ = "j.clients.zerostor"
+        self.__jslocation__ = "j.clients.zstor"
         self.__imports__ = "requests"
         JSBASE.__init__(self)
 

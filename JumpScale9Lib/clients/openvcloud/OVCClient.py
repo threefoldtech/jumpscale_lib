@@ -53,7 +53,7 @@ class OVCClient(JSConfigBase):
         else:
             if j.tools.configmanager.sandbox_check():
                 raise RuntimeError(
-                    "When in a sandbox, jwt is required")                
+                    "When in a sandbox, jwt is required")
             jwt = j.clients.itsyouonline.default.jwt_get(refreshable=True, use_cache=True)
         return jwt
 
@@ -232,7 +232,6 @@ class OVCClient(JSConfigBase):
         :rtype: object
         """
 
-
         if location == "":
             location = self.config.data["location"]
 
@@ -241,7 +240,6 @@ class OVCClient(JSConfigBase):
 
         if not spaceName:
             raise RuntimeError("name needs to be specified in account in config or on method.")
-
 
         account = self.account_get(name=accountName, create=False)
         if account:
