@@ -1,5 +1,8 @@
 import io
+
 from js9 import j
+from JumpScale9Lib.tools.capacity import registration
+
 
 class Capacity:
 
@@ -17,7 +20,7 @@ class Capacity:
                 out.write(msg)
                 out.write('\n')
             self._node.client.system('dmidecode', stream=True).stream(cb)
-            self._hw_info = j.tools.capacityparser.hw_info_from_dmi(out.getvalue())
+            self._hw_info = j.tools.capacity.parser.hw_info_from_dmi(out.getvalue())
         return self._hw_info
 
     @property
@@ -31,7 +34,7 @@ class Capacity:
                     out.write(msg)
                     out.write('\n')
                 self._node.client.system('smartctl -i %s' % disk.devicename, stream=True).stream(cb)
-                self._disk_info[disk.devicename] = j.tools.capacityparser.disk_info_from_smartctl(
+                self._disk_info[disk.devicename] = j.tools.capacity.parser.disk_info_from_smartctl(
                     out.getvalue(),
                     disk.size,
                     disk.type.name,
@@ -43,4 +46,30 @@ class Capacity:
         create a report of the hardware capacity for
         processor, memory, motherboard and disks
         """
-        return j.tools.capacityparser.get_report(self._node.client.info.mem()['total'], self.hw_info, self.disk_info, indent=indent)
+        return j.tools.capacity.parser.get_report(self._node.client.info.mem()['total'], self.hw_info, self.disk_info, indent=indent)
+
+    def get(self):
+        """
+        get the capacity object of the node
+
+        this capacity object is used in the capacity registration tool (j.tools.capacity.registration)
+
+        :return: Capacity object
+        :rtype: JumpScale9Lib.tools.capacity.registration.Capacity
+        """
+        report = self.report()
+        robot_address = "http://%s:6600" % self._node.public_addr
+        os_version = "{branch} {revision}".format(**self._node.client.info.version())
+
+        capacity = registration.Capacity(
+            node_id=self._node.name,
+            location=None,
+            farmer=None,
+            cru=report.CRU,
+            mru=report.MRU,
+            hru=report.HRU,
+            sru=report.SRU,
+            robot_address=robot_address,
+            os_version=os_version,
+        )
+        return capacity

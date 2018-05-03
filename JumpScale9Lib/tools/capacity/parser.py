@@ -1,7 +1,8 @@
 import json
 from enum import Enum
 import re as _re
-from js9 import j
+
+from .registration import Capacity
 
 GIB = 1024 * 1024 * 1024
 GB = 1000 * 1000 * 1000
@@ -12,6 +13,7 @@ _in_block_re = _re.compile("^\\t\\t(.+)$")
 _record_re = _re.compile("\\t(.+):\\s+(.+)$")
 _record2_re = _re.compile("\\t(.+):$")
 
+
 class StorageType(Enum):
     SSD = "SSH"
     HDD = "HDD"
@@ -19,14 +21,8 @@ class StorageType(Enum):
     ARCHIVE = "ARCHIVE"
     CDROM = "CDROM"
 
-JSBASE = j.application.jsbase_get_class()
 
-class CapacityParser(JSBASE):
-
-    
-    def init(self):
-        self.__jslocation__ = "j.tools.capacityparser"
-        JSBASE.__init__(self)
+class CapacityParser:
 
     def disk_info_from_smartctl(self, smartctl_data, disk_size, disk_type):
         """
@@ -43,7 +39,7 @@ class CapacityParser(JSBASE):
         disk_info = _parse_smarctl(smartctl_data)
         disk_info['size'] = disk_size
         disk_info['type'] = disk_type
-        
+
         return disk_info
 
     def hw_info_from_dmi(self, dmi_data):
@@ -51,7 +47,7 @@ class CapacityParser(JSBASE):
         Parses dmi to hw_info
 
         @param dmi_data: output of dmi
-        
+
         @return hw_info
         """
         return _parse_dmi(dmi_data)
@@ -68,11 +64,12 @@ class CapacityParser(JSBASE):
         """
         return Report(total_mem, hw_info, disk_info, indent=indent)
 
+
 class Report():
     """
-        Report takes in hardware information and parses it into a report.    
+        Report takes in hardware information and parses it into a report.
     """
-    
+
     def __init__(self, total_mem, hw_info, disk_info, indent=None):
         """
         @param total_mem: total system memory in bytes
@@ -136,7 +133,7 @@ class Report():
             "memory": self.memory,
             "motherboard": self.motherboard,
             "disk": self.disk,
-        },indent=self.indent)
+        }, indent=self.indent)
 
     def __str__(self):
         return repr(self)
@@ -208,6 +205,7 @@ def _disks_info(data):
         }
         result.append(info)
     return result
+
 
 def _parse_dmi(data):
     output_data = {}
@@ -282,6 +280,7 @@ def _parse_dmi(data):
         raise RuntimeError("Unable to parse 'dmidecode' output")
 
     return output_data
+
 
 def _parse_smarctl(data):
     result = {}
