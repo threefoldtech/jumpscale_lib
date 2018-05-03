@@ -1,13 +1,13 @@
 # Docs can be found at docs/tools/StoryBot.md
 
 import time
-import gevent
 import signal
 
 from .GithubBot import GithubBot
 from .GiteaBot import GiteaBot
 from .utils import _extend_stories
 
+import gevent
 from js9 import j
 
 TEMPLATE =  """
@@ -152,6 +152,26 @@ class StoryBot(JSConfigBase):
         data = self.config.data["gitea_repos"]
         data = ",".join(new_list)
         self.config.data_set("gitea_repos", data)
+
+    def link_stories_interval(self, interval=60, check_broken_urls=False):
+        """Links stories and tasks from configured repositories together.
+        Then waits the specified interval before running it again.
+
+        Stop by pressing 'ctrl+c'.
+        
+        Keyword Arguments:
+            interval int -- Wait interval in minutes (default: 60)
+            check_broken_urls bool -- Check the story/task lists from broken links/URLs (default: False)
+        """
+
+        self.logger.info("Running StoryBot every %s minutes.\nPress ctl+c to stop." % interval)
+        try:
+            while True:
+                self.link_stories(check_broken_urls=check_broken_urls)
+
+                time.sleep(interval * 60)
+        except KeyboardInterrupt:
+            self.logger.info("Stopping StoryBot")
 
     def link_stories(self, check_broken_urls=False):
         """Link stories and tasks from all repos to eachother.

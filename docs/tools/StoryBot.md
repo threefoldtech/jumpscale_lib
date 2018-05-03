@@ -90,7 +90,19 @@ At the end of a successful run, the story and task issues should contain lists t
 The resulting list in stories are described in the [Generated task list in stories](#Generated-task-list-in-stories) chapter.  
 The resulting list in tasks are described in the [Generated story list in tasks](#Generated-story-list-in-tasks) chapter.
 
-#### url checking
+#### Run at intervals
+
+To link the tasks and stories together at an interval, call the `link_stories_interval` method of the bot:
+
+```py
+bot.link_stories_interval(interval=30)
+```
+
+This will link stories and tasks from the repos and then wait the provided `interval` period in minutes (default is 60 minutes).
+
+Press ctrl+c to stop.
+
+#### URL checking
 
 The `link_stories` method has the `check_broken_urls` parameter, which when `True` will loop over all tasks and stories after they have been linked and check their lists to see if the urls in those lists are still working or not.
 
