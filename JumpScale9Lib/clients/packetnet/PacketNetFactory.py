@@ -155,7 +155,7 @@ class PacketNet(JSConfigClient):
                                  wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId=zerotierId, always_pxe=False, sshkey=sshkey)
 
     def startZeroOS(self, hostname="removeMe", plan='baremetal_0', facility='ams1', zerotierId="",
-                    zerotierAPI="", wait=True, remove=False, params=None):
+                    zerotierAPI="", wait=True, remove=False, params=None, branch='master'):
         """
         return (zero-os-client,pubIpAddress,zerotierIpAddress)
 
@@ -168,7 +168,7 @@ class PacketNet(JSConfigClient):
             raise RuntimeError("zerotierId needs to be specified")
         if zerotierAPI.strip() == "" or zerotierAPI is None:
             raise RuntimeError("zerotierAPI needs to be specified")
-        ipxeUrl = "https://bootstrap.gig.tech/ipxe/master/%s" % zerotierId
+        ipxeUrl = "https://bootstrap.gig.tech/ipxe/{}/{}".format(branch, zerotierId)
 
 
         if params is not None:
