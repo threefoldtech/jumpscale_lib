@@ -111,6 +111,8 @@ rack = j.clients.racktivity.get('instance_name')
 
 Depending on the model you might need to specify the power module when specifying the port, since depending on the model it might have multiple power modules. For example `P1` refers to the first power module available.
 
+For example if you have a racktivity device model PM0816-01, there is no need to specify the module id. On the other hand if you model ES1108-16 it is required to specify the module id to use the client.
+
 #### Power info
 
 To get the power info for the device:
