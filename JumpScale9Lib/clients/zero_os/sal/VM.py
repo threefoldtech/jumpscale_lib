@@ -1,35 +1,238 @@
 from js9 import j
+from .abstracts import Collection, Nics
+from .utils import authorize_zerotiers
+import requests
 
+IPXEURL = 'https://bootstrap.gig.tech/ipxe/master/0'
 logger = j.logger.get(__name__)
 
 
+class Disk:
+    def __init__(self, name, url, mountpoint=None, filesystem=None):
+        self.name = name
+        self.url = url
+        self.type = 'disk'
+        self.mountpoint = mountpoint
+        self.filesystem = filesystem
+
+    def __str__(self):
+        return "Disk <{}:{}>".format(self.name, self.url)
+
+    __repr__ = __str__
+
+
+class ZDBDisk(Disk):
+    def __init__(self, zdb, name, mountpoint=None, filesystem='ext4', size=10):
+        if zdb.mode == 'direct':
+            raise RuntimeError('ZDB mode direct not support for disks')
+        super().__init__(name, None, mountpoint, filesystem)
+        self.zdb = zdb
+        self.node = zdb.node
+        self.size = size
+
+    def deploy(self):
+        namespace = self.zdb.namespaces.add(self.name, self.size)
+        self.zdb.deploy()
+        self.url = namespace.url
+        if self.filesystem:
+            tmpfile = '/var/cache/{}'.format(j.data.idgenerator.generateGUID())
+            try:
+                res = self.node.client.system('truncate -s {}G {}'.format(self.size, tmpfile)).get()
+                if res.state != 'SUCCESS':
+                    raise RuntimeError('Failed to create tmpfile')
+                res = self.node.client.system('mkfs.{} -L {} {}'.format(self.filesystem, self.name, tmpfile)).get()
+                if res.state != 'SUCCESS':
+                    raise RuntimeError('Failed to create fs')
+                self.node.client.kvm.convert_image(tmpfile, namespace.url, 'raw')
+            finally:
+                self.node.client.filesystem.remove(tmpfile)
+
+    def __str__(self):
+        return "ZDBDisk <{}:{}>".format(self.name, self.url)
+
+    __repr__ = __str__
+
+
+class Disks(Collection):
+    def add(self, name_or_disk, url=None, mountpoint=None, filesystem=None):
+        """
+        Add disk to vm
+
+        :param name: name to give to disk
+        :type name: str
+        :param url_or_disk: Disk url example: nbd://myip:port
+        :type url: str
+        """
+        if isinstance(name_or_disk, str):
+            if url is None:
+                raise ValueError('Url is mandatory when disk name is given')
+            super().add(name_or_disk)
+            disk = Disk(name_or_disk, url, mountpoint, filesystem)
+        elif isinstance(name_or_disk, ZDBDisk):
+            super().add(name_or_disk.name)
+            disk = name_or_disk
+        else:
+            raise ValueError('Unsupported type {}'.format(name_or_disk))
+
+        self._items.append(disk)
+        return disk
+
+    def get_by_url(self, url):
+        for disk in self:
+            if disk.url == url:
+                return disk
+        raise LookupError('No disk found with url {}'.format(url))
+
+
+class Port:
+    def __init__(self, name, source, target):
+        self.name = name
+        self.source = source
+        self.target = target
+
+
+    def __str__(self):
+        return "Port <{}:{}:{}>".format(self.name, self.source, self.target)
+
+    __repr__ = __str__
+
+class Ports(Collection):
+    def add(self, name, source, target):
+        """
+        Add portforward
+
+        This is only valid incase your vm connects to te default nic
+
+        :param name: Name for the port
+        :type name: str
+        :param source: Source port (port on host)
+        :type source: int
+        :param target: Target port (port on vm)
+        :type target: int
+        """
+        super().add(name)
+        for nic in self._parent.nics:
+            if nic.type == 'default':
+                break
+        else:
+            raise ValueError('Can not add ports when no default nic is added')
+        port = Port(name, source, target)
+        self._items.append(port)
+        return port
+
+
+class MountBind:
+    def __init__(self, name, sourcepath, targetpath):
+        self.name = name
+        self.sourcepath = sourcepath
+        self.targetpath = targetpath
+
+
+    def __str__(self):
+        return "MountBind <{}:{}:{}>".format(self.name, self.sourcepath, self.targetpath)
+
+    __repr__ = __str__
+
+class Mounts(Collection):
+    def add(self, name, sourcepath, targetpath):
+        """
+        Add mount
+
+        Target is only mounted when vm is created from flist otherwise one will need to mount
+        the bind manually
+
+        :param name: Name for the mount
+        :type name: str
+        :param sourcepath: Source path (path on host)
+        :type sourcepath: str
+        :param targetpath: Target, tag to used to mount plan9 fs inside vm
+        :type targetpath: str
+        """
+        super().add(name)
+        if name == 'root' or ' ' in name:
+            raise ValueError('Name can not be \'root\' and can not contain spaces')
+        mount = MountBind(name, sourcepath, targetpath)
+        self._items.append(mount)
+        return mount
+
+
+class Config:
+    def __init__(self, name, path, content):
+        self.name = name
+        self.path = path
+        self.content = content
+
+    def __str__(self):
+        return "Config <{}:{}>".format(self.name, self.path)
+
+    __repr__ = __str__
+
+class Configs(Collection):
+    def add(self, name, path, content):
+        """
+        Add (config) files to rootfs
+
+
+        :param name: Name for the config
+        :type name: str
+        :param path: Path under the rootfs of the guest
+        :type pat: str
+        :param content: Content of the config file
+        :type content: str
+        """
+        super().add(name)
+        if not self._parent.flist:
+            raise ValueError('Config is only supported when booting from flist')
+        config = Config(name, path, content)
+        self._items.append(config)
+        return config
+
+
 class VM:
-    def __init__(self, uuid, node, info=None):
+    def __init__(self, node, name, flist=None, vcpus=2, memory=2048):
         self.node = node
-        self.uuid = uuid
-        self._info = info
+        self._name = name
+        self._memory = memory
+        self._vcpus = vcpus
+        self._flist = flist
+        self.disks = Disks(self)
+        self.nics = Nics(self)
+        self.ports = Ports(self)
+        self.mounts = Mounts(self)
+        self.configs = Configs(self)
+        self.zt_identity = None
+        self.tags = []
 
     def is_running(self):
+        return bool(self.info)
+
+    def drop_ports(self):
+        for port in self.ports:
+            self.node.client.nft.drop_port(port.source)
+
+    @property
+    def info(self):
         try:
-            info = self.node.client.kvm.get(uuid=self.uuid)
-            return info['state'] == 'running'
+            return self.node.client.kvm.get(name=self.name)
         except:
-            return False
+            return None
 
-    def drop_ports(self, ports):
-        portmap = j.clients.zero_os.sal.format_ports(ports)
-        for port in portmap:
-            self.node.client.nft.drop_port(port)
+    @property
+    def uuid(self):
+        info = self.info
+        if info:
+            return info['uuid']
+        raise RuntimeError('VM is not running')
 
-    def destroy(self, ports=None):
+    def destroy(self):
         logger.info('Destroying kvm with uuid %s' % self.uuid)
         self.node.client.kvm.destroy(self.uuid)
-        self.drop_ports(ports)
+        self.drop_ports()
 
-    def shutdown(self, ports=None):
+    def shutdown(self):
         logger.info('Shuting down kvm with uuid %s' % self.uuid)
         self.node.client.kvm.shutdown(self.uuid)
-        self.drop_ports(ports)
+        self.drop_ports()
 
     def pause(self):
         logger.info('Pausing kvm with uuid %s' % self.uuid)
@@ -47,11 +250,246 @@ class VM:
         logger.info('Resuming kvm with uuid %s' % self.uuid)
         self.node.client.kvm.resume(self.uuid)
 
+    def _get_zt_unit(self, networkid):
+        return '''\
+[Unit]
+Description=ZT Network Join
+After=zerotier-one.service
+
+[Service]
+ExecStart=/usr/sbin/zerotier-cli join {}
+RestartSec=5
+Restart=on-failure
+Type=simple
+'''.format(networkid)
+
+    def start(self):
+        media = []
+        nics = []
+        ports = {}
+        mounts = []
+        config = {}
+        fstab = []
+        haszerotier = False
+        if not self.zt_identity:
+            self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
+        publiczt = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
+        for nic in self.nics:
+            if nic.type == 'zerotier':
+                haszerotier = True
+                config['/etc/systemd/system/multi-user.target.wants/zt-{}.service'.format(nic.networkid)] = self._get_zt_unit(nic.networkid)
+                continue
+            nics.append(nic.to_dict(True))
+        for port in self.ports:
+            self.node.client.nft.open_port(port.source)
+            ports[port.source] = port.target
+        for configobj in self.configs:
+            config[configobj.path] = configobj.content
+        for disk in self.disks:
+            if disk.mountpoint and disk.filesystem:
+                fstab.append('LABEL={} {} {} defaults 0 0'.format(disk.name, disk.mountpoint, disk.filesystem))
+            media.append({'url': disk.url, 'type': disk.type})
+        for mount in self.mounts:
+            mounts.append({
+                'source': mount.sourcepath,
+                'target': mount.name
+            })
+            fstab.append('{} {} 9p rw,cache=loose,trans=virtio 0 0'.format(mount.name, mount.targetpath))
+        if fstab:
+            fstab.insert(0, 'root / 9p rw,cache=loose,trans=virtio 0 0')
+            fstab.append('')
+            config['/etc/fstab'] = '\n'.join(fstab)
+        if haszerotier:
+            config['/var/lib/zerotier-one/identity.secret'] = self.zt_identity
+            config['/var/lib/zerotier-one/identity.public'] = publiczt
+            if not nics:
+                nics.append({'type': 'default'})
+            authorize_zerotiers(publiczt, self.nics)
+        self.node.client.kvm.create(self.name, media, self.flist, self.vcpus,
+                                    self.memory, nics, ports, mounts, self.tags, config)
+
+    def load_from_reality(self):
+        info = self.info
+        if not info:
+            raise RuntimeError('Can not load halted vm')
+        self.disks = Disks(self)
+        self.nics = Nics(self)
+        self.ports = Ports(self)
+        self.mounts = Mounts(self)
+        self.configs = Configs(self)
+        self.tags = info['params']['tags']
+        self._vcpus = info['params']['cpu']
+        self._memory = info['params']['memory']
+        self._flist = info['params']['flist']
+        for idx, nicinfo in enumerate(info['params']['nics']):
+            name = 'nic{}'.format(idx)
+            self.nics.add(name, nicinfo['type'], nicinfo['id'], nicinfo['hwaddr'])
+        for idx, diskinfo in enumerate(info['params']['media']):
+            name = 'disk{}'.format(idx)
+            self.disks.add(name, diskinfo['url'], diskinfo['type'])
+        for idx, mountinfo in enumerate(info['params']['mount']):
+            name = 'mount{}'.format(idx)
+            self.mounts.add(name, mountinfo['source'], mountinfo['target'])
+        for idx, (srcport, dstport) in enumerate(info['params']['port'].items()):
+            name = 'port{}'.format(idx)
+            self.ports.add(name, srcport, dstport)
+        for idx, (path, content) in enumerate(info['params']['config'].items()):
+            name = 'config{}'.format(idx)
+            self.configs.add(name, path, content)
+
+    def to_dict(self):
+        data = {
+            'name': self.name,
+            'memory': self.memory,
+            'cpu': self.vcpus,
+            'flist': self.flist,
+            'ztIdentity': self.zt_identity,
+            'tags': self.tags,
+            'nics': [],
+            'disks': [],
+            'ports': [],
+            'configs': [],
+            'mounts': []
+        }
+        for nic in self.nics:
+            data['nics'].append(nic.to_dict())
+        for disk in self.disks:
+            data['disks'].append({
+                'url': disk.url,
+                'mountPoint': disk.mountpoint,
+                'filesystem': disk.filesystem,
+                'type': disk.type
+            })
+        for config in self.configs:
+            data['configs'].append({
+                'path': config.path,
+                'content': config.content
+            })
+        for mount in self.mounts:
+            data['mounts'].append({
+                'sourcePath': mount.sourcepath,
+                'targetPath': mount.targetpath,
+                'name': mount.name
+            })
+        for port in self.ports:
+            data['ports'].append({
+                'name': port['name'],
+                'source': port['source'],
+                'target': port['target'],
+            })
+        return data
+
+    def to_json(self):
+        return j.data.serializer.json.dumps(self.to_dict())
+
+    def from_dict(self, data):
+        self.name = data['name']
+        self.zt_identity = data.get('ztIdentity')
+        self.flist = data['flist']
+        self.vcpus = data['cpu']
+        self.memory = data['memory']
+        self.tags = data['tags']
+        self.disks = Disks(self)
+        self.nics = Nics(self)
+        self.configs = Configs(self)
+        for disk in data['disks']:
+            self.disks.add(disk['name'], disk['url'], disk.get('mountPoint'), disk.get('filesystem'))
+        for nic in data['nics']:
+            nicobj = self.nics.add(nic['name'], nic['type'], nic['id'], nic['hwaddr'])
+            if 'ztClient' in nic:
+                nicobj.client_name = nic['ztClient']
+        for config in data['configs']:
+            self.configs.add(config['name'], config['path'], config['content'])
+        for port in data['ports']:
+            self.ports.add(port['name'], port['source'], port['target'])
+        for mount in data['mounts']:
+            self.mounts.add(mount['name'], mount['sourcePath'], mount['targetPath'])
+
+    def from_json(self, data):
+        data = j.data.serializer.json.loads(data)
+        self.from_dict(data)
+
+    def deploy(self):
+        if not self.is_running():
+            self.start()
+        else:
+            # search for diskchanges
+            realityinfo = self.info
+            self.update_disks(realityinfo)
+            self.update_nics(realityinfo)
+
+    def update_disks(self, info=None):
+        if not info:
+            info = self.info
+        toremove = []
+        wanted = list(self.disks)
+        for disk in info['params']['media']:
+            try:
+                disk = self.disks.get_by_url(disk['url'])
+                wanted.remove(disk)
+            except LookupError:
+                toremove.append(disk)
+        for disk in toremove:
+            disk = {'url': disk['url'], 'type': disk['type']}
+            self.node.client.kvm.detach_disk(self.uuid, disk)
+        for disk in wanted:
+            self.node.client.kvm.attach_disk(self.uuid, {'url': disk.url, 'type': disk.type})
+
+    def update_nics(self, info=None):
+        if not info:
+            info = self.info
+        toremove = []
+        wanted = list(self.nics)
+        for nic in info['params']['nics']:
+            try:
+                nic = self.nics.get_by_type_id(nic['type'], nic['id'])
+                wanted.remove(nic)
+            except LookupError:
+                toremove.append(nic)
+        for nic in toremove:
+            self.node.client.kvm.remove_nic(self.uuid, nic['type'], nic['id'], nic['hwaddr'])
+        for nic in wanted:
+            self.node.client.kvm.add_nic(self.uuid, nic.type, nic.networkid, nic.hwaddr)
+
     @property
-    def info(self):
-        if self._info is None:
-            self._info = self.node.client.kvm.get(uuid=self.uuid)
-        return self._info
+    def vcpus(self):
+        return self._vcpus
+
+    @vcpus.setter
+    def vcpus(self, value):
+        if self.is_running():
+            raise RuntimeError('Can not change cpu of running vm')
+        self._vcpus = value
+
+    @property
+    def memory(self):
+        return self._memory
+
+    @memory.setter
+    def memory(self, value):
+        if self.is_running():
+            raise RuntimeError('Can not change memory of running vm')
+        self._memory = value
+
+    @property
+    def flist(self):
+        return self._flist
+
+    @flist.setter
+    def flist(self, value):
+        if self.is_running():
+            raise RuntimeError('Can not change flist of running vm')
+        self._flist = value
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        if self.is_running():
+            raise RuntimeError('Can not change name of running vm')
+        self._name = value
 
     def enable_vnc(self):
         port = self.info['vnc']
@@ -66,8 +504,30 @@ class VM:
             self.node.client.nft.drop_port(port)
 
     def __str__(self):
-        return "VM <{}>".format(self.info['name'])
+        return "{} <{}>".format(self.__class__.__name__, self.name)
 
     def __repr__(self):
         return str(self)
+
+
+class ZeroOSVM(VM):
+    def __init__(self, node, name, flist=None, vcpus=2, memory=2048, ipxe_url=IPXEURL):
+        super().__init__(node, name, flist, vcpus, memory)
+        self.ipxe_url = ipxe_url
+
+    def deploy(self):
+        if 'ipxescript' in self.configs:
+            self.configs.remove('ipxescript')
+        resp = requests.get(self.ipxe_url)
+        resp.raise_for_status()
+        self.configs.add('ipxescript', '/boot/ipxe-script', resp.content.decode('utf-8'))
+        super().deploy()
+
+    def to_dict(self):
+        data = super().to_dict()
+        data['ipxeUrl'] = self.ipxe_url
+        return data
+
+    def from_dict(self, data):
+        self.ipxe_url = data.get('ipxeUrl')
 

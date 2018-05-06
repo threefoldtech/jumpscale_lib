@@ -1,5 +1,8 @@
 import netaddr
 from js9 import j
+import time
+
+OVS_FLIST = 'https://hub.gig.tech/gig-official-apps/ovs.flist'
 
 
 def combine(ip1, ip2, mask):
@@ -46,6 +49,13 @@ class Network():
 
         return mgmtaddr
 
+    def _ensure_ovs_container(self, name):
+        try:
+            container = self.node.containers.get(name)
+        except LookupError:
+            container = self.node.containers.create(name, OVS_FLIST, 'ovs', host_network=True, privileged=True)
+        return container
+
     def get_addresses(self, network):
         mgmtaddr = self.get_management_info()
         return {
@@ -64,7 +74,7 @@ class Network():
             if nic['speed'] == 0:
                 continue
             availablenics.setdefault(nic['speed'], []).append(nic['name'])
-        return sorted(availablenics.items())
+        return sorted(availablenics.items(), reverse=True)
 
     def reload_driver(self, driver):
         self.node.client.system('modprobe -r {}'.format(driver)).get()
@@ -87,9 +97,9 @@ class Network():
             time.sleep(1)
 
     def configure(self, cidr, vlan_tag, ovs_container_name,  bonded=False):
-        container_sal = self.node.containers.get(ovs_container_name)
-        if not container_sal.is_running():
-            container_sal.start()
+        container = self._ensure_ovs_container(ovs_container_name)
+        if not container.is_running():
+            container.start()
 
         nicmap = {nic['name']: nic for nic in self.node.client.info.nic()}
         # freenics = ([1000, ['eth0']], [100, ['eth1']])
@@ -112,11 +122,11 @@ class Network():
                 raise j.exceptions.RuntimeError("Could not find two equal available nics")
 
         if 'backplane' not in nicmap:
-            container_sal.client.json('ovs.bridge-add', {"bridge": "backplane"})
+            container.client.json('ovs.bridge-add', {"bridge": "backplane"})
             if not bonded:
-                container_sal.client.json('ovs.port-add', {"bridge": "backplane", "port": interfaces[0], "vlan": 0})
+                container.client.json('ovs.port-add', {"bridge": "backplane", "port": interfaces[0], "vlan": 0})
             else:
-                container_sal.client.json('ovs.bond-add', {"bridge": "backplane",
+                container.client.json('ovs.bond-add', {"bridge": "backplane",
                                                            "port": "bond0",
                                                            "links": interfaces,
                                                            "lacp": True,
@@ -129,7 +139,7 @@ class Network():
             self.node.client.ip.link.up('backplane')
 
         if 'vxbackend' not in nicmap:
-            container_sal.client.json('ovs.vlan-ensure', {'master': 'backplane', 'vlan': vlan_tag, 'name': 'vxbackend'})
+            container.client.json('ovs.vlan-ensure', {'master': 'backplane', 'vlan': vlan_tag, 'name': 'vxbackend'})
             # TODO: this need to be turned into 0-os primitives
             self.node.client.ip.addr.add('vxbackend', str(addresses['vxaddr']))
             self.node.client.system('ip link set dev vxbackend mtu 2000').get()

@@ -31,15 +31,15 @@ class Containers():
         return Container.from_containerinfo(containers[0], self.node)
 
     def create(self, name, flist, hostname=None, mounts=None, nics=None,
-               host_network=False, ports=None, storage=None, init_processes=None, privileged=False, env=None):
+               host_network=False, ports=None, storage=None, init_processes=None, privileged=False, env=None, identity=None):
         container = Container(name, self.node, flist, hostname, mounts, nics,
-                              host_network, ports, storage, init_processes, privileged, env=env)
+                              host_network, ports, storage, init_processes, privileged, env=env, identity=identity)
         container.start()
         return container
 
 
 class Container():
-    """G8SO Container"""
+    """Zero-OS Container"""
 
     def __init__(self, name, node, flist, hostname=None, mounts=None, nics=None,
                  host_network=False, ports=None, storage=None, init_processes=None,
@@ -55,12 +55,12 @@ class Container():
         self.hostname = hostname
         self.flist = flist
         self.ports = ports or {}
-        self.nics = nics or []
+        self._nics = nics or []
         self.host_network = host_network
         self.storage = storage
         self.init_processes = init_processes or []
         self.privileged = privileged
-        self.identity = identity
+        self._identity = identity
         self.env = env or {}
         self._client = None
         self.logger = logger or default_logger
@@ -106,16 +106,27 @@ class Container():
         self.logger.debug("get container info")
         for containerid, container in self.node.client.container.list().items():
             if self.name in (container['container']['arguments']['tags'] or []):
+                containerid = int(containerid)
+                if self._client and self._client.container != containerid:
+                    self._client = None
                 container['container']['id'] = int(containerid)
                 return container
         return
+
+    @property
+    def identity(self):
+        if not self._identity:
+            for nic in self.nics:
+                if nic['type'] == 'zerotier':
+                    self._identity = self.client.zerotier.info()['secretIdentity']
+        return self._identity
 
     def add_nic(self, nic):
         self.node.client.container.nic_add(self.id, nic)
 
     def remove_nic(self, nicname):
-        for idx, nic in enumerate(self.info['info']):
-            if nic['name'] == nicname:
+        for idx, nic in enumerate(self.info['container']['arguments']['nics']):
+            if nic['state'] == 'configured' and nic['name'] == nicname:
                 break
         else:
             return
@@ -171,7 +182,7 @@ class Container():
             env=self.env
         )
 
-        containerid = job.get(timeout)
+        self._client = self.node.client.container.client(int(job.get(timeout)))
 
     def is_job_running(self, id):
         try:
@@ -204,13 +215,21 @@ class Container():
             raise RuntimeError('Failed to stop job {}'.format(id))
 
     def is_port_listening(self, port, timeout=60, network=('tcp', 'tcp6')):
-        start = time.time()
-        while start + timeout > time.time():
+        def is_listening():
             for lport in self.client.info.port():
                 if lport['network'] in network and lport['port'] == port:
                     return True
-            time.sleep(1)
-        return False
+            return False
+
+        if timeout:
+            start = time.time()
+            while start + timeout > time.time():
+                if is_listening():
+                    return True
+                time.sleep(1)
+            return False
+        else:
+            return is_listening()
 
     def start(self):
         if not self.is_running():
@@ -233,9 +252,18 @@ class Container():
         self.logger.debug("stop %s", self)
 
         self.node.client.container.terminate(self.id)
+        self._client = None
 
     def is_running(self):
         return self.node.is_running() and self.id is not None
+
+    @property
+    def nics(self):
+        if self.is_running():
+            return list(filter(lambda nic: nic['state'] == 'configured',
+                               self.info['container']['arguments']['nics']))
+        else:
+            return self._nics
 
     def waitOnJob(self, job):
         MAX_LOG = 15

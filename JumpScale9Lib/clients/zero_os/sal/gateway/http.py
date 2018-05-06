@@ -9,7 +9,7 @@ class HTTPServer():
         self.type = type
 
     def id(self):
-        return 'http.{}'.format(self.container.name)
+        return '{}.{}'.format(self.type, self.container.name)
 
     def apply_rules(self):
         # caddy
@@ -19,10 +19,13 @@ class HTTPServer():
         self.container.client.job.kill(self.id(), int(signal.SIGUSR1))
         if caddyconfig == '':
             return
+        args = ''
+        if self.type == 'https':
+            args = '-http-port 81'
         job = self.container.client.system(
-            'caddy -agree -conf {}'.format(conf), stdin='\n', id=self.id())
+            'caddy -disable-http-challenge {} -agree -conf {}'.format(args, conf), stdin='\n', id=self.id())
         start = time.time()
-        while start + 10 > time.time():
+        while start + 30 > time.time():
             if self.is_running():
                 return True
             time.sleep(0.5)
@@ -38,7 +41,4 @@ class HTTPServer():
         except:
             return False
         portnr = 80 if self.type == 'http' else 443
-        for port in self.container.client.info.port():
-            if port['network'] .startswith('tcp') and port['port'] == portnr:
-                return True
-        return False
+        return self.container.is_port_listening(portnr, 0)

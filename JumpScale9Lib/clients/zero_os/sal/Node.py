@@ -14,6 +14,8 @@ from .healthcheck import HealthCheck
 from .Network import Network
 from .StoragePool import StoragePools
 from .gateway import Gateways
+from .zerodb import Zerodbs
+from .primitives import Primitives
 from .Hypervisor import Hypervisor
 
 Mount = namedtuple('Mount', ['device', 'mountpoint', 'fstype', 'options'])
@@ -31,7 +33,9 @@ class Node:
         self.disks = Disks(self)
         self.storagepools = StoragePools(self)
         self.containers = Containers(self)
-        self.gateways = Gateways()
+        self.gateways = Gateways(self)
+        self.zerodbs = Zerodbs(self)
+        self.primitives = Primitives(self)
         self.hypervisor = Hypervisor(self)
         self.network = Network(self)
         self.healthcheck = HealthCheck(self)
@@ -45,6 +49,10 @@ class Node:
         if not macgwdev:
             raise AttributeError("name not found for node {}".format(self))
         return macgwdev.replace(":", '')
+
+    @property
+    def cmdline(self):
+        return self.download_content('/proc/cmdline').split()
 
     @property
     def storageAddr(self):

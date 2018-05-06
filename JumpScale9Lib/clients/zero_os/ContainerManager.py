@@ -9,7 +9,6 @@ from .ProcessManager import ProcessManager
 from .InfoManager import InfoManager
 from .Response import ResultError
 from . import typchk
-from  js9 import j
 
 DefaultTimeout = 10  # seconds
 
@@ -325,10 +324,10 @@ class ContainerManager():
         'config': typchk.Or(
             typchk.Missing(),
             {
-                'dhcp': typchk.Or(bool, typchk.Missing()),
-                'cidr': typchk.Or(str, typchk.Missing()),
-                'gateway': typchk.Or(str, typchk.Missing()),
-                'dns': typchk.Or([str], typchk.Missing()),
+                'dhcp': typchk.Or(bool, typchk.IsNone(), typchk.Missing()),
+                'cidr': typchk.Or(str, typchk.IsNone(), typchk.Missing()),
+                'gateway': typchk.Or(str, typchk.IsNone(), typchk.Missing()),
+                'dns': typchk.Or([str], typchk.IsNone(), typchk.Missing()),
             }
         ),
         'monitor': typchk.Or(bool, typchk.Missing()),

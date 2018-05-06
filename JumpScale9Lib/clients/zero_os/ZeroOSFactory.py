@@ -7,7 +7,6 @@ from .sal.Minio import Minio
 from .sal.Node import Node
 from .sal.Restic import Restic
 from .sal.TfChain import TfChain
-from .sal.ZeroDB import ZeroDB
 from .sal.ZeroRobot import ZeroRobot
 from .sal.VM import VM
 from .sal.Hypervisor import Hypervisor
@@ -137,10 +136,6 @@ class SALFactory():
     def get_node(self, instance='main'):
         client = self._factory.get(instance)
         return Node(client)
-
-    def get_zerodb(self, name, container, node_port=9900, data_dir='/mnt/data',
-                   index_dir='/mnt/index', mode='user', sync=False, admin=''):
-        return ZeroDB(name, container, node_port, data_dir, index_dir, mode, sync, admin)
 
     def get_minio(self, name, container, zdbs, namespace, private_key, namespace_secret='', addr='0.0.0.0', port=9000,  block_size=1048576):
         return Minio(name, container, zdbs, namespace, private_key, namespace_secret, addr, port, block_size=block_size)

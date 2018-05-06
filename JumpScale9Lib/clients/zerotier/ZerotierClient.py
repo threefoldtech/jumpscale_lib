@@ -92,6 +92,11 @@ class NetworkMember(JSBASE):
         """
         self._update_authorization(authorize=False, timeout=timeout)
 
+    def __str__(self):
+        return "ZTMember <{}:{}>".format(self.address, self.data.get('name'))
+
+    __repr__ = __str__
+
 
 
 class ZeroTierNetwork(JSBASE):
@@ -107,7 +112,8 @@ class ZeroTierNetwork(JSBASE):
         self.name = name
         self.description = description
         self.config = config
-        self._client = client
+        self.client = client
+        self._client = client.client
 
 
     def members_list(self, raw=False):
@@ -125,6 +131,20 @@ class ZeroTierNetwork(JSBASE):
 
         return items if raw else self._create_netork_memebers_from_dict(items=items)
 
+    def member_add(self, identity, name=None, description=None, private_ip=None, authorized=True):
+        data = {
+            'config': {
+                'identity': identity,
+                'authorized': authorized,
+            },
+            'name': name,
+        }
+        if private_ip:
+            data['config']['ipAssignments'] = [private_ip]
+        address = identity.split(':')[0]
+        data = self._client.network.updateMember(data, address, self.id)
+        data.raise_for_status()
+        return NetworkMember(self, address, data.json())
 
     def member_get(self, address='', name='', public_ip='', private_ip=''):
         """
@@ -240,6 +260,11 @@ class ZeroTierNetwork(JSBASE):
                 self.logger.error(msg)
                 raise j.exceptions.RuntimeError(msg)
 
+    def __str__(self):
+        return "ZTNetwork <{}:{}>".format(self.id, self.name)
+
+    __repr__ = __str__
+
 
 TEMPLATE = """
 token_ = ""
@@ -293,7 +318,7 @@ class ZerotierClient(JSConfigClient):
         result = []
         for item in items:
             result.append(ZeroTierNetwork(network_id=item['id'], name=item['config']['name'],
-                        description=item['description'], config=item['config'], client=self.client))
+                        description=item['description'], config=item['config'], client=self))
         return result
 
 

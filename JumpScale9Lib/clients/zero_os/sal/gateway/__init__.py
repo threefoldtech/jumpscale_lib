@@ -1,10 +1,15 @@
 from .gateway import Gateway
 
 class Gateways:
-    def get(self, container, data):
+    def __init__(self, node):
+        self.node = node
+
+    def get(self, name):
         """
-        param data: dict object containing detailed information about the gateway
-            See: https://github.com/zero-os/0-templates/blob/master/templates/gateway/README.md
+        :param name: Get gateway with name
+        :type name: str
+        :return: gateway object
+        :rtype: Gateway
         """
-        return Gateway(container, data)
+        return Gateway(self.node, name)
 
