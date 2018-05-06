@@ -1,7 +1,13 @@
 # pylint: disable=W0201
-class Value:
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
+
+
+class Value(JSBASE):
 
     def __init__(self, initStr=None, **kwargs):
+        JSBASE.__init__(self)
         # Initialize everything with None
         self.fields = ("type", "size", "length", "unit",
                        "version", "scale", "min", "max")
@@ -30,10 +36,11 @@ class Value:
             setattr(self, key, eval(val))
 
 
-class Functions:
+class Functions(JSBASE):
     # Variables
 
     def __init__(self):
+        JSBASE.__init__(self)
         self.guid = None
         self.name = None
         self.description = ""

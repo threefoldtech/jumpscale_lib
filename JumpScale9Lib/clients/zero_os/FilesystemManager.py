@@ -1,10 +1,14 @@
 import base64
+from js9 import j
 
 
-class FilesystemManager:
+
+
+class FilesystemManager():
 
     def __init__(self, client):
         self._client = client
+
 
     def open(self, file, mode='r', perm=0o0644):
         """

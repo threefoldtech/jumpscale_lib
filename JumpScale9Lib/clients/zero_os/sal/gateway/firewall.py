@@ -1,31 +1,26 @@
-import ipaddress
-
-from zeroos.orchestrator.sal import templates
-
-
-class Network:
-    def __init__(self, iface, cidr):
-        self.iface = iface
-        ipiface = ipaddress.IPv4Interface(cidr)
-        self.ipaddress = str(ipiface.ip)
-        self.subnet = str(ipiface.network)
+from js9 import j
+from .. import templates
+from .network import ZTNetwork
 
 
 class Firewall:
-    def __init__(self, container, publicnetwork, privatenetworks, forwards):
+    def __init__(self, container, networks, forwards):
         '''
 
         '''
         self.container = container
-        self.publicnetwork = publicnetwork
-        self.privatenetworks = privatenetworks
+        self.networks = networks
         self.forwards = forwards
 
     def apply_rules(self):
         # nftables
+        publicnetworks = list(filter(lambda net: net.ip.gateway, self.networks))
+        if len(publicnetworks) != 1:
+            raise RuntimeError('Need exactly one network with a gateway')
+        privatenetworks = list(filter(lambda net: not net.ip.gateway and not isinstance(net, ZTNetwork), self.networks))
         nftables = templates.render('nftables.conf',
-                                    privatenetworks=self.privatenetworks,
-                                    publicnetwork=self.publicnetwork,
+                                    publicnetwork=publicnetworks[0],
+                                    privatenetworks=privatenetworks,
                                     portforwards=self.forwards)
         self.container.upload_content('/etc/nftables.conf', nftables)
         job = self.container.client.system('nft -f /etc/nftables.conf').get()

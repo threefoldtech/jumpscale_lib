@@ -1,9 +1,12 @@
 import signal
 
 from . import typchk
+from js9 import j
 
 
-class ProcessManager:
+
+
+class ProcessManager():
     _process_chk = typchk.Checker({
         'pid': typchk.Or(int, typchk.IsNone()),
     })
@@ -15,6 +18,7 @@ class ProcessManager:
 
     def __init__(self, client):
         self._client = client
+
 
     def list(self, id=None):
         """

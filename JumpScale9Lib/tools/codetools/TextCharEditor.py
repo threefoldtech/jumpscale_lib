@@ -1,13 +1,16 @@
 from js9 import j
 
+JSBASE = j.application.jsbase_get_class()
 
-class TextCharEditor:
+
+class TextCharEditor(JSBASE):
     """
     represents a piece of text but broken appart in blocks
     this one works on a char basis
     """
 
     def __init__(self, text, textfileeditor):
+        JSBASE.__init__(self)
         text = text.replace("\t", "    ")
         text = text.replace("\r", "")
         self.chars = [[char, "", 0] for char in text]  # is the array of the text, each value = [char,blockname,blocknr]
@@ -210,10 +213,10 @@ class TextCharEditor:
             linepositions.append(pos)
             line += (self.chars[pos][0])
             if self.chars[pos][0] == "\n":
-                print(line)
+                self.logger.debug(line)
                 # print blocknames
-                print((string.join(["%s" % self.chars[pos][1] for pos in linepositions])))
+                self.logger.debug((string.join(["%s" % self.chars[pos][1] for pos in linepositions])))
                 # print blocknrs
-                print((string.join(["%s" % self.chars[pos][2] for pos in linepositions])))
+                self.logger.debug((string.join(["%s" % self.chars[pos][2] for pos in linepositions])))
                 line = ""
                 linepositions = []

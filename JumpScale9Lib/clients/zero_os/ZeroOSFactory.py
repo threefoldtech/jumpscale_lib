@@ -3,9 +3,17 @@ import time
 from js9 import j
 
 from .Client import Client
+from .sal.Minio import Minio
 from .sal.Node import Node
+from .sal.Restic import Restic
+from .sal.TfChain import TfChain
+from .sal.ZeroRobot import ZeroRobot
+from .sal.VM import VM
+from .sal.Hypervisor import Hypervisor
+
 
 JSConfigFactoryBase = j.tools.configmanager.base_class_configs
+logger = j.logger.get(__name__)
 
 
 class ZeroOSFactory(JSConfigFactoryBase):
@@ -13,9 +21,8 @@ class ZeroOSFactory(JSConfigFactoryBase):
     """
 
     def __init__(self):
-        self.__jslocation__ = "j.clients.zero_os"
+        self.__jslocation__ = "j.clients.zos"
         super().__init__(Client)
-        self.logger = j.logger.get('j.clients.zero-os')
         self.connections = {}
         self.sal = SALFactory(self)
 
@@ -25,13 +32,12 @@ class ZeroOSFactory(JSConfigFactoryBase):
         OVHHostName is server name as known by OVH
 
         get clients as follows:
-        - zerotierClient = j.clients.zerotier.get(ZT_API_TOKEN)
+        - zerotierClient = j.clients.zerotier.get(instance='main', data={'data': ZT_API_TOKEN})
         - OVHClient = j.clients.ovh.get(...)
 
         """
-        
+
         cl = OVHClient
-        zt = zerotierClient
 
         self.logger.debug("booting server {} to zero-os".format(OVHHostName))
         task = cl.zero_os_boot(target=OVHHostName, zerotierNetworkID=zerotierNetworkID)
@@ -42,9 +48,9 @@ class ZeroOSFactory(JSConfigFactoryBase):
 
         while True:
             try:
-                member = zt.networkMemberGetFromIPPub(
-                    ip_pub, networkId=zerotierNetworkID, online=True)
-                ipaddr_priv = member["ipaddr_priv"][0]
+                network = zerotierClient.get_network(network_id=zerotierNetworkID)
+                member = network.member_get(public_ip=ip_pub)
+                ipaddr_priv = member.private_ip
                 break
             except RuntimeError as e:
                 # case where we don't find the member in zerotier
@@ -64,7 +70,7 @@ class ZeroOSFactory(JSConfigFactoryBase):
                                   plan_type, location, server_name, zerotierNetworkID, ipxe_base='https://bootstrap.gig.tech/ipxe/master'):
         """
         packetnetClient = j.clients.packetnet.get('TOKEN')
-        zerotierClient = j.clients.zerotier.get('TOKEN')
+        zerotierClient = j.clients.zerotier.get(instance='main', data={'token': 'TOKEN'})
         project_name = packet.net project
         plan_type: one of "Type 0", "Type 1", "Type 2" ,"Type 2A", "Type 3", "Type S"
         location: one of "Amsterdam", "Tokyo", "Synnuvale", "Parsippany"
@@ -102,8 +108,9 @@ class ZeroOSFactory(JSConfigFactoryBase):
 
         while True:
             try:
-                member = zerotierClient.networkMemberGetFromIPPub(ip_pub[0], networkId=zerotierNetworkID, online=True)
-                ipaddr_priv = member["ipaddr_priv"][0]
+                network = zerotierClient.get_network(network_id=zerotierNetworkID)
+                member = network.member_get(public_ip=ip_pub[0])
+                ipaddr_priv = member.private_ip
                 break
             except RuntimeError as e:
                 # case where we don't find the member in zerotier
@@ -120,11 +127,48 @@ class ZeroOSFactory(JSConfigFactoryBase):
         return ip_pub, ipaddr_priv
 
 
-class SALFactory:
+class SALFactory():
 
     def __init__(self, factory):
         self._factory = factory
+        self.tfchain = TfChain()
 
-    def node_get(self, instance='main'):
+    def get_node(self, instance='main'):
         client = self._factory.get(instance)
         return Node(client)
+
+    def get_minio(self, name, container, zdbs, namespace, private_key, namespace_secret='', addr='0.0.0.0', port=9000,  block_size=1048576):
+        return Minio(name, container, zdbs, namespace, private_key, namespace_secret, addr, port, block_size=block_size)
+
+    def get_restic(self, container, repo):
+        return Restic(container, repo)
+
+    def get_vm(self, hypervisor_name, node):
+        return VM(hypervisor_name, node)
+
+    def get_zerorobot(self, container, port=6600, telegram_bot_token=None, telegram_chat_id=0, template_repos=None, organization=None):
+        return ZeroRobot(container, port, telegram_bot_token, telegram_chat_id, template_repos, organization=organization)
+
+    def format_ports(self, ports):
+        """
+        Formats ports from ["80:8080"] to {80: 8080}
+        :param ports: list of ports to format
+        :return: formated ports dict
+        """
+        if ports is None:
+            return {}
+        formatted_ports = {}
+        for p in ports:
+            src, dst = p.split(":")
+            formatted_ports[int(src)] = int(dst)
+
+        return formatted_ports
+
+    def __getattr__(self, name):
+        if name == 'node_get':
+            def wrapper(*args, **kwargs):
+                return self.get_node(*args, **kwargs)
+            logger.warning("'node_get' is deprecated, please use 'get_node'")
+            return wrapper
+
+        return self.__getattribute__(name)

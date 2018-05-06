@@ -1,13 +1,15 @@
 from js9 import j
 from .TLS import TLS
 
+JSBASE = j.application.jsbase_get_class()
 
-class TLSFactory:
+
+class TLSFactory(JSBASE):
     """Factory class to deal with TLS, key and certificate generation"""
 
     def __init__(self):
         self.__jslocation__ = "j.tools.tls"
-
+        JSBASE.__init__(self)
     # def getByInstance(self, instance='main'):
     #     """
     #     Get an instance of the TLS class

@@ -1,14 +1,16 @@
 import logging
+import time
 from io import BytesIO
+import signal
 
 logging.basicConfig(level=logging.INFO)
 default_logger = logging.getLogger(__name__)
 
 
-class Containers:
+class Containers():
+
     def __init__(self, node, logger=None):
         self.node = node
-        self.logger = logger if logger else default_logger
 
     def list(self):
         containers = []
@@ -29,16 +31,15 @@ class Containers:
         return Container.from_containerinfo(containers[0], self.node)
 
     def create(self, name, flist, hostname=None, mounts=None, nics=None,
-               host_network=False, ports=None, storage=None, init_processes=None, privileged=False, env=None):
-        self.logger.debug("create container %s", name)
+               host_network=False, ports=None, storage=None, init_processes=None, privileged=False, env=None, identity=None):
         container = Container(name, self.node, flist, hostname, mounts, nics,
-                              host_network, ports, storage, init_processes, privileged, env=env)
+                              host_network, ports, storage, init_processes, privileged, env=env, identity=identity)
         container.start()
         return container
 
 
-class Container:
-    """G8SO Container"""
+class Container():
+    """Zero-OS Container"""
 
     def __init__(self, name, node, flist, hostname=None, mounts=None, nics=None,
                  host_network=False, ports=None, storage=None, init_processes=None,
@@ -47,23 +48,23 @@ class Container:
         TODO: write doc string
         filesystems: dict {filesystemObj: target}
         """
+
         self.name = name
         self.node = node
         self.mounts = mounts or {}
         self.hostname = hostname
         self.flist = flist
         self.ports = ports or {}
-        self.nics = nics or []
+        self._nics = nics or []
         self.host_network = host_network
         self.storage = storage
         self.init_processes = init_processes or []
         self.privileged = privileged
-        self.identity = identity
+        self._identity = identity
         self.env = env or {}
-        self.logger = logger if logger else default_logger
         self._client = None
+        self.logger = logger or default_logger
 
-        self._ays = None
         for nic in self.nics:
             nic.pop('token', None)
             if nic.get('config', {}).get('gateway', ''):
@@ -92,39 +93,6 @@ class Container:
                    arguments['env'],
                    logger=logger)
 
-    @classmethod
-    def from_ays(cls, service, password=None, logger=None, timeout=120):
-        logger = logger or default_logger
-        logger.debug("create container from service (%s)", service)
-        from .Node import Node
-        node = Node.from_ays(service.parent, password, timeout)
-        ports = {}
-        for portmap in service.model.data.ports:
-            source, dest = portmap.split(':')
-            ports[int(source)] = int(dest)
-        nics = [nic.to_dict() for nic in service.model.data.nics]
-        mounts = service.model.data.to_dict().get('mounts', [])
-        for mount in mounts:
-            fs_service = service.aysrepo.serviceGet('filesystem', mount['filesystem'])
-            mount['storagepool'] = fs_service.parent.name
-
-        container = cls(
-            name=service.name,
-            node=node,
-            mounts=mounts,
-            nics=nics,
-            hostname=service.model.data.hostname,
-            flist=service.model.data.flist,
-            ports=ports,
-            host_network=service.model.data.hostNetworking,
-            storage=service.model.data.storage,
-            init_processes=[p.to_dict() for p in service.model.data.initProcesses],
-            privileged=service.model.data.privileged,
-            identity=service.model.data.identity,
-            logger=logger
-        )
-        return container
-
     @property
     def id(self):
         self.logger.debug("get container id")
@@ -138,9 +106,31 @@ class Container:
         self.logger.debug("get container info")
         for containerid, container in self.node.client.container.list().items():
             if self.name in (container['container']['arguments']['tags'] or []):
+                containerid = int(containerid)
+                if self._client and self._client.container != containerid:
+                    self._client = None
                 container['container']['id'] = int(containerid)
                 return container
         return
+
+    @property
+    def identity(self):
+        if not self._identity:
+            for nic in self.nics:
+                if nic['type'] == 'zerotier':
+                    self._identity = self.client.zerotier.info()['secretIdentity']
+        return self._identity
+
+    def add_nic(self, nic):
+        self.node.client.container.nic_add(self.id, nic)
+
+    def remove_nic(self, nicname):
+        for idx, nic in enumerate(self.info['container']['arguments']['nics']):
+            if nic['state'] == 'configured' and nic['name'] == nicname:
+                break
+        else:
+            return
+        self.node.client.container.nic_remove(self.id, idx)
 
     @property
     def client(self):
@@ -165,7 +155,7 @@ class Container:
         if self.hostname and self.hostname != self.name:
             tags.append(self.hostname)
 
-        # Populate the correct mounts dict if this instance was created using the `from_ays` function.
+        # Populate the correct mounts dict
         if type(self.mounts) == list:
             mounts = {}
             for mount in self.mounts:
@@ -192,28 +182,54 @@ class Container:
             env=self.env
         )
 
-        containerid = job.get(timeout)
+        self._client = self.node.client.container.client(int(job.get(timeout)))
 
-    def is_job_running(self, cmd):
+    def is_job_running(self, id):
         try:
-            for job in self.client.job.list():
-                arguments = job['cmd']['arguments']
-                if 'name' in arguments and arguments['name'] == cmd:
-                    return job
+            for _ in self.client.job.list(id):
+                return True
             return False
         except Exception as err:
             if str(err).find("invalid container id"):
                 return False
             raise
 
-    def is_port_listening(self, port, timeout=60):
-        import time
+    def stop_job(self, id, signal=signal.SIGTERM, timeout=30):
+        is_running = self.is_job_running(id)
+        if not is_running:
+            return
+
+        self.logger.debug('stop job: %s', id)
+
+        self.client.job.kill(id)
+
+        # wait for the daemon to stop
         start = time.time()
-        while start + timeout > time.time():
-            if port not in self.node.freeports(port, nrports=3):
-                return True
-            time.sleep(0.2)
-        return False
+        end = start + timeout
+        is_running = self.is_job_running(id)
+        while is_running and time.time() < end:
+            time.sleep(1)
+            is_running = self.is_job_running(id)
+
+        if is_running:
+            raise RuntimeError('Failed to stop job {}'.format(id))
+
+    def is_port_listening(self, port, timeout=60, network=('tcp', 'tcp6')):
+        def is_listening():
+            for lport in self.client.info.port():
+                if lport['network'] in network and lport['port'] == port:
+                    return True
+            return False
+
+        if timeout:
+            start = time.time()
+            while start + timeout > time.time():
+                if is_listening():
+                    return True
+                time.sleep(1)
+            return False
+        else:
+            return is_listening()
 
     def start(self):
         if not self.is_running():
@@ -236,16 +252,18 @@ class Container:
         self.logger.debug("stop %s", self)
 
         self.node.client.container.terminate(self.id)
+        self._client = None
 
     def is_running(self):
         return self.node.is_running() and self.id is not None
 
     @property
-    def ays(self):
-        if self._ays is None:
-            from JumpScale.sal.g8os.atyourservice.StorageCluster import ContainerAYS
-            self._ays = ContainerAYS(self)
-        return self._ays
+    def nics(self):
+        if self.is_running():
+            return list(filter(lambda nic: nic['state'] == 'configured',
+                               self.info['container']['arguments']['nics']))
+        else:
+            return self._nics
 
     def waitOnJob(self, job):
         MAX_LOG = 15

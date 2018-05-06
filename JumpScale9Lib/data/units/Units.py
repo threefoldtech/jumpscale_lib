@@ -1,11 +1,15 @@
+from js9 import j
+
 order = ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']
+JSBASE = j.application.jsbase_get_class()
 
 
-class Sizes:
+class Sizes(JSBASE):
     _BASE = 1000.
 
     def __init__(self):
         self.__jslocation__ = "j.data_units.sizes"
+        JSBASE.__init__(self)
 
     def toSize(self, value, input='', output='K'):
         """
@@ -33,3 +37,4 @@ class Bytes(Sizes):
 
     def __init__(self):
         self.__jslocation__ = "j.data_units.bytes"
+        Sizes.__init__(self)

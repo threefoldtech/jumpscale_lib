@@ -1,8 +1,12 @@
+from js9 import j
+JSBASE = j.application.jsbase_get_class()
 
-class PropertyDef:
+
+class PropertyDef(JSBASE):
 
     def __init__(self, classDef, name="", defaultVal="", type="", comments="",
                  isArray=False, isDict=False, dictKey="", decorators=None):
+        JSBASE.__init__(self)
         if name.startswith("__"):
             self.name = name[2:]
             self.modifier = "property"

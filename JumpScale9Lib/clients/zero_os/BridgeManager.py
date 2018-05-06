@@ -5,7 +5,7 @@ from js9 import j
 from . import typchk
 
 
-class BridgeManager:
+class BridgeManager():
     _bridge_create_chk = typchk.Checker({
         'name': str,
         'hwaddr': typchk.Or(str, typchk.IsNone()),
@@ -22,7 +22,6 @@ class BridgeManager:
 
     def __init__(self, client):
         self._client = client
-        self.logger = j.logger.get('j.clients.zos.aggr')
 
     def create(self, name, hwaddr=None, network=None, nat=False, settings={}):
         """
@@ -57,7 +56,7 @@ class BridgeManager:
         }
 
         self._bridge_create_chk.check(args)
-        self.logger.info("bridge.create:%s"%args)
+        self.logger.info("bridge.create:%s" % args)
         response = self._client.raw('bridge.create', args)
 
         result = response.get()
@@ -92,10 +91,9 @@ class BridgeManager:
         }
 
         self._bridge_delete_chk.check(args)
-        self.logger.info("bridge.delete:%s"%bridge)
+        self.logger.info("bridge.delete:%s" % bridge)
         response = self._client.raw('bridge.delete', args)
 
         result = response.get()
         if result.state != 'SUCCESS':
             raise RuntimeError('failed to list delete: %s' % result.data)
-

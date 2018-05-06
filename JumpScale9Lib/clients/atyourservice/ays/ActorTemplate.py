@@ -1,4 +1,8 @@
 from requests.exceptions import HTTPError
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
+
 
 def _extract_error(resp):
     if isinstance(resp, HTTPError):
@@ -8,8 +12,10 @@ def _extract_error(resp):
         return resp.response.text
     raise resp
 
-class ActorTemplates:
+
+class ActorTemplates(JSBASE):
     def __init__(self, repository=None, client=None):
+        JSBASE.__init__(self)
         self._repository = repository
         if repository:
             self._ayscl = repository._ayscl
@@ -119,8 +125,9 @@ class ActorTemplates:
                 return template
         raise KeyError("Could not find template with name {}".format(role, name))
 
-class ActorTemplate:
+class ActorTemplate(JSBASE):
     def __init__(self, model):
+        JSBASE.__init__(self)
         self.model = model
 
     def __repr__(self):

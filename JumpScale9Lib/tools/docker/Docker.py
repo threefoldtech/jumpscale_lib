@@ -7,84 +7,104 @@ import docker
 import time
 from urllib import parse
 import copy
+JSBASE = j.application.jsbase_get_class()
 
 
-class Docker:
+class Docker(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.docker"
         self.__imports__ = "docker"
-        self.logger = j.logger.get('j.sal.docker')
+        JSBASE.__init__(self)
         self._basepath = "/storage/docker"
         self._prefix = ""
-        self._containers = {}
+        self._containers = None
         self._names = []
 
-        # if 'DOCKER_HOST' not in os.environ or os.environ['DOCKER_HOST'] == "":
-        #     self.base_url = 'unix://var/run/docker.sock'
-        # else:
-        #     self.base_url = os.environ['DOCKER_HOST']
-        # self.client = docker.Client(base_url=self.base_url, timeout=120)
-        self.client=docker.from_env()
+        if 'DOCKER_HOST' not in os.environ or os.environ['DOCKER_HOST'] == "":
+            self.base_url = 'unix://var/run/docker.sock'
+        else:
+            self.base_url = os.environ['DOCKER_HOST']
+        self.client = docker.APIClient(base_url=self.base_url)
+
+    def _node_set(self, name, sshclient):
+        j.tools.nodemgr.set(name, sshclient=sshclient.instance, selected=False,
+                            cat="docker", clienttype="j.sal.docker", description="deployment on docker")
 
     @property
     def containers(self):
-        todel=[str(item) for item in self._containers.keys()] #are the id's
-        for item in self.client.containers.list():
-            id = item.id
-            if id in todel:
-                todel.pop(id)
-            if id not in self._containers:
-                self._containers[id] = Container(item, self.client)
-        for item in todel:
-            #this to make sure that id's in mem not in docker any more get removed
-            self._containers.pop(id)
-        return list(self._containers.values())
+        """lists (all) containers
+        j.sal.docker.containers
+        Returns:
+            [Container] -- list of containers
+        """
+
+        self._containers = []
+        for obj in self.client.containers():
+            self._containers.append(Container(obj,self.client))
+        return self._containers
 
     @property
-    def containerNamesRunning(self):
+    def docker_host(self):
+        """gets docker host name
+        j.sal.docker.docker_host
+        Returns:
+            String -- hostname
         """
-        List all running containers names
+
+        u = parse.urlparse(self.base_url)
+        if u.scheme == 'unix':
+            return 'localhost'
+        else:
+            return u.hostname
+
+    @property
+    def containers_names_running(self):
+        """lists only running containers
+        j.sal.docker.containers_names_running
+        Returns:
+            [Container] -- list of containers
         """
+
         res = []
         for container in self.containers:
             if container.isRunning():
                 res.append(container.name)
         return res
-
+    
     @property
-    def containerNames(self):
+    def containers_names(self):
+        """lists only container names
+        j.sal.docker.containers_name
+        Returns:
+            [String] -- list of container names
         """
-        List all containers names
-        """
+
         res = []
         for container in self.containers:
             res.append(container.name)
         return res
 
     @property
-    def containersRunning(self):
+    def containers_running(self):
+        """lists only running containers
+        
+        Returns:
+            [Container] -- list of containers
         """
-        List of all running container objects
-        """
+
         res = []
         for container in self.containers:
-            if container.isRunning():
+            if container.is_running():
                 res.append(container)
         return res
 
     def exists(self, name):
-        return name in self.containerNames
+        return name in self.containers_names
 
     @property
     def basepath(self):
         self._basepath = '/mnt/data/docker'
-        # TODO: needs to fetch values out of hrd
-        # if not self._basepath:
-        #     if j.application.config.exists('docker.basepath'):
-        #         self._basepath = j.application.config.get('docker.basepath')
-        #     else:
-        #         self._basepath="/mnt/vmstor/docker" #btrfs subvol create
         return self._basepath
 
     def _getChildren(self, pid, children):
@@ -122,18 +142,22 @@ class Docker:
 
         return res
 
-    def ps(self):
-        """
-        return detailed info
+    def container_get(self, name, die=True):
+        """get a container by name
+        j.sal.docker.container_get(name)
+        Arguments:
+            name {String} -- name of the container
+        
+        Keyword Arguments:
+            die {bool} -- if True it will die if container not found (default: {True})
+        
+        Raises:
+            j.exceptions.RuntimeError -- when no container with this id exists
+        
+        Returns:
+            Container -- container
         """
 
-        return self.client.containers()
-
-    def get(self, name, die=True):
-        """
-        Get a container object by name
-        @param name string: container name
-        """
         for container in self.containers:
             if container.name == name:
                 return container
@@ -143,88 +167,30 @@ class Docker:
         else:
             return None
 
-    def exportRsync(self, name, backupname, key="pub"):
-        raise j.exceptions.RuntimeError("not implemented")
-        self.removeRedundantFiles(name)
-        ipaddr = j.core.state.configGet("jssync.addr")
-        path = self._getMachinePath(name)
-        if not j.sal.fs.exists(path):
-            raise j.exceptions.RuntimeError("cannot find machine:%s" % path)
-        if backupname[-1] != "/":
-            backupname += "/"
-        if path[-1] != "/":
-            path += "/"
-        cmd = "rsync -a %s %s::upload/%s/images/%s --delete-after --modify-window=60 --compress --stats  --progress --exclude '.Trash*'" % (
-            path, ipaddr, key, backupname)
-        j.sal.process.executeWithoutPipe(cmd)
-
-    # def removeRedundantFiles(self,name):
-    #     raise j.exceptions.RuntimeError("not implemented")
-    #     basepath=self._getMachinePath(name)
-    #     j.sal.fs.removeIrrelevantFiles(basepath,followSymlinks=False)
-
-    #     toremove="%s/rootfs/var/cache/apt/archives/"%basepath
-    #     j.sal.fs.removeDirTree(toremove)
-
-    def importRsync(self, backupname, name, basename="", key="pub"):
+    def container_get_by_id(self, id, die=True):
+        """get container by id
+        j.sal.docker.container_get_by_id(id)
+        Arguments:
+            id {string} -- id of the container
+        
+        Keyword Arguments:
+            die {bool} -- if True it will die if container not found (default: {True})
+        
+        Raises:
+            j.exceptions.RuntimeError -- when no container with this id exists
+        
+        Returns:
+            Container -- container
         """
-        @param basename is the name of a start of a machine locally, will be used as basis and then the source will be synced over it
-        """
-        raise j.exceptions.RuntimeError("not implemented")
-        ipaddr = j.core.state.configGet("jssync.addr")
-        path = self._getMachinePath(name)
 
-        self.btrfsSubvolNew(name)
-
-        # j.sal.fs.createDir(path)
-
-        if backupname[-1] != "/":
-            backupname += "/"
-        if path[-1] != "/":
-            path += "/"
-
-        if basename != "":
-            basepath = self._getMachinePath(basename)
-            if basepath[-1] != "/":
-                basepath += "/"
-            if not j.sal.fs.exists(basepath):
-                raise j.exceptions.RuntimeError(
-                    "cannot find base machine:%s" % basepath)
-            cmd = "rsync -av -v %s %s --delete-after --modify-window=60 --size-only --compress --stats  --progress" % (
-                basepath, path)
-            self.logger.info(cmd)
-            j.sal.process.executeWithoutPipe(cmd)
-
-        cmd = "rsync -av -v %s::download/%s/images/%s %s --delete-after --modify-window=60 --compress --stats  --progress" % (
-            ipaddr, key, backupname, path)
-        self.logger.info(cmd)
-        j.sal.process.executeWithoutPipe(cmd)
-
-    def exportTgz(self, name, backupname):
-        raise j.exceptions.RuntimeError("not implemented")
-        self.removeRedundantFiles(name)
-        path = self._getMachinePath(name)
-        bpath = j.sal.fs.joinPaths(self.basepath, "backups")
-        if not j.sal.fs.exists(path):
-            raise j.exceptions.RuntimeError("cannot find machine:%s" % path)
-        j.sal.fs.createDir(bpath)
-        bpath = j.sal.fs.joinPaths(bpath, "%s.tgz" % backupname)
-        cmd = "cd %s;tar Szcf %s ." % (path, bpath)
-        j.sal.process.executeWithoutPipe(cmd)
-        return bpath
-
-    def importTgz(self, backupname, name):
-        raise j.exceptions.RuntimeError("not implemented")
-        path = self._getMachinePath(name)
-        bpath = j.sal.fs.joinPaths(
-            self.basepath, "backups", "%s.tgz" % backupname)
-        if not j.sal.fs.exists(bpath):
+        for container in self.containers:
+            if container.id == id:
+                return container
+        if die:
             raise j.exceptions.RuntimeError(
-                "cannot find import path:%s" % bpath)
-        j.sal.fs.createDir(path)
-
-        cmd = "cd %s;tar xzvf %s -C ." % (path, bpath)
-        j.sal.process.executeWithoutPipe(cmd)
+                "Container with name %s doesn't exists" % name)
+        else:
+            return None
 
     def _init_aysfs(self, fs, dockname):
         if fs.isUnique():
@@ -251,7 +217,7 @@ class Docker:
             vols="",
             volsro="",
             stdout=True,
-            base="jumpscale/ubuntu1604",
+            base="phusion/baseimage",
             nameserver=["8.8.8.8"],
             replace=True,
             cpu=None,
@@ -267,35 +233,35 @@ class Docker:
             aysfs=[],
             detach=False,
             privileged=False,
-            getIfExists=True):
+            getIfExists=True,
+            command=""):
         """
         Creates a new container.
-
+        j.sal.docker.create(...)
         @param ports in format as follows  "22:8022 80:8080"  the first arg e.g. 22 is the port in the container
         @param vols in format as follows "/var/insidemachine:/var/inhost # /var/1:/var/1 # ..."   '#' is separator
         @param sshkeyname : use ssh-agent (can even do remote through ssh -A) and then specify key you want to use in docker
+        @param ssh : if True it will authorize the sskey name givin and creates a node for it
         """
         if ssh is True and myinit is False:
             raise ValueError("SSH can't be enabled without myinit.")
-        # check there is weave
-        #
 
         name = name.lower().strip()
         self.logger.info(("create:%s" % name))
 
-        running = [item.name for item in self.containersRunning]
+        running = [item.name for item in self.containers_running]
 
         if not replace:
             if name in self.containerNamesRunning:
                 if getIfExists:
-                    return self.get(name=name)
+                    return self.container_get(name=name)
                 else:
                     j.events.opserror_critical(
                         "Cannot create machine with name %s, because it does already exists.")
         else:
             if self.exists(name):
                 self.logger.info("remove existing container %s" % name)
-                container = self.get(name)
+                container = self.container_get(name)
                 if container:
                     container.destroy()
 
@@ -379,16 +345,14 @@ class Docker:
             binds[path] = {"bind": key, "ro": True}
             volskeys.append(key)
 
-        if base not in self.getImages():
+        if base not in self.images_get():
             self.logger.info("download docker image %s" % base)
             self.pull(base)
 
-        if base.startswith("jumpscale/ubuntu1604") or myinit is True:
-            cmd = "sh -c \"mkdir -p /var/run/screen;chmod 777 /var/run/screen; /var/run/screen;exec >/dev/tty 2>/dev/tty </dev/tty && /sbin/my_init -- /usr/bin/screen -s bash\""
-            cmd = "sh -c \" /sbin/my_init -- bash -l\""
+        if command == "" and (base.startswith("jumpscale/ubuntu1604") or myinit is True):
+            command = "sh -c \" /sbin/my_init -- bash -l\""
         else:
-            cmd = None
-
+            command = None
         self.logger.info(("install docker with name '%s'" % name))
 
         if vols != "":
@@ -396,11 +360,8 @@ class Docker:
             self.logger.info(volskeys)
             self.logger.info(binds)
 
-        hostname = None if self.weaveIsActive else name.replace('_', '-')
-
-        if self.weaveIsActive:
-            nameserver = None
-
+        hostname = name.replace('_', '-')
+        
         for k, v in portsdict.items():
             if isinstance(k, tuple) and len(k) == 2:
                 portsdict["%s/%s" % (k[0], k[1])] = v
@@ -419,13 +380,12 @@ class Docker:
             network_mode=None)
         res = self.client.create_container(
             image=base,
-            command=cmd,
+            command=command,
             hostname=hostname,
             user="root",
             detach=detach,
             stdin_open=False,
             tty=True,
-            mem_limit=mem,
             ports=list(
                 portsdict.keys()),
             environment=None,
@@ -433,26 +393,39 @@ class Docker:
             network_disabled=False,
             name=name,
             entrypoint=None,
-            cpu_shares=cpu,
             working_dir=None,
             domainname=None,
-            memswap_limit=None,
-            host_config=host_config)
+            host_config=host_config,
+            mac_address=None,
+            labels=None,
+            stop_signal=None,
+            networking_config=None, 
+            healthcheck=None, 
+            stop_timeout=None, 
+            runtime=None)
         if res["Warnings"] is not None:
             raise j.exceptions.RuntimeError(
                 "Could not create docker, res:'%s'" % res)
 
         id = res["Id"]
 
-        # TODO: *1 docker module no longer working
-
         res = self.client.start(container=id)
 
-        container = Container(name, id, self.client, host=self.docker_host)
-        self._containers[id] = container
+        container = self.container_get_by_id(id)
 
         if ssh:
-            container.pushSSHKey(keyname=sshkeyname, sshpubkey=sshpubkey)
+            if setrootrndpasswd:
+                if rootpasswd is None or rootpasswd == '':
+                    rootpasswd = 'gig1234'
+            ex = j.tools.executor.getLocalDocker(name)
+            ex.execute("apt-get update")
+            ex.execute("apt-get install sudo")
+            ex.execute("apt-get install openssh-server -y")
+            ex.execute("apt-get install sed")
+            ex.execute("sed -i 's/prohibit-password/yes/' /etc/ssh/sshd_config")
+            ex.execute("service ssh start")
+            result = ex.prefab.system.user.passwd("root", rootpasswd)
+            container.ssh_authorize(sshkeyname=sshkeyname, password=rootpasswd)
 
             # Make sure docker is ready for executor
             end_time = time.time() + 60
@@ -462,22 +435,16 @@ class Docker:
                     time.sleep(0.1)
                 break
 
-            if setrootrndpasswd:
-                if rootpasswd is None or rootpasswd == '':
-                    self.logger.info("set default root passwd (gig1234)")
-                    container.executor.execute(
-                        "echo \"root:gig1234\"|chpasswd", showout=False)
-                else:
-                    self.logger.info("set root passwd to %s" % rootpasswd)
-                    container.executor.execute(
-                        "echo \"root:%s\"|chpasswd" % rootpasswd, showout=False)
-
-        if not self.weaveIsActive:
-            container.setHostName(name)
-
+            self._node_set(name, container.sshclient)
         return container
 
-    def getImages(self):
+    def images_get(self):
+        """lists images
+        
+        Returns:
+            [String] -- list of image names
+        """
+
         images = []
         for item in self.client.images():
             if item['RepoTags'] is None:
@@ -487,15 +454,23 @@ class Docker:
             images.append(tags)
         return images
 
-    def removeImages(self, tag="<none>:<none>"):
+    def images_remove(self, tag="<none>:<none>"):
+        """Delete a certain Docker image using tag
+        
+        Keyword Arguments:
+            tag {str} -- images tag (default: {"<none>:<none>"})
         """
-        Delete a certain Docker image using tag
-        """
+
         for item in self.client.images():
             if tag in item["RepoTags"]:
                 self.client.remove_image(item["Id"])
 
     def ping(self):
+        """pings the docker
+        
+        Returns:
+            bool -- true if ping is successful
+        """
 
         try:
             self.client.ping()
@@ -503,20 +478,23 @@ class Docker:
             return False
         return True
 
-    def destroyAll(self, removeimages=False):
+    def destroy_all(self, images_remove=False):
+        """destroy all containers
+        if images_remove is true it will remove all images too
+        
+        Keyword Arguments:
+            images_remove {bool} -- [description] (default: {False})
         """
-        Destroy all containers.
-        @param removeimages bool: to remove all images.
-        """
+
         for container in self.containers:
-            if "weave" in container.name:
-                continue
             container.destroy()
 
-        if removeimages:
-            self.removeImages()
+        if images_remove:
+            self.images_remove()
 
     def _destroyAllKill(self):
+        """kills all containers
+        """
 
         if self.ping():
 
@@ -607,9 +585,8 @@ class Docker:
         tag: tag to give to the image. e.g: 'jumpscale/myimage'
         output: print output as it builds
 
-        return: strint containing the stdout
+        return: string containing the stdout
         """
-        # TODO: implement force
         out = []
         if force:
             nocache = True
@@ -622,113 +599,3 @@ class Docker:
                 out.append(line)
 
         return "\n".join(out)
-
-    # class DockerExecObj:
-
-    #     def __init__(self, name):
-    #         self.name = name
-    #         self.id = "docker:%s" % name
-
-    #     def execute(self, cmds, die=True, checkok=None, async=False, showout=True, timeout=0, env={}):
-    #         return self._prefabDockerHost.core.run("docker exec %s  %s" % (self.name, cmds))
-
-
-    # def init(self):
-
-    #     j.sal.process.execute("systemctl stop docker")
-
-    #     d = j.sal.disklayout.findDisk(mountpoint="/storage")
-    #     if d is not None:
-    #         # we found a disk, lets make sure its in fstab
-    #         d.setAutoMount()
-    #         dockerpath = "%s/docker" % d.mountpoint
-    #         dockerpath = dockerpath.replace("//", '/')
-    #         if dockerpath not in j.sal.btrfs.subvolumeList(d.mountpoint):
-    #             # have to create the dockerpath
-    #             j.sal.btrfs.subvolumeCreate(dockerpath)
-    #     # j.sal.fs.createDir("/storage/docker")
-    #     j.sal.fs.copyDirTree("/var/lib/docker", dockerpath)
-    #     j.sal.fs.symlink("/storage/docker", "/var/lib/docker",
-    #                      overwriteTarget=True)
-
-    #     j.sal.process.execute("systemctl start docker")
-
-    # @property
-    # def weaveIsActive(self):
-    #     return bool()
-
-    # @property
-    # def weavesocket(self):
-    #     if self._weaveSocket is None:
-    #         if not j.tools.prefab.local.core.command_check('weave'):
-    #             self.logger.warning("weave not found, do not forget to start if installed.")
-    #             self._weaveSocket = ""
-    #         else:
-
-    #             # rc, self._weaveSocket = j.sal.process.__execute("eval $(weave env) &&
-    #             # echo $DOCKER_HOST", die=False)                rc, self._weaveSocket =
-    #             # j.sal.process.__execute("eval $(weave env) && echo $DOCKER_HOST",
-    #             # die=False) echo $DOCKER_HOST", die=False)
-    #             # FIXME : j.sal.process execute treats eval $(weave en) as a single executable
-    #             # WILL SET IT TO j.sal.process.execute for now.
-    #             rc, self._weaveSocket, _ = j.sal.process.execute("eval $(weave env)")
-    #             if rc > 0:
-    #                 self.logger.warning("weave not found, do not forget to start if installed.")
-    #                 self._weaveSocket = ""
-
-    #             self._weaveSocket = self._weaveSocket.strip()
-
-    #     return self._weaveSocket
-
-    # def weaveInstall(self, ufw=False):
-    #     j.tools.prefab.local.systemservices.weave.install(start=True)
-    #     if ufw:
-    #         j.tools.prefab.local.systemservices.ufw.allowIncoming(6783)
-    #         j.tools.prefab.local.systemservices.ufw.allowIncoming(6783, protocol="udp")
-
-    # def connectRemoteTCP(self, base_url):
-    #     self.base_url = base_url
-    #     self.client = docker.Client(base_url=weavesocket)
-
-
-
-    # @property
-    # def docker_host(self):
-    #     """
-    #     Get the docker hostname.
-    #     """
-
-    #     u = parse.urlparse(self.base_url)
-    #     if u.scheme == 'unix':
-    #         return 'localhost'
-    #     else:
-    #         return u.hostname
-
-    # def _execute(self, command):
-    #     env = os.environ.copy()
-    #     env.pop('PYTHONPATH', None)
-    #     (exitcode, stdout, stderr) = j.sal.process.run(
-    #         command, showOutput=False, captureOutput=True, stopOnError=False, env=env)
-    #     if exitcode != 0:
-    #         raise j.exceptions.RuntimeError(
-    #             "Failed to execute %s: Error: %s, %s" % (command, stdout, stderr))
-    #     return stdout
-
-    #
-    # def copy(self, name, src, dest):
-    #     rndd = j.data.idgenerator.generateRandomInt(10, 1000000)
-    #     temp = "/var/docker/%s/%s" % (name, rndd)
-    #     j.sal.fs.createDir(temp)
-    #     source_name = j.sal.fs.getBaseName(src)
-    #     if j.sal.fs.isDir(src):
-    #         j.sal.fs.copyDirTree(src, j.sal.fs.joinPaths(temp, source_name))
-    #     else:
-    #         j.sal.fs.copyFile(src, j.sal.fs.joinPaths(temp, source_name))
-    #
-    #     ddir = j.sal.fs.getDirName(dest)
-    #     cmd = "mkdir -p %s" % (ddir)
-    #     self.run(name, cmd)
-    #
-    #     cmd = "cp -r /var/jumpscale/%s/%s %s" % (rndd, source_name, dest)
-    #     self.run(name, cmd)
-    #     j.sal.fs.remove(temp)

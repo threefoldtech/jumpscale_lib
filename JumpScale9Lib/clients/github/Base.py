@@ -17,8 +17,13 @@ replacelabels = {
     'type_story': 'type_unknown'
 }
 
+JSBASE = j.application.jsbase_get_class()
 
-class Base:
+
+class Base(JSBASE):
+
+    def __init__(self):
+        JSBASE.__init__(self)
 
     @property
     def bodyWithoutTags(self):

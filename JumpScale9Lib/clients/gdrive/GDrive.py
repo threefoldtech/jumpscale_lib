@@ -24,13 +24,14 @@ SCOPES = ['https://www.googleapis.com/auth/drive',
           'https://www.googleapis.com/auth/drive.metadata']
 
 APPLICATION_NAME = 'Google Drive Exporter'
+JSBASE = j.application.jsbase_get_class()
 
 
-class GDriveFactory:
+class GDriveFactory(JSBASE):
 
     def __init__(self):
+        JSBASE.__init__(self)
         self.__imports__ = "google-api-python-client"
-        self.logger = j.logger.get('j.clients.gdrive')
 
         self.secretsFilePath = 'gdrive_client_secrets.json'
         if not j.sal.fs.exists(self.secretsFilePath, followlinks=True):
@@ -118,12 +119,12 @@ class GDriveFactory:
                 self.logger.info('Found gdrive file: %s (%s)' % (file.get('name'), file.get('id')))
 
                 from IPython import embed
-                print("DEBUG NOW 87")
+                self.logger.debug("DEBUG NOW 87")
                 embed()
                 raise RuntimeError("stop debug here")
 
                 md = GDriveFile(gmd=file)
-                print(md.json)
+                self.logger.debug(md.json)
 
                 # CHECK THAT FILE HAS BEEN MODIFIED
                 epoch = int(j.data.time.any2epoch(parser.parse(file.get('modifiedTime'))))

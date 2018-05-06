@@ -13,8 +13,10 @@ colored_traceback.add_hook(always=True)
 import pygments.lexers
 from pygments.formatters import get_formatter_by_name
 
+JSBASE = j.application.jsbase_get_class()
 
-class Action:
+
+class Action(JSBASE):
 
     def __init__(
             self,
@@ -53,7 +55,7 @@ class Action:
         @param selfGeneratorCode is the code which gets evalled to return the object which is given to self, ...
 
         '''
-        self.logger = j.logger.get("j.actions")
+        JSBASE.__init__(self)
         # self.logger.debug("OPEN ACTION:%s"%action)
 
         if key == "" and action is None:
@@ -250,7 +252,7 @@ class Action:
         return [j.actions.get(item) for item in self._parents]
 
     def _load(self, all=False):
-        # print('load key %s' % self.key)
+        # self.logger.debug('load key %s' % self.key)
         data = j.core.db.hget("actions.%s" % self.runid, self.key)
 
         if data is not None:
@@ -341,8 +343,8 @@ class Action:
         # s2="""
         # res=$name(*j.data.serializer.json.loads(args),**j.data.serializer.json.loads(kwargs))
 
-        # print ("**RESULT**")
-        # print (j.data.serializer.json.dumps(res,True,True))
+        # self.logger.debug ("**RESULT**")
+        # self.logger.debug (j.data.serializer.json.dumps(res,True,True))
 
         # """
 
@@ -638,7 +640,6 @@ class Action:
                     counter += 1
                     time.sleep(0.1)
                     if self.retry > 0:
-                        # print("  RETRY, ERROR (%s/%s)" % (counter, self.retry))
                         self.logger.info("  RETRY, ERROR (%s/%s)" % (counter, self.retry))
                     rcode = 1
 
@@ -656,10 +657,7 @@ class Action:
                     for action in self.getWhoDependsOnMe():
                         if action.state == "ERRORCHILD":
                             continue  # to avoid saving
-                        # print ("#####%s"%self)
-                        # print (action)
                         action.state = "ERRORCHILD"
-                        # print (action)
                         action.save()
 
                 if self.actionRecover is not None:
@@ -683,7 +681,6 @@ class Action:
                 j.actions.delFromStack(self)
                 if self.die:
                     # if j.actions.stack==[]:
-                    # print("error in action: %s"%self)
                     # self.logger.error("error in action: %s"%self)
                     # else:
                     raise j.exceptions.RuntimeError("error in action: %s" % self)
@@ -786,7 +783,7 @@ class Action:
 
         lexer = pygments.lexers.get_lexer_by_name("bash")  # , stripall=True)
         colored = pygments.highlight(self.str, lexer, formatter)
-        print("\n")
+        self.logger.debug("\n")
         self._stream.write(colored)
 
         if self.traceback != "":

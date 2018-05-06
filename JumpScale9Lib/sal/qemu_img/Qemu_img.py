@@ -6,11 +6,14 @@ inforec = re.compile("^(?P<key>\w+(\s+\w+)?):\s+(?P<value>.*)$", re.MULTILINE)
 sizerec = re.compile("^(?P<size>[\d\.]+)(?P<unit>[A-Z])")
 virtualsizerec = re.compile("\((?P<size>[\d\.]+)\sbytes\)")
 
+JSBASE = j.application.jsbase_get_class()
 
-class QemuImg:
+
+class QemuImg(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.qemu_img"
+        JSBASE.__init__(self)
 
     def create(self, fileName, diskImageFormat, size, baseImage=None, encryptTargetImage=False,
                useCompatibilityLevel6=False, isTargetImageTypeSCSI=False):

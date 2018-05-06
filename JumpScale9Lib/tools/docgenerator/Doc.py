@@ -3,17 +3,20 @@ import toml
 import pystache
 import copy
 
+JSBASE = j.application.jsbase_get_class()
 
-class Doc:
+
+class Doc(JSBASE):
     """
     """
 
-    def __init__(self, path, name, docSite):
+    def __init__(self, path, name, docsite):
+        JSBASE.__init__(self)
         self.path = path
         self.name = name.lower()
         self.nameOriginal = name
-        self.docSite = docSite
-        self.rpath = j.sal.fs.pathRemoveDirPart(path, self.docSite.path).strip("/")
+        self.docsite = docsite
+        self.rpath = j.sal.fs.pathRemoveDirPart(path, self.docsite.path).strip("/")
         self.content = None
         self._defContent = ""
         self.data = {}
@@ -30,7 +33,7 @@ class Doc:
             data = j.data.serializer.toml.loads(dataText)
         except Exception as e:
             from IPython import embed
-            print("DEBUG NOW toml load issue in doc")
+            self.logger.debug("DEBUG NOW toml load issue in doc")
             embed()
             raise RuntimeError("stop debug here")
         self._updateData(data)
@@ -58,14 +61,17 @@ class Doc:
 
     @property
     def defaultContent(self):
+        """
+        TODO:*1 need to describe how this works with default content
+        """
         if self._defContent == "":
-            keys = [item for item in self.docSite.defaultContent.keys()]
+            keys = [item for item in self.docsite.defaultContent.keys()]
             keys.sort(key=len)
             C = ""
             for key in keys:
                 key = key.strip("/")
                 if self.rpath.startswith(key):
-                    C2 = self.docSite.defaultContent[key]
+                    C2 = self.docsite.defaultContent[key]
                     if len(C2) > 0 and C2[-1] != "\n":
                         C2 += "\n"
                     C += C2
@@ -77,20 +83,20 @@ class Doc:
         empty data, go over default data's and update in self.data
         """
         self.data = {}
-        keys = [item for item in self.docSite.defaultData.keys()]
+        keys = [item for item in self.docsite.defaultData.keys()]
         keys.sort(key=len)
         for key in keys:
             key = key.strip("/")
             if self.rpath.startswith(key):
-                data = self.docSite.defaultData[key]
+                data = self.docsite.defaultData[key]
                 self._updateData(data)
 
     @property
     def url(self):
-        rpath = j.sal.fs.pathRemoveDirPart(self.path, self.docSite.path)
+        rpath = j.sal.fs.pathRemoveDirPart(self.path, self.docsite.path)
         rpath = rpath[:-3]
         rpath += '/'
-        return "%s%s" % (self.docSite.sitepath, rpath)
+        return "%s%s" % (self.docsite.sitepath, rpath)
 
     def processContent(self, iteration):
         j.tools.docgenerator.logger.info("process:%s" % self)
@@ -145,7 +151,7 @@ class Doc:
                         methodcode += "(content=block2)"
                     methodcode = methodcode.replace(",,", ",")
 
-                    # print("methodcode:'%s'" % methodcode)
+                    # self.logger.debug("methodcode:'%s'" % methodcode)
                     if line0[3:].strip().strip(".").strip(",") == "":
                         # means there was metadata data block in doc
                         dataBlock = block2
@@ -153,7 +159,7 @@ class Doc:
                         block = ""
                     else:
                         cmd = "j.tools.docgenerator.macros." + methodcode
-                        # print(cmd)
+                        # self.logger.debug(cmd)
                         # block = eval(cmd)
                         try:
                             block = eval(cmd)
@@ -161,7 +167,7 @@ class Doc:
                             # from IPython import embed;embed(colors='Linux')
                             # s
                             block = "```python\nERROR IN MACRO*** TODO: *1 ***\ncmd:\n%s\nERROR:\n%s\n```\n" % (cmd, e)
-                            self.docSite.raiseError(block, doc=self)
+                            self.docsite.error_raise(block, doc=self)
                 else:
                     codeblocks.append(block)
                     block = "***[%s]***\n" % (len(codeblocks) - 1)
@@ -185,7 +191,7 @@ class Doc:
                 state = "blockstart"
                 continue
 
-            print(line)
+            self.logger.debug(line)
             if state == "start" and (line.startswith("<!-")):
                 state = "blockcomment"
                 continue
@@ -249,27 +255,27 @@ class Doc:
     def process3(self):
         # check links
         content = self.content
-        ws = j.tools.docgenerator.webserver + self.docSite.name
+        ws = j.tools.docgenerator.webserver + self.docsite.name
 
         regex = "\] *\([a-zA-Z0-9\.\-\_\ \/]+\)"  # find all possible images
         for match in j.data.regex.yieldRegexMatches(regex, content, flags=0):
-            # print("##:%s" % match)
+            # self.logger.debug("##:%s" % match)
             fname = match.founditem.strip("[]").strip("()")
             if match.founditem.find("/") != -1:
                 fname = fname.split("/")[1]
             if j.sal.fs.getFileExtension(fname).lower() in ["png", "jpg", "jpeg", "mov", "mp4"]:
-                fnameFound = self.docSite.getFile(fname, die=True)
+                fnameFound = self.docsite.file_get(fname, die=True)
                 # if fnameFound==None:
                 #     torepl="ERROR:"
-                content = content.replace(match.founditem, "](/%s/files/%s)" % (self.docSite.name, fnameFound))
+                content = content.replace(match.founditem, "](/%s/files/%s)" % (self.docsite.name, fnameFound))
             elif j.sal.fs.getFileExtension(fname).lower() in ["md"]:
                 shortname = fname.lower()[:-3]
-                if shortname not in self.docSite.docs:
+                if shortname not in self.docsite.docs:
                     msg = "**ERROR: COULD NOT FIND LINK: %s TODO: **" % shortname
-                    self.docSite.raiseError(msg, doc=self)
+                    self.docsite.error_raise(msg, doc=self)
                     content = content.replace(match.founditem, msg)
                 else:
-                    thisdoc = self.docSite.docs[shortname]
+                    thisdoc = self.docsite.docs[shortname]
                     content = content.replace(match.founditem, "](%s)" % (thisdoc.url))
 
         regex = "src *= *\" */?static"
@@ -283,7 +289,7 @@ class Doc:
         if "title" in self.data:
             return self.data["title"]
         else:
-            self.raiseError("Could not find title in doc.")
+            self.error_raise("Could not find title in doc.")
 
     @property
     def contentClean(self):
@@ -324,8 +330,8 @@ class Doc:
 
         return out
 
-    def raiseError(self, msg):
-        return self.docSite.raiseError(msg, doc=self)
+    def error_raise(self, msg):
+        return self.docsite.error_raise(msg, doc=self)
 
     def process(self):
         self.processDefaultData()
@@ -352,18 +358,18 @@ class Doc:
 
         regex = "\$\$.*"  # find all possible images
         for match in j.data.regex.yieldRegexMatches(regex, self.content, flags=0):
-            # print("##:%s" % match)
+            # self.logger.debug("##:%s" % match)
             defname = match.founditem
             defname0 = ssplit(defname.replace("$", ""))
             defname = defname0.lower().replace("_", "").replace("-", "").replace(" ", "")
-            if defname in self.docSite.defs:
-                def_ = self.docSite.defs[defname]
-                defnew = "[%s](%s:%s.md)" % (def_.nameOriginal, def_.docSite.name, def_.nameOriginal)
+            if defname in self.docsite.defs:
+                def_ = self.docsite.defs[defname]
+                defnew = "[%s](%s:%s.md)" % (def_.nameOriginal, def_.docsite.name, def_.nameOriginal)
                 self.content = self.content.replace("$$" + defname0, defnew)
             else:
                 defnew = "**ERROR: COULD NOT FIND DEF: %s**" % defname
                 self.content = self.content.replace("$$" + defname0, defnew)
-                self.docSite.raiseError(defnew, doc=self)
+                self.docsite.error_raise(defnew, doc=self)
 
         self.process3()
 
@@ -380,20 +386,12 @@ class Doc:
             C += toml.dumps(self.data)
             C += "\n+++\n\n"
 
-            # C+=
-
             C += self.content
 
-            dpath = j.sal.fs.joinPaths(self.docSite.outpath, "content", self.rpath)
+            dpath = j.sal.fs.joinPaths(self.docsite.outpath, "content", self.rpath)
             j.sal.fs.createDir(j.sal.fs.getDirName(dpath))
             j.sal.fs.writeFile(filename=dpath, contents=C)
 
-            # self.last_content = content
-            # self.last_path = self.path
-            # self.last_dest = j.sal.fs.joinPaths(j.sal.fs.getDirName(path), j.sal.fs.getBaseName(path)[1:])
-            # self.last_dest=j.sal.fs.joinPaths(self.root,j.sal.fs.pathRemoveDirPart(path,self.source))
-            # j.sal.fs.createDir(j.sal.fs.getDirName(self.last_dest))
-            # j.data.regex.replace(regexFind, regexFindsubsetToReplace, replaceWith, text)
 
     def __repr__(self):
         return "doc:%s:%s" % (self.name, self.path)

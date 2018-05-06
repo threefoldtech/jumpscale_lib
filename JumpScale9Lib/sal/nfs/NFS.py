@@ -8,16 +8,18 @@ import re
 
 EXPORT_OPT_REGEXT = re.compile('^(?:([\w/]+)|"([\w\s/]+)")\s+(.+)$')
 CLIENT_OPT_REGEXT = re.compile('\s*([^\(]+)\(([^\)]+)\)')
+JSBASE = j.application.jsbase_get_class()
+
+class NFSError(Exception, JSBASE):
+    def __init__(self):
+        JSBASE.__init__(self)
 
 
-class NFSError(Exception):
-    pass
-
-
-class NFSExport:
+class NFSExport(JSBASE):
 
     def __init__(self, path=""):
         self.__jslocation__ = "j.sal.nfs"
+        JSBASE.__init__(self)
         self._path = j.tools.path.get(path)
         self._clients = []
 
@@ -53,11 +55,12 @@ class NFSExport:
         return str(self)
 
 
-class NFS:
+class NFS(JSBASE):
 
     def __init__(self):
         self._exports = None
         self._executor = j.tools.executorLocal
+        JSBASE.__init__(self)
 
     def _load(self):
         exports = []

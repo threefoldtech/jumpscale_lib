@@ -27,11 +27,10 @@ class SyncthingFactory(JSConfigFactory):
 
 class SyncthingClient(JSConfigClient):
 
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE)
+                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         c = self.config.data
-        self.logger = j.logger.get('j.clients.syncthing')
         self._session = requests.session()
         addr = c['addr'].lower()
         if addr == "127.0.0.1":
@@ -46,8 +45,8 @@ class SyncthingClient(JSConfigClient):
         self._config = None
 
     def executeBashScript(self, cmds, die=True):
-        print("execute cmd on %s" % self.addr)
-        print(cmds)
+        self.logger.debug("execute cmd on %s" % self.addr)
+        self.logger.debug(cmds)
         if self.addr == "localhost":
             return j.tools.prefab.local.core.execute_bash(content=cmds, die=die)
         else:
@@ -104,25 +103,25 @@ class SyncthingClient(JSConfigClient):
         C = C.replace("$apikey", self.syncthing_apikey)
         res = self.executeBashScript(C)
 
-        print("check if we can find syncthing on right port: %s:%s" %
-              (self.addr, self.port))
+        self.logger.debug("check if we can find syncthing on right port: %s:%s" %
+                          (self.addr, self.port))
         if j.sal.nettools.waitConnectionTest(self.addr, self.port, timeout=10) is False:
             raise j.exceptions.RuntimeError(
                 "Could not find syncthing on %s:%s, tcp port test" % (self.addr, self.port))
 
-        print(self.status_get())
+            self.logger.debug(self.status_get())
 
     def restart(self):
-        print("set config")
+        self.logger.debug("set config")
         pprint.pprint(self._config)
         self.config_set()
-        print("restart")
+        self.logger.debug("restart")
 
         res = self.api_call("system/restart", get=False)
-        print("wait for connection")
+        self.logger.debug("wait for connection")
         time.sleep(0.5)
         j.sal.nettools.waitConnectionTest(self.addr, self.port, timeout=2)
-        print("connection reestablished")
+        self.logger.debug("connection reestablished")
 
     def status_get(self):
         return self.api_call("system/status")
@@ -172,7 +171,7 @@ class SyncthingClient(JSConfigClient):
                     res.append(folder)
             self._config["folders"] = res
             if len(res) != x:
-                print('deleted folder:%s' % name)
+                self.logger.debug('deleted folder:%s' % name)
                 # self.config_set()
 
     def config_delete_device(self, name):
@@ -186,25 +185,25 @@ class SyncthingClient(JSConfigClient):
                     res.append(folder)
             self._config["devices"] = res
             if len(res) != x:
-                print('deleted devices:%s' % name)
+                self.logger.debug('deleted devices:%s' % name)
                 # self.config_set()
 
     def config_delete_all_folders(self):
         config = self.config_get()
         # remove the folder
         self._config["folders"] = []
-        print('deleted all folder')
+        self.logger.debug('deleted all folder')
         # self.config_set()
 
     def config_delete_all_devices(self):
         config = self.config_get()
         # remove the folder
         self._config["devices"] = []
-        print('deleted all devices')
+        self.logger.debug('deleted all devices')
         # self.config_set()
 
     def config_add_device(self, name, deviceid, replace=True, introducer=False, compression='always'):
-        print("add device:%s" % name)
+        self.logger.debug("add device:%s" % name)
         name = name.lower()
         config = self.config_get()
         if self.config_exists_device(name):
@@ -228,7 +227,7 @@ class SyncthingClient(JSConfigClient):
 
         config["devices"].append(device)
 
-        print("device set:%s" % name)
+        self.logger.debug("device set:%s" % name)
 
         # self.config_set()
         return device
@@ -272,7 +271,7 @@ class SyncthingClient(JSConfigClient):
                   'versioning': {'params': {}, 'type': ''}}
         config["folders"].append(folder)
 
-        print("folder set:%s" % name)
+        self.logger.debug("folder set:%s" % name)
 
         self.executeBashScript("mkdir -p %s" % path)
         self.restart()
@@ -330,6 +329,6 @@ class SyncthingClient(JSConfigClient):
         if get and endpoint != '/system/version':
             return r.json()
 
-        print("OK")
+        self.logger.debug("OK")
 
         return r.content

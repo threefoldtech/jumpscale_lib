@@ -1,11 +1,15 @@
 import netaddr
 
 from zerotier.client import Client
+from js9 import j
 
 
-class ZTBootstrap:
+
+
+class ZTBootstrap():
 
     def __init__(self, token, bootstap_id, grid_id, cidr):
+
         self.bootstap_nwid = bootstap_id
         self.grid_nwid = grid_id
         self._cidr = cidr  # TODO validate format

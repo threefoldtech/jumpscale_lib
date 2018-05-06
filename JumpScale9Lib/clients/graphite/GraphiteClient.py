@@ -14,7 +14,6 @@ except BaseException:
 
 JSConfigFactory = j.tools.configmanager.base_class_configs
 JSConfigClient = j.tools.configmanager.base_class_config
-
 TEMPLATE = """
 server = "127.0.0.1"
 carbon_port = 2003
@@ -29,9 +28,9 @@ class GraphiteFactory(JSConfigFactory):
 
 class GraphiteClient(JSConfigClient):
 
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE)
+                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         c = self.config.data
         self._SERVER = c['server']
         self._CARBON_PORT = c['carbon_port']

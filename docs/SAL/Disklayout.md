@@ -22,15 +22,6 @@ j.sal.disklayout.getDisks()
   - `disk.erase(force=True)` cleans up the disk by by deleting all non protected partitions and if force=True, deletes all partitions included protected
   - `disk.format(size, hrd)` creates new partition and formats it as configured in the HRD file
 
-  **Note**: the HRD file must contain the following:
-
-  ```
-  filesystem                     = '<fs-type>'
-  mountpath                      = '<mount-path>'
-  protected                      = 0 or 1
-  type                           = data or root or tmp
-  ```
-
 Example:
 
 ```
@@ -54,17 +45,15 @@ Each partition holds the following attributes:
 - `partition.fstype`: file system type
 - `partition.uuid`: file system UUID
 - `partition.mountpoint`: get the mount point of partition
-- `partition.hrd`: HRD instance used when creating the partition or None
 - `partition.delete(force=False)`: deletes the partition and deletes protected partitions if force = True
 - `partition.format()`: formats the partition according to HRD
 - `partition.mount()`: mounts partition to mountpath defined in HRD
-- `partition.setAutoMount(options='defaults', _dump=0, _pass=0)`: which configures partition auto mount `fstab` on `mountpath` defined in HRD
+- `partition.setAutoMount(options='defaults', _dump=0, _pass=0)`: which configures partition auto mount `fstab` on `mountpoint`
 - `partition.unsetAutoMount()`: remotes partition from fstab
 
 partition.hrd can be `None`, in that case partition is considered `unmanaged` which means partition is not created by the SAL. This type of partitions is considered 'protected' by default.
 
-Partition attributes reflects the **real** state of the partition. For example, `mountpoint` will be set if the partition is actually mounted, and is not related to the `mountpath` defined in the HRD file.
-
+Partition attributes reflects the **real** state of the partition. For example, `mountpoint` will be set if the partition is actually mounted.
 Example:
 
 ```

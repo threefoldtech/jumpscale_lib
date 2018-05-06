@@ -7,9 +7,10 @@ import time
 import stat
 import pwd
 import grp
+JSBASE = j.application.jsbase_get_class()
 
 
-class FListMetadata:
+class FListMetadata(JSBASE):
     """Metadata layer on top of flist that enables flist manipulation"""
 
     def __init__(
@@ -19,6 +20,7 @@ class FListMetadata:
             dirCollection=None,
             aciCollection=None,
             userGroupCollection=None):
+        JSBASE.__init__(self)
         self.namespace = namespace
         self.dirCollection = dirCollection
         self.aciCollection = aciCollection
@@ -393,10 +395,10 @@ class FListMetadata:
                                      (fpath, self.rootpath), level=1, source="", tags="", msgpub="")
         relPath = fpath[len(self.rootpath):].strip("/")
         toHash = self.namespace + relPath
-        print("> %s" % toHash)
+        self.logger.debug("> %s" % toHash)
         bl = pyblake2.blake2b(toHash.encode(), 32)
         binhash = bl.digest()
-        print(binascii.hexlify(binhash).decode())
+        self.logger.debug(binascii.hexlify(binhash).decode())
         return relPath, binascii.hexlify(binhash).decode()
 
     def _initialize_aci(self, mode, fileType):

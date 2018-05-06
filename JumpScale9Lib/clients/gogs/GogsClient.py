@@ -11,25 +11,32 @@ from requests.auth import HTTPBasicAuth
 from random import randint
 import sys
 
+JSBASE = j.application.jsbase_get_class()
 
-class GogsBaseException(Exception):
-    pass
+
+class GogsBaseException(Exception, JSBASE):
+    def __init__(self):
+        JSBASE.__init__(self)
 
 
 class AdminRequiredException(GogsBaseException):
-    pass
+    def __init__(self):
+        GogsBaseException.__init__(self)
 
 
 class DataErrorException(GogsBaseException):
-    pass
+    def __init__(self):
+        GogsBaseException.__init__(self)
 
 
 class NotFoundException(GogsBaseException):
-    pass
+    def __init__(self):
+        GogsBaseException.__init__(self)
 
 
 class GogsServerErrorException(GogsBaseException):
-    pass
+    def __init__(self):
+        GogsBaseException.__init__(self)
 
 
 baseurl = "{addr}/api/v1"
@@ -53,11 +60,13 @@ token_ = ""
 
 
 JSConfigBase = j.tools.configmanager.base_class_config
+
+
 class GogsClient(JSConfigBase):
 
     # def __init__(self, addr, login="root", passwd="root", port=3000, accesstoken=None):
-    def __init__(self, instance, data={}, parent=None):
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,template=TEMPLATE)
+    def __init__(self, instance, data={}, parent=None, interactive=False):
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         c = self.config.data
         addr = c["addr"]
         if not addr.startswith("http"):
@@ -73,7 +82,6 @@ class GogsClient(JSConfigBase):
         else:
             self.session.headers['Authorization'] = 'token {}'.format(c['token_'])
 
-        self.logger = j.logger.get("j.clients.gogs")
         self.logger.info("gogs client initted:%s for user %s" % (self.addr, self.login))
 
     def test(self):
@@ -98,9 +106,9 @@ class GogsClient(JSConfigBase):
         testuser = "testuser6oat"
 
         def dump_all():
-            print(self.reposList())
-            print(self.usersList())
-            print(self.organizationsList())
+            self.logger.debug(self.reposList())
+            self.logger.debug(self.usersList())
+            self.logger.debug(self.organizationsList())
 
         try:
             self.repoGet(testrep, "root")
@@ -117,9 +125,9 @@ class GogsClient(JSConfigBase):
             self.organizationCreate(testorg)
         dump_all()
 
-        print(self.userGet("root"))
+        self.logger.debug(self.userGet("root"))
         # CREATE TEST repo
-        print(self.repoGet(testrep))
+        self.logger.debug(self.repoGet(testrep))
 
         self.repoAddCollaborator(testrep, testuser, "root")
         self.repoRemoveCollaborator(testrep, testuser, "root")
@@ -129,11 +137,11 @@ class GogsClient(JSConfigBase):
         self.issuesList(testrep)
         self.issueCreate(testrep, "really doesnt work", "root", "it doesnt compile")
         self.issueCreate(testrep, "really doesnt work2", "root", "it doesnt build")
-        print(self.issuesList(testrep))
-        print(self.issueGet(testrep, 1, "root"))
+        self.logger.debug(self.issuesList(testrep))
+        self.logger.debug(self.issueGet(testrep, 1, "root"))
         # dump_all()
         self.issueClose(testrep, 1)
-        print(self.issuesList(testrep))
+        self.logger.debug(self.issuesList(testrep))
 
         dump_all()
 
@@ -427,7 +435,7 @@ class GogsClient(JSConfigBase):
         @param orgname string: organization name.
         """
         url = self.build_url("orgs", orgname)
-        print("organizationGet::", url)
+        self.logger.debug("organizationGet::", url)
         response_org = self.session.get(url)
         if response_org.status_code == 200:
             return response_org.json()

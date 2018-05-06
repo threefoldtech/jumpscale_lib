@@ -3,14 +3,16 @@ from js9 import j
 # IMPORTANT
 # use functionality in j.clients.ssh to deal with SSH-Agent & getting key info, improve if required
 # use j.data.nacl for underlying encryption/decryption/signing when possible
+JSBASE = j.application.jsbase_get_class()
 
-class EncryptionFactory:
+class EncryptionFactory(JSBASE):
     """
     EncryptionFactory provides the means to sign, encrypt data using NACL
     """
 
     def __init__(self):
         self.__jslocation__ = "j.data.encryption"
+        JSBASE.__init__(self)
 
     def sign_short(self, data, keyname, keypath=None):
         """

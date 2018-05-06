@@ -1,4 +1,3 @@
-import os
 from js9 import j
 j.tools.prefab.local.bash.locale_check()
 import click
@@ -18,7 +17,7 @@ def influxdumper(influx_host, influx_port, influx_login, influx_pasword, db, sca
     InfluxDumper is a process that will scan the network specified by scan-dir for open ports specified by redis-port.
     The dumper will then read from the redis server found and dump the aggregated statistics into influxdb
     """
-    influx_client = j.clients.influxdb.get(host=influx_host, port=influx_port, username=influx_login, password=influx_pasword, database=db)
+    influx_client = j.clients.influxdb.get(data={'host': influx_host, 'port': influx_port, 'username': influx_login, 'database': db})
     j.tools.realityprocess.influxpump(influx_client, cidr=scan_cidr, ports=redis_port, rentention_duration=rentention_duration, workers=workers)
 
 if __name__ == '__main__':

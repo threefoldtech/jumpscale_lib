@@ -2,11 +2,14 @@ from js9 import j
 
 import re
 import os
+from .SandboxPython import SandboxPython
 
+JSBASE = j.application.jsbase_get_class()
 
-class Dep:
+class Dep(JSBASE):
 
     def __init__(self, name, path):
+        JSBASE.__init__(self)
         self.name = name
         self.path = path
         if j.sal.fs.isLink(self.path):
@@ -23,49 +26,46 @@ class Dep:
         else:
             if j.sal.fs.exists(self.path):
                 return
-        raise j.exceptions.RuntimeError(
-            "could not find lib (dep): '%s'" % self.path)
+        raise j.exceptions.RuntimeError("could not find lib (dep): '%s'" % self.path)
 
     def copyTo(self, path):
         dest = j.sal.fs.joinPaths(path, self.name)
         dest = dest.replace("//", "/")
         j.sal.fs.createDir(j.sal.fs.getDirName(dest))
         if dest != self.path:  # don't copy to myself
-            # print("DEPCOPY: %s %s" % (self.path, dest))
+            # self.logger.debug("DEPCOPY: %s %s" % (self.path, dest))
             if not j.sal.fs.exists(dest):
                 j.sal.fs.copyFile(self.path, dest)
-            j.tools.sandboxer._done.append(dest)
 
     def __str__(self):
         return "%-40s %s" % (self.name, self.path)
 
     __repr__ = __str__
 
-
-class Sandboxer:
+class Sandboxer(JSBASE):
     """
     sandbox any linux app
     """
 
     def __init__(self):
         self.__jslocation__ = "j.tools.sandboxer"
-        self._done = []
+        JSBASE.__init__(self)
         self.exclude = ["libpthread.so", "libltdl.so", "libm.so", "libresolv.so",
                         "libz.so", "libgcc", "librt", "libstdc++", "libapt", "libdbus", "libselinux"]
         self.original_size = 0
         self.new_size = 0
+        self.python = SandboxPython()
 
-    def _ldd(self, path, result={}):
-
+    def _ldd(self, path, result=dict(), done=list()):
         if j.sal.fs.getFileExtension(path) in ["py", "pyc", "cfg", "hrd", "bak", "txt",
                                                "png", "gif", "css", "js", "wiki", "spec", "sh", "jar", "xml", "lua"]:
             return result
 
-        if path not in self._done:
-            print(("check:%s" % path))
+        if path not in done:
+            self.logger.debug(("check:%s" % path))
 
             cmd = "ldd %s" % path
-            rc, out, err = j.sal.process.execute(cmd, die=False)
+            rc, out, _ = j.sal.process.execute(cmd, die=False)
             if rc > 0:
                 if out.find("not a dynamic executable") != -1:
                     return result
@@ -83,29 +83,91 @@ class Sandboxer:
                 lpath = lpath.strip()
                 if lpath == "":
                     continue
-                if name.find("libc.so") != 0 and name.lower().find("libx") != 0 and name not in self._done \
+                if name.find("libc.so") != 0 and name.lower().find("libx") != 0 and name not in done \
                         and name.find("libdl.so") != 0:
                     excl = False
                     for toexeclude in self.exclude:
                         if name.lower().find(toexeclude.lower()) != -1:
                             excl = True
                     if not excl:
-                        print(("found:%s" % name))
+                        self.logger.debug(("found:%s" % name))
                         try:
                             result[name] = Dep(name, lpath)
-                            self._done.append(name)
-                            result = self._ldd(lpath, result)
+                            done.append(name)
+                            result = self._ldd(lpath, result, done=done)
                         except Exception as e:
-                            print(e)
+                            self.logger.debug(e)
 
-        self._done.append(path)
+        done.append(path)
         return result
+
+
+    # def sandboxBinWithPrefab(self, prefab, bin_path, sandbox_dir):
+    #     """
+    #     Sandbox a binary located in `bin_path` into a sandbox / filesystem 
+
+    #     @param prefab Prefab: prefab either local or remote on a machine.
+    #     @param bin_path string: binary full path to sandbox.
+    #     @param sandbox_dir string: where to create the sandbox. 
+
+    #     """
+
+    #     prefab.core.dir_remove(sandbox_dir)
+    #     prefab.core.dir_ensure(sandbox_dir)
+
+    #     LIBSDIR = j.sal.fs.joinPaths(sandbox_dir, 'lib')
+    #     BINDIR = j.sal.fs.joinPaths(sandbox_dir, 'bin')
+    #     prefab.core.dir_ensure(LIBSDIR)
+    #     prefab.core.dir_ensure(BINDIR)
+    #     prefab.core.dir_ensure(j.sal.fs.joinPaths(sandbox_dir, 'usr'))
+
+
+    #     for directory in ['opt', 'var', 'tmp', 'root']:
+    #         prefab.core.dir_ensure(j.sal.fs.joinPaths(sandbox_dir, directory))
+
+    #     # copy needed binaries and required libs
+    #     prefab.core.execute_bash("""js9 'j.tools.sandboxer.sandboxLibs("{}", dest="{}")'""".format(bin_path, LIBSDIR))
+
+    #     prefab.core.file_copy(bin_path, BINDIR+'/')
+
+    # def sandboxBinLocal(self, bin_path, sandbox_dir):
+    #     """
+    #     Sandbox a binary located in `bin_path` into a sandbox / filesystem 
+
+    #     @param bin_path string: binary full path to sandbox.
+    #     @param sandbox_dir string: where to create the sandbox. 
+
+    #     """
+    #     try:
+    #         j.sal.fs.removeDir(sandbox_dir)
+    #     except Exception as e:
+    #         pass
+
+        
+    #     j.sal.fs.createDir(sandbox_dir)
+
+    #     LIBSDIR = j.sal.fs.joinPaths(sandbox_dir, 'lib')
+    #     BINDIR = j.sal.fs.joinPaths(sandbox_dir, 'bin')
+    #     j.sal.fs.createDir(LIBSDIR)
+    #     j.sal.fs.createDir(BINDIR)
+    #     j.sal.fs.createDir(j.sal.fs.joinPaths(sandbox_dir, 'usr'))
+
+    #     for directory in ['opt', 'var', 'tmp', 'root']:
+    #         j.sal.fs.createDir(j.sal.fs.joinPaths(sandbox_dir, directory))
+
+    #     # copy needed binaries and required libs
+    #     j.tools.sandboxer.sandboxLibs(bin_path, dest=LIBSDIR)
+    #     j.sal.fs.copyFile(bin_path, BINDIR+'/')
+
+
 
     def findLibs(self, path):
         """
         not needed to use manually, is basically ldd
         """
-        result = self._ldd(path)
+        result = self._ldd(path, result=dict(), done=list())
+        name = j.sal.fs.getBaseName(path)
+        result[name] = Dep(name, path)
         return result
 
     def sandboxLibs(self, path, dest=None, recursive=False):
@@ -115,23 +177,26 @@ class Sandboxer:
         """
         if dest is None:
             dest = "%s/bin/" % j.dirs.BASEDIR
+        j.sal.fs.createDir(dest)
+
         if j.sal.fs.isDir(path):
             # do all files in dir
-            for item in j.sal.fs.listFilesInDir(path, recursive=recursive, followSymlinks=True, listSymlinks=False):
-                if j.sal.fs.isExecutable(item) or j.sal.fs.getFileExtension(item) == "so":
+            for item in j.sal.fs.listFilesInDir(path, recursive=False, followSymlinks=True, listSymlinks=False):
+                if (j.sal.fs.isFile(item) and j.sal.fs.isExecutable(item)) or j.sal.fs.getFileExtension(item) == "so":
                     self.sandboxLibs(item, dest, recursive=False)
             if recursive:
-                for item in j.sal.fs.listDirsInDir(path, recursive=False):
+                for item in j.sal.fs.listFilesAndDirsInDir(path, recursive=False):
                     self.sandboxLibs(item, dest, recursive)
 
         else:
-            result = self.findLibs(path)
-            for name, deb in list(result.items()):
-                deb.copyTo(dest)
+            if (j.sal.fs.isFile(path) and j.sal.fs.isExecutable(path)) or j.sal.fs.getFileExtension(path) == "so":
+                result = self.findLibs(path)
+                for _, deb in list(result.items()):
+                    deb.copyTo(dest)
 
     def copyTo(self, path, dest, excludeFileRegex=[], excludeDirRegex=[], excludeFiltersExt=["pyc", "bak"]):
 
-        print("SANDBOX COPY: %s to %s" % (path, dest))
+        self.logger.debug("SANDBOX COPY: %s to %s" % (path, dest))
 
         excludeFileRegex = [re.compile(r'%s' % item)
                             for item in excludeFileRegex]
@@ -141,14 +206,14 @@ class Sandboxer:
             excludeFileRegex.append(re.compile(r'(\.%s)$' % extregex))
 
         def callbackForMatchDir(path, arg):
-            # print ("P:%s"%path)
+            # self.logger.debug ("P:%s"%path)
             for item in excludeDirRegex:
                 if(len(re.findall(item, path)) > 0):
                     return False
             return True
 
         def callbackForMatchFile(path, arg):
-            # print ("F:%s"%path)
+            # self.logger.debug ("F:%s"%path)
             for item in excludeFileRegex:
                 if(len(re.findall(item, path)) > 0):
                     return False
@@ -164,14 +229,43 @@ class Sandboxer:
 
             dest2 = dest + "/" + subpath
             j.sal.fs.createDir(j.sal.fs.getDirName(dest2))
-            # print ("C:%s"%dest2)
+            # self.logger.debug ("C:%s"%dest2)
             j.sal.fs.copyFile(src, dest2, overwriteFile=True)
 
         j.sal.fswalker.walkFunctional(path, callbackFunctionFile=callbackFile, callbackFunctionDir=None, arg=(
             path, dest), callbackForMatchDir=callbackForMatchDir, callbackForMatchFile=callbackForMatchFile)
 
-    # def sandbox_python3(self):
-    #     j.tools.prefab.local.js9.sandbox_python()
+    def _copy_chroot(self, path, dest):
+        cmd = 'cp --parents -v "{}" "{}"'.format(path, dest)
+        _, out, _ = j.sal.process.execute(cmd, die=False)
+        return out
+
+    def sandbox_chroot(self, path, dest=None):
+        """
+        js9 'j.tools.sandboxer.sandbox_chroot()'
+        """
+        if dest is None:
+            dest = "%s/bin/" % j.dirs.BASEDIR
+        j.sal.fs.createDir(dest)
+
+        if not j.sal.fs.exists(path):
+            raise RuntimeError('bin path "{}" not found'.format(path))
+        self._copy_chroot(path, dest)
+
+        cmd = 'ldd "{}"'.format(path)
+        _, out, _ = j.sal.process.execute(cmd)
+
+        for line in out.splitlines():
+            dep = line.strip()
+            if ' => ' in dep:
+                dep = dep.split(" => ")[1].strip()
+            if dep.startswith('('):
+                continue
+            dep = dep.split('(')[0].strip()
+            self._copy_chroot(dep, dest)
+
+        if not j.sal.fs.exists(j.sal.fs.joinPaths(dest, 'lib64')):
+            j.sal.fs.createDir(j.sal.fs.joinPaths(dest, 'lib64'))
 
     # def dedupe(self, path, storpath, name, excludeFiltersExt=[
     #            "pyc", "bak"], append=False, reset=False, removePrefix="", compress=True, delete=False, excludeDirs=[]):
@@ -189,10 +283,10 @@ class Sandboxer:
     #         path_src = j.tools.path.get(srcReal)
     #         self.original_size += path_src.size
     #         if compress:
-    #             print("- %-100s %sMB" % (srcReal, round(path_src.size / 1000000, 1)))
+    #             self.logger.debug("- %-100s %sMB" % (srcReal, round(path_src.size / 1000000, 1)))
     #             if delete or not j.sal.fs.exists(dest2_bro):
     #                 cmd = "bro --quality 7 --input '%s' --output %s" % (srcReal, dest2_bro)
-    #                 # print (cmd)
+    #                 # self.logger.debug (cmd)
     #                 j.sal.process.execute(cmd)
     #                 if not j.sal.fs.exists(dest2_bro):
     #                     raise j.exceptions.RuntimeError("Could not do:%s" % cmd)
@@ -207,7 +301,7 @@ class Sandboxer:
     #                     efficiency_now = round(path_dest.size / path_src.size, 3)
     #                 else:
     #                     efficiency_now = 0
-    #                 print("- %-100s %-6s %-6s %sMB" %
+    #                 self.logger.debug("- %-100s %-6s %-6s %sMB" %
     #                       ("", efficiency, efficiency_now, round(self.original_size / 1000000, 1)))
     #         else:
     #             j.sal.fs.copyFile(srcReal, dest2)
@@ -233,7 +327,7 @@ class Sandboxer:
     #         for i2 in "1234567890abcdef":
     #             j.sal.fs.createDir("%s/%s/%s" % (storpath2, i1, i2))
 
-    #     print("DEDUPE: %s to %s" % (path, storpath))
+    #     self.logger.debug("DEDUPE: %s to %s" % (path, storpath))
 
     #     plistfile = j.sal.fs.joinPaths(storpath, "md", "%s.flist" % name)
 
@@ -263,26 +357,3 @@ class Sandboxer:
 
     #     out = j.data.text.sort(out)
     #     j.sal.fs.writeFile(plistfile, out)
-
-    # def findDependencies(self, path, deps={}):
-    #     excl = ["libc.so", "libpthread.so", "libutil.so"]
-    #     out = self.installtools.execute("ldd %s" % path)
-    #     result = []
-    #     for item in [item.strip() for item in out.split("\n") if item.strip() != ""]:
-    #         if item.find("=>") != -1:
-    #             link = item.split("=>")[1].strip()
-    #             link = link.split("(")[0].strip()
-    #             if self.exists(link):
-    #                 name = os.path.basename(link)
-    #                 if name not in deps:
-    #                     print(link)
-    #                     deps[name] = link
-    #                     deps = self.findDependencies(link)
-    #     return deps
-    #
-    # def copyDependencies(self, path, dest):
-    #     self.installtools.createDir(dest)
-    #     deps = self.findDependencies(path)
-    #     for name in list(deps.keys()):
-    #         path = deps[name]
-    #         self.installtools.copydeletefirst(path, "%s/%s" % (dest, name))

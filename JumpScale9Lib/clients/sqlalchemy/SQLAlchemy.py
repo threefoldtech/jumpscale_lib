@@ -86,6 +86,7 @@ class Base(Base0):
     def __repr__(self):
         return str(self.getDataAsDict())
 
+
 JSConfigFactory = j.tools.configmanager.base_class_configs
 JSConfigClient = j.tools.configmanager.base_class_config
 
@@ -131,9 +132,9 @@ class SQLAlchemyFactory(JSConfigFactory):
 
 class SQLAlchemy(JSConfigClient):
 
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE)
+                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         c = self.config.data
         if c['sqlitepath'] != "":
             self.connectionstring = 'sqlite:///%s' % c['sqlitepath']

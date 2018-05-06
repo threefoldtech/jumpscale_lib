@@ -1,14 +1,15 @@
 from js9 import j
 from collections import OrderedDict
 
+JSBASE = j.application.jsbase_get_class()
 
-class ModelBase():
+
+class ModelBase(JSBASE):
 
     def __init__(self, key="", new=False, collection=None):
-
+        JSBASE.__init__(self)
         self._propnames = []
         self.collection = collection
-        self.logger = collection.logger
 
         self._key = ""
 
@@ -78,17 +79,13 @@ class ModelBase():
     # def __setattr__(self, attr, val):
     #     if attr in ["_propnames", "_subobjects", "dbobj", "_capnp_schema"]:
     #         self.__dict__[attr] = val
-    #         print("SETATTRBASE:%s" % attr)
+    #         self.logger.debug("SETATTRBASE:%s" % attr)
     #         # return ModelBase.__setattr__(self, attr, val)
     #
-    #     print("SETATTR:%s" % attr)
     #     if attr in self._propnames:
-    #         print("1%s" % attr)
     #         # TODO: is there no more clean way?
     #         dbobj = self._subobjects
-    #         print(2)
     #         exec("dbobj.%s=%s" % (attr, val))
-    #         print(3)
     #         #
     #     else:
     #         raise j.exceptions.Input(message="Cannot set attr:%s in %s" %
@@ -236,9 +233,10 @@ class ModelBase():
     __str__ = __repr__
 
 
-class ModelBaseWithData(ModelBase):
+class ModelBaseWithData(ModelBase, JSBASE):
 
     def __init__(self, key="", new=False, collection=None):
+        JSBASE.__init__(self)
         super().__init__(key=key, new=new, collection=collection)
         self._data_schema = None
         self._data = None
@@ -270,7 +268,7 @@ def getInt(nr):
     return int(nr)
 
 
-class ModelBaseCollection:
+class ModelBaseCollection(JSBASE):
     """
     This class represent a collection
     It's used to list/find/create new Instance of Model objects
@@ -293,7 +291,7 @@ class ModelBaseCollection:
         @param db: connection object to the key-value store
         @param indexDb: connection object to the key-value store used for indexing
         """
-
+        JSBASE.__init__(self)
         self.category = category
         self.namespace = namespace if namespace else category
         self.capnp_schema = schema
@@ -332,8 +330,6 @@ class ModelBaseCollection:
         self._index = indexDb if indexDb else self._db
 
         self.modelBaseClass = modelBaseClass if modelBaseClass else ModelBase
-
-        self.logger = j.logger.get("modelBase_%s" % category)
 
         self._init()
 

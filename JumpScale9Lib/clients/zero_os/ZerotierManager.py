@@ -1,13 +1,17 @@
 from . import typchk
+from js9 import j
 
 
-class ZerotierManager:
+
+
+class ZerotierManager():
     _network_chk = typchk.Checker({
         'network': str,
     })
 
     def __init__(self, client):
         self._client = client
+
 
     def join(self, network):
         """

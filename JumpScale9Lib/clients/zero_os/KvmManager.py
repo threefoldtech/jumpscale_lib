@@ -1,7 +1,7 @@
 from . import typchk
 
 
-class KvmManager:
+class KvmManager():
     _iotune_dict = {
         'totalbytessecset': typchk.Or(bool, typchk.Missing()),
         'totalbytessec': typchk.Or(int, typchk.Missing()),
@@ -73,6 +73,14 @@ class KvmManager:
         'mount': typchk.Or(
             [{'source': str, 'target': str, 'readonly': typchk.Or(bool, typchk.Missing())}],
             typchk.IsNone(),
+        ),
+        'tags': typchk.Or(
+            typchk.IsNone(),
+            [str],
+        ),
+        'config': typchk.Or(
+            typchk.IsNone(),
+            typchk.Map(str, str)
         )
     })
 
@@ -84,12 +92,18 @@ class KvmManager:
         }],
         'port': typchk.Or(
             typchk.Map(int, int),
+            typchk.Map(str, int),
             typchk.IsNone()
         ),
         'uuid': str
     })
 
     _domain_action_chk = typchk.Checker({
+        'uuid': str,
+    })
+
+    _domain_get_chk = typchk.Checker({
+        'name': str,
         'uuid': str,
     })
 
@@ -114,6 +128,23 @@ class KvmManager:
         'uuid': str,
         'media': _media_dict,
     }
+    _create_image_chk = typchk.Checker({
+        'file_name': str,
+        'format': str,
+        'size': str,
+    })
+
+    _convert_image_chk = typchk.Checker({
+        'output_file': str,
+        'input_file': str,
+        'output_format': str,
+    })
+
+    _portforward_chk = typchk.Checker({
+        'uuid': str,
+        'host_port': str,
+        'container_port': int,
+    })
 
     _limit_disk_io_dict.update(_iotune_dict)
 
@@ -122,12 +153,15 @@ class KvmManager:
     def __init__(self, client):
         self._client = client
 
-    def create(self, name, media=None, flist=None, cpu=2, memory=512, nics=None, port=None, mount=None, tags=None):
+    def create(self, name, media=None, flist=None, cpu=2, memory=512, nics=None, port=None, mount=None, tags=None, config=None):
         """
         :param name: Name of the kvm domain
         :param media: (optional) array of media objects to attach to the machine, where the first object is the boot device
                       each media object is a dict of {url, type} where type can be one of 'disk', or 'cdrom', or empty (default to disk)
-                      example: [{'url': 'nbd+unix:///test?socket=/tmp/ndb.socket'}, {'type': 'cdrom': '/somefile.iso'}
+                      example: [{'url': 'nbd+unix:///test?socket=/tmp/ndb.socket'}, {'type': 'cdrom', 'url: '/somefile.iso'}]
+                      zdb exmpale:
+                      [{'url': 'zdb://host:port?size=10G&blocksize=4096'},
+                       {'url': 'zdb+unix:///path/to/unix.socket?size=5G'}]
         :param flist: (optional) VM flist. A special bootable flist witch has a correct boot.yaml file
                      example: http://hub.gig.tech/azmy/ubuntu-zesty.flist
         :param cpu: number of vcpu cores
@@ -135,6 +169,7 @@ class KvmManager:
         :param port: A dict of host_port: container_port pairs
                        Example:
                         `port={8080: 80, 7000:7000}`
+                       Source Format:  NUMBER, IP:NUMBER, IP/MAST:NUMBER, or DEV:NUMBER
                      Only supported if default network is used
         :param nics: Configure the attached nics to the container
                      each nic object is a dict of the format
@@ -144,6 +179,13 @@ class KvmManager:
                      }
         :param port: Configure port forwards to vm, this only works if default network nic is added. Is a dict of {host-port: guest-port}
         :param mount: A list of host shared folders in the format {'source': '/host/path', 'target': '/guest/path', 'readonly': True|False}
+        :param tags: A list of user defined tags (strings)
+        :param config: a map with the config file path as a key and content as a value. This only works when creating a VM from an flist. The
+                       config files are written to the machine before booting.
+                       Example:
+                       config = {'/root/.ssh/authorized_keys': '<PUBLIC KEYS>'}
+
+                       If the machine is not booted from an flist, the config are discarded
 
         :note: At least one media or an flist must be provided.
         :return: uuid of the virtual machine
@@ -161,13 +203,15 @@ class KvmManager:
             'nics': nics,
             'port': port,
             'mount': mount,
+            'tags': tags,
+            'config': config,
         }
         self._create_chk.check(args)
 
         if media is None and flist is None:
             raise ValueError('need at least one boot media via media or an flist')
 
-        return self._client.sync('kvm.create', args, tags=tags)
+        return self._client.json('kvm.create', args, tags=tags)
 
     def prepare_migration_target(self, uuid, nics=None, port=None, tags=None):
         """
@@ -458,3 +502,90 @@ class KvmManager:
         :return:
         """
         return self._client.json('kvm.list', {})
+
+    def create_image(self, file_name, size, format='qcow2'):
+        """
+        Create disk image
+        :param file_name: disk image file name
+        :param size: is the disk image size in bytes. Optional suffixes
+                'k' or 'K' (kilobyte, 1024), 'M' (megabyte, 1024k), 'G' (gigabyte, 1024M),
+                'T' (terabyte, 1024G), 'P' (petabyte, 1024T) and 'E' (exabyte, 1024P)  are
+                supported. 'b' is ignored.
+        :param format: disk image format
+        """
+        args = {
+            'file_name': file_name,
+            'size': size,
+            'format': format,
+        }
+        self._create_image_chk.check(args)
+        return self._client.sync('kvm.create-image', args)
+
+    def convert_image(self, input_file, output_file, output_format):
+        """
+        Convert disk image
+        :param input_file: image to convert
+        :param output_file: output of the conversion
+        :param output_format: outpput image format
+        :return:
+        """
+        args = {
+            'input_file': input_file,
+            'output_file': output_file,
+            'output_format': output_format,
+        }
+        self._convert_image_chk.check(args)
+        return self._client.sync('kvm.convert-image', args)
+
+    def get(self, name='', uuid=''):
+        """
+        Get kvm domain by name or uuid
+        :param name: name of the kvm container
+        :param uuid: uuid of the kvm container
+        :return:
+        """
+        args = {
+            'name': name,
+            'uuid': uuid
+        }
+        self._domain_get_chk.check(args)
+
+        return self._client.json('kvm.get', args)
+
+    def add_portfoward(self, uuid, host_port, container_port):
+        """
+        Add portforward from host to kvm container
+        :param uuid: uuid of the kvm container
+        :param host_port: port on host to forward from (string)
+                         format: NUMBER, IP:NUMBER, IP/MAST:NUMBER, or DEV:NUMBER
+        :param machine_port: port on container to forward to
+        :return:
+        """
+        if isinstance(host_port, int):
+            host_port = str(host_port)
+
+        args = {
+            'uuid': uuid,
+            'host_port': host_port,
+            'container_port': container_port,
+        }
+        self._portforward_chk.check(args)
+
+        return self._client.json('kvm.portforward-add', args)
+
+    def remove_portfoward(self, uuid, host_port, container_port):
+        """
+        Remove portforward from host to kvm container
+        :param uuid: uuid of the kvm container
+        :param host_port: port on host forwarded from (string)
+        :param machine_port: port on container forwarded to
+        :return:
+        """
+        args = {
+            'uuid': uuid,
+            'host_port': host_port,
+            'container_port': container_port,
+        }
+        self._portforward_chk.check(args)
+
+        return self._client.json('kvm.portforward-remove', args)

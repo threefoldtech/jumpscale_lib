@@ -1,16 +1,22 @@
 from js9 import j
 
+from .Capacity import Capacity
 
-class Ubuntu:
+JSBASE = j.application.jsbase_get_class()
+
+
+class Ubuntu(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.ubuntu"
-        self.logger = j.logger.get("j.sal.ubuntu")
+        JSBASE.__init__(self)
         self._aptupdated = False
         self._checked = False
         self._cache = None
         self.installedPackageNames = []
         self._local = j.tools.executorLocal
+        self.capacity = Capacity(self)
+
 
     def apt_init(self):
         try:
@@ -83,7 +89,7 @@ class Ubuntu:
                     "Could not install package %s and check for command %s." % (packagename, cmdname))
 
     def apt_install(self, packagename):
-
+        self.apt_update()
         cmd = 'apt-get install %s --force-yes -y' % packagename
         self._local.execute(cmd)
 
@@ -186,12 +192,10 @@ stop on runlevel [016]
         self.logger.debug("start service on ubuntu for:%s" % servicename)
         if not self.service_status(servicename):
             cmd = "sudo start %s" % servicename
-            # print cmd
             return self._local.execute(cmd)
 
     def service_stop(self, servicename):
         cmd = "sudo stop %s" % servicename
-        # print cmd
         return self._local.execute(cmd, False)
 
     def service_restart(self, servicename):
@@ -215,7 +219,10 @@ stop on runlevel [016]
         self.check()
         if self._cache is None:
             self.apt_init()
-        self._cache.update()
+        if self._cache:
+            self._cache.update()
+        else:
+            self._local.execute("apt-get update", False)
 
     def apt_upgrade(self, force=True):
         self.check()

@@ -8,8 +8,12 @@ from .unhandled_api_error import UnhandledAPIError
 from .unmarshall_error import UnmarshallError
 
 
-class OrgsService:
+
+
+
+class OrgsService():
     def __init__(self, client):
+        pass
         self.client = client
 
     def orgDeleteHook(self, id, org, headers=None, query_params=None, content_type="application/json"):

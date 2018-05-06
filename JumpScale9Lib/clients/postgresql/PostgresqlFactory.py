@@ -60,15 +60,14 @@ class PostgresqlFactory(JSConfigFactory):
         args["dbname"] = db
         cmd = "cd /opt/postgresql/bin;./dropdb -U %(login)s -h %(ipaddr)s -p %(port)s %(dbname)s" % (
             args)
-        # print cmd
         j.sal.process.execute(cmd, showout=False, die=False)
 
 
 class PostgresClient(JSConfigClient):
 
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE)
+                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         c = self.config.data
 
         self.ipaddr = c['ipaddr']
@@ -124,19 +123,17 @@ class PostgresClient(JSConfigClient):
         args["path"] = "%s/_schema.sql" % (path)
         cmd = "cd /opt/postgresql/bin;./pg_dump -U %(login)s -h %(ipaddr)s -p %(port)s -s -O -d %(dbname)s -w > %(path)s" % (
             args)
-        # print cmd
         j.sal.process.execute(cmd, showout=False)
 
         for name, obj in list(base.classes.items()):
             if name in tablesIgnore:
                 continue
-            print("process table:%s" % name)
+            self.logger.debug("process table:%s" % name)
             args["table"] = name
             args["path"] = "%s/%s.sql" % (path, name)
             #--quote-all-identifiers
             cmd = "cd /opt/postgresql/bin;./pg_dump -U %(login)s -h %(ipaddr)s -p %(port)s -t %(table)s -a -b --column-inserts -d %(dbname)s -w > %(path)s" % (
                 args)
-            # print cmd
             j.sal.process.execute(cmd, showout=False)
 
     def restore(self, path, tables=[], schema=True):
@@ -163,7 +160,7 @@ class PostgresClient(JSConfigClient):
                     args)
                 j.sal.process.execute(cmd, showout=False)
 
-    def exportToYAML(self,path):
+    def exportToYAML(self, path):
         """
         TODO: export
 
@@ -177,12 +174,11 @@ class PostgresClient(JSConfigClient):
         """
         pass
 
-    def importFromYAML(self,path):
+    def importFromYAML(self, path):
         """
         TODO:
         """
         pass
-
 
     # def dumpall2hrd(self, path, tablesIgnore=[], fieldsIgnore={}, fieldsId={}, fieldRewriteRules={}, fieldsBinary={}):
     #     """
@@ -197,7 +193,6 @@ class PostgresClient(JSConfigClient):
     #         out = ""
     #         if name in tablesIgnore:
     #             continue
-    #         print("process table:%s" % name)
     #         j.sal.fs.createDir("%s/%s" % (path, name))
     #         for record in session.query(obj):
     #             r = record.__dict__
@@ -256,7 +251,6 @@ class PostgresClient(JSConfigClient):
     #                 j.application.break_into_jshell(
     #                     "DEBUG NOW could not find id for %s in psycopg2dumpall2hrd" % r)
 
-    #             print("process record:%s" % r[idfound])
     #             hrd = j.data.hrd.get(content=out, path="%s/%s/%s.hrd" %
     #                                  (path, name, str(r[idfound]).replace("/", "==")))
     #             hrd.save()
@@ -292,7 +286,6 @@ class PostgresClient(JSConfigClient):
     #         return None
     #     else:
     #         # from IPython import embed
-    #         # print "DEBUG NOW select1"
     #         # embed()
 
     #         return result

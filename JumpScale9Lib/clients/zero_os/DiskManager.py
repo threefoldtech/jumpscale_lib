@@ -1,10 +1,11 @@
 import json
 
 from . import typchk
+from js9 import j
 
 
 class DiskManager:
-    mktable_chk = typchk.Checker({
+    _mktable_chk = typchk.Checker({
         'disk': str,
         'table_type': typchk.Enum('aix', 'amiga', 'bsd', 'dvh', 'gpt', 'mac', 'msdos', 'pc98', 'sun', 'loop')
     })
@@ -36,6 +37,16 @@ class DiskManager:
         'source': str,
     })
 
+    _smartctl_chk = typchk.Checker({
+        'disk': str,
+    })
+
+    _spindown_chk = typchk.Checker({
+        'disk': str,
+        'spindown': int,
+    })
+
+
     def __init__(self, client):
         self._client = client
 
@@ -55,9 +66,13 @@ class DiskManager:
 
         data = result.data.strip()
         if data:
-            return json.loads(data)
-        else:
-            return {}
+            js_data = json.loads(data)
+            if "blockdevices" in js_data:
+                return js_data["blockdevices"]
+
+            return js_data
+
+        return {}
 
     def mktable(self, disk, table_type='gpt'):
         """
@@ -196,4 +211,95 @@ class DiskManager:
 
         if result.state != 'SUCCESS':
             raise RuntimeError('failed to umount partition: %s' % result.stderr)
+
+    def mounts(self):
+        """
+        Get all devices and their mountpoints
+        """
+        response = self._client.raw('disk.mounts', {})
+
+        result = response.get()
+
+        if result.state != 'SUCCESS':
+            raise RuntimeError('failed to list disks: %s' % result.stderr)
+
+        if result.level != 20:  # 20 is JSON output.
+            raise RuntimeError('invalid response type from disk.list command')
+
+        data = result.data.strip()
+        if data:
+            return json.loads(data)
+        else:
+            return {}
+
+    def smartctl_info(self, disk):
+        """
+        Info from running smartctl -i <disk>
+        :param disk: disk path
+        """
+
+        args = {
+            'disk': disk,
+        }
+        self._smartctl_chk.check(args)
+
+        response = self._client.raw('disk.smartctl-info', args)
+
+        result = response.get()
+
+        if result.state != 'SUCCESS':
+            raise RuntimeError('failed to get smartctl info: %s' % result.stderr)
+
+        if result.level != 20:  # 20 is JSON output.
+            raise RuntimeError('invalid response type from disk.list command')
+
+        data = result.data.strip()
+        if data:
+            return json.loads(data)
+        else:
+            return {}
+
+    def smartctl_health(self, disk):
+        """
+        Info from running smartctl -H <disk>
+        :param disk: disk path
+        """
+
+        args = {
+            'disk': disk,
+        }
+        self._smartctl_chk.check(args)
+
+        response = self._client.raw('disk.smartctl-health', args)
+
+        result = response.get()
+
+        if result.state != 'SUCCESS':
+            raise RuntimeError('failed to get smartctl info: %s' % result.stderr)
+
+        if result.level != 20:  # 20 is JSON output.
+            raise RuntimeError('invalid response type from disk.list command')
+
+        data = result.data.strip()
+        if data:
+            return json.loads(data)
+        else:
+            return {}
+
+    def spindown(self, disk, spindown=1):
+        """
+        Spindown a disk
+        :param disk str: Full path to a disk like /dev/sda
+        :param spindown int: spindown value should be in [1, 240]
+        """
+        args = {
+            "disk": disk,
+            "spindown": spindown
+        }
+        self._spindown_chk.check(args)
+        response = self._client.raw('disk.spindown', args)
+
+        result = response.get()
+        if result.state != 'SUCCESS':
+            raise RuntimeError("Failed to spindown disk {} to {}.".format(disk, spindown))
 

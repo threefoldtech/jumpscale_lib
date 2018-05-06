@@ -1,11 +1,15 @@
 from ftplib import FTP
 from io import BytesIO
 from urllib.parse import urlparse
+from js9 import j
 
 
-class FtpClient:
+
+
+class FtpClient():
     def __init__(self, url):
         self.parsed_url = urlparse(url)
+
 
     def upload(self, content, filename):
         with FTP() as ftp:

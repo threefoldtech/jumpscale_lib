@@ -1,11 +1,14 @@
 
 from js9 import j
 
+JSBASE = j.application.jsbase_get_class()
 
-class MarkDown:
+
+class MarkDown(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.tools.markdown"
+        JSBASE.__init__(self)
 
     def installTools(self):
         """

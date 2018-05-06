@@ -37,12 +37,14 @@ def jsonrpc(func):
         return result
     return wrapper
 
+JSBASE = j.application.jsbase_get_class()
 
-class GeventWSServer:
+
+class GeventWSServer(JSBASE):
     SERVICEKEY = j.core.state.configGet('rogerthat.servicekey')
 
     def __init__(self, addr, port, handler):
-        self.logger = j.logger.get('j.clients.rogerthat.service')
+        JSBASE.__init__(self)
         self.port = port
         self.addr = addr
         self.handler = handler

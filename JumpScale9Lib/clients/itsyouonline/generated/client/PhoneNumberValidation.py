@@ -2,11 +2,13 @@
 Auto-generated class for PhoneNumberValidation
 """
 from six import string_types
-
+from js9 import j
 from . import client_support
 
 
-class PhoneNumberValidation(object):
+
+
+class PhoneNumberValidation( ):
     """
     auto-generated. don't touch.
     """
@@ -21,6 +23,7 @@ class PhoneNumberValidation(object):
         return PhoneNumberValidation(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

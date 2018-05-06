@@ -1,8 +1,13 @@
 import json
 import os
+from js9 import j
 
-class Blueprints:
+JSBASE = j.application.jsbase_get_class()
+
+
+class Blueprints(JSBASE):
     def __init__(self, repository):
+        JSBASE.__init__(self)
         self._repository = repository
         self._ayscl = repository._ayscl
 
@@ -89,8 +94,9 @@ class Blueprints:
             except Exception as e:
                 return
 
-class Blueprint:
+class Blueprint(JSBASE):
     def __init__(self, repository, model):
+        JSBASE.__init__(self)
         self._repository = repository
         self._ayscl = repository._ayscl
         self.model = model

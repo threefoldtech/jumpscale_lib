@@ -4,11 +4,13 @@ Auto-generated class for KeyStoreKey
 from .KeyData import KeyData
 from .Label import Label
 from six import string_types
-
+from js9 import j
 from . import client_support
 
 
-class KeyStoreKey(object):
+
+
+class KeyStoreKey( ):
     """
     auto-generated. don't touch.
     """
@@ -27,6 +29,7 @@ class KeyStoreKey(object):
         return KeyStoreKey(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

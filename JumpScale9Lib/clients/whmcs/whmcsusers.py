@@ -4,10 +4,15 @@ from JumpScale9Lib.clients.whmcs import phpserialize
 
 SSL_VERIFY = False
 
+from js9 import j
 
-class whmcsusers:
+JSBASE = j.application.jsbase_get_class()
+
+
+class whmcsusers(JSBASE):
 
     def __init__(self, authenticationparams, url):
+        JSBASE.__init__(self)
         self.authenticationparams = authenticationparams
         self.url = url
 
@@ -20,7 +25,7 @@ class whmcsusers:
         return response
 
     def create_user(self, name, company, emails, password, companyurl, displayname, creationTime):
-        print(('Creating %s' % name))
+        self.logger.debug(('Creating %s' % name))
         create_user_request_params = dict(
 
             action='addclient',
@@ -43,7 +48,7 @@ class whmcsusers:
         return response.ok
 
     def update_user(self, name, company, emails, password, companyurl, displayname, creationTime):
-        print(('Updating %s' % name))
+        self.logger.debug(('Updating %s' % name))
         user_request_params = dict(
 
             action='updateclient',

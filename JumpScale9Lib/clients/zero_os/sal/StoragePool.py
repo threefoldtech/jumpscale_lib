@@ -3,6 +3,7 @@ import os
 import time
 
 from .abstracts import Mountable
+from js9 import j
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -38,6 +39,7 @@ def _prepare_device(node, devicename):
 
 
 class StoragePools:
+
     def __init__(self, node):
         self.node = node
 
@@ -45,14 +47,20 @@ class StoragePools:
     def client(self):
         return self.node.client
 
-    def list(self):
+    def list(self, device=None):
+        """
+        list storage pools in a node
+        :param device: a disk partition. If supplied the function only returns the storagepools that contain this device
+        :return: list of StoragePool
+        """
         storagepools = []
         btrfs_list = self.client.btrfs.list()
         for btrfs in btrfs_list:
             if btrfs['label'].startswith('sp_'):
                 name = btrfs['label'].split('_', 1)[1]
                 devicenames = [device['path'] for device in btrfs['devices']]
-                storagepools.append(StoragePool(self.node, name, devicenames))
+                if (device and device in devicenames) or not device:
+                    storagepools.append(StoragePool(self.node, name, devicenames))
         return storagepools
 
     def get(self, name):
@@ -62,6 +70,9 @@ class StoragePools:
         raise ValueError("Could not find StoragePool with name {}".format(name))
 
     def create(self, name, devices, metadata_profile, data_profile, overwrite=False):
+        if not isinstance(devices, list):
+            raise ValueError("devices must be a list not %s" % type(devices))
+
         label = 'sp_{}'.format(name)
         logger.debug("create storagepool %s", label)
 
@@ -83,18 +94,6 @@ class StoragePool(Mountable):
         self.name = name
         self._mountpoint = None
         self._ays = None
-
-    @classmethod
-    def from_ays(cls, service, password, logger=None):
-        from .Node import Node
-        node = Node.from_ays(service.parent)
-        devices = []
-        for deviceObj in service.model.data.devices:
-            devices.append(deviceObj.device)
-        pool = cls(node=node,
-                   name=service.name,
-                   devices=devices)
-        return pool
 
     @property
     def client(self):
@@ -199,7 +198,7 @@ class StoragePool(Mountable):
 
     def get_devices_and_status(self):
         device_map = []
-        disks = self.client.disk.list()['blockdevices']
+        disks = self.client.disk.list()
         pool_status = 'healthy'
         for device in self.devices:
             info = None
@@ -312,8 +311,10 @@ class StoragePool(Mountable):
         return "StoragePool <{}>".format(self.name)
 
 
-class FileSystem:
+class FileSystem():
+
     def __init__(self, name, pool):
+
         self.name = name
         self.pool = pool
         self.subvolume = "filesystems/{}".format(name)
@@ -389,8 +390,10 @@ class FileSystem:
         return "FileSystem <{}: {!r}>".format(self.name, self.pool)
 
 
-class Snapshot:
+class Snapshot():
+
     def __init__(self, name, filesystem):
+
         self.filesystem = filesystem
         self.name = name
         self.path = os.path.join(self.filesystem.snapshotspath, name)

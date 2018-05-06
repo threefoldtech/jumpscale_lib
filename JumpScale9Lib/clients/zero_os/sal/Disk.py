@@ -2,19 +2,21 @@ from enum import Enum
 
 from .abstracts import Mountable
 from .Partition import Partition
+from js9 import j
 
 
-class DiskType(Enum):
-    ssd = "ssd"
-    hdd = "hdd"
-    nvme = "nvme"
-    archive = "archive"
-    cdrom = 'cdrom'
+class StorageType(Enum):
+    SSD = "SSH"
+    HDD = "HDD"
+    NVME = "NVME"
+    ARCHIVE = "ARCHIVE"
+    CDROM = "CDROM"
 
 
-class Disks:
+class Disks():
 
     """Subobject to list disks"""
+
     def __init__(self, node):
         self.node = node
 
@@ -27,13 +29,11 @@ class Disks:
         List of disks on the node
         """
         disks = []
-        disk_list = self.client.disk.list()
-        if 'blockdevices' in disk_list:
-            for disk_info in self.client.disk.list()['blockdevices']:
-                disks.append(Disk(
-                    node=self.node,
-                    disk_info=disk_info
-                ))
+        for disk_info in self.client.disk.list():
+            disks.append(Disk(
+                node=self.node,
+                disk_info=disk_info
+            ))
         return disks
 
     def get(self, name):
@@ -48,13 +48,14 @@ class Disks:
 
 
 class Disk(Mountable):
-    """Disk in a G8OS"""
+    """Disk in a Zero-OS"""
 
     def __init__(self, node, disk_info):
         """
         disk_info: dict returned by client.disk.list()
         """
         # g8os client to talk to the node
+        Mountable.__init__(self)
         self.node = node
         self.name = None
         self.size = None
@@ -65,6 +66,8 @@ class Disk(Mountable):
         self._filesystems = []
         self.type = None
         self.partitions = []
+        self.transport = None
+        self._disk_info = disk_info
 
         self._load(disk_info)
 
@@ -83,14 +86,14 @@ class Disk(Mountable):
 
     def _load(self, disk_info):
         self.name = disk_info['name']
-        detail = self.client.disk.getinfo(self.name)
         self.size = int(disk_info['size'])
-        self.blocksize = detail['blocksize']
-        if detail['table'] != 'unknown':
-            self.partition_table = detail['table']
+        self.blocksize = disk_info['blocksize'] if 'blocksize' in disk_info else None
+        if 'table' in disk_info and disk_info['table'] != 'unknown':
+            self.partition_table = disk_info['table']
         self.mountpoint = disk_info['mountpoint']
         self.model = disk_info['model']
         self.type = self._disk_type(disk_info)
+        self.transport = disk_info['tran']
         for partition_info in disk_info.get('children', []) or []:
             self.partitions.append(
                 Partition(
@@ -117,17 +120,17 @@ class Disk(Mountable):
         """
         if disk_info['rota'] == "1":
             if disk_info['type'] == 'rom':
-                return DiskType.cdrom
+                return StorageType.CDROM
             # assume that if a disk is more than 7TB it's a SMR disk
             elif int(disk_info['size']) > (1024 * 1024 * 1024 * 1024 * 7):
-                return DiskType.archive
+                return StorageType.ARCHIVE
             else:
-                return DiskType.hdd
+                return StorageType.HDD
         else:
             if "nvme" in disk_info['name']:
-                return DiskType.nvme
+                return StorageType.NVME
             else:
-                return DiskType.ssd
+                return StorageType.SSD
 
     def mktable(self, table_type='gpt', overwrite=False):
         """
@@ -158,7 +161,7 @@ class Disk(Mountable):
             part_type=part_type,
         )
         after = {}
-        for disk in self.client.disk.list()['blockdevices']:
+        for disk in self.client.disk.list():
             if disk['name'] != self.name:
                 continue
             for part in disk.get('children', []):

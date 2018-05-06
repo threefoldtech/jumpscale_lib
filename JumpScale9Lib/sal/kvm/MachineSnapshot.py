@@ -6,6 +6,7 @@ from JumpScale9Lib.sal.kvm.BaseKVMComponent import BaseKVMComponent
 class MachineSnapshot(BaseKVMComponent):
 
     def __init__(self, controller, domain, name, description=""):
+        BaseKVMComponent.__init__(controller=controller)
         self.controller = controller
         self.domain = domain
         self.name = name

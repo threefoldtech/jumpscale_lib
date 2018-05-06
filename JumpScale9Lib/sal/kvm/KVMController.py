@@ -3,10 +3,11 @@ import libvirt
 import atexit
 from js9 import j
 
-
-class KVMController:
+JSBASE = j.application.jsbase_get_class()
+class KVMController(JSBASE):
 
     def __init__(self, executor=None, base_path=None):
+        JSBASE.__init__(self)
         if executor is None:
             executor = j.tools.executorLocal
         self.executor = executor

@@ -10,7 +10,6 @@ from email.mime.text import MIMEText
 
 JSConfigFactory = j.tools.configmanager.base_class_configs
 JSConfigClient = j.tools.configmanager.base_class_config
-
 TEMPLATE = """
 smtp_server = ""
 smtp_port = 0
@@ -19,12 +18,12 @@ password = ""
 from = ""
 """
 
+
 class EmailClient(JSConfigClient):
 
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE)
-        
+                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         config = self.config.data
         self._server = config['smtp_server']
         self._port = config['smtp_port']

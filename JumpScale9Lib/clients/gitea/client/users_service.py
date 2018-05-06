@@ -7,8 +7,12 @@ from .unhandled_api_error import UnhandledAPIError
 from .unmarshall_error import UnmarshallError
 
 
-class UsersService:
+
+
+
+class UsersService():
     def __init__(self, client):
+        pass
         self.client = client
 
     def userSearch(self, headers=None, query_params=None, content_type="application/json"):

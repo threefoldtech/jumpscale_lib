@@ -5,20 +5,25 @@ from io import BytesIO
 
 import netaddr
 import redis
+from js9 import j
 
-from JumpScale9Lib.clients.zero_os.Client import Client
-
+from .Capacity import Capacity
 from .Container import Containers
-from .Disk import Disks, DiskType
+from .Disk import Disks, StorageType
 from .healthcheck import HealthCheck
 from .Network import Network
 from .StoragePool import StoragePools
+from .gateway import Gateways
+from .zerodb import Zerodbs
+from .primitives import Primitives
+from .Hypervisor import Hypervisor
 
 Mount = namedtuple('Mount', ['device', 'mountpoint', 'fstype', 'options'])
+logger = j.logger.get(__name__)
 
 
 class Node:
-    """Represent a G8OS Server"""
+    """Represent a Zero-OS Server"""
 
     def __init__(self, client):
         # g8os client to talk to the node
@@ -28,25 +33,26 @@ class Node:
         self.disks = Disks(self)
         self.storagepools = StoragePools(self)
         self.containers = Containers(self)
+        self.gateways = Gateways(self)
+        self.zerodbs = Zerodbs(self)
+        self.primitives = Primitives(self)
+        self.hypervisor = Hypervisor(self)
         self.network = Network(self)
         self.healthcheck = HealthCheck(self)
+        self.capacity = Capacity(self)
         self.client = client
 
     @property
     def name(self):
-        def get_nic_hwaddr(nics, name):
-            for nic in nics:
-                if nic['name'] == name:
-                    return nic['hardwareaddr']
-
-        defaultgwdev = self.client.bash("ip route | grep default | awk '{print $5}'", max_time=60).get().stdout.strip()
         nics = self.client.info.nic()
-        macgwdev = None
-        if defaultgwdev:
-            macgwdev = get_nic_hwaddr(nics, defaultgwdev)
+        macgwdev, _ = self.get_nic_hwaddr_and_ip(nics)
         if not macgwdev:
-            raise AttributeError("name not find for node {}".format(self))
+            raise AttributeError("name not found for node {}".format(self))
         return macgwdev.replace(":", '')
+
+    @property
+    def cmdline(self):
+        return self.download_content('/proc/cmdline').split()
 
     @property
     def storageAddr(self):
@@ -54,13 +60,33 @@ class Node:
             nic_data = self.client.info.nic()
             for nic in nic_data:
                 if nic['name'] == 'backplane':
-                    for ip in nic['addrs']:
-                        network = netaddr.IPNetwork(ip['addr'])
-                        if network.version == 4:
-                            self._storageAddr = network.ip.format()
-                            return self._storageAddr
+                    self._storageAddr = self.get_ip_from_nic(nic['addrs'])
+                    return self._storageAddr
             self._storageAddr = self.addr
         return self._storageAddr
+
+    @property
+    def public_addr(self):
+        nics = self.client.info.nic()
+        for nic in nics:
+            if nic['name'].startswith('zt'):
+                return self.get_ip_from_nic(nic['addrs'])
+        _, ip = self.get_nic_hwaddr_and_ip(nics)
+        return ip
+
+    def get_nic_hwaddr_and_ip(self, nics, name=None):
+        if not name:
+            name = self.client.bash("ip route | grep default | awk '{print $5}'", max_time=60).get().stdout.strip()
+        for nic in nics:
+            if nic['name'] == name:
+                return nic['hardwareaddr'], self.get_ip_from_nic(nic['addrs'])
+        return '', ''
+
+    def get_ip_from_nic(self, addrs):
+        for ip in addrs:
+            network = netaddr.IPNetwork(ip['addr'])
+            if network.version == 4:
+                return network.ip.format()
 
     def get_nic_by_ip(self, addr):
         try:
@@ -69,12 +95,12 @@ class Node:
         except StopIteration:
             return None
 
-    def _eligible_fscache_disk(self, disks):
+    def _eligible_zeroos_cache_disk(self, disks):
         """
         return the first disk that is eligible to be used as filesystem cache
         First try to find a ssd disk, otherwise return a HDD
         """
-        priorities = [DiskType.ssd, DiskType.hdd, DiskType.nvme]
+        priorities = [StorageType.SSD, StorageType.HDD, StorageType.NVME]
         eligible = {t: [] for t in priorities}
         # Pick up the first ssd
         usedisks = []
@@ -113,9 +139,9 @@ class Node:
 
         return available_disks
 
-    def _mount_fscache(self, storagepool):
+    def _mount_zeroos_cache(self, storagepool):
         """
-        mount the fscache storage pool and copy the content of the in memmory fs inside
+        mount the zeroos_cache storage pool and copy the content of the in memmory fs inside
         """
         mountedpaths = [mount.mountpoint for mount in self.list_mounts()]
 
@@ -160,28 +186,76 @@ class Node:
                     return freeports
             baseport += 1
 
-    def find_persistance(self, name='fscache'):
-        fscache_sp = None
+    def find_persistance(self, name='zos-cache'):
+        zeroos_cache_sp = None
         for sp in self.storagepools.list():
             if sp.name == name:
-                fscache_sp = sp
+                zeroos_cache_sp = sp
                 break
-        return fscache_sp
+        return zeroos_cache_sp
 
-    def is_configured(self, name=None):
-        if not name:
-            name = self.name
-        poolname = '{}_fscache'.format(name)
-        fscache_sp = self.find_persistance(poolname)
-        if fscache_sp is None:
+    def is_configured(self, name='zos-cache'):
+        zeroos_cache_sp = self.find_persistance(name)
+        if zeroos_cache_sp is None:
             return False
-        return bool(fscache_sp.mountpoint)
+        return bool(zeroos_cache_sp.mountpoint)
 
-    def ensure_persistance(self, name='fscache'):
+    def partition_and_mount_disks(self):
+        mounts = []
+        node_mountpoints = self.client.disk.mounts()
+
+        for disk in self.disks.list():
+            # this check is there to be able to test with a qemu setup. Not needed if you start qemu with --nodefaults
+            if disk.model in ['QEMU HARDDISK   ', 'QEMU DVD-ROM    ']:
+                continue
+
+            # temporary fix to ommit overwriting the usb boot disk
+            if disk.transport == 'usb':
+                continue
+
+            if not disk.partitions:
+                sp = self.storagepools.create(disk.name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
+                devicename = sp.devices[0]
+            else:
+                if len(disk.partitions) > 1:
+                    raise RuntimeError('Found more than 1 partition for disk %s' % disk.name)
+
+                partition = disk.partitions[0]
+                devicename = partition.devicename
+                sps = self.storagepools.list(devicename)
+                if len(sps) > 1:
+                    raise RuntimeError('Found more than 1 storagepool for device %s' % devicename)
+                elif not sps:
+                    sp = self.storagepools.create(disk.name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
+                else:
+                    sp = sps[0]
+
+            sp.mount()
+            if sp.exists(disk.name):
+                fs = sp.get(disk.name)
+            else:
+                fs = sp.create(disk.name)
+
+            mount_point = '/mnt/zdbs/{}'.format(disk.name)
+            self.client.filesystem.mkdir(mount_point)
+
+            device_mountpoints = node_mountpoints.get(devicename, [])
+            for device_mountpoint in device_mountpoints:
+                if device_mountpoint['mountpoint'] == mount_point:
+                    break
+            else:
+                subvol = 'subvol={}'.format(fs.subvolume)
+                self.client.disk.mount(sp.devicename, mount_point, [subvol])
+
+            mounts.append({'disk': disk.name, 'mountpoint': mount_point})
+
+        return mounts
+
+    def ensure_persistance(self, name='zos-cache'):
         """
         look for a disk not used,
         create a partition and mount it to be used as cache for the g8ufs
-        set the label `fs_cache` to the partition
+        set the label `zos-cache` to the partition
         """
         disks = self.disks.list()
         if len(disks) <= 0:
@@ -189,21 +263,21 @@ class Node:
             return
 
         # check if there is already a storage pool with the fs_cache label
-        fscache_sp = self.find_persistance(name)
+        zeroos_cache_sp = self.find_persistance(name)
 
         # create the storage pool if we don't have one yet
-        if fscache_sp is None:
-            disk = self._eligible_fscache_disk(disks)
-            fscache_sp = self.storagepools.create(name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
-        fscache_sp.mount()
+        if zeroos_cache_sp is None:
+            disk = self._eligible_zeroos_cache_disk(disks)
+            zeroos_cache_sp = self.storagepools.create(name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
+        zeroos_cache_sp.mount()
         try:
-            fscache_sp.get('logs')
+            zeroos_cache_sp.get('logs')
         except ValueError:
-            fscache_sp.create('logs')
+            zeroos_cache_sp.create('logs')
 
         # mount the storage pool
-        self._mount_fscache(fscache_sp)
-        return fscache_sp
+        self._mount_zeroos_cache(zeroos_cache_sp)
+        return zeroos_cache_sp
 
     def download_content(self, remote):
         buff = BytesIO()
@@ -217,26 +291,30 @@ class Node:
         self.client.filesystem.upload(remote, bytes)
 
     def wipedisks(self):
-        print('Wiping node {hostname}'.format(**self.client.info.os()))
-        mounteddevices = {mount['device']: mount for mount in self.client.info.disk()}
-
-        def getmountpoint(device):
-            for mounteddevice, mount in mounteddevices.items():
-                if mounteddevice.startswith(device):
-                    return mount
+        logger.debug('Wiping node {hostname}'.format(**self.client.info.os()))
 
         jobs = []
-        for disk in self.client.disk.list()['blockdevices']:
-            devicename = '/dev/{}'.format(disk['kname'])
-            if disk['tran'] == 'usb':
-                print('   * Not wiping usb {kname} {model}'.format(**disk))
+        # for disk in self.client.disk.list():
+        for disk in self.disks.list():
+            if disk.type == StorageType.CDROM:
+                logger.debug('   * Not wiping cdrom {kname} {model}'.format(**disk._disk_info))
                 continue
-            mount = getmountpoint(devicename)
-            if not mount:
-                print('   * Wiping disk {kname}'.format(**disk))
-                jobs.append(self.client.system('dd if=/dev/zero of={} bs=1M count=50'.format(devicename)))
+
+            if disk.transport == 'usb':
+                logger.debug('   * Not wiping usb {kname} {model}'.format(**disk._disk_info))
+                continue
+
+            if not disk.mountpoint:
+                for part in disk.partitions:
+                    if part.mountpoint:
+                        logger.debug('   * Not wiping {device} because {part} is mounted at {mountpoint}'\
+                            .format(device=disk.devicename, part=part.devicename,  mountpoint=part.mountpoint))
+                        break
+                else:
+                    logger.debug('   * Wiping disk {kname}'.format(**disk._disk_info))
+                    jobs.append(self.client.system('dd if=/dev/zero of={} bs=1M count=50'.format(disk.devicename)))
             else:
-                print('   * Not wiping {device} mounted at {mountpoint}'.format(device=devicename, mountpoint=mount['mountpoint']))
+                logger.debug('   * Not wiping {device} mounted at {mountpoint}'.format(device=disk.devicename, mountpoint=disk.mountpoint))
 
         # wait for wiping to complete
         for job in jobs:
@@ -251,22 +329,30 @@ class Node:
                                    mount['opts']))
         return allmounts
 
-    def is_running(self):
+    def is_running(self, timeout=30):
         state = False
         start = time.time()
         err = None
-        while time.time() < start + 30:
+        while time.time() < start + timeout:
             try:
                 self.client.testConnectionAttempts = 0
                 state = self.client.ping()
                 break
-            except (RuntimeError, ConnectionError, redis.TimeoutError, TimeoutError) as error:
+            except (RuntimeError, ConnectionError, redis.ConnectionError, redis.TimeoutError, TimeoutError) as error:
                 err = error
                 time.sleep(1)
         else:
-            print("Could not ping %s within 30 seconds due to %s" % (self.addr, err))
+            logger.debug("Could not ping %s within 30 seconds due to %s" % (self.addr, err))
 
         return state
+
+    def uptime(self):
+        response = self.client.system('cat /proc/uptime').get()
+        output = response.stdout.split(' ')
+        return float(output[0])
+
+    def reboot(self):
+        self.client.raw('core.reboot', {})
 
     def __str__(self):
         return "Node <{host}:{port}>".format(

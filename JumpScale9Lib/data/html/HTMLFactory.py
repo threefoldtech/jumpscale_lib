@@ -1,12 +1,13 @@
 from js9 import j
 
 # from .HTML2Text import *
+JSBASE = j.application.jsbase_get_class()
 
-
-class HTMLFactory:
+class HTMLFactory(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.tools.html"
+        JSBASE.__init__(self)
 
     def html2text(self, html):
         """

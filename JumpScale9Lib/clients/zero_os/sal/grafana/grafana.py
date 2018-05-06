@@ -6,8 +6,11 @@ import requests
 from js9 import j
 
 
-class Grafana:
+
+
+class Grafana():
     def __init__(self, container, ip, port, url):
+
         self.container = container
         self.ip = ip
         self.port = port

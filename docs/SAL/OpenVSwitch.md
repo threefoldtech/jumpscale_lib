@@ -24,7 +24,7 @@ j.sal.openvswitch.configureStaticAddress(interfacename, ipaddr, gateway)
 - Get an interface type from its name
 
 ```python
-j.sal.openvswitch.getType()
+j.sal.openvswitch.getType(interface_name)
 ```
 
 - Resetting of an interface to the default configurations

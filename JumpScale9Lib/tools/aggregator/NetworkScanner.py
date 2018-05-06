@@ -2,14 +2,17 @@ import re
 from xml.etree import ElementTree
 from js9 import j
 
+JSBASE = j.application.jsbase_get_class()
 
-class NetworkScanner:
+
+class NetworkScanner(JSBASE):
     COMMAND = 'nmap -n --disable-arp-ping -send-ip -Pn -sS -p{ports} -oX - {cidr}'
 
     def __init__(self, cidr, ports=[80]):
+        JSBASE.__init__(self)
         code, _, _ = j.sal.process.execute('which nmap', showout=False, die=False)
         if code != 0:
-            j.logger.logging.info('nmap not found, installing...')
+            self.logger.info('nmap not found, installing...')
             j.tools.prefab.local.system.package.install('nmap')
 
         self._ports = ','.join([str(port) for port in ports])

@@ -3,21 +3,26 @@ from js9 import j
 
 JSConfigFactory = j.tools.configmanager.base_class_configs
 JSConfigClient = j.tools.configmanager.base_class_config
-
+JSBASE = j.application.jsbase_get_class()
 TEMPLATE = """
 url = "redis://localhost:6379/0"
 actors_path = "actors"
 """
-class CeleryFactory(JSConfigFactory):
+
+
+class CeleryFactory(JSConfigFactory, JSBASE):
     def __init__(self):
         self.__jslocation__ = "j.clients.celery"
+        JSBASE.__init__(self)
         JSConfigFactory.__init__(self, CeleryClient)
 
-class CeleryClient(JSConfigClient):
 
-    def __init__(self, instance, data={}, parent=None):
+class CeleryClient(JSConfigClient, JSBASE):
+
+    def __init__(self, instance, data={}, parent=None, interactive=False):
+        JSBASE.__init__(self)
         JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE)
+                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         self.actors = {}
         self.app = None
         self.url = self.config.data['url']
@@ -80,7 +85,7 @@ class CeleryClient(JSConfigClient):
 
         from celery import Celery
 
-        # j.clients.redis.start4core()
+        # j.clients.redis.core_start()
 
         app = Celery('tasks', broker=self.url)
 

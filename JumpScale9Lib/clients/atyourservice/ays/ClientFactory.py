@@ -2,6 +2,7 @@ from js9 import j
 from .client import Client
 
 JSConfigBase = j.tools.configmanager.base_class_configs
+JSBASE = j.application.jsbase_get_class()
 
 
 class ClientFactory(JSConfigBase):

@@ -3,19 +3,23 @@ from js9 import j
 
 import json as json
 
+JSBASE = j.application.jsbase_get_class()
 
-class packInCodeFactory:
+
+class packInCodeFactory(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.tools.packInCode"
+        JSBASE.__init__(self)
 
     def get4python(self):
         return packInCodePython()
 
 
-class packInCodePython:
+class packInCodePython(JSBASE):
 
     def __init__(self):
+        JSBASE.__init__(self)
         self.code = """
 from js9 import j
 import JumpScale9Lib.tools.packInCode

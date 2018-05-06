@@ -6,13 +6,15 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class StorageEngine:
+
+class StorageEngine():
     """storageEngine server"""
 
     def __init__(self, name, container, enabled=True, status='running', bind='0.0.0.0:16379', data_dir='/mnt/data', master=None):
         """
         TODO: write doc string
         """
+
         self.name = name
         self.bind = bind
         self.enabled = enabled

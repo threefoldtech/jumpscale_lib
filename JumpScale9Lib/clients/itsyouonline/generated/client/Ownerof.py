@@ -2,11 +2,13 @@
 Auto-generated class for Ownerof
 """
 from .EmailAddress import EmailAddress
-
+from js9 import j
 from . import client_support
 
 
-class Ownerof(object):
+
+
+class Ownerof( ):
     """
     auto-generated. don't touch.
     """
@@ -21,6 +23,7 @@ class Ownerof(object):
         return Ownerof(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

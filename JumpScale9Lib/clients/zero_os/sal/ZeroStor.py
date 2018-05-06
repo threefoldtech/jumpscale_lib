@@ -1,14 +1,17 @@
 import logging
 import time
+from js9 import j
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class ZeroStor:
+
+class ZeroStor():
     """zerostor server"""
 
     def __init__(self, name, container, bind='0.0.0.0:8080', data_dir='/mnt/data', meta_dir='/mnt/metadata', max_size_msg=64):
+
         self.name = name
         self.container = container
         self.bind = bind

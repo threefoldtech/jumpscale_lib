@@ -11,6 +11,7 @@ from llfuse import FUSEError
 
 from js9 import j
 
+
 try:
     import faulthandler
 except ImportError:
@@ -29,6 +30,7 @@ class FuseOperations(llfuse.Operations):
 
     def __init__(self, rootpath):
         super().__init__()
+
         self.rootpath = rootpath
         self._flistmeta = j.tools.flist.getFlistMetadata(rootpath)
         self.init_data()

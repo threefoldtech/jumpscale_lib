@@ -226,7 +226,7 @@ def int2bin(value, size, signed):
     data = struct.pack(">%s" % _type, value)
     result = ""
     for char in data:
-        result = char + result
+        result = chr(char) + result
     return result
 
 

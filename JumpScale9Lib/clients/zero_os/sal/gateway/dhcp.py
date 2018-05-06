@@ -1,22 +1,22 @@
 import signal
 import time
-
-from zeroos.orchestrator.sal import templates
+from .. import templates
 
 DNSMASQ = '/bin/dnsmasq --conf-file=/etc/dnsmasq.conf -d'
 
 
+
 class DHCP:
-    def __init__(self, container, domain, dhcps):
+    def __init__(self, container, domain, networks):
         self.container = container
         self.domain = domain
-        self.dhcps = dhcps
+        self.networks = networks
 
     def apply_config(self):
-        dnsmasq = templates.render('dnsmasq.conf', domain=self.domain, dhcps=self.dhcps)
+        dnsmasq = templates.render('dnsmasq.conf', domain=self.domain, networks=self.networks)
         self.container.upload_content('/etc/dnsmasq.conf', dnsmasq)
 
-        dhcp = templates.render('dhcp', dhcps=self.dhcps)
+        dhcp = templates.render('dhcp', networks=self.networks)
         self.container.upload_content('/etc/dhcp', dhcp)
 
         self.stop()

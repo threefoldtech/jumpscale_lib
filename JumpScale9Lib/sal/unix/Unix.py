@@ -17,6 +17,7 @@ from JumpScale9.data.time.TimeInterval import TimeInterval as TimeIntervalUnit
 # TODO: move many of these methods to prefab2 (our prefab) or to system if more appropriate
 # TODO: this file needs to go away
 # TODO: make sure we use proper names & add to right prefab module
+JSBASE = j.application.jsbase_get_class()
 
 
 def user_in_group(username, groupname):
@@ -46,11 +47,11 @@ def user_in_group(username, groupname):
     return user.pw_gid == group.gr_gid
 
 
-class UnixSystem:
+class UnixSystem(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.unix"
-        self.logger = j.logger.get("j.sal.unix")
+        JSBASE.__init__(self)
 
     def getBashEnvFromFile(self, file, var):
         '''Get the value of an environment variable in a Bash file
@@ -225,7 +226,7 @@ class UnixSystem:
         @param pid: process id
         """
 
-        j.logger.logging.info('Killing process group of %d' % pid)
+        self.logger.info('Killing process group of %d' % pid)
         import signal
         os.killpg(os.getpgid(pid), signal.SIGKILL)
 
@@ -243,7 +244,7 @@ class UnixSystem:
         """
         if not group:
             group = 'root'
-        j.logger.logging.info('Chown %s:%s %s' % (user, group, path))
+        self.logger.info('Chown %s:%s %s' % (user, group, path))
         uid = pwd.getpwnam(user).pw_uid
         if group is None:
             gid = grp.getgrnam(group).gr_gid
@@ -259,7 +260,7 @@ class UnixSystem:
         """
         Chmod based on system.fs.walk
         """
-        j.logger.logging.info('Chmod %s' % root)
+        self.logger.info('Chmod %s' % root)
         if j.sal.fs.isFile(root):
             os.chmod(root, mode)
         else:
@@ -334,7 +335,7 @@ class UnixSystem:
         return j.sal.process.executeDaemon(**kwargs)
 
     def _prepareCommand(self, command, username):
-        j.logger.logging.debug('Attempt to run %s as user %s' % (command, username))
+        self.logger.debug('Attempt to run %s as user %s' % (command, username))
         try:
             pwent = pwd.getpwnam(username)
         except KeyError:
@@ -361,7 +362,7 @@ class UnixSystem:
         if not path or not j.sal.fs.checkDirParam(path):
             raise ValueError('Path %s is invalid' % path)
 
-        j.logger.logging.info('Change root to %s' % path)
+        self.logger.info('Change root to %s' % path)
         os.chroot(path)
 
     def addSystemUser(self, username, groupname=None, shell="/bin/bash", homedir=None):
@@ -376,7 +377,7 @@ class UnixSystem:
         '''
 
         if not j.sal.unix.unixUserExists(username):
-            j.logger.logging.info(
+            self.logger.info(
                 "User [%s] does not exist, creating an entry" % username)
 
             command = "useradd"
@@ -402,7 +403,7 @@ class UnixSystem:
                 j.sal.fs.chmod(homedir, 0o700)
 
         else:
-            j.logger.logging.warning("User %s already exists" % username)
+            self.logger.warning("User %s already exists" % username)
 
     def addSystemGroup(self, groupname):
         ''' Add a group to the system
@@ -413,14 +414,14 @@ class UnixSystem:
         @type groupname : string
         '''
         if not j.sal.unix.unixGroupExists(groupname):
-            j.logger.logging.info("Group [%s] does not exist, creating an entry" % groupname)
+            self.logger.info("Group [%s] does not exist, creating an entry" % groupname)
             exitCode, stdout, stderr = j.sal.process.execute("groupadd %s" % groupname)
 
             if exitCode:
                 output = '\n'.join(('Stdout:', stdout, 'Stderr:', stderr, ))
                 raise j.exceptions.RuntimeError('Failed to add group %s, error: %s' % (groupname, output))
         else:
-            j.logger.logging.warning("Group %s already exists" % groupname)
+            self.logger.warning("Group %s already exists" % groupname)
 
     def addUserToGroup(self, username, groupname):
         assert j.sal.unix.unixUserExists(username), \

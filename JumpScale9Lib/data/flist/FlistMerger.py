@@ -2,7 +2,7 @@ from js9 import j
 import capnp
 from . import model_capnp as ModelCapnp
 
-logger = j.logger.get('j.tools.flist.merger')
+logger = j.logger.get(__name__)
 
 
 class FlistMerger:
@@ -135,7 +135,6 @@ def fileFunction(dirobj, type, name, args, subobj):
 
     dest_dir = dest_current_dir(dest_fs, dirobj)
     dest_dir.fileReplace(subobj, create=True)
-
 
     # copy aci
     if not dest_fs.aciCollection.exists(subobj.aclkey):

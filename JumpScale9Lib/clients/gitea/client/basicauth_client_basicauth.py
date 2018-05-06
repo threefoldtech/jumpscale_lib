@@ -5,6 +5,7 @@ import base64
 
 class BasicAuthClientBasicauth:
     def __init__(self, http_client):
+        pass
         self._http_client = http_client
 
     def set_authorization_header(self, username, password):

@@ -22,14 +22,17 @@ import binascii
 import socket
 import select
 import netaddr
+from js9 import j
+JSBASE = j.application.jsbase_get_class()
 
 
-class ApiRos:
+class ApiRos(JSBASE):
     "Routeros api"
 
     def __init__(self, sk):
         self.sk = sk
         self.currenttag = 0
+        JSBASE.__init__(self)
 
     def login(self, username, pwd):
         for repl, attrs in self.talk(["/login"]):
@@ -78,13 +81,11 @@ class ApiRos:
             r.append(w)
 
     def writeWord(self, w):
-        # print "<<< " + w
         self.writeLen(len(w))
         self.writeStr(w)
 
     def readWord(self):
         ret = self.readStr(self.readLen())
-        # print ">>> " + ret
         return ret
 
     def writeLen(self, l):
@@ -162,9 +163,10 @@ class ApiRos:
         return ret
 
 
-class RouterOS:
+class RouterOS(JSBASE):
 
     def __init__(self, host, login, password):
+        JSBASE.__init__(self)
         # self.configPath = j.sal.fs.joinPaths('/etc', 'RouterOS')
         self._s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._s.connect((host, 8728))
@@ -188,8 +190,8 @@ class RouterOS:
             cmds.append(arg)
         if args != {}:
             cmds.append("")
-        print(">>> DO:")
-        print(cmds)
+        self.logger.debug(">>> DO:")
+        self.logger.debug(cmds)
         r = self.api.talk(cmds)
         return self._parse_result(r)
 
@@ -308,7 +310,7 @@ class RouterOS:
         if single:
             for item in self.ipaddr_getall():
                 if item["interface"] == interfacename:
-                    print(("found other addr already on interface, will remove.:%s" % item["ip"]))
+                    self.logger.debug(("found other addr already on interface, will remove.:%s" % item["ip"]))
                     self.ipaddr_remove(item["ip"])
         return self.do("/ip/address/add", args=arg)
 
@@ -387,15 +389,15 @@ class RouterOS:
             self.ftp.retrbinary('RETR %s' % path, open(dest, 'wb').write)
         else:
             try:
-                print(("download '%s'" % path))
+                self.logger.debug(("download '%s'" % path))
                 self.ftp.retrbinary('RETR %s' % path, open(dest, 'wb').write)
-                print()
+                self.logger.debug()
             except Exception as e:
-                print("ERROR")
+                self.logger.error("ERROR")
                 pass
 
     def upload(self, path, dest):
-        print(("upload: '%s' to '%s'" % (path, dest)))
+        self.logger.debug(("upload: '%s' to '%s'" % (path, dest)))
         self._getFtp()
         if not j.sal.fs.exists(path=path):
             raise j.exceptions.RuntimeError("Cannot find %s" % path)
@@ -411,7 +413,7 @@ class RouterOS:
 
     def uploadExecuteScript(self, name, removeAfter=True, vars={}, srcpath=""):
         if srcpath == "":
-            print(("EXECUTE SCRIPT:%s" % name))
+            self.logger.debug(("EXECUTE SCRIPT:%s" % name))
             name = name + ".rsc"
             src = j.sal.fs.joinPaths(self.configpath, name)
         else:
@@ -423,9 +425,9 @@ class RouterOS:
         src = j.sal.fs.joinPaths(j.dirs.TMPDIR, j.sal.fs.getTempFileName())
         j.sal.fs.writeFile(src, content)
 
-        print("EXECUTE:")
-        print(content)
-        print("#################END##################")
+        self.logger.debug("EXECUTE:")
+        self.logger.debug(content)
+        self.logger.debug("#################END##################")
 
         self.upload(src, name)
         self.do("/import", args={"file-name": name})

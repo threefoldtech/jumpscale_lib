@@ -21,9 +21,9 @@ class Intercom(JSConfigFactory):
 
 
 class IntercomClient(JSConfigClient):
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE)
+                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         c = self.config.data
         self.token = c['token']
         self.api = Client(personal_access_token=self.token)
@@ -74,7 +74,6 @@ class IntercomClient(JSConfigClient):
             }
         })
 
-
     def get_user(self, email):
         user = self.api.users.find(email=email)
         return user
@@ -97,9 +96,3 @@ class IntercomClient(JSConfigClient):
             if admin.name == name:
                 return admin
         return None
-
-
-
-
-
-

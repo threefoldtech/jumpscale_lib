@@ -27,7 +27,10 @@ from urllib.parse import urlparse
 # h = AllHandler()
 # logging.getLogger("asyncio").addHandler(h)
 
-class Offliner:
+JSBASE = j.application.jsbase_get_class()
+
+
+class Offliner(JSBASE):
 
     """
     functionality to inspect objectr structure and generate apifile
@@ -35,6 +38,7 @@ class Offliner:
 
     def __init__(self):
         self.__jslocation__ = "j.tools.offliner"
+        JSBASE.__init__(self)
 
     # @asyncio.coroutine
     def getSiteDownloadCmd(self, url, dest="", level=5, docElementsOnly=True, restrictToDomain=True):
@@ -59,7 +63,7 @@ class Offliner:
             cmd += " --domains %s" % domain
 
         cmd += " %s" % url
-        print(cmd)
+        self.logger.debug(cmd)
         return cmd
 
         # # Create the subprocess, redirect the standard output into a pipe

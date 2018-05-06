@@ -2,11 +2,13 @@
 Auto-generated class for GetOrganizationUsersResponseBody
 """
 from .OrganizationUser import OrganizationUser
-
+from js9 import j
 from . import client_support
 
 
-class GetOrganizationUsersResponseBody(object):
+
+
+class GetOrganizationUsersResponseBody( ):
     """
     auto-generated. don't touch.
     """
@@ -22,6 +24,7 @@ class GetOrganizationUsersResponseBody(object):
         return GetOrganizationUsersResponseBody(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

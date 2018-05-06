@@ -3,9 +3,10 @@ from js9 import j
 import time
 
 # TODO: *3 despiegk very early spec, needs to be done todo
+JSBASE = j.application.jsbase_get_class()
 
 
-class LogDumper:
+class LogDumper(JSBASE):
     """
     dump the info to log files,
     for log's the log files are human readable
@@ -17,7 +18,7 @@ class LogDumper:
     """
 
     def __init__(self):
-        pass
+        JSBASE.__init__(self)
 
     def processLog(self):
         """

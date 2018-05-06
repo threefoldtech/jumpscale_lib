@@ -5,11 +5,11 @@ import time
 import logging
 from queue import Empty
 
-
+JSBASE = j.application.jsbase_get_class()
 NUM_WORKERS = 4
 
 
-class BaseDumper:
+class BaseDumper(JSBASE):
 
     def __init__(self, cidr, ports=[6379], scaninterval=300):
         logging.root.setLevel(logging.INFO)

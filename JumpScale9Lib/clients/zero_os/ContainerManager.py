@@ -13,7 +13,7 @@ from . import typchk
 DefaultTimeout = 10  # seconds
 
 
-class BaseClient:
+class BaseClient():
     _system_chk = typchk.Checker({
         'name': str,
         'args': [str],
@@ -28,6 +28,7 @@ class BaseClient:
     })
 
     def __init__(self, timeout=None):
+
         if timeout is None:
             self.timeout = DefaultTimeout
         else:
@@ -113,7 +114,6 @@ class BaseClient:
             if not result.code:
                 result.code = 500
             raise ResultError(msg='%s' % result.data, code=result.code)
-
 
         return result
 
@@ -314,19 +314,20 @@ class ContainerClient(BaseClient):
         cmd_id = json.loads(result.data)
         return self._client.response_for(cmd_id)
 
-class ContainerManager:
+
+class ContainerManager():
     _nic = {
-        'type': typchk.Enum('default', 'bridge', 'zerotier', 'vlan', 'vxlan'),
+        'type': typchk.Enum('default', 'bridge', 'zerotier', 'vlan', 'vxlan', 'macvlan'),
         'id': typchk.Or(str, typchk.Missing()),
         'name': typchk.Or(str, typchk.Missing()),
         'hwaddr': typchk.Or(str, typchk.Missing()),
         'config': typchk.Or(
             typchk.Missing(),
             {
-                'dhcp': typchk.Or(bool, typchk.Missing()),
-                'cidr': typchk.Or(str, typchk.Missing()),
-                'gateway': typchk.Or(str, typchk.Missing()),
-                'dns': typchk.Or([str], typchk.Missing()),
+                'dhcp': typchk.Or(bool, typchk.IsNone(), typchk.Missing()),
+                'cidr': typchk.Or(str, typchk.IsNone(), typchk.Missing()),
+                'gateway': typchk.Or(str, typchk.IsNone(), typchk.Missing()),
+                'dns': typchk.Or([str], typchk.IsNone(), typchk.Missing()),
             }
         ),
         'monitor': typchk.Or(bool, typchk.Missing()),
@@ -342,6 +343,7 @@ class ContainerManager:
         'nics': [_nic],
         'port': typchk.Or(
             typchk.Map(int, int),
+            typchk.Map(str, int),
             typchk.IsNone()
         ),
         'privileged': bool,
@@ -369,9 +371,13 @@ class ContainerManager:
         'index': int,
     })
 
+    _portforward_chk = typchk.Checker({
+        'container': int,
+        'host_port': str,
+        'container_port': int,
+    })
+
     DefaultNetworking = object()
-
-
 
     def __init__(self, client):
         self._client = client
@@ -390,8 +396,8 @@ class ContainerManager:
         :param nics: Configure the attached nics to the container
                      each nic object is a dict of the format
                      {
-                        'type': nic_type # default, bridge, zerotier, vlan, or vxlan (note, vlan and vxlan only supported by ovs)
-                        'id': id # depends on the type, bridge name, zerotier network id, the vlan tag or the vxlan id
+                        'type': nic_type # default, bridge, zerotier, macvlan, vlan, or vxlan (note, vlan and vxlan only supported by ovs)
+                        'id': id # depends on the type, bridge name, zerotier network id, the parent link (macvlan), the vlan tag or the vxlan id
                         'name': name of the nic inside the container (ignored in zerotier type)
                         'hwaddr': Mac address of nic.
                         'config': { # config is only honored for bridge, vlan, and vxlan types
@@ -404,6 +410,7 @@ class ContainerManager:
         :param port: A dict of host_port: container_port pairs (only if default networking is enabled)
                        Example:
                         `port={8080: 80, 7000:7000}`
+                       Source Format: NUMBER, IP:NUMBER, IP/MAST:NUMBER, or DEV:NUMBER
         :param hostname: Specific hostname you want to give to the container.
                          if None it will automatically be set to core-x,
                          x beeing the ID of the container
@@ -480,8 +487,8 @@ class ContainerManager:
 
         :param container: container ID
         :param nic: {
-                        'type': nic_type # default, bridge, zerotier, vlan, or vxlan (note, vlan and vxlan only supported by ovs)
-                        'id': id # depends on the type, bridge name, zerotier network id, the vlan tag or the vxlan id
+                        'type': nic_type # default, bridge, zerotier, macvlan, vlan, or vxlan (note, vlan and vxlan only supported by ovs)
+                        'id': id # depends on the type, bridge name, zerotier network id, the parent link (macvlan), the vlan tag or the vxlan id
                         'name': name of the nic inside the container (ignored in zerotier type)
                         'hwaddr': Mac address of nic.
                         'config': { # config is only honored for bridge, vlan, and vxlan types
@@ -573,3 +580,40 @@ class ContainerManager:
 
         return JSONResponse(self._client.raw('corex.restore', args, tags=tags))
 
+    def add_portfoward(self, container, host_port, container_port):
+        """
+        Add portforward from host to kvm container
+        :param container: id of the container
+        :param host_port: port on host to forward from (string)
+                          format: NUMBER, IP:NUMBER, IP/MAST:NUMBER, or DEV:NUMBER
+        :param container_port: port on container to forward to
+        :return:
+        """
+        if isinstance(host_port, int):
+            host_port = str(host_port)
+
+        args = {
+            'container': container,
+            'host_port': host_port,
+            'container_port': container_port,
+        }
+        self._portforward_chk.check(args)
+
+        return self._client.json('corex.portforward-add', args)
+
+    def remove_portfoward(self, container, host_port, container_port):
+        """
+        Remove portforward from host to kvm container
+        :param container: id of the container
+        :param host_port: port on host forwarded from
+        :param container_port: port on container forwarded to
+        :return:
+        """
+        args = {
+            'container': container,
+            'host_port': host_port,
+            'container_port': container_port,
+        }
+        self._portforward_chk.check(args)
+
+        return self._client.json('corex.portforward-remove', args)

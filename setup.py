@@ -15,7 +15,7 @@ def _post_install(libname, libpath):
     # c[libname] = libpath
     j.core.state.configSet('plugins', c)
     j.sal.process.execute(
-        "pip3 install 'git+https://github.com/zero-os/0-core#egg=0-core-client&subdirectory=client/py-client'")
+        "pip3 install 'git+https://github.com/trezor/python-mnemonic.git'")
     j.tools.jsloader.generate()
 
 
@@ -78,12 +78,12 @@ setup(
         'netaddr>=0.7.19',
         'netifaces>=0.10.5',
         'ovh>=0.4.7',
-        'paramiko>=2.1.2',
+        'paramiko>=1.15.3,<2.2',  # for parallel-ssh
         'path.py>=10.3.1',
         'peewee>=2.9.2',
-        'psutil>=5.2.2 ',
         'psycopg2>=2.7.1',
         'pudb>=2017.1.2',
+        'cryptography>=2.2.0',
         'pyOpenSSL>=17.0.0',
         'pyblake2>=0.9.3',
         'pycapnp>=0.5.12',
@@ -94,17 +94,13 @@ setup(
         'uvloop>=0.8.0',
         'watchdog>=0.8.3',
         'dnspython>=1.15.0',
-        # 'libvirt-python>=3.3.0',
-        # 'apache_libcloud>=2.0.0',
         'python-etcd>=0.4.5',
         'zerotier>=1.1.2',
-        'packet-python>=1.33',
+        'packet-python>=1.37',
         'blosc>=1.5.1',
-        'dnspython',
         'pynacl>=1.1.2',
-    ],
-    dependency_links=[
-        "git+https://github.com/pyca/pynacl"
+        'ipcalc>=1.99.0',
+        'ed25519>=1.4',
     ],
     cmdclass={
         'install': install,

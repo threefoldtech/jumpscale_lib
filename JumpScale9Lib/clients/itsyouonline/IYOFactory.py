@@ -1,18 +1,13 @@
-import requests
-import urllib
+
 
 from js9 import j
-from JumpScale9Lib.clients.itsyouonline.generated.client import Client as IYO_Client
+from .IYOClient import IYOClient
+import requests
+import jwt
+import time
 
 DEFAULT_BASE_URL = "https://itsyou.online/api"
 
-TEMPLATE = """
-baseurl = "https://itsyou.online/api"
-application_id_ = ""
-secret_ = ""
-"""
-
-JSConfigBase = j.tools.configmanager.base_class_config
 JSConfigBaseFactory = j.tools.configmanager.base_class_configs
 
 
@@ -22,34 +17,94 @@ class IYOFactory(JSConfigBaseFactory):
         self.__jslocation__ = 'j.clients.itsyouonline'
         self.raml_spec = "https://raw.githubusercontent.com/itsyouonline/identityserver/master/specifications/api/itsyouonline.raml"
         JSConfigBaseFactory.__init__(self, IYOClient, single_item=True)
+        self._default = None
 
     def install(self):
+        """installs python-jose library locally
+        
+        """
+
         j.tools.prefab.local.runtimes.pip.install("python-jose")
+
+    def refresh_jwt_token(self, token, validity=86400):
+        """refresh a jwt if expired, needs to be refreshable
+        
+        :param token: refreshable jwt token
+        :type token: str
+        :param validity: expiration time of the refreshed jwt, defaults to 86400
+        :param validity: int, optional
+        :return: refreshed token
+        :rtype: str
+        """
+
+        try:
+            import jose.jwt
+        except ImportError:
+            self.logger.info('jose not installed please use install method to get jose')
+            return
+        expires = self.jwt_expire_timestamp(token)
+        if 'refresh_token' not in jose.jwt.get_unverified_claims(token):
+            self.logger.info("Specified token can't be refreshed. Please choose another refreshable token")
+        elif self.jwt_is_expired(expires):
+            headers = {'Authorization': 'bearer %s' % token}
+            params = {'validity': validity}
+            resp = requests.get('https://itsyou.online/v1/oauth/jwt/refresh', headers=headers, params=params)
+            resp.raise_for_status()
+            return resp.content.decode()
+        return token
+
+    def jwt_is_expired(self, expiration):
+        """check if jwt is expired
+        
+        :param expiration: jwt expiration timestamp
+        :type expiration: int
+        :return: true if expired
+        :rtype: bool
+        """
+
+        if time.time() + 300 > expiration:
+            return True
+        return False
+
+    @property
+    def default(self):
+        """ return default itsyou.online instance"""
+
+        if self._default == None:
+            if j.tools.configmanager.sandbox_check():
+                raise RuntimeError("should not call IYO client in sandbox!")
+            self._default = self.get(interactive=False)
+        return self._default
+
 
     def test(self):
         """
         do:
         js9 'j.clients.itsyouonline.test()'
         """
-        from jose.jwt import get_unverified_claims
-        from .generated.client.PublicKey import PublicKey
-        from requests.exceptions import HTTPError
-        client = self.get()
-        jwt_data = get_unverified_claims(client.jwt)
-        username = jwt_data["username"]
+        # from .generated.client.PublicKey import PublicKey #WHY THIS???
+
+        client = j.clients.itsyouonline.default
+
+        self.logger.info(j.clients.itsyouonline.default.jwt)
+
+        self.logger.info(client.api.organizations.GetOrganization("threefold"))
+
+        # TODO:*1 why username???
 
         # Read all the API keys registered for your user
-        print("list all API keys:\n###########")
+        self.logger.debug("list all API keys")
         for key in client.api.users.ListAPIKeys(username).data:
-            print("label: %s" % key.label)
-            print("app ID %s" % key.applicationid)
+            self.logger.debug("label: %s" % key.label)
+            self.logger.debug("app ID %s" % key.applicationid)
 
-        # Create a new API key
+        # Create a new API key (is really a developer way though)
+        from requests.exceptions import HTTPError
         try:
             key = client.api.users.AddApiKey({"label": 'test'}, username).data
-            print("###########\ncreate new API key: ")
-            print("label: %s" % key.label)
-            print("app ID %s" % key.applicationid)
+            self.logger.debug("create new API key: ")
+            self.logger.debug("label: %s" % key.label)
+            self.logger.debug("app ID %s" % key.applicationid)
         except HTTPError as err:
             # example of how to deal with exceptions
             if err.response.status_code == 409:
@@ -61,81 +116,20 @@ class IYOFactory(JSConfigBaseFactory):
         key_labels = [k.label for k in client.api.users.ListAPIKeys(username).data]
         assert 'test' in key_labels
 
-        print("###########\ndelete api key")
+        self.logger.debug("delete api key")
         client.api.users.DeleteAPIkey('test', username)
 
         key_labels = [k.label for k in client.api.users.ListAPIKeys(username).data]
         assert 'test' not in key_labels
 
-    def jwt_get(self, client_id, secret, validity=None, refreshable=False, scope=None, base_url=DEFAULT_BASE_URL):
+    def jwt_expire_timestamp(self, token):
+        """Get expiration date of jwt token
+
+        :param token: jwt token
+        :type token: str
+        :return: return expiration date(timestamp) for the token
+        :rtype: int
         """
-        Get a a JSON Web token for an ItsYou.online organization or user.
 
-        Args:
-            client_id: global ID of the ItsYou.online organization or application ID of the API access key of the ItsYou.online user
-            secret: secret of the API access key of the ItsYou.online organization or user
-            validity: time in seconds after which the JWT will become invalid; defaults to 3600
-            refreshable (True/False): If true the JWT can be refreshed; defaults to False
-            scope: defaults to None
-            base_url: base url of the ItsYou.online service; defaults to https://itsyou.online
-        """
-        params = {
-            'grant_type': 'client_credentials',
-            'client_id': client_id,
-            'client_secret': secret,
-            'response_type': 'id_token'
-        }
-
-        if validity:
-            params["validity"] = validity
-
-        if refreshable:
-            params["scope"] = 'offline_access'
-
-        if scope:
-            if refreshable:
-                params["scope"] = params["scope"] + "," + scope
-            else:
-                params["scope"] = scope
-
-        url = urllib.parse.urljoin(base_url, '/v1/oauth/access_token')
-        resp = requests.post(url, params=params)
-        resp.raise_for_status()
-        jwt = resp.content.decode('utf8')
-        return jwt
-
-    def refresh_jwt_token(self, token, validity=86400):
-        headers = {'Authorization': 'bearer %s' % token}
-        params = {'validity': validity}
-        resp = requests.get('https://itsyou.online/v1/oauth/jwt/refresh', headers=headers, params=params)
-        resp.raise_for_status()
-        return resp.content.decode()
-
-
-class IYOClient(JSConfigBase):
-    def __init__(self, instance, data={}, parent=None):
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE)
-        self._jwt = None
-        self._client = None
-        self.api = None
-        self.oauth2_client_oauth_2_0 = None
-
-    def ensure_client(self):
-        if not self._client:
-            self._client = IYO_Client(base_uri=self.config.data['baseurl'])
-            self.api = self._client.api
-            self.oauth2_client_oauth_2_0 = self._client.oauth2_client_oauth_2_0
-
-    @property
-    def jwt(self):
-        if self.config.data["application_id_"] == "":
-            raise RuntimeError("Please configure your itsyou.online, do this by calling js9 "
-                               "'j.clients.itsyouonline.configure()'")
-        self.ensure_client()
-        if not self._jwt:
-            self._jwt = self._parent.jwt_get(self.config.data["application_id_"], self.config.data["secret_"])
-            self.api.session.headers.update({"Authorization": 'bearer {}'.format(self.jwt)})
-        return self._jwt
-
-    def reset(self):
-        self._jwt = None
+        jwt_data = jwt.decode(token, verify=False)
+        return jwt_data['exp']

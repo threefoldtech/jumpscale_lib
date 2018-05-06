@@ -1,13 +1,17 @@
 from .AggregatorClient import AggregatorClient
 from .AggregatorClientTest import AggregatorClientTest
 
+from js9 import j
+JSBASE = j.application.jsbase_get_class()
 
-class Aggregator:
+
+class Aggregator(JSBASE):
     """
     """
 
     def __init__(self):
         self.__jslocation__ = "j.tools.aggregator"
+        JSBASE.__init__(self)
 
     def getClient(self, redisConnection, nodename):
         return AggregatorClient(redisConnection, nodename)

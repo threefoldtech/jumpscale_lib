@@ -14,11 +14,15 @@ import re
 import pyblake2
 import capnp
 from . import model_capnp as ModelCapnp
+import base64
 
 from .models import DirModel
 from .models import DirCollection
 
 from path import Path
+
+
+logger = j.logger.get(__name__)
 
 
 class FList:
@@ -78,6 +82,7 @@ class FList:
         self.aciCollection = aciCollection
         self.userGroupCollection = userGroupCollection
         self.rootpath = rootpath
+        self._added_files = set()
 
     def _valid(self, fpath, excludes):
         """
@@ -136,8 +141,8 @@ class FList:
         for dirpathAbsolute, dirs, files in os.walk(path, topdown=False):
             # dirpath is full path need to bring it to the relative part
             dirRelPath, dirKey = self.path2key(dirpathAbsolute)
-            print("[+]    add: -- /%s" % dirRelPath)
-            print("[+]         \_ %s" % dirKey)
+            logger.debug("[+]    add: -- /%s" % dirRelPath)
+            logger.debug("[+]         \_ %s" % dirKey)
 
             # invalid directory
             if not self._valid(dirRelPath, _excludes):
@@ -172,7 +177,7 @@ class FList:
                 destlink = os.readlink(pathAbsolute)
                 llinks.append((rawdir, stat, destlink))
 
-                print("[+] dirlnk: -- /%s -> %s" % (rawdir, destlink))
+                logger.debug("[+] dirlnk: -- /%s -> %s" % (rawdir, destlink))
 
             for fname in files:
                 relPathWithName = os.path.join(dirRelPath, fname)
@@ -274,8 +279,8 @@ class FList:
                 counter += 1
 
                 dir_sub_relpath, dir_sub_key = self.path2key(absDirPathFull)
-                print("[+] subadd: -- /%s" % dir_sub_relpath)
-                print("[+]         \_ %s" % dir_sub_key)
+                logger.debug("[+] subadd: -- /%s" % dir_sub_relpath)
+                logger.debug("[+]         \_ %s" % dir_sub_key)
 
                 dbobj.attributes.dir.key = dir_sub_key  # link to directory
                 dbobj.name = j.sal.fs.getBaseName(dirRelPathFull)
@@ -514,16 +519,16 @@ class FList:
 
     def pprint(self, dirRegex=[], fileRegex=[], types="DFLS"):
         def procDir(dirobj, type, name, args, key):
-            print("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
+            logger.debug("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
 
         def procFile(dirobj, type, name, subobj, args):
-            print("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
+            logger.debug("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
 
         def procLink(dirobj, type, name, subobj, args):
-            print("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
+            logger.debug("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
 
         def procSpecial(dirobj, type, name, subobj, args):
-            print("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
+            logger.debug("%s/%s (%s)" % (dirobj.dbobj.location, name, type))
 
         result = []
         self.walk(
@@ -610,7 +615,7 @@ class FList:
 
             args.append("|".join(item))
 
-        print("Building old flist format")
+        logger.debug("Building old flist format")
         result = []
         self.walk(
             dirFunction=procDir,
@@ -620,44 +625,73 @@ class FList:
             args=result
         )
 
-        # print(result)
         return "\n".join(result) + "\n"
 
     def upload(self, host="127.0.0.1", port=16379):
         raise RuntimeError("Upload is not supported anymore, please check 'populate' method")
 
-    def populate(self):
-        import g8storclient
+    def _dummy(self, **kwargs):
+        pass
 
-        def procDir(dirobj, type, name, args, key):
-            # print("Dir: Ignore")
-            pass
+    def upload_to_backend(self, backend):
+        """
+        uploads directly using a backend client.
+        @param client: backend client. Can be a redis client or ardb client
+            - example: j.clients.redis.get(ipaddr=<ipaddr>, port=<port>, ardb_patch=True))
+        """
+        import g8storclient
+        self.populate()
+
+        self.dirCollection._db.rocksdb.compact_range()
 
         def procFile(dirobj, type, name, subobj, args):
             fullpath = "%s/%s/%s" % (self.rootpath, dirobj.dbobj.location, name)
-            print("[+] populating: %s" % fullpath)
+            self.logger.info("[+] uploading: %s" % fullpath)
             hashs = g8storclient.encrypt(fullpath)
 
             if hashs is None:
                 return
 
-            for index, value in enumerate(hashs):
+            for hash in hashs:
+                if not backend.exists(hash['hash']):
+                    backend.set(hash['hash'], hash['data'])
+
+        result = []
+        self.walk(
+            dirFunction=self._dummy,
+            fileFunction=procFile,
+            specialFunction=self._dummy,
+            linkFunction=self._dummy,
+            args=result
+        )
+
+    def populate(self):
+        import g8storclient
+
+        def procDir(dirobj, type, name, args, key):
+            pass
+
+        def procFile(dirobj, type, name, subobj, args):
+            fullpath = "%s/%s/%s" % (self.rootpath, dirobj.dbobj.location, name)
+            logger.debug("[+] populating: %s" % fullpath)
+            hashs = g8storclient.encrypt(fullpath)
+
+            if hashs is None:
+                return
+
+            for index, _ in enumerate(hashs):
                 hashs[index].pop('data', None)
 
             subobj.attributes.file.blocks = hashs
             dirobj.save()
 
-            # print(dirobj, name, subobj)
-
         def procLink(dirobj, type, name, subobj, args):
-            # print("Link: Ignore")
             pass
 
         def procSpecial(dirobj, type, name, subobj, args):
-            # print("Special: Ignore")
             pass
 
-        print("Populating")
+        logger.debug("Populating")
         result = []
         self.walk(
             dirFunction=procDir,
@@ -667,13 +701,85 @@ class FList:
             args=result
         )
 
+    def populate_missing_chunks(self, hubdirect_instance='main'):
+        import g8storclient
+
+        directclient = j.clients.hubdirect.get(hubdirect_instance)
+
+        all_files = {}
+        bykeys = {}
+        to_upload = []
+
+        for source, _, files in os.walk(self.rootpath):
+            for f in files:
+                path = os.path.join(source, f)
+                data = g8storclient.encrypt(path) or []
+                all_files[f] = data
+
+                # keeping a way to find the chunk back from it's hash
+                for id, chunk in enumerate(data):
+                    bykeys[chunk['hash']] = {'file': f, 'index': id}
+
+        # exists_post now wants binary keys
+        # we know we are dealing with strings hash, let's simply encode them before
+        for file in all_files:
+            for id, chunk in enumerate(all_files[file]):
+                all_files[file][id]['bhash'] = chunk['hash'].encode('utf-8')
+
+        for path, chunks in all_files.items():
+            res = directclient.api.exists.exists_post(set([chunk['bhash'] for chunk in chunks]))
+            keys = res.json()
+
+            # let's adding all missing keys
+            # to_upload += [base64.b64decode(key).decode('utf-8') for key in keys]
+            to_upload += keys
+
+        self.logger.info("[+] %d chunks to upload" % len(to_upload))
+
+        if len(to_upload) == 0:
+            return
+
+        upload = ()
+        currentsize = 0
+
+        for bhash in to_upload:
+            # we will upload all theses chunks, we decode them because we know
+            # theses are string hashs
+            hash = base64.b64decode(bhash).decode('utf-8')
+
+            if not bykeys.get(hash):
+                raise RuntimeError("Key not indexed, this should not happend")
+
+            filename = bykeys[hash]['file']
+            chunkindex = bykeys[hash]['index']
+
+            chunk = all_files[filename][chunkindex]
+            payload = base64.b64encode(chunk['data'])
+
+            upload += (('files[]', (bhash, payload)),)
+
+            currentsize += len(payload)
+
+            # if this pack is more than 20MB, uploading it
+            if currentsize > 20 * 1024 * 1024:
+                self.logger.info("[+] uploading part of the data...")
+                try:
+                    directclient.insert.insert_put(upload)
+                    currentsize = 0
+                except Exception as e:
+                    # weird error. could be an existing chunk undetected by previous check
+                    self.logger.error(e)
+
+        self.logger.info("[+] uploading last data...")
+        directclient.api.insert.insert_put(upload)
+
     def destroy(self):
         self.aciCollection.destroy()
         self.userGroupCollection.destroy()
         self.dirCollection.destroy()
-        print("Special: Ignore")
+        logger.debug("Special: Ignore")
 
-        print("Uploading")
+        logger.debug("Uploading")
         result = []
         self.walk(
             dirFunction=procDir,

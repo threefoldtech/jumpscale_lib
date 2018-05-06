@@ -3,13 +3,16 @@ from .InfluxDumper import InfluxDumper
 import time
 import random
 import io
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
 
 
-class AggregatorClientTest:
+class AggregatorClientTest(JSBASE):
     TEST_INFLUX_DB = "test"
 
     def __init__(self):
-        self.logger = j.logger.get(self.__class__.__name__)
+        JSBASE.__init__(self)
 
     def _buildReport(self, actuals, reported):
         buffer = io.StringIO()

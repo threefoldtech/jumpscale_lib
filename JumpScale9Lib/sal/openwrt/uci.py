@@ -1,13 +1,16 @@
 import collections
 from io import StringIO
 
+from js9 import j
+JSBASE = j.application.jsbase_get_class()
 
-class UCISection(collections.OrderedDict):
+class UCISection(collections.OrderedDict, JSBASE):
     _option = '\toption {key} \'{value}\'\n'
     _list = '\tlist {key} \'{value}\'\n'
 
     def __init__(self, type=None, name=None, *args, **kwargs):
         super(UCISection, self).__init__(*args, **kwargs)
+        JSBASE.__init__(self)
         self.type = self._validate(type)
         self.name = self._validate(name, True)
 
@@ -79,11 +82,12 @@ class UCISection(collections.OrderedDict):
             buffer.close()
 
 
-class UCI:
+class UCI(JSBASE):
 
     def __init__(self, package):
         self._package = package
         self._sections = list()
+        JSBASE.__init__(self)
 
     @property
     def sections(self):

@@ -1,22 +1,32 @@
 import time
+import yaml
 
 
-class CloudInit:
-    def __init__(self, container, config):
+class CloudInit():
+    def __init__(self, container, networks):
         self.container = container
-        self.config = config
+        self.networks = networks
         self.CONFIGPATH = "/etc/cloud-init"
 
     def apply_config(self):
-        self.cleanup(self.config.keys())
-
-        for key, value in self.config.items():
-            fpath = "%s/%s" % (self.CONFIGPATH, key)
-            self.container.upload_content(fpath, value)
+        self.cleanup()
+        for network in self.networks:
+            for host in network.hosts:
+                if not host.cloudinit.userdata['users']:
+                    continue
+                data = {'userdata': host.cloudinit.userdata,
+                        'metadata': host.cloudinit.metadata
+                }
+                fpath = "%s/%s" % (self.CONFIGPATH, host.macaddress)
+                self.container.upload_content(fpath, yaml.dump(data))
         if not self.is_running():
             self.start()
 
-    def cleanup(self, macaddresses):
+    def cleanup(self):
+        macaddresses = []
+        for network in self.networks:
+            for host in network.hosts:
+                macaddresses.append(host.macaddress)
         configs = self.container.client.filesystem.list(self.CONFIGPATH)
         for config in configs:
             if config["name"] not in macaddresses:

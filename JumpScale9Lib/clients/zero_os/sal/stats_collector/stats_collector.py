@@ -1,8 +1,12 @@
 import time
+from js9 import j
 
 
-class StatsCollector:
+
+
+class StatsCollector():
     def __init__(self, container, ip, port, db, retention, jwt):
+
         self.container = container
         self.ip = ip
         self.port = port

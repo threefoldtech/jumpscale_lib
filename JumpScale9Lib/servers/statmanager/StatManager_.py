@@ -1,11 +1,11 @@
 
 from js9 import j
+JSBASE = j.application.jsbase_get_class()
 
-
-class StatManager:
+class StatManager(JSBASE):
 
     def __init__(self):
-
+        JSBASE.__init__(self)
         self.inited = False
         self.historyObjs = {}
         self.historyObjsMod = {}
@@ -75,7 +75,7 @@ class StatManager:
                 if key in self.historyObjsMod and self.historyObjsMod[key]:
                     obj = self.historyObjs[key]
                     nrItemsIn5MinRow, nrItemsInHourRow = self.getNrItemsRow(key)
-                    print(("save: %s" % (obj.guid)))
+                    self.logger.debug(("save: %s" % (obj.guid)))
                     # trim values out of range
                     if nrItemsIn5MinRow != 0:
                         test = now5min - nrItemsIn5MinRow
@@ -112,7 +112,7 @@ class StatManager:
         return data
 
     def cleanCache(self):
-        print("clean cache")
+        self.logger.debug("clean cache")
         ttime = self.getEpoch()
         try:
             for key in list(self.historyObjs.keys()):

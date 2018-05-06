@@ -3,17 +3,20 @@ __author__ = 'delandtj'
 from netaddr import *
 from .netclasses import *
 from .systemlist import *
+from js9 import j
 
+JSBASE = j.application.jsbase_get_class()
 
 command_name = sys.argv[0]
 
 
-class NetLayout:
+class NetLayout(JSBASE):
 
     def __init__(self):
         self.interfaces = get_all_ifaces()
         self.nicdetail = {}
         self.bridges = {}
+        JSBASE.__init__(self)
 
     def load(self):
         self.nicdetail = get_nic_params()
@@ -44,7 +47,7 @@ class NetLayout:
         return False
 
 
-class VXNet:
+class VXNet(JSBASE):
 
     def __init__(self, netid, backend='vxbackend'):
         self.netid = NetID(netid)
@@ -52,6 +55,7 @@ class VXNet:
         self.ipv4 = None
         self.backend = backend
         self.existing = NetLayout()
+        JSBASE.__init__(self)
 
     def apply(self):
         """

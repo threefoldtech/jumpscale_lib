@@ -2,11 +2,13 @@
 Auto-generated class for UpdateApikeyReqBody
 """
 from .Label import Label
-
+from js9 import j
 from . import client_support
 
 
-class UpdateApikeyReqBody(object):
+
+
+class UpdateApikeyReqBody( ):
     """
     auto-generated. don't touch.
     """
@@ -21,6 +23,7 @@ class UpdateApikeyReqBody(object):
         return UpdateApikeyReqBody(**kwargs)
 
     def __init__(self, json=None, **kwargs):
+        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

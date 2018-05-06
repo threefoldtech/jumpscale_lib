@@ -2,15 +2,16 @@ import http.cookiejar
 import urllib.error
 import urllib.parse
 import urllib.request
-
+from js9 import j
 
 def Connect(username, password, hostname="127.0.0.1", port=8080):
     return BlockingConnection(username, password, hostname, port)
 
-
-class BlockingConnection:
+JSBASE = j.application.jsbase_get_class()
+class BlockingConnection(JSBASE):
 
     def __init__(self, username, password, hostname="127.0.0.1", port=8080):
+        JSBASE.__init__(self)
         self.cookiejar = http.cookiejar.CookieJar()
         data = {"username": username, "password": password}
         self.urlopener = urllib.request.build_opener(
@@ -26,7 +27,7 @@ class BlockingConnection:
                 raise Exception("Invalid username or password")
             self.basicAuth = False
         except urllib.error.HTTPError as error:
-            if error.code == 501:  # not Implemented, treat it as an old device
+            if error.code in [501, 401]:  # not Implemented, treat it as an old device
                 url = "http://%s:%s@%s:%s" % (username,
                                               password, hostname, port)
                 self.urlopener = urllib.request.FancyURLopener()

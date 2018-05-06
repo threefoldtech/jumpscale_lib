@@ -1,24 +1,25 @@
 from js9 import j
 
+JSBASE = j.application.jsbase_get_class()
 
 OP_ADD = '+'
 OP_DEL = '-'
 OP_ERS = '--'
 
 
-class SSHError(Exception):
-    pass
-
-
-class SSHD:
-
+class SSHError(Exception, JSBASE):
     def __init__(self):
-        self.__jslocation__ = "j.sal.sshd"
+        JSBASE.__init__(self)
+
+
+class SSHD(JSBASE):
 
     SSH_ROOT = j.tools.path.get('/root/.ssh')
     SSH_AUTHORIZED_KEYS = j.tools.path.get(SSH_ROOT).joinpath('authorized_keys')
 
     def __init__(self):
+        self.__jslocation__ = "j.sal.sshd"
+        JSBASE.__init__(self)
         self._local = j.tools.executorLocal
         self._keys = None
         self._transactions = []

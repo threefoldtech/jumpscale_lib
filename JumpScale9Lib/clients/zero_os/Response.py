@@ -2,7 +2,9 @@ import textwrap
 import json
 import time
 import logging
+import sys
 
+from js9 import j
 
 logger = logging.getLogger('g8core')
 
@@ -12,8 +14,10 @@ class JobNotFoundError(Exception):
 
 
 class ResultError(RuntimeError):
+
     def __init__(self, msg, code=0):
         super().__init__(msg)
+
         self._message = msg
         self._code = code
 
@@ -26,7 +30,7 @@ class ResultError(RuntimeError):
         return self._message
 
 
-class Return:
+class Return():
 
     def __init__(self, payload):
         self._payload = payload
@@ -134,7 +138,8 @@ class Return:
         return textwrap.dedent(tmpl).format(code=self.code, state=self.state, stdout=self.stdout, stderr=self.stderr, data=self.data)
 
 
-class Response:
+class Response():
+
     def __init__(self, client, id):
         self._client = client
         self._id = id
@@ -159,7 +164,7 @@ class Response:
         """
         r = self._client._redis
         flag = '{}:flag'.format(self._queue)
-        return bool(r.execute_command('LKEYEXISTS', flag))
+        return bool(r.exists(flag))
 
     @property
     def running(self):
@@ -169,8 +174,9 @@ class Response:
         """
         r = self._client._redis
         flag = '{}:flag'.format(self._queue)
-        if bool(r.execute_command('LKEYEXISTS', flag)):
-            return r.execute_command('LTTL', flag) == -1
+        if bool(r.exists(flag)):
+            ttl = r.ttl(flag)
+            return ttl == -1 or ttl is None
 
         return False
 
@@ -205,10 +211,6 @@ class Response:
 
         queue = 'stream:%s' % self.id
         r = self._client._redis
-
-        # we can terminate quickly by checking if the process is not running and it has no queued output.
-        if not self.running and r.llen(queue) == 0:
-            return
 
         while True:
             data = r.blpop(queue, 10)
@@ -251,19 +253,23 @@ class Response:
         while maxwait > 0:
             if not self.exists:
                 raise JobNotFoundError(self.id)
-            v = r.brpoplpush(self._queue, self._queue, min(maxwait, 10))
-            if v is not None:
-                payload = json.loads(v.decode())
-                r = Return(payload)
-                logger.debug('%s << %s, stdout="%s", stderr="%s", data="%s"',
-                             self._id, r.state, r.stdout, r.stderr, r.data[:1000])
-                return r
+            try:
+                v = r.brpoplpush(self._queue, self._queue, min(maxwait, 10))
+                if not v is None:
+                    payload = json.loads(v.decode())
+                    r = Return(payload)
+                    logger.debug('%s << %s, stdout="%s", stderr="%s", data="%s"',
+                                 self._id, r.state, r.stdout, r.stderr, r.data[:1000])
+                    return r
+            except TimeoutError:
+                pass
             logger.debug('%s still waiting (%ss)', self._id, int(time.time() - start))
             maxwait -= 10
         raise TimeoutError()
 
 
 class JSONResponse(Response):
+
     def __init__(self, response):
         super().__init__(response._client, response.id)
 

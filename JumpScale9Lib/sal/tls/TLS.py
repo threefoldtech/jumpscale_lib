@@ -1,10 +1,11 @@
 from js9 import j
 
+JSBASE = j.application.jsbase_get_class()
 
-class TLS:
+class TLS(JSBASE):
 
     def __init__(self, cfsslService=None, path=None):
-        super(TLS, self).__init__()
+        JSBASE.__init__(self)
         self._local = j.tools.executorLocal
         if cfsslService is not None:
             self._cfsslService = cfsslService
@@ -84,7 +85,7 @@ class TLS:
         cert_path = ca_cert_path + ".pem"
         key_path = ca_cert_path + "-key.pem"
         output = "certificate generated at %s and key at %s" % (cert_path, key_path)
-        print(output)
+        self.logger.debug(output)
 
         return (cert_path, key_path)
 
@@ -127,7 +128,7 @@ class TLS:
         csr_path = self.cwd.joinpath('%s.csr' % name)
         key_path = self.cwd.joinpath('%s-key.pem' % name)
         output = "certificate signing request generated at %s and key at %s" % (csr_path, key_path)
-        print(output)
+        self.logger.debug(output)
 
         return (csr_path, key_path)
 
@@ -146,7 +147,7 @@ class TLS:
         cert_path = self.cwd.joinpath("%s.pem" % name)
         output = 'certificate created at %s' % cert_path
 
-        print(output)
+        self.logger.debug(output)
 
         return cert_path
 
@@ -193,6 +194,6 @@ class TLS:
         key_path = self.cwd.joinpath('%s-key.pem' % name)
 
         output = "certificate generated at %s and key at %s" % (cert_path, key_path)
-        print(output)
+        self.logger.debug(output)
 
         return (cert_path, key_path)

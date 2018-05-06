@@ -2,11 +2,14 @@
 from js9 import j
 import os
 
+JSBASE = j.application.jsbase_get_class()
 
-class AysFsFactory:
+
+class AysFsFactory(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.aysfs"
+        JSBASE.__init__(self)
 
     def get(self, name, prefab=None):
         return AysFs(name=name, prefab=prefab)
@@ -17,7 +20,7 @@ class AysFsFactory:
 
         flist = '/aysfs/flist/%s.flist' % name
         if not j.sal.fs.exists(flist):
-            print('[+] downloading flist: %s' % name)
+            self.logger.debug('[+] downloading flist: %s' % name)
             storx = j.clients.storx.get('https://stor.JumpScale9Lib.org/storx')
             storx.getStaticFile('%s.flist' % name, flist)
 
@@ -43,9 +46,10 @@ class AysFsFactory:
         return js8optvar
 
 
-class AysFs:
+class AysFs(JSBASE):
 
     def __init__(self, name, prefab=None):
+        JSBASE.__init__(self)
         self._prefab = prefab
         if self._prefab is None:
             self._prefab = j.tools.prefab.local
@@ -205,7 +209,7 @@ class AysFs:
         binary = '%s/bin/aysfs' % self.root
 
         if not j.sal.fs.exists(binary):
-            print('[+] downloading aysfs binary')
+            self.logger.debug('[+] downloading aysfs binary')
             storx = j.clients.storx.get('https://stor.JumpScale9Lib.org/storx')
             storx.getStaticFile('aysfs', binary)
             j.sal.fs.chmod(binary, 0o755)
@@ -218,7 +222,7 @@ class AysFs:
         self._parse(self.mounts)
         self._parse(self.backends)
 
-        print('[+] preparing mountpoints')
+        self.logger.debug('[+] preparing mountpoints')
         for mount in self.mounts:
             # force umount (cannot stat folder if Transport endpoint is not
             # connected)
@@ -227,16 +231,16 @@ class AysFs:
             if not j.sal.fs.exists(mount['path']):
                 j.sal.fs.createDir(mount['path'])
 
-        print('[+] checking backends')
+        self.logger.debug('[+] checking backends')
         for backend in self.backends:
             if not j.sal.fs.exists(backend['path']):
                 j.sal.fs.createDir(backend['path'])
 
-        print('[+] writing config file')
+        self.logger.debug('[+] writing config file')
         config = self.getConfig()
         j.sal.fs.writeFile(config, self.generate())
 
-        print('[+] starting aysfs')
+        self.logger.debug('[+] starting aysfs')
 
         cmdline = '%s/bin/aysfs -config %s' % (self.root, config)
         self.tmux.executeInScreen('aysfs', config, cmdline)

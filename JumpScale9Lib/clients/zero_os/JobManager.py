@@ -1,9 +1,12 @@
 import signal
 
 from . import typchk
+from js9 import j
 
 
-class JobManager:
+
+
+class JobManager():
     _job_chk = typchk.Checker({
         'id': typchk.Or(str, typchk.IsNone()),
     })
@@ -14,6 +17,7 @@ class JobManager:
     })
     def __init__(self, client):
         self._client = client
+
 
     def list(self, id=None):
         """

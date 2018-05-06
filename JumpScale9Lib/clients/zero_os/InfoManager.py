@@ -1,7 +1,13 @@
-class InfoManager:
+from js9 import j
+
+
+
+
+class InfoManager():
 
     def __init__(self, client):
         self._client = client
+
 
     def cpu(self):
         """

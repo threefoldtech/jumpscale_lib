@@ -9,14 +9,16 @@ Stats = collections.namedtuple('Stats', 'h_nr m_nr h_avg m_epoch m_total h_total
                                'm_max val h_max key tags h_epoch')
 
 Log = collections.namedtuple('Log', 'level message node epoch tags')
+JSBASE = j.application.jsbase_get_class()
 
 
-class AggregatorClient:
+class AggregatorClient(JSBASE):
 
     def __init__(self, redis, nodename):
         self.redis = redis
         self._sha = dict()
 
+        JSBASE.__init__(self)
         path = os.path.dirname(__file__)
         luapaths = j.sal.fs.listFilesInDir(path, recursive=False, filter="*.lua", followSymlinks=True)
         for luapath in luapaths:
@@ -256,5 +258,5 @@ class AggregatorClient:
         """
         realities = self.redis.lrange('queues:reality', 0, 1000)
         for reality in realities:
-            print(reality)
+            self.logger.debug(reality)
             yield self.realityGet(reality, removeFromQueue=False)

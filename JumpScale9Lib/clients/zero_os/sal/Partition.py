@@ -2,7 +2,7 @@ from .abstracts import Mountable
 
 
 class Partition(Mountable):
-    """Partition of a disk in a G8OS"""
+    """Partition of a disk in a Zero-OS"""
 
     def __init__(self, disk, part_info):
         """
@@ -18,6 +18,7 @@ class Partition(Mountable):
         self._filesystems = []
 
         self._load(part_info)
+        Mountable.__init__(self)
 
     @property
     def client(self):

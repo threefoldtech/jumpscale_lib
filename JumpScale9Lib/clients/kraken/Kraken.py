@@ -12,32 +12,31 @@ JSConfigFactory = j.tools.configmanager.base_class_configs
 
 class KrakenClient(JSConfigClient):
 
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE)
+                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         import krakenex
         from pykrakenapi import KrakenAPI
 
         kraken_api = krakenex.API()
-        kraken_api.key=self.config.data["api_key_"]
-        kraken_api.secret=self.config.data["private_key_"]
+        kraken_api.key = self.config.data["api_key_"]
+        kraken_api.secret = self.config.data["private_key_"]
         self.api = KrakenAPI(kraken_api)
 
     def test(self):
 
         k = self.api
-        print ("open orders")
-        print(k.get_open_orders())
+        self.logger.debug("open orders")
+        self.logger.debug(k.get_open_orders())
 
-        print("get account balance")
-        print(k.get_account_balance())
+        self.logger.debug("get account balance")
+        self.logger.debug(k.get_account_balance())
 
 class Kraken(JSConfigFactory):
     def __init__(self):
         self.__jslocation__ = 'j.clients.kraken'
         JSConfigFactory.__init__(self, KrakenClient)
 
-    def install(self,reset=False):
-        j.tools.prefab.local.runtimes.pip.install("pykrakenapi",reset=reset)
-        j.tools.prefab.local.runtimes.pip.install("krakenex",reset=reset)
-
+    def install(self, reset=False):
+        j.tools.prefab.local.runtimes.pip.install("pykrakenapi", reset=reset)
+        j.tools.prefab.local.runtimes.pip.install("krakenex", reset=reset)

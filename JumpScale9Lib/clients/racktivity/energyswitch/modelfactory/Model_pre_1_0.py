@@ -1,6 +1,12 @@
-class Master:
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
+
+
+class Master(JSBASE):
 
     def __init__(self, parent):
+        JSBASE.__init__(self)
         self._parent = parent
         self._moduleID = "M1"
 
@@ -15,9 +21,10 @@ class Master:
         return 0, "%d.%d.%d.%d" % (ipaddress[0], ipaddress[1], ipaddress[2], ipaddress[3])
 
 
-class Power:
+class Power(JSBASE):
 
     def __init__(self, parent):
+        JSBASE.__init__(self)
         self._parent = parent
         self._moduleID = "P1"
 
@@ -53,7 +60,7 @@ class Power:
         self._parent.client.setAttribute(self._moduleID, guid)
         return 0
 
-    def getStatePortCur(self, portnumber=1, length=1):
+    def getStatePortCur(self, portnumber=1, length=1, **kwargs):
         val = ord(self._parent.client.getAttribute(
             self._moduleID, "F00241000010000000001"))
 
@@ -62,7 +69,7 @@ class Power:
             result.append(bool(val & 1 << (8 - i)))
         return 0, result
 
-    def setPortState(self, value, portnumber=1):
+    def setPortState(self, value, portnumber=1, **kwargs):
         if value == 1:  # power on
             val = 1 << (8 - portnumber)
             self._parent.client.resetAttribute(
@@ -202,7 +209,7 @@ class Power:
 
         return result
 
-    def getPower(self):
+    def getPower(self, **kwargs):
         powerPointers = self.getPowerPointer()
         pointerMeaning = {
             1: "GeneralModuleStatus",

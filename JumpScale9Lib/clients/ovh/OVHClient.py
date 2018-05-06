@@ -25,9 +25,10 @@ class OVHClient(JSConfigBase):
 
     """
 
-    def __init__(self, instance, data={}, parent=None):
+    def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigBase.__init__(self, instance=instance,
-                              data=data, parent=parent, template=TEMPLATE)
+                              data=data, parent=parent, template=TEMPLATE,interactive=interactive)
+
         c = self.config.data
         self.client = ovh.Client(
             endpoint=c["endpoint"],
@@ -36,17 +37,12 @@ class OVHClient(JSConfigBase):
             consumer_key=c["consumerkey_"],
         )
 
-        id = "ovhclient_%s" % c["consumerkey_"]
-        self.cache = j.data.cache.get(
-            id=id,
-            db=j.data.kvs.getRedisStore())
+        # id = "ovhclient_%s" % c["consumerkey_"]
         self.ipxeBase = c["ipxeBase"]
 
-        self.logger = j.logger.get('ovh')
-
-    def name_check(self, name):
-        if "ns302912" in name:
-            raise RuntimeError("Cannot use server:%s" % name)
+    def ovh_id_check(self, ovh_id):
+        if "ns302912" in ovh_id:
+            raise RuntimeError("Cannot use server:%s" % ovh_id)
 
     def reset(self):
         """
@@ -102,7 +98,7 @@ class OVHClient(JSConfigBase):
         @param name: server name
         @param reload: if True the cache will be deleted and will the updated details
         """
-        self.name_check(name)
+        self.ovh_id_check(name)
         key = "server_detail_get_%s" % name
         if reload:
             self.cache.delete(key)
@@ -117,7 +113,7 @@ class OVHClient(JSConfigBase):
         @param name: server name
         @param reload: if True the cache will be deleted and will the updated details
         """
-        self.name_check(name)
+        self.ovh_id_check(name)
         key = "serverGetInstallStatus%s" % name
         if reload:
             self.cache.delete(key)
@@ -159,7 +155,7 @@ class OVHClient(JSConfigBase):
         self.details = {}
         self.logger.info("server install done")
 
-    def server_install(self, name, ovh_id="", installationTemplate="ubuntu1710-server_64", sshKeyName=None,
+    def server_install(self, name, ovh_id, installationTemplate="ubuntu1710-server_64", sshKeyName=None,
                        useDistribKernel=True, noRaid=True, hostname="", wait=True):
         """
 
@@ -168,29 +164,34 @@ class OVHClient(JSConfigBase):
         will return node_client
 
         """
-        self.name_check(name)
+        if name == "" or name is None:
+            raise j.exceptions.Input(
+                message="please specify name", level=1, source="", tags="", msgpub="")
+
+        if ovh_id == "" or ovh_id is None:
+            raise j.exceptions.Input(
+                message="please specify ovh_id", level=1, source="", tags="", msgpub="")
+
+        self.ovh_id_check(ovh_id)
         if installationTemplate not in self.installationtemplates_get():
             raise j.exceptions.Input(message="could not find install template:%s" %
                                      name, level=1, source="", tags="", msgpub="")
 
         if sshKeyName == None:
-            items = j.clients.ssh.ssh_keys_list_from_agent()
-            if len(items) != 1:
-                raise RuntimeError(
-                    "sshkeyname needs to be specified or only 1 sshkey needs to be loaded")
+            items = j.clients.sshkey.list()
+            # if len(items) != 1:
+            #     raise RuntimeError(
+            #         "sshkeyname needs to be specified or only 1 sshkey needs to be loaded")
             sshKeyName = items[0]
             sshKeyName = j.sal.fs.getBaseName(sshKeyName)
 
         if sshKeyName not in self.sshkeys_get():
-            pubkey = j.clients.ssh.SSHKeyGetFromAgentPub(sshKeyName)
+            pubkey = j.clients.ssh.sshkey_pub_get(sshKeyName)
             self.sshkey_add(sshKeyName, pubkey)
-
-        if name == "":
-            raise j.exceptions.Input(
-                message="please specify name", level=1, source="", tags="", msgpub="")
 
         if hostname == "":
             hostname = name
+
         details = {}
         details["installationTemplate"] = installationTemplate
         details["useDistribKernel"] = useDistribKernel
@@ -204,7 +205,7 @@ class OVHClient(JSConfigBase):
 
         try:
             self.client.post("/dedicated/server/%s/install/start" %
-                             name, details=details, templateName=installationTemplate)
+                             ovh_id, details=details, templateName=installationTemplate)
         except Exception as e:
             if "A reinstallation is already in todo" in str(e):
                 self.logger.debug("%s:%s" % (name, e))
@@ -221,12 +222,14 @@ class OVHClient(JSConfigBase):
             if name in self.details:
                 self.details.pop(name)
 
-        conf = self.server_detail_get(name)
+        conf = self.server_detail_get(ovh_id)
         ipaddr = conf['ip']
         port = 22
 
-        node = j.tools.nodemgr.set(name, ipaddr, port, cat="ovh",
-                                   clienttype="j.clients.ovh")
+        node = j.tools.nodemgr.set(name, ipaddr, port, sshclient=sshKeyName, cat="ovh", clienttype="j.clients.ovh")
+
+        j.tools.executor.reset()
+
         return node
 
     def boot_image_pxe_list(self):
@@ -306,7 +309,7 @@ class OVHClient(JSConfigBase):
         Reboot a server
         - target: need to be a OVH server hostname
         """
-        self.name_check(name)
+        self.ovh_id_check(name)
         return self.client.post("/dedicated/server/%s/reboot" % name)
 
     #
@@ -361,7 +364,7 @@ class OVHClient(JSConfigBase):
         - target: need to be an OVH server hostname
         - zerotierNetworkID: network to be used in zerotier
         """
-        self.name_check(target)
+        self.ovh_id_check(target)
         url = "%s/%s" % (self.ipxeBase, zerotierNetworkID)
         ipxe = self._zos_build(url)
 

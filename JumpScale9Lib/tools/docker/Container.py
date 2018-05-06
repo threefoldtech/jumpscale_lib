@@ -4,25 +4,26 @@ import tarfile
 import time
 from io import BytesIO
 
+JSBASE = j.application.jsbase_get_class()
 
-class Container:
+
+class Container(JSBASE):
     """Docker Container"""
 
     def __init__(self, obj, client):
         """
         Container object instance.
 
-        @param name str: name of conainter.
-        @param id  int: id of container.
+        @param obj str: obj of conainter as returned from the api.
         @param client obj(docker.Client()): client object from docker library.
         """
 
         self.client = client
-        self.logger = j.logger.get('docker_container')
+        JSBASE.__init__(self)
 
         self.obj=obj
-        self.name = obj.name
-        self.id = obj.id
+        self.name = obj['Names'][0]
+        self.id = obj['Id']
 
         self._ssh_port = None
         self._sshclient = None
@@ -32,7 +33,7 @@ class Container:
     @property
     def ssh_port(self):
         if self._ssh_port is None:
-            self._ssh_port = self.getPubPortForInternalPort(22)
+            self._ssh_port = self.public_port_get(22)
         return self._ssh_port
 
     @property
@@ -42,22 +43,14 @@ class Container:
     @property
     def sshclient(self):
         if self._sshclient is None:
-            self.executor.sshclient.get(
-                addr=self.host,
-                port=self.ssh_port,
-                login='root',
-                passwd="gig1234",
-                timeout=10,
-                usecache=False,
-                allow_agent=True)
-            self._sshclient = self.executor.sshclient
+            sshclient = j.clients.ssh.new(addr=self.host, port=self.ssh_port, login="root", passwd="gig1234", timeout=10, allow_agent=True)
+            self._sshclient = sshclient
         return self._sshclient
 
     @property
     def executor(self):
         if self._executor is None:
-            self._executor = j.tools.executor.getSSHBased(
-                addr=self.host, port=self.ssh_port, login='root', passwd="gig1234", usecache=False, allow_agent=True)
+            self._executor = j.tools.executor.getLocalDocker(self.id)
         return self._executor
 
     @property
@@ -71,13 +64,6 @@ class Container:
     @property
     def status(self):
         return self.info["State"]["Status"]
-        # if self.info["State"]["Running"]:
-        #     return "running"
-        # if self.info["State"]["Restarting"]:
-        #     return "restarting"
-        # if self.info["State"]["Paused"]:
-        #     return "paused"
-        # return "error"
 
     def prefab(self):
         if self._prefab is None:
@@ -101,114 +87,75 @@ class Container:
 
     @property
     def info(self):
-        return self.obj.attrs
+        return self.obj
 
-    def isRunning(self):
+    def is_running(self):
         """
         Check conainter is running.
         """
-        return self.info["State"]["Running"] is True
+        return self.info["State"] == 'running'
 
-    def getIp(self):
+    def ip_get(self):
         """
         Return ip of docker on hostmachine.
         """
-        return self.info['NetworkSettings']['IPAddress']
+        return self.info['NetworkSettings']['Networks']['bridge']['IPAddress']
 
-    def getPubPortForInternalPort(self, port):
+    def public_port_get(self, private_port):
         """
         Return public port that is forwarded to a port inside docker,
         this will only work if container has port forwarded the ports during
         run time.
 
-        @param port int: port number inside docker to use.
+        @param private_port int: private port number to look for its public port
         """
 
-        if not self.info["NetworkSettings"]["Ports"] is None:
-            for key, portsDict in self.info["NetworkSettings"]["Ports"].items():
-                if key.startswith(str(port)) and portsDict is not None:
-                    # if "PublicPort" not in port2:
-                    #     raise j.exceptions.Input("cannot find publicport for ssh?")
-                    portsfound = [int(item['HostPort']) for item in portsDict]
-                    if len(portsfound) > 0:
-                        return portsfound[0]
-
-        if self.isRunning() is False:
+        if self.is_running() is False:
             raise j.exceptions.RuntimeError(
                 "docker %s is not running cannot get pub port." % self)
 
+        if not self.info["Ports"] is None:
+            for port in self.info['Ports']:
+                if port['PrivatePort'] == private_port:
+                    return port['PublicPort']
+
         raise j.exceptions.Input("cannot find publicport for ssh?")
 
-    def pushSSHKey(self, keyname="", sshpubkey="", generateSSHKey=True):
-        """
-        Push ssh keys onto container, the params are mutually exclusive.
 
-        @param keyname str: path to key or just keyname in /root/.ssh/keyname.
-        @param sshpubkey str: actual key content.
-        @param generateSSHKey bool: generate a key called docker_default.
-        """
-        keys = set()
-
+    def ssh_authorize(self, sshkeyname, password):
         home = j.tools.prefab.local.bash.home
         user_info = [j.tools.prefab.local.system.user.check(user) for user in j.tools.prefab.local.system.user.list()]
-        user = [i['name'] for i in user_info if i['home'] == home]
-        user = user[0] if user else 'root'
+        users = [i['name'] for i in user_info if i['home'] == home]
+        user = users[0] if users else 'root'
+        addr = self.info['Ports'][0]['IP']
+        port = self.info['Ports'][0]['PublicPort']
+        if not sshkeyname:
+            sshkeyname = j.tools.configmanager.keyname
+        instance = addr.replace(".", "-") + "-%s" % port + "-%s" % self.name 
 
-        if sshpubkey != "" and sshpubkey is not None:
-            key = sshpubkey
-        else:
-            if not j.clients.ssh.ssh_agent_available():
-                j.clients.ssh.start_ssh_agent()
+        sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login=user, passwd=password,
+                                       timeout=300)
+        sshclient.connect()
+        sshclient.ssh_authorize(key=j.tools.configmanager.keyname, user='root')
+        sshclient.config.delete()  # remove this temp sshconnection
+        sshclient.close()
 
-            if keyname != "" and keyname is not None:
-                key = j.clients.ssh.SSHKeyGetFromAgentPub(keyname)
-            else:
-                key = j.clients.ssh.SSHKeyGetFromAgentPub("docker_default", die=False)
-                if key is None:
-                    dir = j.tools.path.get('%s/.ssh' % home)
-                    if dir.listdir("docker_default.pub") == []:
-                        # key does not exist, lets create one
-                        j.tools.prefab.local.system.ssh.keygen(user=user, name="docker_default")
-                    key = j.sal.fs.readFile(
-                        filename="%s/.ssh/docker_default.pub" % home)
-                    # load the key
-                    j.tools.executorLocal.execute(
-                        "ssh-add %s/.ssh/docker_default" % home)
+        # remove bad key from local known hosts file
+        j.clients.sshkey.knownhosts_remove(addr)
+        instance = addr.replace(".", "-") + "-%s" % port + "-%s" % self.name
+        self._sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login="root", passwd="",
+                                            keyname=j.tools.configmanager.keyname, allow_agent=True, timeout=300, addr_priv=addr)
 
-        j.sal.fs.writeFile(filename="%s/.ssh/known_hosts" % home, contents="")
-
-        if key is None or key.strip() == "":
-            raise j.exceptions.Input("ssh key cannot be empty (None)")
-
-        self.prefab.system.ssh.authorize("root", key)
-
-        # IS THERE A REASON TO DO IT THE LONG WAY BELOW?
-        # key_tarstream = BytesIO()
-        # key_tar = tarfile.TarFile(fileobj=key_tarstream, mode='w')
-        # tarinfo = tarfile.TarInfo(name='authorized_keys')
-        # tarinfo.size = len(key)
-        # tarinfo.mtime = time.time()
-        # tarinfo.mode = 0o600
-        # key_tar.addfile(tarinfo, BytesIO(key.encode()))
-        # key_tar.close()
-        #
-        # key_tarstream.seek(0)
-        # exec_id = self.client.exec_create(self.id, "mkdir -p /root/.ssh/")
-        # self.client.exec_start(exec_id['Id'])
-        # self.client.put_archive(self.id, '/root/.ssh/', data=key_tarstream)
-
-        return list(keys)
-
-
+        j.tools.executor.reset()
     def destroy(self):
         """
         Stop and remove container.
         """
-        self.cleanAysfs()
+        # self.cleanAysfs()
 
         try:
-            if self.isRunning():
-                self.client.kill(self.id)
+            if self.is_running():
+                self.stop()
             self.client.remove_container(self.id)
         except Exception as e:
             self.logger.error("could not kill:%s" % self.id)
@@ -216,12 +163,17 @@ class Container:
             if self.id in j.sal.docker._containers:
                 del j.sal.docker._containers[self.id]
 
+    def start(self):
+        """
+        start instance of the container.
+        """
+        self.client.start(self.id)
+
     def stop(self):
         """
         Stop running instance of container.
         """
-        self.cleanAysfs()
-        self.client.kill(self.id)
+        self.client.stop(self.id)
 
     def restart(self):
         """
@@ -255,93 +207,3 @@ class Container:
         return "docker:%s" % self.name
 
     __repr__ = __str__
-
-    # def setHostName(self,name,hostname):
-    #     return # TODO:
-    #     c=self.getSSH(name)
-    #     # TODO:
-    #     # c.run("echo '%s' > /etc/hostname;hostname %s"%(hostname,hostname))
-    #
-
-    # def _btrfsExecute(self,cmd):
-    #     cmd="btrfs %s"%cmd
-    #     print(cmd)
-    #     return self._execute(cmd)
-
-    # def btrfsSubvolList(self):
-    #     raise j.exceptions.RuntimeError("not implemented")
-    #     out=self._btrfsExecute("subvolume list %s"%self.basepath)
-    #     res=[]
-    #     for line in out.split("\n"):
-    #         if line.strip()=="":
-    #             continue
-    #         if line.find("path ")!=-1:
-    #             path=line.split("path ")[-1]
-    #             path=path.strip("/")
-    #             path=path.replace("lxc/","")
-    #             res.append(path)
-    #     return res
-
-    # def btrfsSubvolNew(self,name):
-    #     raise j.exceptions.RuntimeError("not implemented")
-    #     if not self.btrfsSubvolExists(name):
-    #         cmd="subvolume create %s/%s"%(self.basepath,name)
-    #         self._btrfsExecute(cmd)
-
-    # def btrfsSubvolCopy(self,nameFrom,NameDest):
-    #     raise j.exceptions.RuntimeError("not implemented")
-    #     if not self.btrfsSubvolExists(nameFrom):
-    #         raise j.exceptions.RuntimeError("could not find vol for %s"%nameFrom)
-    #     if j.sal.fs.exists(path="%s/%s"%(self.basepath,NameDest)):
-    #         raise j.exceptions.RuntimeError("path %s exists, cannot copy to existing destination, destroy first."%nameFrom)
-    #     cmd="subvolume snapshot %s/%s %s/%s"%(self.basepath,nameFrom,self.basepath,NameDest)
-    #     self._btrfsExecute(cmd)
-
-    # def btrfsSubvolExists(self,name):
-    #     raise j.exceptions.RuntimeError("not implemented")
-    #     subvols=self.btrfsSubvolList()
-    #     # print subvols
-    #     return name in subvols
-
-    # def btrfsSubvolDelete(self,name):
-    #     raise j.exceptions.RuntimeError("not implemented")
-    #     if self.btrfsSubvolExists(name):
-    #         cmd="subvolume delete %s/%s"%(self.basepath,name)
-    #         self._btrfsExecute(cmd)
-    #     path="%s/%s"%(self.basepath,name)
-    #     if j.sal.fs.exists(path=path):
-    #         j.sal.fs.removeDirTree(path)
-    #     if self.btrfsSubvolExists(name):
-    #         raise j.exceptions.RuntimeError("vol cannot exist:%s"%name)
-
-    # def getProcessList(self, stdout=True):
-    #     """
-    #     @return [["$name",$pid,$mem,$parent],....,[$mem,$cpu]]
-    #     last one is sum of mem & cpu
-    #     """
-    #     raise j.exceptions.RuntimeError("not implemented")
-    #     pid = self.getPid()
-    #     children = list()
-    #     children = self._getChildren(pid, children)
-    #     result = list()
-    #     pre = ""
-    #     mem = 0.0
-    #     cpu = 0.0
-    #     cpu0 = 0.0
-    #     prevparent = ""
-    #     for child in children:
-    #         if child.parent.name != prevparent:
-    #             pre += ".."
-    #             prevparent = child.parent.name
-    #         # cpu0=child.get_cpu_percent()
-    #         mem0 = int(round(child.get_memory_info().rss / 1024, 0))
-    #         mem += mem0
-    #         cpu += cpu0
-    #         if stdout:
-    #             self.logger.info(("%s%-35s %-5s mem:%-8s" % (pre, child.name, child.pid, mem0)))
-    #         result.append([child.name, child.pid, mem0, child.parent.name])
-    #     cpu = children[0].get_cpu_percent()
-    #     result.append([mem, cpu])
-    #     if stdout:
-    #         self.logger.info(("TOTAL: mem:%-8s cpu:%-8s" % (mem, cpu)))
-    #     return result

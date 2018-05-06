@@ -6,28 +6,31 @@ from js9 import j
 TEMPLATE = """
 config_path = ""
 context = ""
-ssh_key_path = ""
+sshkey_path = ""
 incluster_config = false
 """
 
 
 JSConfigBase = j.tools.configmanager.base_class_config
+JSBASE = j.application.jsbase_get_class()
+
 
 class KubernetesMaster(JSConfigBase):
     """
     A class that represents a top view of the hirarchy.
     Where only the config, context , or namespace are defined.
     """
-    def __init__(self, instance, data={}, parent=None):
+
+    def __init__(self, instance, data={}, parent=None, interactive=False):
         """
         Creates a client instance that connects to either a config path or context or both
         """
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,template=TEMPLATE)
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         # load data from jsconfig
         c = self.config.data
         config_path = c['config_path']
         context = c['context']
-        ssh_key_path = c['ssh_key_path']
+        sshkey_path = c['sshkey_path']
         incluster_config = c['incluster_config']
 
         if incluster_config:
@@ -41,9 +44,9 @@ class KubernetesMaster(JSConfigBase):
             config_path = '%s/.kube/config' % j.dirs.HOMEDIR
         self._config = j.data.serializer.yaml.load(config_path)
 
-        self.ssh_key_path = ssh_key_path
-        if not ssh_key_path:
-            self.ssh_key_path = j.sal.fs.joinPaths(
+        self.sshkey_path = sshkey_path
+        if not sshkey_path:
+            self.sshkey_path = j.sal.fs.joinPaths(
                 j.dirs.HOMEDIR, '.ssh', j.core.state.configMe["ssh"]["sshkeyname"])
 
     @property
@@ -80,9 +83,9 @@ class KubernetesMaster(JSConfigBase):
 
         @param name,, str name of cluster to get
         """
-        for cluster in  self._config.get('clusters', []):
+        for cluster in self._config.get('clusters', []):
             if name == cluster['name']:
-                return  cluster
+                return cluster
 
 
 #######################
@@ -127,10 +130,10 @@ class KubernetesMaster(JSConfigBase):
         @param name ,, str deployment name.
         @param namespace,, str namespace to filter on.
         """
-        dep_obj= self._extensionv1b1.read_namespaced_deployment(name, namespace)
-        return Deployment(dep_obj.metadata.name, self, [],deployment_object=dep_obj)
+        dep_obj = self._extensionv1b1.read_namespaced_deployment(name, namespace)
+        return Deployment(dep_obj.metadata.name, self, [], deployment_object=dep_obj)
 
-    def list_deployments(self, namespace=None,  short=True):
+    def list_deployments(self, namespace=None, short=True):
         """
         will get all deployment within the defined namespace(if no space given will return all).
         @param namespace,, str namespace to filter on.
@@ -151,7 +154,7 @@ class KubernetesMaster(JSConfigBase):
                 output.append(dep_dict)
             return output
         for dep_obj in deployment_objects:
-            deployments.append(Deployment(dep_obj.metadata.name, self, [],deployment_object=deployment_object))
+            deployments.append(Deployment(dep_obj.metadata.name, self, [], deployment_object=deployment_object))
         return deployments
 
     def define_deployment(self, name, containers, namespace='default', labels={}, replicas=1, kind='Deployment',
@@ -174,7 +177,7 @@ class KubernetesMaster(JSConfigBase):
                           generate_name=generate_name, volumes=volumes)
 
     def deploy_ubuntu1604(self, name, namespace='default', labels={}, replicas=1, generate_name=None,
-                          ssh_key_path=None, external_ssh_port=32202, volumes=[], volume_mounts=[]):
+                          sshkey_path=None, external_ssh_port=32202, volumes=[], volume_mounts=[]):
         """
         Creates and deploys a ubuntu1604 phusion image  deployment that has a ssh configured.
         @param name,, str name of deployment
@@ -183,12 +186,12 @@ class KubernetesMaster(JSConfigBase):
         @param replicas,,int number of replicas that will be maintained running throughout the life of the deployment.
         @param cluster_name,, str cluster or context to create deployment on. NOT SUPPORTED by the api server
         @param generate_name,,str first part of the generated name
-        @param ssh_key_path,,str path to new ssh key if none will default to preloaded key
+        @param sshkey_path,,str path to new ssh key if none will default to preloaded key
         @param external_ssh_port,,int external port to map the ssh 22 port to.
         """
         # define container
         container = self.define_container(name='ubuntu1604', image='jumpscale/ubuntu1604', command=['/sbin/my_init'],
-                                          ports=[22], enable_ssh=True, ssh_key_path=ssh_key_path,
+                                          ports=[22], enable_ssh=True, sshkey_path=sshkey_path,
                                           volume_mounts=volume_mounts)
         app_label = {'app': name}
         labels.update(app_label)
@@ -202,7 +205,7 @@ class KubernetesMaster(JSConfigBase):
         if not clusters:
             raise RuntimeError('no Clusters defined this your configuration is incorrect')
 
-        api_server_endpoint =  urllib.parse.urlsplit(clusters[0]['cluster']['server'])
+        api_server_endpoint = urllib.parse.urlsplit(clusters[0]['cluster']['server'])
         node_ip = api_server_endpoint.hostname
         return j.tools.prefab.get('%s:%s' % (node_ip, external_ssh_port))
 
@@ -223,8 +226,6 @@ class KubernetesMaster(JSConfigBase):
         host_path_vol = client.V1HostPathVolumeSource(path=path, type=data_type)
         return client.V1Volume(name=name, host_path=host_path_vol)
 
-
-
     def define_config_map_volume(self, name, config_name, config_items, default_mode=0o644, optional=False):
         """
         The contents of the target ConfigMap's Data field will be presented in a volume as files using the keys in the
@@ -240,7 +241,6 @@ class KubernetesMaster(JSConfigBase):
         config_map_vol = client.V1ConfigMapVolumeSource(default_mode=default_mode, optional=optional, name=config_name,
                                                         items=config_items)
         return client.V1Volume(name=name, config_map=config_map)
-
 
     def define_empty_dir_volume(self, name, medium="", size_limit=None):
         """
@@ -258,7 +258,6 @@ class KubernetesMaster(JSConfigBase):
         empty_dir_vol = client.V1EmptyDirVolumeSource(medium=medium, size_limit=sizeLimit)
         return client.V1Volume(name=name, empty_dir=empty_dir_vol)
 
-
     def define_git_volume(self, name, directory, repo, revision=None):
         """
         Represents a volume that is populated with the contents of a git repository. Git repo volumes do not support
@@ -271,7 +270,6 @@ class KubernetesMaster(JSConfigBase):
         """
         git_vol = client.V1GitRepoVolumeSource(directory=directory, repository=repo, revision=revision)
         return client.V1Volume(name=name, git_repo=git_vol)
-
 
     def define_persistent_volume_claim(self):
         """
@@ -291,9 +289,9 @@ class KubernetesMaster(JSConfigBase):
         @param namespace,, str namespace to filter on.
         """
         pod_obj = self._v1.read_namespaced_pod(name, namespace)
-        return Pod(pod_obj.metadata.name, self, [],pod_object=pod_object)
+        return Pod(pod_obj.metadata.name, self, [], pod_object=pod_object)
 
-    def list_pods(self, namespace=None,  short=True):
+    def list_pods(self, namespace=None, short=True):
         """
         will get all pod within the defined namespace(if no space given will return all).
         @param namespace,, str namespace to filter on.
@@ -312,15 +310,14 @@ class KubernetesMaster(JSConfigBase):
                             'ip': pod.status.pod_ip}
                 output.append(pod_dict)
             return output
-        return [Pod(pod_object.metadata.name, self, [],pod_object=pod_object)for pod_object in pod_objects]
+        return [Pod(pod_object.metadata.name, self, [], pod_object=pod_object)for pod_object in pod_objects]
 
     def define_pod(self):
         """
         define a Pod object instance
         TODO
         """
-        #return Pod(name, master, containers, labels, replicas, api_version, kind, ssh_key)
-
+        # return Pod(name, master, containers, labels, replicas, api_version, kind, ssh_key)
 
     def define_affinity(self):
         """
@@ -332,7 +329,7 @@ class KubernetesMaster(JSConfigBase):
 #   master.Container #
 ######################
 
-    def define_container(self, name, image, ports=[], command=None,  args=None, ssh_key_path=None, enable_ssh=False,
+    def define_container(self, name, image, ports=[], command=None, args=None, sshkey_path=None, enable_ssh=False,
                          envs=[], volume_mounts=[]):
         """
         define container object to be passed to pod creation or deployment
@@ -342,7 +339,7 @@ class KubernetesMaster(JSConfigBase):
         @param ports,,list(int) list of ports to expose to the node
         @param command,, list(str) entry point to the docker
         @param args ,, list(str) args to be passed to the entry point
-        @param ssh_key_path,, str full path to ssh_key will work only if enable_ssh is true
+        @param sshkey_path,, str full path to ssh_key will work only if enable_ssh is true
         @param enable_ssh,, bool if True and no key is passed will load the default loaded one in jumpscale me configs
         @param envs,, list({'key':'value'}) environment variable to define in the container
         @param volume_mounts,, list(volume_mounts) volumes to mount to the containers created from define mount
@@ -351,10 +348,10 @@ class KubernetesMaster(JSConfigBase):
 
         # get ssh_pub_key if not provided will default to the preloaded
         if enable_ssh:
-            if ssh_key_path:
-                pub_key = j.sal.fs.readFile(ssh_key_path)
+            if sshkey_path:
+                pub_key = j.sal.fs.readFile(sshkey_path)
             else:
-                pub_key = j.sal.fs.readFile(self.ssh_key_path)
+                pub_key = j.sal.fs.readFile(self.sshkey_path)
             # the key must be added in the command to be executed on restarts and recovery.
             joined_command = ''
             joined_args = ''
@@ -376,7 +373,6 @@ class KubernetesMaster(JSConfigBase):
             name=name, image=image, env=envs, ports=container_ports, command=command, args=args, stdin=True, volume_mounts=volume_mounts)
         return container
 # The client can be extended for container , but at the moment does not seem necessary.
-
 
     def define_mount(self, name, mount_path, read_only=False, sub_path=""):
         """
@@ -401,7 +397,7 @@ class KubernetesMaster(JSConfigBase):
         @param namespace,, str namespace to filter on.
         """
         service_object = self._v1.read_namespaced_service(name, namespace)
-        return Service(service_object.metadata.name, self,service_object=service_object)
+        return Service(service_object.metadata.name, self, service_object=service_object)
 
     def list_services(self, namespace=None, short=True):
         """
@@ -423,7 +419,7 @@ class KubernetesMaster(JSConfigBase):
                 output.append(service_dict)
             return output
         for service_obj in service_objs:
-            services.append(Service(service_obj.metadata.name, self,service_object=service_obj))
+            services.append(Service(service_obj.metadata.name, self, service_object=service_obj))
         return services
 
     def define_service(self, name, selector, ports, protocol=None, service_type='LoadBalancer'):
@@ -455,7 +451,7 @@ class KubernetesMaster(JSConfigBase):
 #     DEPLOYMENT     #
 ######################
 
-class Deployment:
+class Deployment(JSBASE):
     """
     Kubernetes cluster wrapper layer.
     """
@@ -484,6 +480,7 @@ class Deployment:
         @param min_ready_seconds,, int Minimum number of seconds for which a newly created pod should be ready without any of its container crashing, for it to be considered available. Defaults to 0 (pod will be considered available as soon as it is ready)
         @param volumes,, list(V1Volume) can be created from the define_?_volume methods
         """
+        JSBASE.__init__(self)
         self.object = deployment_object
         if not deployment_object:
             kind = 'Deployment'
@@ -495,23 +492,22 @@ class Deployment:
 
             # create deployment_strategy
             deployment_strategy = client.AppsV1beta1DeploymentStrategy(rolling_update=deployment_strategy_rolling_update,
-                                                                    type=deployment_strategy_type)
+                                                                       type=deployment_strategy_type)
 
             # Create the specification of deployment
             selector = None
             if selectors:
-                selector  = client.V1LabelSelector([], selectors)
+                selector = client.V1LabelSelector([], selectors)
 
             deployment_spec = client.ExtensionsV1beta1DeploymentSpec(replicas=replicas, template=pod_spec,
-                                                                    progress_deadline_seconds=progress_deadline_seconds,
-                                                                    min_ready_seconds=min_ready_seconds,
-                                                                    strategy=deployment_strategy, selector=selector)
+                                                                     progress_deadline_seconds=progress_deadline_seconds,
+                                                                     min_ready_seconds=min_ready_seconds,
+                                                                     strategy=deployment_strategy, selector=selector)
             # Instantiate the deployment object
             self.object = client.ExtensionsV1beta1Deployment(api_version=api_version, kind=kind, spec=deployment_spec,
-                         metadata=client.V1ObjectMeta(name=name, cluster_name=cluster_name, namespace=namespace,
-                                                      generate_name=generate_name))
+                                                             metadata=client.V1ObjectMeta(name=name, cluster_name=cluster_name, namespace=namespace,
+                                                                                          generate_name=generate_name))
         self.master = master
-
 
     def __str__(self):
         return self.object.to_str()
@@ -530,7 +526,7 @@ class Deployment:
         # Create deployment
         api_response = self.master._extensionv1b1.create_namespaced_deployment(
             body=self.object, namespace=self.object.metadata.namespace)
-        j.logger.logging.info("Deployment created. status='%s'" % str(api_response.status))
+        self.logger.info("Deployment created. status='%s'" % str(api_response.status))
 
     def update(self):
         """
@@ -541,7 +537,7 @@ class Deployment:
         api_response = self.master._extensionv1b1.patch_namespaced_deployment(name=self.object.metadata.name,
                                                                               namespace=self.object.metadata.namespace,
                                                                               body=self.object)
-        j.logger.logging.info("Deployment updated. status='%s'" % str(api_response.status))
+        self.logger.info("Deployment updated. status='%s'" % str(api_response.status))
 
     def delete(self, grace_period_seconds=0, propagation_policy='Foreground'):
         """
@@ -557,14 +553,14 @@ class Deployment:
         api_response = self.master._extensionv1b1.delete_namespaced_deployment(name=self.object.metadata.name,
                                                                                namespace=self.object.metadata.namespace,
                                                                                body=delete_options)
-        j.logger.logging.info("Deployment deleted. status='%s'" % str(api_response.status))
+        self.logger.info("Deployment deleted. status='%s'" % str(api_response.status))
 
 ######################
 #     POD            #
 ######################
 
 
-class Pod(client.V1Pod):
+class Pod(client.V1Pod, JSBASE):
     """
     Kubernetes Pod wrapper layer.
     """
@@ -591,6 +587,7 @@ class Pod(client.V1Pod):
         @param node_selector,,list({string:string}) NodeSelector is a selector which must be true for the pod to fit on a node. Selector which must match a node's labels for the pod to be scheduled on that node. More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
         @param subdomain,,str If specified, the fully qualified Pod hostname will be "...svc.". If not specified, the pod will not have a domainname at all.
         """
+        JSBASE.__init__(self)
         self.object = pod_object
         if not pod_object:
             # create metadata for the pod
@@ -628,7 +625,7 @@ class Pod(client.V1Pod):
         # Create deployment
         api_response = self.master._extensionv1b1.create_namespaced_pod(
             body=self.object, namespace=self.object.metadata.namespace)
-        j.logger.logging.info("Pod created. status='%s'" % str(api_response.status))
+        self.logger.info("Pod created. status='%s'" % str(api_response.status))
 
     def update(self):
         """
@@ -638,7 +635,7 @@ class Pod(client.V1Pod):
         api_response = self.master._extensionv1b1.patch_namespaced_pod(name=self.object.metadata.name,
                                                                        namespace=self.object.metadata.namespace,
                                                                        body=self.object)
-        j.logger.logging.info("Pod updated. status='%s'" % str(api_response.status))
+        self.logger.info("Pod updated. status='%s'" % str(api_response.status))
 
     def delete(self, grace_period_seconds=0, propagation_policy='Foreground'):
         """
@@ -654,7 +651,7 @@ class Pod(client.V1Pod):
         api_response = self.master._extensionv1b1.delete_namespaced_pod(name=self.object.metadata.name,
                                                                         namespace=self.object.metadata.namespace,
                                                                         body=delete_options)
-        j.logger.logging.info("Pod deleted. status='%s'" % str(api_response.status))
+        self.logger.info("Pod deleted. status='%s'" % str(api_response.status))
 
 
 ######################
@@ -662,7 +659,7 @@ class Pod(client.V1Pod):
 ######################
 
 
-class Service(client.V1Service):
+class Service(client.V1Service, JSBASE):
 
     def __init__(self, name, master, selector=None, ports=None, namespace='default', protocol='tcp', service_type='LoadBalancer',
                  service_object=None):
@@ -677,6 +674,7 @@ class Service(client.V1Service):
         @param protocol,,str tcp or udp , default to tcp
         @param service_type,,str type determines how the Service is exposed. Defaults to ClusterIP. Valid options are ExternalName, ClusterIP, NodePort, and LoadBalancer. "ExternalName" maps to the specified externalName. "ClusterIP" allocates a cluster-internal IP address for load-balancing to endpoints. Endpoints are determined by the selector or if that is not specified, by manual construction of an Endpoints object. If clusterIP is "None", no virtual IP is allocated and the endpoints are published as a set of endpoints rather than a stable IP. "NodePort" builds on ClusterIP and allocates a port on every node which routes to the clusterIP. "LoadBalancer" builds on NodePort and creates an external load-balancer (if supported in the current cloud) which routes to the clusterIP. More info: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services---service-types
         """
+        JSBASE.__init__(self)
         self.object = service_object
         if not service_object:
             # create etadata for the service
@@ -686,13 +684,12 @@ class Service(client.V1Service):
                 if service_type == 'LoadBalancer' or service_type == 'ClusterIP':
                     internal_port, _ = port_pair.split(':')
                     service_ports.append(client.V1ServicePort('%s-%s' % (name, internal_port),
-                                                            port=int(internal_port), protocol=protocol))
+                                                              port=int(internal_port), protocol=protocol))
                 else:
                     internal_port, external_port = port_pair.split(':')
                     service_ports.append(client.V1ServicePort('%s-%s-%s' % (name, internal_port, external_port),
-                                                            port=int(internal_port), node_port=int(external_port),
-                                                            protocol=protocol))
-
+                                                              port=int(internal_port), node_port=int(external_port),
+                                                              protocol=protocol))
 
             # create the specs
             service_spec = client.V1ServiceSpec(
@@ -700,9 +697,8 @@ class Service(client.V1Service):
 
             # define the service
             self.object = client.V1Service(api_version='v1', kind='Service',
-                            metadata=metadata, spec=service_spec)
+                                           metadata=metadata, spec=service_spec)
         self.master = master
-
 
     def __str__(self):
         return self.object.to_str()
@@ -720,7 +716,7 @@ class Service(client.V1Service):
         # Create deployment
         api_response = self.master._v1.create_namespaced_service(
             body=self.object, namespace=self.object.metadata.namespace)
-        j.logger.logging.info("service created. status='%s'" % str(api_response.status))
+        self.logger.info("service created. status='%s'" % str(api_response.status))
 
     def update(self):
         """
@@ -730,7 +726,7 @@ class Service(client.V1Service):
         api_response = self.master._v1.patch_namespaced_service(name=self.object.metadata.name,
                                                                 namespace=self.object.metadata.namespace,
                                                                 body=self.object)
-        j.logger.logging.info("service updated. status='%s'" % str(api_response.status))
+        self.logger.info("service updated. status='%s'" % str(api_response.status))
 
     def delete(self):
         """
@@ -740,4 +736,4 @@ class Service(client.V1Service):
         # Delete service
         api_response = self.master._v1.delete_namespaced_service(name=self.object.metadata.name,
                                                                  namespace=self.object.metadata.namespace)
-        j.logger.logging.info("service deleted. status='%s'" % str(api_response.status))
+        self.logger.info("service deleted. status='%s'" % str(api_response.status))
