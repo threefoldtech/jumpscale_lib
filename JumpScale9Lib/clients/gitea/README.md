@@ -25,3 +25,20 @@ for name in names:
 
 
 ```
+
+The client provides access to the gitea API, see [here](https://docs.greenitglobe.com/api/v1/swagger). For example to list all repos in a gitea organization taht the user belongs to using the API:
+
+```python
+cl = j.clients.gitea.get()
+orgs = cl.api.orgs # Get all organizations that the user belongs to
+repos, response = orgs.orgListRepos('nameoforg')
+```
+
+You get a list of `Repository` objects from the generated client, following are example operations on the object:
+
+```python
+repo = repos[0]
+repo.full_name # returns org/reponame
+repo.name
+repo.default_branch
+```
