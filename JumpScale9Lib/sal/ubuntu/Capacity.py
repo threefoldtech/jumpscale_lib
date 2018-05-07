@@ -46,7 +46,7 @@ class Capacity:
                     "smartctl -T permissive -i %s" % disk["name"], die=False)
                 if rc != 0:
                     # smartctl prints error on stdout
-                    raise RuntimeError("Error getting disk data for %s:\n%s\n\n%s" % (disk["name"], out, err))
+                    raise RuntimeError("Error getting disk data for %s:\n%s\n\n%s\n\nMake sure you run this on baremetal, not on a VM" % (disk["name"], out, err))
 
                 self._disk_info[disk["name"]] = j.tools.capacityparser.disk_info_from_smartctl(
                     out,
