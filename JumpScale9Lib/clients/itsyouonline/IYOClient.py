@@ -120,8 +120,6 @@ class IYOClient(JSConfigBase):
 
         if validity:
             params["validity"] = validity
-        else:
-            params["validity"] = 7776000
 
         if refreshable:
             params["scope"] = 'offline_access'
