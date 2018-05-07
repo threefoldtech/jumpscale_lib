@@ -170,7 +170,7 @@ class Zerodb:
             self.namespaces.add(
                 namespace['name'], namespace.get('size'), namespace.get('password'), namespace.get('public', True))
         for nic in data.get('nics', []):
-            nicobj = self.nics.add(nic['name'], nic['type'], nic['id'], nic['macaddress'])
+            nicobj = self.nics.add(nic['name'], nic['type'], nic['id'], nic['hwaddr'])
             if nicobj.type == 'zerotier':
                 nicobj.client_name = nic.get('ztClient')
 
