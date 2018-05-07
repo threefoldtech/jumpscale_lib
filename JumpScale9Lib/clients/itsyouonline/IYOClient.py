@@ -27,8 +27,6 @@ class IYOClient(JSConfigBase):
                               interactive=interactive)
 
         self.reset()
-        if self.config.data['secret_'] == "" or self.config.data['secret_'] == "":
-            self.configure()
 
     @property
     def client(self):
@@ -54,7 +52,7 @@ class IYOClient(JSConfigBase):
     @property
     def jwt(self):
         """returns a jwt if not set and update authorization header with that jwt"""
-        if self.config.data["application_id_"] == "":
+        if self.config.data["application_id_"] == "" or self.config.data["secret_"] == "":
             raise RuntimeError("Please configure your itsyou.online, do this by calling js9 "
                                "'j.tools.configmanager.configure(j.clients.itsyouonline,...)'")
         if not self._jwt:
@@ -122,6 +120,8 @@ class IYOClient(JSConfigBase):
 
         if validity:
             params["validity"] = validity
+        else:
+            params["validity"] = 7776000
 
         if refreshable:
             params["scope"] = 'offline_access'
