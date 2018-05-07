@@ -68,9 +68,6 @@ class GiteaFactory(JSConfigBase):
 
         org = cl.org_get(name)
 
-        # CAREFULL WILL GO OVER ALL MILESTONES
-        # org.labels_milestones_add(remove_old=False)
-
         if "testrepo" not in org.repos_list():
             #means no test repo yet, lets create one
             org.repo_new("testrepo")

@@ -8,6 +8,9 @@ The way the bot detects stories and tasks is trough the formatting of the titles
 
 ## Usage
 
+This chapter explains the full setup for StoryBot.  
+There is a also an example script available [here](../../JumpScale9Lib/tools/storybot/example.py) if you want to start straight away.
+
 ### Step 1: Get API keys
 
 The bot needs access to the repos provided to the bot, so it can read and edit them.  

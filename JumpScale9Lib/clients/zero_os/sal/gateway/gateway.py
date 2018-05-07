@@ -5,7 +5,6 @@ from .firewall import Firewall
 from ..abstracts import Collection
 from .network import Networks
 from .cloudinit import CloudInit
-import ipaddress
 import yaml
 import time
 
@@ -123,6 +122,8 @@ class Gateway:
                 network.ip.cidr = nic['config'].get('cidr', None)
             if network.type == 'zerotier':
                 network.client_name = nic['ztClient']
+            if nic.get('hwaddr'):
+                network.hwaddr = nic['hwaddr']
             dhcpserver = nic.get('dhcpserver')
             if not dhcpserver:
                 continue

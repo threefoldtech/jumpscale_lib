@@ -29,8 +29,7 @@ class GiteaRepo(JSBASE):
 
         self.logger.info("labels add")
 
-
-        labels_default = self.org.labels_default_get() if labels is None else []
+        labels_default = labels or self.org.labels_default_get()
 
         repo_labels = self.api.issueListLabels(self.name, self.owner)[0]
         # @TODO: change the way we check on label name when this is fixed
@@ -47,7 +46,7 @@ class GiteaRepo(JSBASE):
 
         if remove_old:
             labels_on_repo = [item.name for item in repo_labels]
-            labels_default = [item.name for item in labels_default]
+            labels_default = [item['name'] for item in labels_default]
             for label in labels_on_repo:
                 if label not in labels_default:
                     self.client.api.repos.issueDeleteLabel(get_label_id(label), self.name, self.owner)
