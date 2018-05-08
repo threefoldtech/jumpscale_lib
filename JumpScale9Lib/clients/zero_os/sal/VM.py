@@ -27,25 +27,40 @@ class ZDBDisk(Disk):
             raise RuntimeError('ZDB mode direct not support for disks')
         super().__init__(name, None, mountpoint, filesystem)
         self.zdb = zdb
-        self.node = zdb.node
         self.size = size
+        self.node = None
+
+    @property
+    def url(self):
+        if self.node is None:
+            raise RuntimeError('Can not get url when node is not set')
+        else:
+            if self.node == self.zdb.node:
+                return self.private_url
+            else:
+                return self.public_url
+
+    @url.setter
+    def url(self, value):
+        return
 
     def deploy(self):
         namespace = self.zdb.namespaces.add(self.name, self.size)
         self.zdb.deploy()
-        self.url = namespace.url
+        self.public_url = namespace.url
+        self.private_url = namespace.private_url
         if self.filesystem:
             tmpfile = '/var/cache/{}'.format(j.data.idgenerator.generateGUID())
             try:
-                res = self.node.client.system('truncate -s {}G {}'.format(self.size, tmpfile)).get()
+                res = self.zdb.node.client.system('truncate -s {}G {}'.format(self.size, tmpfile)).get()
                 if res.state != 'SUCCESS':
                     raise RuntimeError('Failed to create tmpfile')
-                res = self.node.client.system('mkfs.{} -L {} {}'.format(self.filesystem, self.name, tmpfile)).get()
+                res = self.zdb.node.client.system('mkfs.{} -L {} {}'.format(self.filesystem, self.name, tmpfile)).get()
                 if res.state != 'SUCCESS':
                     raise RuntimeError('Failed to create fs')
-                self.node.client.kvm.convert_image(tmpfile, namespace.url, 'raw')
+                self.zdb.node.client.kvm.convert_image(tmpfile, self.private_url, 'raw')
             finally:
-                self.node.client.filesystem.remove(tmpfile)
+                self.zdb.node.client.filesystem.remove(tmpfile)
 
     def __str__(self):
         return "ZDBDisk <{}:{}>".format(self.name, self.url)
@@ -71,6 +86,7 @@ class Disks(Collection):
         elif isinstance(name_or_disk, ZDBDisk):
             super().add(name_or_disk.name)
             disk = name_or_disk
+            disk.node = self._parent.node
         else:
             raise ValueError('Unsupported type {}'.format(name_or_disk))
 

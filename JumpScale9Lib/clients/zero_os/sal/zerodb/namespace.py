@@ -1,5 +1,6 @@
 from js9 import j
 from redis import ResponseError
+import netaddr
 
 from ..abstracts import Collection
 
@@ -64,6 +65,17 @@ class Namespace:
     def url(self):
         return 'zdb://{}:{}?size={}G&blocksize=4096&namespace={}'.format(
             self.parent.node.public_addr, self.parent.node_port, self.size, self.name)
+
+    @property
+    def private_url(self):
+        for ipaddress in self.parent.container.client.ip.addr.list('nat0'):
+            ip = netaddr.IPNetwork(ipaddress)
+            if ip.version == 4:
+                break
+        else:
+            raise LookupError('Failed to get private url')
+        return 'zdb://{}:{}?size={}G&blocksize=4096&namespace={}'.format(
+            ip.ip, self.parent.node_port, self.size, self.name)
 
     def set_property(self, prop, value):
         """
