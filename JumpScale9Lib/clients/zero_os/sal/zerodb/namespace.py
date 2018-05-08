@@ -74,8 +74,8 @@ class Namespace:
                 break
         else:
             raise LookupError('Failed to get private url')
-        return 'zdb://{}:{}?size={}G&blocksize=4096&namespace={}'.format(
-            ip.ip, self.parent.node_port, self.size, self.name)
+        return 'zdb://{}:9900?size={}G&blocksize=4096&namespace={}'.format(
+            ip.ip, self.size, self.name)
 
     def set_property(self, prop, value):
         """
