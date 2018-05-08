@@ -64,7 +64,13 @@ class Network():
         }
 
     def get_free_nics(self):
-        nics = self.client.info.nic()
+        devices = []
+        for device in self.client.ip.link.list():
+            if device['type'] == 'device':
+                if device['up'] == False:
+                    self.client.ip.link.up(device['name'])
+                devices.append(device['name'])
+        nics = list(filter(lambda nic: nic['name'] in devices, self.client.info.nic()))
         nics.sort(key=lambda nic: nic['speed'])
         availablenics = {}
         for nic in nics:
