@@ -115,7 +115,7 @@ class Gateway:
         self.zt_identity = data.get('ztIdentity')
         self.domain = data['domain']
         self.certificates = data.get('certificates', [])
-        for nic in data.get('nics', []):
+        for nic in data.get('networks', []):
             network = self.networks.add(nic['name'], nic['type'], nic['id'])
             if nic.get('config'):
                 network.ip.gateway = nic['config'].get('gateway', None)
@@ -235,7 +235,7 @@ class Gateway:
 
     def to_dict(self):
         data = {
-            'nics': [],
+            'networks': [],
             'hostname': self.name,
             'portforwards': [],
             'httpproxies': [],
@@ -263,7 +263,7 @@ class Gateway:
                     }
                     hosts.append(host)
                 nic['dhcpserver'] = dhcp
-            data['nics'].append(nic)
+            data['networks'].append(nic)
         for proxy in self.httpproxies:
             data['httpproxies'].append({
                 'host': proxy.host,

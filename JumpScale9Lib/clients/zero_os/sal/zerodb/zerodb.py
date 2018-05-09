@@ -173,6 +173,8 @@ class Zerodb:
             nicobj = self.nics.add(nic['name'], nic['type'], nic['id'], nic.get('hwaddr'))
             if nicobj.type == 'zerotier':
                 nicobj.client_name = nic.get('ztClient')
+        if 'nat0' not in self.nics:
+            self.nics.add('nat0', 'default')
 
     def to_dict(self):
         """

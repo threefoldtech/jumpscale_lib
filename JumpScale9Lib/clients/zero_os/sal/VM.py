@@ -399,11 +399,11 @@ Type=simple
         return j.data.serializer.json.dumps(self.to_dict())
 
     def from_dict(self, data):
-        self.name = data['name']
+        self._name = data['name']
         self.zt_identity = data.get('ztIdentity')
-        self.flist = data['flist']
-        self.vcpus = data['cpu']
-        self.memory = data['memory']
+        self._flist = data['flist']
+        self._vcpus = data['cpu']
+        self._memory = data['memory']
         self.tags = data['tags']
         self.disks = Disks(self)
         self.nics = Nics(self)
@@ -411,7 +411,7 @@ Type=simple
         for disk in data['disks']:
             self.disks.add(disk['name'], disk['url'], disk.get('mountPoint'), disk.get('filesystem'))
         for nic in data['nics']:
-            nicobj = self.nics.add(nic['name'], nic['type'], nic['id'], nic['hwaddr'])
+            nicobj = self.nics.add(nic['name'], nic['type'], nic.get('id'), nic.get('hwaddr'))
             if 'ztClient' in nic:
                 nicobj.client_name = nic['ztClient']
         for config in data['configs']:
