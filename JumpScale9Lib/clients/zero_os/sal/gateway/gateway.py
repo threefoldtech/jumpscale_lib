@@ -222,7 +222,7 @@ class Gateway:
                     if network.ip.cidr:
                         privateip = str(network.ip.cidr)
                     ztnetwork.member_add(ztpublic, self.name, private_ip=privateip)
-            nics.append(network.to_dict())
+            nics.append(network.to_dict(forcontainer=True))
             #zerotierbridge = nic.pop('zerotierbridge', None)
             #if zerotierbridge:
             #    contnics.append(

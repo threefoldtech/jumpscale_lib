@@ -100,7 +100,7 @@ class Nic:
             raise ValueError('Invalid nic type {}'.format(value))
         self._type = value
 
-    def to_dict(self, forvm=False):
+    def to_dict(self, forvm=False, forcontainer=False):
         nicinfo = {
             'id': str(self.networkid),
             'type': self.type,
@@ -153,7 +153,7 @@ class ZTNic(Nic):
         return True
 
     def to_dict(self, forvm=False, forcontainer=False):
-        data = super().to_dict(forvm)
+        data = super().to_dict(forvm, forcontainer)
         if forcontainer:
             return data
 
