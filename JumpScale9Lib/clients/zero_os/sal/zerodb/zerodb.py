@@ -98,7 +98,7 @@ class Zerodb:
             'identity': self.zt_identity,
             'mounts': {self.path: '/zerodb'},
             'ports': {self.node_port: DEFAULT_PORT},
-            'nics': [nic.to_dict() for nic in self.nics]
+            'nics': [nic.to_dict(forcontainer=True) for nic in self.nics]
         }
 
     @property
@@ -170,7 +170,7 @@ class Zerodb:
             self.namespaces.add(
                 namespace['name'], namespace.get('size'), namespace.get('password'), namespace.get('public', True))
         for nic in data.get('nics', []):
-            nicobj = self.nics.add(nic['name'], nic['type'], nic['id'], nic['hwaddr'])
+            nicobj = self.nics.add(nic['name'], nic['type'], nic['id'], nic.get('hwaddr'))
             if nicobj.type == 'zerotier':
                 nicobj.client_name = nic.get('ztClient')
 

@@ -152,8 +152,11 @@ class ZTNic(Nic):
         network.member_add(publicidentity, self._parent.name)
         return True
 
-    def to_dict(self, forvm=False):
+    def to_dict(self, forvm=False, forcontainer=False):
         data = super().to_dict(forvm)
+        if forcontainer:
+            return data
+
         if self.client:
             data['ztClient'] = self.client.config.instance
         elif self._client_name:
