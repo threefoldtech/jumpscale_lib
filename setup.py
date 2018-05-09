@@ -65,7 +65,6 @@ setup(
         'JumpScale9>=9.3.0',
         'Pillow>=4.1.1',
         'PyGithub>=1.34',
-        'PyYAML>=3.12',
         'SQLAlchemy>=1.1.9',
         'colored-traceback>=0.2.2',
         'colorlog>=2.10.0',
