@@ -88,7 +88,7 @@ class Nic:
         self._parent = parent
 
     def __str__(self):
-        return "Nic <{}:{}:{}>".format(self.name, self.type, self.networkid)
+        return "{} <{}:{}:{}>".format(self.__class__.__name__, self.name, self.type, self.networkid)
 
     @property
     def type(self):
@@ -163,10 +163,6 @@ class ZTNic(Nic):
             data['ztClient'] = self._client_name
         return data
 
-    def __str__(self):
-        return "ZTNic <{}:{}:{}>".format(self.name, self.type, self.networkid)
-
-    __repr__ = __str__
 
 class Nics(Collection):
     def add(self, name, type_, networkid=None, hwaddr=None):
