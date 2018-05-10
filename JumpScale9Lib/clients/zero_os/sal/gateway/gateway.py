@@ -210,7 +210,7 @@ class Gateway:
 
         for network in self.networks:
             if network.type == 'zerotier':
-                if not network.id:
+                if not network.networkid:
                     if not network.client:
                         raise RuntimeError('Zerotier network should either have client or networkid assigned')
                     cidr = network.ip.subnet or '172.20.0.0/16'

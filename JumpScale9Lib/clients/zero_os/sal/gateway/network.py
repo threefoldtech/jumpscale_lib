@@ -271,8 +271,8 @@ class Network(Nic):
     def __str__(self):
         return "{} <{} {}>".format(self.__class__.__name__, self.name, self.type)
 
-    def to_dict(self):
-        data = super().to_dict()
+    def to_dict(self, forcontainer=False):
+        data = super().to_dict(forcontainer=forcontainer)
         if self.ip.cidr:
             data['config'] = {'cidr': str(self.ip.cidr), 'gateway': self.ip.gateway}
         return data
