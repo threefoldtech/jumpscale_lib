@@ -177,6 +177,11 @@ class Node:
             if portInfo['network'] != "tcp":
                 continue
             usedports.add(portInfo['port'])
+        # Add ports consumed by default forwards
+        # TODO: fix this by using core0 api (does not exist yet)
+        for container in self.containers.list():
+            for port in container.ports:
+                usedports.add(int(port))
 
         freeports = []
         while True:
