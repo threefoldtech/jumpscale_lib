@@ -63,8 +63,11 @@ class Namespace:
 
     @property
     def url(self):
-        return 'zdb://{}:{}?size={}G&blocksize=4096&namespace={}'.format(
+        url = 'zdb://{}:{}?size={}G&blocksize=4096&namespace={}'.format(
             self.parent.node.public_addr, self.parent.node_port, self.size, self.name)
+        if self.password:
+            url += '&password={}'.format(self.password)
+        return url
 
     @property
     def private_url(self):
@@ -74,8 +77,10 @@ class Namespace:
                 break
         else:
             raise LookupError('Failed to get private url')
-        return 'zdb://{}:9900?size={}G&blocksize=4096&namespace={}'.format(
-            ip.ip, self.size, self.name)
+        url = 'zdb://{}:9900?size={}G&blocksize=4096&namespace={}'.format(ip.ip, self.size, self.name)
+        if self.password:
+            url += '&password={}'.format(self.password)
+        return url
 
     def set_property(self, prop, value):
         """
