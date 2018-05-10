@@ -23,6 +23,10 @@ class Bind:
 class Forward:
     def __init__(self, name, source=None, target=None, protocols=None):
         self.name = name
+        if protocols:
+            for protocol in protocols:
+                if protocol not in ['tcp', 'udp']:
+                    raise ValueError('Invalid protocol {} for portforward'.format(protocol))
         if protocols is None:
             protocols = ['tcp']
         self.protocols = protocols
@@ -65,6 +69,10 @@ class HTTPProxy:
     def __init__(self, name, host, destinations, types=None):
         self.name = name
         self.host = host
+        if types:
+            for proxy_type in types:
+                if proxy_type not in ['http', 'https']:
+                    raise ValueError('Invalid type {} for http proxy'.format(proxy_type))
         if types is None:
             types = ['http', 'https']
         self.types = types
@@ -113,7 +121,7 @@ class Gateway:
         self.portforwards = PortForwards(self)
         self.httpproxies = HTTPProxies(self)
         self.zt_identity = data.get('ztIdentity')
-        self.domain = data['domain']
+        self.domain = data.get('domain') or 'lan'
         self.certificates = data.get('certificates', [])
         for nic in data.get('networks', []):
             network = self.networks.add(nic['name'], nic['type'], nic['id'])
