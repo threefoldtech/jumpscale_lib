@@ -46,6 +46,23 @@ class Disks():
                 return disk
         return None
 
+    def get_device(self, name):
+        """
+        Get device can be either disk or partition
+
+        @param name: partition or disk name
+        @type name: str
+        @return: Disk or Partition
+        @rtype: Disk Partition
+        """
+        for disk in self.list():
+            if disk.devicename == name:
+                return disk
+            for partition in disk.partitions:
+                if partition.devicename == name:
+                    return partition
+        raise LookupError('Could not find device with name {}'.format(name))
+
 
 class Disk(Mountable):
     """Disk in a Zero-OS"""
