@@ -82,6 +82,7 @@ class Zerodb:
         info = self.node.client.btrfs.info(self.path)
         used = 0
         total = 0
+        reserved = 0
         devicename = None
         for device in info['devices']:
             used += device['used']
@@ -94,11 +95,15 @@ class Zerodb:
             devicetype = device.type.value
         else:
             devicetype = device.disk.type.value
+        for namespace in self.namespaces:
+            reserved += namespace.size * 1024 ** 3
+
 
         return {
             'used': used,
+            'reserved': reserved,
             'total': total,
-            'free': total - used,
+            'free': total - reserved,
             'path': self.path,
             'mode': self.mode,
             'sync': self.sync,
