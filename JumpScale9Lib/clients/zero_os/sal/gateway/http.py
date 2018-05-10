@@ -1,5 +1,5 @@
+from js9 import j
 import signal
-import time
 from .. import templates
 
 class HTTPServer():
@@ -24,11 +24,8 @@ class HTTPServer():
             args = '-http-port 81'
         job = self.container.client.system(
             'caddy -disable-http-challenge {} -agree -conf {}'.format(args, conf), stdin='\n', id=self.id())
-        start = time.time()
-        while start + 30 > time.time():
-            if self.is_running():
-                return True
-            time.sleep(0.5)
+        if j.tools.timer.execute_until(self.is_running, 30, 0.5):
+            return True
         if not job.running:
             result = job.get()
             raise RuntimeError("Failed to start caddy server: {} {} {}".format(result.stderr, result.stdout, result.data))

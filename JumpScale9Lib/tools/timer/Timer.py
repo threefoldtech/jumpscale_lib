@@ -8,6 +8,27 @@ class TIMER(JSBASE):
         JSBASE.__init__(self)
 
     @staticmethod
+    def execute_until(callback, timeout=60, interval=0.2):
+        """
+        Check periodicly if callback function returns True
+
+        :param callback: Callback function
+        :type callback: callable
+        :param timeout: Amount of time to keep checing in seconds
+        :type timeout: int
+        :param interval: Pause time inbetween calling the callback
+        :type interval: float
+        :return boolean indicating callback was returned true
+        :rtype boolean
+        """
+        start = time.time()
+        while start + timeout > time.time():
+            if callback():
+                return True
+            time.sleep(interval)
+        return False
+
+    @staticmethod
     def start(cat=""):
         TIMER._cat = cat
         TIMER.clean()
