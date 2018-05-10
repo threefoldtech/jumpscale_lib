@@ -48,6 +48,8 @@ class Collection:
             yield item
 
     def __getitem__(self, name):
+        if isinstance(name, int):
+            return self._items[name]
         for item in self._items:
             if item.name == name:
                 return item
@@ -65,7 +67,7 @@ class Collection:
             raise ValueError('Element with name {} already exists'.format(name))
 
     def remove(self, item):
-        if isinstance(item, str):
+        if isinstance(item, (str, int)):
             item = self[item]
         self._items.remove(item)
 
