@@ -45,7 +45,13 @@ class ZDBDisk(Disk):
         return
 
     def deploy(self):
-        namespace = self.zdb.namespaces.add(self.name, self.size)
+        if self.name in self.zdb.namespaces:
+            namespace = self.zdb.namespaces[self.name]
+            if namespace.size != self.size:
+                raise ValueError('namespace with name {} already exists'.format(self.name))
+        else:
+            namespace = self.zdb.namespaces.add(self.name, self.size)
+
         self.zdb.deploy()
         self.public_url = namespace.url
         self.private_url = namespace.private_url
@@ -106,11 +112,11 @@ class Port:
         self.source = source
         self.target = target
 
-
     def __str__(self):
         return "Port <{}:{}:{}>".format(self.name, self.source, self.target)
 
     __repr__ = __str__
+
 
 class Ports(Collection):
     def add(self, name, source, target):
@@ -143,11 +149,11 @@ class MountBind:
         self.sourcepath = sourcepath
         self.targetpath = targetpath
 
-
     def __str__(self):
         return "MountBind <{}:{}:{}>".format(self.name, self.sourcepath, self.targetpath)
 
     __repr__ = __str__
+
 
 class Mounts(Collection):
     def add(self, name, sourcepath, targetpath):
@@ -182,6 +188,7 @@ class Config:
         return "Config <{}:{}>".format(self.name, self.path)
 
     __repr__ = __str__
+
 
 class Configs(Collection):
     def add(self, name, path, content):
@@ -546,4 +553,3 @@ class ZeroOSVM(VM):
 
     def from_dict(self, data):
         self.ipxe_url = data.get('ipxeUrl')
-
