@@ -40,7 +40,7 @@ class NodeRegistration:
                     longitude=data.get('location').get('longitude')
                 )
 
-        self._nodes.replace_one({'node_id': capacity.node_id}, capacity._to_dict(), upsert=True)
+        self._nodes.replace_one({'node_id': capacity.node_id}, capacity.to_dict(), upsert=True)
 
     def list(self, country=None):
         """
@@ -131,7 +131,7 @@ class FarmerRegistration:
         if not isinstance(farmer, Farmer):
             raise TypeError("farmer need to be a Farmer object, not %s" % type(farmer))
 
-        self._farmers.replace_one({'id': farmer.id}, farmer._to_dict(), upsert=True)
+        self._farmers.replace_one({'id': farmer.id}, farmer.to_dict(), upsert=True)
 
     def list(self):
         for farmer in self._farmers.find({}):
