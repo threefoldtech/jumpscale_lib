@@ -1,0 +1,43 @@
+{
+	"$schema": "http://json-schema.org/schema#",
+	"type": "object",
+	"properties": {
+		"cru": {
+			"type": "number"
+		},
+		"farmer": {
+			"type": "string"
+		},
+		"hru": {
+			"type": "number"
+		},
+		"location": {
+			"$ref": "Location_schema.json"
+		},
+		"mru": {
+			"type": "number"
+		},
+		"node_id": {
+			"type": "string"
+		},
+		"os_version": {
+			"type": "string"
+		},
+		"robot_address": {
+			"type": "string"
+		},
+		"sru": {
+			"type": "number"
+		}
+	},
+	"required": [
+		"cru",
+		"farmer",
+		"hru",
+		"mru",
+		"node_id",
+		"os_version",
+		"robot_address",
+		"sru"
+	]
+}

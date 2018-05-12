@@ -1,22 +1,24 @@
 import requests
 
 from js9 import j
+from mongoengine import (Document, EmbeddedDocument, EmbeddedDocumentField,
+                         FloatField, IntField, ListField, PointField,
+                         ReferenceField, StringField, connect)
 
 
 class CapacityRegistration:
 
     def __init__(self):
-        # TODO: need to hardcode location of the etcd cluster for tf capacity
-        mongo = j.clients.mongodb.get('local', data={'host': 'localhost', 'port': 27017, })
-        db = mongo.client.capacity
-        self.nodes = NodeRegistration(db.nodes)
-        self.farmer = FarmerRegistration(db.farmers)
+        # TODO: need to hardcode location of the mongodb cluster for tf capacity
+        connect(db='capacity', host='localhost', port=27017)
+        self.nodes = NodeRegistration()
+        self.farmer = FarmerRegistration()
 
 
 class NodeRegistration:
 
-    def __init__(self, nodes):
-        self._nodes = nodes  # mongodb collection
+    # def __init__(self):
+    #     # self._nodes = nodes  # mongodb collection
 
     def register(self, capacity):
         """
@@ -36,11 +38,10 @@ class NodeRegistration:
                     continent=data.get('continent').get('names').get('en'),
                     country=data.get('country').get('names').get('en'),
                     city=data.get('city').get('names').get('en'),
-                    latitude=data.get('location').get('latitude'),
-                    longitude=data.get('location').get('longitude')
+                    geolocation=[data.get('location').get('longitude'), data.get('location').get('latitude')]
                 )
 
-        self._nodes.replace_one({'node_id': capacity.node_id}, capacity.to_dict(), upsert=True)
+        capacity.save()
 
     def list(self, country=None):
         """
@@ -54,10 +55,10 @@ class NodeRegistration:
         """
         filter = {}
         if country:
-            filter['location'] = {'country': country}
+            filter['location__country'] = country
 
-        for cap in self._nodes.find(filter):
-            yield Capacity.from_dict(cap)
+        for capacity in Capacity.objects(**filter):
+            yield capacity
 
     def get(self, node_id):
         """
@@ -68,10 +69,10 @@ class NodeRegistration:
         :return: Capacity object
         :rtype: Capacity
         """
-        cap = self._nodes.find_one({'node_id': node_id})
-        if not cap:
+        capacity = Capacity.objects(pk=node_id)
+        if not capacity:
             raise NodeNotFoundError("node '%s' not found" % node_id)
-        return Capacity.from_dict(cap)
+        return capacity[0]
 
     def search(self, country=None, mru=None, cru=None, hru=None, sru=None):
         """
@@ -92,18 +93,18 @@ class NodeRegistration:
         """
         filter = {}
         if country:
-            filter['location.country'] = country
+            filter['location__country'] = country
         if mru:
-            filter['mru'] = {'$gte': mru}
+            filter['mru__gte'] = mru
         if cru:
-            filter['cru'] = {'$gte': cru}
+            filter['cru__gte'] = cru
         if hru:
-            filter['hru'] = {'$gte': hru}
+            filter['hru__gte'] = hru
         if sru:
-            filter['sru'] = {'$gte': sru}
+            filter['sru__gte'] = sru
         print(filter)
-        for cap in self._nodes.find(filter):
-            yield Capacity.from_dict(cap)
+        for cap in Capacity.objects(**filter):
+            yield cap
 
     def all_countries(self):
         """
@@ -112,131 +113,66 @@ class NodeRegistration:
         :return: sequence of country
         :rtype: sequence of string
         """
-        countries = self._nodes.distinct('location.country')
-        countries.sort(key=lambda x: x)
-        for country in countries:
-            yield country
+        countries = Capacity.objects.only('location__country')
+        for cap in countries:
+            yield cap.location.country
 
 
 class FarmerRegistration:
 
-    def __init__(self, farmers):
-        self._farmers = farmers  # mongodb collection
-
     def create(self, name, iyo_account, wallet_addresses=None):
-        raise NotImplementedError()
-        # return Farmer(name=name, iyo_account=iyo_account, wallet_addresses=wallet_addresses)
+        return Farmer(name=name, iyo_account=iyo_account, wallet_addresses=wallet_addresses)
 
     def register(self, farmer):
         if not isinstance(farmer, Farmer):
             raise TypeError("farmer need to be a Farmer object, not %s" % type(farmer))
-
-        self._farmers.replace_one({'id': farmer.id}, farmer.to_dict(), upsert=True)
+        farmer.save()
 
     def list(self):
-        for farmer in self._farmers.find({}):
-            yield Farmer.from_dict(farmer)
+        for farmer in Farmer.objects():
+            yield farmer
 
     def get(self, id):
-        farmer = self._farmers.find_one({'id': id})
+        farmer = Farmer.objects(pk=id)
         if not farmer:
             raise FarmerNotFoundError("farmer '%s' not found" % id)
-        return Farmer.from_dict(farmer)
+        return farmer[0]
 
 
-class Capacity():
-    """
-    Represent the ressource units of a zero-os node
-    """
-
-    def __init__(self, node_id, farmer, location, cru, mru, hru, sru, robot_address, os_version):
-        self.node_id = node_id
-        self.location = location
-        self.farmer = farmer
-        self.cru = cru
-        self.mru = mru
-        self.hru = hru
-        self.sru = sru
-        self.robot_address = robot_address
-        self.os_version = os_version
-
-    def to_dict(self):
-        return {
-            'node_id': self.node_id,
-            'location': self.location.to_dict() if self.location else None,
-            'farmer': self.farmer,
-            'cru': self.cru,
-            'mru': self.mru,
-            'hru': self.hru,
-            'sru': self.sru,
-            'robot_address': self.robot_address,
-            'os_version': self.os_version,
-        }
-
-    @classmethod
-    def from_dict(cls, d):
-        d.pop('_id')
-        location = d.pop('location')
-        d['location'] = None
-        capacity = cls(**d)
-        capacity.location = Location(**location)
-        return capacity
-
-    def __repr__(self):
-        return str(self.to_dict())
-
-
-class Location():
+class Location(EmbeddedDocument):
     """
     Location of a node
     """
-
-    def __init__(self, continent, country, city, latitude, longitude):
-        self.continent = continent
-        self.country = country
-        self.city = city
-        self.latitude = latitude
-        self.longitude = longitude
-
-    def to_dict(self):
-        return {
-            'continent': self.continent,
-            'country': self.country,
-            'city': self.city,
-            'latitude': self.latitude,
-            'longitude': self.longitude,
-        }
-
-    def __repr__(self):
-        return str(self.to_dict())
+    continent = StringField()
+    country = StringField()
+    city = StringField()
+    geolocation = PointField()
 
 
-class Farmer():
+class Farmer(Document):
 
     """
     Represent a threefold Farmer
     """
+    # id = StringField(primary_key=True)
+    name = StringField()
+    iyo_account = StringField()
+    wallet_addresses = ListField(StringField())
 
-    def __init__(self, id, name, iyo_account, wallet_addresses=None):
-        self.id = id
-        self.name = name
-        self.iyo_account = iyo_account
-        self.wallet_addresses = wallet_addresses or []
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'iyo_account': self.iyo_account,
-            'wallet_addresses': self.wallet_addresses,
-        }
-
-    @classmethod
-    def from_dict(cls, f):
-        return cls(**f)
-
-    def __repr__(self):
-        return str(self.to_dict())
+class Capacity(Document):
+    """
+    Represent the ressource units of a zero-os node
+    """
+    node_id = StringField(primary_key=True)
+    location = EmbeddedDocumentField(Location)
+    farmer = ReferenceField(Farmer)
+    cru = FloatField()
+    mru = FloatField()
+    hru = FloatField()
+    sru = FloatField()
+    robot_address = StringField()
+    os_version = StringField()
 
 
 class FarmerNotFoundError(KeyError):
