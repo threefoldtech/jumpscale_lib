@@ -1,49 +1,11 @@
-import requests
-
-from js9 import j
 from mongoengine import (Document, EmbeddedDocument, EmbeddedDocumentField,
-                         FloatField, IntField, ListField, PointField,
-                         ReferenceField, StringField, connect)
-
-
-class CapacityRegistration:
-
-    def __init__(self):
-        # TODO: need to hardcode location of the mongodb cluster for tf capacity
-        connect(db='capacity', host='localhost', port=27017)
-        self.nodes = NodeRegistration()
-        self.farmer = FarmerRegistration()
+                         FloatField, ListField, PointField,
+                         ReferenceField, StringField)
 
 
 class NodeRegistration:
-
-    # def __init__(self):
-    #     # self._nodes = nodes  # mongodb collection
-
-    def register(self, capacity):
-        """
-        register capacity from a node
-
-        :param capacity: capacity of the node
-        :type capacity_obj: Capacity
-        """
-        if not isinstance(capacity, Capacity):
-            raise TypeError("capacity should be a Capacity object not %s" % type(capacity))
-
-        if capacity.location is None:
-            resp = requests.get('http://geoip.nekudo.com/api/en/full')
-            if resp.status_code == 200:
-                data = resp.json()
-                capacity.location = Location(
-                    continent=data.get('continent').get('names').get('en'),
-                    country=data.get('country').get('names').get('en'),
-                    city=data.get('city').get('names').get('en'),
-                    geolocation=[data.get('location').get('longitude'), data.get('location').get('latitude')]
-                )
-
-        capacity.save()
-
-    def list(self, country=None):
+    @staticmethod
+    def list(country=None):
         """
         list all the capacity, optionally filter per country.
         returns a list of capacity object
@@ -60,7 +22,8 @@ class NodeRegistration:
         for capacity in Capacity.objects(**filter):
             yield capacity
 
-    def get(self, node_id):
+    @staticmethod
+    def get(node_id):
         """
         return the capacity for a single node
 
@@ -74,7 +37,8 @@ class NodeRegistration:
             raise NodeNotFoundError("node '%s' not found" % node_id)
         return capacity[0]
 
-    def search(self, country=None, mru=None, cru=None, hru=None, sru=None):
+    @staticmethod
+    def search(country=None, mru=None, cru=None, hru=None, sru=None):
         """
         search based on country and minimum resource unit available
 
@@ -106,7 +70,8 @@ class NodeRegistration:
         for cap in Capacity.objects(**filter):
             yield cap
 
-    def all_countries(self):
+    @staticmethod
+    def all_countries():
         """
         yield all the country present in the database
 
@@ -120,18 +85,22 @@ class NodeRegistration:
 
 class FarmerRegistration:
 
+    @staticmethod
     def create(self, name, iyo_account, wallet_addresses=None):
         return Farmer(name=name, iyo_account=iyo_account, wallet_addresses=wallet_addresses)
 
+    @staticmethod
     def register(self, farmer):
         if not isinstance(farmer, Farmer):
             raise TypeError("farmer need to be a Farmer object, not %s" % type(farmer))
         farmer.save()
 
+    @staticmethod
     def list(self):
         for farmer in Farmer.objects():
             yield farmer
 
+    @staticmethod
     def get(self, id):
         farmer = Farmer.objects(pk=id)
         if not farmer:
@@ -146,7 +115,8 @@ class Location(EmbeddedDocument):
     continent = StringField()
     country = StringField()
     city = StringField()
-    geolocation = PointField()
+    longitude = FloatField()
+    latitude = FloatField()
 
 
 class Farmer(Document):

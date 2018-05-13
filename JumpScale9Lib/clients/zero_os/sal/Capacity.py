@@ -1,8 +1,5 @@
 import io
-
 from js9 import j
-from JumpScale9Lib.tools.capacity import registration
-
 
 class Capacity:
 
@@ -52,19 +49,16 @@ class Capacity:
         """
         get the capacity object of the node
 
-        this capacity object is used in the capacity registration tool (j.tools.capacity.registration)
-
         :return: Capacity object
-        :rtype: JumpScale9Lib.tools.capacity.registration.Capacity
+        :rtype: dict
         """
         report = self.report()
         robot_address = "http://%s:6600" % self._node.public_addr
         os_version = "{branch} {revision}".format(**self._node.client.info.version())
 
-        capacity = registration.Capacity(
+        capacity = dict(
             node_id=self._node.name,
-            location=None,
-            farmer=None,
+            location=report.location,
             cru=report.CRU,
             mru=report.MRU,
             hru=report.HRU,
@@ -73,3 +67,9 @@ class Capacity:
             os_version=os_version,
         )
         return capacity
+
+    def register(self):
+        data = self.get()
+        client = j.clients.grid_capacity.get(interactive=False)
+        client.apinodes.RegisterCapacity(data)
+        return True

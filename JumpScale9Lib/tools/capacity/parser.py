@@ -1,8 +1,7 @@
 import json
 from enum import Enum
 import re as _re
-
-from .registration import Capacity
+import requests
 
 GIB = 1024 * 1024 * 1024
 GB = 1000 * 1000 * 1000
@@ -94,6 +93,21 @@ class Report():
         for cpu in self.processor:
             unit += int(cpu.get('thread_nr', 0))
         return unit
+
+    @property
+    def location(self):
+        resp = requests.get('http://geoip.nekudo.com/api/en/full')
+        location = None
+        if resp.status_code == 200:
+            data = resp.json()
+            location = dict(
+                continent=data.get('continent').get('names').get('en'),
+                country=data.get('country').get('names').get('en'),
+                city=data.get('city').get('names').get('en'),
+                longitude=data.get('location').get('longitude'),
+                latitude=data.get('location').get('latitude')
+            )
+        return location
 
     @property
     def MRU(self):

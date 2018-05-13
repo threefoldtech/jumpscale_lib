@@ -1,12 +1,12 @@
 # THIS FILE IS SAFE TO EDIT. It will not be overwritten when rerunning go-raml.
 
-from flask import jsonify, request
-from js9 import j
-
-registration = j.tools.capacity.registration
-
+from ..models import NodeRegistration
+from flask import jsonify
+import json
 
 def ListCapacityHandler():
+    nodes = []
+    for capacity in NodeRegistration.list():
+        nodes.append(json.loads(capacity.to_json()))
 
-    nodes = [cap.to_json() for cap in registration.nodes.list()]
-    return nodes,200,
+    return jsonify(nodes),200,

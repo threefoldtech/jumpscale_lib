@@ -32,7 +32,6 @@
 	},
 	"required": [
 		"cru",
-		"farmer",
 		"hru",
 		"mru",
 		"node_id",
