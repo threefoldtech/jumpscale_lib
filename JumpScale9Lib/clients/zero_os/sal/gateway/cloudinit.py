@@ -1,4 +1,4 @@
-import time
+from js9 import j
 import yaml
 
 
@@ -41,12 +41,8 @@ class CloudInit():
                 .format(config=self.CONFIGPATH),
                 id='cloudinit.{}'.format(self.container.name))
 
-        start = time.time()
-        while time.time() < start + 10:
-            if self.is_running():
-                return
-            time.sleep(0.5)
-        raise RuntimeError('Failed to start cloudinit server')
+        if not j.tools.timer.execute_until(self.is_running, 10, 0.5):
+            raise RuntimeError('Failed to start cloudinit server')
 
     def is_running(self):
         for port in self.container.client.info.port():

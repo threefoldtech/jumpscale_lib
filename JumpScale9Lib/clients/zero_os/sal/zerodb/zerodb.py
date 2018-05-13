@@ -5,6 +5,7 @@ from js9 import j
 
 from ..abstracts import Nics
 from ..utils import authorize_zerotiers
+from ..Disk import Disk, Partition
 from .namespace import Namespaces
 
 logger = j.logger.get(__name__)
@@ -77,6 +78,39 @@ class Zerodb:
         return self.__redis
 
     @property
+    def info(self):
+        info = self.node.client.btrfs.info(self.path)
+        used = 0
+        total = 0
+        reserved = 0
+        devicename = None
+        for device in info['devices']:
+            used += device['used']
+            total += device['size']
+            devicename = device['path']
+
+        device = self.node.disks.get_device(devicename)
+        devicetype = None
+        if isinstance(device, Disk):
+            devicetype = device.type.value
+        else:
+            devicetype = device.disk.type.value
+        for namespace in self.namespaces:
+            reserved += namespace.size * 1024 ** 3
+
+
+        return {
+            'used': used,
+            'reserved': reserved,
+            'total': total,
+            'free': total - reserved,
+            'path': self.path,
+            'mode': self.mode,
+            'sync': self.sync,
+            'type': devicetype
+        }
+
+    @property
     def _container_data(self):
         """
         :return: data used for zerodb container
@@ -98,7 +132,7 @@ class Zerodb:
             'identity': self.zt_identity,
             'mounts': {self.path: '/zerodb'},
             'ports': {self.node_port: DEFAULT_PORT},
-            'nics': [nic.to_dict() for nic in self.nics]
+            'nics': [nic.to_dict(forcontainer=True) for nic in self.nics]
         }
 
     @property
@@ -170,9 +204,11 @@ class Zerodb:
             self.namespaces.add(
                 namespace['name'], namespace.get('size'), namespace.get('password'), namespace.get('public', True))
         for nic in data.get('nics', []):
-            nicobj = self.nics.add(nic['name'], nic['type'], nic['id'], nic['hwaddr'])
+            nicobj = self.nics.add(nic['name'], nic['type'], nic['id'], nic.get('hwaddr'))
             if nicobj.type == 'zerotier':
                 nicobj.client_name = nic.get('ztClient')
+        if 'nat0' not in self.nics:
+            self.nics.add('nat0', 'default')
 
     def to_dict(self):
         """
@@ -273,7 +309,6 @@ class Zerodb:
         if not is_running:
             raise RuntimeError('Failed to start zerodb server: {}'.format(self.name))
 
-        self.container.node.client.nft.open_port(self.node_port)
 
     def stop(self, timeout=30):
         """
@@ -286,7 +321,6 @@ class Zerodb:
 
         is_running, _ = self.is_running()
         if not is_running:
-            self.container.node.client.nft.drop_port(self.node_port)
             self.container.stop()
             return
 
@@ -305,7 +339,6 @@ class Zerodb:
         if is_running:
             raise RuntimeError('Failed to stop zerodb server: {}'.format(self.name))
 
-        self.container.node.client.nft.drop_port(self.node_port)
         self.container.stop()
 
     def _live_namespaces(self):

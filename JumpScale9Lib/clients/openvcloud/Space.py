@@ -238,7 +238,8 @@ class Space(Authorizables):
         stackId=None,
         description="",
         managed_private=False,
-        authorize_ssh=True
+        authorize_ssh=True,
+        userdata = ""
     ):
         """
         Creates a new virtual machine.
@@ -258,6 +259,7 @@ class Space(Authorizables):
                                network of the cloudspace
                                if False, use the public IP of the cloudspace to access the VM. It will create a port forward to be able to access the VM
             - authorize_ssh: if set to true, authorizes ssh and gets prefab
+            - userdata: user data for cloud init.  When passing the ipxe key one is able to pass a url pointing to a (ipxe)[http://ipxe.org/scripting/] script.
         Raises:
             - RuntimeError if machine with given name already exists.
             - RuntimeError if machine name contains spaces
@@ -296,7 +298,9 @@ class Space(Authorizables):
                     disksize=disksize,
                     datadisks=datadisks,
                     stackid=stackId,
-                    description=description)
+                    description=description,
+                    userdata=userdata)
+                    
             else:
                 self.client.api.cloudapi.machines.create(cloudspaceId=self.id,
                                                         name=name,
@@ -304,7 +308,8 @@ class Space(Authorizables):
                                                         imageId=imageId,
                                                         disksize=disksize,
                                                         datadisks=datadisks,
-                                                        description=description)
+                                                        description=description,
+                                                        userdata=userdata)
             self.logger.info("machine created.")
         except Exception as err:
             if err.response.status_code == 409:

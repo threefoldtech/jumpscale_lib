@@ -23,6 +23,10 @@ class Bind:
 class Forward:
     def __init__(self, name, source=None, target=None, protocols=None):
         self.name = name
+        if protocols:
+            for protocol in protocols:
+                if protocol not in ['tcp', 'udp']:
+                    raise ValueError('Invalid protocol {} for portforward'.format(protocol))
         if protocols is None:
             protocols = ['tcp']
         self.protocols = protocols
@@ -65,6 +69,10 @@ class HTTPProxy:
     def __init__(self, name, host, destinations, types=None):
         self.name = name
         self.host = host
+        if types:
+            for proxy_type in types:
+                if proxy_type not in ['http', 'https']:
+                    raise ValueError('Invalid type {} for http proxy'.format(proxy_type))
         if types is None:
             types = ['http', 'https']
         self.types = types
@@ -113,9 +121,9 @@ class Gateway:
         self.portforwards = PortForwards(self)
         self.httpproxies = HTTPProxies(self)
         self.zt_identity = data.get('ztIdentity')
-        self.domain = data['domain']
+        self.domain = data.get('domain') or 'lan'
         self.certificates = data.get('certificates', [])
-        for nic in data.get('nics', []):
+        for nic in data.get('networks', []):
             network = self.networks.add(nic['name'], nic['type'], nic['id'])
             if nic.get('config'):
                 network.ip.gateway = nic['config'].get('gateway', None)
@@ -146,7 +154,9 @@ class Gateway:
         """
         Deploy gateway in reality
         """
-        if not self.container.is_running():
+        if self.container is None:
+            self.create_container()
+        elif not self.container.is_running():
             self.container.start()
         self.container.upload_content('/etc/resolv.conf', 'nameserver 127.0.0.1\n')
         self.setup_zerotier()
@@ -169,10 +179,12 @@ class Gateway:
         self.save_certificates()
 
     def stop(self):
-        if self._container:
-            self._container.stop()
+        if self.container:
+            self.container.stop()
 
     def update_nics(self):
+        if self.container is None:
+            raise RuntimeError('Can not update nics when gateway is not deployed')
         toremove = []
         wantednetworks = list(self.networks)
         for nic in self.container.nics:
@@ -195,40 +207,43 @@ class Gateway:
             try:
                 self._container = self.node.containers.get(self.name)
             except LookupError:
-                nics = []
-                if not self.zt_identity:
-                    self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
-                ztpublic = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
+                return None
+        return self._container
 
-                for network in self.networks:
-                    if network.type == 'zerotier':
-                        if not network.id:
-                            if not network.client:
-                                raise RuntimeError('Zerotier network should either have client or networkid assigned')
-                            cidr = network.ip.subnet or '172.20.0.0/16'
-                            ztnetwork = network.client.network_create(False, cidr, name=network.name)
-                            network.networkid = ztnetwork.id
-                        if network.client:
-                            ztnetwork = network.client.network_get(network.networkid)
-                            privateip = None
-                            if network.ip.cidr:
-                                privateip = str(network.ip.cidr)
-                            ztnetwork.member_add(ztpublic, self.name, private_ip=privateip)
-                    nics.append(network.to_dict())
-                    #zerotierbridge = nic.pop('zerotierbridge', None)
-                    #if zerotierbridge:
-                    #    contnics.append(
-                    #        {
-                    #            'id': zerotierbridge['id'], 'type': 'zerotier',
-                    #            'name': 'z-{}'.format(nic['name']), 'token': zerotierbridge.get('token', '')
-                    #        })
-                self._container = self.node.containers.create(self.name, self.flist, hostname=self.name, nics=nics, privileged=True, identity=self.zt_identity)
+    def create_container(self):
+        nics = []
+        if not self.zt_identity:
+            self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
+        ztpublic = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
 
+        for network in self.networks:
+            if network.type == 'zerotier':
+                if not network.networkid:
+                    if not network.client:
+                        raise RuntimeError('Zerotier network should either have client or networkid assigned')
+                    cidr = network.ip.subnet or '172.20.0.0/16'
+                    ztnetwork = network.client.network_create(False, cidr, name=network.name)
+                    network.networkid = ztnetwork.id
+                if network.client:
+                    ztnetwork = network.client.network_get(network.networkid)
+                    privateip = None
+                    if network.ip.cidr:
+                        privateip = str(network.ip.cidr)
+                    ztnetwork.member_add(ztpublic, self.name, private_ip=privateip)
+            nics.append(network.to_dict(forcontainer=True))
+            #zerotierbridge = nic.pop('zerotierbridge', None)
+            #if zerotierbridge:
+            #    contnics.append(
+            #        {
+            #            'id': zerotierbridge['id'], 'type': 'zerotier',
+            #            'name': 'z-{}'.format(nic['name']), 'token': zerotierbridge.get('token', '')
+            #        })
+        self._container = self.node.containers.create(self.name, self.flist, hostname=self.name, nics=nics, privileged=True, identity=self.zt_identity)
         return self._container
 
     def to_dict(self):
         data = {
-            'nics': [],
+            'networks': [],
             'hostname': self.name,
             'portforwards': [],
             'httpproxies': [],
@@ -256,7 +271,7 @@ class Gateway:
                     }
                     hosts.append(host)
                 nic['dhcpserver'] = dhcp
-            data['nics'].append(nic)
+            data['networks'].append(nic)
         for proxy in self.httpproxies:
             data['httpproxies'].append({
                 'host': proxy.host,
@@ -282,6 +297,8 @@ class Gateway:
         """
         Configure dhcp server based on the hosts added to the networks
         """
+        if self.container is None:
+            raise RuntimeError('Can not configure dhcp when gateway is not deployed')
         dhcp = DHCP(self.container, self.domain, self.networks)
         dhcp.apply_config()
 
@@ -289,6 +306,8 @@ class Gateway:
         """
         Configure cloudinit
         """
+        if self.container is None:
+            raise RuntimeError('Can not configure cloudinit when gateway is not deployed')
         cloudinit = CloudInit(self.container, self.networks)
         cloudinit.apply_config()
 
@@ -296,6 +315,8 @@ class Gateway:
         """
         Configure http server based on the httpproxies
         """
+        if self.container is None:
+            raise RuntimeError('Can not configure http when gateway is not deployed')
         servers = {'http': [], 'https': []}
         for proxy in self.httpproxies:
             if 'http' in proxy.types:
@@ -311,6 +332,8 @@ class Gateway:
         """
         Configure nftables based on the networks and portforwards
         """
+        if self.container is None:
+            raise RuntimeError('Can not configure fw when gateway is not deployed')
         firewall = Firewall(self.container, self.networks, self.portforwards)
         firewall.apply_rules()
 

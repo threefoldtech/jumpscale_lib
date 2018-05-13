@@ -144,10 +144,10 @@ class Primitives:
             gw.from_dict(data)
             return gw
         elif type_ == 'vm':
-            if 'ipxeUrl' in data:
-                vm = ZeroOSVM(data['name'])
+            if data.get('ipxeUrl'):
+                vm = ZeroOSVM(self.node, data['name'])
             else:
-                vm = VM(data['name'])
+                vm = VM(self.node, data['name'])
             vm.from_dict(data)
             return vm
         elif type_ == 'zerodb':

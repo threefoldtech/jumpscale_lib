@@ -48,6 +48,8 @@ class Collection:
             yield item
 
     def __getitem__(self, name):
+        if isinstance(name, int):
+            return self._items[name]
         for item in self._items:
             if item.name == name:
                 return item
@@ -65,7 +67,7 @@ class Collection:
             raise ValueError('Element with name {} already exists'.format(name))
 
     def remove(self, item):
-        if isinstance(item, str):
+        if isinstance(item, (str, int)):
             item = self[item]
         self._items.remove(item)
 
@@ -88,7 +90,7 @@ class Nic:
         self._parent = parent
 
     def __str__(self):
-        return "Nic <{}:{}:{}>".format(self.name, self.type, self.networkid)
+        return "{} <{}:{}:{}>".format(self.__class__.__name__, self.name, self.type, self.networkid)
 
     @property
     def type(self):
@@ -100,7 +102,7 @@ class Nic:
             raise ValueError('Invalid nic type {}'.format(value))
         self._type = value
 
-    def to_dict(self, forvm=False):
+    def to_dict(self, forvm=False, forcontainer=False):
         nicinfo = {
             'id': str(self.networkid),
             'type': self.type,
@@ -152,18 +154,17 @@ class ZTNic(Nic):
         network.member_add(publicidentity, self._parent.name)
         return True
 
-    def to_dict(self, forvm=False):
-        data = super().to_dict(forvm)
+    def to_dict(self, forvm=False, forcontainer=False):
+        data = super().to_dict(forvm, forcontainer)
+        if forcontainer:
+            return data
+
         if self.client:
             data['ztClient'] = self.client.config.instance
         elif self._client_name:
             data['ztClient'] = self._client_name
         return data
 
-    def __str__(self):
-        return "ZTNic <{}:{}:{}>".format(self.name, self.type, self.networkid)
-
-    __repr__ = __str__
 
 class Nics(Collection):
     def add(self, name, type_, networkid=None, hwaddr=None):

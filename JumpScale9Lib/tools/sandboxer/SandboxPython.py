@@ -178,9 +178,11 @@ class SandboxPython(JSBASE):
             dest0 = "%s/lib/jumpscale/%s" % (dest, key)
             j.sal.fs.copyDirTree(p, dest0, keepsymlinks=False, deletefirst=True, overwriteFiles=True, ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True, createdir=True)
 
-            if key == "JumpScale9":
+            if key in ("JumpScale9", "ZeroRobot"):
                 jscodedir = "/".join(p.rstrip("/").split("/")[:-1])
-                for item in j.sal.fs.listFilesInDir("%s/cmds" % jscodedir):
+                cmds_dir = "{}/cmds".format(jscodedir) if key == "JumpScale9" else "{}/cmd".format(jscodedir)
+
+                for item in j.sal.fs.listFilesInDir(cmds_dir):
                     fname = j.sal.fs.getBaseName(item)
                     dest0 = "%s/bin/%s" % (dest, fname)
                     C = j.sal.fs.readFile(item)

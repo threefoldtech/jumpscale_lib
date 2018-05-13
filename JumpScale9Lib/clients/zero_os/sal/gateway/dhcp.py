@@ -1,5 +1,5 @@
+from js9 import j
 import signal
-import time
 from .. import templates
 
 DNSMASQ = '/bin/dnsmasq --conf-file=/etc/dnsmasq.conf -d'
@@ -23,12 +23,7 @@ class DHCP:
 
         self.container.client.system(DNSMASQ, id='dhcp.{}'.format(self.container.name))
         # check if command is listening for dhcp
-        start = time.time()
-        while start + 10 > time.time():
-            if self.is_running():
-                break
-            time.sleep(0.2)
-        else:
+        if not j.tools.timer.execute_until(self.is_running, 10):
             raise RuntimeError('Failed to run dnsmasq')
 
     def is_running(self):
@@ -40,3 +35,5 @@ class DHCP:
         for process in self.container.client.process.list():
             if 'dnsmasq' in process['cmdline']:
                 self.container.client.process.kill(process['pid'], signal.SIGKILL)
+                if not j.tools.timer.execute_until(lambda: not self.is_running(), 10):
+                    raise RuntimeError('Failed to stop DNSMASQ')
