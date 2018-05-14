@@ -4,7 +4,7 @@ set -e
 # Install lib9 in a docker contianer using bash installers
 ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
 
-export ZUTILSBRANCH=${ZUTILSBRANCH:-master}
+export ZUTILSBRANCH=${ZUTILSBRANCH:-development}
 
 curl https://raw.githubusercontent.com/Jumpscale/bash/$ZUTILSBRANCH/install.sh?$RANDOM > /tmp/install.sh;sudo -E bash /tmp/install.sh
 sudo -HE bash -c "source /opt/code/github/jumpscale/bash/zlibs.sh; ZCodeGetJS"

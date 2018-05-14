@@ -2,7 +2,6 @@ import sys
 
 from flask import Flask, jsonify
 from js9 import j
-from mongoengine import connect
 
 from .nodes_api import nodes_api
 from .frontend_blueprint import frontend_bp
@@ -12,7 +11,7 @@ app = Flask(__name__)
 
 app.register_blueprint(nodes_api)
 app.register_blueprint(frontend_bp)
-connect(db='capacity', host='localhost', port=27017)
+j.clients.mongoengine.get('capacity', interactive=False)
 
 
 @app.errorhandler(500)
