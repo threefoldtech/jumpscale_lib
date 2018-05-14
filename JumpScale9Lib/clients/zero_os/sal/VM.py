@@ -45,6 +45,11 @@ class ZDBDisk(Disk):
         return
 
     def deploy(self):
+        """
+        Deploy disk
+
+        Will create zdb namespace with specified limits and create filesystem (if specified) on the disk
+        """
         if self.name in self.zdb.namespaces:
             namespace = self.zdb.namespaces[self.name]
             if namespace.size != self.size:
@@ -79,10 +84,16 @@ class Disks(Collection):
         """
         Add disk to vm
 
-        :param name: name to give to disk
+        :param name_or_disk: name to give to disk or ZDBDisk instance
         :type name: str
-        :param url_or_disk: Disk url example: nbd://myip:port
+        :param url: Disk url example: nbd://myip:port
         :type url: str
+        :param mounpoint: Optional location to mount this disk on the vm 
+                          Only works in combination with filesystem
+        :type mountpoint: str 
+        :param filesystem: Filesystem the disk contains
+        :type filesystem: str
+
         """
         if isinstance(name_or_disk, str):
             if url is None:

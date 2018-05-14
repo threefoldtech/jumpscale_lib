@@ -201,7 +201,10 @@ class Gateway:
     @property
     def container(self):
         """
-        Create container to run gateway services on
+        Get container to run gateway services on
+
+        :return: Container object or None
+        :rtype: Container
         """
         if self._container is None:
             try:

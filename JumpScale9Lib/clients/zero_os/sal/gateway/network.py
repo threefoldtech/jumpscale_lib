@@ -231,6 +231,10 @@ class Networks(Collection):
         """
         Add zerotier by zerotier network
 
+
+        When adding a zerotier network based on the ZerotierClient a new ZerotierNework will be created unless
+        the networkid attribute is set.
+
         :param network: Zerotier network instance or Zerotier client(part of zerotierclient)
         :type network: JumpScale9Lib.clients.zerotier.ZerotierClient.ZeroTierNetwork or JumpScale9Lib.clients.zerotier.ZerotierClient.ZerotierClient
         :param name: Name for the nic if left blank will be the name of the network
