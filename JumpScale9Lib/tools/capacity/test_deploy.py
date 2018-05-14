@@ -9,9 +9,6 @@ logger = j.logger.get("deploy")
 
 
 def main():
-    zdb_password = j.data.idgenerator.generateXCharID(32)
-    etcd_vms = []
-
     # create VMs
     for i, instance in enumerate(NODES[:2]):
         robot = j.clients.zrobot.robots[instance]
