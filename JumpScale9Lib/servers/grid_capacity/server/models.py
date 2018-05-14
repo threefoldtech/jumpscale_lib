@@ -55,19 +55,18 @@ class NodeRegistration:
         :return: sequence of Capacity object matching the query
         :rtype: sequence
         """
-        filter = {}
+        query = {}
         if country:
-            filter['location__country'] = country
+            query['location__country'] = country
         if mru:
-            filter['mru__gte'] = mru
+            query['mru__gte'] = mru
         if cru:
-            filter['cru__gte'] = cru
+            query['cru__gte'] = cru
         if hru:
-            filter['hru__gte'] = hru
+            query['hru__gte'] = hru
         if sru:
-            filter['sru__gte'] = sru
-        print(filter)
-        for cap in Capacity.objects(**filter):
+            query['sru__gte'] = sru
+        for cap in Capacity.objects(**query):
             yield cap
 
     @staticmethod
