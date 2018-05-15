@@ -66,8 +66,7 @@ class NodeRegistration:
             query['hru__gte'] = hru
         if sru:
             query['sru__gte'] = sru
-        for cap in Capacity.objects(**query):
-            yield cap
+        return Capacity.objects(**query)
 
     @staticmethod
     def all_countries():
@@ -83,24 +82,25 @@ class NodeRegistration:
 
 
 class FarmerRegistration:
-
     @staticmethod
-    def create(self, name, iyo_account, wallet_addresses=None):
+    def create(name, iyo_account, wallet_addresses=None):
         return Farmer(name=name, iyo_account=iyo_account, wallet_addresses=wallet_addresses)
 
     @staticmethod
-    def register(self, farmer):
+    def register(farmer):
         if not isinstance(farmer, Farmer):
             raise TypeError("farmer need to be a Farmer object, not %s" % type(farmer))
         farmer.save()
 
     @staticmethod
-    def list(self):
-        for farmer in Farmer.objects():
-            yield farmer
+    def list(name=None):
+        query = {}
+        if name:
+            query['name'] = name
+        return Farmer.objects(**query)
 
     @staticmethod
-    def get(self, id):
+    def get(id):
         farmer = Farmer.objects(pk=id)
         if not farmer:
             raise FarmerNotFoundError("farmer '%s' not found" % id)

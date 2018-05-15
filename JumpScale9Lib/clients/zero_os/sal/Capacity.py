@@ -71,5 +71,5 @@ class Capacity:
     def register(self):
         data = self.get()
         client = j.clients.grid_capacity.get(interactive=False)
-        client.apinodes.RegisterCapacity(data)
+        client.nodes.RegisterCapacity(data)
         return True

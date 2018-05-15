@@ -6,7 +6,10 @@
 			"type": "number"
 		},
 		"farmer": {
-			"type": "string"
+			"type": [
+				"string",
+				"null"
+			]
 		},
 		"hru": {
 			"type": "number"

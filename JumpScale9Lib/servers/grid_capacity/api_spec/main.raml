@@ -58,12 +58,6 @@ types:
         city: Brussels
         latitude: 50.83
         longitude: 4.29
-  CapacityFilter:
-    properties:
-      country?: string
-      cru?: number
-      mru?: number
-      sru?: number
   Farmer:
     properties:
       id:
@@ -101,7 +95,12 @@ types:
   get:
     displayName: ListCapacity
     description: List all the nodes capacity
-    queryString: [CapacityFilter]
+    queryString:
+      properties:
+        country?: string
+        cru?: number
+        mru?: number
+        sru?: number
     responses:
       200:
         body:
@@ -119,6 +118,9 @@ types:
   get:
     displayName: ListFarmers
     description: List Farmers
+    queryString:
+      properties:
+        name?: string
     responses:
       200:
         body:

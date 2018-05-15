@@ -42,7 +42,7 @@ class Capacity(object):
         data_types = [float]
         self.cru = client_support.set_property('cru', data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.farmer = client_support.set_property('farmer', data, data_types, False, [], False, True, class_name)
+        self.farmer = client_support.set_property('farmer', data, data_types, False, [], False, False, class_name)
         data_types = [float]
         self.hru = client_support.set_property('hru', data, data_types, False, [], False, True, class_name)
         data_types = [Location]

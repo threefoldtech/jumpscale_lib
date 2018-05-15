@@ -2,6 +2,7 @@
 from js9 import j
 
 from .apinodes_service import ApinodesService
+from .apifarmers_service import ApifarmersService
 
 from .http_client import HTTPClient
 
@@ -16,7 +17,8 @@ class Client(JSConfigClient):
     def __init__(self, instance, data={}, parent=None, interactive=False):
         super().__init__(instance=instance, data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         http_client = HTTPClient(self.config.data['base_uri'])
-        self.apinodes = ApinodesService(http_client)
+        self.nodes = ApinodesService(http_client)
+        self.farmers = ApifarmersService(http_client)
         self.close = http_client.close
 
 

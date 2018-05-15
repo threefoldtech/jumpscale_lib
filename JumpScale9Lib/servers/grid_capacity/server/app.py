@@ -4,12 +4,14 @@ from flask import Flask, jsonify
 from js9 import j
 
 from .nodes_api import nodes_api
+from .farmers_api import farmers_api
 from .frontend_blueprint import frontend_bp
 
 
 app = Flask(__name__)
 
 app.register_blueprint(nodes_api)
+app.register_blueprint(farmers_api)
 app.register_blueprint(frontend_bp)
 j.clients.mongoengine.get('capacity', interactive=False)
 
