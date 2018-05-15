@@ -52,7 +52,7 @@ class SourceBind:
         raise RuntimeError('ipaddress can\'t be set')
 
     def __str__(self):
-        return "Source Bind <{}:{}>".format(self.ipaddress, self.port)
+        return "Source Bind <{}:{}>".format(self.network_name, self.port)
 
     __repr__ = __str__
 
@@ -85,8 +85,8 @@ class Forward:
             self.source = SourceBind(parent, *source)
         elif isinstance(source, SourceBind):
             self.source = source
-        if source.network_name not in parent.networks:
-            raise LookupError('Network with name {} doesn\'t exist'.format(source.network_name))
+        if self.source.network_name not in parent.networks:
+            raise LookupError('Network with name {} doesn\'t exist'.format(self.source.network_name))
 
         if isinstance(target, tuple):
             self.target = DestBind(*target)
