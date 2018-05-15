@@ -219,6 +219,8 @@ class Gateway:
             if not dhcpserver:
                 continue
             network.hosts.nameservers = dhcpserver['nameservers']
+            network.hosts.pool_size = dhcpserver.get('pool_size', network.hosts.pool_size)
+            network.hosts.pool_start = dhcpserver.get('pool_start', network.hosts.pool_start)
             for host in dhcpserver['hosts']:
                 dhcphost = network.hosts.add(host['hostname'], host['ipaddress'], host['macaddress'])
                 if host['cloudinit']['userdata']:
@@ -375,6 +377,8 @@ class Gateway:
                 dhcp = {
                     'nameservers': network.hosts.nameservers,
                     'hosts': hosts,
+                    'pool_start': network.hosts.pool_start,
+                    'pool_size': network.hosts.pool_size,
                 }
                 for networkhost in network.hosts:
                     host = {
