@@ -171,6 +171,19 @@ class Node:
             self.client.system('klogd -n')
 
     def freeports(self, baseport=2000, nrports=3):
+        """
+        Find free ports on node starting at baseport
+
+        Checks all portfowards + listening ports on host
+        to find a free port
+
+        :param baseport: Port to start looking at
+        :type baseport: int
+        :param nrports: Amount of free ports to find
+        :type nrports: int
+        :return: list if ports that are free
+        :rtype: list(int)
+        """
         ports = self.client.info.port()
         usedports = set()
         for portInfo in ports:
@@ -181,6 +194,7 @@ class Node:
         # TODO: fix this by using core0 api (does not exist yet)
         for container in self.containers.list():
             for port in container.ports:
+                port = port.split(':')[-1]  # parse 'zt0:6000' like ports
                 usedports.add(int(port))
 
         freeports = []

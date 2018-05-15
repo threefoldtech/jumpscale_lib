@@ -101,11 +101,11 @@ class Report():
         if resp.status_code == 200:
             data = resp.json()
             location = dict(
-                continent=data.get('continent').get('names').get('en'),
-                country=data.get('country').get('names').get('en'),
-                city=data.get('city').get('names').get('en'),
-                longitude=data.get('location').get('longitude'),
-                latitude=data.get('location').get('latitude')
+                continent=data.get('continent', {}).get('names', {}).get('en', 'Unknown'),
+                country=data.get('country', {}).get('names', {}).get('en', 'Unknown'),
+                city=data.get('city', {}).get('names', {}).get('en', 'Unknown'),
+                longitude=data.get('location', {}).get('longitude', 0),
+                latitude=data.get('location', {}).get('latitude', 0)
             )
         return location
 

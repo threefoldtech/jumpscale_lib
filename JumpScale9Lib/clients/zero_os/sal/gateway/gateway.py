@@ -207,7 +207,7 @@ class Gateway:
                 network.ip.gateway = nic['config'].get('gateway', None)
                 network.ip.cidr = nic['config'].get('cidr', None)
             if network.type == 'zerotier':
-                network.client_name = nic['ztClient']
+                network.client_name = nic.get('ztClient')
             if network.type == 'default':
                 self._default_nic = network.name
             if nic.get('hwaddr'):

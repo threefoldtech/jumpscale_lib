@@ -253,8 +253,9 @@ class Sandboxer(JSBASE):
         self._copy_chroot(path, dest)
 
         cmd = 'ldd "{}"'.format(path)
-        _, out, _ = j.sal.process.execute(cmd)
-
+        _, out, _ = j.sal.process.execute(cmd, die=False)
+        if "not a dynamic executable" in out:
+            return
         for line in out.splitlines():
             dep = line.strip()
             if ' => ' in dep:
