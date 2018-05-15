@@ -182,7 +182,7 @@ class Nics(Collection):
         :param type_: Nic type vlan, vxlan, zerotier, bridge or default
         :type type_: str
         :param hwaddr: Hardware address of the NIC (MAC)
-        :param type: str
+        :param hwaddr: str
         """
         super().add(name)
         if len(name) > 15 or name == 'default':
