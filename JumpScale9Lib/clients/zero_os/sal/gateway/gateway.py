@@ -85,6 +85,9 @@ class Forward:
             self.source = SourceBind(parent, *source)
         elif isinstance(source, SourceBind):
             self.source = source
+        if source.network_name not in parent.networks:
+            raise LookupError('Network with name {} doesn\'t exist'.format(source.network_name))
+
         if isinstance(target, tuple):
             self.target = DestBind(*target)
         elif isinstance(target, DestBind):
