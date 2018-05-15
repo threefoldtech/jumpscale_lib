@@ -9,8 +9,15 @@ import yaml
 import time
 
 
-class Bind:
+class DestBind:
     def __init__(self, ipaddress, port):
+        """
+        Portforward target bind instance
+        :param ipaddress: ip to forward to
+        :type ipaddress: str
+        :param port: port to forward to
+        :type port: int
+        """
         self.ipaddress = ipaddress
         self.port = port
 
@@ -20,8 +27,52 @@ class Bind:
     __repr__ = __str__
 
 
+class SourceBind:
+    def __init__(self, parent, network_name, port):
+        """
+        Portforward source bind instance
+
+        :param parent: the parent of the forward
+        :type parent: Gateway
+        :param network_name: the network name to get the source ip from
+        :type network_name: str
+        :param port: the source port to forward from
+        :type port
+        """
+        self.network_name = network_name
+        self.port = port
+        self.parent = parent
+
+    @property
+    def ipaddress(self):
+        return self.parent.networks[self.network_name].ip.address
+
+    @ipaddress.setter
+    def ipaddress(self):
+        raise RuntimeError('ipaddress can\'t be set')
+
+    def __str__(self):
+        return "Source Bind <{}:{}>".format(self.ipaddress, self.port)
+
+    __repr__ = __str__
+
+
 class Forward:
-    def __init__(self, name, source=None, target=None, protocols=None):
+    def __init__(self, parent, name, source=None, target=None, protocols=None):
+        """
+        Initialize forward
+
+        :param parent: the parent of the forward
+        :type parent: Gateway
+        :param name: Logical name to give to the portforward
+        :type name: str
+        :param source: Source Network/Port for the portforwards
+        :type source: tuple(str, int) or instance of SourceBind
+        :param target: Target IP/Port for the portforwards
+        :type target: tuple(str, int) or instance of DestBind
+        :param protocols: Protocols to forward tcp or udp
+        :type protocols: list(str)
+        """
         self.name = name
         if protocols:
             for protocol in protocols:
@@ -31,12 +82,15 @@ class Forward:
             protocols = ['tcp']
         self.protocols = protocols
         if isinstance(source, tuple):
-            self.source = Bind(*source)
-        elif isinstance(source, Bind):
+            self.source = SourceBind(parent, *source)
+        elif isinstance(source, SourceBind):
             self.source = source
+        if source.network_name not in parent.networks:
+            raise LookupError('Network with name {} doesn\'t exist'.format(source.network_name))
+
         if isinstance(target, tuple):
-            self.target = Bind(*target)
-        elif isinstance(target, Bind):
+            self.target = DestBind(*target)
+        elif isinstance(target, DestBind):
             self.target = target
 
     def __str__(self):
@@ -52,21 +106,33 @@ class PortForwards(Collection):
 
         :param name: Logical name to give to the portforward
         :type name: str
-        :param source: Source IP/Port for the portforwards
-        :type source: tuple(str, int)
+        :param source: Source Network/Port for the portforwards
+        :type source: tuple(str, int) or instance of SourceBind
         :param target: Target IP/Port for the portforwards
-        :type target: tuple(str, int)
+        :type target: tuple(str, int) or instance of DestBind
         :param protocols: Protocols to forward tcp or udp
         :type protocols: list(str)
         """
         super().add(name)
-        forward = Forward(name, source, target, protocols)
+        forward = Forward(self._parent, name, source, target, protocols)
         self._items.append(forward)
         return forward
 
 
 class HTTPProxy:
     def __init__(self, name, host, destinations, types=None):
+        """
+         Httproxy instance
+        :param name: logical name of the http proxy
+        :type name: str
+        :param host: Host to forward for typical a dns like eg: example.org
+        :type host: str
+        :param destinations: One or more destination to forward to:
+                                eg: ['http://192.168.103.2:8080']
+        :type destinations: list(str)
+        :param types: Type of proxy http or https
+        :type types: list(str)
+        """
         self.name = name
         self.host = host
         if types:
@@ -88,7 +154,8 @@ class HTTPProxies(Collection):
     def add(self, name, host, destinations, types=None):
         """
         Add http proxy to the gateway
-
+        :param name: logical name of the http proxy
+        :type name: str
         :param host: Host to forward for typical a dns like eg: example.org
         :type host: str
         :param destinations: One or more destination to forward to:
@@ -105,6 +172,13 @@ class HTTPProxies(Collection):
 
 class Gateway:
     def __init__(self, node, name):
+        """
+        Gateway Sal
+        :param node: node sal object
+        :type node: class Node
+        :param name: gateway logical name
+        :type name: str
+        """
         self.name = name
         self.node = node
         self.domain = 'lan'
@@ -115,8 +189,15 @@ class Gateway:
         self.httpproxies = HTTPProxies(self)
         self.certificates = []
         self.zt_identity = None
+        self._default_nic = ''  # the name of the default network if there is one
 
     def from_dict(self, data):
+        """
+        Initialize networks, portforwards, httpproxies and certificates from data.
+
+        :param data: data to use for initialization
+        :type data: dict following the schema of the gateway template https://github.com/zero-os/0-templates/tree/master/templates/gateway/schema.capnp
+        """
         self.networks = Networks(self)
         self.portforwards = PortForwards(self)
         self.httpproxies = HTTPProxies(self)
@@ -124,12 +205,14 @@ class Gateway:
         self.domain = data.get('domain') or 'lan'
         self.certificates = data.get('certificates', [])
         for nic in data.get('networks', []):
-            network = self.networks.add(nic['name'], nic['type'], nic['id'])
+            network = self.networks.add(nic['name'], nic['type'], nic.get('id'))
             if nic.get('config'):
                 network.ip.gateway = nic['config'].get('gateway', None)
                 network.ip.cidr = nic['config'].get('cidr', None)
             if network.type == 'zerotier':
                 network.client_name = nic.get('ztClient')
+            if network.type == 'default':
+                self._default_nic = network.name
             if nic.get('hwaddr'):
                 network.hwaddr = nic['hwaddr']
             dhcpserver = nic.get('dhcpserver')
@@ -144,7 +227,7 @@ class Gateway:
                     dhcphost.cloudinit.metadata = yaml.load(host['cloudinit']['metadata'])
         for forward in data['portforwards']:
             self.portforwards.add(forward['name'],
-                                  (forward['srcip'], forward['srcport']),
+                                  (forward['srcnetwork'], forward['srcport']),
                                   (forward['dstip'], forward['dstport']),
                                   forward['protocols'])
         for proxy in data['httpproxies']:
@@ -154,6 +237,10 @@ class Gateway:
         """
         Deploy gateway in reality
         """
+        if not self._default_nic:
+            publicnetworks = list(filter(lambda net: net.ip.gateway, self.networks))
+            if len(publicnetworks) != 1:
+                raise RuntimeError('Need exactly one network with a gateway')
         if self.container is None:
             self.create_container()
         elif not self.container.is_running():
@@ -179,10 +266,16 @@ class Gateway:
         self.save_certificates()
 
     def stop(self):
+        """
+        Stop a gateway by stopping the container
+        """
         if self.container:
             self.container.stop()
 
     def update_nics(self):
+        """
+        Apply gateway's networks to gateway container's nics
+        """
         if self.container is None:
             raise RuntimeError('Can not update nics when gateway is not deployed')
         toremove = []
@@ -192,11 +285,24 @@ class Gateway:
                 network = self.networks[nic['name']]
                 wantednetworks.remove(network)
             except KeyError:
-                toremove.append(nic['name'])
+                toremove.append(nic)
         for removeme in toremove:
-            self.container.remove_nic(removeme)
+            if removeme['type'] == 'default':
+                self._remove_container_portforwards()
+            self.container.remove_nic(removeme['name'])
+
         for network in wantednetworks:
             self.container.add_nic(network.to_dict())
+            if network.type == 'default':
+                self._update_container_portforwards()
+
+    def _container_name(self):
+        """
+        Return the name used for gateway's container
+        :return: container name
+        :rtype: str
+        """
+        return 'gw_{}'.format(self.name)
 
     @property
     def container(self):
@@ -208,12 +314,15 @@ class Gateway:
         """
         if self._container is None:
             try:
-                self._container = self.node.containers.get(self.name)
+                self._container = self.node.containers.get(self._container_name())
             except LookupError:
                 return None
         return self._container
 
     def create_container(self):
+        """
+        Create the gateway container
+        """
         nics = []
         if not self.zt_identity:
             self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
@@ -241,10 +350,15 @@ class Gateway:
             #            'id': zerotierbridge['id'], 'type': 'zerotier',
             #            'name': 'z-{}'.format(nic['name']), 'token': zerotierbridge.get('token', '')
             #        })
-        self._container = self.node.containers.create(self.name, self.flist, hostname=self.name, nics=nics, privileged=True, identity=self.zt_identity)
+        self._container = self.node.containers.create(self._container_name(), self.flist, hostname=self.name, nics=nics, privileged=True, identity=self.zt_identity)
         return self._container
 
     def to_dict(self):
+        """
+        Convert the gateway object to a dict.
+        :return: a dict representation of the gateway matching the schema of the gateway template https://github.com/zero-os/0-templates/tree/master/templates/gateway/schema.capnp
+        :rtype: dict
+        """
         data = {
             'networks': [],
             'hostname': self.name,
@@ -285,7 +399,7 @@ class Gateway:
         for forward in self.portforwards:
             data['portforwards'].append({
                 'srcport': forward.source.port,
-                'srcip': forward.source.ipaddress,
+                'srcnetwork': forward.source.ipaddress,
                 'dstport': forward.target.port,
                 'dstip': forward.target.ipaddress,
                 'protocols': forward.protocols,
@@ -294,6 +408,9 @@ class Gateway:
         return data
 
     def to_json(self):
+        """
+        Create a json string of the result of to_dict function
+        """
         return j.data.serializer.json.dumps(self.to_dict())
 
     def configure_dhcp(self):
@@ -337,8 +454,36 @@ class Gateway:
         """
         if self.container is None:
             raise RuntimeError('Can not configure fw when gateway is not deployed')
+
+        if self._default_nic:
+            self._update_container_portforwards()
+
         firewall = Firewall(self.container, self.networks, self.portforwards)
         firewall.apply_rules()
+
+    def _remove_container_portforwards(self):
+        """
+        Remove all portforwards on the gateway container
+        """
+        for host_port, container_port in self.container.info['container']['arguments']['port'].items():
+            self.container.node.client.container.remove_portforward(
+                self.container.id, host_port, int(container_port))
+
+    def _update_container_portforwards(self):
+        """
+        Update the gateway container portforwards
+        """
+        container_forwards = set([v for k, v in self.container.info['container']['arguments']['port'].items() if v == int(k)])
+        wanted_forwards = {80, 443}
+        container_ip = str(self.container.default_ip(self._default_nic).ip)
+        for forward in self.portforwards:
+            source = forward.source
+            if str(source.ipaddress) == container_ip:
+                wanted_forwards.add(source.port)
+        for port in container_forwards - wanted_forwards:
+            self.container.node.client.container.remove_portforward(self.container.id, port, port)
+        for port in wanted_forwards - container_forwards:
+            self.container.node.client.container.add_portforward(self.container.id, port, port)
 
     def save_certificates(self, caddy_dir="/.caddy"):
         """
@@ -393,6 +538,13 @@ class Gateway:
                 self.container.upload_content("{}/{}.crt".format(cert['path'], cert['path'].split('/')[-1]), cert['cert'])
 
     def get_zerotier_nic(self, zerotierid):
+        """
+        Get the zerotier network device
+        :param zerotierid: id of the zerotier
+        :type zerotierid: str
+        :return: zerotier network device name
+        :rtype: str
+        """
         for zt in self.container.client.zerotier.list():
             if zt['id'] == zerotierid:
                 return zt['portDeviceName']

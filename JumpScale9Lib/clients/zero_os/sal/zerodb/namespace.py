@@ -71,13 +71,7 @@ class Namespace:
 
     @property
     def private_url(self):
-        for ipaddress in self.parent.container.client.ip.addr.list('nat0'):
-            ip = netaddr.IPNetwork(ipaddress)
-            if ip.version == 4:
-                break
-        else:
-            raise LookupError('Failed to get private url')
-        url = 'zdb://{}:9900?size={}G&blocksize=4096&namespace={}'.format(ip.ip, self.size, self.name)
+        url = 'zdb://{}:9900?size={}G&blocksize=4096&namespace={}'.format(self.parent.container.default_ip().ip, self.size, self.name)
         if self.password:
             url += '&password={}'.format(self.password)
         return url
