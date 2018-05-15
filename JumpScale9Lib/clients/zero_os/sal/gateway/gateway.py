@@ -34,7 +34,7 @@ class SourceBind:
 
         :param parent: the parent of the forward
         :type parent: Gateway
-        :param network_namen: the network name to get the source ip from
+        :param network_name: the network name to get the source ip from
         :type network_name: str
         :param port: the source port to forward from
         :type port
@@ -66,7 +66,7 @@ class Forward:
         :type parent: Gateway
         :param name: Logical name to give to the portforward
         :type name: str
-        :param source: Source IP/Port for the portforwards
+        :param source: Source Network/Port for the portforwards
         :type source: tuple(str, int) or instance of SourceBind
         :param target: Target IP/Port for the portforwards
         :type target: tuple(str, int) or instance of DestBind
@@ -103,7 +103,7 @@ class PortForwards(Collection):
 
         :param name: Logical name to give to the portforward
         :type name: str
-        :param source: Source IP/Port for the portforwards
+        :param source: Source Network/Port for the portforwards
         :type source: tuple(str, int) or instance of SourceBind
         :param target: Target IP/Port for the portforwards
         :type target: tuple(str, int) or instance of DestBind
@@ -291,7 +291,7 @@ class Gateway:
         for network in wantednetworks:
             self.container.add_nic(network.to_dict())
             if network.type == 'default':
-                self._add_container_portforwards()
+                self._update_container_portforwards()
 
     def _container_name(self):
         """
@@ -453,10 +453,7 @@ class Gateway:
             raise RuntimeError('Can not configure fw when gateway is not deployed')
 
         if self._default_nic:
-            # nuke old portforwards
-            self._remove_container_portforwards()
-            # add wanted portforwards:
-            self._add_container_portforwards()
+            self._update_container_portforwards()
 
         firewall = Firewall(self.container, self.networks, self.portforwards)
         firewall.apply_rules()
@@ -469,16 +466,21 @@ class Gateway:
             self.container.node.client.container.remove_portforward(
                 self.container.id, host_port, int(container_port))
 
-    def _add_container_portforwards(self):
+    def _update_container_portforwards(self):
         """
-        Add 80, 443 portforwards, in addition to a portforward for the src.port of any gateway forward that has the default container ip as a src ip.
+        Update the gateway container portforwards
         """
-        self.container.node.client.container.add_portforward(self.container.id, 80, 80)
-        self.container.node.client.container.add_portforward(self.container.id, 443, 443)
+        container_forwards = set([v for k, v in self.container.info['container']['arguments']['port'].items() if v == int(k)])
+        wanted_forwards = {80, 443}
+        container_ip = str(self.container.default_ip(self._default_nic).ip)
         for forward in self.portforwards:
             source = forward.source
-            if str(source.ipaddress) == str(self.container.default_ip(self._default_nic).ip):
-                self.container.node.client.container.add_portforward(self.container.id, source.port, source.port)
+            if str(source.ipaddress) == container_ip:
+                wanted_forwards.add(source.port)
+        for port in container_forwards - wanted_forwards:
+            self.container.node.client.container.remove_portforward(self.container.id, port, port)
+        for port in wanted_forwards - container_forwards:
+            self.container.node.client.container.add_portforward(self.container.id, port, port)
 
     def save_certificates(self, caddy_dir="/.caddy"):
         """
