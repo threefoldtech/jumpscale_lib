@@ -191,6 +191,45 @@ class IP:
     __repr__ = __str__
 
 
+class DefaultIP:
+    def __init__(self, network):
+        """
+        IP Address configuration for default network
+        :param network: the network this ip belongs to
+        :type network: DefaultNetwork
+        """
+        self.network = network
+
+    @property
+    def gateway(self):
+        routes = self.network._parent.container.client.ip.route.list()
+        for route in routes:
+            if route['dev'] == self.network.name and route['gw']:
+                return route['gw']
+        raise RuntimeError('Unable to determine network {} gateway'.format(self.network.name))
+
+    @property
+    def cidr(self):
+        return self.network._parent.container.default_ip(self.network.name)
+
+    @property
+    def address(self):
+        return str(self.cidr.ip)
+
+    @property
+    def subnet(self):
+        return str(self.cidr.cidr)
+
+    @property
+    def netmask(self):
+        return str(self.cidr.netmask)
+
+    def __str__(self):
+        return "Default IP"
+
+    __repr__ = __str__
+
+
 class Networks(Collection):
     """
     Collection of networks beloning to the gateway
@@ -222,10 +261,20 @@ class Networks(Collection):
             network = VlanNetwork(name, networkid, self._parent)
         elif type_ == 'zerotier':
             network = ZTNetwork(name, networkid, self._parent)
+        elif type_ == 'default':
+            self._parent._default_nic = name
+            network = DefaultNetwork(name, self._parent)
         else:
             network = Network(name, networkid, type_, self._parent)
         self._items.append(network)
         return network
+
+    def remove(self, item):
+        if isinstance(item, (str, int)):
+            item = self[item]
+        if isinstance(item, Network) and item.type == 'default':
+            self._parent._default_nic = None
+        super().remove(item)
 
     def add_zerotier(self, network, name=None):
         """
@@ -348,7 +397,6 @@ class VXlanNetwork(Network):
         self.networkid = value
 
 
-
 class ZTNetwork(ZTNic):
     """
     Zerotier specific Network implementation
@@ -370,3 +418,24 @@ class ZTNetwork(ZTNic):
             raise ValueError('Invalid value for zerotierid')
         self._networkid = value
 
+
+class DefaultNetwork(Nic):
+    def __init__(self, name, gateway):
+        """
+        Default Network specific implementation implementation
+
+        :param name: Name of the network will also be used as interface name
+                     Should not contain special characters and should not be
+                     longer then 12 characters
+        :type name: str
+        :param gateway: Gateway instance
+        :type gateway: Gateway
+        """
+        super().__init__(name, 'default', None, None, gateway)
+        self.hosts = Hosts(gateway, self)
+        self.ip = DefaultIP(self)
+
+    def __str__(self):
+        return "{} <{} {}>".format(self.__class__.__name__, self.name, self.type)
+
+    __repr__ = __str__
