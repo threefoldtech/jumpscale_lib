@@ -1,10 +1,8 @@
 import json
-import os
 
 import psutil
 
 from js9 import j
-from JumpScale9Lib.tools.capacity import registration
 from JumpScale9Lib.tools.capacity.parser import StorageType
 
 
@@ -69,15 +67,15 @@ class Capacity:
         """
         get the capacity object of the node
 
-        this capacity object is used in the capacity registration tool (j.tools.capacity.registration)
+        this capacity object is used in the capacity registration 
 
-        :return: Capacity object
-        :rtype: JumpScale9Lib.tools.capacity.registration.Capacity
+        :return: dict object ready for capacity registration
+        :rtype: dict
         """
         report = self.report()
-        capacity = registration.Capacity(
+        capacity = dict(
             node_id=self._node.name,
-            location=None,
+            location=report.location,
             farmer=None,
             cru=report.CRU,
             mru=report.MRU,
