@@ -14,7 +14,9 @@ port = 623
 """
 
 class Ipmi(JSConfigBase):
-    """ Impi client
+    """ Ipmi client
+
+    Before using the ipmi client, make sure to install requirements.txt included in this directory
     """
 
     def __init__(self, instance, data={}, parent=None, interactive=None):
@@ -53,12 +55,16 @@ class Ipmi(JSConfigBase):
         self.ipmi.set_power("off", wait=True)
 
     def power_status(self):
-        """ Return power status of ipmi host
+        """ Returns power status of ipmi host
+        
+        Returns:
+            str -- power status of node ('on' or 'off')
         """
         return self.ipmi.get_power()['powerstate']
 
     def power_cycle(self):
         """ Power off host, wait a couple of seconds and turn back on again.
+        The power will always be turned on at the end of this call.
 
         Not using self.ipmi.set_power("reset", wait=True) as it's not reliable to use,
         power state will be pending.

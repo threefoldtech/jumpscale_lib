@@ -4,7 +4,12 @@ from js9 import j
 
 JSConfigBaseFactory = j.tools.configmanager.base_class_configs
 
-class IYOFactory(JSConfigBaseFactory):
+class IpmiFactory(JSConfigBaseFactory):
+    """ Ipmi client factory
+
+    Before using the ipmi client, make sure to install requirements.txt included in this directory
+    """
+
     def __init__(self):
         self.__jslocation__ = "j.clients.ipmi"
         JSConfigBaseFactory.__init__(self, Ipmi)
