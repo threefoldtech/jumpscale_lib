@@ -56,7 +56,6 @@ class BridgeManager():
         }
 
         self._bridge_create_chk.check(args)
-        self.logger.info("bridge.create:%s" % args)
         response = self._client.raw('bridge.create', args)
 
         result = response.get()
@@ -70,7 +69,6 @@ class BridgeManager():
         List all available bridges
         :return: list of bridge names
         """
-        self.logger.info("bridge.list")
         response = self._client.raw('bridge.list', {})
 
         result = response.get()
@@ -91,7 +89,6 @@ class BridgeManager():
         }
 
         self._bridge_delete_chk.check(args)
-        self.logger.info("bridge.delete:%s" % bridge)
         response = self._client.raw('bridge.delete', args)
 
         result = response.get()
