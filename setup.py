@@ -100,6 +100,7 @@ setup(
         'pynacl>=1.1.2',
         'ipcalc>=1.99.0',
         'ed25519>=1.4',
+        'pyghmi==1.0.44',
     ],
     cmdclass={
         'install': install,

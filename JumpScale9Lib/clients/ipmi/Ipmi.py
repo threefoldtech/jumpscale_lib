@@ -1,0 +1,68 @@
+import time
+
+from js9 import j
+from pyghmi.ipmi import command
+from pyghmi.ipmi.private import session
+
+JSConfigBase = j.tools.configmanager.base_class_config
+
+TEMPLATE = """
+bmc = ""
+user = ""
+password = ""
+port = 623
+"""
+
+class Ipmi(JSConfigBase):
+    """ Impi client
+    """
+
+    def __init__(self, instance, data={}, parent=None, interactive=None):
+        JSConfigBase.__init__(self, instance=instance,
+            data=data, parent=parent, template=TEMPLATE)
+
+        self._ipmi = command.Command(
+            bmc=self.config.data["bmc"],
+            userid=self.config.data["user"],
+            password=self.config.data["password"],
+            port=self.config.data["port"],
+        )
+
+    @property
+    def ipmi(self):
+        # Reset session before returning the ipmi client, 
+        # else the client will time out when a call is made after about a minute, 
+        # might as well reset the session each time the client is called.
+        self._ipmi.ipmi_session.initting_sessions.clear()
+        self._ipmi.ipmi_session = session.Session(
+            self.config.data["bmc"],
+            self.config.data["user"],
+            self.config.data["password"],
+            port=self.config.data["port"],
+        )
+        return self._ipmi
+
+    def power_on(self):
+        """ Power on ipmi host
+        """
+        self.ipmi.set_power("on", wait=True)
+
+    def power_off(self):
+        """ Power off ipmi host
+        """
+        self.ipmi.set_power("off", wait=True)
+
+    def power_status(self):
+        """ Return power status of ipmi host
+        """
+        return self.ipmi.get_power()['powerstate']
+
+    def power_cycle(self):
+        """ Power off host, wait a couple of seconds and turn back on again.
+
+        Not using self.ipmi.set_power("reset", wait=True) as it's not reliable to use,
+        power state will be pending.
+        """
+        self.power_off()
+        time.sleep(5)
+        self.power_on()
