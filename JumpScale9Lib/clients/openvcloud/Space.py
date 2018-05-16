@@ -353,7 +353,8 @@ class Space(Authorizables):
         stackId=None,
         description="",
         timeout=300,
-        branch='development',
+        branch='master',
+        dev_mode=False,
     ):
         """
         Creates a new zero-os virtual machine and connect to Zerotier network.
@@ -373,6 +374,8 @@ class Space(Authorizables):
             - description (optional): machine description.
             - timeout (defaults to 20): timeout on waiting node to join ZeroTier network.
             - branch (defaults to "master"): zero-os branch.
+            - dev_mode (defaults to False): set to True to run the ZOS node in development mode (allow access to the node bypassing the node robot),
+                                            set to False to allow access only via the node robot.
         Raises:
             - RuntimeError if machine with given name already exists.
             - RuntimeError if machine name contains spaces
@@ -380,8 +383,8 @@ class Space(Authorizables):
         """
 
         # url pointing to a (ipxe)[http://ipxe.org/scripting/] script.
-        ipxe = 'https://bootstrap.gig.tech/ipxe/development/{zerotier_id}/organisation={organization}%20{branch}'.format(
-            zerotier_id=zerotier_id, organization=organization, branch=branch) 
+        ipxe = 'https://bootstrap.gig.tech/ipxe/{branch}/{zerotier_id}/organisation={organization}%20{dev_mode}'.format(
+             branch=branch, zerotier_id=zerotier_id, organization=organization, dev_mode='development' if dev_mode else '') 
         userdata = 'ipxe: %s' % ipxe
         
         machine = self.machine_create(
@@ -397,18 +400,39 @@ class Space(Authorizables):
 
         # get ZeroTier client, fail if client was not yet configured
         zerotier = j.clients.zerotier.get(zerotier_client, create=False)
-
+        import ipdb; ipdb.set_trace()
         # fetch not yet authorized member of ZeroTier network
+        # network = zerotier.network_get(zerotier_id)
+        # members = network.member_get(public_ip=machine.ipaddr_public)
+        #if len(members)
         limit_timeout = time.time() + timeout
+           
         candidates = None
+        # while time.time() < limit_timeout:
+        #     members = zerotier.client.network.listMembers(zerotier_id).json()
+        #     candidates = [member for member in members if not member['config']['authorized'] and member['online']]
+        #     if candidates:
+        #         break
+        #     time.sleep(1)
+        # else:
+        #     raise TimeoutError('Authorization request to ZeroTier network %s was not received' % zerotier_id)
+
         while time.time() < limit_timeout:
-            members = zerotier.client.network.listMembers(zerotier_id).json()
-            candidates = [member for member in members if not member['config']['authorized'] and member['online']]
-            if candidates:
-                break
-            time.sleep(1)
+            while True:
+                try:
+                    network = zerotier.network_get(network_id=zerotier_id)
+                    members = network.members_list()
+                    for member in members:
+                        if not member.data['config']['authorized'] and member.private_ip == machine.ipaddr_public:
+                            candidates.append(member)
+                    if candidates:
+                        break
+                except RuntimeError as e:
+                    # case where we don't find the member in zerotier
+                    pass
         else:
             raise TimeoutError('Authorization request to ZeroTier network %s was not received' % zerotier_id)
+
 
         if len(candidates) != 1:
             raise RuntimeError('Found %s candidates, expected exactly one' % len(candidates))
