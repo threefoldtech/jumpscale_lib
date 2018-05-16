@@ -27,7 +27,6 @@ MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAES5X8XrfKdx9gYayFITc89wad4usrk0n2
 
 
 def RegisterCapacityHandler():
-    import ipdb; ipdb.set_trace()
     inputs = request.get_json()
     # refresh jwt is needed otherwise return original
     jwt = j.clients.itsyouonline.refresh_jwt_token(inputs.pop('farmer_id'))

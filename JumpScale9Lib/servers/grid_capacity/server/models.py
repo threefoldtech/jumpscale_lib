@@ -76,9 +76,11 @@ class NodeRegistration:
         :return: sequence of country
         :rtype: sequence of string
         """
-        countries = Capacity.objects.only('location__country')
-        for cap in countries:
-            yield cap.location.country
+        capacities = Capacity.objects.only('location__country')
+        countries = set()
+        for cap in capacities:
+            countries.add(cap.location.country)
+        return list(countries)
 
 
 class FarmerRegistration:
