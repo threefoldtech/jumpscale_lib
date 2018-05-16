@@ -70,7 +70,7 @@ class Capacity:
         return capacity
 
     def register(self):
-        farmer_id = self._node.kernel.args.get('farmer_id')
+        farmer_id = self._node.kernel_args.get('farmer_id')
         if not farmer_id:
             return False
         data = self.get(farmer_id)

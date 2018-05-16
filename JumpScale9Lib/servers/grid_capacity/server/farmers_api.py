@@ -16,10 +16,10 @@ def ListFarmers():
     return handlers.ListFarmersHandler()
 
 
-@farmers_api.route('/api/farmers', methods=['POST'])
+@farmers_api.route('/api/farmer_create', methods=['GET'])
 def RegisterFarmer():
     """
     Register a farmer
-    It is handler for POST /api/farmers
+    It is handler for GET /api/farmer_create
     """
     return handlers.RegisterFarmerHandler()

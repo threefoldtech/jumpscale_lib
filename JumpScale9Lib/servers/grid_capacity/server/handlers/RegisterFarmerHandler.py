@@ -1,6 +1,7 @@
 # THIS FILE IS SAFE TO EDIT. It will not be overwritten when rerunning go-raml.
 
-from flask import jsonify, request
+from flask import request, redirect
+from ..flask_itsyouonline import authenticated
 
 import json as JSON
 import jsonschema
@@ -14,16 +15,8 @@ Farmer_schema = JSON.load(open(dir_path + '/schema/Farmer_schema.json'))
 Farmer_schema_resolver = jsonschema.RefResolver('file://' + dir_path + '/schema/', Farmer_schema)
 Farmer_schema_validator = Draft4Validator(Farmer_schema, resolver=Farmer_schema_resolver)
 
-
+@authenticated
 def RegisterFarmerHandler():
-
-    inputs = request.get_json()
-
-    try:
-        Farmer_schema_validator.validate(inputs)
-    except jsonschema.ValidationError as e:
-        return jsonify(errors="bad request body"), 400
-    farmer = Farmer(**inputs)
+    farmer = Farmer(name=request.args['name'], iyo_organization=request.args['organization'])
     farmer.save()
-
-    return farmer.to_json()
+    return redirect('/farm_registered')

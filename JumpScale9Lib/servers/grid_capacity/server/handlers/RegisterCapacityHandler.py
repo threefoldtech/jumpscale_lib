@@ -1,5 +1,6 @@
 # THIS FILE IS SAFE TO EDIT. It will not be overwritten when rerunning go-raml.
 
+from js9 import j
 import json as JSON
 import os
 
@@ -26,10 +27,13 @@ MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAES5X8XrfKdx9gYayFITc89wad4usrk0n2
 
 
 def RegisterCapacityHandler():
+    import ipdb; ipdb.set_trace()
     inputs = request.get_json()
-    token = jose.jwt.decode(inputs['farmer_id'], IYO_PUBLIC_KEY)
-    iyo_account = token['scope'][0].replace('user:memberof:', '')
-    farmers = Farmer.objects(iyo_account=iyo_account)
+    # refresh jwt is needed otherwise return original
+    jwt = j.clients.itsyouonline.refresh_jwt_token(inputs.pop('farmer_id'))
+    token = jose.jwt.decode(jwt, IYO_PUBLIC_KEY)
+    iyo_organization = token['scope'][0].replace('user:memberof:', '')
+    farmers = Farmer.objects(iyo_organization=iyo_organization)
     if not farmers:
         return jsonify(errors='Unauthorized farmer'), 403
 
@@ -37,6 +41,7 @@ def RegisterCapacityHandler():
         Capacity_schema_validator.validate(inputs)
     except jsonschema.ValidationError as e:
         return jsonify(errors="bad request body: {}".format(e)), 400
+    inputs['farmer'] = iyo_organization
     capacity = Capacity(**inputs)
     capacity.save()
 

@@ -60,14 +60,12 @@ types:
         longitude: 4.29
   Farmer:
     properties:
-      id:
-        type: string
-      iyo_account:
+      iyo_organization:
         type: string
       name:
         type: string
-      wallet_address:
-        type: string
+      wallet_addresses:
+        type: string[]
 
   Error:
     properties:
@@ -105,16 +103,17 @@ types:
       200:
         body:
           type: Capacity[]
-/api/farmers:
-  post:
+/api/farmer_create:
+  get:
     displayName: RegisterFarmer
     description: Register a farmer
-    body:
-      type: Farmer
+    queryString:
+      properties:
+        organization: string
+        name: string
     responses:
-      201:
-        body:
-          type: Farmer
+      302:
+        description: Page with information how to use your farm
   get:
     displayName: ListFarmers
     description: List Farmers
