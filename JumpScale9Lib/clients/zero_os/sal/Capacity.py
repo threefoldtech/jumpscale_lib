@@ -45,7 +45,7 @@ class Capacity:
         """
         return j.tools.capacity.parser.get_report(self._node.client.info.mem()['total'], self.hw_info, self.disk_info, indent=indent)
 
-    def get(self):
+    def get(self, farmer_id):
         """
         get the capacity object of the node
 
@@ -65,11 +65,15 @@ class Capacity:
             sru=report.SRU,
             robot_address=robot_address,
             os_version=os_version,
+            farmer_id=farmer_id,
         )
         return capacity
 
     def register(self):
-        data = self.get()
+        farmer_id = self._node.kernel.args.get('farmer_id')
+        if not farmer_id:
+            return False
+        data = self.get(farmer_id)
         client = j.clients.grid_capacity.get(interactive=False)
         client.nodes.RegisterCapacity(data)
         return True

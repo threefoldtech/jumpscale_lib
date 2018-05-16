@@ -123,10 +123,10 @@ class Farmer(Document):
     """
     Represent a threefold Farmer
     """
-    # id = StringField(primary_key=True)
+    id = StringField(primary_key=True)
     name = StringField()
     iyo_account = StringField()
-    wallet_addresses = ListField(StringField())
+    wallet_address = ListField(StringField())
 
 
 class Capacity(Document):

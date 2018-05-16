@@ -51,8 +51,14 @@ class Node:
         return macgwdev.replace(":", '')
 
     @property
-    def cmdline(self):
-        return self.download_content('/proc/cmdline').split()
+    def kernel_args(self):
+        args = self.download_content('/proc/cmdline').split()
+        result = dict()
+        for arg in args:
+            split = arg.split('=')
+            value = split[1] if len(split) > 1 else ''
+            result[split[0]] = value
+        return result
 
     @property
     def storageAddr(self):
