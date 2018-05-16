@@ -15,8 +15,13 @@ Farmer_schema = JSON.load(open(dir_path + '/schema/Farmer_schema.json'))
 Farmer_schema_resolver = jsonschema.RefResolver('file://' + dir_path + '/schema/', Farmer_schema)
 Farmer_schema_validator = Draft4Validator(Farmer_schema, resolver=Farmer_schema_resolver)
 
+
 @authenticated
 def RegisterFarmerHandler():
-    farmer = Farmer(name=request.args['name'], iyo_organization=request.args['organization'])
+    wallet_addresses = []
+    address = request.args.get('walletAddress')
+    if address:
+        wallet_addresses.append(address)
+    farmer = Farmer(name=request.args['name'], iyo_organization=request.args['organization'], wallet_addresses=wallet_addresses)
     farmer.save()
     return redirect('/farm_registered')

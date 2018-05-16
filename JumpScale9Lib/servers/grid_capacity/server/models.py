@@ -127,7 +127,7 @@ class Farmer(Document):
     """
     iyo_organization = StringField(primary_key=True)
     name = StringField()
-    wallet_address = ListField(StringField())
+    wallet_addresses = ListField(StringField())
 
 
 class Capacity(Document):

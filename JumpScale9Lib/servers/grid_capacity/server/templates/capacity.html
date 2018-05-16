@@ -102,6 +102,17 @@
           <div class="modal-body">
             <p>Node 0-robot address: <code>{{node['robot_address']}}</code></p>
             <p>0-OS version: <code>{{node['os_version']}}</code></p>
+            <p>Farm: <code>{{node.farmer.name}}</code></p>
+            <p>
+              Wallet addresses:
+              <ul>
+              {% for addr in node.farmer.wallet_addresses %}
+                <li>
+                  <pre>{{addr}}</pre>
+                </li>
+              {% endfor %}
+              </ul>
+            </p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
