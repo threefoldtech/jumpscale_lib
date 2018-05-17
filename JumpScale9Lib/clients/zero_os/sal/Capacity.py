@@ -1,6 +1,7 @@
 import io
 from js9 import j
 
+
 class Capacity:
 
     def __init__(self, node):

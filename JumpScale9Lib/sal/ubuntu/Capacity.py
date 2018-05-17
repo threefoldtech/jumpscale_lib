@@ -63,11 +63,11 @@ class Capacity:
         """
         return j.tools.capacity.parser.get_report(psutil.virtual_memory().total, self.hw_info, self.disk_info, indent=indent)
 
-    def get(self):
+    def get(self, farmer_id):
         """
         get the capacity object of the node
 
-        this capacity object is used in the capacity registration 
+        this capacity object is used in the capacity registration
 
         :return: dict object ready for capacity registration
         :rtype: dict
@@ -76,15 +76,23 @@ class Capacity:
         capacity = dict(
             node_id=self._node.name,
             location=report.location,
-            farmer=None,
             cru=report.CRU,
             mru=report.MRU,
             hru=report.HRU,
             sru=report.SRU,
             robot_address=None,
             os_version="not running 0-OS",
+            farmer_id=farmer_id,
         )
         return capacity
+
+    def register(self, farmer_id):
+        if not farmer_id:
+            return False
+        data = self.get(farmer_id)
+        client = j.clients.grid_capacity.get(interactive=False)
+        client.nodes.RegisterCapacity(data)
+        return True
 
 
 def _disk_type(disk_info):
