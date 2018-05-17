@@ -2,6 +2,7 @@ import logging
 import time
 from io import BytesIO
 import signal
+import netaddr
 
 logging.basicConfig(level=logging.INFO)
 default_logger = logging.getLogger(__name__)
@@ -120,6 +121,19 @@ class Container():
                 if nic['type'] == 'zerotier':
                     self._identity = self.client.zerotier.info()['secretIdentity']
         return self._identity
+
+    def default_ip(self, interface='nat0'):
+        """
+        Returns the ip if the container has a default nic
+        :return: netaddr.IPNetwork
+        """
+        for ipaddress in self.client.ip.addr.list(interface):
+            ip = netaddr.IPNetwork(ipaddress)
+            if ip.version == 4:
+                break
+        else:
+            raise LookupError('Failed to get default ip')
+        return ip
 
     def add_nic(self, nic):
         self.node.client.container.nic_add(self.id, nic)

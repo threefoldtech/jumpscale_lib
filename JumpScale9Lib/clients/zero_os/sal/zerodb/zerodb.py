@@ -69,7 +69,7 @@ class Zerodb:
         :rtype: Redis class
         """
         if self.__redis is None:
-            if 'development' not in self.node.cmdline:
+            if 'development' not in self.node.kernel_args:
                 self.__redis = redis.Redis(host='172.18.0.1', port=self.node_port, password=self.admin)
             else:
                 # use the connection below if you want to test a dev setup and to execute it from outside the node

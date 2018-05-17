@@ -580,7 +580,7 @@ class ContainerManager():
 
         return JSONResponse(self._client.raw('corex.restore', args, tags=tags))
 
-    def add_portfoward(self, container, host_port, container_port):
+    def add_portforward(self, container, host_port, container_port):
         """
         Add portforward from host to kvm container
         :param container: id of the container
@@ -601,7 +601,7 @@ class ContainerManager():
 
         return self._client.json('corex.portforward-add', args)
 
-    def remove_portfoward(self, container, host_port, container_port):
+    def remove_portforward(self, container, host_port, container_port):
         """
         Remove portforward from host to kvm container
         :param container: id of the container
@@ -609,6 +609,9 @@ class ContainerManager():
         :param container_port: port on container forwarded to
         :return:
         """
+        if isinstance(host_port, int):
+            host_port = str(host_port)
+
         args = {
             'container': container,
             'host_port': host_port,

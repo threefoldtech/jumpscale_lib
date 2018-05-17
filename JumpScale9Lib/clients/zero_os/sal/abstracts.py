@@ -67,6 +67,12 @@ class Collection:
             raise ValueError('Element with name {} already exists'.format(name))
 
     def remove(self, item):
+        """
+        Remove item from collection
+
+        :param item: Item can be the index, the name or the object itself to remove
+        :type item: mixed
+        """
         if isinstance(item, (str, int)):
             item = self[item]
         self._items.remove(item)
@@ -173,10 +179,10 @@ class Nics(Collection):
 
         :param name: name to give to the nic
         :type name: str
-        :param type_: Nic type vxlan bridge default or vlan
+        :param type_: Nic type vlan, vxlan, zerotier, bridge or default
         :type type_: str
         :param hwaddr: Hardware address of the NIC (MAC)
-        :param type: str
+        :param hwaddr: str
         """
         super().add(name)
         if len(name) > 15 or name == 'default':
