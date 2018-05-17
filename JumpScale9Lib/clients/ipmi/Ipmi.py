@@ -23,6 +23,7 @@ class Ipmi(JSConfigBase):
         JSConfigBase.__init__(self, instance=instance,
             data=data, parent=parent, template=TEMPLATE)
 
+        self._clear_sessions()
         self._ipmi = command.Command(
             bmc=self.config.data["bmc"],
             userid=self.config.data["user"],
@@ -30,12 +31,16 @@ class Ipmi(JSConfigBase):
             port=self.config.data["port"],
         )
 
+    def _clear_sessions(self):
+        # Resets ipmi sessions, 
+        # else the client will time out when a call is made after about a minute.
+        # When new Command is created that already exists, will make this creation block indefinitely
+        # A new ipmi_session has to be set after calling this.
+        session.Session.initting_sessions.clear()
+
     @property
     def ipmi(self):
-        # Reset session before returning the ipmi client, 
-        # else the client will time out when a call is made after about a minute, 
-        # might as well reset the session each time the client is called.
-        self._ipmi.ipmi_session.initting_sessions.clear()
+        self._clear_sessions()
         self._ipmi.ipmi_session = session.Session(
             self.config.data["bmc"],
             self.config.data["user"],
