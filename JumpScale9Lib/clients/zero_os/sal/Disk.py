@@ -6,7 +6,7 @@ from js9 import j
 
 
 class StorageType(Enum):
-    SSD = "SSH"
+    SSD = "SSD"
     HDD = "HDD"
     NVME = "NVME"
     ARCHIVE = "ARCHIVE"
