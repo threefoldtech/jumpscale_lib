@@ -23,30 +23,37 @@ class Ipmi(JSConfigBase):
         JSConfigBase.__init__(self, instance=instance,
             data=data, parent=parent, template=TEMPLATE)
 
-        self._clear_sessions()
+        # When new Command is created that already exists, will make this creation block indefinitely,
+        # clearing initting_sessions seems to fix this.
+        session.Session.initting_sessions.clear()
         self._ipmi = command.Command(
             bmc=self.config.data["bmc"],
             userid=self.config.data["user"],
             password=self.config.data["password"],
             port=self.config.data["port"],
         )
+        self._last_session_clear = time.time()
 
     def _clear_sessions(self):
-        # Resets ipmi sessions, 
+        # Resets ipmi sessions every 30s, 
         # else the client will time out when a call is made after about a minute.
-        # When new Command is created that already exists, will make this creation block indefinitely
-        # A new ipmi_session has to be set after calling this.
-        session.Session.initting_sessions.clear()
+        # Refreshing only after 30s, if new sessions are created in quick succession, the ipmi client will run out of resources
+        if time.time() - self._last_session_clear >= 30:
+            self.logger.debug("refreshing ipmi session")
+            session.Session.initting_sessions.clear()
+            session.Session.waiting_sessions.clear()
+            session.Session.keepalive_sessions.clear()
+            self._ipmi.ipmi_session = session.Session(
+                self.config.data["bmc"],
+                self.config.data["user"],
+                self.config.data["password"],
+                port=self.config.data["port"],
+            )
+            self._last_session_clear = time.time()
 
     @property
     def ipmi(self):
         self._clear_sessions()
-        self._ipmi.ipmi_session = session.Session(
-            self.config.data["bmc"],
-            self.config.data["user"],
-            self.config.data["password"],
-            port=self.config.data["port"],
-        )
         return self._ipmi
 
     def power_on(self):
