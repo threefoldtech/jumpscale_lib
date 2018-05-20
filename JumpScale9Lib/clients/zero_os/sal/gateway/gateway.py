@@ -345,20 +345,22 @@ class Gateway:
                         privateip = str(network.ip.cidr)
                     ztnetwork.member_add(ztpublic, self.name, private_ip=privateip)
             nics.append(network.to_dict(forcontainer=True))
-            #zerotierbridge = nic.pop('zerotierbridge', None)
-            #if zerotierbridge:
+            # zerotierbridge = nic.pop('zerotierbridge', None)
+            # if zerotierbridge:
             #    contnics.append(
             #        {
             #            'id': zerotierbridge['id'], 'type': 'zerotier',
             #            'name': 'z-{}'.format(nic['name']), 'token': zerotierbridge.get('token', '')
             #        })
-        self._container = self.node.containers.create(self._container_name(), self.flist, hostname=self.name, nics=nics, privileged=True, identity=self.zt_identity)
+        self._container = self.node.containers.create(self._container_name(), self.flist, hostname=self.name, nics=nics,
+                                                      privileged=True, identity=self.zt_identity)
         return self._container
 
     def to_dict(self):
         """
         Convert the gateway object to a dict.
-        :return: a dict representation of the gateway matching the schema of the gateway template https://github.com/zero-os/0-templates/tree/master/templates/gateway/schema.capnp
+        :return: a dict representation of the gateway matching the schema of the gateway template
+                 https://github.com/zero-os/0-templates/tree/master/templates/gateway/schema.capnp
         :rtype: dict
         """
         data = {
@@ -646,4 +648,3 @@ class Gateway:
             #     ip.link.up(nicname)
             #     ip.link.up(linkname)
             #     ip.link.up(zerotiername)
-

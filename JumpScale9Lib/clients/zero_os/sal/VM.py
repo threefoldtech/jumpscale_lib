@@ -22,12 +22,13 @@ class Disk:
 
 
 class ZDBDisk(Disk):
-    def __init__(self, zdb, name, mountpoint=None, filesystem='ext4', size=10):
+    def __init__(self, zdb, name, mountpoint=None, filesystem='ext4', size=10, label=None):
         if zdb.mode == 'direct':
             raise RuntimeError('ZDB mode direct not support for disks')
         super().__init__(name, None, mountpoint, filesystem)
         self.zdb = zdb
         self.size = size
+        self.label = label or self.name
         self.node = None
 
     @property
@@ -66,7 +67,7 @@ class ZDBDisk(Disk):
                 res = self.zdb.node.client.system('truncate -s {}G {}'.format(self.size, tmpfile)).get()
                 if res.state != 'SUCCESS':
                     raise RuntimeError('Failed to create tmpfile')
-                res = self.zdb.node.client.system('mkfs.{} -L {} {}'.format(self.filesystem, self.name, tmpfile)).get()
+                res = self.zdb.node.client.system('mkfs.{} -L {} {}'.format(self.filesystem, self.label, tmpfile)).get()
                 if res.state != 'SUCCESS':
                     raise RuntimeError('Failed to create fs')
                 self.zdb.node.client.kvm.convert_image(tmpfile, self.private_url, 'raw')

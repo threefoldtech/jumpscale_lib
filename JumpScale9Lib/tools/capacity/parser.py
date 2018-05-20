@@ -91,7 +91,10 @@ class Report():
         """
         unit = 0
         for cpu in self.processor:
-            unit += int(cpu.get('thread_nr', 0))
+            if cpu['thread_nr']:
+                unit += int(cpu['thread_nr'])
+            elif cpu['core_nr']:
+                unit += int(cpu['core_nr'])
         return unit
 
     @property
