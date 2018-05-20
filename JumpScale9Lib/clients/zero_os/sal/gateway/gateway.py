@@ -223,15 +223,15 @@ class Gateway:
             network.hosts.pool_start = dhcpserver.get('poolStart', network.hosts.pool_start)
             for host in dhcpserver['hosts']:
                 dhcphost = network.hosts.add(host['hostname'], host['ipaddress'], host['macaddress'])
-                if host['cloudinit']['userdata']:
+                if host.get('cloudinit', {}).get('userdata'):
                     dhcphost.cloudinit.userdata = yaml.load(host['cloudinit']['userdata'])
-                if host['cloudinit']['metadata']:
+                if host.get('cloudinit', {}).get('metadata'):
                     dhcphost.cloudinit.metadata = yaml.load(host['cloudinit']['metadata'])
         for forward in data['portforwards']:
             self.portforwards.add(forward['name'],
                                   (forward['srcnetwork'], forward['srcport']),
                                   (forward['dstip'], forward['dstport']),
-                                  forward['protocols'])
+                                  forward.get('protocols'))
         for proxy in data['httpproxies']:
             self.httpproxies.add(proxy['name'], proxy['host'], proxy['destinations'], proxy['types'])
 
