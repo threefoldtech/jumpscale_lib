@@ -62,7 +62,7 @@ setup(
     install_requires=[
         'Brotli>=0.6.0',
         'Jinja2>=2.9.6',
-        'JumpScale9>=9.3.0',
+        'JumpScale9>=9.3.1-rc3',
         'Pillow>=4.1.1',
         'PyGithub>=1.34',
         'SQLAlchemy>=1.1.9',
