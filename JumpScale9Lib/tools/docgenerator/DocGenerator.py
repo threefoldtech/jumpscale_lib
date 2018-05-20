@@ -4,8 +4,6 @@ from .Def import Def
 
 import imp
 import sys
-# import inspect
-# import copy
 
 JSBASE = j.application.jsbase_get_class()
 
@@ -15,42 +13,6 @@ def loadmodule(name, path):
     sys.modules[parentname] = __package__
     mod = imp.load_source(name, path)
     return mod
-
-
-if not sys.platform.startswith("darwin"):
-    caddyconfig = '''
-    #tcpport:8080
-    $ws/ {
-        root $outpath
-        browse
-    }
-
-    # $ws/fm/ {
-    #     filemanager / {
-    #         show           $outpath
-    #         allow_new      true
-    #         allow_edit     true
-    #         allow_commands true
-    #         allow_command  git
-    #         allow_command  svn
-    #         allow_command  hg
-    #         allow_command  ls
-    #         block          dotfiles
-    #     }
-    # }
-    '''
-else:
-    caddyconfig = '''
-
-    $ws/ {
-        root $outpath
-        browse
-    }
-
-    '''
-
-caddyconfig = j.data.text.strip(caddyconfig)
-
 
 class DocGenerator(JSBASE):
     """
@@ -74,8 +36,7 @@ class DocGenerator(JSBASE):
         self.gitRepos = {}
         self.defs = {}
         self.webserver = "http://localhost:8080/"
-        self.ws = self.webserver.replace(
-            "http://", "").replace("https://", "").replace("/", "")
+        self.ws = self.webserver.replace("http://", "").replace("https://", "").replace("/", "")
         self._loaded = []
         self._macrosLoaded = []
 
@@ -109,7 +70,7 @@ class DocGenerator(JSBASE):
                 # go install github.com/gohugoio/hugo
                 prefab.core.run("go get -u -v github.com/gohugoio/hugo")
                 prefab.web.caddy.build()
-                prefab.core.run("npm install -g mermaid", profile=True)
+                # prefab.core.run("npm install -g mermaid", profile=True)
                 prefab.web.caddy.configure()
                 prefab.core.doneSet("docgenerator:installed")
 
@@ -120,11 +81,48 @@ class DocGenerator(JSBASE):
         """
         start caddy on localhost:8080
         """
-        configpath = self.caddyfile_generate()
+        configpath = self._caddyfile_generate()
         j.tools.prefab.local.web.caddy.start(configpath=configpath)
         self.logger.info("go to %a" % self.webserver)
 
-    def caddyfile_generate(self):
+    def _caddyfile_generate(self):
+        
+
+        if not sys.platform.startswith("darwin"):
+            caddyconfig = '''
+            #tcpport:8080
+            $ws/ {
+                root $outpath
+                browse
+            }
+
+            # $ws/fm/ {
+            #     filemanager / {
+            #         show           $outpath
+            #         allow_new      true
+            #         allow_edit     true
+            #         allow_commands true
+            #         allow_command  git
+            #         allow_command  svn
+            #         allow_command  hg
+            #         allow_command  ls
+            #         block          dotfiles
+            #     }
+            # }
+            '''
+        else:
+            caddyconfig = '''
+
+            $ws/ {
+                root $outpath
+                browse
+            }
+
+            '''
+
+        caddyconfig = j.data.text.strip(caddyconfig)
+
+
         dest = "%s/docgenerator/caddyfile" % j.dirs.VARDIR
         j.sal.fs.createDir("%s/docgenerator" % j.dirs.VARDIR)
         out2 = caddyconfig
@@ -145,7 +143,7 @@ class DocGenerator(JSBASE):
         j.sal.fs.writeFile(filename=dest, contents=out2, append=False)
         return dest
 
-    def init(self):
+    def _init(self):
         if not self._initOK:
             self.install()
             j.clients.redis.core_get()
@@ -212,7 +210,7 @@ class DocGenerator(JSBASE):
         if pathOrUrl in self._loaded:
             return
         self._loaded.append(pathOrUrl)
-        self.init()
+        self._init()
         if pathOrUrl == "":
             path = j.sal.fs.getcwd()
             path = j.clients.git.findGitPath(path)
@@ -225,15 +223,17 @@ class DocGenerator(JSBASE):
                 ds = DocSite(path=docDir)
                 self.docsites[docDir] = ds
 
-    def generateExamples(self, start=True):
-        self.load(
-            pathOrUrl="https://github.com/Jumpscale/docgenerator/tree/master/examples")
-        # self.load(pathOrUrl="https://github.com/Jumpscale/ays9/tree/master/docs")
+    def generate_examples(self, start=True):
+        """
+        js9 'j.tools.docgenerator.generate_examples()'
+        """
+        self.load(pathOrUrl="https://github.com/Jumpscale/docgenerator/tree/master/examples")
         self.generate(start=start)
 
-    def generateJSDoc(self, start=True):
-        # self.load(pathOrUrl="https://github.com/Jumpscale/portal9")
-        # self.load(pathOrUrl="https://github.com/Jumpscale/ays9/tree/master/docs")
+    def generate_jsdoc(self, start=True):
+        """
+        js9 'j.tools.docgenerator.generate_jsdoc()'
+        """        
         self.load(pathOrUrl="https://github.com/Jumpscale/core9/")
         self.load(pathOrUrl="https://github.com/Jumpscale/lib9")
         self.load(pathOrUrl="https://github.com/Jumpscale/prefab9")
