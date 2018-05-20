@@ -45,6 +45,11 @@ class ZDBDisk(Disk):
         return
 
     def deploy(self):
+        """
+        Deploy disk
+
+        Will create zdb namespace with specified limits and create filesystem (if specified) on the disk
+        """
         if self.name in self.zdb.namespaces:
             namespace = self.zdb.namespaces[self.name]
             if namespace.size != self.size:
@@ -79,10 +84,16 @@ class Disks(Collection):
         """
         Add disk to vm
 
-        :param name: name to give to disk
+        :param name_or_disk: name to give to disk or ZDBDisk instance
         :type name: str
-        :param url_or_disk: Disk url example: nbd://myip:port
+        :param url: Disk url example: nbd://myip:port
         :type url: str
+        :param mounpoint: Optional location to mount this disk on the vm 
+                          Only works in combination with filesystem
+        :type mountpoint: str 
+        :param filesystem: Filesystem the disk contains
+        :type filesystem: str
+
         """
         if isinstance(name_or_disk, str):
             if url is None:
@@ -210,6 +221,21 @@ class Configs(Collection):
         self._items.append(config)
         return config
 
+class VMNics(Nics):
+    def add(self, name, type_, networkid=None, hwaddr=None):
+        """
+        Add nic to VM
+
+        :param name: name to give to the nic
+        :type name: str
+        :param type_: Nic type vlan, vxlan, zerotier, bridge or default
+        :type type_: str
+        :param hwaddr: Hardware address of the NIC (MAC)
+        :param hwaddr: str
+        """
+        if self._parent.is_running() and type_ == 'zerotier':
+            raise RuntimeError('Zerotier can not be added when the VM is running')
+        return super().add(name, type_, networkid, hwaddr)
 
 class VM:
     def __init__(self, node, name, flist=None, vcpus=2, memory=2048):
@@ -219,7 +245,7 @@ class VM:
         self._vcpus = vcpus
         self._flist = flist
         self.disks = Disks(self)
-        self.nics = Nics(self)
+        self.nics = VMNics(self)
         self.ports = Ports(self)
         self.mounts = Mounts(self)
         self.configs = Configs(self)
@@ -336,7 +362,7 @@ Type=simple
         if not info:
             raise RuntimeError('Can not load halted vm')
         self.disks = Disks(self)
-        self.nics = Nics(self)
+        self.nics = VMNics(self)
         self.ports = Ports(self)
         self.mounts = Mounts(self)
         self.configs = Configs(self)
@@ -413,7 +439,7 @@ Type=simple
         self._memory = data['memory']
         self.tags = data['tags']
         self.disks = Disks(self)
-        self.nics = Nics(self)
+        self.nics = VMNics(self)
         self.configs = Configs(self)
         for disk in data['disks']:
             self.disks.add(disk['name'], disk['url'], disk.get('mountPoint'), disk.get('filesystem'))

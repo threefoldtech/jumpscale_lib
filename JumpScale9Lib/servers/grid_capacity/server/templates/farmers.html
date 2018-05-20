@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block body %}
+<main role="main">
+
+    <div class="container">
+      <h2>Farmers</h2>
+      <ul>
+      {% for farmer in farmers %}
+      <li>{{farmer.name}}</li>
+      {% endfor %}
+      </ul>
+    </div>
+</main>
+{% endblock %}

@@ -14,6 +14,7 @@ Some of `JumpScale9` SALs:
 - [Ubuntu](Ubuntu.md)
   - [capacity report](capacityreport_from_ubuntu.md)
 - [UFW](UFW.md)
+- [Zero-OS SAL](zos/primitives.md)
 
 
 ```

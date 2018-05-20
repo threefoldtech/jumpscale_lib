@@ -1,9 +1,10 @@
 import json
+
 import psutil
-import os
 
 from js9 import j
-from JumpScale9Lib.tools.capacityparser.CapacityParser import StorageType
+from JumpScale9Lib.tools.capacity.parser import StorageType
+
 
 class Capacity:
 
@@ -22,7 +23,7 @@ class Capacity:
             if rc != 0:
                 raise RuntimeError("Error getting hardware info:\n%s" % (err))
 
-            self._hw_info = j.tools.capacityparser.hw_info_from_dmi(dmi_data)
+            self._hw_info = j.tools.capacity.parser.hw_info_from_dmi(dmi_data)
         return self._hw_info
 
     @property
@@ -48,7 +49,7 @@ class Capacity:
                     # smartctl prints error on stdout
                     raise RuntimeError("Error getting disk data for %s (Make sure you run this on baremetal, not on a VM):\n%s\n\n%s" % (disk["name"], out, err))
 
-                self._disk_info[disk["name"]] = j.tools.capacityparser.disk_info_from_smartctl(
+                self._disk_info[disk["name"]] = j.tools.capacity.parser.disk_info_from_smartctl(
                     out,
                     disk["size"],
                     _disk_type(disk).name,
@@ -60,7 +61,39 @@ class Capacity:
         create a report of the hardware capacity for
         processor, memory, motherboard and disks
         """
-        return j.tools.capacityparser.get_report(psutil.virtual_memory().total, self.hw_info, self.disk_info, indent=indent)
+        return j.tools.capacity.parser.get_report(psutil.virtual_memory().total, self.hw_info, self.disk_info, indent=indent)
+
+    def get(self, farmer_id):
+        """
+        get the capacity object of the node
+
+        this capacity object is used in the capacity registration
+
+        :return: dict object ready for capacity registration
+        :rtype: dict
+        """
+        report = self.report()
+        capacity = dict(
+            node_id=self._node.name,
+            location=report.location,
+            cru=report.CRU,
+            mru=report.MRU,
+            hru=report.HRU,
+            sru=report.SRU,
+            robot_address=None,
+            os_version="not running 0-OS",
+            farmer_id=farmer_id,
+        )
+        return capacity
+
+    def register(self, farmer_id):
+        if not farmer_id:
+            return False
+        data = self.get(farmer_id)
+        client = j.clients.grid_capacity.get(interactive=False)
+        client.nodes.RegisterCapacity(data)
+        return True
+
 
 def _disk_type(disk_info):
     """
