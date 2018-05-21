@@ -137,7 +137,7 @@ class HTTPProxy:
         self.host = host
         if types:
             for proxy_type in types:
-                if proxy_type not in ['http', 'https']:
+                if proxy_type not in ['http', 'https', 'shttps']:
                     raise ValueError('Invalid type {} for http proxy'.format(proxy_type))
         if types is None:
             types = ['http', 'https']
@@ -443,12 +443,10 @@ class Gateway:
         """
         if self.container is None:
             raise RuntimeError('Can not configure http when gateway is not deployed')
-        servers = {'http': [], 'https': []}
+        servers = {'http': [], 'https': [], 'shttps': []}
         for proxy in self.httpproxies:
-            if 'http' in proxy.types:
-                servers['http'].append(proxy)
-            if 'https' in proxy.types:
-                servers['https'].append(proxy)
+            for proxytype in proxy.types:
+                servers[proxytype].append(proxy)
         for http_type, proxies in sorted(servers.items(), reverse=True):
             if proxies:
                 httpserver = HTTPServer(self.container, proxies, http_type)
