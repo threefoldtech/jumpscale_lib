@@ -11,6 +11,7 @@ from .namespace import Namespaces
 logger = j.logger.get(__name__)
 DEFAULT_PORT = 9900
 
+
 class Zerodb:
     def __init__(self, node, name, path=None, mode='user', sync=False, admin='', node_port=DEFAULT_PORT):
         """
@@ -69,12 +70,13 @@ class Zerodb:
         :rtype: Redis class
         """
         if self.__redis is None:
-            if 'development' not in self.node.kernel_args:
+            nodeip = self.container.node.addr
+            if nodeip == '127.0.0.1':
                 ip = self.container.default_ip().ip.format()
                 self.__redis = redis.Redis(host=ip, port=DEFAULT_PORT, password=self.admin)
             else:
                 # use the connection below if you want to test a dev setup and to execute it from outside the node
-                self.__redis = redis.Redis(host=self.container.node.addr, port=self.node_port, password=self.admin)
+                self.__redis = redis.Redis(host=nodeip, port=self.node_port, password=self.admin)
 
         return self.__redis
 
@@ -98,7 +100,6 @@ class Zerodb:
             devicetype = device.disk.type.value
         for namespace in self.namespaces:
             reserved += namespace.size * 1024 ** 3
-
 
         return {
             'used': used,
@@ -309,7 +310,6 @@ class Zerodb:
 
         if not is_running:
             raise RuntimeError('Failed to start zerodb server: {}'.format(self.name))
-
 
     def stop(self, timeout=30):
         """
