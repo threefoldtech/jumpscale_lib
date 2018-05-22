@@ -57,3 +57,12 @@ class InfoManager():
         :return:
         """
         return self._client.json('info.version', {})
+
+    def dmi(self, *types):
+        """
+        Get dmi output
+        :return: dict
+        """
+
+        return self._client.json('info.dmi', {'types': types})
+
