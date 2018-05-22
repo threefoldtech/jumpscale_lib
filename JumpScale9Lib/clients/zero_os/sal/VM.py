@@ -222,6 +222,7 @@ class Configs(Collection):
         self._items.append(config)
         return config
 
+
 class VMNics(Nics):
     def add(self, name, type_, networkid=None, hwaddr=None):
         """
@@ -234,9 +235,23 @@ class VMNics(Nics):
         :param hwaddr: Hardware address of the NIC (MAC)
         :param hwaddr: str
         """
-        if self._parent.is_running() and type_ == 'zerotier':
+        if not self._parent.loading and self._parent.is_running() and type_ == 'zerotier':
             raise RuntimeError('Zerotier can not be added when the VM is running')
         return super().add(name, type_, networkid, hwaddr)
+
+    def add_zerotier(self, network, name=None):
+        """
+        Add zerotier by zerotier network.
+
+        :param network: Zerotier network instance (part of zerotierclient)
+        :type network: JumpScale9Lib.clients.zerotier.ZerotierClient.ZeroTierNetwork
+        :param name: Name for the nic if left blank will be the name of the network
+        :type name: str
+        """
+        if not self._parent.loading and self._parent.is_running():
+            raise RuntimeError('Zerotier can not be added when the VM is running')
+        return super().add_zerotier(network, name)
+
 
 class VM:
     def __init__(self, node, name, flist=None, vcpus=2, memory=2048):
@@ -362,6 +377,7 @@ Type=simple
         info = self.info
         if not info:
             raise RuntimeError('Can not load halted vm')
+        self.loading = False
         self.disks = Disks(self)
         self.nics = VMNics(self)
         self.ports = Ports(self)
@@ -433,27 +449,31 @@ Type=simple
         return j.data.serializer.json.dumps(self.to_dict())
 
     def from_dict(self, data):
-        self._name = data['name']
-        self.zt_identity = data.get('ztIdentity')
-        self._flist = data['flist']
-        self._vcpus = data['cpu']
-        self._memory = data['memory']
-        self.tags = data['tags']
-        self.disks = Disks(self)
-        self.nics = VMNics(self)
-        self.configs = Configs(self)
-        for disk in data['disks']:
-            self.disks.add(disk['name'], disk['url'], disk.get('mountPoint'), disk.get('filesystem'))
-        for nic in data['nics']:
-            nicobj = self.nics.add(nic['name'], nic['type'], nic.get('id'), nic.get('hwaddr'))
-            if 'ztClient' in nic:
-                nicobj.client_name = nic['ztClient']
-        for config in data['configs']:
-            self.configs.add(config['name'], config['path'], config['content'])
-        for port in data['ports']:
-            self.ports.add(port['name'], port['source'], port['target'])
-        for mount in data['mounts']:
-            self.mounts.add(mount['name'], mount['sourcePath'], mount['targetPath'])
+        self.loading = True
+        try:
+            self._name = data['name']
+            self.zt_identity = data.get('ztIdentity')
+            self._flist = data['flist']
+            self._vcpus = data['cpu']
+            self._memory = data['memory']
+            self.tags = data['tags']
+            self.disks = Disks(self)
+            self.nics = VMNics(self)
+            self.configs = Configs(self)
+            for disk in data['disks']:
+                self.disks.add(disk['name'], disk['url'], disk.get('mountPoint'), disk.get('filesystem'))
+            for nic in data['nics']:
+                nicobj = self.nics.add(nic['name'], nic['type'], nic.get('id'), nic.get('hwaddr'))
+                if 'ztClient' in nic:
+                    nicobj.client_name = nic['ztClient']
+            for config in data['configs']:
+                self.configs.add(config['name'], config['path'], config['content'])
+            for port in data['ports']:
+                self.ports.add(port['name'], port['source'], port['target'])
+            for mount in data['mounts']:
+                self.mounts.add(mount['name'], mount['sourcePath'], mount['targetPath'])
+        finally:
+            self.loading = False
 
     def from_json(self, data):
         data = j.data.serializer.json.loads(data)
