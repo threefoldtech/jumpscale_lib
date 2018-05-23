@@ -20,7 +20,7 @@ class ZeroHubClient(JSConfigClient):
                                 data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         self.token = self.config.data['token_']
         self.username = self.config.data['username']
-        self.client = ZHubClient(self.config.data.get("url", "https://staging.hub.gig.tech/api"))
+        self.client = ZHubClient(self.config.data.get("url", "https://hub.gig.tech/api"))
         self.api = self.client.api
 
     def authentificate(self):
