@@ -82,7 +82,7 @@ class Zerodb:
 
     @property
     def info(self):
-        info = self.node.client.btrfs.info(self.path)
+        info = self.node.client.btrfs.info(self.node.get_mount_path(self.path))
         used = 0
         total = 0
         reserved = 0
