@@ -81,6 +81,21 @@ class ZeroHubClient(JSConfigClient):
 
         return value
 
+    def merge(self, target, flists):
+        """
+        Merge multiple flists (set via a list of flists) and store the merged flist
+        into 'target'
+
+        Example: merge('mymerge', ["maxux/flist1", "maxux/flist2"])
+                 This will merge:
+                  - maxux/flist1.flist
+                  - maxux/flist2.flist
+                 together and store it in "mymerge.flist"
+
+        This method requires authentication (see authenticate method)
+        """
+        return self.api.flist.flist_memerge_post(target, flists).json()
+
     def promote(self, srepo, sfile, destination):
         """
         Promote (fork) one flist from 'srepo/sfile' to 'destination'
