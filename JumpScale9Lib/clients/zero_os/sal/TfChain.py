@@ -238,7 +238,7 @@ class TfChainClient:
         cmd = 'curl -A "Rivine-Agent" --data "passphrase={}" "{}/wallet/init"'.format(self.wallet_password, self.addr)
         result = self.container.client.system(cmd).get()
         error_check(result, message='Could not initialize wallet')
-        stdout = json.loads(result.stdout())
+        stdout = json.loads(result.stdout)
         self._recovery_seed = stdout['primaryseed']
 
     def wallet_unlock(self):
