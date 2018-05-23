@@ -260,6 +260,7 @@ class VM:
         self._memory = memory
         self._vcpus = vcpus
         self._flist = flist
+        self.loading = False
         self.disks = Disks(self)
         self.nics = VMNics(self)
         self.ports = Ports(self)
