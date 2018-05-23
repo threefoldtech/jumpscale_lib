@@ -76,7 +76,22 @@ class ZeroHubClient(JSConfigClient):
 
         This method requires authentication (see authenticate method)
         """
-        return self.api.flist.flist_meupload_post({'file': open(filename, 'rb')}, content_type='multipart/form-data')
+        with open(filename, 'rb') as f:
+            value = self.api.flist.flist_meupload_post({'file': f}, content_type='multipart/form-data')
+
+        return value
+
+    def promote(self, srepo, sfile, destination):
+        """
+        Promote (fork) one flist from 'srepo/sfile' to 'destination'
+        This is used to cross-copy flist from one repository to another one, if you
+        have rights.
+        Please note, the destination is a flist name, and this will end in your repository.
+        Please ensure the current user is well set.
+
+        This method requires authentication (see authenticate method)
+        """
+        return self.api.flist.flist_meflistpromote_get(self, srepo, sfile, destination).json()
 
     def rename(self, source, destination):
         """
