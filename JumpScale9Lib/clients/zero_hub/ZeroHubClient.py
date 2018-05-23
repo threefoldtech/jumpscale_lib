@@ -23,7 +23,7 @@ class ZeroHubClient(JSConfigClient):
         self.client = ZHubClient(self.config.data.get("url", "https://hub.gig.tech/api"))
         self.api = self.client.api
 
-    def authentificate(self):
+    def authenticate(self):
         """
         This is fastest way to authentifcate yourself.
 
@@ -74,7 +74,7 @@ class ZeroHubClient(JSConfigClient):
         Upload an archive (.tar.gz) to the hub, this archive will be converted to an flist
         automatically after being uploaded.
 
-        This method require authentification (see authentificate method)
+        This method requires authentication (see authenticate method)
         """
         return self.api.flist.flist_meupload_post({'file': open(filename, 'rb')}, content_type='multipart/form-data')
 
@@ -83,7 +83,7 @@ class ZeroHubClient(JSConfigClient):
         Rename one of your flist from 'source' to 'destination'
         You can only change the name of the flist, not the owner (repository)
 
-        This method require authentification (see authentificate method)
+        This method requires authentication (see authenticate method)
         """
         return self.api.flist.flist_meflistrenametarget_get(source, destination).json()
 
@@ -94,7 +94,7 @@ class ZeroHubClient(JSConfigClient):
         This is useful when you want to upload multiple version of a flist and
         pointing to the last version, without overwriting the flist
 
-        This method require authentification (see authentificate method)
+        This method requires authentication (see authenticate method)
         """
         return self.api.flist.flist_meflistlinklinkname_get(source, linkname).json()
 
@@ -102,7 +102,7 @@ class ZeroHubClient(JSConfigClient):
         """
         Delete one of your flist. Warning, this action cannot be reverted.
 
-        This method require authentification (see authentificate method)
+        This method requires authentication (see authenticate method)
         """
         return self.api.flist.flist_meflist_delete(filename).json()
 
