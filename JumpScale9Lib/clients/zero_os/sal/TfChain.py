@@ -261,8 +261,8 @@ class TfChainClient:
         """
         return self._get_wallet_info()
 
-    def list_peers(self, link, port='23112'):
-        """ List peers in subnet @addr with open port @port
+    def discover_local_peers(self, link=None, port='23112'):
+        """ List local peers in subnet @addr with open port @port
 
             @link: network interface name
             @port: port for scanning
@@ -271,18 +271,23 @@ class TfChainClient:
         subnet = "%s/%s"%(ipn.network, ipn.prefixlen)
         cmd = 'nmap {} -p {}'.format(subnet, port)
         result = self.container.client.system(cmd, stdin=self.wallet_password).get()
-        
+        error_check(result, "Could not list peers")
+
         ips = re.findall(r'\d\d\d.\d\d\d.+', result.stdout)
         states = re.findall("tcp \w+", result.stdout)
         all_peers = dict(zip(ips, states))
         active_peers = []
         for ip in all_peers:
-            if all_peers[ip] == 'tcp open':
-                active_peers.append(ip)
+            # get peers with open port, exclude own address
+            if all_peers[ip] == 'tcp open' and ip != str(ipn.ip):
+                active_peers.append("{}:{}".format(ip, port))
 
         return active_peers
 
-            
+    def add_peer(self, addr, port='23112'):
+        cmd = 'curl -A "Rivine-Agent" --data " " "{}/gateway/connect/{}:{}"'.format(self.addr, addr, port)
+        result = self.container.client.system(cmd, stdin=self.wallet_password).get()
+        error_check(result, "Could not connect to a peer", parse=False)            
 
     def _get_wallet_info(self):
         """ Get wallet info """
@@ -315,7 +320,6 @@ class TfChainClient:
     def gateway_stat(self):
         return gateway_stat(self.container, self.addr)
 
-
     def get_report(self):
         """ Get wallet report """
 
@@ -331,7 +335,7 @@ class TfChainClient:
         else:
             result["active_blockstakes"] = -1
             result["confirmed_balance"] = -1
-            result["address"] = ""
+            result["address"] = "not supported by tfchaind yet"
             
         consensus = self.consensus_stat()
         result["block_height"] = consensus["height"]
@@ -359,7 +363,7 @@ def gateway_stat(container, addr):
 
     return json.loads(result.stdout)
 
-def error_check(result, message=''):
+def error_check(result, message='', parse=True):
     """ Raise error on errorred curl call
     
         @result: object returned by curl
@@ -370,8 +374,18 @@ def error_check(result, message=''):
         err = '{}: {} \n {}'.format(message, result.stderr, result.data)
         raise RuntimeError(err)
 
-    stdout_error = json.loads(result.stdout).get('message') if result.stdout else None
-    if stdout_error:
-        # check tfclient error
-        err = '{}: {}'.format(message, stdout_error)
-        raise RuntimeError(err)
+    if not parse:
+        return
+
+    # add errorcheck for field 'message' if output is json
+    if result.stdout:
+        try:
+            # extract error message if result.stdout is in json format
+            stdout_error = json.loads(result.stdout).get('message')
+        except json.JSONDecodeError:
+            stdout_error = 'failed parsing JSON: "%s"' % result.stdout
+
+        if stdout_error:
+            # check tfclient error
+            err = '{}: {}'.format(message, stdout_error)
+            raise RuntimeError(err)
