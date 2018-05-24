@@ -146,8 +146,8 @@ class SALFactory():
     def get_vm(self, hypervisor_name, node):
         return VM(hypervisor_name, node)
 
-    def get_zerorobot(self, container, port=6600, telegram_bot_token=None, telegram_chat_id=0, template_repos=None, organization=None):
-        return ZeroRobot(container, port, telegram_bot_token, telegram_chat_id, template_repos, organization=organization)
+    def get_zerorobot(self, container, port=6600, telegram_bot_token=None, telegram_chat_id=0, template_repos=None, data_repo=None, config_repo=None, config_key=None, organization=None):
+        return ZeroRobot(container, port, telegram_bot_token, telegram_chat_id, template_repos, data_repo, config_repo, config_key, organization=organization)
 
     def format_ports(self, ports):
         """
