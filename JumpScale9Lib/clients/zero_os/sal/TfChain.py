@@ -209,17 +209,19 @@ class TfChainClient:
     def wallet_password(self):
         return self._wallet_password
 
+
     def create_new_wallet_address(self):
         """ Create a new wallet address """
 
         cmd = 'curl -A "Rivine-Agent" "{}/wallet/address"'.format(self.addr)
         result = self.container.client.system(cmd).get()
 
-        error_check(result, message='"Could not create a wallet address')
+        error_check(result, message='"Could not create a wallet address', parse=True)
 
         new_wallet_address = json.loads(result.stdout)
 
         return new_wallet_address['address']
+
 
     @property
     def wallet_addresses(self):
@@ -227,39 +229,44 @@ class TfChainClient:
 
         cmd = 'curl -A "Rivine-Agent" "{}/wallet/addresses"'.format(self.addr)
         result = self.container.client.system(cmd).get()
-        error_check(result, message='Could not get wallet addresses')
+        error_check(result, message='Could not get wallet addresses', parse=True)
         
         self._wallet_addresses = json.loads(result.stdout)['addresses']
         return self._wallet_addresses
+
 
     def wallet_init(self):
         """ Initialize wallet """
 
         cmd = 'curl -A "Rivine-Agent" --data "passphrase={}" "{}/wallet/init"'.format(self.wallet_password, self.addr)
         result = self.container.client.system(cmd).get()
-        error_check(result, message='Could not initialize wallet')
+        error_check(result, message='Could not initialize wallet', parse=True)
         stdout = json.loads(result.stdout)
         self._recovery_seed = stdout['primaryseed']
+
 
     def wallet_unlock(self):
         """ Unlock wallet """
         
         cmd = 'curl -A "Rivine-Agent" --data "passphrase={}" "{}/wallet/unlock"'.format(self.wallet_password, self.addr)
         result = self.container.client.system(cmd, stdin=self.wallet_password).get()
-        error_check(result, message="Could not unlock wallet")
+        error_check(result, message="Could not unlock wallet", parse=True)
+
 
     def wallet_lock(self):
         """ Lock wallet """
         
         cmd = 'curl -A "Rivine-Agent" --data " " "{}/wallet/lock"'.format(self.addr)
         result = self.container.client.system(cmd, stdin=self.wallet_password).get()
-        error_check(result, message="Could not lock wallet")
+        error_check(result, message="Could not lock wallet", parse=True)
+
 
     def wallet_amount(self):
         """
         return the amount of token and block stake in the wallet
         """
         return self._get_wallet_info()
+
 
     def discover_local_peers(self, link=None, port='23112'):
         """ List local peers in subnet @addr with open port @port
@@ -284,10 +291,12 @@ class TfChainClient:
 
         return active_peers
 
+
     def add_peer(self, addr, port='23112'):
         cmd = 'curl -A "Rivine-Agent" --data " " "{}/gateway/connect/{}:{}"'.format(self.addr, addr, port)
         result = self.container.client.system(cmd, stdin=self.wallet_password).get()
-        error_check(result, "Could not connect to a peer", parse=False)            
+        error_check(result, "Could not connect to a peer")            
+
 
     def _get_wallet_info(self):
         """ Get wallet info """
@@ -319,6 +328,7 @@ class TfChainClient:
 
     def gateway_stat(self):
         return gateway_stat(self.container, self.addr)
+
 
     def get_report(self):
         """ Get wallet report """
@@ -363,11 +373,13 @@ def gateway_stat(container, addr):
 
     return json.loads(result.stdout)
 
-def error_check(result, message='', parse=True):
+
+def error_check(result, message='', parse=False):
     """ Raise error on errorred curl call
     
         @result: object returned by curl
         @message: arbitrary error message
+        @parse: when set to True tries to parse result.stdout as json
     """
     if result.state != 'SUCCESS':
         # check if curl was executed correctly
