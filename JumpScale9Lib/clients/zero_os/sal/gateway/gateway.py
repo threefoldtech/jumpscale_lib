@@ -261,10 +261,10 @@ class Gateway:
 
         self.update_nics()
         self.restore_certificates()
-        self.configure_http()
         self.configure_fw()
         self.configure_dhcp()
         self.configure_cloudinit()
+        self.configure_http()
         self.save_certificates()
 
     def stop(self):
@@ -273,6 +273,7 @@ class Gateway:
         """
         if self.container:
             self.container.stop()
+            self._container = None
 
     def update_nics(self):
         """
