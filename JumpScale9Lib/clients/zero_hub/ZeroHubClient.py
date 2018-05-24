@@ -106,7 +106,7 @@ class ZeroHubClient(JSConfigClient):
 
         This method requires authentication (see authenticate method)
         """
-        return self.api.flist.flist_meflistpromote_get(self, srepo, sfile, destination).json()
+        return self.api.flist.flist_meflistpromote_get(srepo, sfile, destination).json()
 
     def rename(self, source, destination):
         """
