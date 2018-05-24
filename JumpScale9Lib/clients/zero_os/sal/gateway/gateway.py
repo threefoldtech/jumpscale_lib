@@ -405,7 +405,7 @@ class Gateway:
         for forward in self.portforwards:
             data['portforwards'].append({
                 'srcport': forward.source.port,
-                'srcnetwork': forward.source.ipaddress,
+                'srcnetwork': forward.source.network_name,
                 'dstport': forward.target.port,
                 'dstip': forward.target.ipaddress,
                 'protocols': forward.protocols,
@@ -443,14 +443,8 @@ class Gateway:
         """
         if self.container is None:
             raise RuntimeError('Can not configure http when gateway is not deployed')
-        servers = {'http': [], 'https': [], 'shttps': []}
-        for proxy in self.httpproxies:
-            for proxytype in proxy.types:
-                servers[proxytype].append(proxy)
-        for http_type, proxies in sorted(servers.items(), reverse=True):
-            if proxies:
-                httpserver = HTTPServer(self.container, proxies, http_type)
-                httpserver.apply_rules()
+        httpserver = HTTPServer(self.container, self.httpproxies)
+        httpserver.apply_rules()
 
     def configure_fw(self):
         """

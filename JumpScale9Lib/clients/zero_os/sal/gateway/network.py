@@ -270,7 +270,7 @@ class Networks(Collection):
             raise ValueError('Invalid network name {} should be max 15 chars and not be \'default\''.format(name))
         if networkid is None and type_ != 'default':
             raise ValueError('Missing required argument networkid for type {}'.format(type_))
-        if type_ not in ['vxlan', 'zerotier', 'vlan', 'bridge', 'default']:
+        if type_ not in ['vxlan', 'zerotier', 'vlan', 'bridge', 'default', 'passthrough']:
             raise ValueError('Invalid network type: {}'.format(type_))
         if type_ == 'vxlan':
             network = VXlanNetwork(name, networkid, self._parent)

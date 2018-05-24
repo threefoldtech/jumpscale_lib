@@ -104,7 +104,7 @@ class Nic:
 
     @type.setter
     def type(self, value):
-        if value not in ['vxlan', 'vlan', 'bridge', 'default', 'zerotier']:
+        if value not in ['vxlan', 'vlan', 'bridge', 'default', 'zerotier', 'passthrough']:
             raise ValueError('Invalid nic type {}'.format(value))
         self._type = value
 
