@@ -317,7 +317,7 @@ class ContainerClient(BaseClient):
 
 class ContainerManager():
     _nic = {
-        'type': typchk.Enum('default', 'bridge', 'zerotier', 'vlan', 'vxlan', 'macvlan'),
+        'type': typchk.Enum('default', 'bridge', 'zerotier', 'vlan', 'vxlan', 'macvlan', 'passthrough'),
         'id': typchk.Or(str, typchk.Missing()),
         'name': typchk.Or(str, typchk.Missing()),
         'hwaddr': typchk.Or(str, typchk.Missing()),
