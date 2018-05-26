@@ -89,9 +89,10 @@ class EncryptionFactory(JSBASE):
         words = "talent army language kick harbor crash quote sick twist enact neutral speak slight artefact copper because capable humble fiscal stamp claw salute credit horse"
         secret = j.data.encryption.mnemonic_to_seed(words,"1234")
 
-
         m=self.mnemonic
-        seed = m.to_seed(words)
-        m.to_mnemonic(s)
-        
-        from IPython import embed;embed(colors='Linux')
+
+        #is not very good bin string, but good to test because is readable
+        h=b"1234567890123456"
+        words2 = m.to_mnemonic(h)
+        h2 = m.to_entropy(words2)
+        assert h==h2

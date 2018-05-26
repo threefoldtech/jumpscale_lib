@@ -28,6 +28,8 @@ import itertools
 import os
 import sys
 import unicodedata
+import hashlib, re
+from binascii import hexlify, unhexlify
 from pbkdf2 import PBKDF2
 
 PBKDF2_ROUNDS = 2048
@@ -131,7 +133,7 @@ class Mnemonic(object):
         for i in range(checksumLengthBits):
             if concatBits[entropyLengthBits + i] != hashBits[i]:
                 raise ValueError('Failed checksum.')
-        return entropy
+        return bytes(entropy)
 
     def to_mnemonic(self, data):
         if len(data) not in [16, 20, 24, 28, 32]:
