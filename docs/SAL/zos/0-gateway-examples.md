@@ -206,3 +206,10 @@ j.data.serializer.json.dump('mygw.json', gw.to_dict())
 gw = node.primitives.create_gateway(name="mygw")
 gw.from_dict(j.data.serializer.json.load('mygw.json'))
 ```
+
+```
+!!!
+date = "2018-05-20"
+tags = []
+title = "0 Gateway Examples"
+```

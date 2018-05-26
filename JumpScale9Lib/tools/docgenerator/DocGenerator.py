@@ -190,7 +190,7 @@ class DocGenerator(JSBASE):
             self.macros = loadmodule("macros", self._macroCodepath)
             self._macroPathsDone.append(path)
 
-    def load(self, pathOrUrl=""):
+    def load(self, pathOrUrl="",name=""):
         """
 
         js9 'j.tools.docgenerator.load()'
@@ -217,29 +217,31 @@ class DocGenerator(JSBASE):
         else:
             path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
 
+        if name=="":
+            raise RuntimeError("name cannot be empty")
+
         for docDir in j.sal.fs.listFilesInDir(path, recursive=True, filter=".docs"):
             if docDir not in self.docsites:
                 self.logger.debug("found doc dir:%s" % docDir)
-                ds = DocSite(path=docDir)
-                self.docsites[docDir] = ds
+                ds = DocSite(path=docDir,name=name)
+                self.docsites[name] = ds
 
     def generate_examples(self, start=True):
         """
         js9 'j.tools.docgenerator.generate_examples()'
         """
-        self.load(pathOrUrl="https://github.com/Jumpscale/docgenerator/tree/master/examples")
-        self.generate(start=start)
+        self.generate(url="https://github.com/Jumpscale/docgenerator/tree/master/examples/example2",start=start,name="example2")
 
     def generate_jsdoc(self, start=True):
         """
         js9 'j.tools.docgenerator.generate_jsdoc()'
         """        
-        self.load(pathOrUrl="https://github.com/Jumpscale/core9/")
-        self.load(pathOrUrl="https://github.com/Jumpscale/lib9")
-        self.load(pathOrUrl="https://github.com/Jumpscale/prefab9")
+        self.load(pathOrUrl="https://github.com/Jumpscale/core9/",name="core9")
+        self.load(pathOrUrl="https://github.com/Jumpscale/lib9",name="lib9")
+        self.load(pathOrUrl="https://github.com/Jumpscale/prefab9",name="prefab9")
         self.generate(start=start)
 
-    def generate(self, url=None, start=True):
+    def generate(self, name, url=None, start=True):
         """
         will load all info & process the pre-configured output
 
@@ -247,9 +249,13 @@ class DocGenerator(JSBASE):
 
         """
         if url is not None:
-            self.load(pathOrUrl=url)
+            self.load(pathOrUrl=url,name=name)
         if self.docsites == {}:
-            self.load()
+            # self.load(template=template)
+            raise RuntimeError("no docsites found, did not specify right url")
+
+        for path, ds in self.docsites.items():
+            ds.process()
         for path, ds in self.docsites.items():
             ds.write()
         if start:

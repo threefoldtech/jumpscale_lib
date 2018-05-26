@@ -53,3 +53,10 @@ Internally this will create a namespace suitable for use as vdisk, a filesystem 
 disk = node.primitives.create_disk('mydisk', zdb, mountpoint='/mnt', filesystem='ext4', size=10) 
 disk.deploy()
 ```
+
+```
+!!!
+date = "2018-05-20"
+tags = []
+title = "0 Db Examples"
+```

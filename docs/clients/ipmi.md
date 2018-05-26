@@ -54,3 +54,10 @@ ipmi_cl.power_cycle()
 print(ipmi_cl.power_status())
 # Out: on
 ```
+
+```
+!!!
+date = "2018-05-20"
+tags = []
+title = "Ipmi"
+```

@@ -95,3 +95,9 @@ iyo_cl.api.session.headers.update({"Authorization": 'bearer {}'.format(<jwt>)})
 ### Get an updated version of the auto-generated client code
 
 The auto-generated client can be copied from https://github.com/itsyouonline/identityserver/tree/master/clients/python/itsyouonline
+```
+!!!
+date = "2018-05-20"
+tags = []
+title = "IYO Client"
+```

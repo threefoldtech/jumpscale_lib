@@ -112,3 +112,9 @@ j.tools.atom.generateJumpscaleAutoCompletion()
 ```
 
 It will generate a full stub of JumpScale framework that can be used by jedi (the most common code completion library).
+```
+!!!
+date = "2018-05-20"
+tags = ["howto"]
+title = "Atom"
+```

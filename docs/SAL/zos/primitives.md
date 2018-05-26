@@ -29,3 +29,10 @@ Currently we support two virtual machine primitives being [Ubuntu](https://www.u
 Our Ubuntu image comes preinstalled with SSH server and [zerotier](https://zerotier.com/) binaries, this allows you to easily access your virtual machines from anywhere.
 
 [Examples](virtual-machine-examples.md)
+
+```
+!!!
+date = "2018-05-20"
+tags = []
+title = "Primitives"
+```

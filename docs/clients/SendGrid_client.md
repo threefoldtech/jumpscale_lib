@@ -27,3 +27,9 @@ j.clients.sendgrid
         API_KEY="This is the value of my API KEY"
         send(SENDER, RECIPENT, SUBJECT, MESSAGE_TYPE, MESSAGE, API_KEY)
     ```
+```
+!!!
+date = "2018-05-20"
+tags = []
+title = "SendGrid Client"
+```

@@ -56,3 +56,9 @@ export SECRET="..."
 export JWT=$(curl -d 'grant_type=client_credentials&client_id='"$APP_ID"'&client_secret='"$SECRET"'&response_type=id_token' https://itsyou.online/v1/oauth/access_token)
 echo $JWT
 ```
+```
+!!!
+date = "2018-05-20"
+tags = []
+title = "JWT For OVC"
+```

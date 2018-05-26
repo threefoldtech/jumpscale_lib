@@ -120,3 +120,10 @@ Adding authorized key in our virtual machine
 key = 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCXIQPB...'
 vm.configs.add('sshkey', '/root/.ssh/authorized_keys', key)
 ```
+
+```
+!!!
+date = "2018-05-20"
+tags = []
+title = "Virtual Machine Examples"
+```

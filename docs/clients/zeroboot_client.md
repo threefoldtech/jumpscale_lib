@@ -252,3 +252,9 @@ To specfiy a custom boot link to a host:
 ```python
 host.configure_ipxe_boot(boot_url)
 ```
+```
+!!!
+date = "2018-05-20"
+tags = []
+title = "Zeroboot Client"
+```

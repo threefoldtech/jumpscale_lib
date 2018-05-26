@@ -205,3 +205,10 @@ When the story would be closed an the bot would run again, the generated list wi
 On Github, it would look something like:
 
 !["Task issue with closed story"](images/storybot_4.png "Task issue with closed story")
+
+```
+!!!
+date = "2018-05-20"
+tags = []
+title = "StoryBot"
+```
