@@ -122,11 +122,18 @@ class Container():
                     self._identity = self.client.zerotier.info()['secretIdentity']
         return self._identity
 
-    def default_ip(self, interface='nat0'):
+    def default_ip(self, interface=None):
         """
         Returns the ip if the container has a default nic
         :return: netaddr.IPNetwork
         """
+        if interface is None:
+            for route in self.client.ip.route.list():
+                if route['gw']:
+                    interface = route['dev']
+                    break
+            else:
+                raise LookupError('Could not find default interface')
         for ipaddress in self.client.ip.addr.list(interface):
             ip = netaddr.IPNetwork(ipaddress)
             if ip.version == 4:

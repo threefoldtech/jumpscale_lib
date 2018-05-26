@@ -137,7 +137,7 @@ class HTTPProxy:
         self.host = host
         if types:
             for proxy_type in types:
-                if proxy_type not in ['http', 'https']:
+                if proxy_type not in ['http', 'https', 'shttps']:
                     raise ValueError('Invalid type {} for http proxy'.format(proxy_type))
         if types is None:
             types = ['http', 'https']
@@ -223,15 +223,15 @@ class Gateway:
             network.hosts.pool_start = dhcpserver.get('poolStart', network.hosts.pool_start)
             for host in dhcpserver['hosts']:
                 dhcphost = network.hosts.add(host['hostname'], host['ipaddress'], host['macaddress'])
-                if host['cloudinit']['userdata']:
+                if host.get('cloudinit', {}).get('userdata'):
                     dhcphost.cloudinit.userdata = yaml.load(host['cloudinit']['userdata'])
-                if host['cloudinit']['metadata']:
+                if host.get('cloudinit', {}).get('metadata'):
                     dhcphost.cloudinit.metadata = yaml.load(host['cloudinit']['metadata'])
         for forward in data['portforwards']:
             self.portforwards.add(forward['name'],
                                   (forward['srcnetwork'], forward['srcport']),
                                   (forward['dstip'], forward['dstport']),
-                                  forward['protocols'])
+                                  forward.get('protocols'))
         for proxy in data['httpproxies']:
             self.httpproxies.add(proxy['name'], proxy['host'], proxy['destinations'], proxy['types'])
 
@@ -261,10 +261,10 @@ class Gateway:
 
         self.update_nics()
         self.restore_certificates()
-        self.configure_http()
         self.configure_fw()
         self.configure_dhcp()
         self.configure_cloudinit()
+        self.configure_http()
         self.save_certificates()
 
     def stop(self):
@@ -273,6 +273,7 @@ class Gateway:
         """
         if self.container:
             self.container.stop()
+            self._container = None
 
     def update_nics(self):
         """
@@ -345,20 +346,22 @@ class Gateway:
                         privateip = str(network.ip.cidr)
                     ztnetwork.member_add(ztpublic, self.name, private_ip=privateip)
             nics.append(network.to_dict(forcontainer=True))
-            #zerotierbridge = nic.pop('zerotierbridge', None)
-            #if zerotierbridge:
+            # zerotierbridge = nic.pop('zerotierbridge', None)
+            # if zerotierbridge:
             #    contnics.append(
             #        {
             #            'id': zerotierbridge['id'], 'type': 'zerotier',
             #            'name': 'z-{}'.format(nic['name']), 'token': zerotierbridge.get('token', '')
             #        })
-        self._container = self.node.containers.create(self._container_name(), self.flist, hostname=self.name, nics=nics, privileged=True, identity=self.zt_identity)
+        self._container = self.node.containers.create(self._container_name(), self.flist, hostname=self.name, nics=nics,
+                                                      privileged=True, identity=self.zt_identity)
         return self._container
 
     def to_dict(self):
         """
         Convert the gateway object to a dict.
-        :return: a dict representation of the gateway matching the schema of the gateway template https://github.com/zero-os/0-templates/tree/master/templates/gateway/schema.capnp
+        :return: a dict representation of the gateway matching the schema of the gateway template
+                 https://github.com/zero-os/0-templates/tree/master/templates/gateway/schema.capnp
         :rtype: dict
         """
         data = {
@@ -403,7 +406,7 @@ class Gateway:
         for forward in self.portforwards:
             data['portforwards'].append({
                 'srcport': forward.source.port,
-                'srcnetwork': forward.source.ipaddress,
+                'srcnetwork': forward.source.network_name,
                 'dstport': forward.target.port,
                 'dstip': forward.target.ipaddress,
                 'protocols': forward.protocols,
@@ -441,16 +444,8 @@ class Gateway:
         """
         if self.container is None:
             raise RuntimeError('Can not configure http when gateway is not deployed')
-        servers = {'http': [], 'https': []}
-        for proxy in self.httpproxies:
-            if 'http' in proxy.types:
-                servers['http'].append(proxy)
-            if 'https' in proxy.types:
-                servers['https'].append(proxy)
-        for http_type, proxies in sorted(servers.items(), reverse=True):
-            if proxies:
-                httpserver = HTTPServer(self.container, proxies, http_type)
-                httpserver.apply_rules()
+        httpserver = HTTPServer(self.container, self.httpproxies)
+        httpserver.apply_rules()
 
     def configure_fw(self):
         """
@@ -646,4 +641,3 @@ class Gateway:
             #     ip.link.up(nicname)
             #     ip.link.up(linkname)
             #     ip.link.up(zerotiername)
-

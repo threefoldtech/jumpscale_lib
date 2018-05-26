@@ -20,10 +20,10 @@ class ZeroHubClient(JSConfigClient):
                                 data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         self.token = self.config.data['token_']
         self.username = self.config.data['username']
-        self.client = ZHubClient(self.config.data.get("url", "https://staging.hub.gig.tech/api"))
+        self.client = ZHubClient(self.config.data.get("url", "https://hub.gig.tech/api"))
         self.api = self.client.api
 
-    def authentificate(self):
+    def authenticate(self):
         """
         This is fastest way to authentifcate yourself.
 
@@ -74,16 +74,46 @@ class ZeroHubClient(JSConfigClient):
         Upload an archive (.tar.gz) to the hub, this archive will be converted to an flist
         automatically after being uploaded.
 
-        This method require authentification (see authentificate method)
+        This method requires authentication (see authenticate method)
         """
-        return self.api.flist.flist_meupload_post({'file': open(filename, 'rb')}, content_type='multipart/form-data')
+        with open(filename, 'rb') as f:
+            value = self.api.flist.flist_meupload_post({'file': f}, content_type='multipart/form-data')
+
+        return value
+
+    def merge(self, target, flists):
+        """
+        Merge multiple flists (set via a list of flists) and store the merged flist
+        into 'target'
+
+        Example: merge('mymerge', ["maxux/flist1", "maxux/flist2"])
+                 This will merge:
+                  - maxux/flist1.flist
+                  - maxux/flist2.flist
+                 together and store it in "mymerge.flist"
+
+        This method requires authentication (see authenticate method)
+        """
+        return self.api.flist.flist_memerge_post(target, flists).json()
+
+    def promote(self, srepo, sfile, destination):
+        """
+        Promote (fork) one flist from 'srepo/sfile' to 'destination'
+        This is used to cross-copy flist from one repository to another one, if you
+        have rights.
+        Please note, the destination is a flist name, and this will end in your repository.
+        Please ensure the current user is well set.
+
+        This method requires authentication (see authenticate method)
+        """
+        return self.api.flist.flist_meflistpromote_get(srepo, sfile, destination).json()
 
     def rename(self, source, destination):
         """
         Rename one of your flist from 'source' to 'destination'
         You can only change the name of the flist, not the owner (repository)
 
-        This method require authentification (see authentificate method)
+        This method requires authentication (see authenticate method)
         """
         return self.api.flist.flist_meflistrenametarget_get(source, destination).json()
 
@@ -94,7 +124,7 @@ class ZeroHubClient(JSConfigClient):
         This is useful when you want to upload multiple version of a flist and
         pointing to the last version, without overwriting the flist
 
-        This method require authentification (see authentificate method)
+        This method requires authentication (see authenticate method)
         """
         return self.api.flist.flist_meflistlinklinkname_get(source, linkname).json()
 
@@ -102,7 +132,7 @@ class ZeroHubClient(JSConfigClient):
         """
         Delete one of your flist. Warning, this action cannot be reverted.
 
-        This method require authentification (see authentificate method)
+        This method requires authentication (see authenticate method)
         """
         return self.api.flist.flist_meflist_delete(filename).json()
 

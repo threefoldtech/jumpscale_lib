@@ -6,7 +6,7 @@ class ZeroRobot:
     Zero robot
     """
 
-    def __init__(self, container, port=6600, telegram_bot_token=None, telegram_chat_id=0, template_repos=None, data_repo=None, config_repo=None, organization=None):
+    def __init__(self, container, port=6600, telegram_bot_token=None, telegram_chat_id=0, template_repos=None, data_repo=None, config_repo=None, config_key=None, organization=None):
         self.id = 'zbot.{}'.format(container.name)
         self.container = container
         self.port = port
@@ -16,6 +16,7 @@ class ZeroRobot:
         self.data_repo = data_repo or '/opt/code/zrobot'
         self.config_repo = config_repo or '/opt/code/zrobot/config'
         self.organization = organization
+        self.config_key = config_key
 
     def start(self, timeout=120):
         if self.is_running():
@@ -29,6 +30,9 @@ class ZeroRobot:
             'config': self.config_repo
         }
         cmd_line = "/usr/local/bin/zrobot server start --listen :{port} --data-repo {data} --config-repo {config}".format(**kwargs)
+
+        if self.config_key:
+            cmd_line += " --config-key %s" % self.config_key
 
         for template_repo in self.template_repos:
             cmd_line += " --template-repo %s" % template_repo

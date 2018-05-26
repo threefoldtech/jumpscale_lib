@@ -304,6 +304,21 @@ class Node:
                                    mount['opts']))
         return allmounts
 
+    def get_mount_path(self, path):
+        """
+        Get the parent mountpoint for a path
+
+        :param path: path you want to retreive the mountpoitn for
+        :type path: str
+        :rtype: str
+        :return: path to the mountpoint
+        """
+        bestmatch = "/"
+        for mount in self.list_mounts():
+            if mount.mountpoint in path and len(mount.mountpoint) > len(bestmatch):
+                bestmatch = mount.mountpoint
+        return bestmatch
+
     def is_running(self, timeout=30):
         state = False
         start = time.time()

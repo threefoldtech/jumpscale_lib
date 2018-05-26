@@ -72,9 +72,15 @@ class Capacity:
         :return: dict object ready for capacity registration
         :rtype: dict
         """
+        interface, _ = j.sal.nettools.getDefaultIPConfig()
+        mac = j.sal.nettools.getMacAddress(interface)
+        node_id = mac.replace(':', '')
+        if not node_id:
+            raise RuntimeError("can't detect node ID")
+
         report = self.report()
         capacity = dict(
-            node_id=self._node.name,
+            node_id=node_id,
             location=report.location,
             cru=report.CRU,
             mru=report.MRU,

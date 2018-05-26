@@ -50,10 +50,10 @@ public = gw.networks.add(name='public', type_='default')
 We first need to prepare a bridge to hang our second interface on.
  ```python
 # create bridge
- node.client.bridge.create('publicbridge')
-#attache eth1 to bridge
- node.client.system('ip l s dev eth1 master publicbridge')
- ```
+node.client.bridge.create('publicbridge')
+#attach eth1 to bridge
+node.client.bridge.nid_add('publicbridge', 'eth1')
+```
 
 After this we can attached our public network to the bridge
 ```python

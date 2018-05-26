@@ -37,7 +37,7 @@ class Primitives:
             raise RuntimeError('Invalid VM type {}'.format(type_))
         return klass(**kwargs)
 
-    def create_disk(self, name, zdb, mountpoint=None, filesystem='ext4', size=10):
+    def create_disk(self, name, zdb, mountpoint=None, filesystem='ext4', size=10, label=None):
         """
         Create a disk on zdb and create filesystem
 
@@ -49,8 +49,12 @@ class Primitives:
         :type filesystem: str
         :param size: Size of the disk in GiB
         :type size: int
+        :param label: Label for the disk defaults to name
+        :type label: str
+        :return: Returns ZDBDisk
+        :rtype: ZDBDisk
         """
-        return ZDBDisk(zdb, name, mountpoint, filesystem, size)
+        return ZDBDisk(zdb, name, mountpoint, filesystem, size, label)
 
     def create_gateway(self, name):
         """

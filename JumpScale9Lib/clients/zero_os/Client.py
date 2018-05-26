@@ -21,6 +21,7 @@ from .Nft import Nft
 from .Response import Response
 from .ZerotierManager import ZerotierManager
 from .WebManager import WebManager
+from .RTInfoManager import RTInfoManager
 
 DefaultTimeout = 10  # seconds
 
@@ -67,6 +68,7 @@ class Client(BaseClient, JSConfigClientBase):
         self._aggregator = AggregatorManager(self)
         self._jwt_expire_timestamp = 0
         self._web = WebManager(self)
+        self._rtinfo = RTInfoManager(self)
 
     @property
     def _redis(self):
@@ -191,6 +193,14 @@ class Client(BaseClient, JSConfigClientBase):
         :return:
         """
         return self._web
+
+    @property
+    def rtinfo(self):
+        """
+        RTInfo manager
+        :return:
+        """
+        return self._rtinfo
 
     def raw(self, command, arguments, queue=None, max_time=None, stream=False, tags=None, id=None):
         """
