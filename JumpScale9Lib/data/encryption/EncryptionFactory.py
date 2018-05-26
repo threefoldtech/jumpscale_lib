@@ -86,5 +86,12 @@ class EncryptionFactory(JSBASE):
         assert secret == b'b \xf8MS$\xe4\x8aV\x8dDk\x0c\x87\xda\xc3\x0b8\xac\xe39\x98\xdf\xa2\xc5P\xdd^\x90.\riq\xc4\xf18\x05(\x87u\xb3\xf3\xac\xf7\xa6C\x05\xe9\x94\xe7\x01\xfb2\xc9B\x14\xa8%S\n\xa7n%\xe7'
 
 
+        words = "talent army language kick harbor crash quote sick twist enact neutral speak slight artefact copper because capable humble fiscal stamp claw salute credit horse"
+        secret = j.data.encryption.mnemonic_to_seed(words,"1234")
+
+
         m=self.mnemonic
+        seed = m.to_seed(words)
+        m.to_mnemonic(s)
+        
         from IPython import embed;embed(colors='Linux')
