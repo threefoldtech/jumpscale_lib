@@ -334,6 +334,22 @@ class UnixSystem(JSBASE):
 
         return j.sal.process.executeDaemon(**kwargs)
 
+    def _mkarg(self, string):
+        """
+        Converts string to a shell command argument
+        Note:
+            Removed from python commands library, implementation found at https://hg.python.org/cpython/file/67318d3fa6dc/Lib/commands.py
+        """
+        if '\'' not in string:
+            return ' \'' + string + '\''
+        s = ' "'
+        for c in string:
+            if c in '\\$"`':
+                s = s + '\\'
+            s = s + c
+        s = s + '"'
+        return s
+
     def _prepareCommand(self, command, username):
         self.logger.debug('Attempt to run %s as user %s' % (command, username))
         try:
@@ -349,7 +365,7 @@ class UnixSystem(JSBASE):
         if not j.sal.fs.exists(subin):
             raise j.exceptions.RuntimeError('%s not found on this system, I need it there' % subin)
 
-        command = '%s --login --command %s %s' % (subin, subprocess.mkarg(command), username)
+        command = '%s --login --command %s %s' % (subin, self._mkarg(command), username)
 
         return command
 
