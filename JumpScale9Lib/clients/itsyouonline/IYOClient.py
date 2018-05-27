@@ -76,7 +76,7 @@ class IYOClient(JSConfigBase):
         expires = j.clients.itsyouonline.jwt_expire_timestamp(jwt)
         self.cache.set(key, [jwt, expires])
 
-    def jwt_get(self, validity=None, refreshable=False, scope=None, use_cache=False):
+    def jwt_get(self, validity=None, refreshable=True, scope=None, use_cache=False):
         """Get a a JSON Web token for an ItsYou.online organization or user.
 
         :param validity: time in seconds after which the JWT will become invalid, defaults to 3600
