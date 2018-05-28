@@ -209,7 +209,7 @@ class RivineWallet:
             coinoutputs = txn_info.get('rawtransaction', {}).get('data', {}).get('coinoutputs', [])
             if coinoutputs:
                 for index, utxo in enumerate(coinoutputs):
-                    if utxo.get('unlockhash') == address:
+                    if utxo.get('condition', {}).get('data', {}).get('unlockhash') == address:
                         logger.info('Found transaction output for address {}'.format(address))
                         self._unspent_coins_outputs[txn_info['coinoutputids'][index]] = utxo
 
@@ -262,15 +262,20 @@ class RivineWallet:
             if input_value >= required_funds:
                 break
             transaction.add_input({'parentid': address,
-                                    'unlockconditions': self._keys[unspent_coin_output['unlockhash']].unlockconditions})
+                                    'unlockconditions': self._keys[unspent_coin_output['condition']['data']['unlockhash']].unlockconditions})
             input_value = int(unspent_coin_output['value'])
 
         for txn_input in transaction.inputs:
-            if self._unspent_coins_outputs[txn_input['parentid']]['unlockhash'] not in self._keys.keys():
+            if self._unspent_coins_outputs[txn_input['parentid']]['condition']['data']['unlockhash'] not in self._keys.keys():
                 raise NonExistingOutputError('Trying to spend unexisting output')
 
         transaction.add_output({'value': amount,
-                                'unlockhash': recipient})
+                                'condition':{
+                                    'type': 1,
+                                    'data': {
+                                        'unlockhash': recipient}
+                                    }
+                                })
 
         # we need to check if the sum of the inputs is more than the required fund and if so, we need
         # to send the remainder back to the original user
@@ -280,13 +285,18 @@ class RivineWallet:
             for address in self._keys.keys():
                 used = False
                 for unspent_coin_output in self._unspent_coins_outputs.values():
-                     if unspent_coin_output['unlockhash'] == address:
+                     if unspent_coin_output['condition']['data']['unlockhash'] == address:
                          used = True
                          break
                 if used is True:
                     continue
                 transaction.add_output({'value': remainder,
-                                        'unlockhash': address})
+                                        'condition':{
+                                            'type': 1,
+                                            'data': {
+                                                'unlockhash': address
+                                            }
+                                        }})
                 break
 
         # add minerfee to the transaction
@@ -520,30 +530,14 @@ class UnlockConditions:
         This will return a presentation of the unlocker attribute of the transaction as a singleSingatureInputLock
         """
         if self._json is None:
-            public_keys = []
-            condition = {
-                'publickey': '{}:{}'.format(self._keys[0]['algorithm'],
-                                            self._keys[0]['key'].hex())
-            }
+            public_key = '{}:{}'.format(self._keys[0]['algorithm'], self._keys[0]['key'].hex())
             self._json = {
                 'type': 1,
-                'condition': condition,
-                'fulfillment': {
+                'data':{
+                    'publickey': public_key, 
                     'signature': ''
                 }
             }
-
-            # for pkey in self._keys:
-            #     public_keys.append({
-            #         'algorithm': pkey['algorithm'],
-            #         'key': base64.b64encode(pkey['key']).decode('ascii')
-            #     })
-            #
-            # self._json = {
-            #     'timelock': self._blockheight,
-            #     'publickeys': public_keys,
-            #     'signaturesrequired': self._nr_required_sigs
-            # }
 
         return self._json
 
@@ -636,25 +630,20 @@ class Transaction:
         """
         if self._json is None:
             self._json = {
-            'version': 0,
+            'version': 1,
             'data': {}
             }
             inputs = []
             for idx, input_ in enumerate(self._inputs):
-                unlocker_json = input_['unlockconditions'].json
-                unlocker_json['fulfillment']['signature'] = self._signatrues[idx]['signature']
+                fulfillment = input_['unlockconditions'].json
+                fulfillment['data']['signature'] = self._signatrues[idx]['signature']
                 inputs.append({
                     'parentid': input_['parentid'],
-                    'unlocker': unlocker_json,
+                    'fulfillment': fulfillment,
                 })
             self._json['data']['coininputs'] = inputs
             outputs = []
-            for output in self._outputs:
-                outputs.append({
-                    'value': str(output['value']),
-                    'unlockhash': output['unlockhash'],
-                })
-            self._json['data']['coinoutputs'] = outputs
+            self._json['data']['coinoutputs'] = self._outputs
             self._json['data']['minerfees'] = [str(self._minerfee)]
             if self._arbitrary_data is not None:
                 arbitrary_data_json = []
@@ -727,7 +716,7 @@ class Transaction:
             b_array.extend(bytearray([1]))
             # check if the unlockhash already exist in the caching map, otherwise generate
             # an unlock hash without the checksum
-            unlockhash = unlockhash_address_map.get(output['unlockhash'], get_unlockhash_from_address(output['unlockhash']))
+            unlockhash = unlockhash_address_map.get(output['condition']['data']['unlockhash'], get_unlockhash_from_address(output['condition']['data']['unlockhash']))
             b_array.extend(bytearray.fromhex(unlockhash))
 
         # for now we only set the nubmer of minerfees to 1
