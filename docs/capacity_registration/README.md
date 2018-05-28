@@ -1,13 +1,21 @@
-# Zero-OS capacity registration tool
+# Zero-OS capacity registration tools
 
-This tool is intended to be use to register zero-os node capacity onto a centralized capacity databases.
+This set of tools is intended to be use to register zero-os node capacity onto a centralized capacity databases.
 This is an temporary solution that will be replace with blockchain once we have it ready to support capacity registration.
 
 ## Specifications
 Current database used to store the capacity will be a cluster of mongodb. This should give us enough resilience and availability to survive until we can use the blockchain.
+This database will be expose using a small REST API server that also host a small UI so people can check the current registered capacity
+
+### Architecture
+So there are 3 major component in this architecture:
+- mongo cluster
+- REST API server (https://github.com/Jumpscale/lib9/tree/development/JumpScale9Lib/servers/grid_capacity)
+ - talk to the mongo database using a SAL
+- REST API client (https://github.com/Jumpscale/lib9/tree/development/JumpScale9Lib/clients/grid_capacity)
 
 ### Types:
-The interface of the tool expose 2 Types:
+They are 2 types register in the database:
 
 - Node capacity
 ```yaml
@@ -37,6 +45,8 @@ wallet_addresses: list of tf wallet addresses
 
 
 ### Methods:
+See https://github.com/Jumpscale/lib9/blob/development/JumpScale9Lib/servers/grid_capacity/server/models.py
+
 For node capacity:
 - def register(capacity): register node capacity
 - def list(country=None): list all node capacity optionally filter per country
@@ -49,24 +59,4 @@ For Farmers:
 - def get(id): get a specific farmer detail
 
 ## Usage example:
-```python
-# get the registration SAL 
-register = j.tools.capacity.registration
-
-# create a new farmer and register it to the database
-farmer = register.farmers.create('name', 'iyo', ['addr1','addr2'])
-register.farmer.register(farmer)
-
-# get capacity report from the zero-os node
-# you will never have to do this manually, the node robot will do this for you
-node = j.clients.zero_os.sal.node_get('mynode')
-capacity = node.capacity.get()
-capacity.farmer = farmer.id
-# register the capacity to the database
-register.nodes.register(capacity)
-
-# search for some node that provide capacity with a minimum of 2 CRU and 10 HRU and located in belgium
-robot_urls = []
-for capacity in register.nodes.search(CRU=2, HRU=10, country='belgium'):
-    robot_url.append(capacity.robot_address)
-```
+See how the client is used in the node template: https://github.com/Jumpscale/lib9/blob/development/JumpScale9Lib/clients/zero_os/sal/Capacity.py#L73
