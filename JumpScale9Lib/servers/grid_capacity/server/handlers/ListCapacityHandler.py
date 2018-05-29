@@ -12,4 +12,4 @@ def ListCapacityHandler():
     hru = request.values.get('hru')
     sru = request.values.get('sru')
     nodes = NodeRegistration.search(country, mru, cru, hru, sru).to_json()
-    return nodes, 200
+    return nodes, 200, {'Content-type': 'application/json'}

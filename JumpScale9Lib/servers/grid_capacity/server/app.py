@@ -15,12 +15,10 @@ configure(app, settings.IYO_CLIENTID, settings.IYO_SECRET, settings.IYO_CALLBACK
 db.init_app(app)
 
 
-from .farmers_api import farmers_api
+from .api_api import api_api
 from .frontend_blueprint import frontend_bp
-from .nodes_api import nodes_api
 
-app.register_blueprint(nodes_api)
-app.register_blueprint(farmers_api)
+app.register_blueprint(api_api)
 app.register_blueprint(frontend_bp)
 j.clients.mongoengine.get('capacity', interactive=False)
 

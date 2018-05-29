@@ -44,4 +44,4 @@ def RegisterCapacityHandler():
     capacity = Capacity(**inputs)
     capacity.save()
 
-    return capacity.to_json()
+    return capacity.to_json(), 201, {'Content-type': 'application/json'}

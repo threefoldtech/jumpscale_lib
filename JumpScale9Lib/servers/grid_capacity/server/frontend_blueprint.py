@@ -42,7 +42,7 @@ def capacity():
         form['country'] = request.args.get('country') or ''
 
         form['page'] = int(request.args.get('page') or 1)
-        form['per_page'] = int(request.args.get('pre_page') or 50)
+        form['per_page'] = int(request.args.get('pre_page') or 20)
 
         nodes = NodeRegistration.search(**form)
 
@@ -59,3 +59,8 @@ def farmers():
 def farmer_registered():
     jwt = session['iyo_jwt']
     return render_template('farm_registered.html', jwt=jwt)
+
+
+@frontend_bp.route('/api', methods=['GET'])
+def api_index():
+    return render_template('api.html')
