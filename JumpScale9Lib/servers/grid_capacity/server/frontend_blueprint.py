@@ -41,7 +41,10 @@ def capacity():
             form['hru'] = int(hru)
         form['country'] = request.args.get('country') or ''
 
-        nodes = list(NodeRegistration.search(**form))
+        form['page'] = int(request.args.get('page') or 1)
+        form['per_page'] = int(request.args.get('pre_page') or 50)
+
+        nodes = NodeRegistration.search(**form)
 
     return render_template('capacity.html', nodes=nodes, form=form, countries=countries)
 

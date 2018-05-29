@@ -3,6 +3,7 @@
 from ..models import NodeRegistration
 from flask import request
 
+
 def ListCapacityHandler():
     nodes = []
     country = request.values.get('country')

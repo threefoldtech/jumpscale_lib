@@ -1,9 +1,13 @@
+from flask_mongoengine import MongoEngine, Pagination
 from mongoengine import (Document, EmbeddedDocument, EmbeddedDocumentField,
-                         FloatField, ListField, PointField,
-                         ReferenceField, StringField)
+                         FloatField, ListField, PointField, ReferenceField,
+                         StringField)
+
+db = MongoEngine()
 
 
 class NodeRegistration:
+
     @staticmethod
     def list(country=None):
         """
@@ -38,7 +42,7 @@ class NodeRegistration:
         return capacity[0]
 
     @staticmethod
-    def search(country=None, mru=None, cru=None, hru=None, sru=None):
+    def search(country=None, mru=None, cru=None, hru=None, sru=None, **kwargs):
         """
         search based on country and minimum resource unit available
 
@@ -66,7 +70,14 @@ class NodeRegistration:
             query['hru__gte'] = hru
         if sru:
             query['sru__gte'] = sru
-        return Capacity.objects(**query)
+
+        nodes = Capacity.objects(**query)
+        page = kwargs.get('page')
+        per_page = kwargs.get('per_page', 50)
+        if page:
+            return Pagination(nodes, page, per_page)
+
+        return nodes
 
     @staticmethod
     def all_countries():
@@ -84,6 +95,7 @@ class NodeRegistration:
 
 
 class FarmerRegistration:
+
     @staticmethod
     def create(name, iyo_account, wallet_addresses=None):
         return Farmer(name=name, iyo_account=iyo_account, wallet_addresses=wallet_addresses)
@@ -120,7 +132,7 @@ class Location(EmbeddedDocument):
     latitude = FloatField()
 
 
-class Farmer(Document):
+class Farmer(db.Document):
 
     """
     Represent a threefold Farmer
@@ -130,7 +142,7 @@ class Farmer(Document):
     wallet_addresses = ListField(StringField())
 
 
-class Capacity(Document):
+class Capacity(db.Document):
     """
     Represent the ressource units of a zero-os node
     """
