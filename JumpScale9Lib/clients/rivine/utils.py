@@ -22,11 +22,11 @@ def big_int_to_binary(big_int):
     return result
 
 
-def int_to_binary(value):
+def int_to_binary(value, length=8):
     """
     Convert an int to a binary format
     """
-    return value.to_bytes(8, byteorder='little')
+    return value.to_bytes(length, byteorder='little')
 
 
 def get_unlockhash_from_address(address):
