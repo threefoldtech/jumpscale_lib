@@ -1,7 +1,7 @@
 from flask_mongoengine import MongoEngine, Pagination
 from mongoengine import (Document, EmbeddedDocument, EmbeddedDocumentField,
-                         FloatField, ListField, PointField, ReferenceField,
-                         StringField)
+                         FloatField, IntField, ListField, PointField,
+                         ReferenceField, StringField)
 
 db = MongoEngine()
 
@@ -155,6 +155,7 @@ class Capacity(db.Document):
     sru = FloatField()
     robot_address = StringField()
     os_version = StringField()
+    uptime = IntField()
 
 
 class FarmerNotFoundError(KeyError):

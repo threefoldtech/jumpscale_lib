@@ -5,8 +5,7 @@ from .Error import Error
 from .Farmer import Farmer
 from .Location import Location
 
-from .apifarmers_service import ApifarmersService
-from .apinodes_service import ApinodesService
+from .api_service import ApiService
 
 from .http_client import HTTPClient
 
@@ -14,6 +13,5 @@ from .http_client import HTTPClient
 class Client:
     def __init__(self, base_uri=""):
         http_client = HTTPClient(base_uri)
-        self.apifarmers = ApifarmersService(http_client)
-        self.apinodes = ApinodesService(http_client)
+        self.api = ApiService(http_client)
         self.close = http_client.close

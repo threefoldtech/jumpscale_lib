@@ -1,5 +1,6 @@
 import os
 import sys
+import datetime
 
 from flask import Flask, jsonify
 from js9 import j
@@ -29,6 +30,10 @@ def internal_error(err):
     eco = j.core.errorhandler.parsePythonExceptionObject(err, tb=exc_traceback)
     return jsonify(code=500, message=eco.errormessage, stack_trace=eco.traceback), 500
 
+
+@app.template_filter()
+def uptime(seconds):
+    return str(datetime.timedelta(seconds=seconds))
 
 if __name__ == "__main__":
     app.run(debug=True, port=settings.PORT, host=settings.PORT)

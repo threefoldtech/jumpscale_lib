@@ -16,10 +16,9 @@ class Farmer(object):
     @staticmethod
     def create(**kwargs):
         """
-        :type id: string_types
-        :type iyo_account: string_types
+        :type iyo_organization: string_types
         :type name: string_types
-        :type wallet_address: string_types
+        :type wallet_addresses: list[string_types]
         :rtype: Farmer
         """
 
@@ -34,15 +33,13 @@ class Farmer(object):
 
         # set attributes
         data_types = [string_types]
-        self.id = client_support.set_property('id', data, data_types, False, [], False, True, class_name)
-        data_types = [string_types]
-        self.iyo_account = client_support.set_property(
-            'iyo_account', data, data_types, False, [], False, True, class_name)
+        self.iyo_organization = client_support.set_property(
+            'iyo_organization', data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
         self.name = client_support.set_property('name', data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.wallet_address = client_support.set_property(
-            'wallet_address', data, data_types, False, [], False, True, class_name)
+        self.wallet_addresses = client_support.set_property(
+            'wallet_addresses', data, data_types, False, [], True, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)
