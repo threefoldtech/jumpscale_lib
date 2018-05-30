@@ -153,17 +153,9 @@ class UnixSystem(JSBASE):
             raise ValueError("This function only supports following intervals: " + str(allowedIntervals))
 
         # Construct timing options
-        if j.core.platformtype.myplatform.isLinux or j.core.platformtype.myplatform.isESX():
+        if j.core.platformtype.myplatform.isLinux:
             crontabFilePath = "/etc/crontab"
             crontabItem = "*/" + str(interval)
-        elif j.core.platformtype.myplatform.isSolaris():
-            crontabFilePath = "/var/spool/cron/crontabs/root"
-            if interval == 1:
-                crontabItem = "*"
-            else:
-                # Solaris crontab doesn't know the "*/x" syntax, we have to contruct
-                # options like "0,15,30,45" to run a command every quarter of an hour.
-                crontabItem = ",".join([str(i) for i in range(startAt, unitRange + startAt, interval)])
         else:
             raise j.exceptions.RuntimeError("Platform not supported.")
 
@@ -171,6 +163,7 @@ class UnixSystem(JSBASE):
         # Execute command between x:00 and x:59 if they run hourly, between 0:00
         # and 2:59 if they run daily and on any day if they run monthly.
         randomRanges = [(0, 60), (0, 3), (1, 29)]
+        import random
         crontabOptions = " ".join([str(random.randrange(t[0], t[1])) for t in randomRanges[:(unitPlace - 1)]])
         if not unitPlace == 1:
             crontabOptions = crontabOptions + " "
@@ -205,12 +198,7 @@ class UnixSystem(JSBASE):
 
         # Backup old crontab file and write modifications new crontab file.
         j.sal.fs.copyFile(crontabFilePath, crontabFilePath + ".backup")  # Create backup
-        if j.core.platformtype.myplatform.isSolaris():
-            self.writeFile(crontabFilePath + "_new", "\n".join(crontabLines) + "\n")
-            # On Solaris, we need to call the crontab command to activate the changes.
-            self.execute("crontab " + crontabFilePath + "_new")
-            self.removeFile(crontabFilePath + "_new")
-        elif j.core.platformtype.myplatform.isLinux or j.core.platformtype.myplatform.isESX():
+        if j.core.platformtype.myplatform.isLinux:
             # On Linux, we edit the system-wide crontab of Vixie Cron, so don't have
             # to run the "crontab" command to be sure changes have effect.
             j.sal.fs.writeFile(crontabFilePath, "\n".join(crontabLines) + "\n")
