@@ -1,7 +1,7 @@
 from flask_mongoengine import MongoEngine, Pagination
-from mongoengine import (Document, EmbeddedDocument, EmbeddedDocumentField,
-                         FloatField, IntField, ListField, PointField,
-                         ReferenceField, StringField)
+from mongoengine import (DateTimeField, Document, EmbeddedDocument,
+                         EmbeddedDocumentField, FloatField, IntField,
+                         ListField, PointField, ReferenceField, StringField)
 
 db = MongoEngine()
 
@@ -42,7 +42,7 @@ class NodeRegistration:
         return capacity[0]
 
     @staticmethod
-    def search(country=None, mru=None, cru=None, hru=None, sru=None, **kwargs):
+    def search(country=None, mru=None, cru=None, hru=None, sru=None, farmer=None, ** kwargs):
         """
         search based on country and minimum resource unit available
 
@@ -62,6 +62,8 @@ class NodeRegistration:
         query = {}
         if country:
             query['location__country'] = country
+        if farmer:
+            query['farmer'] = farmer
         if mru:
             query['mru__gte'] = mru
         if cru:
@@ -156,6 +158,7 @@ class Capacity(db.Document):
     robot_address = StringField()
     os_version = StringField()
     uptime = IntField()
+    updated = DateTimeField(required=True)
 
 
 class FarmerNotFoundError(KeyError):

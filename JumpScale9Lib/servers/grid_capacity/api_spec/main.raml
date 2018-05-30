@@ -103,6 +103,7 @@ types:
           cru?: number
           mru?: number
           sru?: number
+          farmer?: string
       responses:
         200:
           body:
@@ -130,10 +131,15 @@ types:
     get:
       displayName: ListFarmers
       description: List Farmers
-      queryString:
-        properties:
-          name?: string
       responses:
         200:
           body:
             type: Farmer[]
+    /{iyo_organization}:
+      get:
+        displayName: GetFarmer
+        description: Get detail about a farmer
+        responses:
+          200:
+            body:
+              type: Farmer

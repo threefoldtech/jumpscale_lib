@@ -20,6 +20,30 @@ class ApiService:
         uri = self.client.base_url + "/api/farmer_create"
         return self.client.get(uri, None, headers, query_params, content_type)
 
+    def GetFarmer(self, iyo_organization, headers=None, query_params=None, content_type="application/json"):
+        """
+        Get detail about a farmer
+        It is method for GET /api/farmers/{iyo_organization}
+        """
+        if query_params is None:
+            query_params = {}
+
+        uri = self.client.base_url + "/api/farmers/" + iyo_organization
+        resp = self.client.get(uri, None, headers, query_params, content_type)
+        try:
+            if resp.status_code == 200:
+                return Farmer(resp.json()), resp
+
+            message = 'unknown status code={}'.format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code,
+                                    message=message)
+        except ValueError as msg:
+            raise UnmarshallError(resp, msg)
+        except UnhandledAPIError as uae:
+            raise uae
+        except Exception as e:
+            raise UnmarshallError(resp, e.message)
+
     def ListFarmers(self, headers=None, query_params=None, content_type="application/json"):
         """
         List Farmers

@@ -12,7 +12,8 @@ def ListCapacityHandler():
     cru = request.values.get('cru')
     hru = request.values.get('hru')
     sru = request.values.get('sru')
-    nodes = NodeRegistration.search(country, mru, cru, hru, sru)
+    farmer = request.values.get('farmer')
+    nodes = NodeRegistration.search(country, mru, cru, hru, sru, farmer)
     output = []
     for node in nodes.all():
         d = node.to_mongo().to_dict()

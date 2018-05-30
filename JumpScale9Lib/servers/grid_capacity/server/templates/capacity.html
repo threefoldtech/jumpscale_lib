@@ -48,19 +48,34 @@
               <label for="formSRU">minimum <abbr title="SSD resource unit">SRU</abbr> : <span class="badge badge-pill badge-primary"><span id=formSRUValue></span> GiB</span></span></label>
               <input type="range" class="form-control-range" id="formSRU" name="sru" value="{{form['sru']}}" step=1 max=1000>
           </div>
-          <div class="form-group">
-              <label for="formCountry">filter by country :</label>
-              <select class="form-control" id="formCountry"  name="country">
-                <option></option>
-                {% for country in countries %}
-                {% if form['country'] == country %}
-                <option selected>{{country}}</option>
-                {% else %}
-                <option>{{country}}</option>
-                {% endif %}
-                {% endfor %}
-              </select>
+          <div class="row">
+            <div class="form-group col-6">
+                <label for="formCountry">filter by country :</label>
+                <select class="form-control" id="formCountry"  name="country">
+                  <option></option>
+                  {% for country in countries %}
+                  {% if form['country'] == country %}
+                  <option selected>{{country}}</option>
+                  {% else %}
+                  <option>{{country}}</option>
+                  {% endif %}
+                  {% endfor %}
+                </select>
             </div>
+            <div class="form-group col-6">
+                <label for="formFarmer">filter by farmer :</label>
+                <select class="form-control" id="formFarmer"  name="farmer">
+                  <option></option>
+                  {% for farmer in farmers %}
+                  {% if form['farmer'] == farmer %}
+                  <option selected>{{farmer}}</option>
+                  {% else %}
+                  <option>{{farmer}}</option>
+                  {% endif %}
+                  {% endfor %}
+                </select>
+            </div>
+          </div>
           <div class="form-group">
               <button type="submit" class="btn btn-primary">Search</button>
               <a class="btn btn-secondary" href="/">Reset</a>
@@ -90,7 +105,7 @@
                 <th scope="col">MRU</th>
                 <th scope="col">HRU</th>
                 <th scope="col">SRU</th>
-                <th scope="col">Uptime</th>
+                <th scope="col" data-toggle="modal" data-target="#uptimeHelpModal">Uptime <span class="badge badge-secondary" id="uptimeHelp">?</span></th>
               </tr>
             </thead>
             <tbody>
@@ -105,7 +120,7 @@
                 <td>{{ node['mru'] }}</td>
                 <td>{{ node['hru'] }}</td>
                 <td>{{ node['sru'] }}</td>
-                <td>{{ node['uptime'] | uptime }}</td>
+                <td><span class="badge badge-{{node['updated'] | deltatime_color}}">{{ node['uptime'] | uptime }}</span></td>
               </tr>
               {% endfor %}
             </tbody>
@@ -122,7 +137,7 @@
     <!-- Modal -->
     {% for node in nodes.items %}
     <div class="modal fade" id="nodeDetailModal{{node['node_id']}}" tabindex="-1" role="dialog" aria-labelledby="nodeDetailModalLabel{{node['node_id']}}" aria-hidden="true">
-      <div class="modal-dialog" role="document">
+      <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="nodeDetailModalLabel">Node detail</h5>
@@ -131,9 +146,11 @@
             </button>
           </div>
           <div class="modal-body">
+            <p>Node ID: <code>{{node['node_id']}}</code></p>
             <p>Node 0-robot address: <code>{{node['robot_address']}}</code></p>
             <p>0-OS version: <code>{{node['os_version']}}</code></p>
             <p>Farm: <code>{{node.farmer.name}}</code></p>
+            <p>Uptime: <span class="badge badge-{{node['updated'] | deltatime_color}}">{{ node['uptime'] | uptime }}</span></p>
             <p>
               Wallet addresses:
               <ul>
@@ -152,4 +169,28 @@
       </div>
     </div>
     {% endfor %}
+
+  <!-- Modal -->
+  <div class="modal fade" id="uptimeHelpModal" tabindex="-1" role="dialog" aria-labelledby="uptimeHelpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="uptimeHelpModalLabel">What does the color of the uptime means ?</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <ul>
+            <li><span class="badge badge-success">green</span> the uptime has been refreshed less then 2 hours ago</li>
+            <li><span class="badge badge-warning">yellow</span> the uptime has been refreshed between 2 hours and 3 hours ago</li>
+            <li><span class="badge badge-danger">red</span> the uptime has been refreshed more then 3 hours ago</li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
   {% endblock %}

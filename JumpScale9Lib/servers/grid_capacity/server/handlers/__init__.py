@@ -6,3 +6,4 @@ from .RegisterCapacityHandler import RegisterCapacityHandler
 from .GetCapacityHandler import GetCapacityHandler
 from .RegisterFarmerHandler import RegisterFarmerHandler
 from .ListFarmersHandler import ListFarmersHandler
+from .GetFarmerHandler import GetFarmerHandler

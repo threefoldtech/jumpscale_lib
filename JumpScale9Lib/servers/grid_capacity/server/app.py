@@ -24,16 +24,39 @@ app.register_blueprint(frontend_bp)
 j.clients.mongoengine.get('capacity', interactive=False)
 
 
+@app.template_filter()
+def uptime(seconds):
+    return str(datetime.timedelta(seconds=seconds))
+
+
+@app.template_filter()
+def deltatime_color(time):
+    """
+    return a color base on the delta time between now and time
+
+    :param time: time we when to compare
+    :type time: datetime.datetime
+    :return: color
+    :rtype: str
+    """
+    if not time:
+        return 'danger'
+
+    delta = datetime.datetime.now() - time
+    if delta.seconds < 7200:  # less then 2h
+        return 'success'
+    if 7200 < delta.seconds and delta.seconds < 10800:  # between 2h and 3h
+        return 'warning'
+    if delta.seconds > 10800:  # plus de 3h
+        return 'danger'
+
+
 @app.errorhandler(500)
 def internal_error(err):
     _, _, exc_traceback = sys.exc_info()
     eco = j.core.errorhandler.parsePythonExceptionObject(err, tb=exc_traceback)
     return jsonify(code=500, message=eco.errormessage, stack_trace=eco.traceback), 500
 
-
-@app.template_filter()
-def uptime(seconds):
-    return str(datetime.timedelta(seconds=seconds))
 
 if __name__ == "__main__":
     app.run(debug=True, port=settings.PORT, host=settings.PORT)

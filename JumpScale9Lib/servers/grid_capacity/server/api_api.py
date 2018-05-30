@@ -50,3 +50,12 @@ def ListFarmers():
     It is handler for GET /api/farmers
     """
     return handlers.ListFarmersHandler()
+
+
+@api_api.route('/api/farmers/<iyo_organization>', methods=['GET'])
+def GetFarmer(iyo_organization):
+    """
+    Get detail about a farmer
+    It is handler for GET /api/farmers/<iyo_organization>
+    """
+    return handlers.GetFarmerHandler(iyo_organization)

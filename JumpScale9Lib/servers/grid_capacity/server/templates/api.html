@@ -1410,6 +1410,32 @@
 </li>
 
                         
+                          <li>
+  <strong>farmer</strong>:
+
+    
+      <em>(string)
+      </em>
+    
+  
+
+
+
+  
+
+  
+
+  
+
+  
+  
+  
+
+  
+
+</li>
+
+                        
                       </ul>
                     
 
@@ -2742,13 +2768,9 @@
               <!-- Nav tabs -->
               <ul class="nav nav-tabs">
                 
-                  <li class="active">
-                    <a href="#api_farmers_get_request" data-toggle="tab">Request</a>
-                  </li>
-                
 
                 
-                  <li>
+                  <li class="active">
                     <a href="#api_farmers_get_response" data-toggle="tab">Response</a>
                   </li>
                 
@@ -2759,54 +2781,9 @@
               <!-- Tab panes -->
               <div class="tab-content">
                 
-                  <div class="tab-pane active" id="api_farmers_get_request">
-                    
-
-                    
-
-                    
-
-                    
-                      <h3>Query String</h3>
-                      <ul>
-                        
-                          <li>
-  <strong>name</strong>:
-
-    
-      <em>(string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                        
-                      </ul>
-                    
-
-                    
-
-                    
-                  </div>
-                
 
                 
-                  <div class="tab-pane" id="api_farmers_get_response">
+                  <div class="tab-pane active" id="api_farmers_get_response">
                     
                       <h2>HTTP status code <a href="http://httpstatus.es/200" target="_blank">200</a></h2>
 
@@ -2947,6 +2924,265 @@
       </div>
     
   </div>
+
+
+
+  
+  <div class="panel panel-white resource-modal">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a class="collapsed" data-toggle="collapse" href="#panel_api_farmers__iyo_organization_">
+          <span class="parent">/api/farmers</span>/{iyo_organization}
+        </a>
+
+        <span class="methods">
+          
+            <a href="#api_farmers__iyo_organization__get"><!-- modal shown by hashchange event -->
+              <span class="badge badge_get">get</span>
+            </a>
+          
+        </span>
+      </h4>
+    </div>
+
+    <div id="panel_api_farmers__iyo_organization_" class="panel-collapse collapse">
+      <div class="panel-body">
+        
+          
+        
+
+        <div class="list-group">
+          
+            <div onclick="window.location.href = '#api_farmers__iyo_organization__get'" class="list-group-item">
+              <span class="badge badge_get">get</span>
+              <div class="method_description">
+<p>Get detail about a farmer</p>
+
+              </div>
+              <div class="clearfix"></div>
+            </div>
+          
+        </div>
+      </div>
+    </div>
+
+    
+      <div class="modal fade" tabindex="0" id="api_farmers__iyo_organization__get">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+              <h4 class="modal-title" id="myModalLabel">
+                <span class="badge badge_get">get</span>
+                <span class="parent">/api/farmers</span>/{iyo_organization}
+              </h4>
+            </div>
+
+            <div class="modal-body">
+              
+                <div class="alert alert-info">
+<p>Get detail about a farmer</p>
+
+                </div>
+              
+
+              
+
+              <!-- Nav tabs -->
+              <ul class="nav nav-tabs">
+                
+                  <li class="active">
+                    <a href="#api_farmers__iyo_organization__get_request" data-toggle="tab">Request</a>
+                  </li>
+                
+
+                
+                  <li>
+                    <a href="#api_farmers__iyo_organization__get_response" data-toggle="tab">Response</a>
+                  </li>
+                
+
+                
+              </ul>
+
+              <!-- Tab panes -->
+              <div class="tab-content">
+                
+                  <div class="tab-pane active" id="api_farmers__iyo_organization__get_request">
+                    
+                      <h3>URI Parameters</h3>
+                      <ul>
+                        
+                          <li>
+  <strong>iyo_organization</strong>:
+
+    
+      <em>required (string)
+      </em>
+    
+  
+
+
+
+  
+
+  
+
+  
+
+  
+  
+  
+
+  
+
+</li>
+
+                        
+                      </ul>
+                    
+
+                    
+
+                    
+
+                    
+
+                    
+
+                    
+                  </div>
+                
+
+                
+                  <div class="tab-pane" id="api_farmers__iyo_organization__get_response">
+                    
+                      <h2>HTTP status code <a href="http://httpstatus.es/200" target="_blank">200</a></h2>
+
+
+                      
+
+                      
+                        <h3>Body</h3>
+                        
+                          <p><strong>Media type</strong>: application/json</p>
+
+                          
+                            
+                              
+                                <p><strong>Type</strong>: object</p>
+                              
+                            
+                          
+
+                          
+
+                          
+
+                          
+                            <strong>Properties</strong>
+                            <ul>
+                              
+                                <li>
+  <strong>iyo_organization</strong>:
+
+    
+      <em>required (string)
+      </em>
+    
+  
+
+
+
+  
+
+  
+
+  
+
+  
+  
+  
+
+  
+
+</li>
+
+                              
+                                <li>
+  <strong>name</strong>:
+
+    
+      <em>required (string)
+      </em>
+    
+  
+
+
+
+  
+
+  
+
+  
+
+  
+  
+  
+
+  
+
+</li>
+
+                              
+                                <li>
+  <strong>wallet_addresses</strong>:
+
+    
+      <em>required (array of )
+      </em>
+    
+  
+
+
+
+  
+
+  
+
+  
+
+  
+  
+  
+
+  
+
+</li>
+
+                              
+                            </ul>
+                          
+
+                          
+                          
+                          
+                        
+                      
+                    
+                  </div>
+                
+
+                
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+  </div>
+
+
 
 
 
