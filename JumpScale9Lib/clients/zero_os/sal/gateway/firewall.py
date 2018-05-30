@@ -1,6 +1,4 @@
-from js9 import j
 from .. import templates
-from .network import ZTNetwork
 
 
 class Firewall:
@@ -15,7 +13,7 @@ class Firewall:
     def apply_rules(self):
         # nftables
         publicnetworks = list(filter(lambda net: net.ip.gateway, self.networks))
-        privatenetworks = list(filter(lambda net: not net.ip.gateway and not isinstance(net, ZTNetwork), self.networks))
+        privatenetworks = list(filter(lambda net: not net.ip.gateway, self.networks))
         nftables = templates.render('nftables.conf',
                                     publicnetwork=publicnetworks[0],
                                     privatenetworks=privatenetworks,

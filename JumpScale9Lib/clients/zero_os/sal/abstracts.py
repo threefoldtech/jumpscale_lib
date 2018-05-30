@@ -102,6 +102,10 @@ class Nic:
     def type(self):
         return self._type
 
+    @property
+    def iface(self):
+        return self.name
+
     @type.setter
     def type(self, value):
         if value not in ['vxlan', 'vlan', 'bridge', 'default', 'zerotier', 'passthrough']:
@@ -159,6 +163,13 @@ class ZTNic(Nic):
         network = self.client.network_get(self.networkid)
         network.member_add(publicidentity, self._parent.name)
         return True
+
+    @property
+    def iface(self):
+        for network in self._parent.container.client.zerotier.list():
+            if network['nwid'] == self.networkid:
+                return network['portDeviceName']
+        raise RuntimeError('Could not find devicename')
 
     def to_dict(self, forvm=False, forcontainer=False):
         data = super().to_dict(forvm, forcontainer)
