@@ -322,6 +322,11 @@ class Gateway:
                 return None
         return self._container
 
+    def is_running(self):
+        if self.container:
+            return self.container.is_running()
+        return False
+
     def create_container(self):
         """
         Create the gateway container
