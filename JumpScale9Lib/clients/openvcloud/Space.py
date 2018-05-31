@@ -339,6 +339,101 @@ class Space(Authorizables):
 
         return machine
 
+    def create_and_connect_zos_machine(
+        self,
+        name,
+        zerotier_id,
+        organization,
+        zerotier_client,
+        image="IPXE Boot",
+        vcpus=1,
+        memsize=2,
+        disksize=10,
+        sizeId=None,
+        stackId=None,
+        description="",
+        timeout=300,
+        branch='master',
+        dev_mode=False,
+    ):
+        """
+        Creates a new zero-os virtual machine and connects it a to Zerotier network.
+        Returns openvloud VM object and ZeroTier member object.
+        Output:
+            {'openvcloud': ..., 'zerotier': ...}
+
+        Args:
+            - name (required): unique name of the virtual machine, e.g. "MyFirstVM".
+            - zerotier_id (required): ZeroTier network ID.
+            - organization (required): itsyou.online organization.
+            - zerotier_client (required): name of ZeroTier client instance.
+            - memsize (defaults to 2): memory size in MB or in GB, e.g. 4096.
+            - vcpus (defaults to 1): number of virtual CPU cores; value is ignored in versions prior to 3.x, use sizeId in order to set the number of virtual CPU cores.
+            - disksize (default to 10): boot disk size in MB.
+            - image (defaults to "IPXE Boot"): name of the Zero OS image to load.
+            - sizeId (optional): overrides the value set for memsize, denotes the type or "size" of the virtual machine, actually sets the number of virtual CPU cores and amount of memory, see the sizes property of the cloud space for the sizes available in the cloud space.
+            - stackId (optional): identifies the grid node on which to create the virtual machine, if nothing specified (recommended) OpenvCloud will decide where to create the virtual machine.
+            - description (optional): machine description.
+            - timeout (defaults to 20): timeout on waiting node to join ZeroTier network.
+            - branch (defaults to "master"): zero-os branch.
+            - dev_mode (defaults to False): set to True to run the ZOS node in development mode (allow direct access to the node bypassing the node robot),
+                                            set to False to allow access only via the node robot.
+        Raises:
+            - RuntimeError if machine with given name already exists.
+            - RuntimeError if machine name contains spaces
+            - RuntimeError if machine name contains underscores
+            - If request to connect zerotier from new machine wasn't received
+              or machine was already connected
+            - If received more than one new request from the same physical IP
+        """
+
+        # url of the (ipxe)[http://ipxe.org/scripting/] script.
+        ipxe = 'https://bootstrap.gig.tech/ipxe/{branch}/{zerotier_id}/organisation={organization}%20{dev_mode}'.format(
+             branch=branch, zerotier_id=zerotier_id, organization=organization, dev_mode='development' if dev_mode else '') 
+        userdata = 'ipxe: %s' % ipxe
+        
+        machine = self.machine_create(
+            name=name,
+            sizeId=sizeId,
+            image=image,
+            disksize=disksize,
+            vcpus=vcpus,
+            memsize=memsize,
+            stackId=stackId,
+            userdata=userdata,
+            authorize_ssh=False)
+
+        # get ZeroTier client, fail if client was not yet configured
+        zerotier = j.clients.zerotier.get(zerotier_client, create=False)
+        limit_timeout = time.time() + timeout          
+        candidates = []
+
+        # wait for a new member to appear in ZeroTier
+        while time.time() < limit_timeout:
+            network = zerotier.network_get(network_id=zerotier_id)
+            members = network.members_list()
+            for member in members:
+                if not member.data['config']['authorized'] and member.data['physicalAddress'] == machine.ipaddr_public:
+                    candidates.append(member)
+            if candidates:
+                break
+        else:
+            raise TimeoutError('Authorization request to ZeroTier network %s was not received' % zerotier_id)
+
+        # We can only identify VMs having the same physical IP address 
+        # if requests arrive one by one.
+        # Ensure only one unauthorized member from required IP address
+        if len(candidates) != 1:
+            raise RuntimeError('Found %s candidates, expected exactly one' % len(candidates))
+
+        candidate = candidates[0]
+
+        # accept VM to the ZeroTier network
+        candidate.authorize()
+   
+        return  {'openvcloud': machine, 
+                 'zerotier': candidate}
+
     @property
     def portforwards(self):
         return self.client.api.cloudapi.portforwarding.list(cloudspaceId=self.id)
