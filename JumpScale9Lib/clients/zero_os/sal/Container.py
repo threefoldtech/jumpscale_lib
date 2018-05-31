@@ -117,9 +117,10 @@ class Container():
     @property
     def identity(self):
         if not self._identity:
-            for nic in self.nics:
-                if nic['type'] == 'zerotier':
-                    self._identity = self.client.zerotier.info()['secretIdentity']
+            if self.is_running():
+                for nic in self.nics:
+                    if nic['type'] == 'zerotier':
+                        self._identity = self.client.zerotier.info()['secretIdentity']
         return self._identity
 
     def default_ip(self, interface=None):
