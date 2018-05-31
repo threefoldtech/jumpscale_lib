@@ -38,7 +38,7 @@ class ZerobootClient(JSConfigBase):
     def __init__(self, instance, data={}, parent=None, interactive=None):
         JSConfigBase.__init__(self, instance=instance,
                               data=data, parent=parent, template=TEMPLATE)
-        self.sshclient = j.clients.ssh.get(instance=self.config.data['sshclient_instance'], interactive=True)
+        self.sshclient = j.clients.ssh.get(instance=self.config.data['sshclient_instance'], interactive=interactive)
         self.ztier = j.clients.zerotier.get(instance=self.config.data['zerotier_instance'])
         self.networks = Networks(self.sshclient)
         network = self.networks.get()
