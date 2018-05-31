@@ -357,8 +357,10 @@ class Space(Authorizables):
         dev_mode=False,
     ):
         """
-        Creates a new zero-os virtual machine and connect to Zerotier network.
-        Returns VM object and node parameters in ZeroTier network.
+        Creates a new zero-os virtual machine and connects it a to Zerotier network.
+        Returns openvloud VM object and ZeroTier member object.
+        Output:
+            {'openvcloud': ..., 'zerotier': ...}
 
         Args:
             - name (required): unique name of the virtual machine, e.g. "MyFirstVM".
@@ -374,15 +376,18 @@ class Space(Authorizables):
             - description (optional): machine description.
             - timeout (defaults to 20): timeout on waiting node to join ZeroTier network.
             - branch (defaults to "master"): zero-os branch.
-            - dev_mode (defaults to False): set to True to run the ZOS node in development mode (allow access to the node bypassing the node robot),
+            - dev_mode (defaults to False): set to True to run the ZOS node in development mode (allow direct access to the node bypassing the node robot),
                                             set to False to allow access only via the node robot.
         Raises:
             - RuntimeError if machine with given name already exists.
             - RuntimeError if machine name contains spaces
             - RuntimeError if machine name contains underscores
+            - If request to connect zerotier from new machine wasn't received
+              or machine was already connected
+            - If received more than one new request from the same physical IP
         """
 
-        # url pointing to a (ipxe)[http://ipxe.org/scripting/] script.
+        # url of the (ipxe)[http://ipxe.org/scripting/] script.
         ipxe = 'https://bootstrap.gig.tech/ipxe/{branch}/{zerotier_id}/organisation={organization}%20{dev_mode}'.format(
              branch=branch, zerotier_id=zerotier_id, organization=organization, dev_mode='development' if dev_mode else '') 
         userdata = 'ipxe: %s' % ipxe
@@ -400,74 +405,34 @@ class Space(Authorizables):
 
         # get ZeroTier client, fail if client was not yet configured
         zerotier = j.clients.zerotier.get(zerotier_client, create=False)
-        import ipdb; ipdb.set_trace()
-        # fetch not yet authorized member of ZeroTier network
-        # network = zerotier.network_get(zerotier_id)
-        # members = network.member_get(public_ip=machine.ipaddr_public)
-        #if len(members)
-        limit_timeout = time.time() + timeout
-           
-        candidates = None
-        # while time.time() < limit_timeout:
-        #     members = zerotier.client.network.listMembers(zerotier_id).json()
-        #     candidates = [member for member in members if not member['config']['authorized'] and member['online']]
-        #     if candidates:
-        #         break
-        #     time.sleep(1)
-        # else:
-        #     raise TimeoutError('Authorization request to ZeroTier network %s was not received' % zerotier_id)
+        limit_timeout = time.time() + timeout          
+        candidates = []
 
+        # wait for a new member to appear in ZeroTier
         while time.time() < limit_timeout:
-            while True:
-                try:
-                    network = zerotier.network_get(network_id=zerotier_id)
-                    members = network.members_list()
-                    for member in members:
-                        if not member.data['config']['authorized'] and member.private_ip == machine.ipaddr_public:
-                            candidates.append(member)
-                    if candidates:
-                        break
-                except RuntimeError as e:
-                    # case where we don't find the member in zerotier
-                    pass
+            network = zerotier.network_get(network_id=zerotier_id)
+            members = network.members_list()
+            for member in members:
+                if not member.data['config']['authorized'] and member.data['physicalAddress'] == machine.ipaddr_public:
+                    candidates.append(member)
+            if candidates:
+                break
         else:
             raise TimeoutError('Authorization request to ZeroTier network %s was not received' % zerotier_id)
 
-
+        # We can only identify VMs having the same physical IP address 
+        # if requests arrive one by one.
+        # Ensure only one unauthorized member from required IP address
         if len(candidates) != 1:
             raise RuntimeError('Found %s candidates, expected exactly one' % len(candidates))
 
         candidate = candidates[0]
 
-        # accept VM to ZeroTier network
-        candidate['config']['authorized'] = True
-        zerotier.client.network.updateMember(candidate, candidate['nodeId'], zerotier_id)
-
-        # wait for node to connect to ZeroTier network
-        limit_timeout = time.time() + timeout
-        while time.time() < limit_timeout:
-            response = zerotier.client.network.getMember(candidate['nodeId'], zerotier_id).json()
-            if response['config']['authorized'] and response['physicalAddress']:
-                break
-            time.sleep(1)
-        else:
-            if not response['config']['authorized']:
-                raise TimeoutError('Failed do authorize node %s to ZeroTier network %s' % (
-                    response['config']['nodeId'], zerotier_id))
-            if not response['physicalAddress']:
-                raise TimeoutError('Failed assigning IP address for node %s in ZeroTier network %s' % (
-                    response['config']['nodeId'], zerotier_id))
-
-        # check that accepted VM belongs to the vdc
-        if response['physicalAddress'] != machine.ipaddr_public:
-            # disconnect VM
-            candidate['config']['authorized'] = False
-            zerotier.client.network.updateMember(candidate, candidate['nodeId'], zerotier_id)
-            raise RuntimeError('Node with unexpected physical address %s tried to connect to ZeroTier network %s' %(
-                response['physicalAddress'], zerotier_id)
-            )
-        
-        return machine, response
+        # accept VM to the ZeroTier network
+        candidate.authorize()
+   
+        return  {'openvcloud': machine, 
+                 'zerotier': candidate}
 
     @property
     def portforwards(self):
