@@ -38,14 +38,18 @@ class ZerobootClient(JSConfigBase):
     def __init__(self, instance, data={}, parent=None, interactive=None):
         JSConfigBase.__init__(self, instance=instance,
                               data=data, parent=parent, template=TEMPLATE)
-        self.sshclient = j.clients.ssh.get(instance=self.config.data['sshclient_instance'], interactive=interactive)
-        self.ztier = j.clients.zerotier.get(instance=self.config.data['zerotier_instance'])
+        self.sshclient = j.clients.ssh.get(
+            instance=self.config.data['sshclient_instance'],          
+            interactive=interactive)
         self.networks = Networks(self.sshclient)
-        network = self.networks.get()
-        cidr = str(netaddr.IPNetwork(network.subnet).cidr)
-        route = {'target': cidr, 'via': self.sshclient.addr}
-        znetwork = self.ztier.network_get(self.config.data['network_id'])
-        znetwork.add_route(route)
+        zerotier_instance = self.config.data['zerotier_instance']
+        if zerotier_instance:
+            ztier = j.clients.zerotier.get(instance=zerotier_instance)
+            network = self.networks.get()
+            cidr = str(netaddr.IPNetwork(network.subnet).cidr)
+            route = {'target': cidr, 'via': self.sshclient.addr}
+            znetwork = ztier.network_get(self.config.data['network_id'])
+            znetwork.add_route(route)
 
     def power_info_get(self, rack_client, module_id=None):
         """gets power info for opened ports
