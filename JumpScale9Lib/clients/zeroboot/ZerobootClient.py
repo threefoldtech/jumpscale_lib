@@ -44,7 +44,7 @@ class ZerobootClient(JSConfigBase):
         self.networks = Networks(self.sshclient)
         zerotier_instance = self.config.data['zerotier_instance']
         if zerotier_instance:
-            ztier = j.clients.zerotier.get(instance=zerotier_instance)
+            ztier = j.clients.zerotier.get(instance=zerotier_instance, interactive=interactive)
             network = self.networks.get()
             cidr = str(netaddr.IPNetwork(network.subnet).cidr)
             route = {'target': cidr, 'via': self.sshclient.addr}
