@@ -350,7 +350,7 @@ class TfChainClient:
         consensus = self.consensus_stat()
         result["block_height"] = consensus["height"]
         gateways = self.gateway_stat()
-        result["connected_peers"] = gateways["peers"]
+        result["connected_peers"] = len(gateways["peers"])
         return result
 
 
