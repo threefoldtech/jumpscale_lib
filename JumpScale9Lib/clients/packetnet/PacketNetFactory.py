@@ -168,7 +168,7 @@ class PacketNet(JSConfigClient):
             raise RuntimeError("zerotierId needs to be specified")
         if zerotierAPI.strip() == "" or zerotierAPI is None:
             raise RuntimeError("zerotierAPI needs to be specified")
-        ipxeUrl = "https://bootstrap.gig.tech/ipxe/{}/{}".format(branch, zerotierId)
+        ipxeUrl = "http://unsecure.bootstrap.gig.tech/ipxe/{}/{}".format(branch, zerotierId)
 
 
         if params is not None:
