@@ -22,7 +22,7 @@ def _execute_and_extract(prefab, cmd, regex, cmd_name, logger, test_output=None)
     if test_output is not None:
         rc, out, err = 0, test_output, ""
     else:
-        rc, out, err = prefab.core.run(cmd=cmd)
+        rc, out, err = prefab.core.run(cmd=cmd, showout=False)
     if rc:
         raise RuntimeError('Failed to execute {} step. Error {}'.format(cmd_name, '{}\n{}'.format(out,err)))
     match = re.search(regex, out)
