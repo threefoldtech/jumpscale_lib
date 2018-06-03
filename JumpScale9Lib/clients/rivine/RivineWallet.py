@@ -10,7 +10,6 @@ the wallet will need the following functionality:
 - For every public key in the input, the corresponding private key is required to sign the transaction to be valid
 """
 
-from mnemonic import Mnemonic
 import ed25519
 from .merkletree import Tree
 from pyblake2 import blake2b
@@ -19,11 +18,13 @@ import requests
 import base64
 from requests.auth import HTTPBasicAuth
 from .utils import big_int_to_binary, int_to_binary, get_unlockhash_from_address
+from .encoding import binary
+from .types.signatures import Ed25519PublicKey
+from .types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY, UNLOCKHASH_TYPE, UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE, SPECIFIER_SIZE 
 
 from JumpScale9 import j
 
-from .const import SIGEd25519, UNLOCKHASH_TYPE, MINER_PAYOUT_MATURITY_WINDOW,\
-UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE, SPECIFIER_SIZE, NON_SIA_SPECIFIER, WALLET_ADDRESS_TYPE, ADDRESS_TYPE_SIZE
+from .const import MINER_PAYOUT_MATURITY_WINDOW, NON_SIA_SPECIFIER, WALLET_ADDRESS_TYPE, ADDRESS_TYPE_SIZE
 
 from .errors import RESTAPIError, BackendError,\
 InsufficientWalletFundsError, NonExistingOutputError,\
@@ -46,7 +47,7 @@ class RivineWallet:
         @param nr_keys_per_seed: Number of keys generated from the seed.
         @param minerfee: Amount of hastings that should be minerfee.
         """
-        self._seed = seed
+        self._seed = j.data.encryption.mnemonic.to_entropy(seed)
         self._unspent_coins_outputs = {}
         self._keys = {}
         self._bc_network = bc_network.strip("/")
@@ -83,7 +84,6 @@ class RivineWallet:
         """
         return [key for key in self._keys.keys()]
 
-
     @property
     def keys(self):
         """
@@ -103,12 +103,15 @@ class RivineWallet:
         """
         Generate a @Spendablekey object from the seed and index
 
-        @param index: Index from the seed
+        @param index: Index of key to generate from the seed
         """
-        # the to_seed function will return a 64 bytes binary seed, we only need 32-bytes
-        binary_seed = Mnemonic.to_seed(mnemonic=self._seed, passphrase=str(index))[32:]
-        binary_seed_hash = blake2b(binary_seed, digest_size=32).digest()
-        return SpendableKey(seed=binary_seed_hash)
+        binary_seed = bytearray()
+        binary_seed.extend(binary.encode(self._seed))
+        binary_seed.extend(binary.encode(index))
+        binary_seed_hash = blake2b(binary_seed, digest_size=UNLOCKHASH_SIZE).digest()
+        sk = ed25519.SigningKey(binary_seed_hash)
+        pk = sk.get_verifying_key()
+        return SpendableKey(pub_key=pk.to_bytes(), sec_key=sk.to_bytes())
 
 
     def get_current_chain_height(self):
@@ -388,38 +391,33 @@ class RivineWallet:
 
 class SpendableKey:
     """
-    SpendableKey is a set of secret keys plus the corresponding unlock
-    conditions.  The public key can be derived from the secret key and then
-    matched to the corresponding public keys in the unlock conditions.
+    SpendableKey is a secret signing key and its public verifying key
     """
 
-    def __init__(self, seed):
+    def __init__(self, pub_key, sec_key):
         """
         Creates new SpendableKey
-        creates the keys and unlock conditions for 32-bytes seed
 
-        @param seed: A 32-bytes binary seed
-        @type seed: bytearray
+        @param pub_key: A 32-bytes verifying key
+        @param sec_key: A signing key that correspond to the verifying key
         """
-        # this will generate a singing key based on the seed and from the singing key, the public key/
-        # verification key can be retrieved
-        self._seed = seed
-        self._sk = ed25519.SigningKey(self._seed)
-        self._keys = [(self._sk,  self._sk.get_verifying_key().to_bytes())]
-        self._unlockconditions = UnlockConditions(pubkey=self._sk.get_verifying_key().to_bytes())
+        self._sk = sec_key
+        self._pk = pub_key
+        self._unlockhash = None
 
 
     @property
-    def secretkeys(self):
+    def unlockhash(self):
         """
-        Returns the singing keys
+        Calculate unlock hash of the spendable key
         """
-        return self._keys
+        if self._unlockhash is None:
+            pub_key = Ed25519PublicKey(pub_key=self._pk)
+            encoded_pub_key = binary.encode(pub_key)
+            hash = blake2b(encoded_pub_key, digest_size=UNLOCKHASH_SIZE).digest()
+            self._unlockhash = UnlockHash(unlock_type=UNLOCK_TYPE_PUBKEY, hash=hash)
+        return self._unlockhash
 
-
-    @property
-    def unlockconditions(self):
-        return self._unlockconditions
 
 
 class UnlockConditions:
@@ -534,7 +532,7 @@ class UnlockConditions:
             self._json = {
                 'type': 1,
                 'data':{
-                    'publickey': public_key, 
+                    'publickey': public_key,
                     'signature': ''
                 }
             }
@@ -668,7 +666,7 @@ class Transaction:
         if input_idx > len(self._inputs):
             raise ValueError('Invalid input index')
         b_array.extend(int_to_binary(input_idx))
-        # adding length of inputs 
+        # adding length of inputs
         b_array.extend(int_to_binary(len(self._inputs)))
         # adding inputs
         for input_ in self._inputs:
@@ -682,7 +680,7 @@ class Transaction:
             unlockhash = unlockhash_address_map.get(output['condition']['data']['unlockhash'], get_unlockhash_from_address(output['condition']['data']['unlockhash']))
             condition_binary.extend(bytearray.fromhex(unlockhash))
             b_array.extend(condition_binary)
-    
+
         b_array.extend(int_to_binary(0))
         b_array.extend(int_to_binary(0))
         # for now we only set the nubmer of minerfees to 1
