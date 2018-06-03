@@ -4,21 +4,26 @@ TEMPLATE = """
 api_key_ = ""
 """
 
-JSConfigBase = j.tools.configmanager.base_class_config
-JSBASE = j.application.jsbase_get_class()
+JSConfigClient = j.tools.configmanager.base_class_config
+JSConfigFactory = j.tools.configmanager.base_class_configs
 
 from pprint import pprint as print
 
 
-class CurrencyLayer(JSConfigBase):
+
+class CurrencyLayerFactory(JSConfigFactory):
+    def __init__(self):
+        self.__jslocation__ = "j.clients.currencylayer"
+        JSConfigFactory.__init__(self, CurrencyLayerClient)
+
+class CurrencyLayerClient(JSConfigClient):
     """
     get key from https://currencylayer.com/quickstart
     """
 
-    def __init__(self):
-        self.__jslocation__ = 'j.clients.currencylayer'
-        JSConfigBase.__init__(self, instance="main", data={},
-                              parent=None, template=TEMPLATE)
+    def __init__(self, instance, data={}, parent=None, interactive=True):
+        JSConfigClient.__init__(self, instance=instance,
+                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         self._data_cur = {}
         self._id2cur = {}
         self._cur2id = {}
