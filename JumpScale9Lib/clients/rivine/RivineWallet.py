@@ -17,14 +17,14 @@ from functools import partial
 import requests
 import base64
 from requests.auth import HTTPBasicAuth
-from .utils import big_int_to_binary, int_to_binary, get_unlockhash_from_address
 from .encoding import binary
-from .types.signatures import Ed25519PublicKey
-from .types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY, UNLOCKHASH_TYPE, UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE, SPECIFIER_SIZE 
+from .types.signatures import Ed25519PublicKey, SPECIFIER_SIZE, NON_SIA_SPECIFIER
+from .types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY, UNLOCKHASH_TYPE, UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE
 
 from JumpScale9 import j
+from JumpScale9Lib.clients.rivine import utils
 
-from .const import MINER_PAYOUT_MATURITY_WINDOW, NON_SIA_SPECIFIER, WALLET_ADDRESS_TYPE, ADDRESS_TYPE_SIZE
+from .const import MINER_PAYOUT_MATURITY_WINDOW, WALLET_ADDRESS_TYPE, ADDRESS_TYPE_SIZE
 
 from .errors import RESTAPIError, BackendError,\
 InsufficientWalletFundsError, NonExistingOutputError,\
@@ -58,10 +58,10 @@ class RivineWallet:
         self._unlockhash_address_map = {}
         for index in range(nr_keys_per_seed):
             key = self._generate_spendable_key(index=index)
-            address = self._generate_address(key.unlockconditions.unlockhash)
-            self._keys[address] = key
-            self._unlockhash_key_map[key.unlockconditions.unlockhash] = key
-            self._unlockhash_address_map[address] = key.unlockconditions.unlockhash
+            # address = self._generate_address(key.unlockconditions.unlockhash)
+            self._keys[key.unlockhash] = key
+            # self._unlockhash_key_map[key.unlockconditions.unlockhash] = key
+            # self._unlockhash_address_map[address] = key.unlockconditions.unlockhash
         self._addresses = None
 
 
@@ -108,7 +108,7 @@ class RivineWallet:
         binary_seed = bytearray()
         binary_seed.extend(binary.encode(self._seed))
         binary_seed.extend(binary.encode(index))
-        binary_seed_hash = blake2b(binary_seed, digest_size=UNLOCKHASH_SIZE).digest()
+        binary_seed_hash = utils.hash(binary_seed)
         sk = ed25519.SigningKey(binary_seed_hash)
         pk = sk.get_verifying_key()
         return SpendableKey(pub_key=pk.to_bytes(), sec_key=sk.to_bytes())
@@ -414,7 +414,7 @@ class SpendableKey:
         if self._unlockhash is None:
             pub_key = Ed25519PublicKey(pub_key=self._pk)
             encoded_pub_key = binary.encode(pub_key)
-            hash = blake2b(encoded_pub_key, digest_size=UNLOCKHASH_SIZE).digest()
+            hash = utils.hash(encoded_pub_key, encoding_type='slice')
             self._unlockhash = UnlockHash(unlock_type=UNLOCK_TYPE_PUBKEY, hash=hash)
         return self._unlockhash
 

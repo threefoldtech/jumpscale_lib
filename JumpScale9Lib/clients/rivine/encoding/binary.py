@@ -14,8 +14,7 @@ def encode(value, type_=None):
     if type_ == 'slice':
         # slice is a variable size array, which means we need to prefix the size of the array and then we can encode the list itself
         result.extend(encode(len(value)))
-        for item in value:
-            result.extend(encode(item))
+        result.extend(encode(value))
     elif type_ == 'currency':
         nbytes, rem = divmod(value.bit_length(), 8)
         if rem:
@@ -31,6 +30,9 @@ def encode(value, type_=None):
             result = value.to_bytes(8, byteorder='little')
         elif value_type is bool:
             result = bytearray([1]) if value else bytearray([0])
+        elif value_type in (list, set, tuple, frozenset):
+            for item in value:
+                result.extend(encode(item))
         else:
             if hasattr(value, 'binary'):
                 result.extend(value.binary)

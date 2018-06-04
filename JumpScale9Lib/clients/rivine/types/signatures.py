@@ -27,11 +27,11 @@ class SiaPublicKey:
         """
         key_value = bytearray()
         s = bytearray(SPECIFIER_SIZE)
-        s[:len(self.algorithm] = bytearray(self.algorithm, encoding='utf-8')
+        s[:len(self.algorithm)] = bytearray(self.algorithm, encoding='utf-8')
         key_value.extend(s)
-        key_value.extend(binary.encode(self.pub_key, type='slice'))
+        key_value.extend(binary.encode(self.pub_key, type_='slice'))
         return key_value
-        
+
 
 class Ed25519PublicKey(SiaPublicKey):
     """
@@ -41,5 +41,4 @@ class Ed25519PublicKey(SiaPublicKey):
         """
         Initialize new Ed25519PublicKey
         """
-        self.algorithm = SIGEd25519
-        super().__init__(pub_key=pub_key)
+        super().__init__(algorithm=SIGEd25519, pub_key=pub_key)
