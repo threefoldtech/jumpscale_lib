@@ -51,7 +51,7 @@ except ImportError:
 
 setup(
     name='JumpScale9Lib',
-    version='9.3.1',
+    version='9.4.0-rc1',
     description='Automation framework for cloud workloads library',
     long_description=long_description,
     url='https://github.com/Jumpscale/lib9',
@@ -62,7 +62,7 @@ setup(
     install_requires=[
         'Brotli>=0.6.0',
         'Jinja2>=2.9.6',
-        'JumpScale9>=9.3.1',
+        'JumpScale9>=9.4.0-rc1',
         'Pillow>=4.1.1',
         'PyGithub>=1.34',
         'SQLAlchemy>=1.1.9',
