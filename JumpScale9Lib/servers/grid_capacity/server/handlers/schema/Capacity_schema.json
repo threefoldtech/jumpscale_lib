@@ -33,7 +33,10 @@
 			"type": "number"
 		},
 		"uptime": {
-			"type": "integer"
+			"type": [
+				"integer",
+				"null"
+			]
 		}
 	},
 	"required": [
@@ -43,7 +46,6 @@
 		"node_id",
 		"os_version",
 		"robot_address",
-		"sru",
-		"uptime"
+		"sru"
 	]
 }

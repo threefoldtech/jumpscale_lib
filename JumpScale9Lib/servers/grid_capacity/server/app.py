@@ -28,6 +28,8 @@ app.register_blueprint(frontend_bp)
 
 @app.template_filter()
 def uptime(seconds):
+    if not seconds:
+        return "not available"
     return str(datetime.timedelta(seconds=seconds))
 
 
