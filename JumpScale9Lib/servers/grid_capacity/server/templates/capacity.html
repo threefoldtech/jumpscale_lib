@@ -67,10 +67,10 @@
                 <select class="form-control" id="formFarmer"  name="farmer">
                   <option></option>
                   {% for farmer in farmers %}
-                  {% if form['farmer'] == farmer %}
-                  <option selected>{{farmer}}</option>
+                  {% if form['farmer'] == farmer.iyo_organization %}
+                  <option value="{{farmer.iyo_organization}}" selected>{{farmer.name}}</option>
                   {% else %}
-                  <option>{{farmer}}</option>
+                  <option value="{{farmer.iyo_organization}}">{{farmer.name}}</option>
                   {% endif %}
                   {% endfor %}
                 </select>
