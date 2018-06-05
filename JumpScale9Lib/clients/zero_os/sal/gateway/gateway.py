@@ -207,14 +207,13 @@ class Gateway:
         for nic in data.get('networks', []):
             network = self.networks.add(nic['name'], nic['type'], nic.get('id'))
             if nic.get('config'):
-                network.ip.gateway = nic['config'].get('gateway', None)
                 network.ip.cidr = nic['config'].get('cidr', None)
+                network.ip.gateway = nic['config'].get('gateway', None)
             if network.type == 'zerotier':
                 network.client_name = nic.get('ztClient')
-            if network.type == 'default':
-                self._default_nic = network.name
             if nic.get('hwaddr'):
                 network.hwaddr = nic['hwaddr']
+            network.public = nic.get('public')
             dhcpserver = nic.get('dhcpserver')
             if not dhcpserver:
                 continue
@@ -239,10 +238,12 @@ class Gateway:
         """
         Deploy gateway in reality
         """
-        if not self._default_nic:
-            publicnetworks = list(filter(lambda net: net.ip.gateway, self.networks))
-            if len(publicnetworks) != 1:
-                raise RuntimeError('Need exactly one network with a gateway')
+        publicnetworks = list(filter(lambda net: net.public, self.networks))
+        if len(publicnetworks) != 1:
+            raise RuntimeError('Need exactly one public network')
+        if  publicnetworks[0].type == 'zerotier' and not self._default_nic:
+            defnet = self.networks.add('nat0', 'default')
+            defnet.public = False
         if self.container is None:
             self.create_container()
         elif not self.container.is_running():
@@ -362,7 +363,7 @@ class Gateway:
                                                       privileged=True, identity=self.zt_identity)
         return self._container
 
-    def to_dict(self):
+    def to_dict(self, live=False):
         """
         Convert the gateway object to a dict.
         :return: a dict representation of the gateway matching the schema of the gateway template
@@ -379,7 +380,7 @@ class Gateway:
             'ztIdentity': self.zt_identity,
         }
         for network in self.networks:
-            nic = network.to_dict()
+            nic = network.to_dict(live=live)
             if network.hosts.list():
                 hosts = []
                 dhcp = {
@@ -459,7 +460,7 @@ class Gateway:
         if self.container is None:
             raise RuntimeError('Can not configure fw when gateway is not deployed')
 
-        if self._default_nic:
+        if self._default_nic and self.networks[self._default_nic].public:
             self._update_container_portforwards()
 
         firewall = Firewall(self.container, self.networks, self.portforwards)

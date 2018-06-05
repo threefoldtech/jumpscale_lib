@@ -32,20 +32,28 @@ gw = node.primitives.create_gateway(name="mygw")
 ```
 
 ## Public Network
+
+Gateway considers any network that configures `network.ip.gateway` a public network unless `network.public` is explictly set to `false`.
+It is also possible to force a network to be considered public by putting the `network.public` flag to `True`
+
 ### Public network usecase 1
 
 In this usecase our zero-os is attached directly to the public network.
 Because this IPAddress is already in use by zero-os itself, we can not use it directly in the gateway but instead we use the internal natting feature of zero-os and forward all ports needed by the gateway from the zero-os.
 
 This approach makes it impossible to create more then one gateway using this technique.
+For this technique it is required to set the `network.public` flag to `True`
 
 ```python
 public = gw.networks.add(name='public', type_='default')
+public.public = True
 ```
  
 ### Public network usecase 2
 
- In this usecase our zero-os has a second interface directly connected to the network with a public interface.
+In this usecase our zero-os has a second interface directly connected to the network with a public interface.
+
+#### Option 1: Create bridge on top of public interface
 
 We first need to prepare a bridge to hang our second interface on.
  ```python
@@ -59,6 +67,16 @@ After this we can attached our public network to the bridge
 ```python
 public = gw.networks.add(name='public', type_='bridge', networkid='publicbridge')
 ```
+
+
+#### Option 2: Passthrough the interface to the gateway
+
+We only have one public IP Address we can use on the public interface so instead of creating a bridge on it and attaching to it we can directly connect this interface to the gateway using the the type `passthrough`.
+```python
+public = gw.networks.add(name='public', type_='passthrough', networkid='eth1')
+```
+
+#### IP Address configuration
 
 For this kind of interface we need to configure a static IPAddress and gateway
 ```python
