@@ -13,6 +13,9 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)
 configure(app, settings.IYO_CLIENTID, settings.IYO_SECRET, settings.IYO_CALLBACK, '/callback', None, True, True, 'organization')
 
+# connect to mongodb
+j.clients.mongoengine.get('capacity', interactive=False)
+
 db.init_app(app)
 
 
@@ -21,11 +24,12 @@ from .frontend_blueprint import frontend_bp
 
 app.register_blueprint(api_api)
 app.register_blueprint(frontend_bp)
-j.clients.mongoengine.get('capacity', interactive=False)
 
 
 @app.template_filter()
 def uptime(seconds):
+    if not seconds:
+        return "not available"
     return str(datetime.timedelta(seconds=seconds))
 
 
