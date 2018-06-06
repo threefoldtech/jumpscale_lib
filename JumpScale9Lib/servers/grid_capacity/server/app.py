@@ -46,12 +46,12 @@ def deltatime_color(time):
     if not time:
         return 'danger'
 
-    delta = datetime.datetime.now() - time
-    if delta.seconds < 7200:  # less then 2h
+    delta = (datetime.datetime.now() - time).total_seconds()
+    if delta < 7200:  # less then 2h
         return 'success'
-    if 7200 < delta.seconds and delta.seconds < 10800:  # between 2h and 3h
+    if 7200 < delta and delta < 10800:  # between 2h and 3h
         return 'warning'
-    if delta.seconds > 10800:  # plus de 3h
+    if delta > 10800:  # plus de 3h
         return 'danger'
 
 
