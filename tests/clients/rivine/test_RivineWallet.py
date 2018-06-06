@@ -18,19 +18,18 @@ client_data = {'bc_address': 'https://explorer.testnet.threefoldtoken.com/',
 rivine_client = j.clients.rivine.get('mytestwallet', data=client_data)
 rivine_client.config.save()
 
-expected_unlockhashes = ['0145df536e9ad219fcfa9b2cd295d3499e59ced97e6cbed30d81373444db01acd563a402d9690c',
- '01dd6b2cb6098f301d6928041d58119c5c9cc62be4a6ba797c8f8a510cd3b0c5bd5d9459988e17',
- '0127ac47fda7f5ac7f3eeb83a29e26aeb9f82d14dd9b74d7ec277af90d2f90d8b90f54416d7a80',
- '019d0e215e29a548bb3aca345eeffe7a47d4bb49e7ecae29d5bd548632b182955950f1f7bd7bd7',
- '011c0baae330902503bbdaa945be3d8f6359c0f21bdba392046c7507992aa900ba31c7654f510c',
- '0162c3980953d55d7670859f474aec7a8caeb1517421c0e744a6c7c8e4ad00a6dbb0b9c7fef482',
- '01fa8ee5ecf2551f9a5a8cdc338ad6ef781d53929d712ebbe25b93a1ff4c89584d0365dededa12',
- '013e47b15d4a1d3974a326556cd127d5b86d607cb8726165bb4c9a3515a98b2ba1bdd01de70c5e',
- '01f65988eefa5f76d0d73f9879e91772e709faa947d1d6f03a2e36b554698594bf656867d297d6',
- '01573cbb732e4a075c3b95103efce8dbc479cc79d2ac9ad917c0c1f5facfbfa664831397a2c28f']
+expected_unlockhashes = [012bdb563a4b3b630ddf32f1fde8d97466376a67c0bc9a278c2fa8c8bd760d4dcb4b9564cdea6f,
+                          01b81f9e02d6be3a7de8440365a7c799e07dedf2ccba26fd5476c304e036b87c1ab716558ce816,
+                          01253b501da49528ff760675a95c0b71e02579425270723476b2798cc7a219870feccb6b15c8a0,
+                          019c03f961a03fb10f56aee2f3ee83c7c1c5669c141caf9db2c1c60ecebc1e49fff4c2553a5285,
+                          016da14f2ebd6bed12c93ca04308d34652ba34a9d93ae50dd6282f2ef1b2b6b17e3012704554b0,
+                          0166358d9c0efc3fca196df46e8b985e9fc0696e0b5b10d8d5d84eddeddbcc4b6ad60bf95fcb70,
+                          0117ffb7b036cb81ad230da98e74fe8b06bbdcea5880a99ffa249f45825abe2faed53cc656c26b,
+                          015069f937c810fff0266c08b49f5cb26ff92207e30051a8d0107909e7014ed4f2c7f7d1ad311d,
+                          0167bb3ab263a1a69c3d7f098738f5aa6ab5e26334c1bfade941f1ddaf868c4c7230f609c78eef,
+                          01e2a7a3ec862a80756caa81d0f33b619b48144b1e85d6997a249157affa4f0dac73231378ff14]
 
 # create a wallet based on the generated Seed
-# rivine_wallet = RivineWallet(seed=seed, bc_network='http://185.69.166.13:2015', nr_keys_per_seed=5)
 rivine_wallet = rivine_client.wallet
 
 actual_unlockhashes = rivine_wallet.addresses

@@ -65,16 +65,16 @@ class RivineWallet:
         self._addresses = None
 
 
-    def _generate_address(self, unlockhash):
-        """
-        Generate a public address from unlockhash
-
-        @param unlockhash: Source unlockhash to create an address from it
-        """
-        key_bytes = bytearray.fromhex(unlockhash)
-        key_bytes = WALLET_ADDRESS_TYPE + key_bytes
-        key_hash = blake2b(key_bytes, digest_size=UNLOCKHASH_SIZE).digest()
-        return '{}{}{}'.format(WALLET_ADDRESS_TYPE.hex(), unlockhash, key_hash[:UNLOCKHASH_CHECKSUM_SIZE].hex())
+    # def _generate_address(self, unlockhash):
+    #     """
+    #     Generate a public address from unlockhash
+    #
+    #     @param unlockhash: Source unlockhash to create an address from it
+    #     """
+    #     key_bytes = bytearray.fromhex(unlockhash)
+    #     key_bytes = WALLET_ADDRESS_TYPE + key_bytes
+    #     key_hash = blake2b(key_bytes, digest_size=UNLOCKHASH_SIZE).digest()
+    #     return '{}{}{}'.format(WALLET_ADDRESS_TYPE.hex(), unlockhash, key_hash[:UNLOCKHASH_CHECKSUM_SIZE].hex())
 
 
     @property
@@ -133,12 +133,15 @@ class RivineWallet:
         return result
 
 
-    def check_address(self, address):
+    def check_address(self, address, log_errors=True):
         """
         Check if an address is valid
         performs a http call to an explorer to check if an address has (an) (unspent) output(s)
 
         @param address: Address to check
+        @param log_errors: If False, no logging will be executed
+
+        @raises: @RESTAPIError if failed to check address
         """
         result = None
         url = '{}/explorer/hashes/{}'.format(self._bc_network, address)
@@ -146,7 +149,8 @@ class RivineWallet:
         response = requests.get(url, headers=headers)
         if response.status_code != 200:
             msg = "Failed to retrieve address information. {}".format(response.text.strip('\n'))
-            logger.error(msg)
+            if log_errors:
+                logger.error(msg)
             raise RESTAPIError(msg)
         else:
             result = response.json()
@@ -163,7 +167,7 @@ class RivineWallet:
         logger.info('Current chain height is: {}'.format(current_chain_height))
         for address in self._keys.keys():
             try:
-                address_info = self.check_address(address=address)
+                address_info = self.check_address(address=address, log_errors=False)
             except RESTAPIError as ex:
                 logger.error('Skipping address: {}'.format(address))
             else:
