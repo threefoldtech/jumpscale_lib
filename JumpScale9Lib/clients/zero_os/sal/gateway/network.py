@@ -161,7 +161,7 @@ class Hosts(Collection):
 
 
 class IP:
-    def __init__(self, cidr=None, gateway=None):
+    def __init__(self, network, cidr=None, gateway=None):
         """
         IP Address configuration for network
 
@@ -174,28 +174,51 @@ class IP:
             self._cidr = netaddr.IPNetwork(cidr)
         else:
             self._cidr = None
-        self.gateway = gateway
+        self._gateway = gateway
+        self.network = network
+
+    @property
+    def gateway(self):
+        if self._gateway:
+            return self._gateway
+        elif self.network._parent.is_running():
+            routes = self.network._parent.container.client.ip.route.list()
+            for route in routes:
+                if route['dev'] == self.network.iface and route['gw']:
+                    return route['gw']
+
+    @gateway.setter
+    def gateway(self, value):
+        if value is None:
+            return
+        if value not in self.cidr:
+            raise ValueError('Gateway should be port of {}'.format(self.cidr))
+        self._gateway = value
 
     @property
     def cidr(self):
-        return self._cidr
+        if self._cidr:
+            return self._cidr
+        if self.network._parent.is_running():
+            return self.network._parent.container.default_ip(self.network.iface)
+        return None
 
     @property
     def address(self):
-        if self._cidr:
-            return str(self._cidr.ip)
+        if self.cidr:
+            return str(self.cidr.ip)
         return None
 
     @property
     def subnet(self):
-        if self._cidr:
-            return str(self._cidr.cidr)
+        if self.cidr:
+            return str(self.cidr.cidr)
         return None
 
     @property
     def netmask(self):
-        if self._cidr:
-            return str(self._cidr.netmask)
+        if self.cidr:
+            return str(self.cidr.netmask)
         return None
 
     @cidr.setter
@@ -203,46 +226,30 @@ class IP:
         self._cidr = netaddr.IPNetwork(value)
 
     def __str__(self):
-        return "IP <{}>".format(self._cidr)
+        return "IP <{}>".format(self.cidr)
 
     __repr__ = __str__
 
 
-class DefaultIP:
+class DefaultIP(IP):
     def __init__(self, network):
         """
         IP Address configuration for default network
         :param network: the network this ip belongs to
         :type network: DefaultNetwork
         """
-        self.network = network
-
-    @property
-    def gateway(self):
-        routes = self.network._parent.container.client.ip.route.list()
-        for route in routes:
-            if route['dev'] == self.network.name and route['gw']:
-                return route['gw']
-        raise RuntimeError('Unable to determine network {} gateway'.format(self.network.name))
+        super().__init__(network, None, None)
 
     @property
     def cidr(self):
-        return self.network._parent.container.default_ip(self.network.name)
+        return self.network._parent.container.default_ip(self.network.iface)
 
-    @property
-    def address(self):
-        return str(self.cidr.ip)
-
-    @property
-    def subnet(self):
-        return str(self.cidr.cidr)
-
-    @property
-    def netmask(self):
-        return str(self.cidr.netmask)
+    @cidr.setter
+    def cidr(self, value):
+        raise RuntimeError('Can not set cidr on default network')
 
     def __str__(self):
-        return "Default IP"
+        return "DefaultIP <{}>".format(self.cidr)
 
     __repr__ = __str__
 
@@ -335,16 +342,33 @@ class Network(Nic):
         :type gateway: Gateway
         """
         super().__init__(name, type_, networkid, None, gateway)
-        self.ip = IP()
+        self.ip = IP(self)
         self.hosts = Hosts(gateway, self)
+        self._public = None
+
+    @property
+    def public(self):
+        """
+        Check if network is public or not if a network has gateway is's considered public
+        It's also considered public if the public flag has been explictly set
+        """
+        if self._public is None:
+            return bool(self.ip.gateway)
+        return self._public
+
+    @public.setter
+    def public(self, value):
+        self._public = value
 
     def __str__(self):
         return "{} <{} {}>".format(self.__class__.__name__, self.name, self.type)
 
-    def to_dict(self, forcontainer=False):
+    def to_dict(self, forcontainer=False, live=False):
         data = super().to_dict(forcontainer=forcontainer)
         if self.ip.cidr:
             data['config'] = {'cidr': str(self.ip.cidr), 'gateway': self.ip.gateway}
+        if not forcontainer:
+            data['public'] = self.public
         return data
 
     __repr__ = __str__
@@ -421,9 +445,10 @@ class ZTNetwork(ZTNic):
     def __init__(self, name, networkid, gateway):
         self._networkid = None
         super().__init__(name, networkid, None, gateway)
-        self.ip = IP()
+        self.ip = IP(self)
         self.hosts = Hosts(gateway, self)
         self.client = None
+        self._public = None
 
     @property
     def networkid(self):
@@ -435,8 +460,33 @@ class ZTNetwork(ZTNic):
             raise ValueError('Invalid value for zerotierid')
         self._networkid = value
 
+    @property
+    def public(self):
+        """
+        Check if network is public or not if a network has gateway is's considered public
+        It's also considered public if the public flag has been explictly set
+        """
+        if self._public is None:
+            return bool(self.ip.gateway)
+        return self._public
 
-class DefaultNetwork(Nic):
+    @public.setter
+    def public(self, value):
+        self._public = value
+
+    def __str__(self):
+        return "{} <{} {}>".format(self.__class__.__name__, self.name, self.type)
+
+    def to_dict(self, forcontainer=False, live=False):
+        data = super().to_dict(forcontainer=forcontainer)
+        if not forcontainer:
+            data['public'] = self.public
+        if live and self.ip.cidr:
+            data['config'] = {'cidr': str(self.ip.cidr), 'gateway': self.ip.gateway}
+        return data
+
+
+class DefaultNetwork(Network):
     def __init__(self, name, gateway):
         """
         Default Network specific implementation implementation
@@ -448,7 +498,7 @@ class DefaultNetwork(Nic):
         :param gateway: Gateway instance
         :type gateway: Gateway
         """
-        super().__init__(name, 'default', None, None, gateway)
+        super().__init__(name, None, 'default', gateway)
         self.hosts = Hosts(gateway, self)
         self.ip = DefaultIP(self)
 
@@ -456,3 +506,9 @@ class DefaultNetwork(Nic):
         return "{} <{} {}>".format(self.__class__.__name__, self.name, self.type)
 
     __repr__ = __str__
+
+    def to_dict(self, forcontainer=False, live=False):
+        data = Nic.to_dict(self, forcontainer=forcontainer)
+        if not forcontainer:
+            data['public'] = self.public
+        return data
