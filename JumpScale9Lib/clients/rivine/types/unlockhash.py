@@ -8,8 +8,8 @@ from JumpScale9Lib.clients.rivine import utils
 UNLOCK_TYPE_PUBKEY = bytearray([1])
 UNLOCKHASH_SIZE = 32
 UNLOCKHASH_TYPE = 'unlockhash'
-UNLOCKHASH_SIZE = 32
 UNLOCKHASH_CHECKSUM_SIZE = 6
+UNLOCKHASH_TYPE_ZISE = 1
 
 class UnlockHash:
     """
@@ -46,3 +46,12 @@ class UnlockHash:
         Calls __str__
         """
         return str(self)
+
+    @classmethod
+    def from_string(cls, ulh_str):
+        """
+        Returns an unlockhash object from a string
+        """
+        if len(ulh_str) == (UNLOCKHASH_SIZE * 2) + (UNLOCKHASH_TYPE_ZISE * 2) + (UNLOCKHASH_CHECKSUM_SIZE * 2):
+            ul_type, ulh, ulh_checksum = ulh_str[:UNLOCKHASH_TYPE_ZISE*2], ulh_str[UNLOCKHASH_TYPE_ZISE*2: UNLOCKHASH_TYPE_ZISE*2 + UNLOCKHASH_SIZE*2], ulh_str[UNLOCKHASH_TYPE_ZISE*2 + UNLOCKHASH_SIZE*2:]
+            return cls(unlock_type=bytearray.fromhex(ul_type), hash=bytearray.fromhex(ulh))
