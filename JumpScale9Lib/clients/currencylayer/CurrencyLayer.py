@@ -1,4 +1,5 @@
 from js9 import j
+import cryptocompare
 
 TEMPLATE = """
 api_key_ = ""
@@ -40,7 +41,14 @@ class CurrencyLayerClient(JSConfigClient):
                 c = j.clients.http.getConnection()
                 r = c.get(url).readlines()
                 data = j.data.serializer.json.loads(r[0].decode())["quotes"]
-                self.logger.error("fetch currency from internet")
+                self.logger.info("fetch currency from internet")
+
+                # add supported crypto currencies
+                ETH = cryptocompare.get_price('ETH', 'USD')['ETH']['USD']
+                data['USDETH'] = ETH
+                XRP = cryptocompare.get_price('XRP', 'USD')['XRP']['USD']
+                data['USDXRP'] = XRP
+                # TODO: add tft 
                 return data
             else:
                 if self.fake or self.fallback:
