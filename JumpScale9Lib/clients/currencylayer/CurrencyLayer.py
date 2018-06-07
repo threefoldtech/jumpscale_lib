@@ -44,9 +44,9 @@ class CurrencyLayerClient(JSConfigClient):
                 self.logger.info("fetch currency from internet")
 
                 # add supported crypto currencies
-                ETH = cryptocompare.get_price('ETH', 'USD')['ETH']['USD']
+                ETH = cryptocompare.get_price('USD', 'ETH')['USD']['ETH']
                 data['USDETH'] = ETH
-                XRP = cryptocompare.get_price('XRP', 'USD')['XRP']['USD']
+                XRP = cryptocompare.get_price('USD', 'XRP')['USD']['XRP']
                 data['USDXRP'] = XRP
                 # TODO: add tft 
                 return data
