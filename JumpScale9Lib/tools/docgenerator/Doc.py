@@ -37,6 +37,8 @@ class Doc(JSBASE):
             # means the subdir starts with _
             self.show = False
 
+        self._processed = False
+
     @property
     def title(self):
         if "title" in self.data:
@@ -109,8 +111,8 @@ class Doc(JSBASE):
         try:
             data = j.data.serializer.toml.loads(dataText)
         except Exception as e:
-            from IPython import embed
             self.logger.debug("DEBUG NOW toml load issue in doc")
+            from IPython import embed
             embed()
             raise RuntimeError("stop debug here")
         self._metadata_update(data)
@@ -177,8 +179,8 @@ class Doc(JSBASE):
         try:
             block = eval(cmd)
         except Exception as e:
-            # from IPython import embed;embed(colors='Linux')
-            # s
+            from IPython import embed;embed(colors='Linux')
+            s
             block = "```python\nERROR IN MACRO*** TODO: *1 ***\ncmd:\n%s\nERROR:\n%s\n```\n" % (cmd, e)
             self.docsite.error_raise(block, doc=self)          
         return block
@@ -200,7 +202,10 @@ class Doc(JSBASE):
         if language_type.lower() == "meta":
             self.metadata = self._metadata_process(block)
             block = ""
-
+        elif line0.strip()=="!!!":   
+            block = "\n".join(splitted[1:])
+            self.metadata = self._metadata_process(block)
+            block = ""
         elif line0.startswith("!!!"):        
             #means is macro  
             block = "\n".join(splitted[1:])    
@@ -211,6 +216,20 @@ class Doc(JSBASE):
             out+="\n```%s\n%s\n```\n" % (language_type,block)
 
         return out 
+
+    def _content_single_line_macros(self):
+        """
+        look for '!!! at start of line, this is a single line macro
+        """
+        out=""
+        for line in self.content.split("\n"):
+            if line.strip().startswith("!!!"):                
+                line2 = line.strip()[3:]
+                if line2.strip()=="":
+                    raise RuntimeError("line !!! should not be empty at this point")
+                line = self._methodline_process(line,block="")
+            out += "%s\n"%line
+        self.content = out
 
     def _content_blocks_process(self):
         """
@@ -227,7 +246,9 @@ class Doc(JSBASE):
         dataBlock = ""
         language_type = ""
         for line in content.split("\n"):
-            if state == "blockstart" and (line.startswith("```") or line.startswith("'''")):
+            line2=line.strip()
+            
+            if state == "blockstart" and (line2.startswith("```") or line2.startswith("'''")):
                 #means we are at end of block
                 out = self._block_process(out,block,language_type)
                 block = ""
@@ -245,7 +266,7 @@ class Doc(JSBASE):
                 block += "%s\n" % line
                 continue
 
-            if state == "start" and (line.startswith("```") or line.startswith("'''")):
+            if state == "start" and (line2.startswith("```") or line2.startswith("'''")):
                 language_type = line[3:].strip()
                 state = "blockstart"
                 continue
@@ -324,6 +345,7 @@ class Doc(JSBASE):
             if j.sal.fs.getFileExtension(fname).lower() in ["png", "jpg", "jpeg", "mov", "mp4"]:
                 fnameFound = self.docsite.file_get(fname, die=False)
                 if fnameFound==None:
+                    print("links process")
                     from IPython import embed;embed(colors='Linux')
                     s
                     msg = "**ERROR: COULD NOT FIND LINK: %s TODO: **" % fnameFound
@@ -370,6 +392,9 @@ class Doc(JSBASE):
         self.process3()
 
     def process(self):
+        if self._processed:
+            return 
+
         j.tools.docgenerator.logger.info("process:%s" % self)
 
         if self.content_default != "":
@@ -383,6 +408,10 @@ class Doc(JSBASE):
 
         self._content_blocks_process()
 
+        if "!!!" in self.content:
+            #means there are still macro's in there, need to check per line
+            self._content_single_line_macros()
+
         self._data_add()
 
         if "{{" in self.content:
@@ -391,7 +420,7 @@ class Doc(JSBASE):
         self._links_process()
         # self._defs_process()
 
-        # self.processed = True
+        self._processed = True
 
         self.write()
 
@@ -418,7 +447,7 @@ class Doc(JSBASE):
 
             C = ""
 
-            if self.docsite.hugo:
+            if self.docsite.hugo and self.doc_add_meta:
                 C += "+++\n"
                 C += toml.dumps(self.data)
                 C += "\n+++\n\n"

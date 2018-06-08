@@ -5,7 +5,6 @@ A System Abstraction Layer (SAL) is a thin abstraction layer making it easy for 
 Some of `JumpScale9` SALs:
 
 - [DiskLayout](Disklayout.md)
-- [FS](FS.md)
 - [KVM](KVM.md)
 - [Open vSwitch](OpenVSwitch.md)
 - [Samba](Samba.md)
@@ -16,10 +15,3 @@ Some of `JumpScale9` SALs:
 - [UFW](UFW.md)
 - [Zero-OS SAL](zos/primitives.md)
 
-
-```
-!!!
-title = "SAL"
-date = "2017-04-08"
-tags = []
-```

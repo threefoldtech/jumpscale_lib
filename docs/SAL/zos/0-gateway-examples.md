@@ -48,7 +48,7 @@ public = gw.networks.add(name='public', type_='default')
  In this usecase our zero-os has a second interface directly connected to the network with a public interface.
 
 We first need to prepare a bridge to hang our second interface on.
- ```python
+```python
 # create bridge
 node.client.bridge.create('publicbridge')
 #attach eth1 to bridge
@@ -202,9 +202,11 @@ The gateway object has a builtin way to serialize its data to json or a python d
 j.data.serializer.json.dump('mygw.json', gw.to_dict())
 ```
 ### Load gateway config from mygw.json
+1111112
 ```python
 gw = node.primitives.create_gateway(name="mygw")
 gw.from_dict(j.data.serializer.json.load('mygw.json'))
+1111113
 ```
 
 ```
