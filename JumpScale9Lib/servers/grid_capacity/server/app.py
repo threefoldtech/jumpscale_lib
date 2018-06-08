@@ -30,7 +30,18 @@ app.register_blueprint(frontend_bp)
 def uptime(seconds):
     if not seconds:
         return "not available"
-    return str(datetime.timedelta(seconds=seconds))
+
+    delta = datetime.timedelta(seconds=seconds)
+
+    # manually compute hh:mm:ss
+    hrs = int(delta.seconds / 3600)
+    min = int((delta.seconds - (hrs * 3600)) / 60)
+    sec = delta.seconds % 60
+
+    if delta.days > 0:
+        return '%d days, %02d:%02d:%02d' % (delta.days, hrs, min, sec)
+
+    return '%02d:%02d:%02d' % (hrs, min, sec)
 
 
 @app.template_filter()
