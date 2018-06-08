@@ -152,7 +152,7 @@ class ZTNic(Nic):
         if value:
             self._client_name = value
 
-        if not j.clients.zerotier.exist(self._client_name):
+        if not j.clients.zerotier.exists(self._client_name):
             return
 
         self._client_name = value
