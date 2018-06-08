@@ -89,9 +89,9 @@ class Disks(Collection):
         :type name: str
         :param url: Disk url example: nbd://myip:port
         :type url: str
-        :param mounpoint: Optional location to mount this disk on the vm 
+        :param mounpoint: Optional location to mount this disk on the vm
                           Only works in combination with filesystem
-        :type mountpoint: str 
+        :type mountpoint: str
         :param filesystem: Filesystem the disk contains
         :type filesystem: str
 
@@ -253,6 +253,10 @@ class VMNics(Nics):
         return super().add_zerotier(network, name)
 
 
+class VMNotRunningError(RuntimeError):
+    pass
+
+
 class VM:
     def __init__(self, node, name, flist=None, vcpus=2, memory=2048):
         self.node = node
@@ -288,11 +292,15 @@ class VM:
         info = self.info
         if info:
             return info['uuid']
-        raise RuntimeError('VM is not running')
+        raise VMNotRunningError('VM is not running')
 
     def destroy(self):
-        logger.info('Destroying kvm with uuid %s' % self.uuid)
-        self.node.client.kvm.destroy(self.uuid)
+        try:
+            logger.info('Destroying kvm with uuid %s' % self.uuid)
+            self.node.client.kvm.destroy(self.uuid)
+        except VMNotRunningError:
+            # destroying something that doesn't exists is a noop
+            pass
         self.drop_ports()
 
     def shutdown(self):
