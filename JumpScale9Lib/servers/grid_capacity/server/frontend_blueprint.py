@@ -17,7 +17,7 @@ def send_js(path):
 @frontend_bp.route('/', methods=['GET'])
 def capacity():
     countries = NodeRegistration.all_countries()
-    farmers = [f.iyo_organization for f in FarmerRegistration.list()]
+    farmers = FarmerRegistration.list()
     nodes = []
     form = {
         'mru': 0,

@@ -5,12 +5,12 @@
   <nav aria-label="Page navigation">
     <ul class="pagination">
       {% if nodes.has_prev %}
-      <li class="page-item"><a class="page-link" href="{{ url_for(endpoint, page=nodes.prev_num, cru=form['cru'], mru=form['mru'], hru=form['hru'], sru=form['sru'], country=form['country']) }}">Previous</a></li>
+      <li class="page-item"><a class="page-link" href="{{ url_for(endpoint, page=nodes.prev_num, cru=form['cru'], mru=form['mru'], hru=form['hru'], sru=form['sru'], country=form['country'], farmer=form['farmer']) }}">Previous</a></li>
       {% endif %}
       {% for page in nodes.iter_pages() %}
         {% if page %}
           {% if page != pagination.page %}
-            <li class="page-item"><a class="page-link" href="{{ url_for(endpoint, page=page, cru=form['cru'], mru=form['mru'], hru=form['hru'], sru=form['sru'], country=form['country']) }}">{{page}}</a></li>
+            <li class="page-item"><a class="page-link" href="{{ url_for(endpoint, page=page, cru=form['cru'], mru=form['mru'], hru=form['hru'], sru=form['sru'], country=form['country'], farmer=form['farmer']) }}">{{page}}</a></li>
           {% else %}
             <li class="page-item active disabled"><a class="page-link" href="#">{{page}} <span class="sr-only">(current)</span></a></li>
           {% endif %}
@@ -19,7 +19,7 @@
         {% endif %}
       {% endfor %}
       {% if nodes.has_next %}
-      <li class="page-item"><a class="page-link" href="{{ url_for(endpoint, page=nodes.next_num, cru=form['cru'], mru=form['mru'], hru=form['hru'], sru=form['sru'], country=form['country']) }}">Next</a></li>
+      <li class="page-item"><a class="page-link" href="{{ url_for(endpoint, page=nodes.next_num, cru=form['cru'], mru=form['mru'], hru=form['hru'], sru=form['sru'], country=form['country'], farmer=form['farmer']) }}">Next</a></li>
       {% endif %}
     </ul>
   </nav>
@@ -67,10 +67,10 @@
                 <select class="form-control" id="formFarmer"  name="farmer">
                   <option></option>
                   {% for farmer in farmers %}
-                  {% if form['farmer'] == farmer %}
-                  <option selected>{{farmer}}</option>
+                  {% if form['farmer'] == farmer.iyo_organization %}
+                  <option value="{{farmer.iyo_organization}}" selected>{{farmer.name}}</option>
                   {% else %}
-                  <option>{{farmer}}</option>
+                  <option value="{{farmer.iyo_organization}}">{{farmer.name}}</option>
                   {% endif %}
                   {% endfor %}
                 </select>
@@ -182,9 +182,9 @@
         </div>
         <div class="modal-body">
           <ul>
-            <li><span class="badge badge-success">green</span> the uptime has been refreshed less then 2 hours ago</li>
+            <li><span class="badge badge-success">green</span> the uptime has been refreshed less than 2 hours ago</li>
             <li><span class="badge badge-warning">yellow</span> the uptime has been refreshed between 2 hours and 3 hours ago</li>
-            <li><span class="badge badge-danger">red</span> the uptime has been refreshed more then 3 hours ago</li>
+            <li><span class="badge badge-danger">red</span> the uptime has been refreshed more than 3 hours ago</li>
           </ul>
         </div>
         <div class="modal-footer">

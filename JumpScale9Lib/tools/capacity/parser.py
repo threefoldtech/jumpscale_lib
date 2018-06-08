@@ -115,7 +115,7 @@ class Report():
     @property
     def MRU(self):
         """
-        return the number of memory units in GB
+        return the number of memory units in GiB
         """
         size = (self._total_mem / GIB)
         return round(size, 2)
@@ -123,7 +123,7 @@ class Report():
     @property
     def HRU(self):
         """
-        return the number of hd units in GB
+        return the number of hd units in GiB
         size field of disks is expected to be in bytes
         """
         unit = 0
@@ -135,7 +135,7 @@ class Report():
     @property
     def SRU(self):
         """
-        return the number of ssd units in GB
+        return the number of ssd units in GiB
         size field of disks is expected to be in bytes
         """
         unit = 0
