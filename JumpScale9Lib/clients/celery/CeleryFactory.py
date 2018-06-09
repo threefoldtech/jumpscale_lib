@@ -16,6 +16,18 @@ class CeleryFactory(JSConfigFactory, JSBASE):
         JSBASE.__init__(self)
         JSConfigFactory.__init__(self, CeleryClient)
 
+    def test(self):
+        """
+        js9 'j.clients.celery.test()'
+        """
+        cmd="js9 'c=j.clients.celery.get();c.flower_start()'"
+        j.tools.tmux.execute(cmd, session='main', window='flower',pane='main', session_reset=False, window_reset=True)
+        print("celery flower running on http://localhost:5555/")
+
+
+
+
+
 
 class CeleryClient(JSConfigClient, JSBASE):
 
@@ -28,7 +40,10 @@ class CeleryClient(JSConfigClient, JSBASE):
         self.url = self.config.data['url']
         self.actorsPath = self.config.data['actors_path']
 
-    def flowerStart(self):
+    def flower_start(self):
+        """
+        js9 'c=j.clients.celery.get();c.flower_start()'
+        """
         from flower.command import FlowerCommand
         from flower.utils import bugreport
 
@@ -81,11 +96,11 @@ class CeleryClient(JSConfigClient, JSBASE):
         code = self._getCode(path2)
         return code
 
-    def celeryStart(self, concurrency=4, actorsPath="actors"):
+    def celery_start(self, concurrency=4, actorsPath="actors"):
 
         from celery import Celery
 
-        # j.clients.redis.core_start()
+        j.clients.redis.core_start()
 
         app = Celery('tasks', broker=self.url)
 
@@ -108,7 +123,7 @@ class CeleryClient(JSConfigClient, JSBASE):
 
         app.worker_main()
 
-    def getCeleryClient(self, actorName, local=False):
+    def celery_client_get(self, actorName, local=False):
 
         if actorName in self.actors:
             return self.actors[actorName]
