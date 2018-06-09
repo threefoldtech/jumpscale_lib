@@ -1,3 +1,4 @@
+from js9 import j
 from JumpScale9Lib.clients.zerotier.ZerotierClient import ZerotierClient, ZeroTierNetwork
 from ..abstracts import Collection, Nic, ZTNic
 from ..VM import VM
@@ -195,12 +196,18 @@ class IP:
             raise ValueError('Gateway should be port of {}'.format(self.cidr))
         self._gateway = value
 
+    def _get_ip(self):
+        try:
+            return self.network._parent.container.default_ip(self.network.iface)
+        except LookupError:
+            return None
+
     @property
     def cidr(self):
         if self._cidr:
             return self._cidr
         if self.network._parent.is_running():
-            return self.network._parent.container.default_ip(self.network.iface)
+            return j.tools.timer.execute_until(self._get_ip, 180, 2)
         return None
 
     @property
