@@ -186,25 +186,29 @@ class Host:
         self.sshclient = sshclient
         self.index = index
 
-    def configure_ipxe_boot(self, boot_url, tftp_root='/opt/storage'):
+    def configure_ipxe_boot(self, lkrn_url, tftp_root='/opt/storage'):
         """[summary]
 
-        :param boot_url: url to boot from includes zerotier netowrk id ex: http://unsecure.bootstrap.gig.tech/ipxe/zero-os-master/a84ac5c10a670ca3
+        :param lkrn_url: url that points to a LKRN file to boot from that includes boot parameters. E.g.: https://bootstrap.gig.tech/krn/master/0/
         :type boot_url: str
         :param tftp_root: tftp root location where pxe config are stored, defaults to '/opt/storage'
         :param tftp_root: str, optional
         """
-
         file_name = '01-{}'.format(str(netaddr.EUI(self.mac)).lower())
         executor = j.tools.executor.ssh_get(self.sshclient)
-        pxe_config_file = '{root}/pxelinux.cfg/{file}'.format(root=tftp_root, file=file_name)
+        pxe_config_root = '{root}/pxelinux.cfg'.format(root=tftp_root)
+        pxe_config_file = '{root}/{file}'.format(root=pxe_config_root, file=file_name)
+        lkrn_file = '{root}/{file}'.format(root=pxe_config_root, file=file_name + ".lkrn")
+        # download lkrn file
+        executor.execute("mkdir -p {root}/lkrn".format(root=pxe_config_root))
+        executor.execute("wget -O {target} {source}".format(target=lkrn_file, source=lkrn_url))
         pxe_config_data = (
         "default 1\n"
         "timeout 100\n"
         "prompt 1\n"
         "ipappend 2\n\n"
         "label 1\n"
-        "\tKERNEL ipxe.krn dhcp && chain {}".format(boot_url))
+        "\tKERNEL {}".format(lkrn_file))
 
         executor.file_write(pxe_config_file, pxe_config_data)
 

@@ -53,11 +53,13 @@ class DocSite(JSBASE):
         self.template_path = j.clients.git.getContentPathFromURLorPath(self.template)
         self.generator_path = j.sal.fs.joinPaths(self.template_path, "generator.py")
 
+        self.doc_add_meta = False
+
         if self.config:
             if "theme" in self.config and self.config["theme"]:
                 self.template_theme_path = "%s/themes/%s" % (self.template_path, self.config["theme"])
             
-
+            
             # now go in configured git directories
             if 'depends' in self.config:
                 for urlfull in self.config['depends']:
@@ -67,12 +69,14 @@ class DocSite(JSBASE):
                     path = j.clients.git.getContentPathFromURLorPath(url)
                     j.tools.docgenerator.load(path,name=name)
 
-            if 'name' not in self.config:
-                raise j.exceptions.Input(message="cannot find argument 'name' in config.yaml of %s" %
-                                        self.source, level=1, source="", tags="", msgpub="")
-            
-            self.name = self.config["name"]
+            if 'doc_add_meta' in self.config:
+                self.doc_add_meta = bool(self.config['doc_add_meta'])
 
+            if self.name == "":
+                if 'name' not in self.config:
+                    raise j.exceptions.Input(message="cannot find argument 'name' in config.yaml of %s" %
+                                        self.source, level=1, source="", tags="", msgpub="")
+                self.name = self.config["name"]
 
             # lets make sure its the outpath at this time and not the potentially changing one
             self.outpath = j.sal.fs.joinPaths(copy.copy(j.tools.docgenerator.outpath), self.name)
@@ -143,6 +147,7 @@ class DocSite(JSBASE):
         fulldirpath = j.sal.fs.getDirName(path)
         rdirpath = j.sal.fs.pathRemoveDirPart(fulldirpath, self.path)
         rdirpath = rdirpath.strip("/").strip().strip("/")
+        import pudb; pudb.set_trace()
         self.data_default[rdirpath] = data
 
     @property
