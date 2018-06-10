@@ -4,6 +4,16 @@ This module implements methods to encode values from different data types to bin
 https://github.com/rivine/rivine/blob/master/doc/transactions/transaction.md#binary-encoding
 """
 
+def encode_all(values):
+    """
+    Encodes a list of object
+    """
+    result = bytearray()
+    for item in values:
+        result.extend(encode(item))
+    return result
+    
+
 def encode(value, type_=None):
     """
     Encode the value into its binary representation

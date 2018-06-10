@@ -61,7 +61,7 @@ class RivineWallet:
         for index in range(nr_keys_per_seed):
             key = self._generate_spendable_key(index=index)
             # address = self._generate_address(key.unlockconditions.unlockhash)
-            self._keys[key.unlockhash] = key
+            self._keys[str(key.unlockhash)] = key
             # self._unlockhash_key_map[key.unlockconditions.unlockhash] = key
             # self._unlockhash_address_map[address] = key.unlockconditions.unlockhash
         self.check_balance()
@@ -211,7 +211,14 @@ class RivineWallet:
                 for index, minerpayout in enumerate(mineroutputs):
                     if minerpayout.get('unlockhash') == address:
                         logger.info('Found miner output with value {}'.format(minerpayout.get('value')))
-                        self._unspent_coins_outputs[block_info['minerpayoutids'][index]] = minerpayout
+                        self._unspent_coins_outputs[block_info['minerpayoutids'][index]] = {
+                            'value': minerpayout['value'],
+                            'condition':{
+                                'data': {
+                                    'unlockhash': address
+                                }
+                            }
+                        }
 
 
     def _collect_transaction_outputs(self, address, transactions):
@@ -246,8 +253,22 @@ class RivineWallet:
                         logger.info('Found a spent address {}'.format(coin_input.get('parentid')))
                         del self._unspent_coins_outputs[coin_input.get('parentid')]
 
+    def send_money(self, amount, recipient):
+        """
+        Sends TFT tokens from the user's wallet to the recipient address
 
-    def spend_money(self, amount, recipient, minerfee=None, sign_transaction=True, custom_data=None):
+        @param amount: Amount to be transfered in TF tokens
+        @param recipient: Address of the fund recipient
+        """
+        # convert amount to hastings
+        amount = amount * 1000000000
+        transaction = self._create_transaction(amount=amount,
+                                                recipient=recipient,
+                                                sign_transaction=True)
+        self._commit_transaction(transaction=transaction)
+
+
+    def _create_transaction(self, amount, recipient, minerfee=None, sign_transaction=True, custom_data=None):
         """
         Creates new transaction and sign it
         creates a new transaction of the specified ammount to a specified address. A remainder address
@@ -278,21 +299,22 @@ class RivineWallet:
             # if we reach the required funds, then break
             if input_value >= required_funds:
                 break
-            transaction.add_input(parent_id=address, pub_key=self._keys[UnlockHash.from_string(address)].public_key)
+            transaction.add_coin_input(parent_id=address, pub_key=self._keys[unspent_coin_output['condition']['data']['unlockhash']].public_key)
 
             input_value = int(unspent_coin_output['value'])
 
-        for txn_input in transaction.inputs:
-            if self._unspent_coins_outputs[txn_input['parentid']]['condition']['data']['unlockhash'] not in self._keys.keys():
+        for txn_input in transaction.coins_inputs:
+            if self._unspent_coins_outputs[txn_input.parent_id]['condition']['data']['unlockhash'] not in self._keys:
                 raise NonExistingOutputError('Trying to spend unexisting output')
 
-        transaction.add_output({'value': amount,
-                                'condition':{
-                                    'type': 1,
-                                    'data': {
-                                        'unlockhash': recipient}
-                                    }
-                                })
+        transaction.add_coin_output(value=amount, recipient=recipient)
+        # transaction.add_output({'value': amount,
+        #                         'condition':{
+        #                             'type': 1,
+        #                             'data': {
+        #                                 'unlockhash': recipient}
+        #                             }
+        #                         })
 
         # we need to check if the sum of the inputs is more than the required fund and if so, we need
         # to send the remainder back to the original user
@@ -307,17 +329,18 @@ class RivineWallet:
                          break
                 if used is True:
                     continue
-                transaction.add_output({'value': remainder,
-                                        'condition':{
-                                            'type': 1,
-                                            'data': {
-                                                'unlockhash': address
-                                            }
-                                        }})
+                transaction.add_coin_output(value=remainder, recipient=address)
+                # transaction.add_output({'value': remainder,
+                #                         'condition':{
+                #                             'type': 1,
+                #                             'data': {
+                #                                 'unlockhash': address
+                #                             }
+                #                         }})
                 break
 
         # add minerfee to the transaction
-        transaction.minerfee = minerfee
+        transaction.add_minerfee(minerfee)
 
         if sign_transaction:
             # sign the transaction
@@ -382,9 +405,7 @@ class RivineWallet:
         if total_signatures < unlock_conditions.nr_required_signatures:
             raise NotEnoughSignaturesFound('Not enough keys found to satisfy required number of signatures')
 
-
-
-    def commit_transaction(self, transaction):
+    def _commit_transaction(self, transaction):
         """
         Commits a singed transaction to the chain
 

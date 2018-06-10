@@ -3,7 +3,6 @@ Test module for RivineWallet js9 client
 """
 
 from js9 import j
-from JumpScale9Lib.clients.rivine.RivineWallet import RivineWallet, SpendableKey
 
 
 # use specific seed that has some funds
@@ -45,20 +44,38 @@ rivine_wallet.check_address(address=address)
 #sync the wallet
 rivine_wallet.current_balance
 
+recipient = '019a4ae97f864d52f11e7dc84b352ee318d588e2557e3fb70b4d2e8f1294a69cd5fbf35170171b'
+transaction = rivine_wallet._create_transaction(amount=1000000000, recipient=recipient, sign_transaction=False)
+import IPython
+IPython.embed()
+
+
+# from JumpScale9Lib.clients.rivine.types import transaction
+#
+# transaction = transaction.TransactionFactory.create_transaction(transaction.DEFAULT_TRANSACTION_VERSION)
+#
+# address, unspent_coin_output  = [item for item in rivine_wallet._unspent_coins_outputs.items()][0]
+# transaction.add_coin_input(parent_id=address, pub_key=rivine_wallet._keys[unspent_coin_output['condition']['data']['unlockhash']].public_key)
+# txn_input = transaction.coins_inputs[0]
+# assert rivine_wallet._unspent_coins_outputs[txn_input.parent_id]['condition']['data']['unlockhash'] in rivine_wallet._keys
+#
+# import IPython
+# IPython.embed()
+
 # create transaction
-recipient = '01e5bd83a85e263817e2040054064575066874ee45a7697facca7a2721d4792af3a9dc35a09c2e'
-transaction = rivine_wallet.create_transaction(amount=500, recipient=recipient)
-
-
-print('Transaction created!')
-
-rivine_wallet.commit_transaction(transaction)
-print('Transaction pushed to chain')
-
-# create transaction with custom data
-custom_data = bytearray("hello from Dresden", encoding='utf-8')
-
-transaction = rivine_wallet.create_transaction(amount=500, recipient=recipient, custom_data=custom_data)
-
-rivine_wallet.commit_transaction(transaction)
-print('Transaction pushed to chain')
+# recipient = '01e5bd83a85e263817e2040054064575066874ee45a7697facca7a2721d4792af3a9dc35a09c2e'
+# transaction = rivine_wallet.create_transaction(amount=500, recipient=recipient)
+#
+#
+# print('Transaction created!')
+#
+# rivine_wallet.commit_transaction(transaction)
+# print('Transaction pushed to chain')
+#
+# # create transaction with custom data
+# custom_data = bytearray("hello from Dresden", encoding='utf-8')
+#
+# transaction = rivine_wallet.create_transaction(amount=500, recipient=recipient, custom_data=custom_data)
+#
+# rivine_wallet.commit_transaction(transaction)
+# print('Transaction pushed to chain')

@@ -2,7 +2,7 @@
 Module contianing all transaction types
 """
 from JumpScale9Lib.clients.rivine.types.signatures import Ed25519PublicKey
-from JumpScale9Lib.clients.rivine.types.unlockconditions import SingleSignatureFulfillment
+from JumpScale9Lib.clients.rivine.types.unlockconditions import SingleSignatureFulfillment, UnlockHashCondition
 
 DEFAULT_TRANSACTION_VERSION = 1
 
@@ -35,12 +35,28 @@ class TransactionV1:
         """
         Initializes a new tansaction
         """
-        self._coins_inputes = []
-        slef._blockstakes_inputs = []
+        self._coins_inputs = []
+        self._blockstakes_inputs = []
         self._coins_outputs = []
         self._blockstakes_outputs = []
         self._minerfees = []
         self._data = bytearray()
+
+
+    @property
+    def coins_inputs(self):
+        """
+        Retrieves coins inputs
+        """
+        return self._coins_inputs
+
+    @property
+    def coins_outputs(self):
+        """
+        Retrieves coins outputs
+        """
+        return self._coins_outputs
+
 
     def add_data(self, data):
         """
@@ -49,13 +65,39 @@ class TransactionV1:
         self._data.extend(data)
 
 
-    def add_input(self, parent_id, pub_key):
+    def add_coin_input(self, parent_id, pub_key):
         """
         Adds a new input to the transaction
         """
         key = Ed25519PublicKey(pub_key=pub_key)
         fulfillment = SingleSignatureFulfillment(pub_key=key)
-        self._coins_inputes.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
+        self._coins_inputs.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
+
+
+    def add_coin_output(self, value, recipient):
+        """
+        Add a new coin output to the transaction
+
+        @param value: Amout of coins
+        @param recipient: The recipient address
+        """
+        self._coins_outputs.append(CoinOutput(value=value, condition=UnlockHashCondition(unlockhash=recipient)))
+
+
+    def add_minerfee(self, minerfee):
+        """
+        Adds a minerfee to the transaction
+        """
+        self._minerfees.append(minerfee)
+
+
+    def get_input_signature_hash(self, input_index):
+        """
+        Builds a signature hash for an input
+        """
+        
+
+
 
 
 class CoinInput:
@@ -68,3 +110,19 @@ class CoinInput:
         """
         self._parent_id = parent_id
         self._fulfillment = fulfillment
+
+    @property
+    def parent_id(self):
+        return self._parent_id
+
+
+class CoinOutput:
+    """
+    CoinOutput calss
+    """
+    def __init__(self, value, condition):
+        """
+        Initializes a new coinoutput
+        """
+        self._value = value
+        self._condition = condition

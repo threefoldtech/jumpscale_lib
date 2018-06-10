@@ -25,10 +25,15 @@ class NonExistingOutputError(Exception):
 
 class NotEnoughSignaturesFound(Exception):
     """
-    Error representing a lack of enough keys to satisfies the number of required signatures 
+    Error representing a lack of enough keys to satisfies the number of required signatures
     """
 
 class InvalidUnlockHashChecksumError(Exception):
     """
     Invalid unlockhash checksum error
+    """
+
+class DoubleSignatureError(Exception):
+    """
+    Double Signatures Error
     """
