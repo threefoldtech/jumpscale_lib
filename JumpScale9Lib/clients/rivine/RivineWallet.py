@@ -67,18 +67,6 @@ class RivineWallet:
         self.check_balance()
 
 
-    # def _generate_address(self, unlockhash):
-    #     """
-    #     Generate a public address from unlockhash
-    #
-    #     @param unlockhash: Source unlockhash to create an address from it
-    #     """
-    #     key_bytes = bytearray.fromhex(unlockhash)
-    #     key_bytes = WALLET_ADDRESS_TYPE + key_bytes
-    #     key_hash = blake2b(key_bytes, digest_size=UNLOCKHASH_SIZE).digest()
-    #     return '{}{}{}'.format(WALLET_ADDRESS_TYPE.hex(), unlockhash, key_hash[:UNLOCKHASH_CHECKSUM_SIZE].hex())
-
-
     @property
     def addresses(self):
         """
@@ -93,12 +81,6 @@ class RivineWallet:
         """
         return self._keys
 
-    @property
-    def unspent_coins_outputs(self):
-        """
-        The unspent coins outputs
-        """
-        return self._unspent_coins_outputs
 
     @property
     def current_balance(self):
@@ -122,7 +104,7 @@ class RivineWallet:
         binary_seed_hash = utils.hash(binary_seed)
         sk = ed25519.SigningKey(binary_seed_hash)
         pk = sk.get_verifying_key()
-        return SpendableKey(pub_key=pk.to_bytes(), sec_key=sk.to_bytes())
+        return SpendableKey(pub_key=pk.to_bytes(), sec_key=sk)
 
 
     def get_current_chain_height(self):
@@ -355,15 +337,11 @@ class RivineWallet:
 
         @param transaction: Transaction object to be signed
         """
-        covered_fields = {'wholetransaction': True}
-        # add a signature for every input
-        for input_ in transaction.inputs:
-            key = self._unlockhash_key_map[input_['unlockconditions'].unlockhash]
-            self._add_signatures(transaction=transaction,
-                                 covered_fields=covered_fields,
-                                 unlock_conditions=input_['unlockconditions'],
-                                 parent_id=input_['parentid'],
-                                 spendable_key=key)
+        logger.info("Signing Trasnaction")
+        for index, input in enumerate(transaction.coins_inputs):
+            key = self._keys[self._unspent_coins_outputs[input.parent_id]['condition']['data']['unlockhash']]
+            input.sign(input_idx=index, transactoin=transaction, secret_key=key.secret_key)
+
 
 
     def _add_signatures(self, transaction, covered_fields, unlock_conditions, parent_id, spendable_key):
@@ -447,6 +425,14 @@ class SpendableKey:
         Return the public verification key
         """
         return self._pk
+
+    @property
+    def secret_key(self):
+        """
+        Returns the secret key
+        """
+        return self._sk
+
 
 
     @property

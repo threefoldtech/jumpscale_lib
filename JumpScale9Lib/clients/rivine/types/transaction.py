@@ -3,6 +3,7 @@ Module contianing all transaction types
 """
 from JumpScale9Lib.clients.rivine.types.signatures import Ed25519PublicKey
 from JumpScale9Lib.clients.rivine.types.unlockconditions import SingleSignatureFulfillment, UnlockHashCondition
+from JumpScale9Lib.clients.rivine.encoding import binary
 
 DEFAULT_TRANSACTION_VERSION = 1
 
@@ -41,6 +42,7 @@ class TransactionV1:
         self._blockstakes_outputs = []
         self._minerfees = []
         self._data = bytearray()
+        self._versoin = bytearray([1])
 
 
     @property
@@ -94,8 +96,31 @@ class TransactionV1:
     def get_input_signature_hash(self, input_index):
         """
         Builds a signature hash for an input
+
+        @param input_index: Index of the input we will get signature hash for
         """
-        
+        buffer = bytearray()
+        # encode the transaction version
+        buffer.extend(self._version)
+        # encode the input index
+        buffer.extend(binary.encode(input_index))
+
+        # encode the number of coins inputs
+        buffer.extend(binary.encode(len(self._coins_inputs)))
+
+        # encode inputs parent_ids
+        for coin_input in self._coins_inputs:
+            buffer.extend(binary.encode(coin_input.parent_id, type_='hex'))
+
+        # encode coin outputs
+        buffer.extend(binary.encode(self._coins_outputs, type_='slice'))
+
+
+
+
+
+
+
 
 
 
@@ -116,6 +141,18 @@ class CoinInput:
         return self._parent_id
 
 
+    def sign(self, input_idx, transactoin, secret_key):
+        """
+        Sign the input using the secret key
+        """
+        sig_ctx = {
+        'input_indx': input_idx,
+        'transaction': transaction,
+        'secret_key': secret_key
+        }
+        self._fulfillment.sing(sig_ctx=sig_ctx)
+
+
 class CoinOutput:
     """
     CoinOutput calss
@@ -126,3 +163,13 @@ class CoinOutput:
         """
         self._value = value
         self._condition = condition
+
+
+    @property
+    def binary(self):
+        """
+        Returns a binary encoded version of the CoinOutput
+        """
+        result = bytearray()
+        result.extend(binary.encode(self._value, type_='currency'))
+        result.extend(binary.encode(self._condition))

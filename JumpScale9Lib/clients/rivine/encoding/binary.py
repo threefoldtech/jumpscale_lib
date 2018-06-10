@@ -12,7 +12,7 @@ def encode_all(values):
     for item in values:
         result.extend(encode(item))
     return result
-    
+
 
 def encode(value, type_=None):
     """
@@ -31,6 +31,8 @@ def encode(value, type_=None):
             nbytes += 1
         result.extend(encode(nbytes))
         result.extend(value.to_bytes(nbytes, byteorder='big'))
+    elif type_ == 'hex':
+        result.extend(bytearray.fromhex(value))
     elif type_ is None:
         # try to figure out the type of the value
         value_type = type(value)
@@ -46,5 +48,7 @@ def encode(value, type_=None):
         else:
             if hasattr(value, 'binary'):
                 result.extend(value.binary)
+        else:
+            raise ValueError('Cannot binary encode value with unknown type')
 
     return result
