@@ -1,24 +1,30 @@
 from js9 import j
+import cryptocompare
 
 TEMPLATE = """
 api_key_ = ""
 """
 
-JSConfigBase = j.tools.configmanager.base_class_config
-JSBASE = j.application.jsbase_get_class()
+JSConfigClient = j.tools.configmanager.base_class_config
+JSConfigFactory = j.tools.configmanager.base_class_configs
 
 from pprint import pprint as print
 
 
-class CurrencyLayer(JSConfigBase):
+
+class CurrencyLayerFactory(JSConfigFactory):
+    def __init__(self):
+        self.__jslocation__ = "j.clients.currencylayer"
+        JSConfigFactory.__init__(self, CurrencyLayerClient)
+
+class CurrencyLayerClient(JSConfigClient):
     """
     get key from https://currencylayer.com/quickstart
     """
 
-    def __init__(self):
-        self.__jslocation__ = 'j.clients.currencylayer'
-        JSConfigBase.__init__(self, instance="main", data={},
-                              parent=None, template=TEMPLATE)
+    def __init__(self, instance, data={}, parent=None, interactive=True):
+        JSConfigClient.__init__(self, instance=instance,
+                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         self._data_cur = {}
         self._id2cur = {}
         self._cur2id = {}
@@ -35,7 +41,14 @@ class CurrencyLayer(JSConfigBase):
                 c = j.clients.http.getConnection()
                 r = c.get(url).readlines()
                 data = j.data.serializer.json.loads(r[0].decode())["quotes"]
-                self.logger.error("fetch currency from internet")
+                self.logger.info("fetch currency from internet")
+
+                # add supported crypto currencies
+                ETH = cryptocompare.get_price('USD', 'ETH')['USD']['ETH']
+                data['USDETH'] = ETH
+                XRP = cryptocompare.get_price('USD', 'XRP')['USD']['XRP']
+                data['USDXRP'] = XRP
+                # TODO: add tft 
                 return data
             else:
                 if self.fake or self.fallback:

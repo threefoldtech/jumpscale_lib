@@ -26,6 +26,7 @@ class Capacity(object):
         :type os_version: string_types
         :type robot_address: string_types
         :type sru: float
+        :type uptime: int
         :rtype: Capacity
         """
 
@@ -59,6 +60,8 @@ class Capacity(object):
             'robot_address', data, data_types, False, [], False, True, class_name)
         data_types = [float]
         self.sru = client_support.set_property('sru', data, data_types, False, [], False, True, class_name)
+        data_types = [int]
+        self.uptime = client_support.set_property('uptime', data, data_types, False, [], False, False, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

@@ -17,6 +17,11 @@ class Ubuntu(JSBASE):
         self._local = j.tools.executorLocal
         self.capacity = Capacity(self)
 
+    def uptime(self):
+        with open('/proc/uptime') as f:
+            data = f.read()
+            uptime, _ = data.split(' ')
+            return float(uptime)
 
     def apt_init(self):
         try:

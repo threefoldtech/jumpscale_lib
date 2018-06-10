@@ -277,7 +277,15 @@ class TfChainClient:
         ipn = self.container.default_ip(link)
         subnet = "%s/%s"%(ipn.network, ipn.prefixlen)
         cmd = 'nmap {} -p {}'.format(subnet, port)
-        result = self.container.client.system(cmd, stdin=self.wallet_password).get()
+
+        scan = self.container.client.system(cmd, stdin=self.wallet_password)
+        while True:
+            try:
+                result = scan.get()
+                break
+            except TimeoutError:
+                continue
+        
         error_check(result, "Could not list peers")
 
         ips = re.findall(r'\d\d\d.\d\d\d.+', result.stdout)
@@ -350,7 +358,7 @@ class TfChainClient:
         consensus = self.consensus_stat()
         result["block_height"] = consensus["height"]
         gateways = self.gateway_stat()
-        result["connected_peers"] = gateways["peers"]
+        result["connected_peers"] = len(gateways["peers"])
         return result
 
 

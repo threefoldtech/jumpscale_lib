@@ -17,6 +17,7 @@ def send_js(path):
 @frontend_bp.route('/', methods=['GET'])
 def capacity():
     countries = NodeRegistration.all_countries()
+    farmers = FarmerRegistration.list()
     nodes = []
     form = {
         'mru': 0,
@@ -40,14 +41,18 @@ def capacity():
         if hru:
             form['hru'] = int(hru)
         form['country'] = request.args.get('country') or ''
+        form['farmer'] = request.args.get('farmer') or ''
 
-        nodes = list(NodeRegistration.search(**form))
+        form['page'] = int(request.args.get('page') or 1)
+        form['per_page'] = int(request.args.get('pre_page') or 20)
 
-    return render_template('capacity.html', nodes=nodes, form=form, countries=countries)
+        nodes = NodeRegistration.search(**form)
+
+    return render_template('capacity.html', nodes=nodes, form=form, countries=countries, farmers=farmers)
 
 
 @frontend_bp.route('/farmers', methods=['GET'])
-def farmers():
+def list_farmers():
     farmers = FarmerRegistration.list()
     return render_template('farmers.html', farmers=farmers)
 
@@ -56,3 +61,8 @@ def farmers():
 def farmer_registered():
     jwt = session['iyo_jwt']
     return render_template('farm_registered.html', jwt=jwt)
+
+
+@frontend_bp.route('/api', methods=['GET'])
+def api_index():
+    return render_template('api.html')

@@ -1,16 +1,17 @@
 # THIS FILE IS SAFE TO EDIT. It will not be overwritten when rerunning go-raml.
 
-from js9 import j
 import json as JSON
 import os
+from datetime import datetime
 
-import jose.jwt
 import jsonschema
 from jsonschema import Draft4Validator
 
+import jose.jwt
 from flask import jsonify, request
-from ..models import Capacity
-from ..models import Farmer
+from js9 import j
+
+from ..models import Capacity, Farmer
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 Capacity_schema = JSON.load(open(dir_path + '/schema/Capacity_schema.json'))
@@ -41,7 +42,8 @@ def RegisterCapacityHandler():
     except jsonschema.ValidationError as e:
         return jsonify(errors="bad request body: {}".format(e)), 400
     inputs['farmer'] = iyo_organization
+    inputs['updated'] = datetime.now()
     capacity = Capacity(**inputs)
     capacity.save()
 
-    return capacity.to_json()
+    return capacity.to_json(use_db_field=False), 201, {'Content-type': 'application/json'}

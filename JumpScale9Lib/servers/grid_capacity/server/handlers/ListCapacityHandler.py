@@ -1,7 +1,9 @@
 # THIS FILE IS SAFE TO EDIT. It will not be overwritten when rerunning go-raml.
 
 from ..models import NodeRegistration
-from flask import request
+from flask import request, jsonify
+from io import StringIO
+
 
 def ListCapacityHandler():
     nodes = []
@@ -10,5 +12,11 @@ def ListCapacityHandler():
     cru = request.values.get('cru')
     hru = request.values.get('hru')
     sru = request.values.get('sru')
-    nodes = NodeRegistration.search(country, mru, cru, hru, sru).to_json()
-    return nodes, 200
+    farmer = request.values.get('farmer')
+    nodes = NodeRegistration.search(country, mru, cru, hru, sru, farmer)
+    output = []
+    for node in nodes.all():
+        d = node.to_mongo().to_dict()
+        d['node_id'] = d.pop('_id')
+        output.append(d)
+    return jsonify(output)

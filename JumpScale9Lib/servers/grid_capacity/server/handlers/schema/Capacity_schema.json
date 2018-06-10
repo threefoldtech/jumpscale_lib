@@ -31,6 +31,12 @@
 		},
 		"sru": {
 			"type": "number"
+		},
+		"uptime": {
+			"type": [
+				"integer",
+				"null"
+			]
 		}
 	},
 	"required": [

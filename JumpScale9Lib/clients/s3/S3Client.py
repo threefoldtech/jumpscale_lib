@@ -8,6 +8,8 @@ try:
         BucketAlreadyOwnedByYou,
         BucketAlreadyExists
     )
+    import urllib3
+    import certifi
 except:
     print("WARNING: s3 pip client (minio) not found please install do j.clients.s3.install()")
 
@@ -41,11 +43,23 @@ class S3Client(JSConfigBase):
         #                     aws_secret_access_key=c["secretkey_"]
         #                     )
 
+        # Create the http client to be able to set timeout
+        http_client = urllib3.PoolManager(
+            timeout=5,
+            cert_reqs='CERT_REQUIRED',
+            ca_certs=certifi.where(),
+            retries=urllib3.Retry(
+                total=3,
+                backoff_factor=0.2,
+                status_forcelist=[500, 502, 503, 504]
+            )
+        )
+
         self.logger.info("open connection to minio:%s"%self.instance)
         self.client = Minio('%s:%s' % (c["address"], c["port"]),
                             access_key=c["accesskey_"],
                             secret_key=c["secretkey_"],
-                            secure=False)
+                            secure=False, http_client=http_client)
 
         if not self.config.data["bucket_ok"]:
             self._bucket_create(self.config.data["bucket"])

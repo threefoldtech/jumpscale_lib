@@ -67,6 +67,7 @@ class Capacity:
             robot_address=robot_address,
             os_version=os_version,
             farmer_id=farmer_id,
+            uptime=int(self._node.uptime())
         )
         return capacity
 
@@ -76,5 +77,5 @@ class Capacity:
             return False
         data = self.get(farmer_id)
         client = j.clients.grid_capacity.get(interactive=False)
-        client.nodes.RegisterCapacity(data)
+        client.api.RegisterCapacity(data)
         return True

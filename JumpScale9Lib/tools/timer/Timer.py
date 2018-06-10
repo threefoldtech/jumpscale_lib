@@ -23,8 +23,9 @@ class TIMER(JSBASE):
         """
         start = time.time()
         while start + timeout > time.time():
-            if callback():
-                return True
+            result = callback()
+            if result:
+                return result
             time.sleep(interval)
         return False
 

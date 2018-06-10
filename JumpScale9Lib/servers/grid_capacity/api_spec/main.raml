@@ -43,6 +43,10 @@ types:
       sru:
         type: number
         description: amount of SSD resource unit
+      uptime:
+        type: integer
+        description: uptime of the node in seconds
+        required: false
     example:
       node_id: 544546f60261
       farmer: JohnDoe
@@ -52,6 +56,7 @@ types:
       mru: 64
       hrd: 5000
       sru: 256
+      uptime: 92682
       location:
         continent: Europe
         country: Belgium
@@ -79,48 +84,63 @@ types:
         type: string
         description: optional stack_trace attached with the error.
         required: false
-
-/api/nodes:
-  post:
-    displayName: RegisterCapacity
-    description: Register a node capacity
-    body:
-      type: Capacity
-    responses:
-      201:
-        body:
-          type: Capacity
-  get:
-    displayName: ListCapacity
-    description: List all the nodes capacity
-    queryString:
-      properties:
-        country?: string
-        cru?: number
-        mru?: number
-        sru?: number
-    responses:
-      200:
-        body:
-          type: Capacity[]
-/api/farmer_create:
-  get:
-    displayName: RegisterFarmer
-    description: Register a farmer
-    queryString:
-      properties:
-        organization: string
-        name: string
-    responses:
-      302:
-        description: Page with information how to use your farm
-  get:
-    displayName: ListFarmers
-    description: List Farmers
-    queryString:
-      properties:
-        name?: string
-    responses:
-      200:
-        body:
-          type: Farmer[]
+/api:
+  /nodes:
+    post:
+      displayName: RegisterCapacity
+      description: Register a node capacity
+      body:
+        type: Capacity
+      responses:
+        201:
+          body:
+            type: Capacity
+    get:
+      displayName: ListCapacity
+      description: List all the nodes capacity
+      queryString:
+        properties:
+          country?: string
+          cru?: number
+          mru?: number
+          sru?: number
+          farmer?: string
+      responses:
+        200:
+          body:
+            type: Capacity[]
+    /{node_id}:
+      get:
+        displayName: GetCapacity
+        description: Get detail about capacity of a node
+        responses:
+          200:
+            body:
+              type: Capacity
+  /farmer_create:
+    get:
+      displayName: RegisterFarmer
+      description: Register a farmer
+      queryString:
+        properties:
+          organization: string
+          name: string
+      responses:
+        302:
+          description: Page with information how to use your farm
+  /farmers:
+    get:
+      displayName: ListFarmers
+      description: List Farmers
+      responses:
+        200:
+          body:
+            type: Farmer[]
+    /{iyo_organization}:
+      get:
+        displayName: GetFarmer
+        description: Get detail about a farmer
+        responses:
+          200:
+            body:
+              type: Farmer

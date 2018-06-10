@@ -102,6 +102,10 @@ class Nic:
     def type(self):
         return self._type
 
+    @property
+    def iface(self):
+        return self.name
+
     @type.setter
     def type(self, value):
         if value not in ['vxlan', 'vlan', 'bridge', 'default', 'zerotier', 'passthrough']:
@@ -130,23 +134,27 @@ class ZTNic(Nic):
         self._client_name = None
 
     @property
-    def client_name(self):
-        return self._client_name
-
-    @property
     def client(self):
-        if self._client is None and self._client_name:
-            self._client = j.clients.zerotier.get(self._client_name, create=False, die=True, interactive=False) 
+        if self._client is None and j.clients.zerotier.exists(self._client_name):
+            self._client = j.clients.zerotier.get(self._client_name, create=False, die=True, interactive=False)
         return self._client
 
     @client.setter
     def client(self, value):
         self._client = value
 
+    @property
+    def client_name(self):
+        return self._client_name
+
     @client_name.setter
     def client_name(self, value):
-        if value not in j.clients.zerotier.list():
-            raise ValueError('There is no zerotier client with name {}'.format(value))
+        if value:
+            self._client_name = value
+
+        if not j.clients.zerotier.exists(self._client_name):
+            return
+
         self._client_name = value
         self.client = j.clients.zerotier.get(value)
 
@@ -159,6 +167,13 @@ class ZTNic(Nic):
         network = self.client.network_get(self.networkid)
         network.member_add(publicidentity, self._parent.name)
         return True
+
+    @property
+    def iface(self):
+        for network in self._parent.container.client.zerotier.list():
+            if network['nwid'] == self.networkid:
+                return network['portDeviceName']
+        raise RuntimeError('Could not find devicename')
 
     def to_dict(self, forvm=False, forcontainer=False):
         data = super().to_dict(forvm, forcontainer)
@@ -240,4 +255,3 @@ class DynamicCollection:
         return str(self.list())
 
     __repr__ = __str__
-

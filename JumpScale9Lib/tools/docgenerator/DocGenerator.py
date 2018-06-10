@@ -217,9 +217,6 @@ class DocGenerator(JSBASE):
         else:
             path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
 
-        if name=="":
-            raise RuntimeError("name cannot be empty")
-
         for docDir in j.sal.fs.listFilesInDir(path, recursive=True, filter=".docs"):
             if docDir not in self.docsites:
                 self.logger.debug("found doc dir:%s" % docDir)
@@ -241,7 +238,7 @@ class DocGenerator(JSBASE):
         self.load(pathOrUrl="https://github.com/Jumpscale/prefab9",name="prefab9")
         self.generate(start=start)
 
-    def generate(self, name, url=None, start=True):
+    def generate(self,name="", url=None, start=True):
         """
         will load all info & process the pre-configured output
 

@@ -10,3 +10,14 @@ input .filter{
 .nodeItem {
     cursor: pointer;
 }
+
+#uptimeHelp {
+    cursor: pointer;
+}
+
+@media (min-width: 768px) {
+    .modal-xl {
+      width: 90%;
+     max-width:1200px;
+    }
+  }

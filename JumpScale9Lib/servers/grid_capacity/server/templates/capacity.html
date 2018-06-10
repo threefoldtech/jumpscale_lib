@@ -1,39 +1,81 @@
 {% extends "layout.html" %}
+
+{# Macro for creating navigation links #}
+{% macro render_navigation(pagination, endpoint) %}
+  <nav aria-label="Page navigation">
+    <ul class="pagination">
+      {% if nodes.has_prev %}
+      <li class="page-item"><a class="page-link" href="{{ url_for(endpoint, page=nodes.prev_num, cru=form['cru'], mru=form['mru'], hru=form['hru'], sru=form['sru'], country=form['country'], farmer=form['farmer']) }}">Previous</a></li>
+      {% endif %}
+      {% for page in nodes.iter_pages() %}
+        {% if page %}
+          {% if page != pagination.page %}
+            <li class="page-item"><a class="page-link" href="{{ url_for(endpoint, page=page, cru=form['cru'], mru=form['mru'], hru=form['hru'], sru=form['sru'], country=form['country'], farmer=form['farmer']) }}">{{page}}</a></li>
+          {% else %}
+            <li class="page-item active disabled"><a class="page-link" href="#">{{page}} <span class="sr-only">(current)</span></a></li>
+          {% endif %}
+        {% else %}
+        <span class=ellipsis>…</span>
+        {% endif %}
+      {% endfor %}
+      {% if nodes.has_next %}
+      <li class="page-item"><a class="page-link" href="{{ url_for(endpoint, page=nodes.next_num, cru=form['cru'], mru=form['mru'], hru=form['hru'], sru=form['sru'], country=form['country'], farmer=form['farmer']) }}">Next</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endmacro %}
+
   {% block body %}
     <main role="main">
 
       <div class="container">
+        <p class="float-right"><a href="https://threefoldfoundation.github.io/info_grid/#/">Threefold grid documentation</a></p>
         <h2>Search for capacity</h2>
         <form action="/" method="get">
           <div class="form-group">
-              <label for="formCRU">Minimum CPU unit : <span class="badge badge-pill badge-primary"><span id=formCRUValue></span> CPU</span></span></label>
+              <label for="formCRU">Minimum <abbr title="CPU resource unit">CRU</abbr> : <span class="badge badge-pill badge-primary"><span id=formCRUValue></span> CPU</span></span></label>
               <input type="range" class="form-control-range" id="formCRU" name="cru" value="{{form['cru']}}" step=1>
           </div>
           <div class="form-group">
-            <label for="formMRU">Minimum memory unit : <span class="badge badge-pill badge-primary"><span id=formMRUValue></span> GiB</span></span></label>
+            <label for="formMRU">Minimum <abbr title="Memory resource unit">MRU</abbr> : <span class="badge badge-pill badge-primary"><span id=formMRUValue></span> GiB</span></span></label>
             <input type="range" class="form-control-range" id="formMRU" name="mru" value="{{form['mru']}}" step=1 onchange="">
           </div>
           <div class="form-group">
-              <label for="formHRU">minimum HDD unit : <span class="badge badge-pill badge-primary"><span id=formHRUValue></span> GiB</span></span></label>
-              <input type="range" class="form-control-range" id="formHRU" name="hru" value="{{form['hru']}}" step=1>
+              <label for="formHRU">minimum <abbr title="HDD resource unit">HRU</abbr> : <span class="badge badge-pill badge-primary"><span id=formHRUValue></span> GiB</span></span></label>
+              <input type="range" class="form-control-range" id="formHRU" name="hru" value="{{form['hru']}}" step=1 max=5000>
           </div>
           <div class="form-group">
-              <label for="formSRU">minimum SSD unit : <span class="badge badge-pill badge-primary"><span id=formSRUValue></span> GiB</span></span></label>
-              <input type="range" class="form-control-range" id="formSRU" name="sru" value="{{form['sru']}}" step=1>
+              <label for="formSRU">minimum <abbr title="SSD resource unit">SRU</abbr> : <span class="badge badge-pill badge-primary"><span id=formSRUValue></span> GiB</span></span></label>
+              <input type="range" class="form-control-range" id="formSRU" name="sru" value="{{form['sru']}}" step=1 max=1000>
           </div>
-          <div class="form-group">
-              <label for="formCountry">filter by country :</label>
-              <select class="form-control" id="formCountry"  name="country">
-                <option></option>
-                {% for country in countries %}
-                {% if form['country'] == country %}
-                <option selected>{{country}}</option>
-                {% else %}
-                <option>{{country}}</option>
-                {% endif %}
-                {% endfor %}
-              </select>
+          <div class="row">
+            <div class="form-group col-6">
+                <label for="formCountry">filter by country :</label>
+                <select class="form-control" id="formCountry"  name="country">
+                  <option></option>
+                  {% for country in countries %}
+                  {% if form['country'] == country %}
+                  <option selected>{{country}}</option>
+                  {% else %}
+                  <option>{{country}}</option>
+                  {% endif %}
+                  {% endfor %}
+                </select>
             </div>
+            <div class="form-group col-6">
+                <label for="formFarmer">filter by farmer :</label>
+                <select class="form-control" id="formFarmer"  name="farmer">
+                  <option></option>
+                  {% for farmer in farmers %}
+                  {% if form['farmer'] == farmer.iyo_organization %}
+                  <option value="{{farmer.iyo_organization}}" selected>{{farmer.name}}</option>
+                  {% else %}
+                  <option value="{{farmer.iyo_organization}}">{{farmer.name}}</option>
+                  {% endif %}
+                  {% endfor %}
+                </select>
+            </div>
+          </div>
           <div class="form-group">
               <button type="submit" class="btn btn-primary">Search</button>
               <a class="btn btn-secondary" href="/">Reset</a>
@@ -45,13 +87,12 @@
       <div class="container">
         <div class="ro">
           {% if products|length > 1 %}
-            <p>Node found: {{nodes|length}}</p>
+            <p>Node found: {{nodes.items|length}}</p>
           {% else %}
-            <p>Nodes found: {{nodes|length}}</p>
+            <p>Nodes found: {{nodes.items|length}}</p>
           {% endif %}
         </div>
         <div class="row">
-
           <table class="table  table-striped table-hover">
             <thead class="thead-light">
               <tr>
@@ -64,10 +105,11 @@
                 <th scope="col">MRU</th>
                 <th scope="col">HRU</th>
                 <th scope="col">SRU</th>
+                <th scope="col" data-toggle="modal" data-target="#uptimeHelpModal">Uptime <span class="badge badge-secondary" id="uptimeHelp">?</span></th>
               </tr>
             </thead>
             <tbody>
-              {% for node in nodes %}
+              {% for node in nodes.items %}
               <tr data-toggle="modal" data-target="#nodeDetailModal{{node['node_id']}}" class="nodeItem">
                 <td>{{ node['node_id'] }}</td>
                 <!-- <td>{{ node['farmer'] }}</td> -->
@@ -78,10 +120,14 @@
                 <td>{{ node['mru'] }}</td>
                 <td>{{ node['hru'] }}</td>
                 <td>{{ node['sru'] }}</td>
+                <td><span class="badge badge-{{node['updated'] | deltatime_color}}">{{ node['uptime'] | uptime }}</span></td>
               </tr>
               {% endfor %}
             </tbody>
           </table>
+        </div>
+        <div class="row">
+          {{ render_navigation(nodes, '.capacity') }}
         </div>
       </div>
       {% endif %}
@@ -89,9 +135,9 @@
     </main>
 
     <!-- Modal -->
-    {% for node in nodes %}
+    {% for node in nodes.items %}
     <div class="modal fade" id="nodeDetailModal{{node['node_id']}}" tabindex="-1" role="dialog" aria-labelledby="nodeDetailModalLabel{{node['node_id']}}" aria-hidden="true">
-      <div class="modal-dialog" role="document">
+      <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="nodeDetailModalLabel">Node detail</h5>
@@ -100,9 +146,11 @@
             </button>
           </div>
           <div class="modal-body">
+            <p>Node ID: <code>{{node['node_id']}}</code></p>
             <p>Node 0-robot address: <code>{{node['robot_address']}}</code></p>
             <p>0-OS version: <code>{{node['os_version']}}</code></p>
             <p>Farm: <code>{{node.farmer.name}}</code></p>
+            <p>Uptime: <span class="badge badge-{{node['updated'] | deltatime_color}}">{{ node['uptime'] | uptime }}</span></p>
             <p>
               Wallet addresses:
               <ul>
@@ -121,4 +169,28 @@
       </div>
     </div>
     {% endfor %}
+
+  <!-- Modal -->
+  <div class="modal fade" id="uptimeHelpModal" tabindex="-1" role="dialog" aria-labelledby="uptimeHelpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="uptimeHelpModalLabel">What does the color of the uptime means ?</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <ul>
+            <li><span class="badge badge-success">uptime</span> has been refreshed less than 2 hours ago</li>
+            <li><span class="badge badge-warning">uptime</span> has been refreshed between 2 hours and 3 hours ago</li>
+            <li><span class="badge badge-danger">uptime</span> has been refreshed more than 3 hours ago</li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
   {% endblock %}
