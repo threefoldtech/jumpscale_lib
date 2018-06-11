@@ -241,7 +241,7 @@ class Gateway:
         publicnetworks = list(filter(lambda net: net.public, self.networks))
         if len(publicnetworks) != 1:
             raise RuntimeError('Need exactly one public network')
-        if  publicnetworks[0].type == 'zerotier' and not self._default_nic:
+        if publicnetworks[0].type == 'zerotier' and not self._default_nic:
             defnet = self.networks.add('nat0', 'default')
             defnet.public = False
         if self.container is None:
