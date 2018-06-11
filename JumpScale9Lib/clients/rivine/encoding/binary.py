@@ -48,7 +48,16 @@ def encode(value, type_=None):
         else:
             if hasattr(value, 'binary'):
                 result.extend(value.binary)
-        else:
-            raise ValueError('Cannot binary encode value with unknown type')
+    else:
+        raise ValueError('Cannot binary encode value with unknown type')
 
     return result
+
+
+def decode(data, type_=None):
+    """
+    Decodes binary data to its original format
+    """
+    if type_ is not None:
+        if type_ == int:
+            return int.from_bytes(data, byteorder='little')

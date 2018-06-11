@@ -38,7 +38,7 @@ class RivineWallet:
     """
     Wallet class
     """
-    def __init__(self, seed, bc_network, bc_network_password, nr_keys_per_seed=50, minerfee=10):
+    def __init__(self, seed, bc_network, bc_network_password, nr_keys_per_seed=50, minerfee=100000000):
         """
         Creates new wallet
         TODO: check if we need to support multiple seeds from the begining
@@ -47,7 +47,7 @@ class RivineWallet:
         @param bc_network: Blockchain network to use.
         @param bc_network_password: Password to send to the explorer node when posting requests.
         @param nr_keys_per_seed: Number of keys generated from the seed.
-        @param minerfee: Amount of hastings that should be minerfee.
+        @param minerfee: Amount of hastings that should be minerfee (default to 0.1 TFT)
         """
         self._seed = j.data.encryption.mnemonic.to_entropy(seed)
         self._unspent_coins_outputs = {}
@@ -55,15 +55,9 @@ class RivineWallet:
         self._bc_network = bc_network.strip("/")
         self._minerfee = minerfee
         self._bc_network_password = bc_network_password
-        # needed to avoid calculating addresses from unlock hashes later
-        self._unlockhash_key_map = {}
-        self._unlockhash_address_map = {}
         for index in range(nr_keys_per_seed):
             key = self._generate_spendable_key(index=index)
-            # address = self._generate_address(key.unlockconditions.unlockhash)
             self._keys[str(key.unlockhash)] = key
-            # self._unlockhash_key_map[key.unlockconditions.unlockhash] = key
-            # self._unlockhash_address_map[address] = key.unlockconditions.unlockhash
         self.check_balance()
 
 
@@ -235,6 +229,7 @@ class RivineWallet:
                         logger.info('Found a spent address {}'.format(coin_input.get('parentid')))
                         del self._unspent_coins_outputs[coin_input.get('parentid')]
 
+
     def send_money(self, amount, recipient):
         """
         Sends TFT tokens from the user's wallet to the recipient address
@@ -248,6 +243,7 @@ class RivineWallet:
                                                 recipient=recipient,
                                                 sign_transaction=True)
         self._commit_transaction(transaction=transaction)
+        return transaction
 
 
     def _create_transaction(self, amount, recipient, minerfee=None, sign_transaction=True, custom_data=None):
@@ -290,13 +286,6 @@ class RivineWallet:
                 raise NonExistingOutputError('Trying to spend unexisting output')
 
         transaction.add_coin_output(value=amount, recipient=recipient)
-        # transaction.add_output({'value': amount,
-        #                         'condition':{
-        #                             'type': 1,
-        #                             'data': {
-        #                                 'unlockhash': recipient}
-        #                             }
-        #                         })
 
         # we need to check if the sum of the inputs is more than the required fund and if so, we need
         # to send the remainder back to the original user
@@ -312,13 +301,6 @@ class RivineWallet:
                 if used is True:
                     continue
                 transaction.add_coin_output(value=remainder, recipient=address)
-                # transaction.add_output({'value': remainder,
-                #                         'condition':{
-                #                             'type': 1,
-                #                             'data': {
-                #                                 'unlockhash': address
-                #                             }
-                #                         }})
                 break
 
         # add minerfee to the transaction
@@ -340,48 +322,8 @@ class RivineWallet:
         logger.info("Signing Trasnaction")
         for index, input in enumerate(transaction.coins_inputs):
             key = self._keys[self._unspent_coins_outputs[input.parent_id]['condition']['data']['unlockhash']]
-            input.sign(input_idx=index, transactoin=transaction, secret_key=key.secret_key)
+            input.sign(input_idx=index, transaction=transaction, secret_key=key.secret_key)
 
-
-
-    def _add_signatures(self, transaction, covered_fields, unlock_conditions, parent_id, spendable_key):
-        """
-        Add a signture to a transaction using one of the spendable keys
-        with support for multisig spendable keys. Because of the restricted input, the function
-        is compatible with both coin inputs and blockstake inputs.
-        Try to find the matching secret key for each public key - some public
-        keys may not have a match. Some secret keys may be used multiple times,
-	    which is why public keys are used as the outer loop.
-        """
-        total_signatures = 0
-        for index, publickey in enumerate(unlock_conditions.public_keys):
-            # search for the matching secret key to the public key
-            for secret_key, pkey in spendable_key.secretkeys:
-                if pkey != publickey:
-                    continue
-
-                # found a matching secret key, create a signature and add it
-                signature = {
-                    'parentid': parent_id,
-                    'coveredfields': covered_fields,
-                    'publickeyindex': index,
-                    'timelock': 0,
-                    'signature': bytearray()
-
-                }
-                # signature_hash = transaction.get_signature_hash(signature, self._unlockhash_address_map)
-                signature_hash = transaction.get_input_sig_hash(index, self._unlockhash_address_map)
-                # logger.info('Singature_hash is: {}'.format(len(signature_hash)))
-                # signature['signature'] = base64.b64encode(secret_key.sign(signature_hash)).decode('ascii')
-                signature['signature'] = secret_key.sign(signature_hash).hex()
-                total_signatures += 1
-                transaction.add_signature(signature)
-                break
-            # if we got enough signatrues then we break
-            if total_signatures == unlock_conditions.nr_required_signatures:
-                break
-        if total_signatures < unlock_conditions.nr_required_signatures:
-            raise NotEnoughSignaturesFound('Not enough keys found to satisfy required number of signatures')
 
     def _commit_transaction(self, transaction):
         """
@@ -446,363 +388,3 @@ class SpendableKey:
             hash = utils.hash(encoded_pub_key, encoding_type='slice')
             self._unlockhash = UnlockHash(unlock_type=UNLOCK_TYPE_PUBKEY, hash=hash)
         return self._unlockhash
-
-
-
-# class UnlockConditions:
-#     """
-#     Represent unlock conditions that would be automatically generated from
-#     input public key
-#     """
-#
-#     def __init__(self, pubkey, nr_required_sigs=1):
-#         """
-#         Generates unlockcontion objects from a public key
-#
-#         @param pubkey: Input public key
-#         @param nr_required_sings: Number of required singnatures
-#         """
-#         self._keys = [{
-#             'algorithm': SIGEd25519,
-#             'key': pubkey
-#         }]
-#         self._nr_required_sigs = nr_required_sigs
-#         self._blockheight = 0
-#         self._merkletree = Tree(hash_func=partial(blake2b, digest_size=UNLOCKHASH_SIZE))
-#         self._unlockhash = None
-#         self._binary = None
-#         self._json = None
-#
-#
-#     @property
-#     def public_keys(self):
-#         """
-#         Retrieve the public keys of the unlock conditions
-#         """
-#         return [item['key'] for item in self._keys]
-#
-#
-#     @property
-#     def keys(self):
-#         """
-#         Unlock coditions keys
-#         """
-#         return self._keys
-#
-#
-#     @property
-#     def nr_required_signatures(self):
-#         """
-#         Number of required singatures
-#         """
-#         return self._nr_required_sigs
-#
-#
-#     @property
-#     def unlockhash(self):
-#         """
-#         Get the  unlockhash of the current UnlockConditions
-#         UnlockHash calculates the root hash of a Merkle tree of the
-#         UnlockConditions object. The leaves of this tree are formed by taking the
-#         hash of the timelock, the hash of the public keys (one leaf each), and the
-#         hash of the number of signatures. The keys are put in the middle because
-#         Timelock and SignaturesRequired are both low entropy fields; they can bee
-#         protected by having random public keys next to them.
-#         """
-#         if self._unlockhash is None:
-#             self._merkletree.push(int_to_binary(self._blockheight))
-#             # logger.info("Pushing {}".format(int_to_binary(self._blockheight).hex()))
-#             for key in self._keys:
-#                 key_value = bytearray()
-#                 s = bytearray(SPECIFIER_SIZE)
-#                 s[:len(key['algorithm'])] = bytearray(key['algorithm'], encoding='utf-8')
-#                 key_value.extend(s)
-#                 key_value.extend(int_to_binary(len(key['key'])))
-#                 key_value.extend(key['key'])
-#                 self._merkletree.push(bytes(key_value))
-#                 # logger.info('Pushing {}'.format(key_value.hex()))
-#             self._merkletree.push(bytes(int_to_binary(self._nr_required_sigs)))
-#             # logger.info('Pushing {}'.format(int_to_binary(self._nr_required_sigs).hex()))
-#             self._unlockhash = self._merkletree.root().hex()
-#
-#         return self._unlockhash
-#
-#
-#     @property
-#     def binary(self):
-#         """
-#         Result of serializing the data attributes to a bytearray
-#         """
-#         if self._binary is None:
-#             self._binary = bytearray()
-#             self._binary.extend(int_to_binary(self._blockheight))
-#             # encode the number of the keys
-#             self._binary.extend(int_to_binary(len(self._keys)))
-#             for key in self._keys:
-#                 # encode specifier
-#                 s = bytearray(SPECIFIER_SIZE)
-#                 s[:len(key['algorithm'])] = bytearray(key['algorithm'], encoding='utf-8')
-#                 self._binary.extend(s)
-#                 # encode the size of the key
-#                 self._binary.extend(int_to_binary(len(key['key'])))
-#                 self._binary.extend(key['key'])
-#             self._binary.extend(int_to_binary(self._nr_required_sigs))
-#         return bytes(self._binary)
-#
-#
-#     @property
-#     def json(self):
-#         """
-#         Return a json encoded representation of the unlockconditions object
-#         This will return a presentation of the unlocker attribute of the transaction as a singleSingatureInputLock
-#         """
-#         if self._json is None:
-#             public_key = '{}:{}'.format(self._keys[0]['algorithm'], self._keys[0]['key'].hex())
-#             self._json = {
-#                 'type': 1,
-#                 'data':{
-#                     'publickey': public_key,
-#                     'signature': ''
-#                 }
-#             }
-#
-#         return self._json
-
-
-# class Transaction:
-#     """
-#     Represent a Transaction of funds from inputs to outputs
-#     """
-#
-#     def __init__(self):
-#         """
-#         Initialize new transaction
-#         """
-#         self._inputs = []
-#         self._outputs = []
-#         self._minerfee = 0
-#         self._blockstake_inputs = []
-#         self._blockstake_outputs = []
-#         self._arbitrary_data = None
-#         self._signatrues = []
-#         self._json = None
-#
-#
-#     @property
-#     def signatrues(self):
-#         """
-#         Transaction signatures
-#         """
-#         return self._signatrues
-#
-#
-#     @property
-#     def inputs(self):
-#         """
-#         Inputs of the transactions
-#         """
-#         return self._inputs
-#
-#
-#     @property
-#     def outputs(self):
-#         """
-#         Outputs of the transactions
-#         """
-#         return self._outputs
-#
-#
-#     @property
-#     def minerfee(self):
-#         """
-#         The miner fee of the transaction
-#         """
-#         return self._minerfee
-#
-#
-#     @minerfee.setter
-#     def minerfee(self, value):
-#         """
-#         Sets the miner fee
-#         """
-#         self._minerfee = value
-#
-#     @property
-#     def custom_data(self):
-#         """
-#         Transaction custom data
-#         """
-#         return self._arbitrary_data
-#
-#
-#     @custom_data.setter
-#     def custom_data(self, data):
-#         """
-#         Set the transaction cutom data
-#         """
-#         # eventually aribitrary data should be a 2d array
-#         # we also need to to prepend the data with a nonsia specificer
-#         data_ = bytearray(SPECIFIER_SIZE)
-#         data_[:len(NON_SIA_SPECIFIER)] = bytearray(NON_SIA_SPECIFIER, encoding='utf-8')
-#         # data_ = bytearray(NON_SIA_SPECIFIER, encoding='utf-8')
-#         data_.extend(data)
-#         self._arbitrary_data = [data_]
-#
-#
-#     @property
-#     def json(self):
-#         """
-#         JSON encoded representation of the transaction
-#         For reference: https://github.com/rivine/rivine/blob/master/doc/transactions/transaction.md
-#         """
-#         if self._json is None:
-#             self._json = {
-#             'version': 1,
-#             'data': {}
-#             }
-#             inputs = []
-#             for idx, input_ in enumerate(self._inputs):
-#                 fulfillment = input_['unlockconditions'].json
-#                 fulfillment['data']['signature'] = self._signatrues[idx]['signature']
-#                 inputs.append({
-#                     'parentid': input_['parentid'],
-#                     'fulfillment': fulfillment,
-#                 })
-#             self._json['data']['coininputs'] = inputs
-#             outputs = []
-#             self._json['data']['coinoutputs'] = self._outputs
-#             self._json['data']['minerfees'] = [str(self._minerfee)]
-#             if self._arbitrary_data is not None:
-#                 arbitrary_data_json = []
-#                 for item in self._arbitrary_data:
-#                     arbitrary_data_json.append(base64.b64encode(item).decode('ascii'))
-#                 self._json['data']['arbitrarydata'] = arbitrary_data_json
-#             else:
-#                 self._json['data']['arbitrarydata'] = self._arbitrary_data
-#             self._json['data']['blockstakeinputs'] = None
-#             self._json['data']['blockstakeoutputs'] = None
-#         return self._json
-#
-#
-#     def get_input_sig_hash(self, input_idx, unlockhash_address_map):
-#         """
-#         Builds a signature hash of an input
-#         """
-#         b_array = bytearray()
-#         # add transaction version is always 1
-#         b_array.extend(int_to_binary(1, 1))
-#         # adding input idx
-#         if input_idx > len(self._inputs):
-#             raise ValueError('Invalid input index')
-#         b_array.extend(int_to_binary(input_idx))
-#         # adding length of inputs
-#         b_array.extend(int_to_binary(len(self._inputs)))
-#         # adding inputs
-#         for input_ in self._inputs:
-#             b_array.extend(bytearray.fromhex(input_['parentid']))
-#         b_array.extend(int_to_binary(len(self._outputs)))
-#         for output in self._outputs:
-#             b_array.extend(big_int_to_binary(output['value']))
-#             condition_binary = bytearray()
-#             # add type always 1
-#             condition_binary.extend(bytearray([1]))
-#             unlockhash = unlockhash_address_map.get(output['condition']['data']['unlockhash'], get_unlockhash_from_address(output['condition']['data']['unlockhash']))
-#             condition_binary.extend(bytearray.fromhex(unlockhash))
-#             b_array.extend(condition_binary)
-#
-#         b_array.extend(int_to_binary(0))
-#         b_array.extend(int_to_binary(0))
-#         # for now we only set the nubmer of minerfees to 1
-#         b_array.extend(int_to_binary(1))
-#         b_array.extend(big_int_to_binary(self._minerfee))
-#
-#         # # encode the size of the arbitrary data
-#         # if self._arbitrary_data is not None:
-#         #     b_array.extend(int_to_binary(len(self._arbitrary_data)))
-#         #     for item in self._arbitrary_data:
-#         #         b_array.extend(int_to_binary(len(item)))
-#         #         b_array.extend(item)
-#         # else:
-#         #     b_array.extend(int_to_binary(0))
-#
-#         return blake2b(b_array, digest_size=UNLOCKHASH_SIZE).digest()
-#
-#
-#     def add_input(self, input_info):
-#         """
-#         Adds new input to the transaction
-#         """
-#         self._inputs.append(input_info)
-#
-#
-#     def add_output(self, output_info):
-#         """
-#         Adds a new output to the transaction
-#         """
-#         self._outputs.append(output_info)
-#
-#
-#     def add_signature(self, signature):
-#         """
-#         Adds a new signature to the transaction
-#
-#         @param signature: signature details
-#         """
-#         self._signatrues.append(signature)
-#
-#
-#     def get_signature_hash(self, signature, unlockhash_address_map):
-#         """
-#         Calculates the hash of a signature
-#         currently only support whole_transaction: True
-#         """
-#         signature_hash = bytearray()
-#         if signature.get('coveredfields', False):
-#             # for the inputs we need to encode the lenght first
-#             signature_hash.extend(int_to_binary(len(self._inputs)))
-#             for input_ in self._inputs:
-#                 signature_hash.extend(bytearray.fromhex(input_['parentid']))
-#                 signature_hash.extend(input_['unlockconditions'].binary)
-#             # encode the number of the outputs
-#             signature_hash.extend(int_to_binary(len(self._outputs)))
-#             for output in self._outputs:
-#                 signature_hash.extend(big_int_to_binary(output['value']))
-#
-#                 # check if the unlockhash already exist in the caching map, otherwise generate
-#                 # an unlock hash without the checksum
-#                 unlockhash = unlockhash_address_map.get(output['unlockhash'], get_unlockhash_from_address(output['unlockhash']))
-#                 signature_hash.extend(bytearray.fromhex(unlockhash))
-#
-#             # encode the number of the blockstake inputs
-#             signature_hash.extend(int_to_binary(len(self._blockstake_inputs)))
-#             for input_ in self._blockstake_inputs:
-#                 signature_hash.extend(bytearray.fromhex(input_['parentid']))
-#                 signature_hash.extend(input_['unlockconditions'].binary)
-#
-#             # encode the number of the blockstake outputs
-#             signature_hash.extend(int_to_binary(len(self._blockstake_outputs)))
-#             for output in self._blockstake_outputs:
-#                 signature_hash.extend(big_int_to_binary(output['value']))
-#                 # check if the unlockhash already exist in the caching map, otherwise generate
-#                 # an unlock hash without the checksum
-#                 unlockhash = unlockhash_address_map.get(output['unlockhash'], get_unlockhash_from_address(output['unlockhash']))
-#                 signature_hash.extend(bytearray.fromhex(unlockhash))
-#
-#             # for now we only set the nubmer of minerfees to 1
-#             signature_hash.extend(int_to_binary(1))
-#             signature_hash.extend(big_int_to_binary(self._minerfee))
-#
-#             # encode the size of the arbitrary data
-#             if self._arbitrary_data is not None:
-#                 signature_hash.extend(int_to_binary(len(self._arbitrary_data)))
-#                 for item in self._arbitrary_data:
-#                     signature_hash.extend(int_to_binary(len(item)))
-#                     signature_hash.extend(item)
-#             else:
-#                 signature_hash.extend(int_to_binary(0))
-#
-#             signature_hash.extend(bytearray.fromhex(signature['parentid']))
-#             signature_hash.extend(int_to_binary(signature['publickeyindex']))
-#             signature_hash.extend(int_to_binary(signature['timelock']))
-#         logger.debug('Signature hash size is {}'.format(len(signature_hash)))
-#         return blake2b(signature_hash, digest_size=UNLOCKHASH_SIZE).digest()

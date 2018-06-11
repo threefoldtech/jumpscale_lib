@@ -3,6 +3,7 @@ Unlockconditions module
 """
 
 from JumpScale9Lib.clients.rivine.errors import DoubleSignatureError
+from JumpScale9Lib.clients.rivine.encoding import binary
 
 class SingleSignatureFulfillment:
     """
@@ -17,6 +18,20 @@ class SingleSignatureFulfillment:
         self._type = bytearray([1])
 
 
+    @property
+    def json(self):
+        """
+        Returns a json encoded versoin of the SingleSignatureFulfillment
+        """
+        return {
+            'type': binary.decode(self._type, type_=int),
+            'data':{
+                'publickey': self._pub_key.json,
+                'signature': self._signature.hex() if self._signature else ''
+            }
+        }
+
+
     def sign(self, sig_ctx):
         """
         Sign the given fulfillment, which is to be done after all properties have been filled of the parent transaction
@@ -25,7 +40,7 @@ class SingleSignatureFulfillment:
         """
         if self._signature is not None:
             raise DoubleSignatureError("cannot sign a fulfillment which is already signed")
-        sig_hash = transaction.get_input_signature_hash(input_idx=sig_ctx['input_idx'])
+        sig_hash = sig_ctx['transaction'].get_input_signature_hash(input_index=sig_ctx['input_idx'])
         self._signature = sig_ctx['secret_key'].sign(sig_hash)
 
 
@@ -59,6 +74,31 @@ class UnlockHashCondition:
         """
         self._unlockhash = unlockhash
         self._type = bytearray([1])
+        self._unlockhash_size = 33
 
 
-    
+
+    @property
+    def binary(self):
+        """
+        Returns a binary encoded version of the unlockhashcondition
+        """
+        result = bytearray()
+        result.extend(self._type)
+        # add the size of the unlockhash
+        result.extend(binary.encode(self._unlockhash_size))
+        result.extend(binary.encode(self._unlockhash))
+        return result
+
+
+    @property
+    def json(self):
+        """
+        Returns a json encoded version of the UnlockHashCondition
+        """
+        return {
+            'type': binary.decode(self._type, type_=int),
+            'data': {
+                'unlockhash': str(self._unlockhash)
+            }
+        }

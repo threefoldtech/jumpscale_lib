@@ -17,8 +17,8 @@ class SiaPublicKey:
         """
         Initialize new SiaPublicKey
         """
-        self.algorithm = algorithm
-        self.pub_key = pub_key
+        self._algorithm = algorithm
+        self._pub_key = pub_key
 
     @property
     def binary(self):
@@ -27,10 +27,18 @@ class SiaPublicKey:
         """
         key_value = bytearray()
         s = bytearray(SPECIFIER_SIZE)
-        s[:len(self.algorithm)] = bytearray(self.algorithm, encoding='utf-8')
+        s[:len(self._algorithm)] = bytearray(self._algorithm, encoding='utf-8')
         key_value.extend(s)
-        key_value.extend(binary.encode(self.pub_key, type_='slice'))
+        key_value.extend(binary.encode(self._pub_key, type_='slice'))
         return key_value
+
+
+    @property
+    def json(self):
+        """
+        Returns a json encoded version of the SiaPublicKey
+        """
+        return "{}:{}".format(self._algorithm, self._pub_key.hex())
 
 
 class Ed25519PublicKey(SiaPublicKey):

@@ -4,6 +4,10 @@ Module contianing all transaction types
 from JumpScale9Lib.clients.rivine.types.signatures import Ed25519PublicKey
 from JumpScale9Lib.clients.rivine.types.unlockconditions import SingleSignatureFulfillment, UnlockHashCondition
 from JumpScale9Lib.clients.rivine.encoding import binary
+from JumpScale9Lib.clients.rivine.utils import hash
+from JumpScale9Lib.clients.rivine.types.unlockhash import UnlockHash
+
+import base64
 
 DEFAULT_TRANSACTION_VERSION = 1
 
@@ -42,7 +46,7 @@ class TransactionV1:
         self._blockstakes_outputs = []
         self._minerfees = []
         self._data = bytearray()
-        self._versoin = bytearray([1])
+        self._version = bytearray([1])
 
 
     @property
@@ -58,6 +62,25 @@ class TransactionV1:
         Retrieves coins outputs
         """
         return self._coins_outputs
+
+
+    @property
+    def json(self):
+        """
+        Returns a json version of the TransactionV1 object
+        """
+        result = {
+            'version': binary.decode(self._version, type_=int),
+            'data': {
+                'coininputs': [input.json for input in self._coins_inputs],
+                'coinoutputs': [output.json for output in self._coins_outputs],
+                'minerfees': [str(fee) for fee in self._minerfees]
+            }
+        }
+        if self._data:
+            result['arbitrarydata'] = base64.b64encode(self._data)
+        return result
+
 
 
     def add_data(self, data):
@@ -83,7 +106,8 @@ class TransactionV1:
         @param value: Amout of coins
         @param recipient: The recipient address
         """
-        self._coins_outputs.append(CoinOutput(value=value, condition=UnlockHashCondition(unlockhash=recipient)))
+        unlockhash = UnlockHash.from_string(recipient)
+        self._coins_outputs.append(CoinOutput(value=value, condition=UnlockHashCondition(unlockhash=unlockhash)))
 
 
     def add_minerfee(self, minerfee):
@@ -115,12 +139,25 @@ class TransactionV1:
         # encode coin outputs
         buffer.extend(binary.encode(self._coins_outputs, type_='slice'))
 
+        # encode the number of blockstakes
+        buffer.extend(binary.encode(len(self._blockstakes_inputs)))
+        # encode blockstack inputs parent_ids
+        for bs_input in self._blockstakes_inputs:
+            buffer.extend(binary.encode(bs_input.parent_id, type_='hex'))
 
+        # encode blockstake outputs
+        buffer.extend(binary.encode(self._blockstakes_outputs, type_='slice'))
 
+        # encode miner fees
+        buffer.extend(binary.encode(len(self._minerfees)))
+        for miner_fee in self._minerfees:
+            buffer.extend(binary.encode(miner_fee, type_='currency'))
 
+        # encode custom data_
+        buffer.extend(binary.encode(self._data, type_='slice'))
 
-
-
+        # now we need to return the hash value of the binary array
+        return hash(data=buffer)
 
 
 
@@ -141,16 +178,27 @@ class CoinInput:
         return self._parent_id
 
 
-    def sign(self, input_idx, transactoin, secret_key):
+    @property
+    def json(self):
+        """
+        Returns a json encoded version of the Coininput
+        """
+        return {
+            'parentid': self._parent_id,
+            'fulfillment': self._fulfillment.json
+        }
+
+
+    def sign(self, input_idx, transaction, secret_key):
         """
         Sign the input using the secret key
         """
         sig_ctx = {
-        'input_indx': input_idx,
+        'input_idx': input_idx,
         'transaction': transaction,
         'secret_key': secret_key
         }
-        self._fulfillment.sing(sig_ctx=sig_ctx)
+        self._fulfillment.sign(sig_ctx=sig_ctx)
 
 
 class CoinOutput:
@@ -173,3 +221,15 @@ class CoinOutput:
         result = bytearray()
         result.extend(binary.encode(self._value, type_='currency'))
         result.extend(binary.encode(self._condition))
+        return result
+
+
+    @property
+    def json(self):
+        """
+        Returns a json encoded version of the CointOutput
+        """
+        return {
+            'value': str(self._value),
+            'condition': self._condition.json
+        }

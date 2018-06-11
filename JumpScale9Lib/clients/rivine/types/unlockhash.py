@@ -4,6 +4,7 @@ Modules defines the unlockhash types
 
 from pyblake2 import blake2b
 from JumpScale9Lib.clients.rivine import utils
+from JumpScale9Lib.clients.rivine.encoding import binary
 
 UNLOCK_TYPE_PUBKEY = bytearray([1])
 UNLOCKHASH_SIZE = 32
@@ -46,6 +47,17 @@ class UnlockHash:
         Calls __str__
         """
         return str(self)
+
+
+    @property
+    def binary(self):
+        """
+        Returns a binary encoded unlockhash
+        """
+        result = bytearray()
+        result.extend(self._unlock_type)
+        result.extend(binary.encode(self._hash))
+        return result
 
     @classmethod
     def from_string(cls, ulh_str):
