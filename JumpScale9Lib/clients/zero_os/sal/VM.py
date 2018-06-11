@@ -609,3 +609,4 @@ class ZeroOSVM(VM):
 
     def from_dict(self, data):
         self.ipxe_url = data.get('ipxeUrl')
+        self._flist = data.get('flist')
