@@ -26,7 +26,7 @@ from JumpScale9Lib.clients.rivine import utils
 from JumpScale9Lib.clients.rivine.types.transaction import TransactionFactory, DEFAULT_TRANSACTION_VERSION
 from JumpScale9Lib.clients.rivine.types.unlockhash import UnlockHash
 
-from .const import MINER_PAYOUT_MATURITY_WINDOW, WALLET_ADDRESS_TYPE, ADDRESS_TYPE_SIZE
+from .const import MINER_PAYOUT_MATURITY_WINDOW, WALLET_ADDRESS_TYPE, ADDRESS_TYPE_SIZE, HASTINGS_TFT_VALUE
 
 from .errors import RESTAPIError, BackendError,\
 InsufficientWalletFundsError, NonExistingOutputError,\
@@ -82,7 +82,7 @@ class RivineWallet:
         Retrieves current wallet balance
         """
         self.check_balance()
-        return sum(int(value.get('value', 0)) for value in self._unspent_coins_outputs.values())
+        return sum(int(value.get('value', 0)) for value in self._unspent_coins_outputs.values()) / HASTINGS_TFT_VALUE
 
 
 
@@ -230,18 +230,22 @@ class RivineWallet:
                         del self._unspent_coins_outputs[coin_input.get('parentid')]
 
 
-    def send_money(self, amount, recipient):
+    def send_money(self, amount, recipient, data=None):
         """
         Sends TFT tokens from the user's wallet to the recipient address
 
         @param amount: Amount to be transfered in TF tokens
         @param recipient: Address of the fund recipient
+        @param data: Custom data to be sent with the transaction
         """
+        if data is not None:
+            data = binary.encode(data)
         # convert amount to hastings
-        amount = amount * 1000000000
+        amount = amount * HASTINGS_TFT_VALUE
         transaction = self._create_transaction(amount=amount,
                                                 recipient=recipient,
-                                                sign_transaction=True)
+                                                sign_transaction=True,
+                                                custom_data=data)
         self._commit_transaction(transaction=transaction)
         return transaction
 
@@ -262,7 +266,7 @@ class RivineWallet:
         """
         if minerfee is None:
             minerfee = self._minerfee
-        wallet_fund = self.current_balance
+        wallet_fund = self.current_balance * HASTINGS_TFT_VALUE
         required_funds = amount + minerfee
         if required_funds > wallet_fund:
             raise InsufficientWalletFundsError('No sufficient funds to make the transaction')

@@ -78,7 +78,7 @@ class TransactionV1:
             }
         }
         if self._data:
-            result['arbitrarydata'] = base64.b64encode(self._data)
+            result['arbitrarydata'] = base64.b64encode(self._data).decode('utf-8')
         return result
 
 

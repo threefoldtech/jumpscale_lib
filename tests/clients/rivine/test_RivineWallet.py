@@ -47,7 +47,9 @@ rivine_wallet.current_balance
 
 try:
     recipient = '0112a7c1813746c5f6d5d496441d7a6a226984a3cc318021ee82b5695e4470f160c6ca61f66df2'
-    transaction = rivine_wallet._create_transaction(amount=1000000000, recipient=recipient, sign_transaction=True)
+    data = b'hello from cairo'
+    transaction = rivine_wallet.send_money(amount=2, recipient=recipient, data=data)
+    # transaction = rivine_wallet._create_transaction(amount=1000000000, recipient=recipient, sign_transaction=True, custom_data=data)
     print(transaction.json)
 finally:
     import IPython
