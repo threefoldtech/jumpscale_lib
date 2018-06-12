@@ -200,7 +200,7 @@ class Host:
         pxe_config_file = '{root}/{file}'.format(root=pxe_config_root, file=file_name)
         lkrn_file = '{root}/{file}'.format(root=pxe_config_root, file=file_name + ".lkrn")
         # download lkrn file
-        executor.execute("mkdir -p {root}/lkrn".format(root=pxe_config_root))
+        executor.execute("mkdir -p {root}".format(root=pxe_config_root))
         executor.execute("wget -O {target} {source}".format(target=lkrn_file, source=lkrn_url))
         pxe_config_data = (
         "default 1\n"
