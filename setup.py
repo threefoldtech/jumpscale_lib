@@ -102,6 +102,7 @@ setup(
         'ed25519>=1.4',
         'pyghmi==1.0.44',
         'python-jose>=1.3.2',
+        'cryptocompare==0.6.1'
     ],
     cmdclass={
         'install': install,
