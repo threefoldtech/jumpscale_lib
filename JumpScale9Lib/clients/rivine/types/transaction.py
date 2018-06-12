@@ -166,7 +166,6 @@ class TransactionV1:
 
 
 
-
 class CoinInput:
     """
     CoinIput class

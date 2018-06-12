@@ -174,6 +174,7 @@ class RivineWallet:
         @TOCHECK: this needs to be synchronized with locks or other primitive
         """
         current_chain_height = self.get_current_chain_height()
+        unconfirmed_txs = self._get_unconfirmed_transactions(format_inputs=True)
         logger.info('Current chain height is: {}'.format(current_chain_height))
         for address in self.addresses:
             if address in self._addresses_info:
@@ -189,7 +190,7 @@ class RivineWallet:
                 self._collect_miner_fees(address=address, blocks=address_info.get('blocks',{}),
                                         height=current_chain_height)
                 transactions = address_info.get('transactions', {})
-                self._collect_transaction_outputs(address=address, transactions=transactions)
+                self._collect_transaction_outputs(address=address, transactions=transactions, unconfirmed_txs=unconfirmed_txs)
         # remove spent inputs after collection all the inputs
         for address, address_info in self._addresses_info.items():
             self._remove_spent_inputs(transactions = address_info.get('transactions', {}))
@@ -225,13 +226,16 @@ class RivineWallet:
                         }
 
 
-    def _collect_transaction_outputs(self, address, transactions):
+    def _collect_transaction_outputs(self, address, transactions, unconfirmed_txs=None):
         """
         Collects transactions outputs
 
         @param address: address to collect transactions outputs
         @param transactions: Details about the transactions
+        @param unconfirmed_txs: List of unconfirmed transactions
         """
+        if unconfirmed_txs is None:
+            unconfirmed_txs = []
         for txn_info in transactions:
             # coinoutputs can exist in the dictionary but has the value None
             coinoutputs = txn_info.get('rawtransaction', {}).get('data', {}).get('coinoutputs', [])
@@ -240,6 +244,9 @@ class RivineWallet:
                     # support both v0 and v1 tnx format
                     if utxo.get('unlockhash') == address or (utxo.get('condition', {}).get('data', {}).get('unlockhash') == address):
                         logger.info('Found transaction output for address {}'.format(address))
+                        if txn_info['coinoutputids'][index] in unconfirmed_txs:
+                            logger.warn("Transaction output is part of an unconfirmed tansaction. Ignoring it...")
+                            continue
                         self._unspent_coins_outputs[txn_info['coinoutputids'][index]] = utxo
 
 
@@ -348,14 +355,11 @@ class RivineWallet:
 
 
         input_value = 0
-        unconfirmed_txs = self._get_unconfirmed_transactions(format_inputs=True)
         for address, unspent_coin_output in self._unspent_coins_outputs.items():
             # if we reach the required funds, then break
             if input_value >= required_funds:
                 break
-            if address in unconfirmed_txs:
-                logger.warn("Unspent output {} is a part of unconfirmed transaction. Ignoring it".format(address))
-                continue
+
             ulh = unspent_coin_output.get('condition', {}).get('data', {}).get('unlockhash', None)
             if ulh is None:
                 # v0 transaction format

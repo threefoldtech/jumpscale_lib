@@ -36,10 +36,10 @@ wallet.current_balance
 
 try:
     recipient = '01fffda0a9b5d6494af38294028cac4401768f30740271d8314d486ebf3585647eece15d5f8b47'
-    data = b'hello from cairo'
+    data = b"Hello from Cairo!"
     # transaction = wallet.send_money(amount=2, recipient=recipient, data=data)
     # transaction = wallet._create_transaction(amount=1000000000, recipient=recipient, sign_transaction=True, custom_data=data)
-    transaction = wallet._create_transaction(amount=2000000000, recipient=recipient, sign_transaction=True)
+    transaction = wallet._create_transaction(amount=2000000000, recipient=recipient, sign_transaction=True, custom_data=data)
     # transaction = wallet.send_money(amount=2, recipient=recipient)
     print(transaction.json)
 finally:
