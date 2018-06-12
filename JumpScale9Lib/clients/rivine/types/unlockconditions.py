@@ -45,13 +45,13 @@ class SingleSignatureFulfillment:
 
 
 
-class TimeLockCondition:
+class LockTimeCondition:
     """
-    TimeLockCondition class
+    LockTimeCondition class
     """
-    def __init__(self, locktime, condition):
+    def __init__(self, condition, locktime):
         """
-        Initializes a new TimeLockCondition
+        Initializes a new LockTimeCondition
 
         @param locktime: Identifies the height or timestamp until which this output is locked
         If the locktime is less then 500 milion it is to be assumed to be identifying a block height,
@@ -59,8 +59,38 @@ class TimeLockCondition:
 
         @param condition: A condtion object that can be an UnlockHashCondition or a MultiSignatureCondition
         """
-        self._locktime = locktime
+        self._locktime = int(locktime)
         self._condition = condition
+        self._type = bytearray([3])
+
+
+
+    @property
+    def binary(self):
+        """
+        Returns a binary encoded versoin of the LockTimeCondition
+        """
+        result = bytearray()
+        result.extend(self._type)
+        # encode the length of all properties: len(locktime) = 8 + len(binary(condition))
+        result.extend(binary.encode(8 + len(self._condition.binary)))
+        result.extend(binary.encode(self._locktime))
+        result.extend(binary.encode(self._condition))
+        return result
+
+
+    @property
+    def json(self):
+        """
+        Returns a json encoded version of the LockTimeCondition
+        """
+        return {
+            'type': binary.decode(self._type, type_=int),
+            'data': {
+                'locktime': self._locktime,
+                'condition': self._condition.json
+            }
+        }
 
 
 

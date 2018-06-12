@@ -38,7 +38,7 @@ class RivineWallet:
     """
     Wallet class
     """
-    def __init__(self, seed, bc_network, bc_network_password, nr_keys_per_seed=50, minerfee=100000000):
+    def __init__(self, seed, bc_network, bc_network_password, nr_keys_per_seed=50, minerfee=100000000, client=None):
         """
         Creates new wallet
         TODO: check if we need to support multiple seeds from the begining
@@ -48,16 +48,20 @@ class RivineWallet:
         @param bc_network_password: Password to send to the explorer node when posting requests.
         @param nr_keys_per_seed: Number of keys generated from the seed.
         @param minerfee: Amount of hastings that should be minerfee (default to 0.1 TFT)
+        @param client: Name of the insance of the j.clients.rivine that is used to create the wallet
         """
+        self._client = j.clients.rivine.get(client) if client else None
         self._seed = j.data.encryption.mnemonic.to_entropy(seed)
         self._unspent_coins_outputs = {}
         self._keys = {}
         self._bc_network = bc_network.strip("/")
         self._minerfee = minerfee
         self._bc_network_password = bc_network_password
-        for index in range(nr_keys_per_seed):
+        self._nr_keys_per_seed = nr_keys_per_seed
+        for index in range(self._nr_keys_per_seed):
             key = self._generate_spendable_key(index=index)
             self._keys[str(key.unlockhash)] = key
+        self._addresses_info = {}
         self.check_balance()
 
 
@@ -85,6 +89,25 @@ class RivineWallet:
         return sum(int(value.get('value', 0)) for value in self._unspent_coins_outputs.values()) / HASTINGS_TFT_VALUE
 
 
+    def generate_address(self):
+        """
+        Generates a new wallet address
+        """
+        key = self._generate_spendable_key(index=self._nr_keys_per_seed)
+        address = str(key.unlockhash)
+        self._keys[address] = key
+        self._nr_keys_per_seed += 1
+        if self._client is not None:
+            # we need to update the config with the new nr_of_keys_per_seed for this wallet
+            data = dict(self._client.config.data)
+            data['nr_keys_per_seed'] = self._nr_keys_per_seed
+            cl = j.clients.rivine.get(instance=self._client.instance,
+                                       data=data,
+                                       create=True,
+                                       interactive=False)
+            cl.config.save()
+
+        return address
 
     def _generate_spendable_key(self, index):
         """
@@ -153,6 +176,8 @@ class RivineWallet:
         current_chain_height = self.get_current_chain_height()
         logger.info('Current chain height is: {}'.format(current_chain_height))
         for address in self.addresses:
+            if address in self._addresses_info:
+                continue
             try:
                 address_info = self.check_address(address=address, log_errors=False)
             except RESTAPIError:
@@ -160,11 +185,14 @@ class RivineWallet:
             else:
                 if address_info.get('hashtype', None) != UNLOCKHASH_TYPE:
                     raise BackendError('Address is not recognized as an unblock hash')
+                self._addresses_info[address] = address_info
                 self._collect_miner_fees(address=address, blocks=address_info.get('blocks',{}),
                                         height=current_chain_height)
                 transactions = address_info.get('transactions', {})
                 self._collect_transaction_outputs(address=address, transactions=transactions)
-                self._remove_spent_inputs(transactions=transactions)
+        # remove spent inputs after collection all the inputs
+        for address, address_info in self._addresses_info.items():
+            self._remove_spent_inputs(transactions = address_info.get('transactions', {}))
 
 
     def _collect_miner_fees(self, address, blocks, height):
@@ -209,7 +237,8 @@ class RivineWallet:
             coinoutputs = txn_info.get('rawtransaction', {}).get('data', {}).get('coinoutputs', [])
             if coinoutputs:
                 for index, utxo in enumerate(coinoutputs):
-                    if utxo.get('condition', {}).get('data', {}).get('unlockhash') == address:
+                    # support both v0 and v1 tnx format
+                    if utxo.get('unlockhash') == address or (utxo.get('condition', {}).get('data', {}).get('unlockhash') == address):
                         logger.info('Found transaction output for address {}'.format(address))
                         self._unspent_coins_outputs[txn_info['coinoutputids'][index]] = utxo
 
@@ -228,6 +257,46 @@ class RivineWallet:
                     if coin_input.get('parentid') in self._unspent_coins_outputs:
                         logger.info('Found a spent address {}'.format(coin_input.get('parentid')))
                         del self._unspent_coins_outputs[coin_input.get('parentid')]
+
+
+    def _get_unconfirmed_transactions(self, format_inputs=False):
+        """
+        Retrieves the unconfirmed transaction from a remote node that runs the Transaction pool module
+
+        @param format_inputs: If True, the output will be formated to get a list of the inputs parent ids
+
+        # example output
+                {'transactions': [{'version': 1,
+           'data': {'coininputs': [{'parentid': '7616c88f452d6b22a3683bcbdfdf6ee3c32b63a810a8ac0d46a7403a33d4c06f',
+              'fulfillment': {'type': 1,
+               'data': {'publickey': 'ed25519:9413b12a6158f52fad6c39cc164054a9e7fbe5378892311f498eae56f80c068a',
+                'signature': '34cee9bbc380deba2f52ccb20c2a47d4f6001fe66cfe7079d6b71367ea14544e89e69657201d0cc7b7b901324e64a7f4dce6ac6177536726cee576a0b74a8700'}}}],
+            'coinoutputs': [{'value': '2000000000',
+              'condition': {'type': 1,
+               'data': {'unlockhash': '0112a7c1813746c5f6d5d496441d7a6a226984a3cc318021ee82b5695e4470f160c6ca61f66df2'}}},
+             {'value': '3600000000',
+              'condition': {'type': 1,
+               'data': {'unlockhash': '012bdb563a4b3b630ddf32f1fde8d97466376a67c0bc9a278c2fa8c8bd760d4dcb4b9564cdea6f'}}}],
+            'minerfees': ['100000000']}}]}
+        """
+        result = []
+        url = "{}/transactionpool/transactions".format(self._bc_network)
+        headers = {'user-agent': 'Rivine-Agent'}
+        auth = HTTPBasicAuth('', self._bc_network_password)
+        res = requests.get(url, headers=headers, auth=auth)
+        if res.status_code != 200:
+            msg = 'Failed to retrieve unconfirmed transactions. Error: {}'.format(res.text)
+            logger.error(msg)
+            raise BackendError(msg)
+        transactions = res.json()['transactions']
+        if transactions is None:
+            transactions = []
+        if format_inputs:
+            for txn in transactions:
+                result.extend([coininput['parentid'] for coininput in txn['data']['coininputs']])
+            return result
+        return transactions
+
 
 
     def send_money(self, amount, recipient, data=None):
@@ -250,7 +319,7 @@ class RivineWallet:
         return transaction
 
 
-    def _create_transaction(self, amount, recipient, minerfee=None, sign_transaction=True, custom_data=None):
+    def _create_transaction(self, amount, recipient, minerfee=None, sign_transaction=True, custom_data=None, locktime=None):
         """
         Creates new transaction and sign it
         creates a new transaction of the specified ammount to a specified address. A remainder address
@@ -263,6 +332,7 @@ class RivineWallet:
         @param sign_transaction: If True, the created transaction will be singed
         @param custom_data: Custom data to add to the transaction record
         @type custom_data: bytearray
+        @param locktime: Identifies the height or timestamp until which this transaction is locked
         """
         if minerfee is None:
             minerfee = self._minerfee
@@ -276,20 +346,32 @@ class RivineWallet:
         if custom_data is not None:
             transaction.add_data(custom_data)
 
+
         input_value = 0
+        unconfirmed_txs = self._get_unconfirmed_transactions(format_inputs=True)
         for address, unspent_coin_output in self._unspent_coins_outputs.items():
             # if we reach the required funds, then break
             if input_value >= required_funds:
                 break
+            if address in unconfirmed_txs:
+                logger.warn("Unspent output {} is a part of unconfirmed transaction. Ignoring it".format(address))
+                continue
+            ulh = unspent_coin_output.get('condition', {}).get('data', {}).get('unlockhash', None)
+            if ulh is None:
+                # v0 transaction format
+                ulh = unspent_coin_output.get('unlockhash', None)
+            if ulh is None:
+                raise RunimeError('Cannot retrieve unlockhash')
+
             transaction.add_coin_input(parent_id=address, pub_key=self._keys[unspent_coin_output['condition']['data']['unlockhash']].public_key)
 
-            input_value = int(unspent_coin_output['value'])
+            input_value += int(unspent_coin_output['value'])
 
         for txn_input in transaction.coins_inputs:
             if self._unspent_coins_outputs[txn_input.parent_id]['condition']['data']['unlockhash'] not in self._keys:
                 raise NonExistingOutputError('Trying to spend unexisting output')
 
-        transaction.add_coin_output(value=amount, recipient=recipient)
+        transaction.add_coin_output(value=amount, recipient=recipient, locktime=locktime)
 
         # we need to check if the sum of the inputs is more than the required fund and if so, we need
         # to send the remainder back to the original user

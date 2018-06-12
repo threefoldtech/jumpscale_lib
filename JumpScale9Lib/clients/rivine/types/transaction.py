@@ -2,7 +2,7 @@
 Module contianing all transaction types
 """
 from JumpScale9Lib.clients.rivine.types.signatures import Ed25519PublicKey
-from JumpScale9Lib.clients.rivine.types.unlockconditions import SingleSignatureFulfillment, UnlockHashCondition
+from JumpScale9Lib.clients.rivine.types.unlockconditions import SingleSignatureFulfillment, UnlockHashCondition, LockTimeCondition
 from JumpScale9Lib.clients.rivine.encoding import binary
 from JumpScale9Lib.clients.rivine.utils import hash
 from JumpScale9Lib.clients.rivine.types.unlockhash import UnlockHash
@@ -99,15 +99,20 @@ class TransactionV1:
         self._coins_inputs.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
 
 
-    def add_coin_output(self, value, recipient):
+    def add_coin_output(self, value, recipient, locktime=None):
         """
         Add a new coin output to the transaction
 
         @param value: Amout of coins
         @param recipient: The recipient address
+        @param locktime: If provided then a locktimecondition will be created for this output
         """
         unlockhash = UnlockHash.from_string(recipient)
-        self._coins_outputs.append(CoinOutput(value=value, condition=UnlockHashCondition(unlockhash=unlockhash)))
+        ulh_condition = UnlockHashCondition(unlockhash=unlockhash)
+        lt_condition = None
+        if locktime is not None:
+            lt_condition = LockTimeCondition(condition=ulh_condition, locktime=locktime)
+        self._coins_outputs.append(CoinOutput(value=value, condition=lt_condition or ulh_condition))
 
 
     def add_minerfee(self, minerfee):
