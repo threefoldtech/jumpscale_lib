@@ -62,7 +62,6 @@ class RivineWallet:
             key = self._generate_spendable_key(index=index)
             self._keys[str(key.unlockhash)] = key
         self._addresses_info = {}
-        self.check_balance()
 
 
     @property
@@ -85,7 +84,7 @@ class RivineWallet:
         """
         Retrieves current wallet balance
         """
-        self.check_balance()
+        self._check_balance()
         return sum(int(value.get('value', 0)) for value in self._unspent_coins_outputs.values()) / HASTINGS_TFT_VALUE
 
 
@@ -124,7 +123,7 @@ class RivineWallet:
         return SpendableKey(pub_key=pk.to_bytes(), sec_key=sk)
 
 
-    def get_current_chain_height(self):
+    def _get_current_chain_height(self):
         """
         Retrieves the current chain height
         """
@@ -143,7 +142,7 @@ class RivineWallet:
         return result
 
 
-    def check_address(self, address, log_errors=True):
+    def _check_address(self, address, log_errors=True):
         """
         Check if an address is valid
         performs a http call to an explorer to check if an address has (an) (unspent) output(s)
@@ -167,20 +166,20 @@ class RivineWallet:
         return result
 
 
-    def check_balance(self):
+    def _check_balance(self):
         """
         Syncs the wallet with the blockchain
 
         @TOCHECK: this needs to be synchronized with locks or other primitive
         """
-        current_chain_height = self.get_current_chain_height()
+        current_chain_height = self._get_current_chain_height()
         unconfirmed_txs = self._get_unconfirmed_transactions(format_inputs=True)
         logger.info('Current chain height is: {}'.format(current_chain_height))
         for address in self.addresses:
-            if address in self._addresses_info:
-                continue
+            # if address in self._addresses_info:
+            #     continue
             try:
-                address_info = self.check_address(address=address, log_errors=False)
+                address_info = self._check_address(address=address, log_errors=False)
             except RESTAPIError:
                 pass
             else:
@@ -243,7 +242,7 @@ class RivineWallet:
                 for index, utxo in enumerate(coinoutputs):
                     # support both v0 and v1 tnx format
                     if utxo.get('unlockhash') == address or (utxo.get('condition', {}).get('data', {}).get('unlockhash') == address):
-                        logger.info('Found transaction output for address {}'.format(address))
+                        logger.debug('Found transaction output for address {}'.format(address))
                         if txn_info['coinoutputids'][index] in unconfirmed_txs:
                             logger.warn("Transaction output is part of an unconfirmed tansaction. Ignoring it...")
                             continue
@@ -262,7 +261,7 @@ class RivineWallet:
             if coininputs:
                 for coin_input in coininputs:
                     if coin_input.get('parentid') in self._unspent_coins_outputs:
-                        logger.info('Found a spent address {}'.format(coin_input.get('parentid')))
+                        logger.debug('Found a spent address {}'.format(coin_input.get('parentid')))
                         del self._unspent_coins_outputs[coin_input.get('parentid')]
 
 
@@ -305,14 +304,14 @@ class RivineWallet:
         return transactions
 
 
-
-    def send_money(self, amount, recipient, data=None):
+    def send_money(self, amount, recipient, data=None, locktime=None):
         """
         Sends TFT tokens from the user's wallet to the recipient address
 
         @param amount: Amount to be transfered in TF tokens
         @param recipient: Address of the fund recipient
         @param data: Custom data to be sent with the transaction
+        @param locktime: Identifies the height or timestamp until which this transaction is locked
         """
         if data is not None:
             data = binary.encode(data)
@@ -321,7 +320,8 @@ class RivineWallet:
         transaction = self._create_transaction(amount=amount,
                                                 recipient=recipient,
                                                 sign_transaction=True,
-                                                custom_data=data)
+                                                custom_data=data,
+                                                locktime=locktime)
         self._commit_transaction(transaction=transaction)
         return transaction
 

@@ -72,10 +72,12 @@ class LockTimeCondition:
         """
         result = bytearray()
         result.extend(self._type)
-        # encode the length of all properties: len(locktime) = 8 + len(binary(condition))
-        result.extend(binary.encode(8 + len(self._condition.binary)))
+        # encode the length of all properties: len(locktime) = 8 + len(binary(condition)) - 8
+        # the -8 in the above statement is due to the fact that we do not need to include the length of the interal condition's data
+        result.extend(binary.encode(len(self._condition.binary)))
         result.extend(binary.encode(self._locktime))
-        result.extend(binary.encode(self._condition))
+        result.extend(self._condition.type)
+        result.extend(binary.encode(self._condition.data))
         return result
 
 
@@ -106,6 +108,22 @@ class UnlockHashCondition:
         self._type = bytearray([1])
         self._unlockhash_size = 33
 
+
+
+    @property
+    def type(self):
+        """
+        Returns the unlock type
+        """
+        return self._type
+
+
+    @property
+    def data(self):
+        """
+        Returns the condtion data being the unlockhash in this condition type
+        """
+        return self._unlockhash
 
 
     @property

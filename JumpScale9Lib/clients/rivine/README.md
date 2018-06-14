@@ -80,3 +80,13 @@ recipient = '01e5bd83a85e263817e2040054064575066874ee45a7697facca7a2721d4792af37
 custom_data = b"hello from Dresden"
 transaction = wallet.send_money(amount=2, recipient=recipient, data=data)
 ```
+
+You can also add a locktime to your transactions
+```python
+import time
+recipient = '01e5bd83a85e263817e2040054064575066874ee45a7697facca7a2721d4792af374ea35f549a1'
+custom_data = b"hello from Dresden"
+# 15 minutes locktime
+locktime = time.time() + 900
+transaction = wallet.send_money(amount=2, recipient=recipient, data=data, locktime=locktime)
+```

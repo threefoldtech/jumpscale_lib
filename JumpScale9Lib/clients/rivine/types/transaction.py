@@ -78,7 +78,7 @@ class TransactionV1:
             }
         }
         if self._data:
-            result['arbitrarydata'] = base64.b64encode(self._data).decode('utf-8')
+            result['data']['arbitrarydata'] = base64.b64encode(self._data).decode('utf-8')
         return result
 
 
@@ -108,11 +108,10 @@ class TransactionV1:
         @param locktime: If provided then a locktimecondition will be created for this output
         """
         unlockhash = UnlockHash.from_string(recipient)
-        ulh_condition = UnlockHashCondition(unlockhash=unlockhash)
-        lt_condition = None
+        condition = UnlockHashCondition(unlockhash=unlockhash)
         if locktime is not None:
-            lt_condition = LockTimeCondition(condition=ulh_condition, locktime=locktime)
-        self._coins_outputs.append(CoinOutput(value=value, condition=lt_condition or ulh_condition))
+            condition = LockTimeCondition(condition=condition, locktime=locktime)
+        self._coins_outputs.append(CoinOutput(value=value, condition=condition))
 
 
     def add_minerfee(self, minerfee):
