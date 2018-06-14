@@ -296,7 +296,7 @@ class Gateway:
             self.container.remove_nic(removeme['name'])
 
         for network in wantednetworks:
-            self.container.add_nic(network.to_dict())
+            self.container.add_nic(network.to_dict(forcontainer=True))
             if network.type == 'default':
                 self._update_container_portforwards()
 
