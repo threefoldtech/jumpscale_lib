@@ -25,6 +25,7 @@ from JumpScale9 import j
 from JumpScale9Lib.clients.rivine import utils
 from JumpScale9Lib.clients.rivine.types.transaction import TransactionFactory, DEFAULT_TRANSACTION_VERSION
 from JumpScale9Lib.clients.rivine.types.unlockhash import UnlockHash
+from JumpScale9Lib.clients.rivine.types.unlockconditions import TIMELOCK_CONDITION_HEIGHT_LIMIT
 
 from .const import MINER_PAYOUT_MATURITY_WINDOW, WALLET_ADDRESS_TYPE, ADDRESS_TYPE_SIZE, HASTINGS_TFT_VALUE
 
@@ -241,7 +242,35 @@ class RivineWallet:
             if coinoutputs:
                 for index, utxo in enumerate(coinoutputs):
                     # support both v0 and v1 tnx format
-                    if utxo.get('unlockhash') == address or (utxo.get('condition', {}).get('data', {}).get('unlockhash') == address):
+                    if 'unlockhash' in utxo:
+                        # v0 transaction format
+                        condition_ulh = utxo['unlockhash']
+                    elif 'condition' in utxo:
+                        # v1 transaction format
+                        # check condition type
+                        if utxo['condition'].get('type') == 1:
+                            # unlockhash condition type
+                            condition_ulh = utxo['condition']['type']['data']['unlockhash']
+                        elif utxo['condition'].get('type') == 3:
+                            # timelock condition, right now we only support timelock condition with internal unlockhash condition
+                            locktime = utxo['condition']['data']['locktime']
+                            if locktime < TIMELOCK_CONDITION_HEIGHT_LIMIT:
+                                # locktime should be checked againest the current chain height
+                                current_height = self._get_current_chain_height()
+                                if current_height > locktime:
+                                    condition_ulh = utxo['condition']['data']['condition']['data'].get('unlockhash')
+                                else:
+                                    logger.warn("Found transaction output for address {} but its is time locked".format(address))
+                                    continue
+                            else:
+                                # locktime represent timestamp
+                                if locktime < time.time():
+                                    condition_ulh = utxo['condition']['data']['condition']['data'].get('unlockhash')
+                                else:
+                                    logger.warn("Found transaction output for address {} but its is time locked".format(address))
+                                    continue
+
+                    if condition_ulh == address:
                         logger.debug('Found transaction output for address {}'.format(address))
                         if txn_info['coinoutputids'][index] in unconfirmed_txs:
                             logger.warn("Transaction output is part of an unconfirmed tansaction. Ignoring it...")

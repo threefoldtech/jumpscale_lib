@@ -5,6 +5,9 @@ Unlockconditions module
 from JumpScale9Lib.clients.rivine.errors import DoubleSignatureError
 from JumpScale9Lib.clients.rivine.encoding import binary
 
+# this is the value if the locktime is less than it, it means that the locktime should be interpreted as the chain height lock instead of the timestamp
+TIMELOCK_CONDITION_HEIGHT_LIMIT = 5000000
+
 class SingleSignatureFulfillment:
     """
     SingleSignatureFulfillment class
