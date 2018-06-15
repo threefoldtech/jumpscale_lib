@@ -16,6 +16,7 @@ from pyblake2 import blake2b
 from functools import partial
 import requests
 import base64
+import time
 from requests.auth import HTTPBasicAuth
 from .encoding import binary
 from .types.signatures import Ed25519PublicKey, SPECIFIER_SIZE, NON_SIA_SPECIFIER
@@ -71,13 +72,6 @@ class RivineWallet:
         Wallet addresses to recieve and send funds
         """
         return [str(key) for key in self._keys.keys()]
-
-    @property
-    def keys(self):
-        """
-        Set of SpendableKeys
-        """
-        return self._keys
 
 
     @property
@@ -250,7 +244,7 @@ class RivineWallet:
                         # check condition type
                         if utxo['condition'].get('type') == 1:
                             # unlockhash condition type
-                            condition_ulh = utxo['condition']['type']['data']['unlockhash']
+                            condition_ulh = utxo['condition']['data']['unlockhash']
                         elif utxo['condition'].get('type') == 3:
                             # timelock condition, right now we only support timelock condition with internal unlockhash condition
                             locktime = utxo['condition']['data']['locktime']
@@ -260,14 +254,14 @@ class RivineWallet:
                                 if current_height > locktime:
                                     condition_ulh = utxo['condition']['data']['condition']['data'].get('unlockhash')
                                 else:
-                                    logger.warn("Found transaction output for address {} but its is time locked".format(address))
+                                    logger.warn("Found transaction output for address {} but it cannot be unlocked yet".format(address))
                                     continue
                             else:
                                 # locktime represent timestamp
                                 if locktime < time.time():
                                     condition_ulh = utxo['condition']['data']['condition']['data'].get('unlockhash')
                                 else:
-                                    logger.warn("Found transaction output for address {} but its is time locked".format(address))
+                                    logger.warn("Found transaction output for address {} but it cannot be unlocked yet".format(address))
                                     continue
 
                     if condition_ulh == address:
