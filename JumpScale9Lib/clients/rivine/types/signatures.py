@@ -6,7 +6,6 @@ from JumpScale9Lib.clients.rivine.encoding import binary
 
 SIGEd25519 = 'ed25519'
 SPECIFIER_SIZE = 16
-NON_SIA_SPECIFIER = 'NonSia'
 
 class SiaPublicKey:
     """

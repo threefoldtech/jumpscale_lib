@@ -19,7 +19,7 @@ import base64
 import time
 from requests.auth import HTTPBasicAuth
 from .encoding import binary
-from .types.signatures import Ed25519PublicKey, SPECIFIER_SIZE, NON_SIA_SPECIFIER
+from .types.signatures import Ed25519PublicKey, SPECIFIER_SIZE
 from .types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY, UNLOCKHASH_TYPE, UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE
 
 from JumpScale9 import j
