@@ -378,7 +378,7 @@ class RivineWallet:
 
 
         input_value = 0
-        used_addresses = []
+        used_addresses = {}
         for address, unspent_coin_output in self._unspent_coins_outputs.items():
             # if we reach the required funds, then break
             if input_value >= required_funds:
@@ -400,13 +400,15 @@ class RivineWallet:
             if ulh is None:
                 raise RunimeError('Cannot retrieve unlockhash')
 
-            used_addresses.append(ulh)
+            # used_addresses.append(ulh)
+            used_addresses[address] = ulh
             transaction.add_coin_input(parent_id=address, pub_key=self._keys[ulh].public_key)
 
             input_value += int(unspent_coin_output['value'])
 
         for txn_input in transaction.coins_inputs:
-            if self._unspent_coins_outputs[txn_input.parent_id][ulh] not in self._keys:
+            if used_addresses[txn_input.parent_id] not in self._keys:
+            # if self._unspent_coins_outputs[txn_input.parent_id][ulh] not in self._keys:
                 raise NonExistingOutputError('Trying to spend unexisting output')
 
         transaction.add_coin_output(value=amount, recipient=recipient, locktime=locktime)
@@ -417,7 +419,7 @@ class RivineWallet:
         if remainder > 0:
             # we have leftover fund, so we create new transaction, and pick on user key that is not used
             for address in self._keys.keys():
-                if address in used_addresses:
+                if address in used_addresses.values():
                     continue
                 transaction.add_coin_output(value=remainder, recipient=address)
                 break
