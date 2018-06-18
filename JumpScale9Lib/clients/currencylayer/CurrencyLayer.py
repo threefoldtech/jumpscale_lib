@@ -5,26 +5,21 @@ TEMPLATE = """
 api_key_ = ""
 """
 
-JSConfigClient = j.tools.configmanager.base_class_config
-JSConfigFactory = j.tools.configmanager.base_class_configs
+JSConfigBase = j.tools.configmanager.base_class_config
+JSBASE = j.application.jsbase_get_class()
 
 from pprint import pprint as print
 
 
-
-class CurrencyLayerFactory(JSConfigFactory):
-    def __init__(self):
-        self.__jslocation__ = "j.clients.currencylayer"
-        JSConfigFactory.__init__(self, CurrencyLayerClient)
-
-class CurrencyLayerClient(JSConfigClient):
+class CurrencyLayer(JSConfigBase):
     """
     get key from https://currencylayer.com/quickstart
     """
 
-    def __init__(self, instance, data={}, parent=None, interactive=True):
-        JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
+    def __init__(self):
+        self.__jslocation__ = 'j.clients.currencylayer'
+        JSConfigBase.__init__(self, instance="main", data={},
+                              parent=None, template=TEMPLATE)
         self._data_cur = {}
         self._id2cur = {}
         self._cur2id = {}
@@ -41,14 +36,13 @@ class CurrencyLayerClient(JSConfigClient):
                 c = j.clients.http.getConnection()
                 r = c.get(url).readlines()
                 data = j.data.serializer.json.loads(r[0].decode())["quotes"]
-                self.logger.info("fetch currency from internet")
 
-                # add supported crypto currencies
-                ETH = cryptocompare.get_price('USD', 'ETH')['USD']['ETH']
-                data['USDETH'] = ETH
-                XRP = cryptocompare.get_price('USD', 'XRP')['USD']['XRP']
-                data['USDXRP'] = XRP
-                # TODO: add tft 
+                eth = cryptocompare.get_price('ETH', 'USD')['ETH']['USD']
+                data['USDETH'] = eth
+                xrp = cryptocompare.get_price('XRP', 'USD')['XRP']['USD']
+                data['USDXRP'] = xrp
+
+                self.logger.error("fetch currency from internet")
                 return data
             else:
                 if self.fake or self.fallback:
