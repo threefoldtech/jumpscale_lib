@@ -346,7 +346,7 @@ Type=simple
         fstab = []
         haszerotier = False
         if not self.zt_identity:
-            self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
+            self.zt_identity = self.node.generate_zerotier_identity()
         publiczt = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
         for nic in self.nics:
             if nic.type == 'zerotier':
@@ -608,5 +608,5 @@ class ZeroOSVM(VM):
         return data
 
     def from_dict(self, data):
+        super().from_dict(data)
         self.ipxe_url = data.get('ipxeUrl')
-        self._flist = data.get('flist')

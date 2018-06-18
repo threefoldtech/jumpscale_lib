@@ -80,6 +80,9 @@ class Node:
         _, ip = self.get_nic_hwaddr_and_ip(nics)
         return ip
 
+    def generate_zerotier_identity(self):
+        return self.client.system('zerotier-idtool generate').get().stdout.strip()
+
     def get_nic_hwaddr_and_ip(self, nics, name=None):
         if not name:
             name = self.client.bash("ip route | grep default | awk '{print $5}'", max_time=60).get().stdout.strip()
