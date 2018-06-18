@@ -177,8 +177,8 @@ class UnixSystem(JSBASE):
         if logFilePath is None:
             crontabOutputRedir = " >/dev/null"
         else:
-            if not self.exists(self.getDirName(logFilePath)):
-                j.sal.fs.createDir(self.getDirName(logFilePath))
+            if not j.sal.fs.exists(j.sal.fs.getDirName(logFilePath)):
+                j.sal.fs.createDir(j.sal.fs.getDirName(logFilePath))
             crontabOutputRedir = " >>" + logFilePath
         crontabOutputRedir = crontabOutputRedir + " 2>&1"
 
