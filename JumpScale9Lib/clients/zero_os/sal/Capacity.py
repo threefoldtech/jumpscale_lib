@@ -75,7 +75,12 @@ class Capacity:
         farmer_id = self._node.kernel_args.get('farmer_id')
         if not farmer_id:
             return False
+
         data = self.get(farmer_id)
+
+        if 'private' in self._node.kernel_args:
+            data['robot_address'] = 'private'
+
         client = j.clients.grid_capacity.get(interactive=False)
         client.api.RegisterCapacity(data)
         return True
