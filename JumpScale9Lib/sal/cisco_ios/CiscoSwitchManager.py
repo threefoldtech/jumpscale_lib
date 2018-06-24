@@ -16,7 +16,7 @@ class CiscoSwitchManager(JSBASE):
         Arguments:
             host {str} -- host of CiscoSwitch
             login {str} -- User of CiscoSwitch
-            password {str} -- [Password of CiscoSwitch
+            password {str} -- Password of CiscoSwitch
         
         Returns:
             CiscoSwitch -- return your Cisco Switch 
