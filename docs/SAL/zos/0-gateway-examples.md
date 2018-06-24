@@ -60,7 +60,7 @@ We first need to prepare a bridge to hang our second interface on.
 # create bridge
 node.client.bridge.create('publicbridge')
 #attach eth1 to bridge
-node.client.bridge.nid_add('publicbridge', 'eth1')
+node.client.bridge.nic_add('publicbridge', 'eth1')
 ```
 
 After this we can attached our public network to the bridge
