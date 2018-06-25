@@ -27,18 +27,11 @@ def capacity():
     }
 
     if len(request.args) != 0:
-        mru = request.args.get('mru') or None
-        if mru:
-            form['mru'] = int(mru)
-        cru = request.args.get('cru') or None
-        if cru:
-            form['cru'] = int(cru)
-        sru = request.args.get('sru') or None
-        if sru:
-            form['sru'] = int(sru)
-        hru = request.args.get('hru') or None
-        if hru:
-            form['hru'] = int(hru)
+        for unit in ['mru', 'cru', 'sru', 'hru']:
+            u = request.args.get(unit) or None
+            if u:
+                form[unit] = int(u)
+
         form['country'] = request.args.get('country') or ''
         form['farmer'] = request.args.get('farmer') or ''
 

@@ -113,6 +113,7 @@
               <tr data-toggle="modal" data-target="#nodeDetailModal{{node['node_id']}}" class="nodeItem">
                 <td>{{ node['node_id'] }}</td>
                 <!-- <td>{{ node['farmer'] }}</td> -->
+<<<<<<< HEAD
                 <td>{{ node['farmer']['location']['continent'] or node['location']['continent'] }}</td>
                 <td>{{ node['farmer']['location']['country'] or node['location']['country'] }}</td>
                 <td>{{ node['farmer']['location']['city'] or node['location']['city'] }}</td>
@@ -120,6 +121,15 @@
                 <td>{{ node['mru'] }}</td>
                 <td>{{ node['hru'] }}</td>
                 <td>{{ node['sru'] }}</td>
+=======
+                <td>{{ node['location']['continent'] }}</td>
+                <td>{{ node['location']['country'] }}</td>
+                <td>{{ node['location']['city'] }}</td>
+                <td>{{ node['total_resources']['cru'] }}</td>
+                <td>{{ node['total_resources']['mru'] }}</td>
+                <td>{{ node['total_resources']['hru'] }}</td>
+                <td>{{ node['total_resources']['sru'] }}</td>
+>>>>>>> WIP: add reserved and used capacity to tracking system
                 <td><span class="badge badge-{{node['updated'] | deltatime_color}}">{{ node['uptime'] | uptime }}</span></td>
               </tr>
               {% endfor %}

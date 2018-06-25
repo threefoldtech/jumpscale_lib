@@ -4,6 +4,7 @@
 Auto-generated class for Capacity
 """
 from .Location import Location
+from .ResourceUnits import ResourceUnits
 from six import string_types
 
 from . import client_support
@@ -17,16 +18,15 @@ class Capacity(object):
     @staticmethod
     def create(**kwargs):
         """
-        :type cru: float
-        :type farmer: string_types
-        :type hru: float
+        :type farmer_id: string_types
         :type location: Location
-        :type mru: float
         :type node_id: string_types
         :type os_version: string_types
+        :type reserved_resources: ResourceUnits
         :type robot_address: string_types
-        :type sru: float
+        :type total_resources: ResourceUnits
         :type uptime: int
+        :type used_resources: ResourceUnits
         :rtype: Capacity
         """
 
@@ -40,28 +40,29 @@ class Capacity(object):
         data = json or kwargs
 
         # set attributes
-        data_types = [float]
-        self.cru = client_support.set_property('cru', data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.farmer = client_support.set_property('farmer', data, data_types, False, [], False, False, class_name)
-        data_types = [float]
-        self.hru = client_support.set_property('hru', data, data_types, False, [], False, True, class_name)
+        self.farmer_id = client_support.set_property('farmer_id', data, data_types, False, [], False, False, class_name)
         data_types = [Location]
         self.location = client_support.set_property('location', data, data_types, False, [], False, False, class_name)
-        data_types = [float]
-        self.mru = client_support.set_property('mru', data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
         self.node_id = client_support.set_property('node_id', data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
         self.os_version = client_support.set_property(
             'os_version', data, data_types, False, [], False, True, class_name)
+        data_types = [ResourceUnits]
+        self.reserved_resources = client_support.set_property(
+            'reserved_resources', data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
         self.robot_address = client_support.set_property(
             'robot_address', data, data_types, False, [], False, True, class_name)
-        data_types = [float]
-        self.sru = client_support.set_property('sru', data, data_types, False, [], False, True, class_name)
+        data_types = [ResourceUnits]
+        self.total_resources = client_support.set_property(
+            'total_resources', data, data_types, False, [], False, True, class_name)
         data_types = [int]
         self.uptime = client_support.set_property('uptime', data, data_types, False, [], False, False, class_name)
+        data_types = [ResourceUnits]
+        self.used_resources = client_support.set_property(
+            'used_resources', data, data_types, False, [], False, False, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

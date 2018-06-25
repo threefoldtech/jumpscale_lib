@@ -71,6 +71,28 @@ class ApiService:
         except Exception as e:
             raise UnmarshallError(resp, e.message)
 
+    def UpdateActualUsedCapacity(self, data, node_id, headers=None, query_params=None, content_type="application/json"):
+        """
+        Set the actual usage of the capacity of a node
+        It is method for PUT /api/nodes/{node_id}/actual
+        """
+        if query_params is None:
+            query_params = {}
+
+        uri = self.client.base_url + "/api/nodes/" + node_id + "/actual"
+        return self.client.put(uri, data, headers, query_params, content_type)
+
+    def UpdateReservedCapacity(self, data, node_id, headers=None, query_params=None, content_type="application/json"):
+        """
+        Mark some capacity on a node to be reserved
+        It is method for PUT /api/nodes/{node_id}/reserved
+        """
+        if query_params is None:
+            query_params = {}
+
+        uri = self.client.base_url + "/api/nodes/" + node_id + "/reserved"
+        return self.client.put(uri, data, headers, query_params, content_type)
+
     def GetCapacity(self, node_id, headers=None, query_params=None, content_type="application/json"):
         """
         Get detail about capacity of a node

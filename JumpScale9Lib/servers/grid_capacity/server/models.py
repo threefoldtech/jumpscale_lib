@@ -65,13 +65,13 @@ class NodeRegistration:
         if farmer:
             query['farmer'] = farmer
         if mru:
-            query['mru__gte'] = mru
+            query['total_resources__mru__gte'] = mru
         if cru:
-            query['cru__gte'] = cru
+            query['total_resources__cru__gte'] = cru
         if hru:
-            query['hru__gte'] = hru
+            query['total_resources__hru__gte'] = hru
         if sru:
-            query['sru__gte'] = sru
+            query['total_resources__sru__gte'] = sru
 
         nodes = Capacity.objects(**query)
         page = kwargs.get('page')
@@ -109,10 +109,12 @@ class FarmerRegistration:
         farmer.save()
 
     @staticmethod
-    def list(name=None):
+    def list(name=None, organization=None):
         query = {}
         if name:
             query['name'] = name
+        if organization:
+            query['organization'] = organization
         return Farmer.objects(**query)
 
     @staticmethod
@@ -145,6 +147,13 @@ class Farmer(db.Document):
     location = EmbeddedDocumentField(Location)
 
 
+class Ressources(EmbeddedDocument):
+    cru = FloatField()
+    mru = FloatField()
+    hru = FloatField()
+    sru = FloatField()
+
+
 class Capacity(db.Document):
     """
     Represent the ressource units of a zero-os node
@@ -152,10 +161,9 @@ class Capacity(db.Document):
     node_id = StringField(primary_key=True)
     location = EmbeddedDocumentField(Location)
     farmer = ReferenceField(Farmer)
-    cru = FloatField()
-    mru = FloatField()
-    hru = FloatField()
-    sru = FloatField()
+    total_resources = EmbeddedDocumentField(Ressources)
+    reserved_resources = EmbeddedDocumentField(Ressources)
+    used_resources = EmbeddedDocumentField(Ressources)
     robot_address = StringField()
     os_version = StringField()
     uptime = IntField()
