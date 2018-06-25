@@ -208,7 +208,7 @@ class Host:
         "prompt 1\n"
         "ipappend 2\n\n"
         "label 1\n"
-        "\tKERNEL {}".format(lkrn_file))
+        "\tKERNEL {}\n".format(lkrn_file))
 
         executor.file_write(pxe_config_file, pxe_config_data)
 
