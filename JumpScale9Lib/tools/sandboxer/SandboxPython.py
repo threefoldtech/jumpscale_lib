@@ -32,7 +32,7 @@ class SandboxPython(JSBASE):
         path = j.tools.prefab.local.runtimes.python.build(reset=reset, js9_branch=js9_branch, include_js9=include_js9)
         return path
 
-    def do(self, path="", dest="", build=True, reset=False, include_portal=False):
+    def do(self, path="", dest="", build=True, reset=False):
         """
         js9 'j.tools.sandboxer.python.do()'
 
@@ -44,10 +44,6 @@ class SandboxPython(JSBASE):
 
         if build:
             path = self.build(reset=reset)
-
-        if include_portal:
-            j.tools.prefab.local.web.portal.install(start=False, branch='development')
-            j.tools.prefab.local.web.zrobotportal.install(branch='development')
 
         if path == "":
             path = self.BUILDDIR
