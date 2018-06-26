@@ -105,7 +105,7 @@
                 <th scope="col">MRU</th>
                 <th scope="col">HRU</th>
                 <th scope="col">SRU</th>
-                <th scope="col" data-toggle="modal" data-target="#uptimeHelpModal">Uptime <span class="badge badge-secondary" id="uptimeHelp">?</span></th>
+                <!-- <th scope="col" data-toggle="modal" data-target="#uptimeHelpModal">Uptime <span class="badge badge-secondary" id="uptimeHelp">?</span></th> -->
               </tr>
             </thead>
             <tbody>
@@ -129,8 +129,12 @@
                 <td>{{ node['total_resources']['mru'] }}</td>
                 <td>{{ node['total_resources']['hru'] }}</td>
                 <td>{{ node['total_resources']['sru'] }}</td>
+<<<<<<< HEAD
 >>>>>>> WIP: add reserved and used capacity to tracking system
                 <td><span class="badge badge-{{node['updated'] | deltatime_color}}">{{ node['uptime'] | uptime }}</span></td>
+=======
+                <!-- <td><span class="badge badge-{{node['updated'] | deltatime_color}}">{{ node['uptime'] | uptime }}</span></td> -->
+>>>>>>> don't show uptime for now
               </tr>
               {% endfor %}
             </tbody>
@@ -160,8 +164,12 @@
             <p>Node 0-robot address: <code>{{node['robot_address']}}</code></p>
             <p>0-OS version: <code>{{node['os_version']}}</code></p>
             <p>Farm: <code>{{node.farmer.name}}</code></p>
+<<<<<<< HEAD
             <p>Uptime: <span class="badge badge-{{node['updated'] | deltatime_color}}">{{ node['uptime'] | uptime }}</span></p>
             {% if node.farmer.wallet_addresses|length > 0 %}
+=======
+            <!-- <p>Uptime: <span class="badge badge-{{node['updated'] | deltatime_color}}">{{ node['uptime'] | uptime }}</span></p> -->
+>>>>>>> don't show uptime for now
             <p>
               Wallet addresses:
               <ul>
@@ -183,7 +191,7 @@
     {% endfor %}
 
   <!-- Modal -->
-  <div class="modal fade" id="uptimeHelpModal" tabindex="-1" role="dialog" aria-labelledby="uptimeHelpModalLabel" aria-hidden="true">
+  <!-- <div class="modal fade" id="uptimeHelpModal" tabindex="-1" role="dialog" aria-labelledby="uptimeHelpModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -204,5 +212,5 @@
         </div>
       </div>
     </div>
-  </div>
+  </div> -->
   {% endblock %}
