@@ -10,7 +10,7 @@ JSBASE = j.application.jsbase_get_class()
 class NetworkingError(Exception, JSBASE):
     def __init__(self, msg=""):
         JSBASE.__init__(self)
-        self.logger.info(msg)
+        self.logger.error(msg)
 
 
 class UnixNetworkManager(JSBASE):
