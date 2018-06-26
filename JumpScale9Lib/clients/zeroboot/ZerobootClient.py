@@ -231,8 +231,8 @@ class Hosts:
         self._hosts = {}
         self.sshclient = sshclient
         self.subnet = subnet
-        self._populate()
         self._last_index = -1
+        self._populate()
         self.leasetime = leasetime
 
     def _hosts_chunks(self, l, n):
@@ -250,6 +250,7 @@ class Hosts:
         ('1', 'mac', "'00:11:22:33:44:55'"),
         ('1', 'name', "'myhost'")]
         """
+
         _, out, _ = self.sshclient.execute('uci show dhcp')
         hosts_data = re.findall("dhcp.@host\[(\d+)\]\.(ip|mac|name)=(.+)", out)
         if hosts_data:
@@ -276,7 +277,6 @@ class Hosts:
         :return: object representing the host
         :rtype: object
         """
-
         if netaddr.IPAddress(address) not in netaddr.IPNetwork(self.subnet):
             raise RuntimeError("specified address: {addr} not in network: {net}".format(addr=address, net=self.subnet))
         if hostname in self._hosts:
