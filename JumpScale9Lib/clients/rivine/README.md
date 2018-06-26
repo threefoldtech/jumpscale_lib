@@ -39,7 +39,7 @@ From a seed you can create new wallet
                                     bc_network='http://185.69.166.13:2015',
                                     bc_network_password='test123',
                                     nr_keys_per_seed=5,
-                                    minerfee=10)
+                                    minerfee=100000000)
         # where seed is the seed you have or generated
         # bc_network: is the url to the blockchain network explorer node
         # bc_network_password: is the password to use while communicating with the chain explorer node

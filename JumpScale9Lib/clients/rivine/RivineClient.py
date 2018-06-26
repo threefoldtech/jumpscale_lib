@@ -11,7 +11,7 @@ TEMPLATE = """
 bc_address = ""
 seed_ = ""
 nr_keys_per_seed = 50
-minerfee = 10
+minerfee = 100000000
 password_ = ""
 """
 
