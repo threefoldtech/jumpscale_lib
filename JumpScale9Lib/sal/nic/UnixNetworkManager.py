@@ -19,10 +19,12 @@ class UnixNetworkManager(JSBASE):
         JSBASE.__init__(self)
         self._executor = j.tools.executorLocal
         self._nics = None
+        contentConfig = 'source /etc/network/interfaces.d/*\n'
+        j.tools.path.get('/etc/network/interfaces').write_text(contentConfig)
 
     def _nicExists(self, nic):
         if nic not in self.nics:
-            raise NetworkingError('Invalid NIC')
+            raise self.NetworkingError('Invalid NIC')
 
     def ipGet(self, device):
         """
@@ -81,15 +83,21 @@ class UnixNetworkManager(JSBASE):
         if self._nics is None:
             rc, ifaces, err = self._executor.execute("""ifconfig -a | sed 's/[ \t].*//;/^$/d'""")
             self._nics = [iface for iface in ifaces.splitlines() if iface]
+        
+        for i, nic in enumerate(self._nics):
+            if nic.endswith(':'):
+                self._nics[i] = self._nics[i][:-1]
+
         return self._nics
 
     def commit(self, device=None):
         #- make sure loopback exist
         content = 'auto lo\niface lo inet loopback\n'
         j.tools.path.get('/etc/network/interfaces.d/lo').write_text(content)
-
-        self._executor.execute('service networking restart')
+       
         if device:
             self.logger.info('Restarting interface %s' % device)
-            self._executor.execute('ifdown %s && ifup %s' % (device, device))
+            (ip, netmask) = self.ipGet(device)
+            self._executor.execute('ip a del %s dev %s'% (ip, device))
+            self._executor.execute('systemctl restart networking')
         self.logger.info('DONE')
