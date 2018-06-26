@@ -1,18 +1,17 @@
 import json
-import logging
 import socket
+import time
 import uuid
 
 import redis
-import jwt
-import time
 from js9 import j
 
 from . import typchk
-from .BaseClient import BaseClient
 from .AggregatorManager import AggregatorManager
+from .BaseClient import BaseClient, DefaultTimeout
 from .BridgeManager import BridgeManager
 from .BtrfsManager import BtrfsManager
+from .CGroupManager import CGroupManager
 from .Config import Config
 from .ContainerManager import ContainerManager
 from .DiskManager import DiskManager
@@ -20,12 +19,9 @@ from .KvmManager import KvmManager
 from .LogManager import LogManager
 from .Nft import Nft
 from .Response import Response
-from .ZerotierManager import ZerotierManager
-from .WebManager import WebManager
 from .RTInfoManager import RTInfoManager
-from .CGroupManager import CGroupManager
-
-DefaultTimeout = 10  # seconds
+from .WebManager import WebManager
+from .ZerotierManager import ZerotierManager
 
 TEMPLATE = """
 host = "127.0.0.1"
@@ -72,7 +68,6 @@ class Client(BaseClient, JSConfigClientBase):
         self._web = WebManager(self)
         self._rtinfo = RTInfoManager(self)
         self._cgroup = CGroupManager(self)
-
 
     @property
     def _redis(self):

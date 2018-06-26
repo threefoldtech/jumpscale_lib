@@ -1,11 +1,16 @@
 import json
+import shlex
+
 from . import typchk
 from .FilesystemManager import FilesystemManager
+from .InfoManager import InfoManager
 from .IPManager import IPManager
 from .JobManager import JobManager
 from .ProcessManager import ProcessManager
-from .InfoManager import InfoManager
 from .Response import ResultError
+
+DefaultTimeout = 10  # seconds
+
 
 class BaseClient():
     _system_chk = typchk.Checker({
@@ -89,7 +94,7 @@ class BaseClient():
         :param id: job id. Generated if not supplied
         :return: Response object
         """
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def sync(self, command, arguments, tags=None, id=None):
         """
@@ -217,4 +222,3 @@ class BaseClient():
         :return: the subscribe Job object
         """
         return self.raw('core.subscribe', {'id': job}, stream=True, id=id)
-
