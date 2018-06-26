@@ -5,6 +5,7 @@ from js9 import j
 import re
 import requests
 import time
+import json
 
 
 
@@ -12,6 +13,7 @@ JSBASE = j.application.jsbase_get_class()
 
 SUPPORTED_CURRENCIES = ['BTC', 'TFT']
 DEFAULT_LOCKTIME_THRESHOLD = 25
+HASTINGS_TFT_VALUE = 1000000000.0
 
 
 def _execute_and_extract(prefab, cmd, regex, cmd_name, logger, test_output=None):
@@ -128,17 +130,15 @@ class AtomicSwapFactory(JSBASE):
 
         participant.wait_for_confirmations(transaction_id=participate_result['output_id'])
 
-        reverse_audit_result = initiator.auditcontract(output_id=participate_result['output_id'],
+        initiator.auditcontract(output_id=participate_result['output_id'],
                                                       recipient_addr=participate_result['recipient_addr'],
-                                                      refund_addr=participate_result['refund_addr'],
-                                                      timelock=participate_result['locktime'],
                                                       secret_hash=participate_result['secret_hash'],
                                                       amount=participate_result['contract_value'])
 
         #todo: we should validate the participate audit as well
         self.logger.info("Initiator redeeming the contract")
-        redeem_result = initiator.redeem(output_id=participate_result['output_id'], secret=initiate_result['secret'], amount=float(participate_result['contract_value']))
-        participant.wait_for_confirmations(transaction_id=redeem_result['transaction_id'])
+        redeem_output = initiator.redeem(output_id=participate_result['output_id'], secret=initiate_result['secret'])
+        participant.wait_for_confirmations(transaction_id=redeem_output['transaction_id'])
 
         self.logger.info("Participant redeeming the contract")
         participant_redeem_result = participant.redeem(contract=initiate_result['contract'], contract_txn=initiate_result['contract_txn'], secret=initiate_result['secret'])
@@ -192,7 +192,7 @@ class BTCInitiator(Initiator):
         res = requests.get(url)
         if res.status_code != 200:
             raise RuntimeError("Cannot confirm transaction using {}".format(url))
-        while res.json()['confirmations'] < nr_of_confirmations:
+        while res.json().get('confirmations', 0) < nr_of_confirmations:
             res = requests.get(url)
             time.sleep(20)
 
@@ -201,9 +201,9 @@ class BTCInitiator(Initiator):
     def initiate(self, rpcuser='user', rpcpass='pass', addr='localhost:8332'):
         """
         Initiate an atomic swap
-        btcatomicswap --testnet --rpcuser=user --rpcpass=pass -s localhost:8332 --publish initiate n18MobJVWMLkWDTf8cku9DRAMTa86itr6D 0.01234
+        btcatomicswap --testnet --rpcuser=user --rpcpass=pass -s localhost:8332 --force-yes initiate n18MobJVWMLkWDTf8cku9DRAMTa86itr6D 0.01234
         """
-        cmd = 'btcatomicswap{} --rpcuser={} --rpcpass={} -s {} --publish initiate {} {}'.format(' --testnet' if self._testnet else '',
+        cmd = 'btcatomicswap{} --rpcuser={} --rpcpass={} -s {} --force-yes initiate {} {}'.format(' --testnet' if self._testnet else '',
                 rpcuser, rpcpass, addr, self._recipient_address, self._amount)
         pattern = r'Secret:\s*(?P<secret>\w+)\n*Secret\shash:\s*(?P<secret_hash>\w+)\n*.*\n*.*\n*Contract\s*\((?P<contract_addr>\w+)\):\n*(?P<contract>\w+)\n*Contract\s*transaction\s*\((?P<contract_txn_addr>\w+)\):\n*(?P<contract_txn>\w+)\n*Refund\s*transaction\s*\((?P<refund_txn_addr>\w+)\):\n*(?P<refund_txn>\w+)\n*.*\n*Published\s*contract\s*transaction\s*\((?P<published_contract_txn_address>\w+)\)'
         test_output=None
@@ -230,24 +230,19 @@ class BTCInitiator(Initiator):
 
 
 
-    def auditcontract(self, output_id, recipient_addr, refund_addr, timelock, secret_hash, amount):
+    def auditcontract(self, output_id, recipient_addr, secret_hash, amount):
         """
         Audit contract after the participant executed the participate step
-        tfchainc atomicswap audit 028761224dfb7fd4a34ed29e65852500ada0e2b54e017200cd97d1626af2c4544bb055199553a5 01c0f0bb61e95dd7e1e414b78f08117c5dae8327114979fecc0d07542ab9d047515066ae19594d 015a88c1bffaf989e10d9b9dd4262090a1185b8a1c159e93101be09a86ccab988b0b7a43c61320 1526917093 29bc7db3f1809b2bbd2091e5225d7dc2660826a78b8b734b8783cf2ae3830db8 .5
 
         @param output_id: Output ID i.e the transaction id of the published contract from the participate step
         @param recipient_addr: Address of the recipient of the contract
-        @param refund_addr: Address to recieve the refund incase of remaining locktime elapsed
-        @param timelock: Timestamp of the timelock of the participant published contract
         @param secret_hash: Hash of the secret
         @param amount: Amount of funds sent by the participant in the contract
-        @returns: A dictionary of the format {'contract_addr': <>, 'recipient_addr', <>,
-                                              'refund_addr': <>, 'secret_hash': <>, 'remaining_locktime': <>,
-                                              'locktime': <>}
         """
-        cmd = 'tfchainc atomicswap audit {} {} {} {} {} {}'.format(output_id, recipient_addr, refund_addr, timelock, secret_hash, amount)
-        pattern = r'Contract\saddress:\s*(?P<contract_addr>\w+)\n*Recipient\saddress:\s*(?P<recipient_addr>\w+)\n*Refund\saddress:\s*(?P<refund_addr>\w+)\n*Hashed\sSecret:\s*(?P<secret_hash>\w+)\n*Locktime:\s*(?P<locktime>\w+)\s*.*\n*Locktime\sreached\sin:\s*(?P<remaining_locktime>[\w.]+)\n*'
-        test_output = None
+        cmd = 'tfchainc atomicswap -y --encoding json auditcontract {} --receiver {} --secrethash {} --amount {}'.format(output_id, recipient_addr, secret_hash, amount)
+        self._prefab.core.run(cmd)
+        # pattern = r'Contract\saddress:\s*(?P<contract_addr>\w+)\n*Recipient\saddress:\s*(?P<recipient_addr>\w+)\n*Refund\saddress:\s*(?P<refund_addr>\w+)\n*Hashed\sSecret:\s*(?P<secret_hash>\w+)\n*Locktime:\s*(?P<locktime>\w+)\s*.*\n*Locktime\sreached\sin:\s*(?P<remaining_locktime>[\w.]+)\n*'
+        # test_output = None
 #         test_output = """
 # Given unlock hash matches the given contract information :)
 #
@@ -263,26 +258,27 @@ class BTCInitiator(Initiator):
 # This was a quick check only, whether it has been spend already or not is unclear.
 # You can do a complete/thorough check when auditing using the output ID instead.
 # """
-        return _execute_and_extract(prefab=self._prefab, cmd=cmd, regex=pattern, cmd_name="audit", logger=self.logger, test_output=test_output)
+        # return _execute_and_extract(prefab=self._prefab, cmd=cmd, regex=pattern, cmd_name="audit", logger=self.logger, test_output=test_output)
 
 
 
-    def redeem(self, output_id, secret, amount):
+    def redeem(self, output_id, secret):
         """
         Redeems the amount of the contract
-        tfchainc atomicswap claim dafed64af281bccf03fda2da4814281251d13d9bfb3aea95f3e505b160b6efe5 58febdffd0dd5c141d27c45d8fb1a962e2e9a4eb991fac2da0bca56bd99736ca .5
 
         @param output_id: Transaction ID of the participate step
         @param secret: Secret that was generated during the first initiate step
-        @param amount: Amount of the transcation in the participator currency
 
-        @returns: A dictionary of the format {'contract_addr': <>, 'recipient_addr', <>,
-                                              'refund_addr': <>, 'secret_hash': <>, 'remaining_locktime': <>,
-                                              'locktime': <>, 'transaction_id': <>}
+        @returns: @returns: A dictionary with the following format {'transaction_id': <>}
         """
-        cmd = 'export TFT_AS_FORCEYES=true; tfchainc atomicswap claim {} {} {}'.format(output_id, secret, amount)
-        pattern = r'Contract\saddress:\s*(?P<contract_addr>\w+)\n*Recipient\saddress:\s*(?P<recipient_addr>\w+)\n*Refund\saddress:\s*(?P<refund_addr>\w+)\n*Hashed\sSecret:\s*(?P<secret_hash>\w+)\n*Locktime:\s*(?P<locktime>\w+)\s*.*\n*Locktime\sreached\sin:\s*(?P<remaining_locktime>[\w.]+)\n*.*\n*Transaction\sID:\s*(?P<transaction_id>\w+)'
-        test_output = None
+        cmd = 'tfchainc atomicswap redeem {} {} -y --encoding json '.format(output_id, secret)
+        _, out, _ = self._prefab.core.run(cmd)
+        out = json.loads(out)
+        return {
+            'transaction_id': out['transactionid'],
+            }
+        # pattern = r'Contract\saddress:\s*(?P<contract_addr>\w+)\n*Recipient\saddress:\s*(?P<recipient_addr>\w+)\n*Refund\saddress:\s*(?P<refund_addr>\w+)\n*Hashed\sSecret:\s*(?P<secret_hash>\w+)\n*Locktime:\s*(?P<locktime>\w+)\s*.*\n*Locktime\sreached\sin:\s*(?P<remaining_locktime>[\w.]+)\n*.*\n*Transaction\sID:\s*(?P<transaction_id>\w+)'
+        # test_output = None
 #         test_output = """
 # An unspend atomic swap contract could be found for the given outputID,
 # and the given contract information matches the found contract's information, all good! :)
@@ -306,7 +302,7 @@ class BTCInitiator(Initiator):
 # > your payment went through. If not, try to audit the contract (again).
 # """
 
-        return _execute_and_extract(prefab=self._prefab, cmd=cmd, regex=pattern, cmd_name="redeem", logger=self.logger, test_output=test_output)
+        # return _execute_and_extract(prefab=self._prefab, cmd=cmd, regex=pattern, cmd_name="redeem", logger=self.logger, test_output=test_output)
 
 
 class Participant(JSBASE):
@@ -435,13 +431,23 @@ class TFTParticipant(Participant):
 
         @param secret_hash: The secret hash produced by the initiate step
         @returns: A dictionary of the format {'contract_addr': <>, 'contract_value': <>, 'recipient_addr', <>,
-                                                            'refund_addr': <>, 'secret_hash': <>, 'remaining_locktime': <>,
-                                                            'locktime': <>, 'output_id': <>}
+                                                            'secret_hash': <>,
+                                                            'output_id': <>}
         """
-        cmd = "export TFT_AS_FORCEYES=true; tfchainc atomicswap participate {} {} {}".format(self._initiator_address,
+        cmd = "tfchainc atomicswap -y --encoding json participate {} {} {}".format(self._initiator_address,
                                                                                             self._amount, secret_hash)
-        pattern = r'Contract\saddress:\s*(?P<contract_addr>\w+)\n*Contract\svalue:\s*(?P<contract_value>[\w.]+)\s+.*\n*Recipient\saddress:\s*(?P<recipient_addr>\w+)\n*Refund\saddress:\s*(?P<refund_addr>\w+)\n*Hashed\sSecret:\s*(?P<secret_hash>\w+)\n*Locktime:\s*(?P<locktime>\w+)\s*.*\n*Locktime\sreached\sin:\s*(?P<remaining_locktime>[\w.]+)\n*.*\n*OutputID:\s+(?P<output_id>\w+)'
-        test_output = None
+        _, out, _ = self._prefab.core.run(cmd)
+        out = """{"coins":"500000000","contract":{"sender":"012ffd03d1b4d39ba9df8294bb5135a0a69768494a54e4df0c0eb817309b6a7fba795e4ac1f4ff","receiver":"0108031a2111cec5427954fae23fdd6a0cc21d9ab91cf0e878af9d2bb0081e9c1246da7c1e2346","hashedsecret":"0900e02c2b413ad422c107862b670c7980fa24956e60699436f652ff56d98d4e","timelock":1530126270},"contractid":"02806e2cfa3aa87e2ea41d4c1f1bf8bf2b73d167eb3df610b7b364633426b8215e607e40db08b1","outputid":"e27bfac78c16e7690b5cb477f1602e0f6b074522d198d4733dd03d148cac4024","transactionid":"09bb77d6555488103f59709d27f0679fcf4d86dfa3ae77dbb06d976aeccc947e"}"""
+        out = json.loads(out)
+        return {
+            'contract_addr': out['contractid'],
+            'contract_value': int(out['coins']) / HASTINGS_TFT_VALUE,
+            'recipient_addr': out['contract']['receiver'],
+            'secret_hash': out['contract']['hashedsecret'],
+            'output_id': out['outputid']
+        }
+        # pattern = r'Contract\saddress:\s*(?P<contract_addr>\w+)\n*Contract\svalue:\s*(?P<contract_value>[\w.]+)\s+.*\n*Recipient\saddress:\s*(?P<recipient_addr>\w+)\n*Refund\saddress:\s*(?P<refund_addr>\w+)\n*Hashed\sSecret:\s*(?P<secret_hash>\w+)\n*Locktime:\s*(?P<locktime>\w+)\s*.*\n*Locktime\sreached\sin:\s*(?P<remaining_locktime>[\w.]+)\n*.*\n*OutputID:\s+(?P<output_id>\w+)'
+        # test_output = None
 #         test_output = """
 # Contract address: 028761224dfb7fd4a34ed29e65852500ada0e2b54e017200cd97d1626af2c4544bb055199553a5
 # Contract value: 0.5 TFT
@@ -457,13 +463,12 @@ class TFTParticipant(Participant):
 # OutputID: dafed64af281bccf03fda2da4814281251d13d9bfb3aea95f3e505b160b6efe5
 # """
 
-        return _execute_and_extract(prefab=self._prefab, cmd=cmd, regex=pattern, cmd_name="participate", logger=self.logger, test_output=test_output)
+        # return _execute_and_extract(prefab=self._prefab, cmd=cmd, regex=pattern, cmd_name="participate", logger=self.logger, test_output=test_output)
 
 
     def redeem(self, contract, contract_txn, secret, rpcuser='user', rpcpass='pass', addr='localhost:8332'):
         """
         Redeems a contract that has already redeemed by the initiator
-        btcatomicswap --testnet -s localhost:8332 --rpcuser=user --rpcpass=pass --publish redeem <contract> <contract_transaction> <secret>
 
         @param contract: The contract that was created during the initiate step
         @param contract_txn: The contract transaction that was created during the initiate step
@@ -471,7 +476,7 @@ class TFTParticipant(Participant):
 
         @returns: A dictionary with the following format {'transaction_id': <>}
         """
-        cmd = 'btcatomicswap{} -s {} --rpcuser={} --rpcpass={} --publish redeem {} {} {}'.format(' --testnet' if self._testnet else '', addr,
+        cmd = 'btcatomicswap{} -s {} --rpcuser={} --rpcpass={} --force-yes redeem {} {} {}'.format(' --testnet' if self._testnet else '', addr,
                                                                                              rpcuser , rpcpass, contract, contract_txn, secret)
         pattern = r'Published\sredeem\stransaction\s*\((?P<transaction_id>\w+)\)'
         test_output = None
