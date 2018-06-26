@@ -277,6 +277,7 @@ class Hosts:
         :return: object representing the host
         :rtype: object
         """
+        self._populate() # make sure dhcp list is up to date (e.g. manually/webinterface)
         if netaddr.IPAddress(address) not in netaddr.IPNetwork(self.subnet):
             raise RuntimeError("specified address: {addr} not in network: {net}".format(addr=address, net=self.subnet))
         if hostname in self._hosts:
