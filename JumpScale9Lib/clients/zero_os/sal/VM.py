@@ -8,12 +8,13 @@ logger = j.logger.get(__name__)
 
 
 class Disk:
-    def __init__(self, name, url, mountpoint=None, filesystem=None):
+    def __init__(self, name, url, mountpoint=None, filesystem=None, label=None):
         self.name = name
         self.url = url
         self.type = 'disk'
         self.mountpoint = mountpoint
         self.filesystem = filesystem
+        self.label = label or name
 
     def __str__(self):
         return "Disk <{}:{}>".format(self.name, self.url)
@@ -25,10 +26,9 @@ class ZDBDisk(Disk):
     def __init__(self, zdb, name, mountpoint=None, filesystem='ext4', size=10, label=None):
         if zdb.mode == 'direct':
             raise RuntimeError('ZDB mode direct not support for disks')
-        super().__init__(name, None, mountpoint, filesystem)
+        super().__init__(name, None, mountpoint, filesystem, label)
         self.zdb = zdb
         self.size = size
-        self.label = label or self.name
         self.node = None
 
     @property
@@ -81,7 +81,7 @@ class ZDBDisk(Disk):
 
 
 class Disks(Collection):
-    def add(self, name_or_disk, url=None, mountpoint=None, filesystem=None):
+    def add(self, name_or_disk, url=None, mountpoint=None, filesystem=None, label=None):
         """
         Add disk to vm
 
@@ -94,13 +94,15 @@ class Disks(Collection):
         :type mountpoint: str
         :param filesystem: Filesystem the disk contains
         :type filesystem: str
+        :param label: label to use for disk
+        :type label: str
 
         """
         if isinstance(name_or_disk, str):
             if url is None:
                 raise ValueError('Url is mandatory when disk name is given')
             super().add(name_or_disk)
-            disk = Disk(name_or_disk, url, mountpoint, filesystem)
+            disk = Disk(name_or_disk, url, mountpoint, filesystem, label)
         elif isinstance(name_or_disk, ZDBDisk):
             super().add(name_or_disk.name)
             disk = name_or_disk
@@ -361,7 +363,7 @@ Type=simple
             config[configobj.path] = configobj.content
         for disk in self.disks:
             if disk.mountpoint and disk.filesystem:
-                fstab.append('LABEL={} {} {} defaults 0 0'.format(disk.name, disk.mountpoint, disk.filesystem))
+                fstab.append('LABEL={} {} {} defaults 0 0'.format(disk.label, disk.mountpoint, disk.filesystem))
             media.append({'url': disk.url, 'type': disk.type})
         for mount in self.mounts:
             mounts.append({
@@ -470,7 +472,8 @@ Type=simple
             self.nics = VMNics(self)
             self.configs = Configs(self)
             for disk in data['disks']:
-                self.disks.add(disk['name'], disk['url'], disk.get('mountPoint'), disk.get('filesystem'))
+                self.disks.add(
+                    disk['name'], disk['url'], disk.get('mountPoint'), disk.get('filesystem'), disk.get('label'))
             for nic in data['nics']:
                 nicobj = self.nics.add(nic['name'], nic['type'], nic.get('id'), nic.get('hwaddr'))
                 if 'ztClient' in nic:
