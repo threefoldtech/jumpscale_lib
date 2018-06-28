@@ -152,7 +152,7 @@ class SandboxPython(JSBASE):
     def _zip(self, dest=""):
         if dest == "":
             dest = j.dirs.BUILDDIR + "/sandbox/python3/"
-        cmd = "cd %s;rm -f ../js9_sandbox.tar.gz;tar -czf ../js9_sandbox.tar.gz *;" % dest
+        cmd = "cd %s;rm -f ../js9_sandbox.tar.gz;tar -czf ../js9_sandbox.tar.gz .;" % dest
         j.sal.process.execute(cmd)
 
 
@@ -204,6 +204,11 @@ class SandboxPython(JSBASE):
         j.sal.fs.createDir(config_dir)
         j.sal.fs.copyFile(j.core.state.configJSPath, '%s/jumpscale9.toml' % config_dir)
 
+        # Copy startup configuration
+
+        startup_file = j.dirs.JSAPPSDIR + '/0-robot-portal/autostart/startup.toml'
+        j.sal.fs.copyFile(startup_file, '%s/.startup.toml' % dest)
+
         j.sal.fs.copyFile(self.JS9FILE, "%s/lib/jumpscale/js9.py" % (dest))
 
         self.env_write(dest)
@@ -228,8 +233,10 @@ class SandboxPython(JSBASE):
 
         export LDFLAGS="-L$LIBRARY_PATH/"
 
-        export LC_ALL=en_US.UTF-8
-        export LANG=en_US.UTF-8
+        export LC_ALL=C.UTF-8
+        export LANG=C.UTF-8
+
+        export HOME=$PBASE/root
 
         export PS1="JS9: "
 
