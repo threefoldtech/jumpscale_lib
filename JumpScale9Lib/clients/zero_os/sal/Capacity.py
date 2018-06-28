@@ -54,7 +54,11 @@ class Capacity:
         :rtype: dict
         """
         report = self.report()
-        robot_address = "http://%s:6600" % self._node.public_addr
+        public_addr = self._node.public_addr
+        if public_addr:
+            robot_address = "http://%s:6600" % self._node.public_addr
+        else:
+            robot_address = ""
         os_version = "{branch} {revision}".format(**self._node.client.info.version())
 
         capacity = dict(
@@ -80,7 +84,8 @@ class Capacity:
 
         if 'private' in self._node.kernel_args:
             data['robot_address'] = 'private'
+        elif not data['robot_address']:
+            raise RuntimeError('Can not register a node withouth robot_address')
 
         client = j.clients.grid_capacity.get(interactive=False)
         client.api.RegisterCapacity(data)
-        return True
