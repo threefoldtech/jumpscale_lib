@@ -66,6 +66,8 @@ class SandboxPython(JSBASE):
             dest0 = "%s/bin/%s" % (dest, item)
             j.sal.fs.copyFile(src0, dest0)
 
+        j.sal.fs.copyDirTree(j.dirs.BINDIR, j.sal.fs.joinPaths(dest, 'bin'), rsyncdelete=False)
+
         def dircheck(name):
             for item in ["lib2to3", "idle", ".dist-info", "__pycache__", "site-packages"]:
                 if name.find(item) is not -1:
@@ -193,6 +195,14 @@ class SandboxPython(JSBASE):
             if key == 'JumpScale9Prefab':
                 j.sal.fs.copyDirTree(j.sal.fs.getParent(p), '%s/lib/jumpscale' % dest)
         j.sal.fs.touch("%s/lib/jumpscale/__init__.py" % (dest))
+
+        # SANDBOX APPS
+        j.sal.fs.copyDirTree(j.dirs.JSAPPSDIR, dest + j.dirs.JSAPPSDIR)
+
+        # COPY JUMPSCALE9.TOML FOR PORTAL CONFIG
+        config_dir = dest + '/root/js9host/cfg'
+        j.sal.fs.createDir(config_dir)
+        j.sal.fs.copyFile(j.core.state.configJSPath, '%s/jumpscale9.toml' % config_dir)
 
         j.sal.fs.copyFile(self.JS9FILE, "%s/lib/jumpscale/js9.py" % (dest))
 
