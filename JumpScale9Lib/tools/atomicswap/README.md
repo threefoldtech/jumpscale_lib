@@ -16,6 +16,11 @@ The following environment variables can be set:
 
 ## Preparing the nodes
 To run the SAL you will need to have two systems (one initiator and one participant), each system will need to run a full node from all the blockchains that you will need to use for atomicswaps (for now that is being TFChain and Bitcoin)
+We provide prefab modules to install these blockchains, an example would look like:
+```python
+<prefab>.blockchain.bitcoin.install()
+<prefab>.blockchain.tfchain.install()
+```
 
 In addition to the blockchain daemons, you also need to have the atomicswap binary, you can get this using the prefab module
 ```python
