@@ -23,15 +23,11 @@ class NetworkMember(JSBASE):
         self.address = address
         self._private_ip = None
 
-
-
-    @property
-    def private_ip(self):
+    def get_private_ip(self, timeout=120):
         """
         Gets the private ip address of the member node
         """
         if not self._private_ip:
-            timeout = 120
             while not self.data['config']['ipAssignments'] and timeout:
                 timeout -= 2
                 time.sleep(2)
@@ -41,6 +37,9 @@ class NetworkMember(JSBASE):
             self._private_ip = self.data['config']['ipAssignments'][0]
         return self._private_ip
 
+    @property
+    def private_ip(self):
+        return self.get_private_ip()
 
     def _refresh(self):
         """
