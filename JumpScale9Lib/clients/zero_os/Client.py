@@ -1,29 +1,27 @@
 import json
-import logging
 import socket
+import time
 import uuid
 
 import redis
-import jwt
-import time
 from js9 import j
 
 from . import typchk
 from .AggregatorManager import AggregatorManager
+from .BaseClient import BaseClient, DefaultTimeout
 from .BridgeManager import BridgeManager
 from .BtrfsManager import BtrfsManager
+from .CGroupManager import CGroupManager
 from .Config import Config
-from .ContainerManager import BaseClient, ContainerManager
+from .ContainerManager import ContainerManager
 from .DiskManager import DiskManager
 from .KvmManager import KvmManager
 from .LogManager import LogManager
 from .Nft import Nft
 from .Response import Response
-from .ZerotierManager import ZerotierManager
-from .WebManager import WebManager
 from .RTInfoManager import RTInfoManager
-
-DefaultTimeout = 10  # seconds
+from .WebManager import WebManager
+from .ZerotierManager import ZerotierManager
 
 TEMPLATE = """
 host = "127.0.0.1"
@@ -69,6 +67,7 @@ class Client(BaseClient, JSConfigClientBase):
         self._jwt_expire_timestamp = 0
         self._web = WebManager(self)
         self._rtinfo = RTInfoManager(self)
+        self._cgroup = CGroupManager(self)
 
     @property
     def _redis(self):
@@ -201,6 +200,13 @@ class Client(BaseClient, JSConfigClientBase):
         :return:
         """
         return self._rtinfo
+
+    @property
+    def cgroup(self):
+        """
+        Cgroup manager
+        """
+        return self._cgroup
 
     def raw(self, command, arguments, queue=None, max_time=None, stream=False, tags=None, id=None):
         """
