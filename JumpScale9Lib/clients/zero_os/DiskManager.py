@@ -46,6 +46,9 @@ class DiskManager:
         'spindown': int,
     })
 
+    _seektime_chk = typchk.Checker({
+        'disk': str,
+    })
 
     def __init__(self, client):
         self._client = client
@@ -303,3 +306,18 @@ class DiskManager:
         if result.state != 'SUCCESS':
             raise RuntimeError("Failed to spindown disk {} to {}.".format(disk, spindown))
 
+    def seektime(self, disk):
+        """
+        Gives seek latency on disk which is a very good indication to the `type` of the disk.
+        it's a very good way to verify if the underlying disk type is SSD or HDD
+
+        :param disk: disk path or name (/dev/sda, or sda)
+        :return: a dict as follows {'device': '<device-path>', 'elapsed': <seek-time in us', 'type': '<SSD or HDD>'}
+        """
+        args = {
+            'disk': disk,
+        }
+
+        self._seektime_chk.check(args)
+
+        return self._client.json("disk.seektime", args)
