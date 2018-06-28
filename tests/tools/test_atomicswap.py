@@ -3,20 +3,36 @@ Test module for atomicswap
 """
 import re
 from js9 import j
+import os
+from JumpScale9Lib.tools.atomicswap.AtomicSwapFactory import BTCInitiator, TFTParticipant
 
-tft_prefab = j.tools.prefab.getFromSSH('localhost', port=2222)
+os.environ.setdefault('BTC_MIN_CONFIRMATIONS', '1')
+os.environ.setdefault('TFT_MIN_CONFIRMATION_HEIGHT', '2')
+
+participant_address = 'mhv5Tve23BkVD6a8tpWKFxzWkub2sfiRqv'
+initiator_address = '013803e566cdc065c415b14a1f082f240e8cc81a6f13fd01ef59e94620601a5a2f26e83b806091'
+initiator_amount = 0.01234
+participant_amount = 0.5
+testnet = True
+
+# initiator = j.tools.atomicswap.get_btc_initiator('localhost:2200', initiator_amount,
+#                                                 participant_address, testnet)
+# participant = j.tools.atomicswap.get_tft_participant('localhost:2222', participant_amount,
+#                                                 initiator_address, testnet)
+
+# import IPython
+# IPython.embed()
+
+
+# import pdb; pdb.set_trace()
 btc_prefab = j.tools.prefab.getFromSSH('localhost', port=2200)
-participant_address = 'mmJodZXwHJa4A8EeGKE1s4ecFXh82dk4LC'
-initiator_address = '010e4a0f112d746d7e1a1093be0c5e577db39817e42e1fd0d26a66176cd4736cdca92b4ad53963'
-participant_amount = '0.5TFT'
-initiator_amount = '0.01234BTC'
-
+tft_prefab = j.tools.prefab.getFromSSH('localhost', port=2222)
 j.tools.atomicswap.execute(initiator_prefab=btc_prefab, initiator_address=initiator_address,
-                          initiator_amount=initiator_amount,
+                          initiator_amount='{}BTC'.format(initiator_amount),
                           participant_prefab=tft_prefab,
                           participant_address=participant_address,
-                          participant_amount=participant_amount,
-                          testnet=True)
+                          participant_amount='{}TFT'.format(participant_amount),
+                          testnet=testnet)
 
 
 # initiate_cmd = 'btcatomicswap --testnet --rpcuser=user --rpcpass=pass -s localhost:8332 --force-yes initiate {} 0.01234'.format(participant_address)
