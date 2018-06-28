@@ -6,7 +6,7 @@ The SAL provides the user with APIs that allows:
 - Create an atomicswap participant that supports participate, audit, and redeem operations
 
 ## Configurations
-You configure some environment variable to customize the behavior of the SAL specially if you are going to use the single API for executing a full atomicswap.
+You can configure some environment variable to customize the behavior of the SAL specially if you are going to use the single API for executing a full atomicswap.
 The following environment variables can be set:
 - BTC_MIN_CONFIRMATIONS: This controls the number of confirmations the on the BTC network the SAL will wait for after creating a new transaction [default: 6]
 - TFT_MIN_CONFIRMATION_HEIGHT: This controls the minimum height difference between a transaction and the chain height before considering the transaction confirmed [default: 5]
@@ -61,7 +61,7 @@ j.tools.atomicswap.execute(initiator_prefab=btc_prefab, initiator_address=initia
                           participant_address=participant_address,
                           participant_amount='{}TFT'.format(participant_amount),
                           testnet=testnet)
-                          
+
 * Starting atomicswap operation
 * Intiating the atomicswap
 * Waiting for transaction 5ec1bdea60804dd257e201ba28b5f5c3b49865ec570af9e6402c62a67010a263 to have at least 1 confirmations
@@ -95,4 +95,44 @@ once you have created the initiator you can execute the following operations
 - Initiate an atomicswap process
   ```python
     initiator.initiate()
+  ```
+- Audit the contract after participant executed the participate operation
+  ```python
+    initiator.auditcontract(output_id=<output_id>,
+                                recipient_addr=<recipient_addr>,
+                                secret_hash=<secret_hash>,
+                                amount=<amount>)
+  ```
+- Redeem the amount from the contract
+  ```python
+    initiator.redeem(output_id=<output_id>,
+                     secret=<secret>)
+  ```
+
+#### Creating a Participant
+You can also create a participant (only TFT participants are supported at the moment)
+```python
+initiator_address = '013803e566cdc065c415b14a1f082f240e8cc81a6f13fd01ef59e94620601a5a2f26e83b806091'
+initiator_amount = 0.01234
+testnet = True
+
+participant = j.tools.atomicswap.get_tft_participant('localhost:2222', participant_amount,
+                                                initiator_address, testnet)
+
+```
+once you have created the participant you can execute the following operations
+
+- Participate in an atomicswap process
+  ```python
+    participant.participate(secret_hash=<secret_hash>)
+  ```
+- Audit the contract
+  ```python
+    participant.auditcontract(contract=<contract>,
+                            contract_txn=<contract_transaction>)
+  ```
+- Redeem the amount from the contract
+  ```python
+    participant.redeem(contract=<contract>, contract_txn=<contract_transaction>,
+                        secret=<secrete>)
   ```
