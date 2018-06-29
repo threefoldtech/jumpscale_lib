@@ -11,7 +11,6 @@ the wallet will need the following functionality:
 """
 
 import ed25519
-from .merkletree import Tree
 from pyblake2 import blake2b
 from functools import partial
 import requests
