@@ -37,9 +37,9 @@ class CurrencyLayer(JSConfigBase):
                 r = c.get(url).readlines()
                 data = j.data.serializer.json.loads(r[0].decode())["quotes"]
 
-                eth = cryptocompare.get_price('ETH', 'USD')['ETH']['USD']
+                eth = cryptocompare.get_price('USD', 'ETH')['USD']['ETH']
                 data['USDETH'] = eth
-                xrp = cryptocompare.get_price('XRP', 'USD')['XRP']['USD']
+                xrp = cryptocompare.get_price('USD', 'XRP')['USD']['XRP']
                 data['USDXRP'] = xrp
 
                 self.logger.error("fetch currency from internet")

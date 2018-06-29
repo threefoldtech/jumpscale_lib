@@ -384,18 +384,7 @@ class RivineWallet:
             if input_value >= required_funds:
                 break
 
-            # support both v0 and v1 tnx format
-            if 'unlockhash' in unspent_coin_output:
-                # v0 transaction format
-                ulh = unspent_coin_output['unlockhash']
-            elif 'condition' in unspent_coin_output:
-                # v1 transaction format
-                # check condition type
-                if unspent_coin_output['condition'].get('type') == 1:
-                    # unlockhash condition type
-                    ulh = unspent_coin_output['condition']['data']['unlockhash']
-                elif unspent_coin_output['condition'].get('type') == 3:
-                    ulh = unspent_coin_output['condition']['data']['condition']['data'].get('unlockhash')
+            ulh = self._get_unlockhash_from_output(output=unspent_coin_output)
 
             if ulh is None:
                 raise RunimeError('Cannot retrieve unlockhash')
@@ -434,6 +423,27 @@ class RivineWallet:
         return transaction
 
 
+    def _get_unlockhash_from_output(self, output):
+        """
+        Retrieves unlockhash from coin output. This should handle different types of output conditions and transaction formats
+        """
+        ulh = None
+        # support both v0 and v1 tnx format
+        if 'unlockhash' in output:
+            # v0 transaction format
+            ulh = output['unlockhash']
+        elif 'condition' in output:
+            # v1 transaction format
+            # check condition type
+            if output['condition'].get('type') == 1:
+                # unlockhash condition type
+                ulh = output['condition']['data']['unlockhash']
+            elif output['condition'].get('type') == 3:
+                ulh = output['condition']['data']['condition']['data'].get('unlockhash')
+
+        return ulh
+
+
     def _sign_transaction(self, transaction):
         """
         Signs a transaction with the existing keys.
@@ -442,8 +452,13 @@ class RivineWallet:
         """
         logger.info("Signing Trasnaction")
         for index, input in enumerate(transaction.coins_inputs):
-            key = self._keys[self._unspent_coins_outputs[input.parent_id]['condition']['data']['unlockhash']]
-            input.sign(input_idx=index, transaction=transaction, secret_key=key.secret_key)
+            #@TODO improve the parsing of outputs its duplicated now in too many places
+            ulh = self._get_unlockhash_from_output(output=self._unspent_coins_outputs[input.parent_id])
+            if ulh is not None:
+                key = self._keys[ulh]
+                input.sign(input_idx=index, transaction=transaction, secret_key=key.secret_key)
+            else:
+                logger.warn("Failed to retrieve unlockhash related to input {}".format(input))
 
 
     def _commit_transaction(self, transaction):

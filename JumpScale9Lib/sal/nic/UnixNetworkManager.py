@@ -8,8 +8,9 @@ import netaddr
 JSBASE = j.application.jsbase_get_class()
 
 class NetworkingError(Exception, JSBASE):
-    def __init__(self):
+    def __init__(self, msg=""):
         JSBASE.__init__(self)
+        self.logger.error(msg)
 
 
 class UnixNetworkManager(JSBASE):
@@ -22,7 +23,11 @@ class UnixNetworkManager(JSBASE):
 
     def _nicExists(self, nic):
         if nic not in self.nics:
-            raise NetworkingError('Invalid NIC')
+            raise NetworkingError("NIC doesn't exist")
+
+    def configSet(self):
+        contentConfig = 'source /etc/network/interfaces.d/*\n'
+        j.tools.path.get('/etc/network/interfaces').write_text(contentConfig)
 
     def ipGet(self, device):
         """
@@ -31,7 +36,7 @@ class UnixNetworkManager(JSBASE):
         """
         self._nicExists(device)
         cmd = 'echo `ip a | grep %s | sed -n 2p | xargs | cut -d " " -f 2`' % device
-        rc, res, err = self._executor.execute(cmd)
+        _, res, _ = self._executor.execute(cmd)
         ipmask = netaddr.IPNetwork(res)
         netmask = str(ipmask.netmask)
         ip = str(ipmask.ip)
@@ -79,17 +84,20 @@ class UnixNetworkManager(JSBASE):
     @property
     def nics(self):
         if self._nics is None:
-            rc, ifaces, err = self._executor.execute("""ifconfig -a | sed 's/[ \t].*//;/^$/d'""")
+            _, ifaces, _ = self._executor.execute("""ifconfig -a | sed 's/[ \t].*//;/^$/d'""")
             self._nics = [iface for iface in ifaces.splitlines() if iface]
+
+        self._nics = [nic.replace(':', '') for nic in self._nics]
         return self._nics
 
     def commit(self, device=None):
         #- make sure loopback exist
+        self.configSet()
         content = 'auto lo\niface lo inet loopback\n'
         j.tools.path.get('/etc/network/interfaces.d/lo').write_text(content)
-
-        self._executor.execute('service networking restart')
         if device:
             self.logger.info('Restarting interface %s' % device)
-            self._executor.execute('ifdown %s && ifup %s' % (device, device))
+            (ip, _) = self.ipGet(device)
+            self._executor.execute('ip a del %s dev %s'% (ip, device))
+        self._executor.execute('systemctl restart networking')
         self.logger.info('DONE')
