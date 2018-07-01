@@ -288,7 +288,7 @@ class TfChainClient:
         
         error_check(result, "Could not list peers")
 
-        ips = re.findall(r'\d\d\d.\d\d\d.+', result.stdout)
+        ips = re.findall(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', result.stdout)
         states = re.findall("tcp \w+", result.stdout)
         all_peers = dict(zip(ips, states))
         active_peers = []

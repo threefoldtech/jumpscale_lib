@@ -27,9 +27,9 @@ class Users(Collection):
         :type kwargs: dict
         """
         user = {
-            'name': name, 
-            'shell': shell, 
-            'lock-passwd': False, 
+            'name': name,
+            'shell': shell,
+            'lock-passwd': False,
             'plain_text_passwd': password,
         }
         if sudo:
@@ -49,8 +49,8 @@ class CloudInitStruct:
         :type hostname: str
         """
         self._userdata = {
-            'users': [], 
-            'ssh_pwauth': True, 
+            'users': [],
+            'ssh_pwauth': True,
             'manage_etc_hosts': True,
             'chpasswd': {'expire': False}
         }
@@ -91,6 +91,7 @@ class Host:
 
     __repr__ = __str__
 
+
 class Hosts(Collection):
     def __init__(self, gateway, network):
         super().__init__(gateway)
@@ -98,7 +99,6 @@ class Hosts(Collection):
         self.nameservers = ['8.8.8.8']
         self.pool_start = 10
         self.pool_size = 100
-
 
     def add(self, host, ipaddress=None, macaddress=None):
         """
@@ -265,6 +265,7 @@ class Networks(Collection):
     """
     Collection of networks beloning to the gateway
     """
+
     def add(self, name, type_, networkid=None):
         """
         Add network to the gateway
@@ -345,7 +346,7 @@ class Network(Nic):
                      longer then 12 characters
         :type name: str
         :type type_: str
-        :param gateway: Gateway instance 
+        :param gateway: Gateway instance
         :type gateway: Gateway
         """
         super().__init__(name, type_, networkid, None, gateway)
@@ -385,6 +386,7 @@ class VlanNetwork(Network):
     """
     VLAN specific Network implementation
     """
+
     def __init__(self, name, networkid, gateway):
         self._networkid = None
         super().__init__(name, networkid, 'vlan', gateway)
@@ -417,6 +419,7 @@ class VXlanNetwork(Network):
     """
     VXLAN specific Network implementation
     """
+
     def __init__(self, name, networkid, gateway):
         self._networkid = None
         super().__init__(name, networkid, 'vxlan', gateway)
@@ -449,6 +452,7 @@ class ZTNetwork(ZTNic):
     """
     Zerotier specific Network implementation
     """
+
     def __init__(self, name, networkid, gateway):
         self._networkid = None
         super().__init__(name, networkid, None, gateway)
@@ -470,8 +474,8 @@ class ZTNetwork(ZTNic):
     @property
     def public(self):
         """
-        Check if network is public or not if a network has gateway is's considered public
-        It's also considered public if the public flag has been explictly set
+        Check if network is public or not if a network has gateway it's considered public
+        It's also considered public if the public flag has been explicitly set
         """
         if self._public is None:
             return bool(self.ip.gateway)

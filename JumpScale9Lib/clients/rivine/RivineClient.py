@@ -11,7 +11,7 @@ TEMPLATE = """
 bc_address = ""
 seed_ = ""
 nr_keys_per_seed = 50
-minerfee = 10
+minerfee = 100000000
 password_ = ""
 """
 
@@ -43,5 +43,6 @@ class RivineClient(JSConfigBase):
                                         bc_network=self.config.data['bc_address'],
                                         bc_network_password=self.config.data['password_'],
                                         nr_keys_per_seed=int(self.config.data['nr_keys_per_seed']),
-                                        minerfee=int(self.config.data['minerfee']))
+                                        minerfee=int(self.config.data['minerfee']),
+                                        client=self.instance)
         return self._wallet

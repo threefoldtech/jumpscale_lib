@@ -3,7 +3,7 @@ import time
 from js9 import j
 
 from .Client import Client
-from .sal.Minio import Minio
+from .sal.Minio import Minio, DEFAULT_PORT
 from .sal.Node import Node
 from .sal.Restic import Restic
 from .sal.TfChain import TfChain
@@ -127,7 +127,7 @@ class ZeroOSFactory(JSConfigFactoryBase):
         return ip_pub, ipaddr_priv
 
 
-class SALFactory():
+class SALFactory:
 
     def __init__(self, factory):
         self._factory = factory
@@ -137,8 +137,8 @@ class SALFactory():
         client = self._factory.get(instance)
         return Node(client)
 
-    def get_minio(self, name, container, zdbs, namespace, private_key, namespace_secret='', addr='0.0.0.0', port=9000,  block_size=1048576):
-        return Minio(name, container, zdbs, namespace, private_key, namespace_secret, addr, port, block_size=block_size)
+    def get_minio(self, name, node, login, password, zdbs, namespace, private_key, namespace_secret='', node_port=DEFAULT_PORT, block_size=1048576, restic_username='', restic_password='', meta_private_key=''):
+        return Minio(name, node, login, password, zdbs, namespace, private_key, namespace_secret, node_port, block_size, restic_username, restic_password, meta_private_key)
 
     def get_restic(self, container, repo):
         return Restic(container, repo)

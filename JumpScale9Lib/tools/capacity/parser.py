@@ -95,6 +95,9 @@ class Report():
                 unit += int(cpu['thread_nr'])
             elif cpu['core_nr']:
                 unit += int(cpu['core_nr'])
+            else:
+                # when no thread_nr or core_nr is available we assume it's a single core/thread processor
+                unit += 1
         return unit
 
     @property

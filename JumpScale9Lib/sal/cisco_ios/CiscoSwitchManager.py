@@ -11,6 +11,16 @@ class CiscoSwitchManager(JSBASE):
         JSBASE.__init__(self)
 
     def get(self, host, login, password):
+        """get CiscoSwitch
+        
+        Arguments:
+            host {str} -- host of CiscoSwitch
+            login {str} -- User of CiscoSwitch
+            password {str} -- Password of CiscoSwitch
+        
+        Returns:
+            CiscoSwitch -- return your Cisco Switch 
+        """
         return CiscoSwitch(host, login, password)
 #!/usr/bin/python
 

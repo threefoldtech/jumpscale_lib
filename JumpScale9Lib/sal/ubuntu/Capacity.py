@@ -86,8 +86,8 @@ class Capacity:
             mru=report.MRU,
             hru=report.HRU,
             sru=report.SRU,
-            robot_address=None,
-            os_version="not running 0-OS",
+            robot_address="private",
+            os_version="private",
             farmer_id=farmer_id,
             uptime=int(self._node.uptime()),
         )

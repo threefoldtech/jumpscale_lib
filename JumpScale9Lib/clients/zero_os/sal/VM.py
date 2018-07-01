@@ -8,12 +8,13 @@ logger = j.logger.get(__name__)
 
 
 class Disk:
-    def __init__(self, name, url, mountpoint=None, filesystem=None):
+    def __init__(self, name, url, mountpoint=None, filesystem=None, label=None):
         self.name = name
         self.url = url
         self.type = 'disk'
         self.mountpoint = mountpoint
         self.filesystem = filesystem
+        self.label = label or name
 
     def __str__(self):
         return "Disk <{}:{}>".format(self.name, self.url)
@@ -25,10 +26,9 @@ class ZDBDisk(Disk):
     def __init__(self, zdb, name, mountpoint=None, filesystem='ext4', size=10, label=None):
         if zdb.mode == 'direct':
             raise RuntimeError('ZDB mode direct not support for disks')
-        super().__init__(name, None, mountpoint, filesystem)
+        super().__init__(name, None, mountpoint, filesystem, label)
         self.zdb = zdb
         self.size = size
-        self.label = label or self.name
         self.node = None
 
     @property
@@ -81,7 +81,7 @@ class ZDBDisk(Disk):
 
 
 class Disks(Collection):
-    def add(self, name_or_disk, url=None, mountpoint=None, filesystem=None):
+    def add(self, name_or_disk, url=None, mountpoint=None, filesystem=None, label=None):
         """
         Add disk to vm
 
@@ -89,18 +89,20 @@ class Disks(Collection):
         :type name: str
         :param url: Disk url example: nbd://myip:port
         :type url: str
-        :param mounpoint: Optional location to mount this disk on the vm 
+        :param mounpoint: Optional location to mount this disk on the vm
                           Only works in combination with filesystem
-        :type mountpoint: str 
+        :type mountpoint: str
         :param filesystem: Filesystem the disk contains
         :type filesystem: str
+        :param label: label to use for disk
+        :type label: str
 
         """
         if isinstance(name_or_disk, str):
             if url is None:
                 raise ValueError('Url is mandatory when disk name is given')
             super().add(name_or_disk)
-            disk = Disk(name_or_disk, url, mountpoint, filesystem)
+            disk = Disk(name_or_disk, url, mountpoint, filesystem, label)
         elif isinstance(name_or_disk, ZDBDisk):
             super().add(name_or_disk.name)
             disk = name_or_disk
@@ -253,6 +255,10 @@ class VMNics(Nics):
         return super().add_zerotier(network, name)
 
 
+class VMNotRunningError(RuntimeError):
+    pass
+
+
 class VM:
     def __init__(self, node, name, flist=None, vcpus=2, memory=2048):
         self.node = node
@@ -288,11 +294,15 @@ class VM:
         info = self.info
         if info:
             return info['uuid']
-        raise RuntimeError('VM is not running')
+        raise VMNotRunningError('VM is not running')
 
     def destroy(self):
-        logger.info('Destroying kvm with uuid %s' % self.uuid)
-        self.node.client.kvm.destroy(self.uuid)
+        try:
+            logger.info('Destroying kvm with uuid %s' % self.uuid)
+            self.node.client.kvm.destroy(self.uuid)
+        except VMNotRunningError:
+            # destroying something that doesn't exists is a noop
+            pass
         self.drop_ports()
 
     def shutdown(self):
@@ -338,7 +348,7 @@ Type=simple
         fstab = []
         haszerotier = False
         if not self.zt_identity:
-            self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
+            self.zt_identity = self.node.generate_zerotier_identity()
         publiczt = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
         for nic in self.nics:
             if nic.type == 'zerotier':
@@ -353,7 +363,7 @@ Type=simple
             config[configobj.path] = configobj.content
         for disk in self.disks:
             if disk.mountpoint and disk.filesystem:
-                fstab.append('LABEL={} {} {} defaults 0 0'.format(disk.name, disk.mountpoint, disk.filesystem))
+                fstab.append('LABEL={} {} {} defaults 0 0'.format(disk.label, disk.mountpoint, disk.filesystem))
             media.append({'url': disk.url, 'type': disk.type})
         for mount in self.mounts:
             mounts.append({
@@ -462,7 +472,8 @@ Type=simple
             self.nics = VMNics(self)
             self.configs = Configs(self)
             for disk in data['disks']:
-                self.disks.add(disk['name'], disk['url'], disk.get('mountPoint'), disk.get('filesystem'))
+                self.disks.add(
+                    disk['name'], disk['url'], disk.get('mountPoint'), disk.get('filesystem'), disk.get('label'))
             for nic in data['nics']:
                 nicobj = self.nics.add(nic['name'], nic['type'], nic.get('id'), nic.get('hwaddr'))
                 if 'ztClient' in nic:
@@ -600,4 +611,5 @@ class ZeroOSVM(VM):
         return data
 
     def from_dict(self, data):
+        super().from_dict(data)
         self.ipxe_url = data.get('ipxeUrl')

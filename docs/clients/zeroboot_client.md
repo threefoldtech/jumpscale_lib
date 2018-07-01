@@ -247,7 +247,7 @@ Host object contains the host information and allows the following operations:
 
 #### Configuring pxe boot
 
-To specfiy a custom boot link to a host:
+To specify a custom boot link (LKRN bootable file URL) to a host:
 
 ```python
 host.configure_ipxe_boot(boot_url)

@@ -200,7 +200,7 @@ class Host:
         pxe_config_file = '{root}/{file}'.format(root=pxe_config_root, file=file_name)
         lkrn_file = '{root}/{file}'.format(root=pxe_config_root, file=file_name + ".lkrn")
         # download lkrn file
-        executor.execute("mkdir -p {root}/lkrn".format(root=pxe_config_root))
+        executor.execute("mkdir -p {root}".format(root=pxe_config_root))
         executor.execute("wget -O {target} {source}".format(target=lkrn_file, source=lkrn_url))
         pxe_config_data = (
         "default 1\n"
@@ -208,7 +208,7 @@ class Host:
         "prompt 1\n"
         "ipappend 2\n\n"
         "label 1\n"
-        "\tKERNEL {}".format(lkrn_file))
+        "\tKERNEL {}\n".format(lkrn_file))
 
         executor.file_write(pxe_config_file, pxe_config_data)
 
@@ -231,8 +231,8 @@ class Hosts:
         self._hosts = {}
         self.sshclient = sshclient
         self.subnet = subnet
-        self._populate()
         self._last_index = -1
+        self._populate()
         self.leasetime = leasetime
 
     def _hosts_chunks(self, l, n):
@@ -250,6 +250,7 @@ class Hosts:
         ('1', 'mac', "'00:11:22:33:44:55'"),
         ('1', 'name', "'myhost'")]
         """
+
         _, out, _ = self.sshclient.execute('uci show dhcp')
         hosts_data = re.findall("dhcp.@host\[(\d+)\]\.(ip|mac|name)=(.+)", out)
         if hosts_data:
@@ -276,7 +277,7 @@ class Hosts:
         :return: object representing the host
         :rtype: object
         """
-
+        self._populate() # make sure dhcp list is up to date (e.g. manually/webinterface)
         if netaddr.IPAddress(address) not in netaddr.IPNetwork(self.subnet):
             raise RuntimeError("specified address: {addr} not in network: {net}".format(addr=address, net=self.subnet))
         if hostname in self._hosts:
