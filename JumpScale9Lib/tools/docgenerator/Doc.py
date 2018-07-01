@@ -3,53 +3,24 @@ import toml
 
 import copy
 
-JSBASE = j.application.jsbase_get_class()
+from .DocBase import DocBase
 
 
-class Doc(JSBASE):
+class Doc(DocBase):
     """
     """
 
     def __init__(self, path, name, docsite):
-        JSBASE.__init__(self)
-        self.path = path
-        self.docsite = docsite
-        
-        self.path_dir = j.sal.fs.getDirName(self.path)
-        self.path_dir_rel = j.sal.fs.pathRemoveDirPart(self.path_dir, self.docsite.path).strip("/")
-        self.name = name.lower()
-        self.name_original = name
-        self.path_rel = j.sal.fs.pathRemoveDirPart(path, self.docsite.path).strip("/")
+        DocBase.__init__(self, path, name, docsite)
 
-        name_dot =  "%s/%s" % (self.path_dir_rel,name)
-        self.name_dot = name_dot.replace("/",".")
-        self.name_dot_lower = self.name_dot.replace("/",".").lower()
-
-        self.content = ""
         self._content_default = ""
         self.data = {} #is all data, from parents as well, also from default data
         self.metadata = {}  #is the data which is in the page itself
-        self.show = True
-        self.errors = []
-        # self.processed = False
 
-        if j.sal.fs.getDirName(self.path).strip("/").split("/")[-1][0] == "_":
-            # means the subdir starts with _
-            self.show = False
-
-        self._processed = False
-
-    @property
-    def title(self):
-        if "title" in self.data:
-            return self.data["title"]
-        else:
-            self.error_raise("Could not find title in doc.")
 
     @property
     def content_clean(self):
-        if not self.processed:
-            self.write()
+
         # remove the code blocks (comments are already gone)
         state = "start"
         out = ""
@@ -104,9 +75,6 @@ class Doc(JSBASE):
             self._content_default = C
         return self._content_default
 
-    def error_raise(self, msg):
-        return self.docsite.error_raise(msg, doc=self)            
-
     def _metadata_process(self, dataText):
         try:
             data = j.data.serializer.toml.loads(dataText)
@@ -151,13 +119,6 @@ class Doc(JSBASE):
             if self.path_rel.startswith(key):
                 data = self.docsite.data_default[key]
                 self._metadata_update(data)
-
-    @property
-    def url(self):
-        
-        rpath = self.path_rel[:-3]
-        rpath += '/'
-        return "%s%s" % (self.docsite.sitepath, rpath)
 
     def _methodline_process(self,line,block):
         methodcode = line[3:]
@@ -461,5 +422,3 @@ class Doc(JSBASE):
 
     def __repr__(self):
         return "doc:%s:%s" % (self.name, self.path)
-
-    __str__ = __repr__

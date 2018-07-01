@@ -39,6 +39,7 @@ class DocGenerator(JSBASE):
         self.ws = self.webserver.replace("http://", "").replace("https://", "").replace("/", "")
         self._loaded = []
         self._macrosLoaded = []
+        self.logger_enable()
 
     def gitrepo_add(self, path):
         if path not in self.gitRepos:
@@ -238,15 +239,17 @@ class DocGenerator(JSBASE):
         self.load(pathOrUrl="https://github.com/Jumpscale/prefab9",name="prefab9")
         self.generate(start=start)
 
-    def generate(self,name="", url=None, start=True):
+    def generate(self,name="", pathOrUrl=None, start=True):
         """
-        will load all info & process the pre-configured output
 
         js9 'j.tools.docgenerator.generate()'
 
         """
-        if url is not None:
-            self.load(pathOrUrl=url,name=name)
+        if not pathOrUrl:
+            pathOrUrl = j.sal.fs.getcwd()
+
+        self.load(pathOrUrl=pathOrUrl,name=name)
+
         if self.docsites == {}:
             # self.load(template=template)
             raise RuntimeError("no docsites found, did not specify right url")

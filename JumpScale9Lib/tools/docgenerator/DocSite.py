@@ -1,5 +1,8 @@
 from js9 import j
 from .Doc import Doc
+from .DocBase import DocBase
+from .HtmlPage import HtmlPage
+
 import copy
 
 import imp
@@ -48,6 +51,8 @@ class DocSite(JSBASE):
         self.data_default = {}  # key is relative path in docsite where default content found
 
         self.docs = {}
+        self.htmlpages = {}
+        self.others = {}
         self.files = {}
 
         self.template_path = j.clients.git.getContentPathFromURLorPath(self.template)
@@ -82,6 +87,9 @@ class DocSite(JSBASE):
             self.outpath = j.sal.fs.joinPaths(copy.copy(j.tools.docgenerator.outpath), self.name)
 
         self._generator = None
+
+        self.logger_enable()
+        self.logger.level=1
 
         self.load()
         
@@ -222,18 +230,37 @@ class DocSite(JSBASE):
             ext = j.sal.fs.getFileExtension(path).lower()
             base = j.sal.fs.getBaseName(path)
             if ext == "md":
+                self.logger.debug("found md:%s"%path)
                 base = base[:-3]  # remove extension
                 doc = Doc(path, base, docsite=self)
                 if base not in self.docs:
                     self.docs[base.lower()] = doc
                 self.docs[doc.name_dot_lower] = doc
+            elif ext in ["html","css","htm"]:
+                self.logger.debug("found html alike:%s"%path)
+                l = len(ext)+1
+                base = base[:-l]  # remove extension
+                doc = HtmlPage(path, base, docsite=self)
+                if base not in self.htmlpages:
+                    self.htmlpages[base.lower()] = doc
+                self.htmlpages[doc.name_dot_lower] = doc
             else:
+                
                 if ext in ["png", "jpg", "jpeg", "pdf", "docx", "doc", "xlsx", "xls", "ppt", "pptx", "gig", "mp4"]:
-                    self.logger.debug("file image/vide")
+                    self.logger.debug("found pic/video:%s"%path)
                     if base in self.files:
                         raise j.exceptions.Input(message="duplication file in %s,%s" %
                                                  (self, path), level=1, source="", tags="", msgpub="")
                     self.files[base.lower()] = path
+                # else:
+                #     self.logger.debug("found other:%s"%path)
+                #     l = len(ext)+1
+                #     base = base[:-l]  # remove extension
+                #     doc = DocBase(path, base, docsite=self)
+                #     if base not in self.others:
+                #         self.others[base.lower()] = doc
+                #     self.others[doc.name_dot_lower] = doc
+                    
 
         callbackFunctionDir(self.path, "")  # to make sure we use first data.yaml in root
 
