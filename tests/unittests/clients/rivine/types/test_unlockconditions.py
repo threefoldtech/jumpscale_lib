@@ -14,17 +14,15 @@ import pytest
 
 
 
-def test_ssf_sign():
+def test_ssf_sign(ed25519_key, spendable_key):
     """
     Tests sing the method of SingleSignatureFulfillment
     """
     expected_output = b'Y\xcf5rp\xc5\xf5\xd2\xc2\xeay\xcag\x8d\xb7GB\x7f\x81l\xfa.\xfd\x9aQV\xf2#V&\xb4\x00G\xa3\xd0\xaf\x9bBQ\x02=\xe9\xb7\xcc\x8e\xbaYv"\xd8\x97\x0ec\x01/%\x02_\xa2\xe9\x07\x98:\x04'
-    sk, pk = ed25519.create_keypair(entropy=lambda x: b'a'*64)
-    key = Ed25519PublicKey(pub_key=pk.to_bytes())
-    ssf = SingleSignatureFulfillment(pub_key=key)
+    ssf = SingleSignatureFulfillment(pub_key=ed25519_key)
     sig_ctx = {
         'input_idx': 0,
-        'secret_key': sk,
+        'secret_key': spendable_key.secret_key,
         'transaction': MagicMock(),
     }
     sig_ctx['transaction'].get_input_signature_hash = MagicMock(return_value=bytes('hello', encoding='utf-8'))
@@ -32,19 +30,17 @@ def test_ssf_sign():
     assert ssf._signature == expected_output
 
 
-def test_ssf_double_singature():
+def test_ssf_double_singature(ed25519_key):
     """
     Tests that the SingleSignatureFulfillment type does not allow double singnatures
     """
-    _, pk = ed25519.create_keypair(entropy=lambda x: b'a'*64)
-    key = Ed25519PublicKey(pub_key=pk.to_bytes())
-    ssf = SingleSignatureFulfillment(pub_key=key)
+    ssf = SingleSignatureFulfillment(pub_key=ed25519_key)
     ssf._signature = 'hello'
     with pytest.raises(DoubleSignatureError):
         ssf.sign(sig_ctx={})
 
 
-def test_ssf_json():
+def test_ssf_json(ed25519_key):
     """
     Tests the json representation of SingleSignatureFulfillment
     """
@@ -54,25 +50,21 @@ def test_ssf_json():
                             'signature': ''
                             }
                         }
-    _, pk = ed25519.create_keypair(entropy=lambda x: b'a'*64)
-    key = Ed25519PublicKey(pub_key=pk.to_bytes())
-    ssf = SingleSignatureFulfillment(pub_key=key)
+    ssf = SingleSignatureFulfillment(pub_key=ed25519_key)
     assert ssf.json == expected_output, "Failed to generate the correct json representation of the SingleSignatureFulfillment"
 
 
 
-def test_unlockhashcondition_binary():
+def test_unlockhashcondition_binary(ulh):
     """
     Tests the generation of binary encoded version of unlockhashcondition object
     """
     expected_output = bytearray(b'\x01!\x00\x00\x00\x00\x00\x00\x00\x012M\xcf\x02}\xd4\xa3\n\x93,D\x1f6Z%\xe8k\x17=\xef\xa4\xb8\xe5\x89H%4q\xb8\x1br\xcf')
-    hash = utils.hash(b'hello')
-    ulh = UnlockHash(unlock_type=UNLOCK_TYPE_PUBKEY, hash=hash)
     ulhc = UnlockHashCondition(unlockhash=ulh)
     assert ulhc.binary == expected_output, "Failed to generate the expected binary value of unlockhashcondition"
 
 
-def test_unlockhashcondition_json():
+def test_unlockhashcondition_json(ulh):
     """
     Tests the generation of json encoded version of the unlockhashcondition object
     """
@@ -81,26 +73,22 @@ def test_unlockhashcondition_json():
                                 'unlockhash': '01324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf57a828ea336a'
                                 }
                         }
-    hash = utils.hash(b'hello')
-    ulh = UnlockHash(unlock_type=UNLOCK_TYPE_PUBKEY, hash=hash)
     ulhc = UnlockHashCondition(unlockhash=ulh)
     assert ulhc.json == expected_output, "Failed to generate the expected json value of unlockhashcondition"
 
 
 
-def test_locktimecondition_binary():
+def test_locktimecondition_binary(ulh):
     """
     Tests the generation of binary encoded version of LockTimeCondition object
     """
     expected_output = bytearray(b'\x03*\x00\x00\x00\x00\x00\x00\x00\n\x00\x00\x00\x00\x00\x00\x00\x01\x012M\xcf\x02}\xd4\xa3\n\x93,D\x1f6Z%\xe8k\x17=\xef\xa4\xb8\xe5\x89H%4q\xb8\x1br\xcf')
-    hash = utils.hash(b'hello')
-    ulh = UnlockHash(unlock_type=UNLOCK_TYPE_PUBKEY, hash=hash)
     ulhc = UnlockHashCondition(unlockhash=ulh)
     ltc = LockTimeCondition(condition=ulhc, locktime=10)
     assert ltc.binary == expected_output, "Failed to generate the expected binary value of locktimecondition"
 
 
-def test_locktimecondition_json():
+def test_locktimecondition_json(ulh):
     """
     Tests the generation of json encoded version of the LockTimeCondition object
     """
@@ -116,8 +104,6 @@ def test_locktimecondition_json():
                             }
                         }
 
-    hash = utils.hash(b'hello')
-    ulh = UnlockHash(unlock_type=UNLOCK_TYPE_PUBKEY, hash=hash)
     ulhc = UnlockHashCondition(unlockhash=ulh)
     ltc = LockTimeCondition(condition=ulhc, locktime=10)
     assert ltc.json == expected_output, "Failed to generate the expected json value of locktimecondition"
