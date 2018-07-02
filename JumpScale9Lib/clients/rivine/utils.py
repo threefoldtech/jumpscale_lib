@@ -8,7 +8,7 @@ from JumpScale9Lib.clients.rivine.encoding import binary
 
 def hash(data, encoding_type=None):
     """
-    Hashes the input binary input data usinng the blake2b algorithm and
+    Hashes the input binary data using the blake2b algorithm
 
     @param data: Input data to be hashed
     @param encoding_type: Type of the data to guide the binary encoding before hashing

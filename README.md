@@ -55,3 +55,50 @@ The instance can be the used as follows:
 ```python
 git_cl.repo_get('myrepo')
 ```
+
+## Running the tests
+Jumpscale9 Libs come with unittests, to run them, you will need to have the pytest libarary installed, once you have it, you can run the following command:
+```shell
+root@abdelrahman-ThinkPad-T530:~# pytest -v /opt/code/github/jumpscale/lib9/tests/unittests/
+====================================================================================================== test session starts ======================================================================================================
+platform linux -- Python 3.6.5, pytest-3.6.2, py-1.5.3, pluggy-0.6.0 -- /usr/bin/python3
+cachedir: ../opt/code/github/jumpscale/lib9/.pytest_cache
+rootdir: /opt/code/github/jumpscale/lib9, inifile:
+collected 31 items
+
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/encoding/test_binary.py::test_encode_all PASSED                                                                                                          [  3%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/encoding/test_binary.py::test_encode_None PASSED                                                                                                         [  6%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/encoding/test_binary.py::test_encode_unknown_type PASSED                                                                                                 [  9%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/encoding/test_binary.py::test_encode_hex PASSED                                                                                                          [ 12%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/encoding/test_binary.py::test_encode_binary PASSED                                                                                                       [ 16%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/encoding/test_binary.py::test_encode_int PASSED                                                                                                          [ 19%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/encoding/test_binary.py::test_encode_bool PASSED                                                                                                         [ 22%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/encoding/test_binary.py::test_encode_list PASSED                                                                                                         [ 25%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/encoding/test_binary.py::test_encode_object PASSED                                                                                                       [ 29%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/encoding/test_binary.py::test_encode_currency PASSED                                                                                                     [ 32%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/encoding/test_binary.py::test_encode_slice PASSED                                                                                                        [ 35%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/encoding/test_binary.py::test_decode_int PASSED                                                                                                          [ 38%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/types/test_signatures.py::test_Ed25519PublicKey_binary PASSED                                                                                            [ 41%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/types/test_signatures.py::test_Ed25519PublicKey_json PASSED                                                                                              [ 45%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/types/test_transaction.py::test_create_transaction_v1 PASSED                                                                                             [ 48%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/types/test_transaction.py::test_coininput_json PASSED                                                                                                    [ 51%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/types/test_transaction.py::test_coininput_sign PASSED                                                                                                    [ 54%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/types/test_transaction.py::test_coinoutput_binary PASSED                                                                                                 [ 58%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/types/test_transaction.py::test_coinoutput_json PASSED                                                                                                   [ 61%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/types/test_transaction.py::test_transactionv1_json PASSED                                                                                                [ 64%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/types/test_transaction.py::test_transactionv1_get_input_signature_hash PASSED                                                                            [ 67%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/types/test_unlockconditions.py::test_ssf_sign PASSED                                                                                                     [ 70%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/types/test_unlockconditions.py::test_ssf_double_singature PASSED                                                                                         [ 74%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/types/test_unlockconditions.py::test_ssf_json PASSED                                                                                                     [ 77%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/types/test_unlockconditions.py::test_unlockhashcondition_binary PASSED                                                                                   [ 80%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/types/test_unlockconditions.py::test_unlockhashcondition_json PASSED                                                                                     [ 83%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/types/test_unlockconditions.py::test_locktimecondition_binary PASSED                                                                                     [ 87%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/types/test_unlockconditions.py::test_locktimecondition_json PASSED                                                                                       [ 90%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/types/test_unlockhash.py::test_unlock_to_string PASSED                                                                                                   [ 93%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/types/test_unlockhash.py::test_unlockhash_binary PASSED                                                                                                  [ 96%]
+../opt/code/github/jumpscale/lib9/tests/unittests/clients/rivine/types/test_unlockhash.py::test_unlockhash_from_string PASSED                                                                                             [100%]
+
+=================================================================================================== 31 passed in 0.58 seconds ===================================================================================================
+root@abdelrahman-ThinkPad-T530:~#
+
+```
