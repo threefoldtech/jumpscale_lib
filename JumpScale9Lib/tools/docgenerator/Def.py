@@ -9,7 +9,7 @@ class Def(JSBASE):
     def __init__(self, docsource, name):
         JSBASE.__init__(self)
         self.docsource = docsource
-        self.name = name.lower()
+        self.name = j.data.text.strip_to_ascii_dense(name)
         self.docsite = self.docsource.docsite
         self.aliasses = []
 

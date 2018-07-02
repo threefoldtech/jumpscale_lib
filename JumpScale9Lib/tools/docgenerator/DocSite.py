@@ -21,25 +21,38 @@ class DocSite(JSBASE):
     """
     """
 
-    def __init__(self, path="",template="https://github.com/Jumpscale/docgenerator/tree/master/templates/docsify",theme="",name=""):
+    def __init__(self, docgen, configPath,name=""):
         JSBASE.__init__(self)
 
+        self.docgen = docgen
+
         #init initial arguments
-        self.path = j.sal.fs.getDirName(path)
-        self.theme = theme
-        self.template = template
+        self.path = j.sal.fs.getDirName(configPath)
+        # self.theme = theme
+        # self.template = template
 
-        self.name = name
+        self.config = j.data.serializer.toml.load(configPath)
 
-        if "docsify" in template:
-            self.hugo = False
+        if not name:
+            if "name" not in self.config:                        
+                self.name = j.sal.fs.getBaseName(self.path.rstrip("/")).lower()
+            else:
+                self.name = self.config["name"].lower()
         else:
-            self.hugo = True
+            self.name = name.lower()
 
-        self._config = None
+        self.name = j.data.text.strip_to_ascii_dense(self.name)
 
-        gitpath = j.clients.git.findGitPath(path)
-        self.git = j.tools.docgenerator.gitrepo_add(gitpath)
+        # if "docsify" in template:
+        #     self.hugo = False
+        # else:
+        #     self.hugo = True
+
+        gitpath = j.clients.git.findGitPath(self.path)
+        if gitpath not in self.docgen._git_repos:
+            self.git = j.tools.docgenerator._git_get(gitpath)
+            self.docgen._git_repos[gitpath] = self.git
+
         self.defs = {}
         self.content_default = {}  # key is relative path in docsite where default content found
 
@@ -55,38 +68,28 @@ class DocSite(JSBASE):
         self.others = {}
         self.files = {}
 
-        self.template_path = j.clients.git.getContentPathFromURLorPath(self.template)
-        self.generator_path = j.sal.fs.joinPaths(self.template_path, "generator.py")
+        # self.template_path = j.clients.git.getContentPathFromURLorPath(self.template)
+        # self.generator_path = j.sal.fs.joinPaths(self.template_path, "generator.py")
 
-        self.doc_add_meta = False
+        # self.doc_add_meta = False
 
-        if self.config:
-            if "theme" in self.config and self.config["theme"]:
-                self.template_theme_path = "%s/themes/%s" % (self.template_path, self.config["theme"])
-            
-            
-            # now go in configured git directories
-            if 'depends' in self.config:
-                for urlfull in self.config['depends']:
-                    name, url = urlfull.split(",",2)
-                    name = name.strip().lower()
-                    url = url.strip()
-                    path = j.clients.git.getContentPathFromURLorPath(url)
-                    j.tools.docgenerator.load(path,name=name)
+        # check if there are dependencies
+        if 'docs' in self.config:
+            for item in self.config['docs']:
+                if "name" not in item or "url" not in item:
+                    raise RuntimeError("config docs item:%s not well defined in %s"%(item,self))
+                name = item["name"].strip().lower()
+                url = item["url"].strip()
+                path = j.clients.git.getContentPathFromURLorPath(url)
+                j.tools.docgenerator.load(path,name=name)
 
-            if 'doc_add_meta' in self.config:
-                self.doc_add_meta = bool(self.config['doc_add_meta'])
+        # if 'doc_add_meta' in self.config:
+        #     self.doc_add_meta = bool(self.config['doc_add_meta'])
 
-            if self.name == "":
-                if 'name' not in self.config:
-                    raise j.exceptions.Input(message="cannot find argument 'name' in config.yaml of %s" %
-                                        self.source, level=1, source="", tags="", msgpub="")
-                self.name = self.config["name"]
+        # # lets make sure its the outpath at this time and not the potentially changing one
+        # self.outpath = j.sal.fs.joinPaths(copy.copy(j.tools.docgenerator.outpath), self.name)
 
-            # lets make sure its the outpath at this time and not the potentially changing one
-            self.outpath = j.sal.fs.joinPaths(copy.copy(j.tools.docgenerator.outpath), self.name)
-
-        self._generator = None
+        # self._generator = None
 
         self.logger_enable()
         self.logger.level=1
@@ -94,34 +97,34 @@ class DocSite(JSBASE):
         self.load()
         
 
-    @property
-    def config_template(self):
+    # @property
+    # def config_template(self):
         
-        from jinja2 import Environment, FileSystemLoader, select_autoescape
-        j2_env = Environment(
-            loader = FileSystemLoader(self.template_path),
-            autoescape=select_autoescape(['html', 'xml'])
-        )
-        config_template = j2_env.get_template('config.toml')  
-        return config_template
+    #     from jinja2 import Environment, FileSystemLoader, select_autoescape
+    #     j2_env = Environment(
+    #         loader = FileSystemLoader(self.template_path),
+    #         autoescape=select_autoescape(['html', 'xml'])
+    #     )
+    #     config_template = j2_env.get_template('config.toml')  
+    #     return config_template
 
-    @property
-    def config(self):
-        if not self._config:
-            cfgpath = self.path + "config.toml"
-            if  j.sal.fs.exists(cfgpath, followlinks=True):
-                c = j.sal.fs.fileGetContents(cfgpath)
-                self._config = j.data.serializer.toml.loads(c)
-                self.name = self._config["name"].strip().lower()
-                if "template" in self._config:
-                    self.template = self._config["template"].strip()
-                else:
-                    self.template = ""
-                if "theme" in self._config:
-                    self.theme = self._config["theme"].strip()
-                else:
-                    self.theme = ""
-        return self._config
+    # @property
+    # def config(self):
+    #     if not self._config:
+    #         cfgpath = self.path + "config.toml"
+    #         if  j.sal.fs.exists(cfgpath, followlinks=True):
+    #             c = j.sal.fs.fileGetContents(cfgpath)
+    #             self._config = j.data.serializer.toml.loads(c)
+    #             self.name = self._config["name"].strip().lower()
+    #             if "template" in self._config:
+    #                 self.template = self._config["template"].strip()
+    #             else:
+    #                 self.template = ""
+    #             if "theme" in self._config:
+    #                 self.theme = self._config["theme"].strip()
+    #             else:
+    #                 self.theme = ""
+    #     return self._config
 
     def _processData(self, path):
         ext = j.sal.fs.getFileExtension(path).lower()
@@ -158,13 +161,13 @@ class DocSite(JSBASE):
         import pudb; pudb.set_trace()
         self.data_default[rdirpath] = data
 
-    @property
-    def url(self):
-        return "%s/%s" % (j.tools.docgenerator.webserver, self.name)
+    # @property
+    # def url(self):
+    #     return "%s/%s" % (j.tools.docgenerator.webserver, self.name)
 
-    @property
-    def sitepath(self):
-        return "/%s/" % (self.name)
+    # @property
+    # def sitepath(self):
+    #     return "/%s/" % (self.name)
 
     def load(self):
         """
@@ -179,6 +182,10 @@ class DocSite(JSBASE):
         if not j.sal.fs.exists(path=path):
             raise j.exceptions.NotFound("Cannot find source path in load:'%s'" % path)
 
+
+        def clean(name):
+            return j.data.text.strip_to_ascii_dense(name)
+
         def callbackForMatchDir(path, arg):
             base = j.sal.fs.getBaseName(path)
             if base.startswith("."):
@@ -191,8 +198,8 @@ class DocSite(JSBASE):
             if base == "macros":
                 j.tools.docgenerator.macros_load(path=path)
 
-            if base in ["static"]:
-                return False
+            # if base in ["static"]:
+            #     return False
 
             return True
 
@@ -236,8 +243,8 @@ class DocSite(JSBASE):
                 if base not in self.docs:
                     self.docs[base.lower()] = doc
                 self.docs[doc.name_dot_lower] = doc
-            elif ext in ["html","css","htm"]:
-                self.logger.debug("found html alike:%s"%path)
+            elif ext in ["html","htm"]:
+                self.logger.debug("found html:%s"%path)
                 l = len(ext)+1
                 base = base[:-l]  # remove extension
                 doc = HtmlPage(path, base, docsite=self)
@@ -246,8 +253,9 @@ class DocSite(JSBASE):
                 self.htmlpages[doc.name_dot_lower] = doc
             else:
                 
-                if ext in ["png", "jpg", "jpeg", "pdf", "docx", "doc", "xlsx", "xls", "ppt", "pptx", "gig", "mp4"]:
-                    self.logger.debug("found pic/video:%s"%path)
+                if ext in ["png", "jpg", "jpeg", "pdf", "docx", "doc", "xlsx", "xls", \
+                            "ppt", "pptx", "mp4","css","js"]:
+                    self.logger.debug("found file:%s"%path)
                     if base in self.files:
                         raise j.exceptions.Input(message="duplication file in %s,%s" %
                                                  (self, path), level=1, source="", tags="", msgpub="")
@@ -272,35 +280,35 @@ class DocSite(JSBASE):
             callbackForMatchDir=callbackForMatchDir,
             callbackForMatchFile=callbackForMatchFile)
 
-    def file_add(self, path):
-        if not j.sal.fs.exists(path, followlinks=True):
-            raise j.exceptions.Input(message="Cannot find path:%s" % path, level=1, source="", tags="", msgpub="")
-        base = j.sal.fs.getBaseName(path).lower()
-        self.files[base] = path
+    # def file_add(self, path):
+    #     if not j.sal.fs.exists(path, followlinks=True):
+    #         raise j.exceptions.Input(message="Cannot find path:%s" % path, level=1, source="", tags="", msgpub="")
+    #     base = j.sal.fs.getBaseName(path).lower()
+    #     self.files[base] = path
 
-    def files_copy(self, destination=None):
-        if not destination:
-            if self.hugo:
-                destination = "static/files"
-            else:
-                destination = "files"
-        dpath = j.sal.fs.joinPaths(self.outpath, destination)
-        j.sal.fs.createDir(dpath)
-        for name, path in self.files.items():
-            j.sal.fs.copyFile(path, j.sal.fs.joinPaths(dpath, name))
+    # def files_copy(self, destination=None):
+    #     if not destination:
+    #         if self.hugo:
+    #             destination = "static/files"
+    #         else:
+    #             destination = "files"
+    #     dpath = j.sal.fs.joinPaths(self.outpath, destination)
+    #     j.sal.fs.createDir(dpath)
+    #     for name, path in self.files.items():
+    #         j.sal.fs.copyFile(path, j.sal.fs.joinPaths(dpath, name))
 
     def process(self):
         for key, doc in self.docs.items():
             doc.process()
 
-    @property
-    def generator(self):
-        """
-        is the generation code which is in directory of the template, is called generate.py and is in root of template dir
-        """
-        if self._generator is None:
-            self._generator = loadmodule(self.name, self.generator_path)
-        return self._generator
+    # @property
+    # def generator(self):
+    #     """
+    #     is the generation code which is in directory of the template, is called generate.py and is in root of template dir
+    #     """
+    #     if self._generator is None:
+    #         self._generator = loadmodule(self.name, self.generator_path)
+    #     return self._generator
 
     def error_raise(self, errormsg, doc=None):
         if doc is not None:
@@ -314,49 +322,49 @@ class DocSite(JSBASE):
             embed()
             raise RuntimeError("stop debug here")
 
-    def write(self):
-        if self._config:
-            j.sal.fs.removeDirTree(self.outpath)
-            dest = j.sal.fs.joinPaths(self.outpath, "content")
-            j.sal.fs.createDir(dest)
-            # source = self.path
-            # j.do.copyTree(source, dest, overwriteFiles=True, ignoredir=['.*'], ignorefiles=[
-            #               "*.md", "*.toml", "_*", "*.yaml", ".*"], rsync=True, recursive=True, rsyncdelete=False)
+    # def write(self):
+    #     if self._config:
+    #         j.sal.fs.removeDirTree(self.outpath)
+    #         dest = j.sal.fs.joinPaths(self.outpath, "content")
+    #         j.sal.fs.createDir(dest)
+    #         # source = self.path
+    #         # j.do.copyTree(source, dest, overwriteFiles=True, ignoredir=['.*'], ignorefiles=[
+    #         #               "*.md", "*.toml", "_*", "*.yaml", ".*"], rsync=True, recursive=True, rsyncdelete=False)
 
-            for key, doc in self.docs.items():
-                doc.process()
+    #         for key, doc in self.docs.items():
+    #             doc.process()
 
-            # find the defs, also process the aliases
-            for key, doc in self.docs.items():
-                if "tags" in doc.data:
-                    tags = doc.data["tags"]
-                    if "def" in tags:
-                        name = doc.name.lower().replace("_", "").replace("-", "").replace(" ", "")
-                        self.defs[name] = doc
-                        if "alias" in doc.data:
-                            for alias in doc.data["alias"]:
-                                name = alias.lower().replace("_", "").replace("-", "").replace(" ", "")
-                                self.defs[name] = doc
+    #         # find the defs, also process the aliases
+    #         for key, doc in self.docs.items():
+    #             if "tags" in doc.data:
+    #                 tags = doc.data["tags"]
+    #                 if "def" in tags:
+    #                     name = doc.name.lower().replace("_", "").replace("-", "").replace(" ", "")
+    #                     self.defs[name] = doc
+    #                     if "alias" in doc.data:
+    #                         for alias in doc.data["alias"]:
+    #                             name = alias.lower().replace("_", "").replace("-", "").replace(" ", "")
+    #                             self.defs[name] = doc
 
-            for key, doc in self.docs.items():
-                # doc.defs_process()
-                doc.write()
+    #         for key, doc in self.docs.items():
+    #             # doc.defs_process()
+    #             doc.write()
 
-            self.generator.generate(self)
+    #         self.generator.generate(self)
 
-            if j.sal.fs.exists(j.sal.fs.joinPaths(self.path, "static"), followlinks=True):
-                j.sal.fs.copyDirTree(j.sal.fs.joinPaths(self.path, "static"), j.sal.fs.joinPaths(self.outpath, "public"))
-        else:
-            self.logger.info("no need to write:%s"%self.path)
+    #         if j.sal.fs.exists(j.sal.fs.joinPaths(self.path, "static"), followlinks=True):
+    #             j.sal.fs.copyDirTree(j.sal.fs.joinPaths(self.path, "static"), j.sal.fs.joinPaths(self.outpath, "public"))
+    #     else:
+    #         self.logger.info("no need to write:%s"%self.path)
 
     def file_get(self, name, die=True):
         for key, val in self.files.items():
             if key.lower() == name.lower():
                 return key
-            ext = j.sal.fs.getFileExtension(key)
-            nameLower = key[:-(len(ext) + 1)]
-            if nameLower == name.lower():
-                return key
+            # ext = j.sal.fs.getFileExtension(key)
+            # nameLower = key[:-(len(ext) + 1)]
+            # if nameLower == name.lower():
+            #     return key
         if die:
             raise j.exceptions.Input(message="Did not find file:%s in %s" %
                                      (name, self), level=1, source="", tags="", msgpub="")
@@ -370,6 +378,18 @@ class DocSite(JSBASE):
             raise j.exceptions.Input(message="Cannot find doc with name:%s" % name, level=1, source="", tags="", msgpub="")
         else:
             return None
+
+    def html_get(self, name, die=True):
+        if "." in name:
+            ext =  j.sal.fs.getFileExtension(name).lower()
+            name = name[:-(len(ext)+1)] #name without extension
+        name = j.data.text.strip_to_ascii_dense(name)
+        if name in self.htmlpages:
+            return self.htmlpages[name]
+        if die:
+            raise j.exceptions.Input(message="Cannot find doc with name:%s" % name, level=1, source="", tags="", msgpub="")
+        else:
+            return None            
 
     def __repr__(self):
         return "docsite:%s" % ( self.path)

@@ -17,7 +17,7 @@ class DocBase(JSBASE):
         
         self.path_dir = j.sal.fs.getDirName(self.path)
         self.path_dir_rel = j.sal.fs.pathRemoveDirPart(self.path_dir, self.docsite.path).strip("/")
-        self.name = name.lower()
+        self.name = j.data.text.strip_to_ascii_dense(name)
         self.name_original = name
         self.path_rel = j.sal.fs.pathRemoveDirPart(path, self.docsite.path).strip("/")
 

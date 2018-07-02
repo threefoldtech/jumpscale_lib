@@ -340,7 +340,7 @@ class Doc(DocBase):
             # self.logger.debug("##:%s" % match)
             defname = match.founditem
             defname0 = ssplit(defname.replace("$", ""))
-            defname = defname0.lower().replace("_", "").replace("-", "").replace(" ", "")
+            defname = j.data.text.strip_to_ascii_dense(defname0)
             if defname in self.docsite.defs:
                 def_ = self.docsite.defs[defname]
                 defnew = "[%s](%s:%s.md)" % (def_.nameOriginal, def_.docsite.name, def_.nameOriginal)
@@ -397,27 +397,27 @@ class Doc(DocBase):
         return template
         
 
-    def write(self):
+    # def write(self):
 
-        if self.show and self.docsite.config:
-            if self.errors != []:
-                if "tags" not in self.data:
-                    self.data["tags"] = ["error"]
-                else:
-                    self.data["tags"].append("error")
+    #     if self.show and self.docsite.config:
+    #         if self.errors != []:
+    #             if "tags" not in self.data:
+    #                 self.data["tags"] = ["error"]
+    #             else:
+    #                 self.data["tags"].append("error")
 
-            C = ""
+    #         C = ""
 
-            if self.docsite.hugo and self.doc_add_meta:
-                C += "+++\n"
-                C += toml.dumps(self.data)
-                C += "\n+++\n\n"
+    #         if self.docsite.hugo and self.doc_add_meta:
+    #             C += "+++\n"
+    #             C += toml.dumps(self.data)
+    #             C += "\n+++\n\n"
 
-            C += self.content
+    #         C += self.content
 
-            dpath = j.sal.fs.joinPaths(self.docsite.outpath, "content", self.path_rel)
-            j.sal.fs.createDir(j.sal.fs.getDirName(dpath))
-            j.sal.fs.writeFile(filename=dpath, contents=C)
+    #         dpath = j.sal.fs.joinPaths(self.docsite.outpath, "content", self.path_rel)
+    #         j.sal.fs.createDir(j.sal.fs.getDirName(dpath))
+    #         j.sal.fs.writeFile(filename=dpath, contents=C)
 
 
     def __repr__(self):

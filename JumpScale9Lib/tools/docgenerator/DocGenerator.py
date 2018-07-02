@@ -14,10 +14,9 @@ def loadmodule(name, path):
     mod = imp.load_source(name, path)
     return mod
 
+
 class DocGenerator(JSBASE):
     """
-    process all markdown files in a git repo, write a summary.md file
-    optionally call pdf gitbook generator to produce pdf(s)
     """
 
     def __init__(self):
@@ -30,33 +29,39 @@ class DocGenerator(JSBASE):
             j.dirs.VARDIR, "docgenerator_internal", "macros.py")
         j.sal.fs.createDir(j.sal.fs.joinPaths(
             j.dirs.VARDIR, "docgenerator_internal"))
-        self._docRootPathsDone = []
+
         self.docsites = {}  # location in the outpath per site
         self.outpath = j.sal.fs.joinPaths(j.dirs.VARDIR, "docgenerator")
-        self.gitRepos = {}
+        self._git_repos = {}
         self.defs = {}
-        self.webserver = "http://localhost:8080/"
-        self.ws = self.webserver.replace("http://", "").replace("https://", "").replace("/", "")
-        self._loaded = []
-        self._macrosLoaded = []
+        # self.webserver = "http://localhost:8080/"
+        # self.ws = self.webserver.replace("http://", "").replace("https://", "").replace("/", "")
+        self._loaded = []  # don't double load a dir
+        self._configs = []  # all found config files
+        self._macros_loaded = []
+
+        self._pointer_cache = {}  # so we don't have to full lookup all the time
+
         self.logger_enable()
 
-    def gitrepo_add(self, path):
-        if path not in self.gitRepos:
+    def _git_get(self, path):
+        if path not in self._git_repos:
             gc = j.clients.git.get(path)
-            self.gitRepos[path] = gc
-        return self.gitRepos[path]
+            self._git_repos[path] = gc
+        return self._git_repos[path]
 
-    def install(self, reset=False):
+    def install(self, reset=False, hugo=False, caddy=False):
         """
         js9 'j.tools.docgenerator.install()'
         """
         prefab = j.tools.prefab.local
         if prefab.core.doneGet("docgenerator:installed") == False or reset:
             prefab.system.package.install('graphviz')
-            if "darwin" in str(j.core.platformtype.myplatform):                
-                prefab.system.package.install('hugo')
-                prefab.system.package.install('caddy')
+            if "darwin" in str(j.core.platformtype.myplatform):
+                if hugo:
+                    prefab.system.package.install('hugo')
+                if caddy:
+                    prefab.system.package.install('caddy')
             elif "ubuntu" in str(j.core.platformtype.myplatform):
                 prefab.runtimes.golang.install()
                 prefab.runtimes.nodejs.phantomjs()
@@ -69,7 +74,8 @@ class DocGenerator(JSBASE):
                 # go get github.com/kardianos/govendor
                 # govendor get github.com/gohugoio/hugo
                 # go install github.com/gohugoio/hugo
-                prefab.core.run("go get -u -v github.com/gohugoio/hugo")
+                if hugo:
+                    prefab.core.run("go get -u -v github.com/gohugoio/hugo")
                 prefab.web.caddy.build()
                 # prefab.core.run("npm install -g mermaid", profile=True)
                 prefab.web.caddy.configure()
@@ -78,71 +84,13 @@ class DocGenerator(JSBASE):
             # prefab.runtimes.pip.install(
             #     "dash,dash-renderer,dash-html-components,dash-core-components,plotly")
 
-    def webserver_start(self):
-        """
-        start caddy on localhost:8080
-        """
-        configpath = self._caddyfile_generate()
-        j.tools.prefab.local.web.caddy.start(configpath=configpath)
-        self.logger.info("go to %a" % self.webserver)
-
-    def _caddyfile_generate(self):
-        
-
-        if not sys.platform.startswith("darwin"):
-            caddyconfig = '''
-            #tcpport:8080
-            $ws/ {
-                root $outpath
-                browse
-            }
-
-            # $ws/fm/ {
-            #     filemanager / {
-            #         show           $outpath
-            #         allow_new      true
-            #         allow_edit     true
-            #         allow_commands true
-            #         allow_command  git
-            #         allow_command  svn
-            #         allow_command  hg
-            #         allow_command  ls
-            #         block          dotfiles
-            #     }
-            # }
-            '''
-        else:
-            caddyconfig = '''
-
-            $ws/ {
-                root $outpath
-                browse
-            }
-
-            '''
-
-        caddyconfig = j.data.text.strip(caddyconfig)
-
-
-        dest = "%s/docgenerator/caddyfile" % j.dirs.VARDIR
-        j.sal.fs.createDir("%s/docgenerator" % j.dirs.VARDIR)
-        out2 = caddyconfig
-
-        C2 = """
-        $ws/$name/ {
-            root $vardir/docgenerator/$name/public
-            #log ../access.log
-        }
-
-        """
-        for key, ds in self.docsites.items():
-            C3 = j.data.text.strip(C2.replace("$name", ds.name))
-            out2 += C3
-        out2 = out2.replace("$outpath", self.outpath)
-        out2 = out2.replace("$ws", self.ws)
-        out2 = out2.replace("$vardir", j.dirs.VARDIR)
-        j.sal.fs.writeFile(filename=dest, contents=out2, append=False)
-        return dest
+    # def webserver_start(self):
+    #     """
+    #     start caddy on localhost:8080
+    #     """
+    #     # configpath = self._caddyfile_generate()
+    #     # j.tools.prefab.local.web.caddy.start(configpath=configpath)
+    #     # self.logger.info("go to %a" % self.webserver)
 
     def _init(self):
         if not self._initOK:
@@ -150,13 +98,12 @@ class DocGenerator(JSBASE):
             j.clients.redis.core_get()
             j.sal.fs.remove(self._macroCodepath)
             # load the default macro's
-            self.macros_load(
-                "https://github.com/Jumpscale/docgenerator/tree/master/macros")
+            self.macros_load("https://github.com/Jumpscale/docgenerator/tree/master/macros")
             self._initOK = True
-        if self.webserver[-1] != "/":
-            self.webserver += "/"
-        self.ws = self.webserver.replace(
-            "http://", "").replace("https://", "").replace("/", "")
+        # if self.webserver[-1] != "/":
+        #     self.webserver += "/"
+        # self.ws = self.webserver.replace(
+        #     "http://", "").replace("https://", "").replace("/", "")
 
     def macros_load(self, pathOrUrl=""):
         """
@@ -180,9 +127,9 @@ class DocGenerator(JSBASE):
             for path0 in j.sal.fs.listFilesInDir(path, recursive=True, filter="*.py", followSymlinks=True):
                 newdata = j.sal.fs.fileGetContents(path0)
                 md5 = j.data.hash.md5_string(newdata)
-                if md5 not in self._macrosLoaded:
+                if md5 not in self._macros_loaded:
                     code += newdata
-                    self._macrosLoaded.append(md5)
+                    self._macros_loaded.append(md5)
 
             code = code.replace("from js9 import j", "")
             code = "from js9 import j\n\n" + code
@@ -191,14 +138,14 @@ class DocGenerator(JSBASE):
             self.macros = loadmodule("macros", self._macroCodepath)
             self._macroPathsDone.append(path)
 
-    def load(self, pathOrUrl="",name=""):
+    def load(self, pathOrUrl="", name=""):
         """
 
         js9 'j.tools.docgenerator.load()'
 
-        will look for config.yaml in $source/config.yaml
+        will look for config.toml in $source/config.toml
 
-        @param pathOrUrl is the location where the markdown docs are which need to be processed
+        @param pathOrUrl is the location where the markdown or html docs are which need to be processed
             if not specified then will look for root of git repo and add docs
             source = $gitrepoRootDir/docs
 
@@ -207,9 +154,9 @@ class DocGenerator(JSBASE):
         """
         if pathOrUrl == "":
             pathOrUrl = j.sal.fs.getcwd()
-        self.logger.info("load:%s" % pathOrUrl)
         if pathOrUrl in self._loaded:
             return
+        self.logger.info("load:%s" % pathOrUrl)
         self._loaded.append(pathOrUrl)
         self._init()
         if pathOrUrl == "":
@@ -218,65 +165,84 @@ class DocGenerator(JSBASE):
         else:
             path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
 
-        for docDir in j.sal.fs.listFilesInDir(path, recursive=True, filter=".docs"):
-            if docDir not in self.docsites:
-                self.logger.debug("found doc dir:%s" % docDir)
-                ds = DocSite(path=docDir,name=name)
-                self.docsites[name] = ds
-
-    def generate_examples(self, start=True):
-        """
-        js9 'j.tools.docgenerator.generate_examples()'
-        """
-        self.generate(url="https://github.com/Jumpscale/docgenerator/tree/master/examples/example2",start=start,name="example2")
-
-    def generate_jsdoc(self, start=True):
-        """
-        js9 'j.tools.docgenerator.generate_jsdoc()'
-        """        
-        self.load(pathOrUrl="https://github.com/Jumpscale/core9/",name="core9")
-        self.load(pathOrUrl="https://github.com/Jumpscale/lib9",name="lib9")
-        self.load(pathOrUrl="https://github.com/Jumpscale/prefab9",name="prefab9")
-        self.generate(start=start)
-
-    def generate(self,name="", pathOrUrl=None, start=True):
-        """
-
-        js9 'j.tools.docgenerator.generate()'
-
-        """
-        if not pathOrUrl:
-            pathOrUrl = j.sal.fs.getcwd()
-
-        self.load(pathOrUrl=pathOrUrl,name=name)
-
-        if self.docsites == {}:
-            # self.load(template=template)
-            raise RuntimeError("no docsites found, did not specify right url")
-
-        for path, ds in self.docsites.items():
-            ds.process()
-        for path, ds in self.docsites.items():
-            ds.write()
-        if start:
-            self.webserver_start()
-            self.logger.debug("TO CHECK GO TO: %s" % self.webserver)
+        for configPath in j.sal.fs.listFilesInDir(path, recursive=True, filter="docs_config.toml"):
+            if configPath not in self._configs:
+                self.logger.debug("found configPath for doc dir:%s" % configPath)
+                ds = DocSite(self, configPath=configPath, name=name)
+                self.docsites[ds.name] = ds
 
     def git_update(self):
         if self.docsites == {}:
             self.load()
-        for gc in self.gitRepos:
+        for gc in self._git_repos:
             gc.pull()
 
-    def doc_get(self, name, die=True):
-        for key, ds in self.docsites.items():
-            if name in ds.docs:
-                return ds.docs[name]
-        if die:
-            raise j.exceptions.Input(message="Cannot find doc with name:%s" %
-                                     name, level=1, source="", tags="", msgpub="")
+    def item_get(self, name, namespace="", die=True, first=False):
+        """
+        """
+        key = "%s_%s" % (namespace, name)
+
+        import pudb; pudb.set_trace()
+
+        # we need the cache for performance reasons
+        if not key in self._pointer_cache:
+
+            # make sure we have the most dense ascii name for search
+            ext = j.sal.fs.getFileExtension(name).lower()
+            name = name[:-(len(ext)+1)]  # name without extension
+            name = j.data.text.strip_to_ascii_dense(name)
+
+            namespace = j.data.text.strip_to_ascii_dense(namespace)
+
+            if not namespace == "":
+                ds = self.docsite_get(namespace)
+                res = self._items_get(name, ds=ds)
+
+                # found so will return & remember
+                if len(res) == 1:
+                    self._pointer_cache[key] = res[0]
+                    return res
+
+                # did not find so namespace does not count
+
+            res = self._items_get(name=name, ext=ext)
+
+            if (first and len(res)==0) or not len(res) == 1:
+                if die:
+                    raise j.exceptions.Input(
+                        message="Cannot find item with name:%s in namespace:'%s'" % (name, namespace))
+                else:
+                    self._pointer_cache[key] = None
+            else:
+                self._pointer_cache[key] = res[0]
+
+        return self._pointer_cache[key]
+
+    def _items_get(self, name, ext, ds=None, res=[]):
+        """
+        @param ds = DocSite, optional, if specified then will only look there
+        """
+
+        if ds is not None:
+
+            if ext in ["md"]:
+                find_method = ds.doc_get
+            if ext in ["html", "htm"]:
+                find_method = ds.html_get
+            else:
+                find_method = ds.file_get
+
+            res0 = find_method(name=name+"."+ext, die=False)
+
+            if res0 is not None:
+                # we have a match, lets add to results
+                res.append(res0)
+
         else:
-            return None
+            for key, ds in self.docsites.items():
+                res = self._items_get(name=name, ext=ext, ds=ds, res=res)
+
+        return res
 
     def def_get(self, name):
         if name not in self.defs:
@@ -293,3 +259,41 @@ class DocGenerator(JSBASE):
                                      name, level=1, source="", tags="", msgpub="")
         else:
             return None
+
+    # def generate_examples(self, start=True):
+    #     """
+    #     js9 'j.tools.docgenerator.generate_examples()'
+    #     """
+    #     self.generate(url="https://github.com/Jumpscale/docgenerator/tree/master/examples/example2",start=start,name="example2")
+
+    # def generate_jsdoc(self, start=True):
+    #     """
+    #     js9 'j.tools.docgenerator.generate_jsdoc()'
+    #     """
+    #     self.load(pathOrUrl="https://github.com/Jumpscale/core9/",name="core9")
+    #     self.load(pathOrUrl="https://github.com/Jumpscale/lib9",name="lib9")
+    #     self.load(pathOrUrl="https://github.com/Jumpscale/prefab9",name="prefab9")
+    #     self.generate(start=start)
+
+    # def generate(self,name="", pathOrUrl=None, start=True):
+    #     """
+
+    #     js9 'j.tools.docgenerator.generate()'
+
+    #     """
+    #     if not pathOrUrl:
+    #         pathOrUrl = j.sal.fs.getcwd()
+
+    #     self.load(pathOrUrl=pathOrUrl,name=name)
+
+    #     if self.docsites == {}:
+    #         # self.load(template=template)
+    #         raise RuntimeError("no docsites found, did not specify right url")
+
+    #     for path, ds in self.docsites.items():
+    #         ds.process()
+    #     for path, ds in self.docsites.items():
+    #         ds.write()
+    #     if start:
+    #         self.webserver_start()
+    #         self.logger.debug("TO CHECK GO TO: %s" % self.webserver)
