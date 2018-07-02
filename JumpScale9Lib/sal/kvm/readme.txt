@@ -2,17 +2,15 @@ Details
 The extension is located under jumpscale_core9/lib/JumpScale/lib/kvm
 Images under /mnt/vmstor/kvm/images, and
 VMs to be created under /mnt/vmstor/kvm
-Each image comes with an hrd file named <image_name>.hrd and a fabric module responsible for configuring the vm after creation (pushing ssh keys, configure network, etc) there is also an hrd file created with every VM
-Hrd contains basic info name, description, etc and most importantly IP address of the VM, login credentials and a fabric module which contains network configuration logic which varies by os type, thus more flexibility installing/configuring network on the created VM. 
+a fabric module responsible for configuring the vm after creation (pushing ssh keys, configure network, etc), in libvirt contains basic info name, description, etc and most importantly IP address of the VM, login credentials and a fabric module which contains network configuration logic which varies by os type, thus more flexibility installing/configuring network on the created VM. 
 
 How to use it
 Please note that this extension requires libvirt to be installed on your system
-After having code deployed in its location, images ready with their hrd configurations, you need to configure the following bridges on your host:
+you need to configure the following bridges on your host:
 brmgmt (ip 192.168.66.254/24)
 brpub
 brtmp
 Images
-HRD format
 
 id=1
 name=openwrt
@@ -37,7 +35,7 @@ Ubuntu 14.10 (image name: ubuntu1410)
 OpenWRT (image name: openwrt)
 
 Notes when creating images
-Provide username and password in the image hrd (please see image hrd format)
+Provide username and password  of the machine xml onto libvirt.
 Create your image with three network interfaces:
 eth0 (management interface): default ip address 192.168.66.253 (to be changed later via the fabric setupNetwork function)
 eth1 (public interface)
