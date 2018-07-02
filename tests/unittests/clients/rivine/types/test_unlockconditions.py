@@ -7,8 +7,29 @@ from JumpScale9Lib.clients.rivine.types.unlockhash import UnlockHash, UNLOCK_TYP
 from JumpScale9Lib.clients.rivine.types.signatures import Ed25519PublicKey
 from JumpScale9Lib.clients.rivine.errors import DoubleSignatureError
 from JumpScale9Lib.clients.rivine import utils
+from unittest.mock import MagicMock
 import ed25519
 import pytest
+
+
+
+
+def test_ssf_sign():
+    """
+    Tests sing the method of SingleSignatureFulfillment
+    """
+    expected_output = b'Y\xcf5rp\xc5\xf5\xd2\xc2\xeay\xcag\x8d\xb7GB\x7f\x81l\xfa.\xfd\x9aQV\xf2#V&\xb4\x00G\xa3\xd0\xaf\x9bBQ\x02=\xe9\xb7\xcc\x8e\xbaYv"\xd8\x97\x0ec\x01/%\x02_\xa2\xe9\x07\x98:\x04'
+    sk, pk = ed25519.create_keypair(entropy=lambda x: b'a'*64)
+    key = Ed25519PublicKey(pub_key=pk.to_bytes())
+    ssf = SingleSignatureFulfillment(pub_key=key)
+    sig_ctx = {
+        'input_idx': 0,
+        'secret_key': sk,
+        'transaction': MagicMock(),
+    }
+    sig_ctx['transaction'].get_input_signature_hash = MagicMock(return_value=bytes('hello', encoding='utf-8'))
+    ssf.sign(sig_ctx=sig_ctx)
+    assert ssf._signature == expected_output
 
 
 def test_ssf_double_singature():
