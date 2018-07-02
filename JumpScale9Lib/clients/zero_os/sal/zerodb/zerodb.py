@@ -70,13 +70,18 @@ class Zerodb:
         :rtype: Redis class
         """
         if self.__redis is None:
-            nodeip = self.container.node.addr
-            if nodeip == '127.0.0.1':
+            ip = self.container.node.addr
+            port = DEFAULT_PORT
+            password = self.admin
+
+            if ip == '127.0.0.1':
                 ip = self.container.default_ip().ip.format()
-                self.__redis = redis.Redis(host=ip, port=DEFAULT_PORT, password=self.admin)
             else:
                 # use the connection below if you want to test a dev setup and to execute it from outside the node
-                self.__redis = redis.Redis(host=nodeip, port=self.node_port, password=self.admin)
+                port = self.node_port
+
+            self.__redis = redis.Redis(host=ip, port=port, password=password)
+            self.__redis.ping()
 
         return self.__redis
 
