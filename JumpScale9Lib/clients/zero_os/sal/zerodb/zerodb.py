@@ -138,7 +138,7 @@ class Zerodb:
             'flist': self.flist,
             'identity': self.zt_identity,
             'mounts': {self.path: '/zerodb'},
-            'ports': {self.node_port: DEFAULT_PORT},
+            'ports': {"zt*:%s" % self.node_port: DEFAULT_PORT},
             'nics': [nic.to_dict(forcontainer=True) for nic in self.nics]
         }
 
@@ -278,7 +278,7 @@ class Zerodb:
         """
         try:
             for job in self.container.client.job.list(self._id):
-                runstatus = self.container.is_port_listening(9900, None)
+                runstatus = self.container.is_port_listening(DEFAULT_PORT, None)
                 return runstatus, job['cmd']['arguments']['args']
             return False, []
         except Exception as err:
@@ -299,11 +299,11 @@ class Zerodb:
         logger.info('start zerodb %s' % self.name)
 
         cmd = '/bin/zdb \
-            --port 9900 \
+            --port {port} \
             --data /zerodb/data \
             --index /zerodb/index \
             --mode {mode} \
-            '.format(mode=self.mode)
+            '.format(port=DEFAULT_PORT, mode=self.mode)
         if self.sync:
             cmd += ' --sync'
         if self.admin:
@@ -311,7 +311,7 @@ class Zerodb:
 
         # wait for zerodb to start
         self.container.client.system(cmd, id=self._id)
-        is_running = self.container.is_port_listening(9900, timeout)
+        is_running = self.container.is_port_listening(DEFAULT_PORT, timeout)
 
         if not is_running:
             raise RuntimeError('Failed to start zerodb server: {}'.format(self.name))
