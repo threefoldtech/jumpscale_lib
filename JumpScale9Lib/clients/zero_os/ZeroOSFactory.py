@@ -11,6 +11,9 @@ from .sal.ZeroRobot import ZeroRobot
 from .sal.VM import VM
 from .sal.Hypervisor import Hypervisor
 
+from .sal.Mongodb import Mongodb
+from .sal.Mongodb import Mongod
+from .sal.Mongodb import Mongos
 
 JSConfigFactoryBase = j.tools.configmanager.base_class_configs
 logger = j.logger.get(__name__)
@@ -139,6 +142,15 @@ class SALFactory:
 
     def get_minio(self, name, node, login, password, zdbs, namespace, private_key, namespace_secret='', node_port=DEFAULT_PORT, block_size=1048576, restic_username='', restic_password='', meta_private_key=''):
         return Minio(name, node, login, password, zdbs, namespace, private_key, namespace_secret, node_port, block_size, restic_username, restic_password, meta_private_key)
+
+    def get_mongodb(self, name, node, container_name=None, config_replica_set=None, config_port=None, config_mount=None, shard_replica_set=None, shard_port=None, shard_mount=None, route_port=None):
+        return Mongodb(name, node, container_name, config_replica_set, config_port, config_mount, shard_replica_set, shard_port, shard_mount, route_port)
+
+    def get_mongos(self, container, port):
+        return Mongos(container, port)
+
+    def get_mongod(self, container, replica_set, port, dir, db_type):
+        return Mongod(container, replica_set, port, dir, db_type)
 
     def get_restic(self, container, repo):
         return Restic(container, repo)
