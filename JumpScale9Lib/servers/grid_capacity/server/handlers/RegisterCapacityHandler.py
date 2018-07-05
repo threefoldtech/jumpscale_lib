@@ -10,7 +10,7 @@ from jsonschema import Draft4Validator
 from flask import jsonify, request
 from js9 import j
 
-from ..models import Capacity
+from ..models import Capacity, NodeRegistration, NodeNotFoundError, Farmer
 from .jwt import validate_farmer_id, FarmerInvalid
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -31,13 +31,23 @@ def RegisterCapacityHandler():
     except jsonschema.ValidationError as e:
         return jsonify(errors="bad request body: {}".format(e)), 400
 
-    inputs['farmer'] = iyo_organization
+    # Update the node if already exists or create new one using the inputs
+    farmer = Farmer.objects(iyo_organization=iyo_organization).first()
+    if not farmer:
+        return jsonify(errors='Unauthorized farmer'), 403
+
     inputs['updated'] = datetime.now()
-    capacity = Capacity(**inputs)
 
-    if farmer.location:
-        capacity.location = farmer.location
-
-    capacity.save()
+    try:
+        capacity = NodeRegistration.get(inputs.get("node_id"))
+        if farmer.location:
+            capacity.location = farmer.location
+        capacity.update(**inputs)
+    except NodeNotFoundError:
+        inputs['farmer'] = iyo_organization
+        capacity = Capacity(**inputs)
+        if farmer.location:
+            capacity.location = farmer.location
+        capacity.save()
 
     return capacity.to_json(use_db_field=False), 201, {'Content-type': 'application/json'}

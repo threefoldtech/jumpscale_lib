@@ -64,10 +64,12 @@ class Capacity:
         capacity = dict(
             node_id=self._node.name,
             location=report.location,
-            cru=report.CRU,
-            mru=report.MRU,
-            hru=report.HRU,
-            sru=report.SRU,
+            total_resources=dict(
+                cru=report.CRU,
+                mru=report.MRU,
+                hru=report.HRU,
+                sru=report.SRU
+            ),
             robot_address=robot_address,
             os_version=os_version,
             farmer_id=farmer_id,
