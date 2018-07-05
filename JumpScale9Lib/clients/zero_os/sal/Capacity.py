@@ -85,7 +85,7 @@ class Capacity:
         if 'private' in self._node.kernel_args:
             data['robot_address'] = 'private'
         elif not data['robot_address']:
-            raise RuntimeError('Can not register a node withouth robot_address')
+            raise RuntimeError('Can not register a node without robot_address')
 
         client = j.clients.grid_capacity.get(interactive=False)
         client.api.RegisterCapacity(data)
