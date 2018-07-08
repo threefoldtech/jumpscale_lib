@@ -2,7 +2,7 @@
 Module contianing all transaction types
 """
 from JumpScale9Lib.clients.rivine.types.signatures import Ed25519PublicKey
-from JumpScale9Lib.clients.rivine.types.unlockconditions import SingleSignatureFulfillment, UnlockHashCondition, LockTimeCondition
+from JumpScale9Lib.clients.rivine.types.unlockconditions import SingleSignatureFulfillment, UnlockHashCondition, LockTimeCondition, AtomicSwapCondition
 from JumpScale9Lib.clients.rivine.encoding import binary
 from JumpScale9Lib.clients.rivine.utils import hash
 from JumpScale9Lib.clients.rivine.types.unlockhash import UnlockHash
@@ -47,6 +47,22 @@ class TransactionV1:
         self._minerfees = []
         self._data = bytearray()
         self._version = bytearray([1])
+        self._id = None
+
+
+    @property
+    def id(self):
+        """
+        Gets transaction id
+        """
+        return self._id
+        
+    @id.setter
+    def id(self, txn_id):
+        """
+        Sets transaction id
+        """
+        self._id = txn_id
 
 
     @property
@@ -114,6 +130,19 @@ class TransactionV1:
         self._coins_outputs.append(CoinOutput(value=value, condition=condition))
 
 
+
+    def add_atomicswap_output(self, value, recipient, locktime, refund_address, hashed_secret):
+        """
+        Add a new atomicswap output to the transaction
+        """
+        condition = AtomicSwapCondition(sender=refund_address, reciever=recipient,
+                                        hashed_secret=hashed_secret, locktime=locktime)
+        coin_output = CoinOutput(value=value, condition=condition)
+        self._coins_outputs.append(coin_output)
+        return coin_output
+
+
+
     def add_minerfee(self, minerfee):
         """
         Adds a minerfee to the transaction
@@ -141,6 +170,7 @@ class TransactionV1:
             buffer.extend(binary.encode(coin_input.parent_id, type_='hex'))
 
         # encode coin outputs
+        # raise RuntimeError(binary.encode(self._coins_outputs, type_='slice').hex())
         buffer.extend(binary.encode(self._coins_outputs, type_='slice'))
 
         # encode the number of blockstakes
@@ -161,6 +191,7 @@ class TransactionV1:
         buffer.extend(binary.encode(self._data, type_='slice'))
 
         # now we need to return the hash value of the binary array
+        # return bytes(buffer)
         return hash(data=buffer)
 
 

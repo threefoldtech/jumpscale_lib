@@ -23,6 +23,7 @@ from .types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY, UNLOCKHASH_TYPE, U
 
 from JumpScale9 import j
 from JumpScale9Lib.clients.rivine import utils
+from JumpScale9Lib.clients.rivine.atomicswap.atomicswap import AtomicSwapManager
 from JumpScale9Lib.clients.rivine.types.transaction import TransactionFactory, DEFAULT_TRANSACTION_VERSION
 from JumpScale9Lib.clients.rivine.types.unlockhash import UnlockHash
 from JumpScale9Lib.clients.rivine.types.unlockconditions import TIMELOCK_CONDITION_HEIGHT_LIMIT
@@ -63,6 +64,7 @@ class RivineWallet:
             key = self._generate_spendable_key(index=index)
             self._keys[str(key.unlockhash)] = key
         self._addresses_info = {}
+        self.atomicswap = AtomicSwapManager(wallet=self)
 
 
     @property
@@ -234,34 +236,7 @@ class RivineWallet:
             coinoutputs = txn_info.get('rawtransaction', {}).get('data', {}).get('coinoutputs', [])
             if coinoutputs:
                 for index, utxo in enumerate(coinoutputs):
-                    # support both v0 and v1 tnx format
-                    if 'unlockhash' in utxo:
-                        # v0 transaction format
-                        condition_ulh = utxo['unlockhash']
-                    elif 'condition' in utxo:
-                        # v1 transaction format
-                        # check condition type
-                        if utxo['condition'].get('type') == 1:
-                            # unlockhash condition type
-                            condition_ulh = utxo['condition']['data']['unlockhash']
-                        elif utxo['condition'].get('type') == 3:
-                            # timelock condition, right now we only support timelock condition with internal unlockhash condition
-                            locktime = utxo['condition']['data']['locktime']
-                            if locktime < TIMELOCK_CONDITION_HEIGHT_LIMIT:
-                                # locktime should be checked againest the current chain height
-                                current_height = self._get_current_chain_height()
-                                if current_height > locktime:
-                                    condition_ulh = utxo['condition']['data']['condition']['data'].get('unlockhash')
-                                else:
-                                    logger.warn("Found transaction output for address {} but it cannot be unlocked yet".format(address))
-                                    continue
-                            else:
-                                # locktime represent timestamp
-                                if locktime < time.time():
-                                    condition_ulh = utxo['condition']['data']['condition']['data'].get('unlockhash')
-                                else:
-                                    logger.warn("Found transaction output for address {} but it cannot be unlocked yet".format(address))
-                                    continue
+                    condition_ulh = self._get_unlockhash_from_output(output=utxo, address=address)
 
                     if condition_ulh == address:
                         logger.debug('Found transaction output for address {}'.format(address))
@@ -348,6 +323,45 @@ class RivineWallet:
         return transaction
 
 
+    def _get_inputs(self, amount, minerfee=None):
+        """
+        Retrieves the inputs data that can cover the specified amount
+
+        @param amount: The amount of funds that needs to be covered
+
+        @returns: a tuple of (input info dictionary, the used addresses, minerfee, remainder)
+        """
+        if minerfee is None:
+            minerfee = self._minerfee
+        wallet_fund = self.current_balance * HASTINGS_TFT_VALUE
+        required_funds = amount + minerfee
+        if required_funds > wallet_fund:
+            raise InsufficientWalletFundsError('No sufficient funds to make the transaction')
+
+        result = []
+        input_value = 0
+        used_addresses = {}
+        for address, unspent_coin_output in self._unspent_coins_outputs.items():
+            # if we reach the required funds, then break
+            if input_value >= required_funds:
+                break
+            input_result = {}
+            ulh = self._get_unlockhash_from_output(output=unspent_coin_output, address=address)
+
+            if ulh is None:
+                raise RuntimeError('Cannot retrieve unlockhash')
+
+            # used_addresses.append(ulh)
+            used_addresses[address] = ulh
+            input_result['parent_id'] = address
+            input_result['pub_key'] = self._keys[ulh].public_key
+            # transaction.add_coin_input(parent_id=address, pub_key=self._keys[ulh].public_key)
+
+            input_value += int(unspent_coin_output['value'])
+            result.append(input_result)
+        return result, used_addresses, minerfee, (input_value - required_funds)
+
+
     def _create_transaction(self, amount, recipient, minerfee=None, sign_transaction=True, custom_data=None, locktime=None):
         """
         Creates new transaction and sign it
@@ -363,12 +377,6 @@ class RivineWallet:
         @type custom_data: bytearray
         @param locktime: Identifies the height or timestamp until which this transaction is locked
         """
-        if minerfee is None:
-            minerfee = self._minerfee
-        wallet_fund = self.current_balance * HASTINGS_TFT_VALUE
-        required_funds = amount + minerfee
-        if required_funds > wallet_fund:
-            raise InsufficientWalletFundsError('No sufficient funds to make the transaction')
         transaction = TransactionFactory.create_transaction(version=DEFAULT_TRANSACTION_VERSION)
 
         # set the the custom data on the transaction
@@ -376,23 +384,9 @@ class RivineWallet:
             transaction.add_data(custom_data)
 
 
-        input_value = 0
-        used_addresses = {}
-        for address, unspent_coin_output in self._unspent_coins_outputs.items():
-            # if we reach the required funds, then break
-            if input_value >= required_funds:
-                break
-
-            ulh = self._get_unlockhash_from_output(output=unspent_coin_output)
-
-            if ulh is None:
-                raise RunimeError('Cannot retrieve unlockhash')
-
-            # used_addresses.append(ulh)
-            used_addresses[address] = ulh
-            transaction.add_coin_input(parent_id=address, pub_key=self._keys[ulh].public_key)
-
-            input_value += int(unspent_coin_output['value'])
+        input_results, used_addresses, minerfee, remainder = self._get_inputs(amount=amount)
+        for input_result in input_results:
+            transaction.add_coin_input(**input_result)
 
         for txn_input in transaction.coins_inputs:
             if used_addresses[txn_input.parent_id] not in self._keys:
@@ -403,7 +397,6 @@ class RivineWallet:
 
         # we need to check if the sum of the inputs is more than the required fund and if so, we need
         # to send the remainder back to the original user
-        remainder = input_value - required_funds
         if remainder > 0:
             # we have leftover fund, so we create new transaction, and pick on user key that is not used
             for address in self._keys.keys():
@@ -422,7 +415,7 @@ class RivineWallet:
         return transaction
 
 
-    def _get_unlockhash_from_output(self, output):
+    def _get_unlockhash_from_output(self, output, address):
         """
         Retrieves unlockhash from coin output. This should handle different types of output conditions and transaction formats
         """
@@ -438,7 +431,21 @@ class RivineWallet:
                 # unlockhash condition type
                 ulh = output['condition']['data']['unlockhash']
             elif output['condition'].get('type') == 3:
-                ulh = output['condition']['data']['condition']['data'].get('unlockhash')
+                # timelock condition, right now we only support timelock condition with internal unlockhash condition
+                locktime = output['condition']['data']['locktime']
+                if locktime < TIMELOCK_CONDITION_HEIGHT_LIMIT:
+                    # locktime should be checked againest the current chain height
+                    current_height = self._get_current_chain_height()
+                    if current_height > locktime:
+                        ulh = output['condition']['data']['condition']['data'].get('unlockhash')
+                    else:
+                        logger.warn("Found transaction output for address {} but it cannot be unlocked yet".format(address))
+                else:
+                    # locktime represent timestamp
+                    if locktime < time.time():
+                        ulh = output['condition']['data']['condition']['data'].get('unlockhash')
+                    else:
+                        logger.warn("Found transaction output for address {} but it cannot be unlocked yet".format(address))
 
         return ulh
 
@@ -452,7 +459,7 @@ class RivineWallet:
         logger.info("Signing Trasnaction")
         for index, input in enumerate(transaction.coins_inputs):
             #@TODO improve the parsing of outputs its duplicated now in too many places
-            ulh = self._get_unlockhash_from_output(output=self._unspent_coins_outputs[input.parent_id])
+            ulh = self._get_unlockhash_from_output(output=self._unspent_coins_outputs[input.parent_id], address=input.parent_id)
             if ulh is not None:
                 key = self._keys[ulh]
                 input.sign(input_idx=index, transaction=transaction, secret_key=key.secret_key)
@@ -476,7 +483,9 @@ class RivineWallet:
             logger.error(msg)
             raise BackendError(msg)
         else:
+            transaction.id = res.json()['transactionid']
             logger.info('Transaction committed successfully')
+            return transaction.id
 
 
 class SpendableKey:

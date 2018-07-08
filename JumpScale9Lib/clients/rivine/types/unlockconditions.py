@@ -2,11 +2,29 @@
 Unlockconditions module
 """
 
-from JumpScale9Lib.clients.rivine.errors import DoubleSignatureError
 from JumpScale9Lib.clients.rivine.encoding import binary
+from JumpScale9Lib.clients.rivine.errors import DoubleSignatureError
+from JumpScale9Lib.clients.rivine.types.unlockhash import UnlockHash
 
 # this is the value if the locktime is less than it, it means that the locktime should be interpreted as the chain height lock instead of the timestamp
 TIMELOCK_CONDITION_HEIGHT_LIMIT = 5000000
+
+
+class AtomicSwapFulfillment:
+    """
+    AtomicSwapFulfillment class
+    """
+    def __init__(self, pub_key, secret):
+        """
+        Initializes a new AtomicSwapFulfillment object
+        """
+        self._pub_key = pub_key
+        self._signature = None
+        self._secret = secret
+        self._type = bytearray([2])
+
+
+
 
 class SingleSignatureFulfillment:
     """
@@ -45,6 +63,56 @@ class SingleSignatureFulfillment:
             raise DoubleSignatureError("cannot sign a fulfillment which is already signed")
         sig_hash = sig_ctx['transaction'].get_input_signature_hash(input_index=sig_ctx['input_idx'])
         self._signature = sig_ctx['secret_key'].sign(sig_hash)
+
+
+
+
+class AtomicSwapCondition:
+    """
+    AtomicSwapCondition class
+    """
+    def __init__(self, sender, reciever, hashed_secret, locktime):
+        """
+        Initializes a new AtomicSwapCondition object
+        """
+        self._sender = sender
+        self._reciever = reciever
+        self._hashed_secret = hashed_secret
+        self._locktime = locktime
+        self._type = bytearray([2])
+
+
+    @property
+    def binary(self):
+        """
+        Returns a binary encoded versoin of the AtomicSwapCondition
+        """
+        result = bytearray()
+        result.extend(self._type)
+        # 106 size of the atomicswap condition in binary form
+        result.extend(binary.encode(106))
+        result.extend(binary.encode(UnlockHash.from_string(self._sender)))
+        result.extend(binary.encode(UnlockHash.from_string(self._reciever)))
+        result.extend(binary.encode(self._hashed_secret, type_='hex'))
+        result.extend(binary.encode(self._locktime))
+
+        return result
+
+
+    @property
+    def json(self):
+        """
+        Returns a json encoded version of the AtomicSwapCondition
+        """
+        return {
+            'type': binary.decode(self._type, type_=int),
+            'data': {
+                'timelock': self._locktime,
+                'sender': self._sender,
+                'receiver': self._reciever,
+                'hashedsecret': self._hashed_secret
+            }
+        }
 
 
 
