@@ -126,6 +126,7 @@ class Minio:
             raise RuntimeError('Failed to stop minio server: {}'.format(self.name))
 
         self.container.node.client.nft.drop_port(self.node_port)
+        self.container.stop()
 
     def start(self, timeout=15):
         """
