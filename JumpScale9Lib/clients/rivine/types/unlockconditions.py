@@ -8,6 +8,7 @@ from JumpScale9Lib.clients.rivine.types.unlockhash import UnlockHash
 
 # this is the value if the locktime is less than it, it means that the locktime should be interpreted as the chain height lock instead of the timestamp
 TIMELOCK_CONDITION_HEIGHT_LIMIT = 5000000
+ATOMICSWAP_CONDITION_TYPE = bytearray([2])
 
 
 class AtomicSwapFulfillment:
@@ -79,7 +80,7 @@ class AtomicSwapCondition:
         self._reciever = reciever
         self._hashed_secret = hashed_secret
         self._locktime = locktime
-        self._type = bytearray([2])
+        self._type = ATOMICSWAP_CONDITION_TYPE
 
 
     @property

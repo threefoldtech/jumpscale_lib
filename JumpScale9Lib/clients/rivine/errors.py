@@ -37,3 +37,8 @@ class DoubleSignatureError(Exception):
     """
     Double Signatures Error
     """
+
+class InvalidAtomicswapContract(Exception):
+    """
+    InvalidAtomicswapContract error
+    """
