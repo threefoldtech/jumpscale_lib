@@ -237,29 +237,31 @@ class Diskmanager(JSBASE):
                             if (ttype is None or fs == ttype) and size > minsize and (
                                     maxsize is None or size < maxsize):
                                 if ssd is None or disko.ssd == ssd:
-                                    hrdpath = "%s/disk.hrd" % mountpoint
+                                    tomlpath = "%s/disk.toml" % mountpoint
 
-                                    if j.sal.fs.exists(hrdpath):
-                                        hrd = j.data.hrd.get(hrdpath)
-                                        partnr = hrd.getInt("diskinfo.partnr")
+                                    if j.sal.fs.exists(tomlpath):
+                                        toml = j.data.serializer.toml.load(tomlpath)
+                                        partnr = toml.getInt("diskinfo.partnr")
                                         if partnr == 0 or forceinitialize:
-                                            j.sal.fs.remove(hrdpath)
+                                            j.sal.fs.remove(tomlpath)
 
-                                    if not j.sal.fs.exists(hrdpath) and initialize:
+                                    if not j.sal.fs.exists(tomlpath) and initialize:
                                         C = """
-                                        diskinfo.partnr=
-                                        diskinfo.type=
-                                        diskinfo.epoch=
-                                        diskinfo.description=
+                                        title = "Disk INFO"
+                                        [disk]
+                                        diskinfoPartnr=
+                                        diskinfoType=
+                                        diskinfoEpoch=
+                                        diskinfoDescription=
                                         """
                                         j.sal.fs.writeFile(
-                                            filename=hrdpath, contents=C)
-                                        hrd = j.data.hrd.get(hrdpath)
-                                        hrd.set("diskinfo.description", j.tools.console.askString(
+                                            filename=tomlpath, contents=C)
+                                        toml = j.data.serializer.toml.load(tomlpath)
+                                        toml.set("diskinfoDescription", j.tools.console.askString(
                                             "please give description for disk"))
-                                        hrd.set("diskinfo.type", ",".join(j.tools.console.askChoiceMultiple(
+                                        toml.set("diskinfoType", ",".join(j.tools.console.askChoiceMultiple(
                                             ["BOOT", "CACHE", "TMP", "DATA", "OTHER"])))
-                                        hrd.set("diskinfo.epoch",
+                                        toml.set("diskinfoEpoch",
                                                 j.data.time.getTimeEpoch())
 
                                         # TODO (*4*) ---> get connection from
@@ -271,23 +273,22 @@ class Diskmanager(JSBASE):
                                         for key, val in list(disko.__dict__.items()):
                                             disk.__dict__[key] = val
 
-                                        disk.description = hrd.get(
-                                            "diskinfo.description")
-                                        disk.type = hrd.get(
-                                            "diskinfo.type").split(",")
+                                        disk.description = toml.get(
+                                            "diskinfoDescription")
+                                        disk.type = toml.get(
+                                            "diskinfoType").split(",")
                                         disk.type.sort()
 
                                         disk.save()
                                         diskid = disk.guid
-                                        hrd.set("diskinfo.partnr", diskid)
-                                    if j.sal.fs.exists(hrdpath):
-                                        # hrd=j.data.hrd.get(hrdpath)
-                                        disko.id = hrd.get("diskinfo.partnr")
-                                        disko.type = hrd.get(
-                                            "diskinfo.type").split(",")
+                                        toml.set("diskinfoPartnr", diskid)
+                                    if j.sal.fs.exists(tomlpath):
+                                        disko.id = toml.get("diskinfoPartnr")
+                                        disko.type = toml.get(
+                                            "diskinfoType").split(",")
                                         disko.type.sort()
-                                        disko.description = hrd.get(
-                                            "diskinfo.description")
+                                        disko.description = toml.get(
+                                            "diskinfoDescription")
                                         self.logger.debug(("found disk:\n%s" % (disko)))
                                     cmd = "umount /mnt/tmp"
                                     j.sal.process.execute(cmd, die=False)

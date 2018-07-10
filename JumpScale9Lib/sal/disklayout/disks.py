@@ -44,7 +44,6 @@ class BlkInfo(JSBASE):
         self.name = name
         self.type = type
         self.size = int(size)
-        self.hrd = None
         self._executor = executor or j.tools.executorLocal
         JSBASE.__init__(self)
 
@@ -56,16 +55,11 @@ class BlkInfo(JSBASE):
 
     def mount(self):
         """
-        Mount partition to `mountpath` defined in HRD
+        Mount partition 
         """
         if self.invalid:
             raise PartitionError('Partition is invalid')
-
-        if self.hrd is None:
-            raise PartitionError('No HRD attached to disk')
-
-        path = self.hrd.get('mountpath')
-        mnt = mount.Mount(self.name, path, executor=self._executor)
+        mnt = mount.Mount(self.name, self.mountpoint, executor=self._executor)
         mnt.mount()
         self.refresh()
 
@@ -75,11 +69,6 @@ class BlkInfo(JSBASE):
         """
         if self.invalid:
             raise PartitionError('Partition is invalid')
-
-        # if self.hrd is None:
-        #     raise PartitionError('No HRD attached to disk')
-
-        # path = self.hrd.get('mountpath')
         mnt = mount.Mount(self.name, self.mountpoint, executor=self._executor)
         mnt.umount()
         self.refresh()
@@ -104,15 +93,11 @@ class BlkInfo(JSBASE):
 
     def setAutoMount(self, options='defaults', _dump=0, _pass=0):
         """
-        Configure partition auto mount `fstab` on `mountpath` defined in HRD
+        Configure partition auto mount `fstab`
         """
-
-        if self.hrd is None:
-            path = self.mountpoint
-            if path == "":
-                raise RuntimeError("path cannot be empty")
-        else:
-            path = self.hrd.get('mountpath')
+        path = self.mountpoint
+        if path == "":
+            raise RuntimeError("path cannot be empty")
         self._executor.prefab.core.dir_ensure(path)
 
         fstab = self._executor.prefab.core.file_read('/etc/fstab').splitlines()
@@ -140,21 +125,6 @@ class BlkInfo(JSBASE):
         fstab.append(entry)
 
         self._executor.prefab.core.file_write('/etc/fstab', '\n'.join(fstab), mode='0644')
-
-    def _validateHRD(self, hrd):
-        for field in ['filesystem', 'mountpath', 'protected', 'type']:
-            if not hrd.exists(field):
-                raise PartitionError(
-                    'Invalid hrd, missing mandatory field "%s"' % field
-                )
-            if field in _hrd_validators:
-                validator = _hrd_validators[field]
-                value = hrd.get(field)
-                if not validator(value):
-                    raise PartitionError('Invalid valud for %s: %s' % (
-                        field, value
-                    ))
-
 
 class DiskInfo(BlkInfo):
     """
@@ -238,27 +208,20 @@ class DiskInfo(BlkInfo):
 
         return start, start + size
 
-    def format(self, size, hrd, force=False):
+    def format(self, size, force=False):
         """
-        Create new partition and format it as configured in hrd file
+        Create new partition and format it as configured 
 
         :size: in bytes
-        :hrd: the disk hrd info
 
         Note:
-        hrd file must contain the following
+        partition info  must contain the following
 
         filesystem                     = '<fs-type>'
         mountpath                      = '<mount-path>'
         protected                      = 0 or 1
         type                           = data or root or tmp
         """
-        self._validateHRD(hrd)
-
-        if not self.partitions:
-            # if no partitions, make sure to clear mbr to convert to gpt
-            self._clearMBR()
-
         parts = self._getpart()
         spot = self._findFreeSpot(parts, size)
         if not spot:
@@ -297,10 +260,6 @@ class DiskInfo(BlkInfo):
             device=self,
             executor=self._executor
         )
-
-        partition.hrd = hrd
-
-        partition.format(force=force)
         self.partitions.append(partition)
         return partition
 
@@ -401,7 +360,7 @@ class PartitionInfo(BlkInfo):
             # that's an unmanaged partition, assume protected
             return True
         #TODO: implement
-        return bool(self.hrd.get('protected', True))
+        return self.config.get('protected', True)
 
     def _formatter(self, name, fstype):
         fmtr = _formatters.get(fstype, _default_formatter)
@@ -427,15 +386,9 @@ class PartitionInfo(BlkInfo):
         for key, val in info.items():
             setattr(self, key.lower(), val)
 
-    def _dumpCONFIG(self):
-        with mount.Mount(self.name, executor=self._executor) as mnt:
-            filepath = j.tools.path.get(mnt.path).joinpath('.disk.hrd')
-            filepath.write_text(str(self.hrd))
-            filepath.chmod(400)
-
     def format(self, fstype, force=False):
         """
-        Reformat the partition according to hrd
+        Reformat the partition
         """
         self.refresh()
 
@@ -448,16 +401,7 @@ class PartitionInfo(BlkInfo):
             else:
                 self.umount()
 
-        if self.hrd is None:
-            raise PartitionError('No HRD attached to disk')
-
         command = self._formatter(self.name, fstype)
-        try:
-            rc, out, err = self._executor.execute(command, showout=False)
-            self._dumpCONFIG()
-        except Exception as e:
-            raise FormatError(e)
-
         self.refresh()
 
     def delete(self, force=False):

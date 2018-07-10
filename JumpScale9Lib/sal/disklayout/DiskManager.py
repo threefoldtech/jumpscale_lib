@@ -90,7 +90,6 @@ class DiskManager(JSBASE):
         """
         blks = lsblk.lsblk(executor=self._executor)
         devices = self._loaddisks(blks)
-        # loading hrds
         for disk in devices:
             for partition in disk.partitions:
                 if partition.fstype == 'swap' or\

@@ -70,13 +70,18 @@ class Zerodb:
         :rtype: Redis class
         """
         if self.__redis is None:
-            nodeip = self.container.node.addr
-            if nodeip == '127.0.0.1':
+            ip = self.container.node.addr
+            port = DEFAULT_PORT
+            password = self.admin
+
+            if ip == '127.0.0.1':
                 ip = self.container.default_ip().ip.format()
-                self.__redis = redis.Redis(host=ip, port=DEFAULT_PORT, password=self.admin)
             else:
                 # use the connection below if you want to test a dev setup and to execute it from outside the node
-                self.__redis = redis.Redis(host=nodeip, port=self.node_port, password=self.admin)
+                port = self.node_port
+
+            self.__redis = redis.Redis(host=ip, port=port, password=password)
+            self.__redis.ping()
 
         return self.__redis
 
@@ -133,7 +138,7 @@ class Zerodb:
             'flist': self.flist,
             'identity': self.zt_identity,
             'mounts': {self.path: '/zerodb'},
-            'ports': {self.node_port: DEFAULT_PORT},
+            'ports': {"zt*:%s" % self.node_port: DEFAULT_PORT},
             'nics': [nic.to_dict(forcontainer=True) for nic in self.nics]
         }
 
@@ -273,7 +278,7 @@ class Zerodb:
         """
         try:
             for job in self.container.client.job.list(self._id):
-                runstatus = self.container.is_port_listening(9900, None)
+                runstatus = self.container.is_port_listening(DEFAULT_PORT, None)
                 return runstatus, job['cmd']['arguments']['args']
             return False, []
         except Exception as err:
@@ -294,11 +299,11 @@ class Zerodb:
         logger.info('start zerodb %s' % self.name)
 
         cmd = '/bin/zdb \
-            --port 9900 \
+            --port {port} \
             --data /zerodb/data \
             --index /zerodb/index \
             --mode {mode} \
-            '.format(mode=self.mode)
+            '.format(port=DEFAULT_PORT, mode=self.mode)
         if self.sync:
             cmd += ' --sync'
         if self.admin:
@@ -306,7 +311,7 @@ class Zerodb:
 
         # wait for zerodb to start
         self.container.client.system(cmd, id=self._id)
-        is_running = self.container.is_port_listening(9900, timeout)
+        is_running = self.container.is_port_listening(DEFAULT_PORT, timeout)
 
         if not is_running:
             raise RuntimeError('Failed to start zerodb server: {}'.format(self.name))

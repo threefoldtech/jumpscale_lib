@@ -78,7 +78,6 @@ class WIC_Factory(JSBASE):
             e.sshclient.execute("opkg install bash")
             e.sshclient.execute("opkg install fastd")
 
-            dnsmasq
 
         # wics=[]
         for wicip in wicips:
