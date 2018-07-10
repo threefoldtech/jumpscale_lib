@@ -182,7 +182,7 @@ class DocGenerator(JSBASE):
         """
         key = "%s_%s" % (namespace, name)
 
-        import pudb; pudb.set_trace()
+        import pudb; pudb.set_trace()       
 
         # we need the cache for performance reasons
         if not key in self._pointer_cache:
