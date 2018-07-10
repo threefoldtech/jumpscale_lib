@@ -7,6 +7,7 @@ from pyblake2 import blake2b
 from random import choice
 from .const import HASH_SIZE
 from JumpScale9Lib.clients.rivine.encoding import binary
+from JumpScale9Lib.clients.rivine import secrets
 
 
 DURATION_REGX_PATTERN = '^(?P<hours>\d*)h(?P<minutes>\d*)m(?P<seconds>\d*)s$'
@@ -55,8 +56,9 @@ def get_secret(size):
 
     @param size: The size of the secret token
     """
-    alphapet = string.ascii_letters + string.digits
-    result = []
-    for _ in range(size):
-        result.append(choice(alphapet))
-    return ''.join(result)
+    # alphapet = string.ascii_letters + string.digits
+    # result = []
+    # for _ in range(size):
+    #     result.append(choice(alphapet))
+    # return ''.join(result)
+    return secrets.token_bytes(nbytes=size)

@@ -2,7 +2,8 @@
 Module contianing all transaction types
 """
 from JumpScale9Lib.clients.rivine.types.signatures import Ed25519PublicKey
-from JumpScale9Lib.clients.rivine.types.unlockconditions import SingleSignatureFulfillment, UnlockHashCondition, LockTimeCondition, AtomicSwapCondition
+from JumpScale9Lib.clients.rivine.types.unlockconditions import SingleSignatureFulfillment, UnlockHashCondition,\
+ LockTimeCondition, AtomicSwapCondition, AtomicSwapFulfillment
 from JumpScale9Lib.clients.rivine.encoding import binary
 from JumpScale9Lib.clients.rivine.utils import hash
 from JumpScale9Lib.clients.rivine.types.unlockhash import UnlockHash
@@ -10,6 +11,7 @@ from JumpScale9Lib.clients.rivine.types.unlockhash import UnlockHash
 import base64
 
 DEFAULT_TRANSACTION_VERSION = 1
+HASHTYPE_COINOUTPUT_ID = 'coinoutputid'
 
 class TransactionFactory:
     """
@@ -56,7 +58,7 @@ class TransactionV1:
         Gets transaction id
         """
         return self._id
-        
+
     @id.setter
     def id(self, txn_id):
         """
@@ -115,6 +117,18 @@ class TransactionV1:
         self._coins_inputs.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
 
 
+    def add_atomicswap_input(self, parent_id, pub_key, secret=None):
+        """
+        Adds a new atomicswap input to the transaction
+        An atomicswap input can be for refund or redeem purposes, if for refund no secret is needed, but if for redeem then
+        a secret needs tp be provided
+        """
+        key = Ed25519PublicKey(pub_key=pub_key)
+        fulfillment = AtomicSwapFulfillment(pub_key=key, secret=secret)
+        self._coins_inputs.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
+
+
+
     def add_coin_output(self, value, recipient, locktime=None):
         """
         Add a new coin output to the transaction
@@ -150,17 +164,24 @@ class TransactionV1:
         self._minerfees.append(minerfee)
 
 
-    def get_input_signature_hash(self, input_index):
+    def get_input_signature_hash(self, input_index, extra_objects=None):
         """
         Builds a signature hash for an input
 
         @param input_index: Index of the input we will get signature hash for
         """
+        if extra_objects is None:
+            extra_objects = []
+
         buffer = bytearray()
         # encode the transaction version
         buffer.extend(self._version)
         # encode the input index
         buffer.extend(binary.encode(input_index))
+
+        # encode extra objects if exists
+        for extra_object in extra_objects:
+            buffer.extend(binary.encode(extra_object))
 
         # encode the number of coins inputs
         buffer.extend(binary.encode(len(self._coins_inputs)))

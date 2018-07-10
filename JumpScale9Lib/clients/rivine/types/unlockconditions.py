@@ -11,39 +11,23 @@ TIMELOCK_CONDITION_HEIGHT_LIMIT = 5000000
 ATOMICSWAP_CONDITION_TYPE = bytearray([2])
 
 
-class AtomicSwapFulfillment:
+class BaseFulFillment:
     """
-    AtomicSwapFulfillment class
-    """
-    def __init__(self, pub_key, secret):
-        """
-        Initializes a new AtomicSwapFulfillment object
-        """
-        self._pub_key = pub_key
-        self._signature = None
-        self._secret = secret
-        self._type = bytearray([2])
-
-
-
-
-class SingleSignatureFulfillment:
-    """
-    SingleSignatureFulfillment class
+    BaseFulFillment class
     """
     def __init__(self, pub_key):
         """
-        Initialzies new single singnature fulfillment class
+        Initializes a new BaseFulfillment object
         """
         self._pub_key = pub_key
         self._signature = None
-        self._type = bytearray([1])
+        self._extra_objects = None
 
 
     @property
     def json(self):
         """
-        Returns a json encoded versoin of the SingleSignatureFulfillment
+        Returns a json encoded versoin of the Fulfillment
         """
         return {
             'type': binary.decode(self._type, type_=int),
@@ -54,6 +38,7 @@ class SingleSignatureFulfillment:
         }
 
 
+
     def sign(self, sig_ctx):
         """
         Sign the given fulfillment, which is to be done after all properties have been filled of the parent transaction
@@ -62,8 +47,53 @@ class SingleSignatureFulfillment:
         """
         if self._signature is not None:
             raise DoubleSignatureError("cannot sign a fulfillment which is already signed")
-        sig_hash = sig_ctx['transaction'].get_input_signature_hash(input_index=sig_ctx['input_idx'])
+        sig_hash = sig_ctx['transaction'].get_input_signature_hash(input_index=sig_ctx['input_idx'],
+                                                                    extra_objects=self._extra_objects)
         self._signature = sig_ctx['secret_key'].sign(sig_hash)
+
+
+
+
+class AtomicSwapFulfillment(BaseFulFillment):
+    """
+    AtomicSwapFulfillment class
+    """
+    def __init__(self, pub_key, secret=None):
+        """
+        Initializes a new AtomicSwapFulfillment object
+        """
+        super().__init__(pub_key=pub_key)
+        self._secret = secret
+        self._type = bytearray([2])
+        self._extra_objects = [self._pub_key]
+        if self._secret is not None:
+            self._extra_objects.append(bytearray.fromhex(self._secret))
+
+
+    @property
+    def json(self):
+        """
+        Returns a json encoded versoin of the SingleSignatureFulfillment
+        """
+        result = super().json
+        if self._secret:
+            result['data']['secret'] = self._secret
+        return result
+
+
+
+
+
+class SingleSignatureFulfillment(BaseFulFillment):
+    """
+    SingleSignatureFulfillment class
+    """
+    def __init__(self, pub_key):
+        """
+        Initialzies new single singnature fulfillment class
+        """
+        super().__init__(pub_key=pub_key)
+        self._type = bytearray([1])
 
 
 

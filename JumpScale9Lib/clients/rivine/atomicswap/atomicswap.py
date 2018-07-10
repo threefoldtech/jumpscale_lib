@@ -6,10 +6,10 @@ import hashlib
 from JumpScale9 import j
 from JumpScale9Lib.clients.rivine import utils
 from JumpScale9Lib.clients.rivine.encoding import binary
-from JumpScale9Lib.clients.rivine.errors import InvalidAtomicswapContract
+from JumpScale9Lib.clients.rivine.errors import InvalidAtomicswapContract, AtomicSwapError
 from JumpScale9Lib.clients.rivine.types.unlockconditions import ATOMICSWAP_CONDITION_TYPE
-from JumpScale9Lib.clients.rivine.const import HASTINGS_TFT_VALUE, ATOMICSWAP_SECRET_SIZE
-from JumpScale9Lib.clients.rivine.types.transaction import TransactionFactory, DEFAULT_TRANSACTION_VERSION
+from JumpScale9Lib.clients.rivine.const import HASTINGS_TFT_VALUE, ATOMICSWAP_SECRET_SIZE, MINIMUM_TRANSACTION_FEE
+from JumpScale9Lib.clients.rivine.types.transaction import TransactionFactory, DEFAULT_TRANSACTION_VERSION, HASHTYPE_COINOUTPUT_ID
 
 logger = j.logger.get(__name__)
 
@@ -51,8 +51,8 @@ class AtomicSwapManager:
             # generate a secret
             secret = utils.get_secret(size=ATOMICSWAP_SECRET_SIZE)
             # hash the secret
-            hashed_secret = hashlib.sha256(bytearray(secret, encoding='utf-8')).digest().hex()
-            contract['secret'] = secret
+            hashed_secret = hashlib.sha256(secret).digest().hex()
+            contract['secret'] = secret.hex()
         else:
             secret = None
         contract['hashed_secret'] = hashed_secret
@@ -113,8 +113,6 @@ class AtomicSwapManager:
                                                 refund_address=refund_address)
 
 
-
-
     def initiate(self, participant_address, amount, duration='48h0m0s', refund_address=None):
         """
         Create an atomic swap contract as initiator
@@ -132,7 +130,6 @@ class AtomicSwapManager:
                                                 refund_address=refund_address)
 
 
-
     def validate(self, output_id, amount=None, hashed_secret=None, receiver_address=None, time_left=None):
         """
         Validates that the given output id exist in the consensus as an unspent output
@@ -143,16 +140,18 @@ class AtomicSwapManager:
         @param receiver_address: Validate the given receiver's address (unlockhash) to the one found in the atomic swap contract condition
         @param time_left: Minimum time left for the contract, if the contract locktime is expired in less than this value the contract will be considered invalid
         """
-        output_result = None
-        output_info = self._wallet._check_address(output_id)
-        for txn_info in output_info['transactions']:
-            if output_result is not None:
-                break
-            for idx, coin_output in enumerate(txn_info['rawtransaction']['data']['coinoutputs']):
-                if txn_info['coinoutputids'][idx] == output_id:
-                    output_result = coin_output
-                    print(output_result)
-                    break
+        return self._validate(output_id=output_id,
+                             amount=amount,
+                             hashed_secret=hashed_secret,
+                             receiver_address=receiver_address,
+                             time_left=time_left)[0]
+
+
+    def _validate(self, output_id, amount=None, hashed_secret=None, receiver_address=None, time_left=None):
+        """
+        An internal function that does all the validation the public validate method does, but return more info
+        """
+        output_result = self._get_output_info_from_id(output_id=output_id)
         if output_result:
             if amount and int(output_result['value']) != amount * HASTINGS_TFT_VALUE:
                 raise InvalidAtomicswapContract("Contract amount does not match the provided amount value")
@@ -166,4 +165,88 @@ class AtomicSwapManager:
                 raise InvalidAtomicswapContract("Contract will expired in less than the minimum time specified")
         else:
             raise InvalidAtomicswapContract("Could not validate atomicswap contract for output {}".format(output_id))
-        return True
+        return True, output_result
+
+
+    def _get_output_info_from_id(self, output_id):
+        """
+        Retrieves information about an atomicswap output from a given id
+        """
+        output_result = None
+        output_info = self._wallet._check_address(output_id)
+        if output_info.get('hashtype', None) != HASHTYPE_COINOUTPUT_ID:
+            raise InvalidAtomicswapContract('Given output id does not have the expected hashtype')
+
+        for txn_info in output_info['transactions']:
+            if output_result is not None:
+                break
+            for idx, coin_output in enumerate(txn_info['rawtransaction']['data']['coinoutputs']):
+                if txn_info['coinoutputids'][idx] == output_id:
+                    output_result = coin_output
+                    print(output_result)
+                    break
+        return output_result
+
+
+    def _spend_atomicswap_contract(self, output_id, secret=None):
+        """
+        Spends an atomicswap contract
+        Can be used by both refund and redeem operations
+        """
+        _, output_info = self._validate(output_id=output_id)
+        if secret is None:
+            # spending the output as refund
+            # fetch the sender address from the output_info
+            address = output_info['condition']['data']['sender']
+        else:
+            # spend the output as redeem
+            address = output_info['condition']['data']['receiver']
+        if address not in self._wallet._keys:
+            raise AtomicSwapError('Address found in the output does not belong to the current wallet')
+        key = self._wallet._keys[address]
+        value = int(output_info['value'])
+        if value <= MINIMUM_TRANSACTION_FEE:
+            raise AtomicSwapError("Value of the atomicswap contract is less than or equal to the minimum transaction fee.")
+        # create a new transaction
+        transaction = TransactionFactory.create_transaction(version=DEFAULT_TRANSACTION_VERSION)
+        transaction.add_atomicswap_input(parent_id=output_id, pub_key=key.public_key,
+                                        secret=secret)
+        txn_value = value - MINIMUM_TRANSACTION_FEE
+        transaction.add_coin_output(value=txn_value, recipient=address)
+        transaction.add_minerfee(minerfee=MINIMUM_TRANSACTION_FEE)
+
+        # sign the transaction input
+        input_idx = 0
+        transaction.coins_inputs[input_idx].sign(input_idx=input_idx,
+                                                 transaction=transaction,
+                                                 secret_key=key.secret_key
+                                                 )
+
+        # commit transaction
+        txn_id = self._wallet._commit_transaction(transaction)
+        return txn_id
+
+
+
+    def refund(self, output_id):
+        """
+        Spends an atomicswap contract
+
+        @param output_id: Output reference to the output with the atomicswap condition
+        """
+        txn_id = self._spend_atomicswap_contract(output_id=output_id)
+        logger.info("Refund executed successfully. Transaction ID: {}".format(txn_id))
+        return txn_id
+
+
+
+    def redeem(self, output_id, secret):
+        """
+        Complete the atomicswap contract by spending a the output as the receiver of the atomicswap
+
+        @param output_id: Output ID to be spent
+        @param secret: Atomicswap secert
+        """
+        txn_id = self._spend_atomicswap_contract(output_id=output_id, secret=secret)
+        logger.info("Redeem executed successfully. Transaction ID: {}".format(txn_id))
+        return txn_id

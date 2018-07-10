@@ -42,3 +42,8 @@ class InvalidAtomicswapContract(Exception):
     """
     InvalidAtomicswapContract error
     """
+
+class AtomicSwapError(Exception):
+    """
+    AtomicSwapError error
+    """
