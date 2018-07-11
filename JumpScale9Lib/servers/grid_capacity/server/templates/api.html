@@ -183,7 +183,7 @@
         <div class="col-md-9" role="main">
           <div class="page-header">
             <h1>TFT Grid capacity API documentation
-              <small>version 0.0.1</small>
+              <small>version 0.1.0</small>
             </h1>
             <p></p>
             <p>API of the TFT grid, used to register/track the capacity available on the grid</p>
@@ -270,38 +270,10 @@
                                   <strong>node_id</strong>:
                                   <em>required (string)
       </em>
-<<<<<<< HEAD
                                 </li>
                                 <li>
-                                  <strong>farmer</strong>:
+                                  <strong>farmer_id</strong>:
                                   <em>(string)
-=======
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                            
-                              <li>
-  <strong>farmer_id</strong>:
-
-    
-      <em>(string)
->>>>>>> WIP: add reserved and used capacity to tracking system
       </em>
                                   <p>ID of the farmer owning the node</p>
                                 </li>
@@ -350,47 +322,112 @@
                                   <p>URL to the node 0-robot of the node</p>
                                 </li>
                                 <li>
-                                  <strong>cru</strong>:
-                                  <em>required (number)
-      </em>
-                                  <p>amount of CPU resource unit</p>
-                                </li>
-                                <li>
-                                  <strong>mru</strong>:
-                                  <em>required (number)
-      </em>
-                                  <p>amount of memory resource unit</p>
-                                </li>
-                                <li>
-                                  <strong>hru</strong>:
-                                  <em>required (number)
-      </em>
-                                  <p>amount of HDD resource unit</p>
-                                </li>
-                                <li>
-                                  <strong>sru</strong>:
-                                  <em>required (number)
-      </em>
-                                  <p>amount of SSD resource unit</p>
-                                </li>
-                                <li>
                                   <strong>uptime</strong>:
                                   <em>(integer)
       </em>
                                   <p>uptime of the node in seconds</p>
+                                </li>
+                                <li>
+                                  <strong>total_resources</strong>:
+                                  <em>(object)
+      </em>
+                                  <ul>
+                                    <li>
+                                      <strong>cru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of CPU resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>mru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of memory resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>hru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of HDD resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>sru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of SSD resource unit</p>
+                                    </li>
+                                  </ul>
+                                </li>
+                                <li>
+                                  <strong>reserved_resources</strong>:
+                                  <em>(object)
+      </em>
+                                  <ul>
+                                    <li>
+                                      <strong>cru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of CPU resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>mru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of memory resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>hru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of HDD resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>sru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of SSD resource unit</p>
+                                    </li>
+                                  </ul>
+                                </li>
+                                <li>
+                                  <strong>used_resources</strong>:
+                                  <em>(object)
+      </em>
+                                  <ul>
+                                    <li>
+                                      <strong>cru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of CPU resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>mru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of memory resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>hru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of HDD resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>sru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of SSD resource unit</p>
+                                    </li>
+                                  </ul>
                                 </li>
                               </ul>
                               <p><strong>Example</strong>:</p>
                               <div class="examples">
                                 <pre><code>{
   "node_id": "544546f60261",
-  "farmer": "JohnDoe",
+  "farmer_id": "JohnDoe",
   "os_version": "heads/v1.2.2 6b693a496de940b26ee1a2356b67f7d65767c13f",
   "robot_address": "http://10.241.100.10:6600",
-  "cru": 5,
-  "mru": 64,
-  "hrd": 5000,
-  "sru": 256,
   "uptime": 92682,
   "location": {
     "continent": "Europe",
@@ -398,6 +435,12 @@
     "city": "Brussels",
     "latitude": 50.83,
     "longitude": 4.29
+  },
+  "total_resources": {
+    "cru": 5,
+    "mru": 64,
+    "hrd": 5000,
+    "sru": 256
   }
 }</code></pre>
                               </div>
@@ -417,10 +460,9 @@
       </em>
                                 </li>
                                 <li>
-                                  <strong>farmer</strong>:
+                                  <strong>farmer_id</strong>:
                                   <em>(string)
       </em>
-<<<<<<< HEAD
                                   <p>ID of the farmer owning the node</p>
                                 </li>
                                 <li>
@@ -468,47 +510,112 @@
                                   <p>URL to the node 0-robot of the node</p>
                                 </li>
                                 <li>
-                                  <strong>cru</strong>:
-                                  <em>required (number)
-      </em>
-                                  <p>amount of CPU resource unit</p>
-                                </li>
-                                <li>
-                                  <strong>mru</strong>:
-                                  <em>required (number)
-      </em>
-                                  <p>amount of memory resource unit</p>
-                                </li>
-                                <li>
-                                  <strong>hru</strong>:
-                                  <em>required (number)
-      </em>
-                                  <p>amount of HDD resource unit</p>
-                                </li>
-                                <li>
-                                  <strong>sru</strong>:
-                                  <em>required (number)
-      </em>
-                                  <p>amount of SSD resource unit</p>
-                                </li>
-                                <li>
                                   <strong>uptime</strong>:
                                   <em>(integer)
       </em>
                                   <p>uptime of the node in seconds</p>
+                                </li>
+                                <li>
+                                  <strong>total_resources</strong>:
+                                  <em>(object)
+      </em>
+                                  <ul>
+                                    <li>
+                                      <strong>cru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of CPU resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>mru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of memory resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>hru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of HDD resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>sru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of SSD resource unit</p>
+                                    </li>
+                                  </ul>
+                                </li>
+                                <li>
+                                  <strong>reserved_resources</strong>:
+                                  <em>(object)
+      </em>
+                                  <ul>
+                                    <li>
+                                      <strong>cru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of CPU resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>mru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of memory resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>hru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of HDD resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>sru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of SSD resource unit</p>
+                                    </li>
+                                  </ul>
+                                </li>
+                                <li>
+                                  <strong>used_resources</strong>:
+                                  <em>(object)
+      </em>
+                                  <ul>
+                                    <li>
+                                      <strong>cru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of CPU resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>mru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of memory resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>hru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of HDD resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>sru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of SSD resource unit</p>
+                                    </li>
+                                  </ul>
                                 </li>
                               </ul>
                               <p><strong>Example</strong>:</p>
                               <div class="examples">
                                 <pre><code>{
   "node_id": "544546f60261",
-  "farmer": "JohnDoe",
+  "farmer_id": "JohnDoe",
   "os_version": "heads/v1.2.2 6b693a496de940b26ee1a2356b67f7d65767c13f",
   "robot_address": "http://10.241.100.10:6600",
-  "cru": 5,
-  "mru": 64,
-  "hrd": 5000,
-  "sru": 256,
   "uptime": 92682,
   "location": {
     "continent": "Europe",
@@ -516,6 +623,12 @@
     "city": "Brussels",
     "latitude": 50.83,
     "longitude": 4.29
+  },
+  "total_resources": {
+    "cru": 5,
+    "mru": 64,
+    "hrd": 5000,
+    "sru": 256
   }
 }</code></pre>
                               </div>
@@ -598,7 +711,7 @@
       </em>
                                   </li>
                                   <li>
-                                    <strong>farmer</strong>:
+                                    <strong>farmer_id</strong>:
                                     <em>(string)
       </em>
                                     <p>ID of the farmer owning the node</p>
@@ -648,34 +761,103 @@
                                     <p>URL to the node 0-robot of the node</p>
                                   </li>
                                   <li>
-                                    <strong>cru</strong>:
-                                    <em>required (number)
-      </em>
-                                    <p>amount of CPU resource unit</p>
-                                  </li>
-                                  <li>
-                                    <strong>mru</strong>:
-                                    <em>required (number)
-      </em>
-                                    <p>amount of memory resource unit</p>
-                                  </li>
-                                  <li>
-                                    <strong>hru</strong>:
-                                    <em>required (number)
-      </em>
-                                    <p>amount of HDD resource unit</p>
-                                  </li>
-                                  <li>
-                                    <strong>sru</strong>:
-                                    <em>required (number)
-      </em>
-                                    <p>amount of SSD resource unit</p>
-                                  </li>
-                                  <li>
                                     <strong>uptime</strong>:
                                     <em>(integer)
       </em>
                                     <p>uptime of the node in seconds</p>
+                                  </li>
+                                  <li>
+                                    <strong>total_resources</strong>:
+                                    <em>(object)
+      </em>
+                                    <ul>
+                                      <li>
+                                        <strong>cru</strong>:
+                                        <em>required (number)
+      </em>
+                                        <p>amount of CPU resource unit</p>
+                                      </li>
+                                      <li>
+                                        <strong>mru</strong>:
+                                        <em>required (number)
+      </em>
+                                        <p>amount of memory resource unit</p>
+                                      </li>
+                                      <li>
+                                        <strong>hru</strong>:
+                                        <em>required (number)
+      </em>
+                                        <p>amount of HDD resource unit</p>
+                                      </li>
+                                      <li>
+                                        <strong>sru</strong>:
+                                        <em>required (number)
+      </em>
+                                        <p>amount of SSD resource unit</p>
+                                      </li>
+                                    </ul>
+                                  </li>
+                                  <li>
+                                    <strong>reserved_resources</strong>:
+                                    <em>(object)
+      </em>
+                                    <ul>
+                                      <li>
+                                        <strong>cru</strong>:
+                                        <em>required (number)
+      </em>
+                                        <p>amount of CPU resource unit</p>
+                                      </li>
+                                      <li>
+                                        <strong>mru</strong>:
+                                        <em>required (number)
+      </em>
+                                        <p>amount of memory resource unit</p>
+                                      </li>
+                                      <li>
+                                        <strong>hru</strong>:
+                                        <em>required (number)
+      </em>
+                                        <p>amount of HDD resource unit</p>
+                                      </li>
+                                      <li>
+                                        <strong>sru</strong>:
+                                        <em>required (number)
+      </em>
+                                        <p>amount of SSD resource unit</p>
+                                      </li>
+                                    </ul>
+                                  </li>
+                                  <li>
+                                    <strong>used_resources</strong>:
+                                    <em>(object)
+      </em>
+                                    <ul>
+                                      <li>
+                                        <strong>cru</strong>:
+                                        <em>required (number)
+      </em>
+                                        <p>amount of CPU resource unit</p>
+                                      </li>
+                                      <li>
+                                        <strong>mru</strong>:
+                                        <em>required (number)
+      </em>
+                                        <p>amount of memory resource unit</p>
+                                      </li>
+                                      <li>
+                                        <strong>hru</strong>:
+                                        <em>required (number)
+      </em>
+                                        <p>amount of HDD resource unit</p>
+                                      </li>
+                                      <li>
+                                        <strong>sru</strong>:
+                                        <em>required (number)
+      </em>
+                                        <p>amount of SSD resource unit</p>
+                                      </li>
+                                    </ul>
                                   </li>
                                 </ul>
                               </div>
@@ -737,268 +919,6 @@
                               <a href="#api_nodes__node_id__get_response" data-toggle="tab">Response</a>
                             </li>
                           </ul>
-=======
-    
-  
-
-<p>URL to the node 0-robot of the node</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                            
-                              <li>
-  <strong>uptime</strong>:
-
-    
-      <em>(integer)
-      </em>
-    
-  
-
-<p>uptime of the node in seconds</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                            
-                              <li>
-  <strong>total_resources</strong>:
-
-    
-      <em>(object)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-    <ul>
-      
-        <li>
-  <strong>cru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of CPU resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>mru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of memory resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>hru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of HDD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>sru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of SSD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-    </ul>
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                            
-                              <li>
-  <strong>reserved_resources</strong>:
-
-    
-      <em>(object)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-    <ul>
-      
-        <li>
-  <strong>cru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of CPU resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>mru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of memory resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>hru</strong>:
->>>>>>> WIP: add reserved and used capacity to tracking system
 
                           <!-- Tab panes -->
                           <div class="tab-content">
@@ -1025,10 +945,9 @@
                                   <strong>node_id</strong>:
                                   <em>required (string)
       </em>
-<<<<<<< HEAD
                                 </li>
                                 <li>
-                                  <strong>farmer</strong>:
+                                  <strong>farmer_id</strong>:
                                   <em>(string)
       </em>
                                   <p>ID of the farmer owning the node</p>
@@ -1078,6 +997,204 @@
                                   <p>URL to the node 0-robot of the node</p>
                                 </li>
                                 <li>
+                                  <strong>uptime</strong>:
+                                  <em>(integer)
+      </em>
+                                  <p>uptime of the node in seconds</p>
+                                </li>
+                                <li>
+                                  <strong>total_resources</strong>:
+                                  <em>(object)
+      </em>
+                                  <ul>
+                                    <li>
+                                      <strong>cru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of CPU resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>mru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of memory resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>hru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of HDD resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>sru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of SSD resource unit</p>
+                                    </li>
+                                  </ul>
+                                </li>
+                                <li>
+                                  <strong>reserved_resources</strong>:
+                                  <em>(object)
+      </em>
+                                  <ul>
+                                    <li>
+                                      <strong>cru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of CPU resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>mru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of memory resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>hru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of HDD resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>sru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of SSD resource unit</p>
+                                    </li>
+                                  </ul>
+                                </li>
+                                <li>
+                                  <strong>used_resources</strong>:
+                                  <em>(object)
+      </em>
+                                  <ul>
+                                    <li>
+                                      <strong>cru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of CPU resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>mru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of memory resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>hru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of HDD resource unit</p>
+                                    </li>
+                                    <li>
+                                      <strong>sru</strong>:
+                                      <em>required (number)
+      </em>
+                                      <p>amount of SSD resource unit</p>
+                                    </li>
+                                  </ul>
+                                </li>
+                              </ul>
+                              <p><strong>Example</strong>:</p>
+                              <div class="examples">
+                                <pre><code>{
+  "node_id": "544546f60261",
+  "farmer_id": "JohnDoe",
+  "os_version": "heads/v1.2.2 6b693a496de940b26ee1a2356b67f7d65767c13f",
+  "robot_address": "http://10.241.100.10:6600",
+  "uptime": 92682,
+  "location": {
+    "continent": "Europe",
+    "country": "Belgium",
+    "city": "Brussels",
+    "latitude": 50.83,
+    "longitude": 4.29
+  },
+  "total_resources": {
+    "cru": 5,
+    "mru": 64,
+    "hrd": 5000,
+    "sru": 256
+  }
+}</code></pre>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="panel panel-white resource-modal">
+                  <div class="panel-heading">
+                    <h4 class="panel-title">
+                      <a class="collapsed" data-toggle="collapse" href="#panel_api_nodes__node_id__reserved">
+                        <span class="parent">/api/nodes/{node_id}</span>/reserved
+                      </a>
+                      <span class="methods">
+            <a href="#api_nodes__node_id__reserved_put">
+<!-- modal shown by hashchange event -->
+              <span class="badge badge_put">put</span>
+                      </a>
+                      </span>
+                    </h4>
+                  </div>
+                  <div id="panel_api_nodes__node_id__reserved" class="panel-collapse collapse">
+                    <div class="panel-body">
+                      <div class="list-group">
+                        <div onclick="window.location.href = '#api_nodes__node_id__reserved_put'" class="list-group-item">
+                          <span class="badge badge_put">put</span>
+                          <div class="method_description">
+                            <p>Mark some capacity on a node to be reserved</p>
+                          </div>
+                          <div class="clearfix"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="modal fade" tabindex="0" id="api_nodes__node_id__reserved_put">
+                    <div class="modal-dialog modal-lg">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                          <h4 class="modal-title" id="myModalLabel">
+                            <span class="badge badge_put">put</span>
+                            <span class="parent">/api/nodes/{node_id}</span>/reserved
+                          </h4>
+                        </div>
+                        <div class="modal-body">
+                          <div class="alert alert-info">
+                            <p>Mark some capacity on a node to be reserved</p>
+                          </div>
+
+                          <!-- Nav tabs -->
+                          <ul class="nav nav-tabs">
+                            <li class="active">
+                              <a href="#api_nodes__node_id__reserved_put_request" data-toggle="tab">Request</a>
+                            </li>
+                            <li>
+                              <a href="#api_nodes__node_id__reserved_put_response" data-toggle="tab">Response</a>
+                            </li>
+                          </ul>
+
+                          <!-- Tab panes -->
+                          <div class="tab-content">
+                            <div class="tab-pane active" id="api_nodes__node_id__reserved_put_request">
+                              <h3>URI Parameters</h3>
+                              <ul>
+                                <li>
+                                  <strong>node_id</strong>:
+                                  <em>required (string)
+      </em>
+                                </li>
+                              </ul>
+                              <h3>Body</h3>
+                              <p><strong>Media type</strong>: application/json</p>
+                              <p><strong>Type</strong>: object</p>
+                              <strong>Properties</strong>
+                              <ul>
+                                <li>
                                   <strong>cru</strong>:
                                   <em>required (number)
       </em>
@@ -1102,247 +1219,150 @@
                                   <p>amount of SSD resource unit</p>
                                 </li>
                                 <li>
-                                  <strong>uptime</strong>:
-                                  <em>(integer)
+                                  <strong>farmer_id</strong>:
+                                  <em>(string)
       </em>
-                                  <p>uptime of the node in seconds</p>
+                                  <p>ID of the farmer owning the node</p>
                                 </li>
                               </ul>
                               <p><strong>Example</strong>:</p>
                               <div class="examples">
                                 <pre><code>{
-=======
-    
-  
-
-<p>amount of HDD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>sru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of SSD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-    </ul>
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                            
-                              <li>
-  <strong>used_resources</strong>:
-
-    
-      <em>(object)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-    <ul>
-      
-        <li>
-  <strong>cru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of CPU resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>mru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of memory resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>hru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of HDD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>sru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of SSD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-    </ul>
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                            
-                          </ul>
-                        
-
-                        
-                        
-                        
-    <p><strong>Example</strong>:</p>
-    <div class="examples">
-        
-            
-            <pre><code>{
->>>>>>> WIP: add reserved and used capacity to tracking system
   "node_id": "544546f60261",
   "farmer_id": "JohnDoe",
-  "os_version": "heads/v1.2.2 6b693a496de940b26ee1a2356b67f7d65767c13f",
-  "robot_address": "http://10.241.100.10:6600",
-  "uptime": 92682,
-  "location": {
-    "continent": "Europe",
-    "country": "Belgium",
-    "city": "Brussels",
-    "latitude": 50.83,
-    "longitude": 4.29
-  },
-  "total_resources": {
-    "cru": 5,
-    "mru": 64,
-    "hrd": 5000,
-    "sru": 256
-  }
+  "cru": 1,
+  "mru": 20,
+  "hrd": 50,
+  "sru": 12
 }</code></pre>
-<<<<<<< HEAD
                               </div>
+                            </div>
+                            <div class="tab-pane" id="api_nodes__node_id__reserved_put_response">
+                              <h2>HTTP status code
+                                <a href="http://httpstatus.es/204" target="_blank">204</a>
+                              </h2>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="panel panel-white resource-modal">
+                  <div class="panel-heading">
+                    <h4 class="panel-title">
+                      <a class="collapsed" data-toggle="collapse" href="#panel_api_nodes__node_id__actual">
+                        <span class="parent">/api/nodes/{node_id}</span>/actual
+                      </a>
+                      <span class="methods">
+            <a href="#api_nodes__node_id__actual_put">
+<!-- modal shown by hashchange event -->
+              <span class="badge badge_put">put</span>
+                      </a>
+                      </span>
+                    </h4>
+                  </div>
+                  <div id="panel_api_nodes__node_id__actual" class="panel-collapse collapse">
+                    <div class="panel-body">
+                      <div class="list-group">
+                        <div onclick="window.location.href = '#api_nodes__node_id__actual_put'" class="list-group-item">
+                          <span class="badge badge_put">put</span>
+                          <div class="method_description">
+                            <p>Set the actual usage of the capacity of a node</p>
+                          </div>
+                          <div class="clearfix"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="modal fade" tabindex="0" id="api_nodes__node_id__actual_put">
+                    <div class="modal-dialog modal-lg">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                          <h4 class="modal-title" id="myModalLabel">
+                            <span class="badge badge_put">put</span>
+                            <span class="parent">/api/nodes/{node_id}</span>/actual
+                          </h4>
+                        </div>
+                        <div class="modal-body">
+                          <div class="alert alert-info">
+                            <p>Set the actual usage of the capacity of a node</p>
+                          </div>
+
+                          <!-- Nav tabs -->
+                          <ul class="nav nav-tabs">
+                            <li class="active">
+                              <a href="#api_nodes__node_id__actual_put_request" data-toggle="tab">Request</a>
+                            </li>
+                            <li>
+                              <a href="#api_nodes__node_id__actual_put_response" data-toggle="tab">Response</a>
+                            </li>
+                          </ul>
+
+                          <!-- Tab panes -->
+                          <div class="tab-content">
+                            <div class="tab-pane active" id="api_nodes__node_id__actual_put_request">
+                              <h3>URI Parameters</h3>
+                              <ul>
+                                <li>
+                                  <strong>node_id</strong>:
+                                  <em>required (string)
+      </em>
+                                </li>
+                              </ul>
+                              <h3>Body</h3>
+                              <p><strong>Media type</strong>: application/json</p>
+                              <p><strong>Type</strong>: object</p>
+                              <strong>Properties</strong>
+                              <ul>
+                                <li>
+                                  <strong>cru</strong>:
+                                  <em>required (number)
+      </em>
+                                  <p>amount of CPU resource unit</p>
+                                </li>
+                                <li>
+                                  <strong>mru</strong>:
+                                  <em>required (number)
+      </em>
+                                  <p>amount of memory resource unit</p>
+                                </li>
+                                <li>
+                                  <strong>hru</strong>:
+                                  <em>required (number)
+      </em>
+                                  <p>amount of HDD resource unit</p>
+                                </li>
+                                <li>
+                                  <strong>sru</strong>:
+                                  <em>required (number)
+      </em>
+                                  <p>amount of SSD resource unit</p>
+                                </li>
+                                <li>
+                                  <strong>farmer_id</strong>:
+                                  <em>(string)
+      </em>
+                                  <p>ID of the farmer owning the node</p>
+                                </li>
+                              </ul>
+                              <p><strong>Example</strong>:</p>
+                              <div class="examples">
+                                <pre><code>{
+  "node_id": "544546f60261",
+  "farmer_id": "JohnDoe",
+  "cru": 1,
+  "mru": 20,
+  "hrd": 50,
+  "sru": 12
+}</code></pre>
+                              </div>
+                            </div>
+                            <div class="tab-pane" id="api_nodes__node_id__actual_put_response">
+                              <h2>HTTP status code
+                                <a href="http://httpstatus.es/204" target="_blank">204</a>
+                              </h2>
                             </div>
                           </div>
                         </div>
@@ -1675,3956 +1695,6 @@
                                   <em>required (string)
       </em>
                                 </li>
-=======
-        
-    </div>
-
-                      
-                    
-                  </div>
-                
-
-                
-                  <div class="tab-pane" id="api_nodes_post_response">
-                    
-                      <h2>HTTP status code <a href="http://httpstatus.es/201" target="_blank">201</a></h2>
-
-
-                      
-
-                      
-                        <h3>Body</h3>
-                        
-                          <p><strong>Media type</strong>: application/json</p>
-
-                          
-                            
-                              
-                                <p><strong>Type</strong>: object</p>
-                              
-                            
-                          
-
-                          
-
-                          
-
-                          
-                            <strong>Properties</strong>
-                            <ul>
-                              
-                                <li>
-  <strong>node_id</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                              
-                                <li>
-  <strong>farmer_id</strong>:
-
-    
-      <em>(string)
-      </em>
-    
-  
-
-<p>ID of the farmer owning the node</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                              
-                                <li>
-  <strong>os_version</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-<p>branch and revision of 0-OS</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                              
-                                <li>
-  <strong>location</strong>:
-
-    
-      <em>(object)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-    <ul>
-      
-        <li>
-  <strong>continent</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>country</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>city</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>latitude</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>longitude</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-    </ul>
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                              
-                                <li>
-  <strong>robot_address</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-<p>URL to the node 0-robot of the node</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                              
-                                <li>
-  <strong>uptime</strong>:
-
-    
-      <em>(integer)
-      </em>
-    
-  
-
-<p>uptime of the node in seconds</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                              
-                                <li>
-  <strong>total_resources</strong>:
-
-    
-      <em>(object)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-    <ul>
-      
-        <li>
-  <strong>cru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of CPU resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>mru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of memory resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>hru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of HDD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>sru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of SSD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-    </ul>
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                              
-                                <li>
-  <strong>reserved_resources</strong>:
-
-    
-      <em>(object)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-    <ul>
-      
-        <li>
-  <strong>cru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of CPU resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>mru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of memory resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>hru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of HDD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>sru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of SSD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-    </ul>
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                              
-                                <li>
-  <strong>used_resources</strong>:
-
-    
-      <em>(object)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-    <ul>
-      
-        <li>
-  <strong>cru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of CPU resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>mru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of memory resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>hru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of HDD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>sru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of SSD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-    </ul>
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                              
-                            </ul>
-                          
-
-                          
-                          
-                          
-    <p><strong>Example</strong>:</p>
-    <div class="examples">
-        
-            
-            <pre><code>{
-  "node_id": "544546f60261",
-  "farmer_id": "JohnDoe",
-  "os_version": "heads/v1.2.2 6b693a496de940b26ee1a2356b67f7d65767c13f",
-  "robot_address": "http://10.241.100.10:6600",
-  "uptime": 92682,
-  "location": {
-    "continent": "Europe",
-    "country": "Belgium",
-    "city": "Brussels",
-    "latitude": 50.83,
-    "longitude": 4.29
-  },
-  "total_resources": {
-    "cru": 5,
-    "mru": 64,
-    "hrd": 5000,
-    "sru": 256
-  }
-}</code></pre>
-        
-    </div>
-
-                        
-                      
-                    
-                  </div>
-                
-
-                
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    
-      <div class="modal fade" tabindex="0" id="api_nodes_get">
-        <div class="modal-dialog modal-lg">
-          <div class="modal-content">
-            <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-              <h4 class="modal-title" id="myModalLabel">
-                <span class="badge badge_get">get</span>
-                <span class="parent">/api</span>/nodes
-              </h4>
-            </div>
-
-            <div class="modal-body">
-              
-                <div class="alert alert-info">
-<p>List all the nodes capacity</p>
-
-                </div>
-              
-
-              
-
-              <!-- Nav tabs -->
-              <ul class="nav nav-tabs">
-                
-                  <li class="active">
-                    <a href="#api_nodes_get_request" data-toggle="tab">Request</a>
-                  </li>
-                
-
-                
-                  <li>
-                    <a href="#api_nodes_get_response" data-toggle="tab">Response</a>
-                  </li>
-                
-
-                
-              </ul>
-
-              <!-- Tab panes -->
-              <div class="tab-content">
-                
-                  <div class="tab-pane active" id="api_nodes_get_request">
-                    
-
-                    
-
-                    
-
-                    
-                      <h3>Query String</h3>
-                      <ul>
-                        
-                          <li>
-  <strong>country</strong>:
-
-    
-      <em>(string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                        
-                          <li>
-  <strong>cru</strong>:
-
-    
-      <em>(number)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                        
-                          <li>
-  <strong>mru</strong>:
-
-    
-      <em>(number)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                        
-                          <li>
-  <strong>sru</strong>:
-
-    
-      <em>(number)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                        
-                          <li>
-  <strong>farmer</strong>:
-
-    
-      <em>(string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                        
-                      </ul>
-                    
-
-                    
-
-                    
-                  </div>
-                
-
-                
-                  <div class="tab-pane" id="api_nodes_get_response">
-                    
-                      <h2>HTTP status code <a href="http://httpstatus.es/200" target="_blank">200</a></h2>
-
-
-                      
-
-                      
-                        <h3>Body</h3>
-                        
-                          <p><strong>Media type</strong>: application/json</p>
-
-                          
-                            
-                              
-                                <p><strong>Type</strong>: array of Capacity</p>
-                              
-                            
-                          
-
-                          
-
-                          
-                            
-
-                            
-                              <p><strong>Items</strong>: Capacity</p>
-
-                              
-                                <div class="items">
-                                  
-                                    <ul>
-                                      
-                                        <li>
-  <strong>node_id</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                                      
-                                        <li>
-  <strong>farmer_id</strong>:
-
-    
-      <em>(string)
-      </em>
-    
-  
-
-<p>ID of the farmer owning the node</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                                      
-                                        <li>
-  <strong>os_version</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-<p>branch and revision of 0-OS</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                                      
-                                        <li>
-  <strong>location</strong>:
-
-    
-      <em>(object)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-    <ul>
-      
-        <li>
-  <strong>continent</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>country</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>city</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>latitude</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>longitude</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-    </ul>
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                                      
-                                        <li>
-  <strong>robot_address</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-<p>URL to the node 0-robot of the node</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                                      
-                                        <li>
-  <strong>uptime</strong>:
-
-    
-      <em>(integer)
-      </em>
-    
-  
-
-<p>uptime of the node in seconds</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                                      
-                                        <li>
-  <strong>total_resources</strong>:
-
-    
-      <em>(object)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-    <ul>
-      
-        <li>
-  <strong>cru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of CPU resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>mru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of memory resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>hru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of HDD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>sru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of SSD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-    </ul>
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                                      
-                                        <li>
-  <strong>reserved_resources</strong>:
-
-    
-      <em>(object)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-    <ul>
-      
-        <li>
-  <strong>cru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of CPU resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>mru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of memory resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>hru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of HDD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>sru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of SSD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-    </ul>
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                                      
-                                        <li>
-  <strong>used_resources</strong>:
-
-    
-      <em>(object)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-    <ul>
-      
-        <li>
-  <strong>cru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of CPU resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>mru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of memory resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>hru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of HDD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>sru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of SSD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-    </ul>
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                                      
-                                    </ul>
-                                  
-
-                                  
-                                  
-                                  
-                                </div>
-                              
-                            
-                          
-
-                          
-
-                          
-                          
-                          
-                        
-                      
-                    
-                  </div>
-                
-
-                
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    
-  </div>
-
-
-
-  
-  <div class="panel panel-white resource-modal">
-    <div class="panel-heading">
-      <h4 class="panel-title">
-        <a class="collapsed" data-toggle="collapse" href="#panel_api_nodes__node_id_">
-          <span class="parent">/api/nodes</span>/{node_id}
-        </a>
-
-        <span class="methods">
-          
-            <a href="#api_nodes__node_id__get"><!-- modal shown by hashchange event -->
-              <span class="badge badge_get">get</span>
-            </a>
-          
-        </span>
-      </h4>
-    </div>
-
-    <div id="panel_api_nodes__node_id_" class="panel-collapse collapse">
-      <div class="panel-body">
-        
-          
-        
-
-        <div class="list-group">
-          
-            <div onclick="window.location.href = '#api_nodes__node_id__get'" class="list-group-item">
-              <span class="badge badge_get">get</span>
-              <div class="method_description">
-<p>Get detail about capacity of a node</p>
-
-              </div>
-              <div class="clearfix"></div>
-            </div>
-          
-        </div>
-      </div>
-    </div>
-
-    
-      <div class="modal fade" tabindex="0" id="api_nodes__node_id__get">
-        <div class="modal-dialog modal-lg">
-          <div class="modal-content">
-            <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-              <h4 class="modal-title" id="myModalLabel">
-                <span class="badge badge_get">get</span>
-                <span class="parent">/api/nodes</span>/{node_id}
-              </h4>
-            </div>
-
-            <div class="modal-body">
-              
-                <div class="alert alert-info">
-<p>Get detail about capacity of a node</p>
-
-                </div>
-              
-
-              
-
-              <!-- Nav tabs -->
-              <ul class="nav nav-tabs">
-                
-                  <li class="active">
-                    <a href="#api_nodes__node_id__get_request" data-toggle="tab">Request</a>
-                  </li>
-                
-
-                
-                  <li>
-                    <a href="#api_nodes__node_id__get_response" data-toggle="tab">Response</a>
-                  </li>
-                
-
-                
-              </ul>
-
-              <!-- Tab panes -->
-              <div class="tab-content">
-                
-                  <div class="tab-pane active" id="api_nodes__node_id__get_request">
-                    
-                      <h3>URI Parameters</h3>
-                      <ul>
-                        
-                          <li>
-  <strong>node_id</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                        
-                      </ul>
-                    
-
-                    
-
-                    
-
-                    
-
-                    
-
-                    
-                  </div>
-                
-
-                
-                  <div class="tab-pane" id="api_nodes__node_id__get_response">
-                    
-                      <h2>HTTP status code <a href="http://httpstatus.es/200" target="_blank">200</a></h2>
-
-
-                      
-
-                      
-                        <h3>Body</h3>
-                        
-                          <p><strong>Media type</strong>: application/json</p>
-
-                          
-                            
-                              
-                                <p><strong>Type</strong>: object</p>
-                              
-                            
-                          
-
-                          
-
-                          
-
-                          
-                            <strong>Properties</strong>
-                            <ul>
-                              
-                                <li>
-  <strong>node_id</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                              
-                                <li>
-  <strong>farmer_id</strong>:
-
-    
-      <em>(string)
-      </em>
-    
-  
-
-<p>ID of the farmer owning the node</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                              
-                                <li>
-  <strong>os_version</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-<p>branch and revision of 0-OS</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                              
-                                <li>
-  <strong>location</strong>:
-
-    
-      <em>(object)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-    <ul>
-      
-        <li>
-  <strong>continent</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>country</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>city</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>latitude</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>longitude</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-    </ul>
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                              
-                                <li>
-  <strong>robot_address</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-<p>URL to the node 0-robot of the node</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                              
-                                <li>
-  <strong>uptime</strong>:
-
-    
-      <em>(integer)
-      </em>
-    
-  
-
-<p>uptime of the node in seconds</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                              
-                                <li>
-  <strong>total_resources</strong>:
-
-    
-      <em>(object)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-    <ul>
-      
-        <li>
-  <strong>cru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of CPU resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>mru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of memory resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>hru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of HDD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>sru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of SSD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-    </ul>
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                              
-                                <li>
-  <strong>reserved_resources</strong>:
-
-    
-      <em>(object)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-    <ul>
-      
-        <li>
-  <strong>cru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of CPU resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>mru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of memory resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>hru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of HDD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>sru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of SSD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-    </ul>
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                              
-                                <li>
-  <strong>used_resources</strong>:
-
-    
-      <em>(object)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-    <ul>
-      
-        <li>
-  <strong>cru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of CPU resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>mru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of memory resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>hru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of HDD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-        <li>
-  <strong>sru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of SSD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-      
-    </ul>
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                              
-                            </ul>
-                          
-
-                          
-                          
-                          
-    <p><strong>Example</strong>:</p>
-    <div class="examples">
-        
-            
-            <pre><code>{
-  "node_id": "544546f60261",
-  "farmer_id": "JohnDoe",
-  "os_version": "heads/v1.2.2 6b693a496de940b26ee1a2356b67f7d65767c13f",
-  "robot_address": "http://10.241.100.10:6600",
-  "uptime": 92682,
-  "location": {
-    "continent": "Europe",
-    "country": "Belgium",
-    "city": "Brussels",
-    "latitude": 50.83,
-    "longitude": 4.29
-  },
-  "total_resources": {
-    "cru": 5,
-    "mru": 64,
-    "hrd": 5000,
-    "sru": 256
-  }
-}</code></pre>
-        
-    </div>
-
-                        
-                      
-                    
-                  </div>
-                
-
-                
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    
-  </div>
-
-
-
-  
-  <div class="panel panel-white resource-modal">
-    <div class="panel-heading">
-      <h4 class="panel-title">
-        <a class="collapsed" data-toggle="collapse" href="#panel_api_nodes__node_id__reserved">
-          <span class="parent">/api/nodes/{node_id}</span>/reserved
-        </a>
-
-        <span class="methods">
-          
-            <a href="#api_nodes__node_id__reserved_put"><!-- modal shown by hashchange event -->
-              <span class="badge badge_put">put</span>
-            </a>
-          
-        </span>
-      </h4>
-    </div>
-
-    <div id="panel_api_nodes__node_id__reserved" class="panel-collapse collapse">
-      <div class="panel-body">
-        
-          
-        
-
-        <div class="list-group">
-          
-            <div onclick="window.location.href = '#api_nodes__node_id__reserved_put'" class="list-group-item">
-              <span class="badge badge_put">put</span>
-              <div class="method_description">
-<p>Mark some capacity on a node to be reserved</p>
-
-              </div>
-              <div class="clearfix"></div>
-            </div>
-          
-        </div>
-      </div>
-    </div>
-
-    
-      <div class="modal fade" tabindex="0" id="api_nodes__node_id__reserved_put">
-        <div class="modal-dialog modal-lg">
-          <div class="modal-content">
-            <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-              <h4 class="modal-title" id="myModalLabel">
-                <span class="badge badge_put">put</span>
-                <span class="parent">/api/nodes/{node_id}</span>/reserved
-              </h4>
-            </div>
-
-            <div class="modal-body">
-              
-                <div class="alert alert-info">
-<p>Mark some capacity on a node to be reserved</p>
-
-                </div>
-              
-
-              
-
-              <!-- Nav tabs -->
-              <ul class="nav nav-tabs">
-                
-                  <li class="active">
-                    <a href="#api_nodes__node_id__reserved_put_request" data-toggle="tab">Request</a>
-                  </li>
-                
-
-                
-                  <li>
-                    <a href="#api_nodes__node_id__reserved_put_response" data-toggle="tab">Response</a>
-                  </li>
-                
-
-                
-              </ul>
-
-              <!-- Tab panes -->
-              <div class="tab-content">
-                
-                  <div class="tab-pane active" id="api_nodes__node_id__reserved_put_request">
-                    
-                      <h3>URI Parameters</h3>
-                      <ul>
-                        
-                          <li>
-  <strong>node_id</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                        
-                      </ul>
-                    
-
-                    
-
-                    
-
-                    
-
-                    
-
-                    
-                      <h3>Body</h3>
-                      
-                        <p><strong>Media type</strong>: application/json</p>
-
-                        
-                          
-                            
-                              <p><strong>Type</strong>: object</p>
-                            
-                          
-                        
-
-                        
-
-                        
-
-                        
-                          <strong>Properties</strong>
-                          <ul>
-                            
-                              <li>
-  <strong>cru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of CPU resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                            
-                              <li>
-  <strong>mru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of memory resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                            
-                              <li>
-  <strong>hru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of HDD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                            
-                              <li>
-  <strong>sru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of SSD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                            
-                              <li>
-  <strong>farmer_id</strong>:
-
-    
-      <em>(string)
-      </em>
-    
-  
-
-<p>ID of the farmer owning the node</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                            
-                          </ul>
-                        
-
-                        
-                        
-                        
-    <p><strong>Example</strong>:</p>
-    <div class="examples">
-        
-            
-            <pre><code>{
-  "node_id": "544546f60261",
-  "farmer_id": "JohnDoe",
-  "cru": 1,
-  "mru": 20,
-  "hrd": 50,
-  "sru": 12
-}</code></pre>
-        
-    </div>
-
-                      
-                    
-                  </div>
-                
-
-                
-                  <div class="tab-pane" id="api_nodes__node_id__reserved_put_response">
-                    
-                      <h2>HTTP status code <a href="http://httpstatus.es/204" target="_blank">204</a></h2>
-
-
-                      
-
-                      
-                    
-                  </div>
-                
-
-                
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    
-  </div>
-
-
-
-
-
-  
-  <div class="panel panel-white resource-modal">
-    <div class="panel-heading">
-      <h4 class="panel-title">
-        <a class="collapsed" data-toggle="collapse" href="#panel_api_nodes__node_id__actual">
-          <span class="parent">/api/nodes/{node_id}</span>/actual
-        </a>
-
-        <span class="methods">
-          
-            <a href="#api_nodes__node_id__actual_put"><!-- modal shown by hashchange event -->
-              <span class="badge badge_put">put</span>
-            </a>
-          
-        </span>
-      </h4>
-    </div>
-
-    <div id="panel_api_nodes__node_id__actual" class="panel-collapse collapse">
-      <div class="panel-body">
-        
-          
-        
-
-        <div class="list-group">
-          
-            <div onclick="window.location.href = '#api_nodes__node_id__actual_put'" class="list-group-item">
-              <span class="badge badge_put">put</span>
-              <div class="method_description">
-<p>Set the actual usage of the capacity of a node</p>
-
-              </div>
-              <div class="clearfix"></div>
-            </div>
-          
-        </div>
-      </div>
-    </div>
-
-    
-      <div class="modal fade" tabindex="0" id="api_nodes__node_id__actual_put">
-        <div class="modal-dialog modal-lg">
-          <div class="modal-content">
-            <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-              <h4 class="modal-title" id="myModalLabel">
-                <span class="badge badge_put">put</span>
-                <span class="parent">/api/nodes/{node_id}</span>/actual
-              </h4>
-            </div>
-
-            <div class="modal-body">
-              
-                <div class="alert alert-info">
-<p>Set the actual usage of the capacity of a node</p>
-
-                </div>
-              
-
-              
-
-              <!-- Nav tabs -->
-              <ul class="nav nav-tabs">
-                
-                  <li class="active">
-                    <a href="#api_nodes__node_id__actual_put_request" data-toggle="tab">Request</a>
-                  </li>
-                
-
-                
-                  <li>
-                    <a href="#api_nodes__node_id__actual_put_response" data-toggle="tab">Response</a>
-                  </li>
-                
-
-                
-              </ul>
-
-              <!-- Tab panes -->
-              <div class="tab-content">
-                
-                  <div class="tab-pane active" id="api_nodes__node_id__actual_put_request">
-                    
-                      <h3>URI Parameters</h3>
-                      <ul>
-                        
-                          <li>
-  <strong>node_id</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                        
-                      </ul>
-                    
-
-                    
-
-                    
-
-                    
-
-                    
-
-                    
-                      <h3>Body</h3>
-                      
-                        <p><strong>Media type</strong>: application/json</p>
-
-                        
-                          
-                            
-                              <p><strong>Type</strong>: object</p>
-                            
-                          
-                        
-
-                        
-
-                        
-
-                        
-                          <strong>Properties</strong>
-                          <ul>
-                            
-                              <li>
-  <strong>cru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of CPU resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                            
-                              <li>
-  <strong>mru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of memory resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                            
-                              <li>
-  <strong>hru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of HDD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                            
-                              <li>
-  <strong>sru</strong>:
-
-    
-      <em>required (number)
-      </em>
-    
-  
-
-<p>amount of SSD resource unit</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                            
-                              <li>
-  <strong>farmer_id</strong>:
-
-    
-      <em>(string)
-      </em>
-    
-  
-
-<p>ID of the farmer owning the node</p>
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                            
-                          </ul>
-                        
-
-                        
-                        
-                        
-    <p><strong>Example</strong>:</p>
-    <div class="examples">
-        
-            
-            <pre><code>{
-  "node_id": "544546f60261",
-  "farmer_id": "JohnDoe",
-  "cru": 1,
-  "mru": 20,
-  "hrd": 50,
-  "sru": 12
-}</code></pre>
-        
-    </div>
-
-                      
-                    
-                  </div>
-                
-
-                
-                  <div class="tab-pane" id="api_nodes__node_id__actual_put_response">
-                    
-                      <h2>HTTP status code <a href="http://httpstatus.es/204" target="_blank">204</a></h2>
-
-
-                      
-
-                      
-                    
-                  </div>
-                
-
-                
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    
-  </div>
-
-
-
-
-
-
-
-
-
-  
-  <div class="panel panel-white resource-modal">
-    <div class="panel-heading">
-      <h4 class="panel-title">
-        <a class="collapsed" data-toggle="collapse" href="#panel_api_farmer_create">
-          <span class="parent">/api</span>/farmer_create
-        </a>
-
-        <span class="methods">
-          
-            <a href="#api_farmer_create_get"><!-- modal shown by hashchange event -->
-              <span class="badge badge_get">get</span>
-            </a>
-          
-        </span>
-      </h4>
-    </div>
-
-    <div id="panel_api_farmer_create" class="panel-collapse collapse">
-      <div class="panel-body">
-        
-          
-        
-
-        <div class="list-group">
-          
-            <div onclick="window.location.href = '#api_farmer_create_get'" class="list-group-item">
-              <span class="badge badge_get">get</span>
-              <div class="method_description">
-<p>Register a farmer</p>
-
-              </div>
-              <div class="clearfix"></div>
-            </div>
-          
-        </div>
-      </div>
-    </div>
-
-    
-      <div class="modal fade" tabindex="0" id="api_farmer_create_get">
-        <div class="modal-dialog modal-lg">
-          <div class="modal-content">
-            <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-              <h4 class="modal-title" id="myModalLabel">
-                <span class="badge badge_get">get</span>
-                <span class="parent">/api</span>/farmer_create
-              </h4>
-            </div>
-
-            <div class="modal-body">
-              
-                <div class="alert alert-info">
-<p>Register a farmer</p>
-
-                </div>
-              
-
-              
-
-              <!-- Nav tabs -->
-              <ul class="nav nav-tabs">
-                
-                  <li class="active">
-                    <a href="#api_farmer_create_get_request" data-toggle="tab">Request</a>
-                  </li>
-                
-
-                
-                  <li>
-                    <a href="#api_farmer_create_get_response" data-toggle="tab">Response</a>
-                  </li>
-                
-
-                
-              </ul>
-
-              <!-- Tab panes -->
-              <div class="tab-content">
-                
-                  <div class="tab-pane active" id="api_farmer_create_get_request">
-                    
-
-                    
-
-                    
-
-                    
-                      <h3>Query String</h3>
-                      <ul>
-                        
-                          <li>
-  <strong>organization</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                        
-                          <li>
-  <strong>name</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                        
-                      </ul>
-                    
-
-                    
-
-                    
-                  </div>
-                
-
-                
-                  <div class="tab-pane" id="api_farmer_create_get_response">
-                    
-                      <h2>HTTP status code <a href="http://httpstatus.es/302" target="_blank">302</a></h2>
-<p>Page with information how to use your farm</p>
-
-
-                      
-
-                      
-                    
-                  </div>
-                
-
-                
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    
-  </div>
-
-
-
-
-
-  
-  <div class="panel panel-white resource-modal">
-    <div class="panel-heading">
-      <h4 class="panel-title">
-        <a class="collapsed" data-toggle="collapse" href="#panel_api_farmers">
-          <span class="parent">/api</span>/farmers
-        </a>
-
-        <span class="methods">
-          
-            <a href="#api_farmers_get"><!-- modal shown by hashchange event -->
-              <span class="badge badge_get">get</span>
-            </a>
-          
-        </span>
-      </h4>
-    </div>
-
-    <div id="panel_api_farmers" class="panel-collapse collapse">
-      <div class="panel-body">
-        
-          
-        
-
-        <div class="list-group">
-          
-            <div onclick="window.location.href = '#api_farmers_get'" class="list-group-item">
-              <span class="badge badge_get">get</span>
-              <div class="method_description">
-<p>List Farmers</p>
-
-              </div>
-              <div class="clearfix"></div>
-            </div>
-          
-        </div>
-      </div>
-    </div>
-
-    
-      <div class="modal fade" tabindex="0" id="api_farmers_get">
-        <div class="modal-dialog modal-lg">
-          <div class="modal-content">
-            <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-              <h4 class="modal-title" id="myModalLabel">
-                <span class="badge badge_get">get</span>
-                <span class="parent">/api</span>/farmers
-              </h4>
-            </div>
-
-            <div class="modal-body">
-              
-                <div class="alert alert-info">
-<p>List Farmers</p>
-
-                </div>
-              
-
-              
-
-              <!-- Nav tabs -->
-              <ul class="nav nav-tabs">
-                
-
-                
-                  <li class="active">
-                    <a href="#api_farmers_get_response" data-toggle="tab">Response</a>
-                  </li>
-                
-
-                
-              </ul>
-
-              <!-- Tab panes -->
-              <div class="tab-content">
-                
-
-                
-                  <div class="tab-pane active" id="api_farmers_get_response">
-                    
-                      <h2>HTTP status code <a href="http://httpstatus.es/200" target="_blank">200</a></h2>
-
-
-                      
-
-                      
-                        <h3>Body</h3>
-                        
-                          <p><strong>Media type</strong>: application/json</p>
-
-                          
-                            
-                              
-                                <p><strong>Type</strong>: array of Farmer</p>
-                              
-                            
-                          
-
-                          
-
-                          
-                            
-
-                            
-                              <p><strong>Items</strong>: Farmer</p>
-
-                              
-                                <div class="items">
-                                  
-                                    <ul>
-                                      
-                                        <li>
-  <strong>iyo_organization</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                                      
-                                        <li>
-  <strong>name</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                                      
-                                        <li>
-  <strong>wallet_addresses</strong>:
-
-    
-      <em>required (array of )
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                                      
-                                    </ul>
-                                  
-
-                                  
-                                  
-                                  
-                                </div>
-                              
-                            
-                          
-
-                          
-
-                          
-                          
-                          
-                        
-                      
-                    
-                  </div>
-                
-
-                
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    
-  </div>
-
-
-
-  
-  <div class="panel panel-white resource-modal">
-    <div class="panel-heading">
-      <h4 class="panel-title">
-        <a class="collapsed" data-toggle="collapse" href="#panel_api_farmers__iyo_organization_">
-          <span class="parent">/api/farmers</span>/{iyo_organization}
-        </a>
-
-        <span class="methods">
-          
-            <a href="#api_farmers__iyo_organization__get"><!-- modal shown by hashchange event -->
-              <span class="badge badge_get">get</span>
-            </a>
-          
-        </span>
-      </h4>
-    </div>
-
-    <div id="panel_api_farmers__iyo_organization_" class="panel-collapse collapse">
-      <div class="panel-body">
-        
-          
-        
-
-        <div class="list-group">
-          
-            <div onclick="window.location.href = '#api_farmers__iyo_organization__get'" class="list-group-item">
-              <span class="badge badge_get">get</span>
-              <div class="method_description">
-<p>Get detail about a farmer</p>
-
-              </div>
-              <div class="clearfix"></div>
-            </div>
-          
-        </div>
-      </div>
-    </div>
-
-    
-      <div class="modal fade" tabindex="0" id="api_farmers__iyo_organization__get">
-        <div class="modal-dialog modal-lg">
-          <div class="modal-content">
-            <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-              <h4 class="modal-title" id="myModalLabel">
-                <span class="badge badge_get">get</span>
-                <span class="parent">/api/farmers</span>/{iyo_organization}
-              </h4>
-            </div>
-
-            <div class="modal-body">
-              
-                <div class="alert alert-info">
-<p>Get detail about a farmer</p>
-
-                </div>
-              
-
-              
-
-              <!-- Nav tabs -->
-              <ul class="nav nav-tabs">
-                
-                  <li class="active">
-                    <a href="#api_farmers__iyo_organization__get_request" data-toggle="tab">Request</a>
-                  </li>
-                
-
-                
-                  <li>
-                    <a href="#api_farmers__iyo_organization__get_response" data-toggle="tab">Response</a>
-                  </li>
-                
-
-                
-              </ul>
-
-              <!-- Tab panes -->
-              <div class="tab-content">
-                
-                  <div class="tab-pane active" id="api_farmers__iyo_organization__get_request">
-                    
-                      <h3>URI Parameters</h3>
-                      <ul>
-                        
-                          <li>
-  <strong>iyo_organization</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                        
-                      </ul>
-                    
-
-                    
-
-                    
-
-                    
-
-                    
-
-                    
-                  </div>
-                
-
-                
-                  <div class="tab-pane" id="api_farmers__iyo_organization__get_response">
-                    
-                      <h2>HTTP status code <a href="http://httpstatus.es/200" target="_blank">200</a></h2>
-
-
-                      
-
-                      
-                        <h3>Body</h3>
-                        
-                          <p><strong>Media type</strong>: application/json</p>
-
-                          
-                            
-                              
-                                <p><strong>Type</strong>: object</p>
-                              
-                            
-                          
-
-                          
-
-                          
-
-                          
-                            <strong>Properties</strong>
-                            <ul>
-                              
-                                <li>
-  <strong>iyo_organization</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                              
-                                <li>
-  <strong>name</strong>:
-
-    
-      <em>required (string)
-      </em>
-    
-  
-
-
-
-  
-
-  
-
-  
-
-  
-  
-  
-
-  
-
-</li>
-
-                              
->>>>>>> WIP: add reserved and used capacity to tracking system
                                 <li>
                                   <strong>wallet_addresses</strong>:
                                   <em>required (array of string)

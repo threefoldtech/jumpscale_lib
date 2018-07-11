@@ -2,11 +2,6 @@
 	"$schema": "http://json-schema.org/schema#",
 	"type": "object",
 	"properties": {
-		"cru": {
-			"type": "number"
-		},
-		"farmer": {
-			"type": "string"
 		"farmer_id": {
 			"type": [
 				"string",
@@ -32,9 +27,6 @@
 			"$ref": "ResourceUnits_schema.json"
 		},
 		"uptime": {
-<<<<<<< HEAD
-			"type": "integer"
-=======
 			"type": [
 				"integer",
 				"null"
@@ -42,7 +34,6 @@
 		},
 		"used_resources": {
 			"$ref": "ResourceUnits_schema.json"
->>>>>>> WIP: add reserved and used capacity to tracking system
 		}
 	},
 	"required": [

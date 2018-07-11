@@ -20,6 +20,17 @@ class ApiService:
         uri = self.client.base_url + "/api/farmer_create"
         return self.client.get(uri, None, headers, query_params, content_type)
 
+    def UpdateFarmer(self, headers=None, query_params=None, content_type="application/json"):
+        """
+        Update a farmer
+        It is method for GET /api/farmer_update
+        """
+        if query_params is None:
+            query_params = {}
+
+        uri = self.client.base_url + "/api/farmer_update"
+        return self.client.get(uri, None, headers, query_params, content_type)
+
     def GetFarmer(self, iyo_organization, headers=None, query_params=None, content_type="application/json"):
         """
         Get detail about a farmer

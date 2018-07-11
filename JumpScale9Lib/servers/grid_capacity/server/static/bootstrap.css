@@ -1,6 +1,5 @@
-/* Move down content because we have a fixed navbar that is 3.5rem tall */
-
 body {
+    /* Move down content because we have a fixed navbar that is 3.5rem tall */
     padding-top: 5rem;
 }
 
@@ -8,12 +7,19 @@ input .filter {
     float: left;
 }
 
-.nodeItem {
+.clickable {
     cursor: pointer;
 }
 
 #uptimeHelp {
     cursor: pointer;
+}
+
+.modal{
+    width: 75%;
+    margin-top: 5rem;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 @media (min-width: 768px) {

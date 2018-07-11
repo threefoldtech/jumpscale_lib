@@ -43,5 +43,6 @@ def UpdateActualUsedCapacityHandler(node_id):
     capacity.used_resources.hru = inputs['hru']
     capacity.used_resources.sru = inputs['sru']
     capacity.updated = datetime.now()
+    capacity.save()
 
     return '', 204

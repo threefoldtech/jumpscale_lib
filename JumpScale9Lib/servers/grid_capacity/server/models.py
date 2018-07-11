@@ -74,6 +74,9 @@ class NodeRegistration:
             query['total_resources__sru__gte'] = sru
 
         nodes = Capacity.objects(**query)
+        if kwargs.get('order'):
+            nodes = nodes.order_by(kwargs.get('order'))
+
         page = kwargs.get('page')
         per_page = kwargs.get('per_page', 50)
         if page:
@@ -89,10 +92,11 @@ class NodeRegistration:
         :return: sequence of country
         :rtype: sequence of string
         """
-        capacities = Capacity.objects.only('location__country')
+        capacities = Capacity.objects.only('location__country').order_by('location__country')
         countries = set()
         for cap in capacities:
-            countries.add(cap.location.country)
+            if cap.location:
+                countries.add(cap.location.country)
         return list(countries)
 
 
@@ -109,13 +113,18 @@ class FarmerRegistration:
         farmer.save()
 
     @staticmethod
-    def list(name=None, organization=None):
+    def list(name=None, organization=None, **kwargs):
         query = {}
         if name:
             query['name'] = name
         if organization:
             query['organization'] = organization
-        return Farmer.objects(**query)
+        farmers = Farmer.objects(**query)
+
+        if kwargs.get('order'):
+            farmers = farmers.order_by(kwargs.get('order'))
+
+        return farmers
 
     @staticmethod
     def get(id):
@@ -148,10 +157,10 @@ class Farmer(db.Document):
 
 
 class Ressources(EmbeddedDocument):
-    cru = FloatField()
-    mru = FloatField()
-    hru = FloatField()
-    sru = FloatField()
+    cru = FloatField(default=0.0)
+    mru = FloatField(default=0.0)
+    hru = FloatField(default=0.0)
+    sru = FloatField(default=0.0)
 
 
 class Capacity(db.Document):

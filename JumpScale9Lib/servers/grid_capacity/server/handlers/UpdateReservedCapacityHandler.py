@@ -36,5 +36,6 @@ def UpdateReservedCapacityHandler(node_id):
     capacity.reserved_resources.hru = inputs['hru']
     capacity.reserved_resources.sru = inputs['sru']
     capacity.updated = datetime.now()
+    capacity.save()
 
     return '', 204

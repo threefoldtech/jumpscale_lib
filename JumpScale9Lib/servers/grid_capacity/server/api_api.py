@@ -7,6 +7,42 @@ from . import handlers
 api_api = Blueprint('api_api', __name__)
 
 
+@api_api.route('/api/farmer_create', methods=['GET'])
+def RegisterFarmer():
+    """
+    Register a farmer
+    It is handler for GET /api/farmer_create
+    """
+    return handlers.RegisterFarmerHandler()
+
+
+@api_api.route('/api/farmer_update', methods=['GET'])
+def UpdateFarmer():
+    """
+    Update a farmer
+    It is handler for GET /api/farmer_update
+    """
+    return handlers.UpdateFarmerHandler()
+
+
+@api_api.route('/api/farmers', methods=['GET'])
+def ListFarmers():
+    """
+    List Farmers
+    It is handler for GET /api/farmers
+    """
+    return handlers.ListFarmersHandler()
+
+
+@api_api.route('/api/farmers/<iyo_organization>', methods=['GET'])
+def GetFarmer(iyo_organization):
+    """
+    Get detail about a farmer
+    It is handler for GET /api/farmers/<iyo_organization>
+    """
+    return handlers.GetFarmerHandler(iyo_organization)
+
+
 @api_api.route('/api/nodes', methods=['GET'])
 def ListCapacity():
     """
@@ -50,39 +86,3 @@ def UpdateActualUsedCapacity(node_id):
     It is handler for PUT /api/nodes/<node_id>/actual
     """
     return handlers.UpdateActualUsedCapacityHandler(node_id)
-
-
-@api_api.route('/api/farmer_create', methods=['GET'])
-def RegisterFarmer():
-    """
-    Register a farmer
-    It is handler for GET /api/farmer_create
-    """
-    return handlers.RegisterFarmerHandler()
-
-
-@api_api.route('/api/farmer_update', methods=['GET'])
-def UpdateFarmer():
-    """
-    Register a farmer
-    It is handler for GET /api/farmer_update
-    """
-    return handlers.UpdateFarmerHandler()
-
-
-@api_api.route('/api/farmers', methods=['GET'])
-def ListFarmers():
-    """
-    List Farmers
-    It is handler for GET /api/farmers
-    """
-    return handlers.ListFarmersHandler()
-
-
-@api_api.route('/api/farmers/<iyo_organization>', methods=['GET'])
-def GetFarmer(iyo_organization):
-    """
-    Get detail about a farmer
-    It is handler for GET /api/farmers/<iyo_organization>
-    """
-    return handlers.GetFarmerHandler(iyo_organization)

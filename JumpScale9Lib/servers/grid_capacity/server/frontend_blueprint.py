@@ -8,6 +8,7 @@ frontend_bp = Blueprint('frontent', __name__)
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
+
 @frontend_bp.route('/static/<path:path>')
 def send_js(path):
     return send_from_directory(dir_path, os.path.join('static', path))
@@ -16,7 +17,8 @@ def send_js(path):
 @frontend_bp.route('/', methods=['GET'])
 def capacity():
     countries = NodeRegistration.all_countries()
-    farmers = FarmerRegistration.list()
+    farmers = FarmerRegistration.list().order_by('name')
+
     nodes = []
     form = {
         'mru': 0,
@@ -38,14 +40,14 @@ def capacity():
         form['page'] = int(request.args.get('page') or 1)
         form['per_page'] = int(request.args.get('pre_page') or 20)
 
-        nodes = NodeRegistration.search(**form)
+        nodes = NodeRegistration.search(**form, order='uptime')
 
     return render_template('capacity.html', nodes=nodes, form=form, countries=countries, farmers=farmers)
 
 
 @frontend_bp.route('/farmers', methods=['GET'])
 def list_farmers():
-    farmers = FarmerRegistration.list()
+    farmers = FarmerRegistration.list(order='name')
     return render_template('farmers.html', farmers=farmers)
 
 
@@ -53,6 +55,7 @@ def list_farmers():
 def farmer_registered():
     jwt = session['iyo_jwt']
     return render_template('farm_registered.html', jwt=jwt)
+
 
 @frontend_bp.route('/farm_updated', methods=['GET'])
 def farmer_updated():
@@ -63,7 +66,6 @@ def farmer_updated():
 @frontend_bp.route('/api', methods=['GET'])
 def api_index():
     return render_template('api.html')
-
 
 
 @frontend_bp.route('/register_farm', methods=['GET'])
@@ -85,7 +87,7 @@ def edit_farmer(organization):
             # invalidate iyo_authenticated to retry login with the new scope.
             force_invalidate_session()
 
-            return redirect("/edit_farm/{}".format(organization))        
+            return redirect("/edit_farm/{}".format(organization))
         try:
             farmer = FarmerRegistration.get(organization)
         except FarmerNotFoundError as e:
@@ -93,5 +95,3 @@ def edit_farmer(organization):
         else:
             return render_template('edit_farm.html', farmer=farmer)
     return handler()
-
-

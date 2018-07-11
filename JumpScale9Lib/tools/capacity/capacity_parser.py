@@ -1,24 +1,18 @@
 import json
-from enum import Enum
 import re as _re
+from enum import Enum
+
 import requests
 
-GIB = 1024 * 1024 * 1024
-GB = 1000 * 1000 * 1000
+from JumpScale9Lib.clients.zero_os.sal.Disk import StorageType
+
+from .units import GB, GiB
 
 # regex for _parse_dmi
 _handle_re = _re.compile("^Handle\\s+(.+),\\s+DMI\\s+type\\s+(\\d+),\\s+(\\d+)\\s+bytes$")
 _in_block_re = _re.compile("^\\t\\t(.+)$")
 _record_re = _re.compile("\\t(.+):\\s+(.+)$")
 _record2_re = _re.compile("\\t(.+):$")
-
-
-class StorageType(Enum):
-    SSD = "SSH"
-    HDD = "HDD"
-    NVME = "NVME"
-    ARCHIVE = "ARCHIVE"
-    CDROM = "CDROM"
 
 
 class CapacityParser:
@@ -120,7 +114,7 @@ class Report():
         """
         return the number of memory units in GiB
         """
-        size = (self._total_mem / GIB)
+        size = (self._total_mem / GiB)
         return round(size, 2)
 
     @property
@@ -132,7 +126,7 @@ class Report():
         unit = 0
         for disk in self.disk:
             if disk['type'] in [StorageType.HDD.name, StorageType.ARCHIVE.name]:
-                unit += int(disk['size']) / GIB
+                unit += int(disk['size']) / GiB
         return round(unit, 2)
 
     @property
@@ -144,7 +138,7 @@ class Report():
         unit = 0
         for disk in self.disk:
             if disk['type'] in [StorageType.SSD.name, StorageType.NVME.name]:
-                unit += int(disk['size']) / GIB
+                unit += int(disk['size']) / GiB
         return round(unit, 2)
 
     def __repr__(self):
