@@ -319,6 +319,34 @@ class BTCInitiator(Initiator):
         return _execute_and_extract(prefab=self._prefab, cmd=cmd, regex=pattern, cmd_name="initiate", logger=self.logger, test_output=test_output)
 
 
+    def participate(self, secret_hash, rpcuser=None, rpcpass=None, addr=None):
+        """
+        Participates in an atomicswap contract
+        """
+        rpcuser = rpcuser or os.environ.get('BTC_RPC_USER', DEFAULT_BTC_RPC_USER)
+        rpcpass = rpcpass or os.environ.get('BTC_RPC_PASS', DEFAULT_BTC_RPC_PASS)
+        addr = addr or os.environ.get('BTC_RPC_ADDRESS', DEFAULT_BTC_RPC_ADDRESS)
+        cmd = 'btcatomicswap{} --rpcuser={} --rpcpass={} -s {} --force-yes participate {} {} {}'.format(' --testnet' if self._testnet else '',
+                rpcuser, rpcpass, addr, self._recipient_address, self._amount, secret_hash)
+        pattern = r'Contract\s*\((?P<contract_addr>\w+)\):\n*(?P<contract>\w+)\n*Contract\s*transaction\s*\((?P<contract_txn_addr>\w+)\):\n*(?P<contract_txn>\w+)\n*Refund\s*transaction\s*\((?P<refund_txn_addr>\w+)\):\n*(?P<refund_txn>\w+)\n*.*\n*Published\s*contract\s*transaction\s*\((?P<published_contract_txn_address>\w+)\)'
+        test_output=None
+#         test_output="""
+# Contract fee: 0.00000166 BTC (0.00000672 BTC/kB)
+# Refund fee:   0.00000297 BTC (0.00001017 BTC/kB)
+#
+# Contract (2MyUPdJFNzPLB64pd4N3rTrDhBv466DHM3S):
+# 6382012088a82024856edde4429002952db9a47d55841f1365b7cc6006fa537b475353acc897678876a914762e80f7b2551a2739861a5c23143bbd95c061e667042e22475bb17576a914a8d41c962be0c756b25a5b087692f9dcc77d0ef16888ac
+#
+# Contract transaction (df83561db38cbd784ab5f53c124db544bdc74c75e636b693ebc22882d221ebea):
+# 020000000001010eabecc71d0304a8f3fda29858b6380ff5f728aa519c3f914534c904b7c9c0270100000017160014344c91e759c0a38ea03ef04140c463d7f3bee735feffffff0250d412000000000017a914444e352f243bbbb64213f47a880040c2aa3c211b87283f23020000000017a914634e0d5fc9f1910a0890045debfd74a58e219c39870247304402206ef9ebdd9fe6707aa8d1a509f776d445927e60cdba50bf5c5d81b54835bf2598022007e445c6ee20e0c8b4533d74ff8fc789dd5993f2f14e425e70ffa13e0391a655012103c9b4e2d0719feda608e7818e666e0f1a1cd9ff9104b1b4491d5e2045a9e671bf00000000
+#
+# Refund transaction (0ffe5d9b0c7c2bbfc7793691f7c97c2ecbd413f29c191d7fd542524e49a82d93):
+# 0200000001eaeb21d28228c2eb93b636e6754cc7bd44b54d123cf5b54a78bd8cb31d5683df00000000cf483045022100e9790898960369af436eab390b1dd18b5e3ead1c88ab7b6cd44a7c780d91904c02203c01759e91036a6eb3a416b23d7fe96944117c321cf298f5ac6358a7413b8d6d01210269cf7bc32dd71da4189c7473682a8b4b88a68b94b434b01a77d3553ec87d7962004c616382012088a82024856edde4429002952db9a47d55841f1365b7cc6006fa537b475353acc897678876a914762e80f7b2551a2739861a5c23143bbd95c061e667042e22475bb17576a914a8d41c962be0c756b25a5b087692f9dcc77d0ef16888ac000000000127d31200000000001976a914e10b245915601cc3b6b677d66660b7e228aa71ca88ac2e22475b
+# """
+
+        return _execute_and_extract(prefab=self._prefab, cmd=cmd, regex=pattern, cmd_name="initiate", logger=self.logger, test_output=test_output)
+
+
 
     def auditcontract(self, output_id, recipient_addr, secret_hash, amount, daemon_address=None):
         """
@@ -493,6 +521,27 @@ class TFTParticipant(Participant):
 # """
 
         return _execute_and_extract(prefab=self._prefab, cmd=cmd, regex=pattern, cmd_name="auditcontract", logger=self.logger, test_output=test_output)
+
+
+    def initiate(self, daemon_address=None):
+        """
+        Initiate an atomicswap contract
+        """
+        daemon_address = daemon_address or os.environ.get('TFT_DAEMON_ADDRESS', DEFAULT_TFT_DAEMON_ADDRESS)
+        cmd = "tfchainc -a {} atomicswap -y --encoding json initiate {} {}".format(daemon_address,
+                                                                                self._initiator_address,
+                                                                                self._amount)
+        _, out, _ = self._prefab.core.run(cmd, showout=False)
+        out = json.loads(out)
+        return {
+            'contract_addr': out['contractid'],
+            'contract_value': int(out['coins']) / HASTINGS_TFT_VALUE,
+            'recipient_addr': out['contract']['receiver'],
+            'secret': out['secret'],
+            'secret_hash': out['contract']['hashedsecret'],
+            'output_id': out['outputid'],
+            'transaction_id': out['transactionid'],
+        }
 
 
     def participate(self, secret_hash, daemon_address=None):
