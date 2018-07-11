@@ -9,10 +9,7 @@
 			"type": "string"
 		},
 		"stack_trace": {
-			"type": [
-				"string",
-				"null"
-			]
+			"type": "string"
 		}
 	},
 	"required": [

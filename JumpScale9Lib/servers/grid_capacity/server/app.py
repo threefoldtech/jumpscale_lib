@@ -18,7 +18,6 @@ j.clients.mongoengine.get('capacity', interactive=False)
 
 db.init_app(app)
 
-
 from .api_api import api_api
 from .frontend_blueprint import frontend_bp
 

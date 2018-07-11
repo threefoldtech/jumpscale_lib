@@ -142,6 +142,7 @@ class Farmer(db.Document):
     iyo_organization = StringField(primary_key=True)
     name = StringField()
     wallet_addresses = ListField(StringField())
+    location = EmbeddedDocumentField(Location)
 
 
 class Capacity(db.Document):

@@ -16,6 +16,8 @@ def ListCapacityHandler():
     nodes = NodeRegistration.search(country, mru, cru, hru, sru, farmer)
     output = []
     for node in nodes.all():
+        if node.farmer.location:
+            node.location = node.farmer.location
         d = node.to_mongo().to_dict()
         d['node_id'] = d.pop('_id')
         output.append(d)

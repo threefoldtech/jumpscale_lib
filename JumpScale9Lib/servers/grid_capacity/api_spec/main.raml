@@ -128,6 +128,18 @@ types:
       responses:
         302:
           description: Page with information how to use your farm
+
+
+  /farmer_update:
+    get:
+      displayName: UpdateFarmer
+      description: Update a farmer
+      queryString:
+        properties:
+          organization: string
+      responses:
+        302:
+          description: Page with all the farmers
   /farmers:
     get:
       displayName: ListFarmers

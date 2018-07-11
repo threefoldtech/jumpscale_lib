@@ -6,10 +6,7 @@
 			"type": "number"
 		},
 		"farmer": {
-			"type": [
-				"string",
-				"null"
-			]
+			"type": "string"
 		},
 		"hru": {
 			"type": "number"
@@ -33,10 +30,7 @@
 			"type": "number"
 		},
 		"uptime": {
-			"type": [
-				"integer",
-				"null"
-			]
+			"type": "integer"
 		}
 	},
 	"required": [

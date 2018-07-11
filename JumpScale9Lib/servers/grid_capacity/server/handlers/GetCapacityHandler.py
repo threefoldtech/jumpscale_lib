@@ -7,6 +7,8 @@ from ..models import NodeRegistration, NodeNotFoundError
 def GetCapacityHandler(node_id):
     try:
         node = NodeRegistration.get(node_id)
+        if node.farmer.location:
+            node.location = node.farmer.location
     except NodeNotFoundError:
         return jsonify(), 404
 

@@ -59,3 +59,13 @@ def RegisterFarmer():
     It is handler for GET /api/farmer_create
     """
     return handlers.RegisterFarmerHandler()
+
+
+
+@api_api.route('/api/farmer_update', methods=['GET'])
+def UpdateFarmer():
+    """
+    Register a farmer
+    It is handler for GET /api/farmer_update
+    """
+    return handlers.UpdateFarmerHandler()

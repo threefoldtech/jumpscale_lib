@@ -33,17 +33,23 @@ def RegisterCapacityHandler():
     jwt = j.clients.itsyouonline.refresh_jwt_token(inputs.pop('farmer_id'))
     token = jose.jwt.decode(jwt, IYO_PUBLIC_KEY)
     iyo_organization = token['scope'][0].replace('user:memberof:', '')
-    farmers = Farmer.objects(iyo_organization=iyo_organization)
-    if not farmers:
+    farmer = Farmer.objects(iyo_organization=iyo_organization).first()
+    if not farmer:
         return jsonify(errors='Unauthorized farmer'), 403
 
     try:
         Capacity_schema_validator.validate(inputs)
     except jsonschema.ValidationError as e:
         return jsonify(errors="bad request body: {}".format(e)), 400
+    
+
     inputs['farmer'] = iyo_organization
     inputs['updated'] = datetime.now()
     capacity = Capacity(**inputs)
+
+    if farmer.location:
+        capacity.location = farmer.location
+
     capacity.save()
 
     return capacity.to_json(use_db_field=False), 201, {'Content-type': 'application/json'}

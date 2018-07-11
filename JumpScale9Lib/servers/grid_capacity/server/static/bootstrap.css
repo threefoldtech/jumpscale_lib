@@ -1,10 +1,11 @@
 /* Move down content because we have a fixed navbar that is 3.5rem tall */
+
 body {
     padding-top: 5rem;
 }
 
-input .filter{
- float: left;
+input .filter {
+    float: left;
 }
 
 .nodeItem {
@@ -17,7 +18,14 @@ input .filter{
 
 @media (min-width: 768px) {
     .modal-xl {
-      width: 90%;
-     max-width:1200px;
+        width: 90%;
+        max-width: 1200px;
     }
-  }
+}
+
+@media (min-width: 576px) {
+    .modal-dialog {
+        max-width: 95%;
+        margin: 0 auto;
+    }
+}

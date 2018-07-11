@@ -2,7 +2,6 @@
 from flask import request, jsonify
 from ..models import FarmerRegistration
 
-
 def ListFarmersHandler():
     farmers = FarmerRegistration.list()
     output = []
