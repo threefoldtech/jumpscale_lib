@@ -82,8 +82,6 @@ class AtomicSwapFulfillment(BaseFulFillment):
 
 
 
-
-
 class SingleSignatureFulfillment(BaseFulFillment):
     """
     SingleSignatureFulfillment class
