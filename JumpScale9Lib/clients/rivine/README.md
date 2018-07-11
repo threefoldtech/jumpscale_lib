@@ -28,7 +28,7 @@ From a seed you can create new wallet
 ```python
         from JumpScale9Lib.clients.rivine.RivineWallet import RivineWallet
         wallet = RivineWallet(seed=seed,
-                                    bc_network='http://185.69.166.13:2015',
+                                    bc_network='https://explorer.testnet.threefoldtoken.com/',
                                     bc_network_password='test123',
                                     nr_keys_per_seed=5,
                                     minerfee=100000000)
