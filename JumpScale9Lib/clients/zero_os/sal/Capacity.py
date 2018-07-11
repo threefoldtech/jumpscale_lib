@@ -41,10 +41,50 @@ class Capacity:
 
     def report(self, indent=None):
         """
-        create a report of the hardware capacity for
+        create a report of the total hardware capacity for
         processor, memory, motherboard and disks
         """
         return j.tools.capacity.parser.get_report(self._node.client.info.mem()['total'], self.hw_info, self.disk_info, indent=indent)
+
+    def actual_use_report(self, total_report):
+        """
+        create a report of the actual used hardware capacity for
+        processor, memory, motherboard and disks
+        """
+        res = {}
+        gib = 1024 * 1024 * 1024
+
+        # Get actual used memory
+        memory_available_report = self._node.client.aggregator.query("machine.memory.ram.available").get(
+            "machine.memory.ram.available"
+        )
+        if memory_available_report:
+            memory_available = memory_available_report['current']['3600']['avg']
+        else:
+            memory_available = 0
+        res['MRU'] = total_report.MRU - round((memory_available / gib), 2)
+
+        # Get actual used disks
+        disks_free_space = self._node.client.aggregator.query("disk.size.free")
+        res["HRU"] = total_report.HRU
+        res["SRU"] = total_report.SRU
+        for disk in total_report.disk:
+            disk_name = disk['name'].replace('/dev/', '')
+            free_spaces = [value['current']['3600']['avg'] for key, value in disks_free_space.items()
+                           if disk_name in key.lower()]
+            free_space = sum(free_spaces) / gib
+            if disk['type'] in ["HDD", "ARCHIVE"]:
+                res['HRU'] -= free_space
+            elif disk['type'] in ["SSD", "NVME"]:
+                res['SRU'] -= free_space
+        res['HRU'] = round(res['HRU'], 2)
+        res['SRU'] = round(res['SRU'], 2)
+
+        # Get actual used cpu
+        cpu_percentages = [value['current']['3600']['avg']
+                           for value in self._node.client.aggregator.query("machine.CPU.percent").values()]
+        res['CRU'] = round(sum(cpu_percentages) * sum(cpu_percentages) / 100, 2)
+        return res
 
     def get(self, farmer_id):
         """
@@ -54,6 +94,7 @@ class Capacity:
         :rtype: dict
         """
         report = self.report()
+        used_report = self.actual_use_report(report)
         public_addr = self._node.public_addr
         if public_addr:
             robot_address = "http://%s:6600" % self._node.public_addr
@@ -69,6 +110,12 @@ class Capacity:
                 mru=report.MRU,
                 hru=report.HRU,
                 sru=report.SRU
+            ),
+            used_resources=dict(
+                cru=used_report['CRU'],
+                mru=used_report['MRU'],
+                hru=used_report['HRU'],
+                sru=used_report['SRU'],
             ),
             robot_address=robot_address,
             os_version=os_version,
