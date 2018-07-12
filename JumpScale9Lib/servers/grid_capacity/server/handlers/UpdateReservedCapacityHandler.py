@@ -8,7 +8,7 @@ from jsonschema import Draft4Validator
 
 from flask import jsonify, request
 
-from ..models import NodeRegistration, Ressources
+from ..models import NodeRegistration, Resources
 from .jwt import FarmerInvalid, validate_farmer_id
 
 
@@ -29,7 +29,7 @@ def UpdateReservedCapacityHandler(node_id):
 
     capacity = NodeRegistration.get(node_id)
     if capacity.reserved_resources is None:
-        capacity.reserved_resources = Ressources()
+        capacity.reserved_resources = Resources()
 
     capacity.reserved_resources.cru = inputs['cru']
     capacity.reserved_resources.mru = inputs['mru']

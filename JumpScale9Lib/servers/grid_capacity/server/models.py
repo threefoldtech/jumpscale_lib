@@ -48,13 +48,13 @@ class NodeRegistration:
 
         :param country: if set, search for capacity in the specified country, defaults to None
         :param country: str, optional
-        :param mru: minimal memory ressource unit, defaults to None
+        :param mru: minimal memory resource unit, defaults to None
         :param mru: int, optional
         :param cru: minimal CPU resource unit, defaults to None
         :param cru: int, optional
         :param hru: minimal HDD resource unit, defaults to None
         :param hru: int, optional
-        :param sru: minimal SSD ressource unit defaults to None
+        :param sru: minimal SSD resource unit defaults to None
         :param sru: int, optional
         :return: sequence of Capacity object matching the query
         :rtype: sequence
@@ -156,7 +156,7 @@ class Farmer(db.Document):
     location = EmbeddedDocumentField(Location)
 
 
-class Ressources(EmbeddedDocument):
+class Resources(EmbeddedDocument):
     cru = FloatField(default=0.0)
     mru = FloatField(default=0.0)
     hru = FloatField(default=0.0)
@@ -165,14 +165,14 @@ class Ressources(EmbeddedDocument):
 
 class Capacity(db.Document):
     """
-    Represent the ressource units of a zero-os node
+    Represent the resource units of a zero-os node
     """
     node_id = StringField(primary_key=True)
     location = EmbeddedDocumentField(Location)
     farmer = ReferenceField(Farmer)
-    total_resources = EmbeddedDocumentField(Ressources)
-    reserved_resources = EmbeddedDocumentField(Ressources)
-    used_resources = EmbeddedDocumentField(Ressources)
+    total_resources = EmbeddedDocumentField(Resources)
+    reserved_resources = EmbeddedDocumentField(Resources)
+    used_resources = EmbeddedDocumentField(Resources)
     robot_address = StringField()
     os_version = StringField()
     uptime = IntField()

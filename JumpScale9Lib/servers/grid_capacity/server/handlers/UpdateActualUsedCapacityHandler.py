@@ -9,7 +9,7 @@ from jsonschema import Draft4Validator
 
 from flask import jsonify, request
 
-from ..models import NodeRegistration, Ressources
+from ..models import NodeRegistration, Resources
 from .jwt import FarmerInvalid, validate_farmer_id
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -36,7 +36,7 @@ def UpdateActualUsedCapacityHandler(node_id):
 
     capacity = NodeRegistration.get(node_id)
     if capacity.used_resources is None:
-        capacity.used_resources = Ressources()
+        capacity.used_resources = Resources()
 
     capacity.used_resources.cru = inputs['cru']
     capacity.used_resources.mru = inputs['mru']
