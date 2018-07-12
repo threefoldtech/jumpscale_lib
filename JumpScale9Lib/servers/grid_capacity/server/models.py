@@ -138,11 +138,11 @@ class Location(EmbeddedDocument):
     """
     Location of a node
     """
-    continent = StringField()
-    country = StringField()
-    city = StringField()
-    longitude = FloatField()
-    latitude = FloatField()
+    continent = StringField(default='')
+    country = StringField(default='')
+    city = StringField(default='')
+    longitude = FloatField(default=0.0)
+    latitude = FloatField(default=0.0)
 
 
 class Farmer(db.Document):
