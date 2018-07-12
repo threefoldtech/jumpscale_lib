@@ -9,7 +9,7 @@ from urllib.parse import urlencode
 
 import jwt
 import requests
-from flask import current_app, redirect, request, session
+from flask import current_app, redirect, request, session, flash
 
 __version__ = '0.0.1'
 
@@ -20,6 +20,15 @@ MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAES5X8XrfKdx9gYayFITc89wad4usrk0n2
 7MjiGYvqalizeSWTHEpnd7oea9IQ8T5oJjMVH5cc0H5tFSKilFFeh//wngxIyny6
 6+Vq5t5B0V0Ehy01+2ceEon2Y0XDkIKv
 -----END PUBLIC KEY-----"""
+
+
+def force_invalidate_session():
+    if '_iyo_authenticated' in session:
+        del session['_iyo_authenticated']
+    if 'iyo_user_info' in session:
+        del session['iyo_user_info']
+    if 'iyo_jwt' in session:
+        del session['iyo_jwt']
 
 
 def _invalidate_session():
@@ -54,59 +63,66 @@ def configure(app, organization, client_secret, callback_uri, callback_route, sc
     app.add_url_rule(callback_route, '_callback', _callback)
 
 
-def get_auth_org():
+def get_auth_org(org_from_request=False):
+    if org_from_request and isinstance(org_from_request, str):
+        return org_from_request
     config = current_app.config["iyo_config"]
-    if config['orgfromrequest']:
+    if org_from_request is True:
         return request.values[config['orgfromrequest']]
-    else:
-        return config['organization']
 
-def authenticated(handler):
-    """
-    Wraps route handler to be only accessible after authentication via Itsyou.Online
-    """
-    @wraps(handler)
-    def _wrapper(*args, **kwargs):
-        if not session.get("_iyo_authenticated"):
-            organization = get_auth_org()
-            config = current_app.config["iyo_config"]
-            scopes = []
-            scopes.append("user:memberof:{}".format(organization))
-            if config["scope"]:
-                scopes.append(config['scope'])
-            scope = ','.join(scopes)
+    return config['organization']
 
-            header = request.headers.get("Authorization")
-            if header:
-                match = JWT_AUTH_HEADER.match(header)
-                if match:
-                    jwt_string = match.group(1)
-                    jwt_info = jwt.decode(jwt_string, ITSYOUONLINE_KEY)
-                    jwt_scope = jwt_info["scope"]
-                    if set(scope.split(",")).issubset(set(jwt_scope)):
-                        username = jwt_info["username"]
-                        session["iyo_user_info"] = _get_info(username, jwt=jwt_string)
-                        session["_iyo_authenticated"] = time.time()
-                        session['iyo_jwt'] = jwt_string
-                        return handler(*args, **kwargs)
-                return "Could not authorize this request!", 403
-            state = str(uuid.uuid4())
-            session["_iyo_state"] = state
-            session['_iyo_organization'] = organization
-            session["_iyo_auth_complete_uri"] = request.full_path
-            params = {
-                "response_type": "code",
-                "client_id": config["organization"],
-                "redirect_uri": config["callback_uri"],
-                "scope": scope,
-                "state" : state
-            }
-            base_url = "{}/oauth/authorize?".format(ITSYOUONLINEV1)
-            login_url = base_url + urlencode(params)
-            return redirect(login_url)
-        else:
-            return handler(*args, **kwargs)
-    return _wrapper
+
+def requires_auth(org_from_request=False):
+    def decorator(handler):
+        """
+        Wraps route handler to be only accessible after authentication via Itsyou.Online
+        """
+
+        @wraps(handler)
+        def _wrapper(*args, **kwargs):
+            if not session.get("_iyo_authenticated"):
+                organization = get_auth_org(org_from_request=org_from_request)
+                config = current_app.config["iyo_config"]
+                scopes = []
+                scopes.append("user:memberof:{}".format(organization))
+                if config["scope"]:
+                    scopes.append(config['scope'])
+                scope = ','.join(scopes)
+
+                header = request.headers.get("Authorization")
+                if header:
+                    match = JWT_AUTH_HEADER.match(header)
+                    if match:
+                        jwt_string = match.group(1)
+                        jwt_info = jwt.decode(jwt_string, ITSYOUONLINE_KEY)
+                        jwt_scope = jwt_info["scope"]
+                        if set(scope.split(",")).issubset(set(jwt_scope)):
+                            username = jwt_info["username"]
+                            session["iyo_user_info"] = _get_info(username, jwt=jwt_string)
+                            session["_iyo_authenticated"] = time.time()
+                            session['iyo_jwt'] = jwt_string
+                            return handler(*args, **kwargs)
+                    return "Could not authorize this request!", 403
+                state = str(uuid.uuid4())
+                session["_iyo_state"] = state
+                session['_iyo_organization'] = organization
+                session["_iyo_auth_complete_uri"] = request.full_path
+                params = {
+                    "response_type": "code",
+                    "client_id": config["organization"],
+                    "redirect_uri": config["callback_uri"],
+                    "scope": scope,
+                    "state" : state
+                }
+                base_url = "{}/oauth/authorize?".format(ITSYOUONLINEV1)
+                login_url = base_url + urlencode(params)
+                return redirect(login_url)
+            else:
+
+                return handler(*args, **kwargs)
+        return _wrapper
+    return decorator
 
 
 def _callback():
@@ -139,7 +155,8 @@ def _callback():
     response = response.json()
     scope_parts = response["scope"].split(",")
     if not "user:memberof:{}".format(authorg) in scope_parts:
-        return "User is not authorized.", 403
+        flash("User is not authorized", "danger")
+        return redirect("/")
     access_token = response["access_token"]
     username = response["info"]["username"]
     # Get user info

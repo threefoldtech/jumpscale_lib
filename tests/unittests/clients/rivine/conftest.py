@@ -8,6 +8,22 @@ from JumpScale9Lib.clients.rivine import utils, RivineWallet
 import pytest
 import ed25519
 
+
+@pytest.fixture(scope="module")
+def ats_hashed_secret():
+    """
+    Generate an atomicswap contract hashed secret
+    """
+    return "b5011ef9e6e03dcce148282ead7dd1cdf6f397d1c05680e8f12f39ba7b9c5dc4"
+
+
+@pytest.fixture(scope="module")
+def ats_secret():
+    """
+    Generate an atomicswap contract secret
+    """
+    return "603eb3efa05660fe04ea1cf391d8164265721eb8acd7f071c8c37de0f2214460"
+
 @pytest.fixture(scope="module")
 def recipient():
     """

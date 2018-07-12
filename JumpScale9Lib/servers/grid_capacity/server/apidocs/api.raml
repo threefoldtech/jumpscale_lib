@@ -68,6 +68,9 @@ types:
         type: string
       wallet_address:
         type: string
+      location:
+        required: false
+        type: Location
 
   Error:
     properties:
@@ -105,6 +108,8 @@ types:
       200:
         body:
           type: Capacity[]
+
+    
 /api/farmers:
   post:
     displayName: RegisterFarmer
@@ -115,6 +120,25 @@ types:
       201:
         body:
           type: Farmer
+  
+  put:
+    displayName: UpdateFarmer
+    description: Update a farmer
+    body:
+      type: Farmer
+    responses:
+      204:
+        description: Farmer updated successfully
+      400:
+        description: Invalid location (longitude, latitude)
+        body:
+          type: Error
+      404:
+        description: Itsyou.online organization not found.
+        body:
+          type: Error
+
+      
   get:
     displayName: ListFarmers
     description: List Farmers
@@ -122,3 +146,5 @@ types:
       200:
         body:
           type: Farmer[]
+
+  

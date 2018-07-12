@@ -18,6 +18,7 @@ HASTINGS_TFT_VALUE = 1000000000.0
 DEFAULT_BTC_RPC_USER = 'user'
 DEFAULT_BTC_RPC_PASS = 'pass'
 DEFAULT_BTC_RPC_ADDRESS = 'localhost:8332'
+DEFAULT_TFT_DAEMON_ADDRESS = 'localhost:23110'
 
 
 def _execute_and_extract(prefab, cmd, regex, cmd_name, logger, test_output=None):
@@ -37,7 +38,7 @@ def _execute_and_extract(prefab, cmd, regex, cmd_name, logger, test_output=None)
     return match.groupdict()
 
 
-def _tft_wait_for_height(prefab, height, timeout=None):
+def _tft_wait_for_height(prefab, height, timeout=None, daemon_address=None):
     """
     Will wait until the tft node reach the desired height
 
@@ -46,10 +47,12 @@ def _tft_wait_for_height(prefab, height, timeout=None):
     @param timeout: If set, then we will wait max the amount of timeout and then we die if the node is not on the desired height
     """
     height_reached = False
+    daemon_address = daemon_address or os.environ.get('TFT_DAEMON_ADDRESS', DEFAULT_TFT_DAEMON_ADDRESS)
+    cmd = 'tfchainc -a {}'.format(daemon_address)
     while height_reached is False:
         if timeout is not None and timeout < 0:
             break
-        _, out, err = prefab.core.run(cmd='tfchainc', showout=False, die=False)
+        _, out, err = prefab.core.run(cmd=cmd, showout=False, die=False)
         out = '{}\n{}'.format(out, err)
         match = re.search('^Synced:\s+(?P<synced>\w+)\n*.*\n*Height:\s*(?P<height>\d+)', out)
         if match:
@@ -177,7 +180,7 @@ class AtomicSwapFactory(JSBASE):
 
         self.logger.info("Waiting for participant node to be synced")
         _tft_wait_for_height(prefab=participant_prefab, height=participant.get_current_chain_height())
-        
+
         self.logger.info("Executing paricipate operation")
         participate_result = participant.participate(secret_hash=initiate_result['secret_hash'])
 
@@ -316,8 +319,36 @@ class BTCInitiator(Initiator):
         return _execute_and_extract(prefab=self._prefab, cmd=cmd, regex=pattern, cmd_name="initiate", logger=self.logger, test_output=test_output)
 
 
+    def participate(self, secret_hash, rpcuser=None, rpcpass=None, addr=None):
+        """
+        Participates in an atomicswap contract
+        """
+        rpcuser = rpcuser or os.environ.get('BTC_RPC_USER', DEFAULT_BTC_RPC_USER)
+        rpcpass = rpcpass or os.environ.get('BTC_RPC_PASS', DEFAULT_BTC_RPC_PASS)
+        addr = addr or os.environ.get('BTC_RPC_ADDRESS', DEFAULT_BTC_RPC_ADDRESS)
+        cmd = 'btcatomicswap{} --rpcuser={} --rpcpass={} -s {} --force-yes participate {} {} {}'.format(' --testnet' if self._testnet else '',
+                rpcuser, rpcpass, addr, self._recipient_address, self._amount, secret_hash)
+        pattern = r'Contract\s*\((?P<contract_addr>\w+)\):\n*(?P<contract>\w+)\n*Contract\s*transaction\s*\((?P<contract_txn_addr>\w+)\):\n*(?P<contract_txn>\w+)\n*Refund\s*transaction\s*\((?P<refund_txn_addr>\w+)\):\n*(?P<refund_txn>\w+)\n*.*\n*Published\s*contract\s*transaction\s*\((?P<published_contract_txn_address>\w+)\)'
+        test_output=None
+#         test_output="""
+# Contract fee: 0.00000166 BTC (0.00000672 BTC/kB)
+# Refund fee:   0.00000297 BTC (0.00001017 BTC/kB)
+#
+# Contract (2MyUPdJFNzPLB64pd4N3rTrDhBv466DHM3S):
+# 6382012088a82024856edde4429002952db9a47d55841f1365b7cc6006fa537b475353acc897678876a914762e80f7b2551a2739861a5c23143bbd95c061e667042e22475bb17576a914a8d41c962be0c756b25a5b087692f9dcc77d0ef16888ac
+#
+# Contract transaction (df83561db38cbd784ab5f53c124db544bdc74c75e636b693ebc22882d221ebea):
+# 020000000001010eabecc71d0304a8f3fda29858b6380ff5f728aa519c3f914534c904b7c9c0270100000017160014344c91e759c0a38ea03ef04140c463d7f3bee735feffffff0250d412000000000017a914444e352f243bbbb64213f47a880040c2aa3c211b87283f23020000000017a914634e0d5fc9f1910a0890045debfd74a58e219c39870247304402206ef9ebdd9fe6707aa8d1a509f776d445927e60cdba50bf5c5d81b54835bf2598022007e445c6ee20e0c8b4533d74ff8fc789dd5993f2f14e425e70ffa13e0391a655012103c9b4e2d0719feda608e7818e666e0f1a1cd9ff9104b1b4491d5e2045a9e671bf00000000
+#
+# Refund transaction (0ffe5d9b0c7c2bbfc7793691f7c97c2ecbd413f29c191d7fd542524e49a82d93):
+# 0200000001eaeb21d28228c2eb93b636e6754cc7bd44b54d123cf5b54a78bd8cb31d5683df00000000cf483045022100e9790898960369af436eab390b1dd18b5e3ead1c88ab7b6cd44a7c780d91904c02203c01759e91036a6eb3a416b23d7fe96944117c321cf298f5ac6358a7413b8d6d01210269cf7bc32dd71da4189c7473682a8b4b88a68b94b434b01a77d3553ec87d7962004c616382012088a82024856edde4429002952db9a47d55841f1365b7cc6006fa537b475353acc897678876a914762e80f7b2551a2739861a5c23143bbd95c061e667042e22475bb17576a914a8d41c962be0c756b25a5b087692f9dcc77d0ef16888ac000000000127d31200000000001976a914e10b245915601cc3b6b677d66660b7e228aa71ca88ac2e22475b
+# """
 
-    def auditcontract(self, output_id, recipient_addr, secret_hash, amount):
+        return _execute_and_extract(prefab=self._prefab, cmd=cmd, regex=pattern, cmd_name="initiate", logger=self.logger, test_output=test_output)
+
+
+
+    def auditcontract(self, output_id, recipient_addr, secret_hash, amount, daemon_address=None):
         """
         Audit contract after the participant executed the participate step
 
@@ -325,13 +356,15 @@ class BTCInitiator(Initiator):
         @param recipient_addr: Address of the recipient of the contract
         @param secret_hash: Hash of the secret
         @param amount: Amount of funds sent by the participant in the contract
+        @param daemon_address: Which host/port to communicate with (i.e. the host/port tfchaind is listening on)
         """
-        cmd = 'tfchainc atomicswap -y --encoding json auditcontract {} --receiver {} --secrethash {} --amount {}'.format(output_id, recipient_addr, secret_hash, amount)
+        daemon_address = daemon_address or os.environ.get('TFT_DAEMON_ADDRESS', DEFAULT_TFT_DAEMON_ADDRESS)
+        cmd = 'tfchainc -a {} atomicswap -y --encoding json auditcontract {} --receiver {} --secrethash {} --amount {}'.format(daemon_address, output_id, recipient_addr, secret_hash, amount)
         self._prefab.core.run(cmd, showout=False)
 
 
 
-    def redeem(self, output_id, secret):
+    def redeem(self, output_id, secret, daemon_address=None):
         """
         Redeems the amount of the contract
 
@@ -340,12 +373,27 @@ class BTCInitiator(Initiator):
 
         @returns: @returns: A dictionary with the following format {'transaction_id': <>}
         """
-        cmd = 'tfchainc atomicswap redeem {} {} -y --encoding json '.format(output_id, secret)
+        daemon_address = daemon_address or os.environ.get('TFT_DAEMON_ADDRESS', DEFAULT_TFT_DAEMON_ADDRESS)
+        cmd = 'tfchainc -a {} atomicswap redeem {} {} -y --encoding json '.format(daemon_address, output_id, secret)
         _, out, _ = self._prefab.core.run(cmd, showout=False)
         out = json.loads(out)
         return {
             'transaction_id': out['transactionid'],
             }
+
+
+    def refund(self, contract, contract_transaction, rpcuser=None, rpcpass=None, addr=None):
+        """
+        Refunds an atomicswap contract
+        """
+        rpcuser = rpcuser or os.environ.get('BTC_RPC_USER', DEFAULT_BTC_RPC_USER)
+        rpcpass = rpcpass or os.environ.get('BTC_RPC_PASS', DEFAULT_BTC_RPC_PASS)
+        addr = addr or os.environ.get('BTC_RPC_ADDRESS', DEFAULT_BTC_RPC_ADDRESS)
+        cmd = 'btcatomicswap{} --rpcuser={} --rpcpass={} -s {} --force-yes refund {} {}'.format(' --testnet' if self._testnet else '',
+                rpcuser, rpcpass, addr, contract, contract_transaction)
+        self._prefab.core.run(cmd, showout=False)
+
+
 
 
 class Participant(JSBASE):
@@ -475,7 +523,28 @@ class TFTParticipant(Participant):
         return _execute_and_extract(prefab=self._prefab, cmd=cmd, regex=pattern, cmd_name="auditcontract", logger=self.logger, test_output=test_output)
 
 
-    def participate(self, secret_hash):
+    def initiate(self, daemon_address=None):
+        """
+        Initiate an atomicswap contract
+        """
+        daemon_address = daemon_address or os.environ.get('TFT_DAEMON_ADDRESS', DEFAULT_TFT_DAEMON_ADDRESS)
+        cmd = "tfchainc -a {} atomicswap -y --encoding json initiate {} {}".format(daemon_address,
+                                                                                self._initiator_address,
+                                                                                self._amount)
+        _, out, _ = self._prefab.core.run(cmd, showout=False)
+        out = json.loads(out)
+        return {
+            'contract_addr': out['contractid'],
+            'contract_value': int(out['coins']) / HASTINGS_TFT_VALUE,
+            'recipient_addr': out['contract']['receiver'],
+            'secret': out['secret'],
+            'secret_hash': out['contract']['hashedsecret'],
+            'output_id': out['outputid'],
+            'transaction_id': out['transactionid'],
+        }
+
+
+    def participate(self, secret_hash, daemon_address=None):
         """
         Execute participate on an atomicswap transaction
 
@@ -484,8 +553,10 @@ class TFTParticipant(Participant):
                                                             'secret_hash': <>,
                                                             'output_id': <>}
         """
-        cmd = "tfchainc atomicswap -y --encoding json participate {} {} {}".format(self._initiator_address,
-                                                                                            self._amount, secret_hash)
+        daemon_address = daemon_address or os.environ.get('TFT_DAEMON_ADDRESS', DEFAULT_TFT_DAEMON_ADDRESS)
+        cmd = "tfchainc -a {} atomicswap -y --encoding json participate {} {} {}".format(daemon_address,
+                                                                                self._initiator_address,
+                                                                                self._amount, secret_hash)
         _, out, _ = self._prefab.core.run(cmd, showout=False)
         # out = """{"coins":"500000000","contract":{"sender":"012ffd03d1b4d39ba9df8294bb5135a0a69768494a54e4df0c0eb817309b6a7fba795e4ac1f4ff","receiver":"0108031a2111cec5427954fae23fdd6a0cc21d9ab91cf0e878af9d2bb0081e9c1246da7c1e2346","hashedsecret":"0900e02c2b413ad422c107862b670c7980fa24956e60699436f652ff56d98d4e","timelock":1530126270},"contractid":"02806e2cfa3aa87e2ea41d4c1f1bf8bf2b73d167eb3df610b7b364633426b8215e607e40db08b1","outputid":"e27bfac78c16e7690b5cb477f1602e0f6b074522d198d4733dd03d148cac4024","transactionid":"09bb77d6555488103f59709d27f0679fcf4d86dfa3ae77dbb06d976aeccc947e"}"""
         out = json.loads(out)
@@ -525,3 +596,18 @@ class TFTParticipant(Participant):
 # Published redeem transaction (ddd1040fd2f255a82aba54255d39b7c8ccc43393f99fa2871c1557da216bf802)
 # """
         return _execute_and_extract(prefab=self._prefab, cmd=cmd, regex=pattern, cmd_name="redeem", logger=self.logger, test_output=test_output)
+
+
+    def refund(self, output_id, secret, daemon_address=None):
+        """
+        Refund an atomicswap contract
+        """
+        daemon_address = daemon_address or os.environ.get('TFT_DAEMON_ADDRESS', DEFAULT_TFT_DAEMON_ADDRESS)
+        cmd = "tfchainc -a {} atomicswap -y --encoding json refund {} {}".format(daemon_address,
+                                                                                output_id,
+                                                                                secret)
+        _, out, _ = self._prefab.core.run(cmd, showout=False)
+        out = json.loads(out)
+        return {
+            'transaction_id': out['transactionid'],
+        }

@@ -2,23 +2,14 @@
 	"$schema": "http://json-schema.org/schema#",
 	"type": "object",
 	"properties": {
-		"cru": {
-			"type": "number"
-		},
-		"farmer": {
+		"farmer_id": {
 			"type": [
 				"string",
 				"null"
 			]
 		},
-		"hru": {
-			"type": "number"
-		},
 		"location": {
 			"$ref": "Location_schema.json"
-		},
-		"mru": {
-			"type": "number"
 		},
 		"node_id": {
 			"type": "string"
@@ -26,26 +17,29 @@
 		"os_version": {
 			"type": "string"
 		},
+		"reserved_resources": {
+			"$ref": "ResourceUnits_schema.json"
+		},
 		"robot_address": {
 			"type": "string"
 		},
-		"sru": {
-			"type": "number"
+		"total_resources": {
+			"$ref": "ResourceUnits_schema.json"
 		},
 		"uptime": {
 			"type": [
 				"integer",
 				"null"
 			]
+		},
+		"used_resources": {
+			"$ref": "ResourceUnits_schema.json"
 		}
 	},
 	"required": [
-		"cru",
-		"hru",
-		"mru",
 		"node_id",
 		"os_version",
 		"robot_address",
-		"sru"
+		"total_resources"
 	]
 }

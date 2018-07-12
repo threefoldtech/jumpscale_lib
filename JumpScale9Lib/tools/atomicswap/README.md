@@ -13,6 +13,7 @@ The following environment variables can be set:
 - BTC_RPC_USER: User name to use when connecting to the BTC daemon over RPC [default: user].
 - BTC_RPC_PASS: Password to use when connecting to the BTC daemon over RPC [default: pass].
 - BTC_RPC_ADDRESS: Address in the form of ip:port of the BTC daeomn [default: 'localhost:8332'].
+- TFT_DAEMON_ADDRESS: Address in the form of ip:port of the TFchain daemon[default: 'localhost:23110'].
 
 ## Preparing the nodes
 To run the SAL you will need to have two systems (one initiator and one participant), each system will need to run a full node from all the blockchains that you will need to use for atomicswaps (for now that is being TFChain and Bitcoin)

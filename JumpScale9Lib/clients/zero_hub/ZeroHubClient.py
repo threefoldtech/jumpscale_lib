@@ -6,7 +6,7 @@ JSConfigClient = j.tools.configmanager.base_class_config
 TEMPLATE = """
 token_ = ""
 username = ""
-url = ""
+url = "https://hub.gig.tech/api"
 """
 
 

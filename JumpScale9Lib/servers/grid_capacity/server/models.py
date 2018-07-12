@@ -48,13 +48,13 @@ class NodeRegistration:
 
         :param country: if set, search for capacity in the specified country, defaults to None
         :param country: str, optional
-        :param mru: minimal memory ressource unit, defaults to None
+        :param mru: minimal memory resource unit, defaults to None
         :param mru: int, optional
         :param cru: minimal CPU resource unit, defaults to None
         :param cru: int, optional
         :param hru: minimal HDD resource unit, defaults to None
         :param hru: int, optional
-        :param sru: minimal SSD ressource unit defaults to None
+        :param sru: minimal SSD resource unit defaults to None
         :param sru: int, optional
         :return: sequence of Capacity object matching the query
         :rtype: sequence
@@ -65,15 +65,18 @@ class NodeRegistration:
         if farmer:
             query['farmer'] = farmer
         if mru:
-            query['mru__gte'] = mru
+            query['total_resources__mru__gte'] = mru
         if cru:
-            query['cru__gte'] = cru
+            query['total_resources__cru__gte'] = cru
         if hru:
-            query['hru__gte'] = hru
+            query['total_resources__hru__gte'] = hru
         if sru:
-            query['sru__gte'] = sru
+            query['total_resources__sru__gte'] = sru
 
         nodes = Capacity.objects(**query)
+        if kwargs.get('order'):
+            nodes = nodes.order_by(kwargs.get('order'))
+
         page = kwargs.get('page')
         per_page = kwargs.get('per_page', 50)
         if page:
@@ -89,10 +92,11 @@ class NodeRegistration:
         :return: sequence of country
         :rtype: sequence of string
         """
-        capacities = Capacity.objects.only('location__country')
+        capacities = Capacity.objects.only('location__country').order_by('location__country')
         countries = set()
         for cap in capacities:
-            countries.add(cap.location.country)
+            if cap.location:
+                countries.add(cap.location.country)
         return list(countries)
 
 
@@ -109,11 +113,18 @@ class FarmerRegistration:
         farmer.save()
 
     @staticmethod
-    def list(name=None):
+    def list(name=None, organization=None, **kwargs):
         query = {}
         if name:
             query['name'] = name
-        return Farmer.objects(**query)
+        if organization:
+            query['organization'] = organization
+        farmers = Farmer.objects(**query)
+
+        if kwargs.get('order'):
+            farmers = farmers.order_by(kwargs.get('order'))
+
+        return farmers
 
     @staticmethod
     def get(id):
@@ -127,11 +138,11 @@ class Location(EmbeddedDocument):
     """
     Location of a node
     """
-    continent = StringField()
-    country = StringField()
-    city = StringField()
-    longitude = FloatField()
-    latitude = FloatField()
+    continent = StringField(default='')
+    country = StringField(default='')
+    city = StringField(default='')
+    longitude = FloatField(default=0.0)
+    latitude = FloatField(default=0.0)
 
 
 class Farmer(db.Document):
@@ -142,19 +153,26 @@ class Farmer(db.Document):
     iyo_organization = StringField(primary_key=True)
     name = StringField()
     wallet_addresses = ListField(StringField())
+    location = EmbeddedDocumentField(Location)
+
+
+class Resources(EmbeddedDocument):
+    cru = FloatField(default=0.0)
+    mru = FloatField(default=0.0)
+    hru = FloatField(default=0.0)
+    sru = FloatField(default=0.0)
 
 
 class Capacity(db.Document):
     """
-    Represent the ressource units of a zero-os node
+    Represent the resource units of a zero-os node
     """
     node_id = StringField(primary_key=True)
     location = EmbeddedDocumentField(Location)
     farmer = ReferenceField(Farmer)
-    cru = FloatField()
-    mru = FloatField()
-    hru = FloatField()
-    sru = FloatField()
+    total_resources = EmbeddedDocumentField(Resources)
+    reserved_resources = EmbeddedDocumentField(Resources)
+    used_resources = EmbeddedDocumentField(Resources)
     robot_address = StringField()
     os_version = StringField()
     uptime = IntField()

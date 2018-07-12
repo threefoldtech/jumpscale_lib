@@ -11,4 +11,4 @@ sudo -HE bash -c "source /opt/code/github/jumpscale/bash/zlibs.sh; ZKeysLoad; ZD
 sudo -HE bash -c "ssh -tA  root@localhost -p 2222 \"pip install -U pytest\""
 
 # Run tests
-sudo -HE bash -c "ssh -tA  root@localhost -p 2222 \"cd /opt/code/github/jumpscale/core9; /bin/bash test.sh\""
+sudo -HE bash -c "ssh -tA  root@localhost -p 2222 \"cd /opt/code/github/jumpscale/lib9; /bin/bash test.sh\""

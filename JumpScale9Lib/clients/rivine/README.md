@@ -16,7 +16,7 @@ Starting from a seed which can be a sentence of [12, 15, 18, 21, 24] words, for 
 
 You can generate new seed by using the following commands in your js9 shell
 ```python
-        j.data.encryption.mnemonic.generate(265)
+        j.data.encryption.mnemonic.generate(256)
 ```
 
 Alternativly, you can generate a seed from the client factory
@@ -28,7 +28,7 @@ From a seed you can create new wallet
 ```python
         from JumpScale9Lib.clients.rivine.RivineWallet import RivineWallet
         wallet = RivineWallet(seed=seed,
-                                    bc_network='http://185.69.166.13:2015',
+                                    bc_network='https://explorer.testnet.threefoldtoken.com/',
                                     bc_network_password='test123',
                                     nr_keys_per_seed=5,
                                     minerfee=100000000)
@@ -89,4 +89,19 @@ custom_data = b"hello from Dresden"
 # 15 minutes locktime
 locktime = time.time() + 900
 transaction = wallet.send_money(amount=2, recipient=recipient, data=data, locktime=locktime)
+```
+
+## How to use AtomicSwap
+The light wallet client supports the different atomicswap operations. It allows the user to:
+- Initiate a new atomicswap contract
+- Participate in an exsisting atomicswap contract
+- Validate the information of an atomicswap contract
+- Withdraw funds from atomicswap contract
+- Refund funds from atomicswap contract
+
+For more details about the atomicswap process, it is recommended to check the documentation at the Rivine offical repository here: https://github.com/rivine/rivine/blob/master/doc/atomicswap/atomicswap.md
+
+The light wallet client exposes the APIs via the following hook:
+```python
+wallet.atomicswap.[TAB]
 ```

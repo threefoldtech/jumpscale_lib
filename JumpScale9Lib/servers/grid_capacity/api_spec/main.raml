@@ -1,7 +1,7 @@
 #%RAML 1.0
 title: "TFT Grid capacity"
 description: API of the TFT grid, used to register/track the capacity available on the grid
-version: 0.0.1
+version: 0.1.0
 mediaType: application/json
 
 types:
@@ -12,25 +12,9 @@ types:
       city: string
       latitude: number
       longitude: number
-  Capacity:
-    description: |
-      Capacity of a node
+
+  ResourceUnits:
     properties:
-      node_id:
-        type: string
-      farmer:
-        type: string
-        description: ID of the farmer owning the node
-        required: false
-      os_version:
-        type: string
-        description: branch and revision of 0-OS
-      location:
-        required: false
-        type: Location
-      robot_address:
-        type: string
-        description: URL to the node 0-robot of the node
       cru:
         type: number
         description: amount of CPU resource unit
@@ -43,19 +27,45 @@ types:
       sru:
         type: number
         description: amount of SSD resource unit
+
+
+  Capacity:
+    description: |
+      Capacity of a node
+    properties:
+      node_id:
+        type: string
+      farmer_id:
+        type: string
+        description: ID of the farmer owning the node
+        required: false
+      os_version:
+        type: string
+        description: branch and revision of 0-OS
+      location:
+        required: false
+        type: Location
+      robot_address:
+        type: string
+        description: URL to the node 0-robot of the node
       uptime:
         type: integer
         description: uptime of the node in seconds
         required: false
+      total_resources:
+        type: ResourceUnits
+        required: True
+      reserved_resources:
+        type: ResourceUnits
+        required: false
+      used_resources:
+        type: ResourceUnits
+        required: false
     example:
       node_id: 544546f60261
-      farmer: JohnDoe
+      farmer_id: JohnDoe
       os_version: "heads/v1.2.2 6b693a496de940b26ee1a2356b67f7d65767c13f"
       robot_address: "http://10.241.100.10:6600"
-      cru: 5
-      mru: 64
-      hrd: 5000
-      sru: 256
       uptime: 92682
       location:
         continent: Europe
@@ -63,6 +73,46 @@ types:
         city: Brussels
         latitude: 50.83
         longitude: 4.29
+      total_resources:
+        cru: 5
+        mru: 64
+        hrd: 5000
+        sru: 256
+
+  ReservedCapacity:
+    type: ResourceUnits
+    description: |
+      Capacity reserved on a node
+    properties:
+      farmer_id:
+        type: string
+        description: ID of the farmer owning the node
+        required: false
+    example:
+      node_id: 544546f60261
+      farmer_id: JohnDoe
+      cru: 1
+      mru: 20
+      hrd: 50
+      sru: 12
+
+  ActualUsedCapacity:
+    type: ResourceUnits
+    description: |
+      Capacity actually used on a node
+    properties:
+      farmer_id:
+        type: string
+        description: ID of the farmer owning the node
+        required: false
+    example:
+      node_id: 544546f60261
+      farmer_id: JohnDoe
+      cru: 1
+      mru: 20
+      hrd: 50
+      sru: 12
+
   Farmer:
     properties:
       iyo_organization:
@@ -117,6 +167,23 @@ types:
           200:
             body:
               type: Capacity
+      /reserved:
+        put:
+          displayName: UpdateReservedCapacity
+          description: Mark some capacity on a node to be reserved
+          body:
+            type: ReservedCapacity
+          responses:
+            204:
+      /actual:
+        put:
+          displayName: UpdateActualUsedCapacity
+          description: Set the actual usage of the capacity of a node
+          body:
+            type: ActualUsedCapacity
+          responses:
+            204:
+
   /farmer_create:
     get:
       displayName: RegisterFarmer
@@ -128,6 +195,18 @@ types:
       responses:
         302:
           description: Page with information how to use your farm
+
+
+  /farmer_update:
+    get:
+      displayName: UpdateFarmer
+      description: Update a farmer
+      queryString:
+        properties:
+          organization: string
+      responses:
+        302:
+          description: Page with all the farmers
   /farmers:
     get:
       displayName: ListFarmers
