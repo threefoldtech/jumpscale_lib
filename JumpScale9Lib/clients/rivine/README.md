@@ -16,7 +16,7 @@ Starting from a seed which can be a sentence of [12, 15, 18, 21, 24] words, for 
 
 You can generate new seed by using the following commands in your js9 shell
 ```python
-        j.data.encryption.mnemonic.generate(265)
+        j.data.encryption.mnemonic.generate(256)
 ```
 
 Alternativly, you can generate a seed from the client factory
