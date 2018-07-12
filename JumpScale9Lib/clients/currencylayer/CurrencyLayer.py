@@ -35,6 +35,7 @@ class CurrencyLayer(JSConfigBase):
                 url = "http://www.apilayer.net/api/live?access_key=%s" % key
                 c = j.clients.http.getConnection()
                 r = c.get(url).readlines()
+                
                 data = j.data.serializer.json.loads(r[0].decode())["quotes"]
 
                 eth = cryptocompare.get_price('USD', 'ETH')['USD']['ETH']
