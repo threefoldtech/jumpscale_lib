@@ -3,7 +3,7 @@ import json
 import psutil
 
 from js9 import j
-from JumpScale9Lib.tools.capacity.parser import StorageType
+from JumpScale9Lib.clients.zero_os.sal.Disk import StorageType
 
 
 class Capacity:
@@ -82,10 +82,12 @@ class Capacity:
         capacity = dict(
             node_id=node_id,
             location=report.location,
-            cru=report.CRU,
-            mru=report.MRU,
-            hru=report.HRU,
-            sru=report.SRU,
+            total_resources=dict(
+                cru=report.CRU,
+                mru=report.MRU,
+                hru=report.HRU,
+                sru=report.SRU,
+            ),
             robot_address="private",
             os_version="private",
             farmer_id=farmer_id,
@@ -98,7 +100,8 @@ class Capacity:
             return False
         data = self.get(farmer_id)
         client = j.clients.grid_capacity.get(interactive=False)
-        client.api.RegisterCapacity(data)
+        _, resp = client.api.RegisterCapacity(data)
+        resp.raise_for_status()
         return True
 
 
