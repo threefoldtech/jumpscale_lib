@@ -267,6 +267,7 @@ class ZeroTierNetwork(JSBASE):
 
 TEMPLATE = """
 token_ = ""
+networkid = ""
 """
 
 class ZerotierClient(JSConfigClient):
@@ -294,12 +295,17 @@ class ZerotierClient(JSConfigClient):
         return self._network_creates_from_dict(items=resp.json())
 
 
-    def network_get(self, network_id):
+    def network_get(self, network_id=""):
         """
         Retrieves details information about a netowrk
 
         @param network_id: ID of the network
         """
+        if network_id is "":
+            print("YVES: fill in from config")
+            from IPython import embed;embed(colors='Linux')
+            #if not specified raise error
+             
         resp = self.client.network.getNetwork(id=network_id)
         if resp.status_code != 200:
             msg = 'Failed to retrieve network. Error: {}'.format(resp.text)
@@ -376,3 +382,11 @@ class ZerotierClient(JSConfigClient):
             self.logger.error(msg)
             raise RuntimeError(msg)
         return True
+
+
+    def members_nonactive_delete(self):
+        """
+        walks over all members, the ones which are not active get deleted
+        """
+        raise RuntimeError("not implemented")
+        #TODO: *1 yves

@@ -29,13 +29,13 @@ class ZerotierFactory(JSConfigFactory):
         self.connections = {}
         JSConfigFactory.__init__(self, ZerotierClient)
 
-    def configure(self,instance,token,networkid="",interactive=False):
+    def configure(self,instance,token,networkid_default="",interactive=False):
         """
         @PARAM networkid is optional
         """
         data={}
         data["token_"]=token
-        data["networkid"]=networkid
+        data["networkid"]=networkid_default
         return self.get(instance=instance,data=data,interactive=interactive)
 
     def test(self):
