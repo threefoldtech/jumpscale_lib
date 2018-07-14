@@ -57,12 +57,34 @@ def deltatime_color(time):
         return 'danger'
 
     delta = (datetime.datetime.now() - time).total_seconds()
-    if delta < 7200:  # less then 2h
+    if delta <= 600:  # 10 minutes or less
         return 'success'
-    if 7200 < delta and delta < 10800:  # between 2h and 3h
+    if 600 < delta and delta < 900:  # between 10 and 15 minutes
         return 'warning'
-    if delta > 10800:  # plus de 3h
+    if delta > 9000:  # plus de 15 minutes
         return 'danger'
+
+
+@app.template_filter()
+def node_status(time):
+    """
+    return a color base on the delta time between now and time
+
+    :param time: time we when to compare
+    :type time: datetime.datetime
+    :return: color
+    :rtype: str
+    """
+    if not time:
+        return 'down'
+
+    delta = (datetime.datetime.now() - time).total_seconds()
+    if delta <= 600:  # 10 minutes or less
+        return 'up'
+    if 600 < delta and delta < 900:  # between 10 and 15 minutes
+        return 'likely down'
+    if delta > 9000:  # plus de 15 minutes
+        return 'down'
 
 
 @app.errorhandler(500)

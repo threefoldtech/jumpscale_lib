@@ -105,7 +105,7 @@
                 <th scope="col">Location</th>
                 <th scope="col">Farmer</th>
                 <th scope="col">Resources units</th>
-                <!-- <th scope="col" data-toggle="modal" data-target="#uptimeHelpModal">Uptime <span class="badge badge-secondary" id="uptimeHelp">?</span></th> -->
+                <th scope="col" data-toggle="modal" data-target="#statusHelpModal">Status <span class="badge badge-secondary" id="statusHelp">?</span></th>
               </tr>
             </thead>
             <tbody>
@@ -123,7 +123,7 @@
                 <td>
                   <button type="button" class="btn btn-info" data-toggle="modal" data-target="#nodeDetailModal{{node.node_id}}"><i class="fas fa-hdd"></i> details</button>
                 </td>
-                <!-- <td><span class="badge badge-{{node.updated | deltatime_color}}">{{ node.uptime | uptime }}</span></td> -->
+                <td><span class="badge badge-{{node.updated | deltatime_color}}">{{ node.updated | node_status }}</span></td>
               </tr>
               {% endfor %}
             </tbody>
@@ -212,20 +212,20 @@
     {% endfor %}
 
   <!-- Modal -->
-  <!-- <div class="modal fade" id="uptimeHelpModal" tabindex="-1" role="dialog" aria-labelledby="uptimeHelpModalLabel" aria-hidden="true">
+  <div class="modal fade" id="statusHelpModal" tabindex="-1" role="dialog" aria-labelledby="statusHelpModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="uptimeHelpModalLabel">What does the color of the uptime means ?</h5>
+          <h5 class="modal-title" id="statusHelpModalLabel">What does the color of the status means ?</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
         <div class="modal-body">
           <ul>
-            <li><span class="badge badge-success">uptime</span> has been refreshed less than 2 hours ago</li>
-            <li><span class="badge badge-warning">uptime</span> has been refreshed between 2 hours and 3 hours ago</li>
-            <li><span class="badge badge-danger">uptime</span> has been refreshed more than 3 hours ago</li>
+            <li><span class="badge badge-success">Node is up</span> and has been refreshed less than 10 minutes</li>
+            <li><span class="badge badge-warning">Node is likely down</span> cause we didn't recevieve update from it for more than 10 minutes</li>
+            <li><span class="badge badge-danger">Node is down</span></li>
           </ul>
         </div>
         <div class="modal-footer">
@@ -233,5 +233,5 @@
         </div>
       </div>
     </div>
-  </div> -->
+  </div>
   {% endblock %}
