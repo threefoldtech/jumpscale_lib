@@ -20,5 +20,7 @@ def ListCapacityHandler():
             node.location = node.farmer.location
         d = node.to_mongo().to_dict()
         d['node_id'] = d.pop('_id')
+        d['farmer_id'] = d.pop('farmer')
         output.append(d)
+
     return jsonify(output)

@@ -12,4 +12,7 @@ def GetCapacityHandler(node_id):
     except NodeNotFoundError:
         return jsonify(), 404
 
-    return node.to_json(use_db_field=False), 200, {'Content-type': 'application/json'}
+    output = node.to_json(use_db_field=False)
+    output['farmer_id'] = output.pop('farmer')
+
+    return output, 200, {'Content-type': 'application/json'}
