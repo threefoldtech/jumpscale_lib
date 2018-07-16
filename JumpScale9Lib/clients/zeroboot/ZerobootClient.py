@@ -138,13 +138,28 @@ class Networks:
     def __init__(self, sshclient):
         self._networks = {}
         self.sshclient = sshclient
+
         self._populate()
 
     def _populate(self):
-        _, ipaddr, _ = self.sshclient.execute('uci get network.lan.ipaddr')
-        _, netmask, _ = self.sshclient.execute('uci get network.lan.netmask')
-        subnet = str(netaddr.IPNetwork("{ip}/{net}".format(ip=ipaddr.strip(), net=netmask.strip())))
-        self._networks[subnet] = Network(subnet, self.sshclient)
+        _, output, _ = self.sshclient.execute('uci show network')
+        output = output.splitlines()
+        data = dict()
+        for line in output:
+            key, value = line.split('=')
+            data[key] = value
+
+        for key, value in data.items():
+            if key.endswith('.ipaddr'):
+                ip = value.strip()
+                ip = ip.strip("\'")
+                netmask = data[key.replace('.ipaddr', '.netmask')].strip()
+                netmask = netmask.strip("\'")
+
+                subnet = str(
+                    netaddr.IPNetwork("{ip}/{net}".format(ip=ip, net=netmask))
+                )
+                self._networks[subnet] = Network(subnet, self.sshclient)
 
     def add(self, subnet, list_of_dns):
         raise NotImplementedError()
