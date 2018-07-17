@@ -50,6 +50,10 @@ class DiskManager:
         'disk': str,
     })
 
+    _usage_chk = typchk.Checker({
+        'disk': str,
+    })
+
     def __init__(self, client):
         self._client = client
 
@@ -321,3 +325,11 @@ class DiskManager:
         self._seektime_chk.check(args)
 
         return self._client.json("disk.seektime", args)
+
+    def usage(self, disk):
+        args = {
+            'disk': disk,
+        }
+
+        self._usage_chk.check(args)
+        return self._client.json("disk.usage", args)
