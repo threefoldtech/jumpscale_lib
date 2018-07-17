@@ -106,7 +106,7 @@ class Disk(Mountable):
     def _load(self, disk_info):
         self.name = disk_info['name']
         self.size = int(disk_info['size'])
-        for free_info in disk_info.get('free', []):
+        for free_info in disk_info.get('free', []) or []:
             self.free += free_info['size']
         self.used = self.size - self.free
         self.blocksize = disk_info['blocksize'] if 'blocksize' in disk_info else None
