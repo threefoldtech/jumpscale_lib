@@ -16,10 +16,10 @@ class RealityParser():
             'sru': 0.0,
         }
 
-    def get_report(self, disks, total_cpu_nr, used_cpu, used_memory):
+    def get_report(self, disks, storage_pools, total_cpu_nr, used_cpu, used_memory):
         self._ressources['mru'] = _parse_memory(used_memory)
         self._ressources['cru'] = _parse_cpu(total_cpu_nr, used_cpu)
-        storage = _parse_disks(disks)
+        storage = _parse_storage(disks, storage_pools)
         self._ressources['sru'] = storage['sru']
         self._ressources['hru'] = storage['hru']
 
@@ -61,15 +61,32 @@ class Report:
     __str__ = __repr__
 
 
-def _parse_disks(disks):
-    ressoures = {'sru': 0, 'hru': 0}
+def _parse_storage(disks, storage_pools):
+
+    disk_mapping = {}
     for disk in disks:
-        if disk.type in [StorageType.HDD, StorageType.ARCHIVE]:
-            ressoures['hru'] += disk.used / GiB
-        elif disk.type in [StorageType.SSD, StorageType.NVME]:
-            ressoures['sru'] += disk.used / GiB
+        for part in disk.partitions:
+            if part.devicename not in disk_mapping:
+                disk_mapping[part.devicename] = disk.type
+
+    ressoures = {'sru': 0, 'hru': 0}
+    for sp in storage_pools:
+        if len(sp.devices) <= 0:
+            continue
+
+        if sp.mountpoint == '/mnt/storagepools/sp_zos-cache':
+            continue
+
+        disk_type = disk_mapping[sp.devices[0]]
+        size = sp.fsinfo['data']['used']
+
+        if disk_type in [StorageType.HDD, StorageType.ARCHIVE]:
+            ressoures['hru'] += size / GiB
+        elif disk_type in [StorageType.SSD, StorageType.NVME]:
+            ressoures['sru'] += size / GiB
         else:
             raise ValueError("disk type %s is not valid" % disk.type.name)
+
     return ressoures
 
 
