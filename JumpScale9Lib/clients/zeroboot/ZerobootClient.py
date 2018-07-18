@@ -1,6 +1,8 @@
+import hashlib
 import re
-import netaddr
 import time
+
+import netaddr
 from js9 import j
 
 JSConfigBase = j.tools.configmanager.base_class_config
@@ -231,14 +233,16 @@ class Host:
         :param tftp_root: tftp root location where pxe config are stored, defaults to '/opt/storage'
         :param tftp_root: str, optional
         """
+        lkrn_hash = hashlib.md5(lkrn_url.encode('utf8')).hexdigest()
         file_name = '01-{}'.format(str(netaddr.EUI(self.mac)).lower())
         executor = j.tools.executor.ssh_get(self.sshclient)
         pxe_config_root = '{root}/pxelinux.cfg'.format(root=tftp_root)
         pxe_config_file = '{root}/{file}'.format(root=pxe_config_root, file=file_name)
-        lkrn_file = '{root}/{file}'.format(root=pxe_config_root, file=file_name + ".lkrn")
-        # download lkrn file
-        executor.execute("mkdir -p {root}".format(root=pxe_config_root))
-        executor.execute("wget -O {target} {source}".format(target=lkrn_file, source=lkrn_url))
+        lkrn_file = '{root}/{file}'.format(root=pxe_config_root, file=lkrn_hash + ".lkrn")
+        if not self.sshclient.prefab.core.exists(lkrn_file):
+            # download lkrn file
+            executor.execute("mkdir -p {root}".format(root=pxe_config_root))
+            executor.execute("wget -O {target} {source}".format(target=lkrn_file, source=lkrn_url))
         pxe_config_data = (
         "default 1\n"
         "timeout 100\n"
