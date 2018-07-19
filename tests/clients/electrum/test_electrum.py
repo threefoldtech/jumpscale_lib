@@ -61,7 +61,7 @@ def _start_daemon_and_get_client(wallet_name):
         'rpc_pass_': RPC_PASS,
         'seed_': SEED,
         'password_': "pass",
-        "passphrase_": "pass",
+        "passphrase_": "",
         "electrum_path": electrum_dir,
         "testnet": 1
     }
