@@ -15,7 +15,7 @@ def _post_install(libname, libpath):
     # c[libname] = libpath
     j.core.state.configSet('plugins', c)
     j.sal.process.execute(
-        "pip3 install 'git+https://github.com/spesmilo/electrum.git'")
+        "pip3 install 'git+https://github.com/spesmilo/electrum.git@3.2.2'")
     j.tools.jsloader.generate()
 
 
