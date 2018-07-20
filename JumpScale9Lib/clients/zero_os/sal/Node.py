@@ -5,6 +5,8 @@ from io import BytesIO
 
 import netaddr
 import redis
+import uuid
+import threading
 from js9 import j
 
 from .Capacity import Capacity
@@ -59,6 +61,29 @@ class Node:
             value = split[1] if len(split) > 1 else ''
             result[split[0]] = value
         return result
+
+    def shell(self):
+        """
+        Pseudo shell interactive ash shell will be triggered
+        Full line commands can be send to the shell (not tabcomplete or fancyness though)
+        """
+        fifofile = "/tmp/{}".format(uuid.uuid4())
+        self.client.system('mkfifo {}'.format(fifofile))
+        proc = self.client.bash('ash < {}'.format(fifofile), stream=True)
+        reader = threading.Thread(target=proc.stream)
+        reader.start()
+
+        writer = self.client.filesystem.open(fifofile, 'w')
+        while True:
+            try:
+                cmd = input('# ').encode('utf-8')
+            except EOFError:
+                break
+            if cmd:
+                self.client.filesystem.write(writer, cmd + b";pwd\n")
+        self.client.filesystem.close(writer)
+        self.client.filesystem.remove(fifofile)
+        self.client.job.kill(proc.id, 9)
 
     @property
     def storageAddr(self):

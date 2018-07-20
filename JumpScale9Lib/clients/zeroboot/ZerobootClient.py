@@ -1,6 +1,7 @@
 import hashlib
 import re
 import time
+import urllib
 
 import netaddr
 from js9 import j
@@ -233,6 +234,14 @@ class Host:
         :param tftp_root: tftp root location where pxe config are stored, defaults to '/opt/storage'
         :param tftp_root: str, optional
         """
+        # url parse boot parameters
+        url_parts = lkrn_url.split('/')
+        i = -1
+        if url_parts[i] == '':
+            i = -2
+        url_parts[i] = urllib.parse.quote_plus(url_parts[i])
+        lkrn_url = '/'.join(url_parts)
+
         lkrn_hash = hashlib.md5(lkrn_url.encode('utf8')).hexdigest()
         file_name = '01-{}'.format(str(netaddr.EUI(self.mac)).lower())
         executor = j.tools.executor.ssh_get(self.sshclient)
