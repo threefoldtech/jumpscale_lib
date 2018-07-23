@@ -76,8 +76,6 @@ class Disk(Mountable):
         self.node = node
         self.name = None
         self.size = None
-        self.free = 0
-        self.used = 0
         self.blocksize = None
         self.partition_table = None
         self.mountpoint = None
@@ -106,9 +104,6 @@ class Disk(Mountable):
     def _load(self, disk_info):
         self.name = disk_info['name']
         self.size = int(disk_info['size'])
-        for free_info in disk_info.get('free', []):
-            self.free += free_info['size']
-        self.used = self.size - self.free
         self.blocksize = disk_info['blocksize'] if 'blocksize' in disk_info else None
         if 'table' in disk_info and disk_info['table'] != 'unknown':
             self.partition_table = disk_info['table']

@@ -61,7 +61,7 @@ def deltatime_color(time):
         return 'success'
     if 600 < delta and delta < 900:  # between 10 and 15 minutes
         return 'warning'
-    if delta > 9000:  # plus de 15 minutes
+    if delta > 900:  # plus de 15 minutes
         return 'danger'
 
 
@@ -83,7 +83,7 @@ def node_status(time):
         return 'up'
     if 600 < delta and delta < 900:  # between 10 and 15 minutes
         return 'likely down'
-    if delta > 9000:  # plus de 15 minutes
+    if delta > 900:  # plus de 15 minutes
         return 'down'
 
 

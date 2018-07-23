@@ -15,7 +15,7 @@ def _post_install(libname, libpath):
     # c[libname] = libpath
     j.core.state.configSet('plugins', c)
     j.sal.process.execute(
-        "pip3 install 'git+https://github.com/trezor/python-mnemonic.git'")
+        "pip3 install 'git+https://github.com/spesmilo/electrum.git@3.2.2'")
     j.tools.jsloader.generate()
 
 
@@ -77,7 +77,7 @@ setup(
         'netaddr>=0.7.19',
         'netifaces>=0.10.5',
         'ovh>=0.4.7',
-        'paramiko>=1.15.3,<2.2',  # for parallel-ssh
+        'paramiko>=2.2.3',  # for parallel-ssh
         'path.py>=10.3.1',
         'peewee>=2.9.2',
         'psycopg2>=2.7.1',

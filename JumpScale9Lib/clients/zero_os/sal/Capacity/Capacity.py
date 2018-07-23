@@ -55,6 +55,7 @@ class Capacity:
 
         return j.tools.capacity.reality_parser.get_report(
             disks=self._node.disks.list(),
+            storage_pools=self._node.storagepools.list(),
             total_cpu_nr=total_report.CRU,
             used_cpu=self._node.client.aggregator.query("machine.CPU.percent"),
             used_memory=self._node.client.info.mem()['used']
