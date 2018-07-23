@@ -14,7 +14,6 @@ def loadmodule(name, path):
     mod = imp.load_source(name, path)
     return mod
 
-
 class DocGenerator(JSBASE):
     """
     """
@@ -34,8 +33,7 @@ class DocGenerator(JSBASE):
         self.outpath = j.sal.fs.joinPaths(j.dirs.VARDIR, "docgenerator")
         self._git_repos = {}
         self.defs = {}
-        # self.webserver = "http://localhost:8080/"
-        # self.ws = self.webserver.replace("http://", "").replace("https://", "").replace("/", "")
+
         self._loaded = []  # don't double load a dir
         self._configs = []  # all found config files
         self._macros_loaded = []
@@ -46,64 +44,22 @@ class DocGenerator(JSBASE):
 
     def _git_get(self, path):
         if path not in self._git_repos:
-            gc = j.clients.git.get(path)
+            try:
+                gc = j.clients.git.get(path)
+            except Exception as e:
+                print("cannot load git:%s"%path)
+                return
             self._git_repos[path] = gc
         return self._git_repos[path]
 
-    def install(self, reset=False, hugo=False, caddy=False):
-        """
-        js9 'j.tools.docgenerator.install()'
-        """
-        prefab = j.tools.prefab.local
-        if prefab.core.doneGet("docgenerator:installed") == False or reset:
-            prefab.system.package.install('graphviz')
-            if "darwin" in str(j.core.platformtype.myplatform):
-                if hugo:
-                    prefab.system.package.install('hugo')
-                if caddy:
-                    prefab.system.package.install('caddy')
-            elif "ubuntu" in str(j.core.platformtype.myplatform):
-                prefab.runtimes.golang.install()
-                prefab.runtimes.nodejs.phantomjs()
-                prefab.system.package.install('graphviz')
-                prefab.runtimes.nodejs.install()
-                # Using package install will result in an old version on some machines
-                # prefab.core.file_download('https://github.com/gohugoio/hugo/releases/download/v0.26/hugo_0.26_Linux-64bit.tar.gz')
-                # prefab.core.file_expand('$TMPDIR/hugo_0.26_Linux-64bit.tar.gz')
-                # prefab.core.file_copy('$TMPDIR/hugo_0.26_Linux-64bit/hugo', '/usr/bin/')
-                # go get github.com/kardianos/govendor
-                # govendor get github.com/gohugoio/hugo
-                # go install github.com/gohugoio/hugo
-                if hugo:
-                    prefab.core.run("go get -u -v github.com/gohugoio/hugo")
-                prefab.web.caddy.build()
-                # prefab.core.run("npm install -g mermaid", profile=True)
-                prefab.web.caddy.configure()
-                prefab.core.doneSet("docgenerator:installed")
-
-            # prefab.runtimes.pip.install(
-            #     "dash,dash-renderer,dash-html-components,dash-core-components,plotly")
-
-    # def webserver_start(self):
-    #     """
-    #     start caddy on localhost:8080
-    #     """
-    #     # configpath = self._caddyfile_generate()
-    #     # j.tools.prefab.local.web.caddy.start(configpath=configpath)
-    #     # self.logger.info("go to %a" % self.webserver)
-
     def _init(self):
         if not self._initOK:
-            self.install()
+            # self.install()
             j.clients.redis.core_get()
             j.sal.fs.remove(self._macroCodepath)
             # load the default macro's
             self.macros_load("https://github.com/Jumpscale/docgenerator/tree/master/macros")
             self._initOK = True
-        # if self.webserver[-1] != "/":
-        #     self.webserver += "/"
-        # self.ws = self.webserver.replace(
-        #     "http://", "").replace("https://", "").replace("/", "")
 
     def macros_load(self, pathOrUrl=""):
         """
@@ -161,7 +117,6 @@ class DocGenerator(JSBASE):
         self._init()
         if pathOrUrl == "":
             path = j.sal.fs.getcwd()
-            path = j.clients.git.findGitPath(path)
         else:
             path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
 
@@ -260,6 +215,10 @@ class DocGenerator(JSBASE):
         else:
             return None
 
+    def process(self):
+        for key, ds in self.docsites.items():
+            ds.process()
+    
     # def generate_examples(self, start=True):
     #     """
     #     js9 'j.tools.docgenerator.generate_examples()'
@@ -297,3 +256,39 @@ class DocGenerator(JSBASE):
     #     if start:
     #         self.webserver_start()
     #         self.logger.debug("TO CHECK GO TO: %s" % self.webserver)
+
+
+
+    # def install(self, reset=False, hugo=False, caddy=False):
+    #     """
+    #     js9 'j.tools.docgenerator.install()'
+    #     """
+    #     prefab = j.tools.prefab.local
+    #     if prefab.core.doneGet("docgenerator:installed") == False or reset:
+    #         prefab.system.package.install('graphviz')
+    #         if "darwin" in str(j.core.platformtype.myplatform):
+    #             if hugo:
+    #                 prefab.system.package.install('hugo')
+    #             if caddy:
+    #                 prefab.system.package.install('caddy')
+    #         elif "ubuntu" in str(j.core.platformtype.myplatform):
+    #             prefab.runtimes.golang.install()
+    #             prefab.runtimes.nodejs.phantomjs()
+    #             prefab.system.package.install('graphviz')
+    #             prefab.runtimes.nodejs.install()
+    #             # Using package install will result in an old version on some machines
+    #             # prefab.core.file_download('https://github.com/gohugoio/hugo/releases/download/v0.26/hugo_0.26_Linux-64bit.tar.gz')
+    #             # prefab.core.file_expand('$TMPDIR/hugo_0.26_Linux-64bit.tar.gz')
+    #             # prefab.core.file_copy('$TMPDIR/hugo_0.26_Linux-64bit/hugo', '/usr/bin/')
+    #             # go get github.com/kardianos/govendor
+    #             # govendor get github.com/gohugoio/hugo
+    #             # go install github.com/gohugoio/hugo
+    #             if hugo:
+    #                 prefab.core.run("go get -u -v github.com/gohugoio/hugo")
+    #             prefab.web.caddy.build()
+    #             # prefab.core.run("npm install -g mermaid", profile=True)
+    #             prefab.web.caddy.configure()
+    #             prefab.core.doneSet("docgenerator:installed")
+
+    #         # prefab.runtimes.pip.install(
+    #         #     "dash,dash-renderer,dash-html-components,dash-core-components,plotly")

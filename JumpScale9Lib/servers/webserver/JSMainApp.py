@@ -4,11 +4,11 @@ from flask import request
 import sys
 from js9 import j
 
-mydir = j.sal.fs.getcwd()
-if mydir not in sys.path:
-    sys.path.append(mydir)
+# mydir = j.sal.fs.getcwd()
+# if mydir not in sys.path:
+#     sys.path.append(mydir)
 
-from site_threefold import app as app_threefold
+# from site_threefold import app as app_threefold
 
 class JSMainApp(Flask):
     
@@ -17,20 +17,15 @@ class JSMainApp(Flask):
 
         self.config.from_object(rq_dashboard.default_settings)
         self.register_blueprint(rq_dashboard.blueprint, url_prefix="/rq")
-        self.register_blueprint(app_threefold.bp, url_prefix="/threefold")
+        # self.register_blueprint(app_threefold.bp, url_prefix="/threefold")
 
-        self.add_url_rule('/hello', view_func=self.hello)
-        self.add_url_rule('/files/<name>', view_func=self.files1)
-        self.add_url_rule('/files/<ns>/<name>', view_func=self.files2)
+        # self.add_url_rule('/hello', view_func=self.hello)
+        # self.add_url_rule('/files/<name>', view_func=self.files1)
+        # self.add_url_rule('/files/<ns>/<name>', view_func=self.files2)
 
-        self.config["DEBUG"]=True
-
-
-    def load(self,path):
-        j.tools.docgenerator.load(path)
-        i = j.tools.docgenerator.item_get("threefold-token-what-is-it-threefold-foundation.html",die=False)
-        print("load app")
-        from IPython import embed;embed(colors='Linux')
+        self.config["DEBUG"] = True
+        # self.config["static_folder"] = 'base/static'
+        # from IPython import embed;embed(colors='Linux')
 
     ############
 

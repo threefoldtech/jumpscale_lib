@@ -294,8 +294,9 @@ class Doc(DocBase):
     def _links_process(self):
         
         # check links for internal images
+        return
 
-        ws = j.tools.docgenerator.webserver + self.docsite.name
+        ws = "wiki/" + self.docsite.name
 
         regex = "\] *\([a-zA-Z0-9\.\-\_\ \/]+\)"  # find all possible images/links
         for match in j.data.regex.yieldRegexMatches(regex, self.content, flags=0):
@@ -383,7 +384,7 @@ class Doc(DocBase):
 
         self._processed = True
 
-        self.write()
+        # self.write()
 
     @property
     def template(self):

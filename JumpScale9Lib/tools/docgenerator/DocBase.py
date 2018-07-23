@@ -23,7 +23,7 @@ class DocBase(JSBASE):
 
         name_dot =  "%s/%s" % (self.path_dir_rel,name)
         self.name_dot = name_dot.replace("/",".")
-        self.name_dot_lower = self.name_dot.replace("/",".").lower()
+        self.name_dot_lower = self.name_dot.replace("/",".").lower().strip(".")
 
         self.content = ""
         self.show = True

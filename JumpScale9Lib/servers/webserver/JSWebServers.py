@@ -24,6 +24,10 @@ class JSWebServers(JSConfigBase):
         if ws_dir is "":
             ws_dir = j.sal.fs.getcwd()
 
+        config_path = j.sal.fs.joinPaths(ws_dir,"site_config.toml")
+        if not j.sal.fs.exists(config_path):
+            raise RuntimeError("cannot find: %s"%config_path)
+
         data = {
             "port": port,
             "host": host,
@@ -39,7 +43,7 @@ class JSWebServers(JSConfigBase):
 
         """        
         p = j.tools.prefab.local
-        p.runtimes.pip.install("rq-dashboard,rq-scheduler,rq,flask-classy")  # ,Flask-Bootstrap4")
+        p.runtimes.pip.install("rq-dashboard,rq-scheduler,rq,flask-classy,gevent")  # ,Flask-Bootstrap4")
 
     def start(self, instance="main",background=False):
 
