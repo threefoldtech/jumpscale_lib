@@ -26,11 +26,11 @@ class DNSTools(JSBASE):
         JSBASE.__init__(self)
         self._default = None
 
-    def get(self, nameservers=["8.26.56.26", "8.20.247.20"]):  #https://www.computerworld.com/article/2872700/endpoint-security/6-dns-services-protect-against-malware-and-other-unwanted-content.html?page=3
+    def get(self, nameservers=["8.26.56.26", "8.20.247.20"],port=53):  #https://www.computerworld.com/article/2872700/endpoint-security/6-dns-services-protect-against-malware-and-other-unwanted-content.html?page=3
         if "localhost" in nameservers:
             nameservers.pop(nameservers.index("localhost"))
             nameservers.append("127.0.0.1")
-        return DNSClient(nameservers=nameservers)
+        return DNSClient(nameservers=nameservers,port=port)
 
     @property
     def default(self):
@@ -50,11 +50,12 @@ class DNSTools(JSBASE):
 
 class DNSClient(JSBASE):
 
-    def __init__(self, nameservers):
+    def __init__(self, nameservers,port=53):
         JSBASE.__init__(self)
         self.nameservers=nameservers
         self.resolver=dns.resolver.Resolver(configure = False)
         self.resolver.nameservers=self.nameservers
+        self.resolver.port=port
 
 
     def nameservers_get(self, domain = "threefoldtoken.org"):
