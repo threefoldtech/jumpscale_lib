@@ -1,11 +1,13 @@
-JSBASE = j.application.jsbase_get_class()
 
+from js9 import j
+
+JSBASE = j.application.jsbase_get_class()
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 
 
-class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
+class DocWatchdog(FileSystemEventHandler, JSBASE):
     def __init__(self):
         JSBASE.__init__(self)
         self.logger_enable()

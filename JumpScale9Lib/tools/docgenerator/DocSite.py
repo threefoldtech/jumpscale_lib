@@ -3,6 +3,7 @@ from .Doc import Doc
 from .DocBase import DocBase
 from .DocWatchdog import DocWatchdog
 from .HtmlPage import HtmlPage
+JSBASE = j.application.jsbase_get_class()
 
 import copy
 
