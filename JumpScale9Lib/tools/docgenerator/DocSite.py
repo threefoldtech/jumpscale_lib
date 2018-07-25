@@ -14,7 +14,6 @@ def loadmodule(name, path):
     mod = imp.load_source(name, path)
     return mod
 
-JSBASE = j.application.jsbase_get_class()
 
 
 class DocSite(JSBASE):
@@ -75,6 +74,7 @@ class DocSite(JSBASE):
         self.logger.level=1
 
         self._git=None
+        self._watchdog=None
 
         self.logger.info("loaded:%s"%self)
         
