@@ -3,6 +3,7 @@ from js9 import j
 from gevent.pywsgi import WSGIServer
 import sys
 import os
+
 from .JSWebLoader import JSWebLoader
 
 JSConfigBase = j.tools.configmanager.base_class_config
@@ -39,7 +40,7 @@ class JSWebServer(JSConfigBase):
         j.servers.web.latest = self
         self.loader = JSWebLoader()
     
-    def init(self):
+    def init(self, debug=False):
         
         if self._inited:
             return
@@ -49,7 +50,8 @@ class JSWebServer(JSConfigBase):
         if self.path not in sys.path:
             sys.path.append(self.path)
 
-        self.app = self.loader.create_app()
+        self.app = self.loader.create_app(debug=debug)
+        self.app.debug = True
 
         self.http_server = WSGIServer((self.host, self.port), self.app)
 
@@ -91,12 +93,12 @@ class JSWebServer(JSConfigBase):
         cert = os.path.join(self.path, 'ca.crt')
         return key, cert
 
-    def start(self, reset=False):
+    def start(self, reset=False, debug=False):
         print("start")
 
         # self.scaffold(reset=reset)
 
-        self.init()
+        self.init(debug=debug)
         print ("Webserver running")
         print (self)
         self.http_server.serve_forever()
