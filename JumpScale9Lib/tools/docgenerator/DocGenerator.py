@@ -94,37 +94,43 @@ class DocGenerator(JSBASE):
             self.macros = loadmodule("macros", self._macroCodepath)
             self._macroPathsDone.append(path)
 
-    def load(self, pathOrUrl="", name=""):
-        """
 
-        js9 'j.tools.docgenerator.load()'
+    def load(self, path="", name=""):
+        ds = DocSite(path=path, name=name)
+        self.docsites[ds.name] = ds
+        
+    
+    # def scan_load(self, pathOrUrl="", name=""):
+    #     """
 
-        will look for config.toml in $source/config.toml
+    #     js9 'j.tools.docgenerator.load()'
 
-        @param pathOrUrl is the location where the markdown or html docs are which need to be processed
-            if not specified then will look for root of git repo and add docs
-            source = $gitrepoRootDir/docs
+    #     will look for config.toml in $source/config.toml
 
-            this can also be a git url e.g. https://github.com/Jumpscale/docgenerator/tree/master/examples
+    #     @param pathOrUrl is the location where the markdown or html docs are which need to be processed
+    #         if not specified then will look for root of git repo and add docs
+    #         source = $gitrepoRootDir/docs
 
-        """
-        if pathOrUrl == "":
-            pathOrUrl = j.sal.fs.getcwd()
-        if pathOrUrl in self._loaded:
-            return
-        self.logger.info("load:%s" % pathOrUrl)
-        self._loaded.append(pathOrUrl)
-        self._init()
-        if pathOrUrl == "":
-            path = j.sal.fs.getcwd()
-        else:
-            path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
+    #         this can also be a git url e.g. https://github.com/Jumpscale/docgenerator/tree/master/examples
 
-        for configPath in j.sal.fs.listFilesInDir(path, recursive=True, filter="docs_config.toml"):
-            if configPath not in self._configs:
-                self.logger.debug("found configPath for doc dir:%s" % configPath)
-                ds = DocSite(self, configPath=configPath, name=name)
-                self.docsites[ds.name] = ds
+    #     """
+    #     if pathOrUrl == "":
+    #         pathOrUrl = j.sal.fs.getcwd()
+    #     if pathOrUrl in self._loaded:
+    #         return
+    #     self.logger.info("load:%s" % pathOrUrl)
+    #     self._loaded.append(pathOrUrl)
+    #     self._init()
+    #     if pathOrUrl == "":
+    #         path = j.sal.fs.getcwd()
+    #     else:
+    #         path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
+
+    #     for configPath in j.sal.fs.listFilesInDir(path, recursive=True, filter="docs_config.toml"):
+    #         if configPath not in self._configs:
+    #             self.logger.debug("found configPath for doc dir:%s" % configPath)
+    #             ds = DocSite(self, configPath=configPath, name=name)
+    #             self.docsites[ds.name] = ds
 
     def git_update(self):
         if self.docsites == {}:
@@ -215,9 +221,9 @@ class DocGenerator(JSBASE):
         else:
             return None
 
-    def process(self):
-        for key, ds in self.docsites.items():
-            ds.process()
+    # def process(self):
+    #     for key, ds in self.docsites.items():
+    #         ds.process()
     
     # def generate_examples(self, start=True):
     #     """

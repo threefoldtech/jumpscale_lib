@@ -21,15 +21,21 @@ class DocSite(JSBASE):
     """
     """
 
-    def __init__(self, docgen, configPath,name=""):
+    def __init__(self, path,name=""):
         JSBASE.__init__(self)
 
-        self.docgen = docgen
+        self.docgen = j.tools.docgenerator
 
         #init initial arguments
-        self.path = j.sal.fs.getDirName(configPath)
+        self.path = path
+        if not j.sal.fs.exists(path):
+            raise RuntimeError("Cannot find path:%s"%path)
 
-        self.config = j.data.serializer.toml.load(configPath)
+        config_path = j.sal.fs.joinPaths(self.path,"docs_config.toml")
+        if j.sal.fs.exists(config_path):
+            self.config = j.data.serializer.toml.load(config_path)
+        else:
+            self.config = {}
 
         if not name:
             if "name" not in self.config:                        
@@ -40,11 +46,6 @@ class DocSite(JSBASE):
             self.name = name.lower()
 
         self.name = j.data.text.strip_to_ascii_dense(self.name)
-
-        gitpath = j.clients.git.findGitPath(self.path)
-        if gitpath not in self.docgen._git_repos:
-            self.git = j.tools.docgenerator._git_get(gitpath)
-            self.docgen._git_repos[gitpath] = self.git
 
         self.defs = {}
         self.content_default = {}  # key is relative path in docsite where default content found
@@ -57,6 +58,7 @@ class DocSite(JSBASE):
         self.others = {}
         self.files = {}
         self.sidebars = {}
+        self._processed = False
 
     
         # check if there are dependencies
@@ -72,8 +74,21 @@ class DocSite(JSBASE):
         self.logger_enable()
         self.logger.level=1
 
-        self.load()
+        self._git=None
+
+        self.logger.info("loaded:%s"%self)
         
+
+    @property
+    def git(self):
+        if self._git is None:
+            gitpath = j.clients.git.findGitPath(self.path,die=False)
+            if not gitpath:
+                return
+            if gitpath not in self.docgen._git_repos:
+                self._git = j.tools.docgenerator._git_get(gitpath)
+                self.docgen._git_repos[gitpath] = self.git   
+        return self._git      
 
     @property
     def urls(self):
@@ -234,6 +249,7 @@ class DocSite(JSBASE):
     def process(self):
         for key, doc in self.docs.items():
             doc.process()
+        self._processed = True
 
     def error_raise(self, errormsg, doc=None):
         if doc is not None:
@@ -247,40 +263,9 @@ class DocSite(JSBASE):
             embed()
             raise RuntimeError("stop debug here")
 
-    # def write(self):
-    #     if self._config:
-    #         j.sal.fs.removeDirTree(self.outpath)
-    #         dest = j.sal.fs.joinPaths(self.outpath, "content")
-    #         j.sal.fs.createDir(dest)
-    #         # source = self.path
-    #         # j.do.copyTree(source, dest, overwriteFiles=True, ignoredir=['.*'], ignorefiles=[
-    #         #               "*.md", "*.toml", "_*", "*.yaml", ".*"], rsync=True, recursive=True, rsyncdelete=False)
-
-    #         for key, doc in self.docs.items():
-    #             doc.process()
-
-    #         # find the defs, also process the aliases
-    #         for key, doc in self.docs.items():
-    #             if "tags" in doc.data:
-    #                 tags = doc.data["tags"]
-    #                 if "def" in tags:
-    #                     name = doc.name.lower().replace("_", "").replace("-", "").replace(" ", "")
-    #                     self.defs[name] = doc
-    #                     if "alias" in doc.data:
-    #                         for alias in doc.data["alias"]:
-    #                             name = alias.lower().replace("_", "").replace("-", "").replace(" ", "")
-    #                             self.defs[name] = doc
-
-    #         for key, doc in self.docs.items():
-    #             # doc.defs_process()
-    #             doc.write()
-
-    #         self.generator.generate(self)
-
-    #         if j.sal.fs.exists(j.sal.fs.joinPaths(self.path, "static"), followlinks=True):
-    #             j.sal.fs.copyDirTree(j.sal.fs.joinPaths(self.path, "static"), j.sal.fs.joinPaths(self.outpath, "public"))
-    #     else:
-    #         self.logger.info("no need to write:%s"%self.path)
+    def load_process(self):
+        self.load()
+        self.process()
 
     def file_get(self, name, die=True):
         for key, val in self.files.items():
@@ -292,6 +277,9 @@ class DocSite(JSBASE):
         return None
 
     def doc_get(self, name, die=True):
+        
+        if not self._processed:
+            self.load_process()
 
         if j.data.types.list.check(name):
             name = "/".join(name)
@@ -306,6 +294,7 @@ class DocSite(JSBASE):
             name = name.replace("/",".")
 
         name = name.strip(".")  #lets make sure its clean again
+
 
         #let caching work
         if name in self.docs:
@@ -343,7 +332,6 @@ class DocSite(JSBASE):
             raise j.exceptions.Input(message="Cannot find doc with name:%s" % name, level=1, source="", tags="", msgpub="")
         else:
             return None
-
 
     def _doc_get(self, name):
                 
@@ -499,3 +487,38 @@ class DocSite(JSBASE):
         return "docsite:%s" % ( self.path)
 
     __str__ = __repr__
+
+    # def write(self):
+    #     if self._config:
+    #         j.sal.fs.removeDirTree(self.outpath)
+    #         dest = j.sal.fs.joinPaths(self.outpath, "content")
+    #         j.sal.fs.createDir(dest)
+    #         # source = self.path
+    #         # j.do.copyTree(source, dest, overwriteFiles=True, ignoredir=['.*'], ignorefiles=[
+    #         #               "*.md", "*.toml", "_*", "*.yaml", ".*"], rsync=True, recursive=True, rsyncdelete=False)
+
+    #         for key, doc in self.docs.items():
+    #             doc.process()
+
+    #         # find the defs, also process the aliases
+    #         for key, doc in self.docs.items():
+    #             if "tags" in doc.data:
+    #                 tags = doc.data["tags"]
+    #                 if "def" in tags:
+    #                     name = doc.name.lower().replace("_", "").replace("-", "").replace(" ", "")
+    #                     self.defs[name] = doc
+    #                     if "alias" in doc.data:
+    #                         for alias in doc.data["alias"]:
+    #                             name = alias.lower().replace("_", "").replace("-", "").replace(" ", "")
+    #                             self.defs[name] = doc
+
+    #         for key, doc in self.docs.items():
+    #             # doc.defs_process()
+    #             doc.write()
+
+    #         self.generator.generate(self)
+
+    #         if j.sal.fs.exists(j.sal.fs.joinPaths(self.path, "static"), followlinks=True):
+    #             j.sal.fs.copyDirTree(j.sal.fs.joinPaths(self.path, "static"), j.sal.fs.joinPaths(self.outpath, "public"))
+    #     else:
+    #         self.logger.info("no need to write:%s"%self.path)    
