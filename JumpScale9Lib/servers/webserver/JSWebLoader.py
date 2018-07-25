@@ -32,10 +32,10 @@ class JSWebLoader(JSBASE):
 
 
     def register_blueprints(self,app):
-        apps = j.sal.fs.listDirsInDir("app", recursive=False, dirNameOnly=True, findDirectorySymlinks=True, followSymlinks=True)
+        apps = j.sal.fs.listDirsInDir("apps", recursive=False, dirNameOnly=True, findDirectorySymlinks=True, followSymlinks=True)
         apps = [item for item in apps if item[0] is not "_"]
         for module_name in apps:
-            module = import_module('app.{}.routes'.format(module_name))
+            module = import_module('apps.{}.routes'.format(module_name))
             print("blueprint register:%s"%module_name)
             app.register_blueprint(module.blueprint)
 
