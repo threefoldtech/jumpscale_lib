@@ -36,6 +36,7 @@ class JSWebServer(JSConfigBase):
             self.site_config = {}
 
         self._inited = False
+        j.servers.web.latest = self
         self.loader = JSWebLoader()
     
     def init(self):
@@ -58,7 +59,6 @@ class JSWebServer(JSConfigBase):
 
         self.docs_load()
 
-        j.servers.web.latest = self
 
         # self._sig_handler.append(gevent.signal(signal.SIGINT, self.stop))
 
