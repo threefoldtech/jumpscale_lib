@@ -1,6 +1,7 @@
 from js9 import j
 from .Doc import Doc
 from .DocBase import DocBase
+from .DocWatchdog import DocWatchdog
 from .HtmlPage import HtmlPage
 
 import copy
