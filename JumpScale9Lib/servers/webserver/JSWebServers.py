@@ -59,7 +59,7 @@ class JSWebServers(JSConfigBase):
         p = j.tools.prefab.local
         p.runtimes.pip.install(pips)  # ,Flask-Bootstrap4")
 
-    def start(self, instance="main",background=False):
+    def start(self, instance="main",background=False, debug=False):
 
         # start redis
         print("make sure core redis running")
@@ -68,7 +68,7 @@ class JSWebServers(JSConfigBase):
         s=self.get(instance)
 
         if not background:
-            s.start()
+            s.start(debug=debug)
         else:
             # start
             cmd = """
@@ -76,7 +76,7 @@ class JSWebServers(JSConfigBase):
             export LANG=de_DE.utf-8
             export FLASK_DEBUG=1
             export APP_SETTINGS=project.server.config.DevelopmentConfig
-            js9_web start -i $instance       
+            js9_web start -i $instance -d    
             """
             cmd = cmd.replace("$instance", instance)
             j.tools.tmux.execute(cmd, session='main', window=instance, pane='main', session_reset=False, window_reset=True)

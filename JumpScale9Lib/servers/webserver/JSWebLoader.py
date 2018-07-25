@@ -4,6 +4,8 @@ from flask_sqlalchemy import SQLAlchemy
 from importlib import import_module
 from logging import basicConfig, DEBUG, getLogger, StreamHandler
 from js9 import j
+from werkzeug.debug import DebuggedApplication
+
 
 JSBASE = j.application.jsbase_get_class()
 
@@ -66,13 +68,17 @@ class JSWebLoader(JSBASE):
         return app
 
 
-    def create_app(self,selenium=False):
+    def create_app(self,selenium=False, debug=True):
         app = Flask(__name__, static_folder='base/static')
         app.config.from_object(DebugConfig)
         # if selenium:
         #     app.config['LOGIN_DISABLED'] = True
         # register_extensions(app)
         self.register_blueprints(app)
+        if debug is True:
+            app = DebuggedApplication(app, evalex=True)
+
+        # print(app.url_map)
         # configure_database(app)
         # configure_logs(app)
         return app
