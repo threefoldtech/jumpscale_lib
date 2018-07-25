@@ -49,7 +49,7 @@ class JSWebLoader(JSBASE):
 
 
     def configure_logs(self,app):
-        basicConfig(filename='error.log', level=DEBUG) #TODO:*1 is this ok ;ike this?
+        basicConfig(filename='error.log', level=DEBUG) #TODO:*1 is this ok this?
         self.logger = getLogger()
         self.logger.addHandler(StreamHandler())
 
@@ -67,7 +67,8 @@ class JSWebLoader(JSBASE):
 
 
     def create_app(self,selenium=False):
-        app = Flask(__name__, static_folder='base/static')
+        # staticpath = j.clients.git.getContentPathFromURLorPath("https://github.com/Jumpscale/web_libs/tree/master/libs")
+        app = Flask(__name__, static_folder="base/static")  #'/base/static'
         app.config.from_object(DebugConfig)
         # if selenium:
         #     app.config['LOGIN_DISABLED'] = True
