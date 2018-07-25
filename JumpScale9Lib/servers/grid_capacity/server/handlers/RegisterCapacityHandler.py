@@ -42,6 +42,7 @@ def RegisterCapacityHandler():
         capacity = NodeRegistration.get(inputs.get("node_id"))
         if farmer.location:
             capacity.location = farmer.location
+        inputs['farmer'] = farmer
         capacity.update(**inputs)
     except NodeNotFoundError:
         inputs['farmer'] = iyo_organization
