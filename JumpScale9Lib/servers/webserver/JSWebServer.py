@@ -1,13 +1,16 @@
 from js9 import j
-from .JSMainApp import JSMainApp
+# from .JSMainApp import JSMainApp
 from gevent.pywsgi import WSGIServer
 import sys
 import os
+from .JSWebLoader import JSWebLoader
+
 JSConfigBase = j.tools.configmanager.base_class_config
 
 TEMPLATE = """
     host = "localhost"
     port = 5050
+    port_ssl = 0
     secret_ = ""
     ws_dir = ""
     """
@@ -23,14 +26,17 @@ class JSWebServer(JSConfigBase):
 
         self.host = self.config.data["host"]
         self.port = int(self.config.data["port"])
+        self.port_ssl = int(self.config.data["port_ssl"])
         self.address = '{}:{}'.format(self.host, self.port)
 
         config_path = j.sal.fs.joinPaths(self.path,"site_config.toml")
-        if not j.sal.fs.exists(config_path):
-            raise RuntimeError("cannot find: %s"%config_path)
-        self.site_config = j.data.serializer.toml.load(config_path)
-        self._inited = False
+        if j.sal.fs.exists(config_path):
+            self.site_config = j.data.serializer.toml.load(config_path)
+        else:
+            self.site_config = {}
 
+        self._inited = False
+        self.loader = JSWebLoader()
     
     def init(self):
         
@@ -39,15 +45,8 @@ class JSWebServer(JSConfigBase):
         
         self.logger.info("init server")
     
-        static_folder='%s/app/base/static'%self.path
-        # print(static_folder)
-        self.app = JSMainApp(self.instance,static_folder=static_folder)
-
         if self.path not in sys.path:
             sys.path.append(self.path)
-
-        from app import app_load, db
-        app_load(self.app)
 
         self.http_server = WSGIServer((self.host, self.port), self.app)
 

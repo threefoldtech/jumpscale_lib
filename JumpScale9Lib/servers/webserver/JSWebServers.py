@@ -16,8 +16,11 @@ class JSWebServers(JSConfigBase):
 
         JSConfigBase.__init__(self, JSWebServer)
 
-    def configure(self, instance="main", port=5050, host="localhost", secret="", ws_dir=""):
+    def configure(self, instance="main", port=5050,port_ssl=0, host="localhost", secret="", ws_dir=""):
         """
+        params
+            - port_ssl if 0 not used
+
         js9 'j.servers.web.configure()'
 
         """
@@ -30,20 +33,31 @@ class JSWebServers(JSConfigBase):
 
         data = {
             "port": port,
+            "port_ssl": port_ssl,
             "host": host,
             "secret_": secret,
             "ws_dir": ws_dir,
         }
 
-        return self.get(instance, data)
+        return self.get(instance, data, interactive=False)
 
     def install(self):
         """
         js9 'j.servers.web.install()'
 
         """        
+        pips="""
+        flask
+        flask_login
+        flask_migrate
+        flask_wtf
+        flask_sqlalchemy
+        gunicorn
+        gevent
+        """
+        #rq-dashboard,rq-scheduler,rq,flask-classy,
         p = j.tools.prefab.local
-        p.runtimes.pip.install("rq-dashboard,rq-scheduler,rq,flask-classy,gevent")  # ,Flask-Bootstrap4")
+        p.runtimes.pip.install(pips)  # ,Flask-Bootstrap4")
 
     def start(self, instance="main",background=False):
 
