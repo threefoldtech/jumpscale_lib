@@ -48,6 +48,8 @@ class JSWebServer(JSConfigBase):
         if self.path not in sys.path:
             sys.path.append(self.path)
 
+        self.app = self.loader.create_app()
+
         self.http_server = WSGIServer((self.host, self.port), self.app)
 
         self.app.http_server = self.http_server 

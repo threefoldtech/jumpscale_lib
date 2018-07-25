@@ -18,19 +18,17 @@ class ProductionConfig(Config):
 class DebugConfig(Config):
     DEBUG = True
 
-db = SQLAlchemy()
-login_manager = LoginManager()
 
 
 class JSWebLoader(JSBASE):
-
-    def load(self,path):
-
-
+    
+    def __init__(self):
+        self.db = SQLAlchemy()
 
     def register_extensions(self,app):
-        db.init_app(app)
-        login_manager.init_app(app)
+        self.db.init_app(app)
+        self.login_manager = LoginManager()
+        self.login_manager.init_app(app)
 
 
     def register_blueprints(self,app):
@@ -41,22 +39,21 @@ class JSWebLoader(JSBASE):
             print("blueprint register:%s"%module_name)
             app.register_blueprint(module.blueprint)
 
-
     def configure_database(self,app):
 
         @app.before_first_request
         def initialize_database():
-            db.create_all()
+            self.db.create_all()
 
         @app.teardown_request
         def shutdown_session(exception=None):
-            db.session.remove()
+            self.db.session.remove()
 
 
     def configure_logs(self,app):
-        basicConfig(filename='error.log', level=DEBUG)
-        logger = getLogger()
-        logger.addHandler(StreamHandler())
+        basicConfig(filename='error.log', level=DEBUG) #TODO:*1 is this ok ;ike this?
+        self.logger = getLogger()
+        self.logger.addHandler(StreamHandler())
 
 
     def app_load(self,app,selenium=False):
@@ -65,19 +62,19 @@ class JSWebLoader(JSBASE):
         # if selenium:
         #     app.config['LOGIN_DISABLED'] = True
         # register_extensions(app)
-        register_blueprints(app)
+        self.register_blueprints(app)
         # configure_database(app)
         # configure_logs(app)
         return app
 
 
-    def create_app(selenium=False):
+    def create_app(self,selenium=False):
         app = Flask(__name__, static_folder='base/static')
         app.config.from_object(DebugConfig)
         # if selenium:
         #     app.config['LOGIN_DISABLED'] = True
         # register_extensions(app)
-        register_blueprints(app)
+        self.register_blueprints(app)
         # configure_database(app)
         # configure_logs(app)
         return app
