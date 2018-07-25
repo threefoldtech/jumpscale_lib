@@ -2,18 +2,23 @@
 
 The ipmi client allows for managing the hardware of a node that supports ipmi.
 
-The provided methods of the Jumpscale implementation focus on the power management through ipmi.  
-Other methods of the internal ipmi client ([pyghmi](https://github.com/openstack/pyghmi)) are exposed by the `ipmi` property of the client.
+The provided methods of the Jumpscale implementation focus on the power management through ipmi.
 
 ## Prerequisites
 
-To keep the Jumpscale Lib9 installation smaller, the dependencies of the ipmi client are not installed.
+The ipmi client is a wrapper of the ipmitool command line tool.
 
-To install the dependencies run the following command in the root directory of Lib9
+To install run the installation script of Jumpscale
 
 ```sh
-pip3 install -r JumpScale9Lib/clients/ipmi/requirements.txt
+./install.sh
 ```
+
+Or install it directly from the package manager
+```sh
+apt install ipmitool
+```
+
 
 ## Usage
 
@@ -23,7 +28,7 @@ Get instance of the client:
 data = {
   "bmc": "10.10.1.1",
   "user": "ADMIN",
-  "password": "admin",
+  "password_": "admin",
   "port": 623,
 }
 ipmi_cl = j.clients.ipmi.get(instance="test1", data=data, interactive=False)
