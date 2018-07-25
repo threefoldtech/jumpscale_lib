@@ -61,13 +61,15 @@ class JSWebServer(JSConfigBase):
 
         self.docs_load()
 
-
         # self._sig_handler.append(gevent.signal(signal.SIGINT, self.stop))
 
         self._inited = False        
 
 
     def docs_load(self):
+        if "docsite" not in self.site_config:
+            return
+
         for item in self.site_config["docsite"]:
             url=item["url"]
             name=item["name"]
@@ -75,8 +77,7 @@ class JSWebServer(JSConfigBase):
                 path = j.clients.git.getContentPathFromURLorPath(url)
                 if not j.sal.fs.exists(path):
                     j.clients.git.pullGitRepo(url=url)
-                j.tools.docgenerator.load(pathOrUrl=path,name=name)
-        j.tools.docgenerator.process()        
+                j.tools.docgenerator.load(path=path,name=name)       
 
     @property
     def path(self):
@@ -88,8 +89,8 @@ class JSWebServer(JSConfigBase):
             self.logger.info("generated sslkeys for gedis in %s" % self.ws_dir)
         else:
             self.logger.info('using existing key and cerificate for gedis @ %s' % self.ws_dir)
-        key = os.path.join(self.ws_dir, 'ca.key')
-        cert = os.path.join(self.ws_dir, 'ca.crt')
+        key = os.path.join(self.path, 'ca.key')
+        cert = os.path.join(self.path, 'ca.crt')
         return key, cert
 
     def start(self, reset=False, debug=False):
