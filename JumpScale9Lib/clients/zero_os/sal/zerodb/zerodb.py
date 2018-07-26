@@ -259,6 +259,15 @@ class Zerodb:
         """
         if not self.container.is_running():
             self.container.start()
+
+        for i in range(5):
+            try:
+                self.container.client.ping()
+                break
+            except RuntimeError as err:
+                if str(err).find('failed to dispatch command to container'):
+                    time.sleep(1)
+
         self.start()
 
         live_namespaces = self._live_namespaces()
