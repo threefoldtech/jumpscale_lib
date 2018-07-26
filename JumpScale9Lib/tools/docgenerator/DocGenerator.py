@@ -96,6 +96,8 @@ class DocGenerator(JSBASE):
 
 
     def load(self, path="", name=""):
+        if path.startswith("http"):
+            path = j.clients.git.getContentPathFromURLorPath(path)
         ds = DocSite(path=path, name=name)
         self.docsites[ds.name] = ds
         

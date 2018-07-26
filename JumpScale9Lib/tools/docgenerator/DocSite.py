@@ -136,7 +136,6 @@ class DocSite(JSBASE):
         fulldirpath = j.sal.fs.getDirName(path)
         rdirpath = j.sal.fs.pathRemoveDirPart(fulldirpath, self.path)
         rdirpath = rdirpath.strip("/").strip().strip("/")
-        import pudb; pudb.set_trace()
         self.data_default[rdirpath] = data
 
 
@@ -286,7 +285,7 @@ class DocSite(JSBASE):
                                      (name, self), level=1, source="", tags="", msgpub="")
         return None
 
-    def doc_get(self, name, die=True):
+    def doc_get(self, name, cat="", die=True):
         
         if not self._processed:
             self.load_process()
@@ -320,7 +319,7 @@ class DocSite(JSBASE):
             candidates.append(name+".readme")
 
         if name.endswith("index"):            
-            nr,res = self._doc_get(name[:-5]+"readme")
+            nr,res = self._doc_get(name[:-5]+"readme",cat=cat)
             if nr==1:
                 return 1,res
             name = name[:-6]
@@ -333,7 +332,7 @@ class DocSite(JSBASE):
             candidates.append(name0)
 
         for cand in candidates:
-            nr,res = self._doc_get(cand)
+            nr,res = self._doc_get(cand,cat=cat)
             if nr == 1:
                 self.docs[name] = res  #remember for caching
                 return self.docs[name]
@@ -343,19 +342,25 @@ class DocSite(JSBASE):
         else:
             return None
 
-    def _doc_get(self, name):
-                
+    def _doc_get(self, name, cat=""):
+        
         if name in self.docs:
-            return 1, self.docs[name]
-    
-        res = []
-        for key,item in self.docs.items():
-            if name in  item.name_dot_lower:
-                res.append(key)
-        if len(res)>0:
-            return  len(res),self.docs[res[0]]
+            if cat is "":
+                return 1, self.docs[name]
+            else:
+                if self.docs[name] == cat:
+                    return 1, self.docs[name]
+
         else:
-            return 0,None
+                
+            res = []
+            for key,item in self.docs.items():
+                if name in  item.name_dot_lower:
+                    res.append(key)
+            if len(res)>0:
+                return  len(res),self.docs[res[0]]
+            else:
+                return 0,None
 
 
     def html_get(self, name, die=True):

@@ -1,7 +1,8 @@
 from js9 import j
 
-# from .HTML2Text import *
 JSBASE = j.application.jsbase_get_class()
+
+from .HTMLPage import HTMLPage
 
 class HTMLFactory(JSBASE):
 
@@ -36,3 +37,16 @@ class HTMLFactory(JSBASE):
         text.encode('utf-8')
 
         return text
+
+
+    def page_get(self):
+        """
+        return a html page on which content can be dynamically build
+
+        """
+        return HTMLPage()
+
+    def test(self):
+        """
+
+        """

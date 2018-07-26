@@ -244,53 +244,6 @@ class Doc(DocBase):
 
         self.content = out
 
-    def _data_add(self):
-        """
-        looks if default data like tags, date & title filled in, if not will add to metadata & rewrite in content
-        """
-        
-        rewriteDataBlock = False
-
-        if "title" not in self.metadata:
-            rewriteDataBlock = True
-            name = self.name_original.replace("_", " ").replace("-", " ").strip()
-            # makes first letters uppercase
-            name = " ".join([item[0].upper() + item[1:] for item in name.split(" ")])
-            self.metadata["title"] = name
-        if "date" not in self.metadata:
-            rewriteDataBlock = True
-            self.metadata["date"] = j.data.time.epoch2HRDate(j.data.time.epoch).replace("/", "-")
-        if "tags" not in self.metadata:
-            parts = [item.lower() for item in j.sal.fs.getDirName(self.path).strip("/").split("/")[-4:]]
-            tags = []
-            if "defs" in parts or "def" in parts:
-                tags.append("def")
-            if "howto" in parts or "howtos" in parts:
-                tags.append("howto")
-            if "ideas" in parts or "idea" in parts:
-                tags.append("idea")
-            if "question" in parts or "questions" in parts:
-                tags.append("question")
-            if "spec" in parts or "specs" in parts:
-                tags.append("spec")
-            if "overview" in parts:
-                tags.append("overview")
-            if "api" in parts or "apis" in parts:
-                tags.append("api")
-            self.metadata["tags"] = tags
-            rewriteDataBlock = True
-
-        #LETS NOT REWRITE THE DATABLOCK< THINK BAD (despiegk)
-
-        # if rewriteDataBlock:
-        #     content0 = j.sal.fs.fileGetContents(self.path)
-        #     content1 = "\n```meta\n"
-        #     content1 += j.data.serializer.toml.dumps(self.metadata)
-        #     content1 += "```\n"
-        #     self._processData(j.data.serializer.toml.dumps(self.metadata))
-        #     j.sal.fs.writeFile(filename=self.path, contents=content0 + content1)
-        #     out += content1
-
     def _links_process(self):
         
         # check links for internal images
@@ -374,7 +327,7 @@ class Doc(DocBase):
             #means there are still macro's in there, need to check per line
             self._content_single_line_macros()
 
-        self._data_add()
+        # self._data_add()
 
         if "{{" in self.content:
             self.content = self.template.render(obj=self)
@@ -384,7 +337,6 @@ class Doc(DocBase):
 
         self._processed = True
 
-        # self.write()
 
     @property
     def template(self):
@@ -423,3 +375,51 @@ class Doc(DocBase):
 
     def __repr__(self):
         return "doc:%s:%s" % (self.name, self.path)
+
+
+    # def _data_add(self):
+    #     """
+    #     looks if default data like tags, date & title filled in, if not will add to metadata & rewrite in content
+    #     """
+        
+    #     rewriteDataBlock = False
+
+    #     if "title" not in self.metadata:
+    #         rewriteDataBlock = True
+    #         name = self.name_original.replace("_", " ").replace("-", " ").strip()
+    #         # makes first letters uppercase
+    #         name = " ".join([item[0].upper() + item[1:] for item in name.split(" ")])
+    #         self.metadata["title"] = name
+    #     if "date" not in self.metadata:
+    #         rewriteDataBlock = True
+    #         self.metadata["date"] = j.data.time.epoch2HRDate(j.data.time.epoch).replace("/", "-")
+    #     if "tags" not in self.metadata:
+    #         parts = [item.lower() for item in j.sal.fs.getDirName(self.path).strip("/").split("/")[-4:]]
+    #         tags = []
+    #         if "defs" in parts or "def" in parts:
+    #             tags.append("def")
+    #         if "howto" in parts or "howtos" in parts:
+    #             tags.append("howto")
+    #         if "ideas" in parts or "idea" in parts:
+    #             tags.append("idea")
+    #         if "question" in parts or "questions" in parts:
+    #             tags.append("question")
+    #         if "spec" in parts or "specs" in parts:
+    #             tags.append("spec")
+    #         if "overview" in parts:
+    #             tags.append("overview")
+    #         if "api" in parts or "apis" in parts:
+    #             tags.append("api")
+    #         self.metadata["tags"] = tags
+    #         rewriteDataBlock = True
+
+        #LETS NOT REWRITE THE DATABLOCK< THINK BAD (despiegk)
+
+        # if rewriteDataBlock:
+        #     content0 = j.sal.fs.fileGetContents(self.path)
+        #     content1 = "\n```meta\n"
+        #     content1 += j.data.serializer.toml.dumps(self.metadata)
+        #     content1 += "```\n"
+        #     self._processData(j.data.serializer.toml.dumps(self.metadata))
+        #     j.sal.fs.writeFile(filename=self.path, contents=content0 + content1)
+        #     out += content1

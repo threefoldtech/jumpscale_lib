@@ -14,6 +14,10 @@ class DocBase(JSBASE):
         JSBASE.__init__(self)
         self.path = path
         self.docsite = docsite
+
+        self.cat = ""
+        if "/blogs/" in path or "/blog/" in path:
+            self.cat = "blog"
         
         self.path_dir = j.sal.fs.getDirName(self.path)
         self.path_dir_rel = j.sal.fs.pathRemoveDirPart(self.path_dir, self.docsite.path).strip("/")
