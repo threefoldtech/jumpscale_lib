@@ -76,10 +76,11 @@ class JSWebLoader(JSBASE):
         #     app.config['LOGIN_DISABLED'] = True
     # register_extensions(app)
         self.register_blueprints(app)
+        print(app.url_map)
+
         if debug is True:
             app = DebuggedApplication(app, evalex=True)
 
-        # print(app.url_map)
         # configure_database(app)
         # configure_logs(app)
         return app
