@@ -30,7 +30,6 @@ class JSWebLoader(JSBASE):
         self.db.init_app(app)        
         self.login_manager.init_app(app)
 
-
     def register_blueprints(self,app):
         apps = j.sal.fs.listDirsInDir("blueprints", recursive=False, dirNameOnly=True, findDirectorySymlinks=True, followSymlinks=True)
         apps = [item for item in apps if item[0] is not "_"]
@@ -69,9 +68,10 @@ class JSWebLoader(JSBASE):
 
 
     def create_app(self,selenium=False, debug=True):
-        # staticpath = j.clients.git.getContentPathFromURLorPath("https://github.com/Jumpscale/web_libs/tree/master/libs")
-        app = Flask(__name__, static_folder="/base/static")  #'/base/static'
+        staticpath = j.clients.git.getContentPathFromURLorPath("https://github.com/Jumpscale/web_libs/tree/master/static")
+        app = Flask(__name__, static_folder=staticpath)  #'/base/static'
         app.config.from_object(DebugConfig)
+
         # if selenium:
         #     app.config['LOGIN_DISABLED'] = True
     # register_extensions(app)

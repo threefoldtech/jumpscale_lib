@@ -28,15 +28,21 @@ class DocSite(JSBASE):
         self.docgen = j.tools.docgenerator
 
         #init initial arguments
+
+        config_path = j.sal.fs.joinPaths(path,"docs_config.toml")
+        config_path2 = j.sal.fs.joinPaths(path,"docs/docs_config.toml")
+        if not j.sal.fs.exists(config_path) and j.sal.fs.exists(config_path2):
+            config_path=config_path2
+            path = j.sal.fs.joinPaths(path,"docs")
+        if j.sal.fs.exists(config_path):
+            self.config = j.data.serializer.toml.load(config_path)
+        else:
+            raise RuntimeError("cannot find docs_config in %s"%config_path)
+
         self.path = path
         if not j.sal.fs.exists(path):
             raise RuntimeError("Cannot find path:%s"%path)
 
-        config_path = j.sal.fs.joinPaths(self.path,"docs_config.toml")
-        if j.sal.fs.exists(config_path):
-            self.config = j.data.serializer.toml.load(config_path)
-        else:
-            self.config = {}
 
         if not name:
             if "name" not in self.config:                        
@@ -142,6 +148,7 @@ class DocSite(JSBASE):
         if duplicate only the first found will be used
 
         """
+
         j.sal.fs.remove(self.path + "errors.md")
         path = self.path
         if not j.sal.fs.exists(path=path):
@@ -166,8 +173,6 @@ class DocSite(JSBASE):
             if base.startswith("_"):
                 return False
             ext = j.sal.fs.getFileExtension(path)
-            if not ext in ["md", "yaml", "toml"]:
-                return False
             if ext == "md" and base[:-3] in ["summary", "default"]:
                 return False
             return True
@@ -270,6 +275,9 @@ class DocSite(JSBASE):
         self.process()
 
     def file_get(self, name, die=True):
+        if not self._processed:
+            self.load_process()
+        
         for key, val in self.files.items():
             if key.lower() == name.lower():
                 return val
@@ -351,6 +359,8 @@ class DocSite(JSBASE):
 
 
     def html_get(self, name, die=True):
+        if not self._processed:
+            self.load_process()        
         if "." in name:
             ext =  j.sal.fs.getFileExtension(name).lower()
             name = name[:-(len(ext)+1)] #name without extension
@@ -366,6 +376,8 @@ class DocSite(JSBASE):
         """
         will calculate the sidebar, if not in url will return None
         """
+        if not self._processed:
+            self.load_process()        
         if j.data.types.list.check(url):
             url = "/".join(url)
         self.logger.debug("sidebar_get:%s"%url)            
@@ -390,6 +402,7 @@ class DocSite(JSBASE):
             self.sidebars[url_original]=None
             return None #did not find sidebar just return None
 
+
         if url in self.docs:
             self.sidebars[url_original] = self._sidebar_process(self.docs[url].content,url_original=url_original)
             return self.sidebars[url_original]                        
@@ -406,6 +419,10 @@ class DocSite(JSBASE):
                     return self.get(possiblepath)
 
         #lets look at parent
+        
+        if url0=="":
+            raise RuntimeError("cannot be empty")
+            
         newurl = ".".join(url0.split(".")[:-1])+"._sidebar"
         return self.sidebar_get(newurl)
             
