@@ -48,5 +48,8 @@ class HTMLFactory(JSBASE):
 
     def test(self):
         """
-
+        j.tools.html.test()
         """
+
+        p = self.page_get()
+        p.addHeading()
