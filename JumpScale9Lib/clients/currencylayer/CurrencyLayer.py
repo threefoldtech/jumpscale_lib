@@ -26,22 +26,37 @@ class CurrencyLayer(JSConfigBase):
         self.fallback = True
         self.fake = False
 
-    def load(self):
+    def write_default(self):
+        """
+        will load currencies from internet and then write to currencies.py in the extension directory
+        """
+        raise NotImplementedError()
+        #TODO:*2
+
+    def load(self,reset=False):
+        """
+        js9 'j.clients.currencylayer.load()'
+        """
+        if reset:
+            self.cache.reset()
         def get():
             if self.fake==False and j.sal.nettools.tcpPortConnectionTest("currencylayer.com", 443):
                 key = self.config.data["api_key_"]
                 if key.strip()=="":
                     raise RuntimeError("api key for currency layer needs to be specified")
+
                 url = "http://www.apilayer.net/api/live?access_key=%s" % key
                 c = j.clients.http.getConnection()
                 r = c.get(url).readlines()
                 
                 data = j.data.serializer.json.loads(r[0].decode())["quotes"]
 
-                eth = cryptocompare.get_price('USD', 'ETH')['USD']['ETH']
-                data['USDETH'] = eth
-                xrp = cryptocompare.get_price('USD', 'XRP')['USD']['XRP']
-                data['USDXRP'] = xrp
+                data['USDETH'] = 1/cryptocompare.get_price('ETH','USD')['ETH']['USD']
+
+                data['USDXRP'] = cryptocompare.get_price('USD', 'XRP')['USD']['XRP']
+
+                data['USDBTC'] = 1/cryptocompare.get_price('BTC','USD')['BTC']['USD']
+
 
                 self.logger.error("fetch currency from internet")
                 return data
@@ -51,7 +66,7 @@ class CurrencyLayer(JSConfigBase):
                     from .currencies import currencies
                     return currencies
                 raise RuntimeError("could not data from currencylayers")
-
+        
         data = self.cache.get("currency_data", get, expire=3600 * 24)
         for key, item in data.items():
             if key.startswith("USD"):

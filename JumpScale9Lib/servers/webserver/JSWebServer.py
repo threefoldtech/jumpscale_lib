@@ -1,14 +1,17 @@
 from js9 import j
-
-from .JSMainApp import JSMainApp
-from gevent.wsgi import WSGIServer
+# from .JSMainApp import JSMainApp
+from gevent.pywsgi import WSGIServer
 import sys
 import os
+
+from .JSWebLoader import JSWebLoader
+
 JSConfigBase = j.tools.configmanager.base_class_config
 
 TEMPLATE = """
     host = "localhost"
     port = 5050
+    port_ssl = 0
     secret_ = ""
     ws_dir = ""
     """
@@ -24,11 +27,31 @@ class JSWebServer(JSConfigBase):
 
         self.host = self.config.data["host"]
         self.port = int(self.config.data["port"])
+        self.port_ssl = int(self.config.data["port_ssl"])
         self.address = '{}:{}'.format(self.host, self.port)
 
-        self._inited = False
+        config_path = j.sal.fs.joinPaths(self.path,"site_config.toml")
+        if j.sal.fs.exists(config_path):
+            self.site_config = j.data.serializer.toml.load(config_path)
+        else:
+            self.site_config = {}
 
-        self.app = JSMainApp(instance)
+        self._inited = False
+        j.servers.web.latest = self
+        self.loader = JSWebLoader()
+    
+    def init(self, debug=False):
+        
+        if self._inited:
+            return
+        
+        self.logger.info("init server")
+    
+        if self.path not in sys.path:
+            sys.path.append(self.path)
+
+        self.app = self.loader.create_app(debug=debug)
+        self.app.debug = True
 
         self.http_server = WSGIServer((self.host, self.port), self.app)
 
@@ -36,39 +59,29 @@ class JSWebServer(JSConfigBase):
 
         self.app.server = self
 
-        self.app.load(self.config.data["ws_dir"])
+        self.docs_load()
 
+        # self._sig_handler.append(gevent.signal(signal.SIGINT, self.stop))
+
+        self._inited = False        
+
+
+    def docs_load(self):
+        if "docsite" not in self.site_config:
+            return
+
+        for item in self.site_config["docsite"]:
+            url=item["url"]
+            name=item["name"]
+            if url is not "":
+                path = j.clients.git.getContentPathFromURLorPath(url)
+                if not j.sal.fs.exists(path):
+                    j.clients.git.pullGitRepo(url=url)
+                j.tools.docgenerator.load(path=path,name=name)       
 
     @property
-    def ws_dir(self):
+    def path(self):
         return self.config.data['ws_dir'].rstrip("/")+"/"
-
-    def scaffold(self, reset=False):
-
-        if not j.sal.fs.exists(self.ws_dir):
-            j.sal.fs.createDir(self.ws_dir)
-
-        if not self.ws_dir in sys.path:
-            sys.path.append(self.ws_dir)
-
-        j.sal.fs.touch(os.path.join(self.ws_dir, '__init__.py'))
-
-        server_path = os.path.join(self.ws_dir, 'server')
-        if not j.sal.fs.exists(server_path):
-            j.sal.fs.createDir(server_path)
-
-        if not server_path in sys.path:
-            sys.path.append(server_path)
-
-        j.sal.fs.touch(os.path.join(server_path, '__init__.py'))
-
-        # copy the templates in the local server dir
-        for item in ["system"]:
-            dest = os.path.join(server_path, "%s.py" % item)
-            if reset or not j.sal.fs.exists(dest):
-                src = os.path.join(j.servers.gedis2._path, "templates", '%s.py' % item)
-                j.sal.fs.copyFile(src, dest)
-        return server_path
 
     def sslkeys_generate(self):
         res = j.sal.ssl.ca_cert_generate(self.ws_dir)
@@ -76,25 +89,18 @@ class JSWebServer(JSConfigBase):
             self.logger.info("generated sslkeys for gedis in %s" % self.ws_dir)
         else:
             self.logger.info('using existing key and cerificate for gedis @ %s' % self.ws_dir)
-        key = os.path.join(self.ws_dir, 'ca.key')
-        cert = os.path.join(self.ws_dir, 'ca.crt')
+        key = os.path.join(self.path, 'ca.key')
+        cert = os.path.join(self.path, 'ca.crt')
         return key, cert
 
-    def init(self):
-        self.logger.info("init server")
-        # self._sig_handler.append(gevent.signal(signal.SIGINT, self.stop))
-        self.logger.info("start server")
-
-        self._inited = True
-
-    def start(self, reset=False):
+    def start(self, reset=False, debug=False):
         print("start")
 
-        self.scaffold(reset=reset)
+        # self.scaffold(reset=reset)
 
-        if self._inited is False:
-            self.init()
-
+        self.init(debug=debug)
+        print ("Webserver running")
+        print (self)
         self.http_server.serve_forever()
 
     def stop(self):
@@ -110,6 +116,6 @@ class JSWebServer(JSConfigBase):
         self.server.stop()
 
     def __repr__(self):
-        return '<Flask Server address=%s  app_dir=%s)' % (self.address, self.ws_dir)
+        return '<Flask Server http://%s  app_dir=%s)' % (self.address, self.path)
 
     __str__ = __repr__
