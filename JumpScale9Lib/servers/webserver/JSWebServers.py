@@ -41,6 +41,15 @@ class JSWebServers(JSConfigBase):
 
         return self.get(instance, data, interactive=False)
 
+    def geventserver_get(self,instance,debug=True):
+        """
+        will return server which can be attached in a gevent_servers_rack
+        """
+        ws=self.get(instance)
+        ws.init(debug=debug)
+        return ws.http_server
+        
+
     def install(self):
         """
         js9 'j.servers.web.install()'
@@ -57,7 +66,7 @@ class JSWebServers(JSConfigBase):
         """
         #rq-dashboard,rq-scheduler,rq,flask-classy,
         p = j.tools.prefab.local
-        p.runtimes.pip.install(pips)  # ,Flask-Bootstrap4")
+        p.runtimes.pip.install(pips) 
 
     def start(self, instance="main",background=False, debug=False):
 

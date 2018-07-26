@@ -33,8 +33,6 @@ class Jinja2(JSBASE):
         return self.templates[key]
 
     def template_render(self,path,**args):
-        if j.sal.fs.getBaseName(path).startswith("_") or "__py" in path:
-            return
         self.logger.debug("template render:%s"%path)
         # print(path)
         C = j.sal.fs.readFile(path)
@@ -57,26 +55,37 @@ class Jinja2(JSBASE):
         return t.render(DIRS=j.dirs,**args)
 
 
-    def file_render(self,path,**args):
+    def file_render(self,path,write=True,dest=None,**args):
         """
         will read file, render & then overwrite the same file
 
         std arguments given to renderer:
 
         - DIRS - j.dirs
+        
+        if dest is noe then the source file will be overwritten
 
         """
-        if j.sal.fs.getBaseName(path).startswith("_"):
-            return
+        if j.sal.fs.getBaseName(path).startswith("_") or "__py" in path:
+            if "__init__" not in path:
+                raise RuntimeError("cannot render path:%s"%path)
         C = self.template_render(path, DIRS=j.dirs, **args)
-        if C is not None:
+        if C is not None and write:
+            if dest:
+                path=dest
             j.sal.fs.writeFile(path,C)
+        return C
 
     def dir_render(self,path, recursive=True, filter=None, minmtime=None, maxmtime=None, depth=None,\
              exclude=[], followSymlinks=False, listSymlinks=False,**args):
-
+        
+        if exclude == []:
+            exclude=['*.egg-info','*.pyc','*.bak','*__pycache__*']
+    
         for item in  j.sal.fs.listFilesInDir(path=path,recursive=recursive,filter=filter,\
                 minmtime=minmtime,maxmtime=maxmtime,depth=depth,exclude=exclude,followSymlinks=followSymlinks,listSymlinks=listSymlinks):
+            if j.sal.fs.getBaseName(path).startswith("_") or "__py" in path:
+                continue                
             self.file_render(item,**args)
 
     def copy_dir_render(self,src,dest,overwriteFiles=False,filter=None, ignoredir=[],ignorefiles=[],reset=False,**args):

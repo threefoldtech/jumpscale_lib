@@ -38,7 +38,7 @@ class JSWebServer(JSConfigBase):
 
         self._inited = False
         j.servers.web.latest = self
-        self.loader = JSWebLoader()
+        self.loader = JSWebLoader(path=self.path)
     
     def init(self, debug=False):
         
