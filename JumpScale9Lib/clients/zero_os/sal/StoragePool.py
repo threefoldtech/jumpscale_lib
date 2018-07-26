@@ -192,6 +192,9 @@ class StoragePool(Mountable):
                 return fs
         return None
 
+    def total_quota(self):
+        return sum([subvol['Quota'] for subvol in self.raw_list()])
+
     def raw_list(self):
         mountpoint = self._get_mountpoint()
         return self.client.btrfs.subvol_list(mountpoint) or []
