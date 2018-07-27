@@ -3,22 +3,33 @@ from js9 import j
 
 JSBASE = j.application.jsbase_get_class()
 import gevent
-from .GeventServerRack import GeventServerRack
+from .GeventRobot import GeventRobot
 
-class GeventServerRacks(JSBASE):
+class GeventWorlds(JSBASE):
 
     def __init__(self):
-        self.__jslocation__ = "j.servers.gevent_servers_racks"
+        self.__jslocation__ = "j.servers.gworld"
         JSBASE.__init__(self)
 
     def get(self):
-        return GeventServerRack()
+        return GeventRobot()
 
-    def test(self,zdb_start=False):
+    def test_actors(self):
         """
-        js9 'j.servers.gevent_servers_racks.test(zdb_start=False)'
+        js9 'j.servers.gworld.test_actors()'
         """
-        rack=j.servers.gevent_servers_racks.get()
+        rack=j.servers.gworld.get()
+        r1=rack.actors.get("kristof.mailprocessor","main")
+        r2=rack.actors.get("kristof.mailprocessor","failback")
+
+
+
+
+    def test_servers(self,zdb_start=False):
+        """
+        js9 'j.servers.gworld.test(zdb_start=False)'
+        """
+        rack=j.servers.gworld.get()
 
         if zdb_start:
             cl = j.clients.zdb.testdb_server_start_client_get(start=True)  #starts & resets a zdb in seq mode with name test       

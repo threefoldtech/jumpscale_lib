@@ -5,15 +5,13 @@
 
     The fastest markdown parser in pure Python with renderer feature.
 
-    :copyright: (c) 2014 - 2015 by Hsiaoming Yang.
+    :copyright: (c) 2014 - 2017 by Hsiaoming Yang.
 """
 
 import re
 import inspect
-from js9 import j
 
-
-__version__ = '0.7.2'
+__version__ = '0.8.3'
 __author__ = 'Hsiaoming Yang <me@lepture.com>'
 __all__ = [
     'BlockGrammar', 'BlockLexer',
@@ -37,11 +35,9 @@ _inline_tags = [
 ]
 _pre_tags = ['pre', 'script', 'style']
 _valid_end = r'(?!:/|[^\w\s@]*@)\b'
-_valid_attr = r'''"[^"]*"|'[^']*'|[^'">]'''
+_valid_attr = r'''\s*[a-zA-Z\-](?:\=(?:"[^"]*"|'[^']*'|[^\s'">]+))?'''
 _block_tag = r'(?!(?:%s)\b)\w+%s' % ('|'.join(_inline_tags), _valid_end)
-_scheme_blacklist = ('javascript', 'data', 'vbscript')
-
-JSBASE = j.application.jsbase_get_class()
+_scheme_blacklist = ('javascript:', 'vbscript:')
 
 
 def _pure_pattern(regex):
@@ -52,7 +48,8 @@ def _pure_pattern(regex):
 
 
 def _keyify(key):
-    return _key_pattern.sub(' ', key.lower())
+    key = escape(key.lower(), quote=True)
+    return _key_pattern.sub(' ', key)
 
 
 def escape(text, quote=False, smart_amp=True):
@@ -76,33 +73,26 @@ def escape(text, quote=False, smart_amp=True):
     return text
 
 
-def escape_link(url, **kwargs):
+def escape_link(url):
     """Remove dangerous URL schemes like javascript: and escape afterwards."""
-    if ':' in url:
-        scheme, _ = url.split(':', 1)
-        scheme = _nonalpha_pattern.sub('', scheme)
-        # whitelist would be better but mistune's use case is too general
-        if scheme.lower() in _scheme_blacklist:
+    lower_url = url.lower().strip('\x00\x1a \n\r\t')
+
+    for scheme in _scheme_blacklist:
+        if re.sub(r'[^A-Za-z0-9\/:]+', '', lower_url).startswith(scheme):
             return ''
-    # escape &entities; to &amp;entities;
-    kwargs['smart_amp'] = False
-    return escape(url, **kwargs)
+    return escape(url, quote=True, smart_amp=False)
 
 
 def preprocessing(text, tab=4):
     text = _newline_pattern.sub('\n', text)
-    text = text.replace('\t', ' ' * tab)
-    text = text.replace('\u00a0', ' ')
+    text = text.expandtabs(tab)
     text = text.replace('\u2424', '\n')
     pattern = re.compile(r'^ +$', re.M)
     return pattern.sub('', text)
 
 
-class BlockGrammar(JSBASE):
+class BlockGrammar(object):
     """Grammars for block level tokens."""
-
-    def __init__(self):
-        JSBASE.__init__(self)
 
     def_links = re.compile(
         r'^ *\[([^^\]]+)\]: *'  # [key]:
@@ -128,11 +118,12 @@ class BlockGrammar(JSBASE):
     lheading = re.compile(r'^([^\n]+)\n *(=|-)+ *(?:\n+|$)')
     block_quote = re.compile(r'^( *>[^\n]+(\n[^\n]+)*\n*)+')
     list_block = re.compile(
-        r'^( *)([*+-]|\d+\.) [\s\S]+?'
+        r'^( *)(?=[*+-]|\d+\.)(([*+-])?(?:\d+\.)?) [\s\S]+?'
         r'(?:'
         r'\n+(?=\1?(?:[-*_] *){3,}(?:\n+|$))'  # hrule
         r'|\n+(?=%s)'  # def links
-        r'|\n+(?=%s)'  # def footnotes
+        r'|\n+(?=%s)'  # def footnotes\
+        r'|\n+(?=\1(?(3)\d+\.|[*+-]) )'   # heterogeneous bullet
         r'|\n{2,}'
         r'(?! )'
         r'(?!\1(?:[*+-]|\d+\.) )\n*'
@@ -166,8 +157,8 @@ class BlockGrammar(JSBASE):
     block_html = re.compile(
         r'^ *(?:%s|%s|%s) *(?:\n{2,}|\s*$)' % (
             r'<!--[\s\S]*?-->',
-            r'<(%s)((?:%s)*?)>([\s\S]+?)<\/\1>' % (_block_tag, _valid_attr),
-            r'<%s(?:%s)*?>' % (_block_tag, _valid_attr),
+            r'<(%s)((?:%s)*?)>([\s\S]*?)<\/\1>' % (_block_tag, _valid_attr),
+            r'<%s(?:%s)*?\s*\/?>' % (_block_tag, _valid_attr),
         )
     )
     table = re.compile(
@@ -179,7 +170,7 @@ class BlockGrammar(JSBASE):
     text = re.compile(r'^[^\n]+')
 
 
-class BlockLexer(JSBASE):
+class BlockLexer(object):
     """Block level lexer for block grammars."""
     grammar_class = BlockGrammar
 
@@ -202,7 +193,6 @@ class BlockLexer(JSBASE):
     )
 
     def __init__(self, rules=None, **kwargs):
-        JSBASE.__init__(self)
         self.tokens = []
         self.def_links = {}
         self.def_footnotes = {}
@@ -315,7 +305,7 @@ class BlockLexer(JSBASE):
 
             rest = len(item)
             if i != length - 1 and rest:
-                _next = item[rest - 1] == '\n'
+                _next = item[rest-1] == '\n'
                 if not loose:
                     loose = _next
 
@@ -384,9 +374,9 @@ class BlockLexer(JSBASE):
         cells = cells.split('\n')
         for i, v in enumerate(cells):
             v = re.sub(r'^ *\| *| *\| *$', '', v)
-            cells[i] = re.split(r' *\| *', v)
+            cells[i] = re.split(r' *(?<!\\)\| *', v)
 
-        item['cells'] = cells
+        item['cells'] = self._process_cells(cells)
         self.tokens.append(item)
 
     def parse_nptable(self, m):
@@ -395,9 +385,9 @@ class BlockLexer(JSBASE):
         cells = re.sub(r'\n$', '', m.group(3))
         cells = cells.split('\n')
         for i, v in enumerate(cells):
-            cells[i] = re.split(r' *\| *', v)
+            cells[i] = re.split(r' *(?<!\\)\| *', v)
 
-        item['cells'] = cells
+        item['cells'] = self._process_cells(cells)
         self.tokens.append(item)
 
     def _process_table(self, m):
@@ -422,6 +412,14 @@ class BlockLexer(JSBASE):
             'align': align,
         }
         return item
+
+    def _process_cells(self, cells):
+        for i, line in enumerate(cells):
+            for c, cell in enumerate(line):
+                # de-escape any pipe inside the cell here
+                cells[i][c] = re.sub('\\\\\|', '|', cell)
+
+        return cells
 
     def parse_block_html(self, m):
         tag = m.group(1)
@@ -450,15 +448,16 @@ class BlockLexer(JSBASE):
         self.tokens.append({'type': 'text', 'text': text})
 
 
-class InlineGrammar(JSBASE):
+class InlineGrammar(object):
     """Grammars for inline level tokens."""
 
     escape = re.compile(r'^\\([\\`*{}\[\]()#+\-.!_>~|])')  # \* \+ \! ....
     inline_html = re.compile(
         r'^(?:%s|%s|%s)' % (
             r'<!--[\s\S]*?-->',
-            r'<(\w+%s)((?:%s)*?)>([\s\S]*?)<\/\1>' % (_valid_end, _valid_attr),
-            r'<\w+%s(?:%s)*?>' % (_valid_end, _valid_attr),
+            r'<(\w+%s)((?:%s)*?)\s*>([\s\S]*?)<\/\1>' % (
+                _valid_end, _valid_attr),
+            r'<\w+%s(?:%s)*?\s*\/?>' % (_valid_end, _valid_attr),
         )
     )
     autolink = re.compile(r'^<([^ >]+(@|:)[^ >]+)>')
@@ -492,9 +491,6 @@ class InlineGrammar(JSBASE):
     footnote = re.compile(r'^\[\^([^\]]+)\]')
     text = re.compile(r'^[\s\S]+?(?=[\\<!\[_*`~]|https?://| {2,}\n|$)')
 
-    def __init__(self):
-        JSBASE.__init__(self)
-
     def hard_wrap(self):
         """Grammar for hard wrap linebreak. You don't need to add two
         spaces at the end of a line.
@@ -505,7 +501,7 @@ class InlineGrammar(JSBASE):
         )
 
 
-class InlineLexer(JSBASE):
+class InlineLexer(object):
     """Inline level lexer for inline grammars."""
     grammar_class = InlineGrammar
 
@@ -516,13 +512,12 @@ class InlineLexer(JSBASE):
         'linebreak', 'strikethrough', 'text',
     ]
     inline_html_rules = [
-        'escape', 'autolink', 'url', 'link', 'reflink',
+        'escape', 'inline_html', 'autolink', 'url', 'link', 'reflink',
         'nolink', 'double_emphasis', 'emphasis', 'code',
         'linebreak', 'strikethrough', 'text',
     ]
 
     def __init__(self, renderer, rules=None, **kwargs):
-        JSBASE.__init__(self)
         self.renderer = renderer
         self.links = {}
         self.footnotes = {}
@@ -571,10 +566,8 @@ class InlineLexer(JSBASE):
                     return m, out
             return False  # pragma: no cover
 
-        self.line_started = False
         while text:
             ret = manipulate(text)
-            self.line_started = True
             if ret is not False:
                 m, out = ret
                 output += out
@@ -586,7 +579,8 @@ class InlineLexer(JSBASE):
         return output
 
     def output_escape(self, m):
-        return m.group(1)
+        text = m.group(1)
+        return self.renderer.escape(text)
 
     def output_autolink(self, m):
         link = m.group(1)
@@ -682,13 +676,12 @@ class InlineLexer(JSBASE):
         return self.renderer.text(text)
 
 
-class Renderer(JSBASE):
+class Renderer(object):
     """The default HTML renderer for rendering Markdown.
     """
 
     def __init__(self, **kwargs):
         self.options = kwargs
-        JSBASE.__init__(self)
 
     def placeholder(self):
         """Returns the default, empty output value for the renderer.
@@ -846,6 +839,15 @@ class Renderer(JSBASE):
 
         :param text: text content.
         """
+        if self.options.get('parse_block_html'):
+            return text
+        return escape(text)
+
+    def escape(self, text):
+        """Rendering escape sequence.
+
+        :param text: text content.
+        """
         return escape(text)
 
     def autolink(self, link, is_email=False):
@@ -854,7 +856,7 @@ class Renderer(JSBASE):
         :param link: link content or email address.
         :param is_email: whether this is an email or not.
         """
-        text = link = escape(link)
+        text = link = escape_link(link)
         if is_email:
             link = 'mailto:%s' % link
         return '<a href="%s">%s</a>' % (link, text)
@@ -866,7 +868,7 @@ class Renderer(JSBASE):
         :param title: title content for `title` attribute.
         :param text: text content for description.
         """
-        link = escape_link(link, quote=True)
+        link = escape_link(link)
         if not title:
             return '<a href="%s">%s</a>' % (link, text)
         title = escape(title, quote=True)
@@ -879,7 +881,7 @@ class Renderer(JSBASE):
         :param title: title text of the image.
         :param text: alt text of the image.
         """
-        src = escape_link(src, quote=True)
+        src = escape_link(src)
         text = escape(text, quote=True)
         if title:
             title = escape(title, quote=True)
@@ -911,7 +913,7 @@ class Renderer(JSBASE):
         """
         html = (
             '<sup class="footnote-ref" id="fnref-%s">'
-            '<a href="#fn-%s" rel="footnote">%d</a></sup>'
+            '<a href="#fn-%s">%d</a></sup>'
         ) % (escape(key), escape(key), index)
         return html
 
@@ -922,7 +924,7 @@ class Renderer(JSBASE):
         :param text: text content of the footnote.
         """
         back = (
-            '<a href="#fnref-%s" rev="footnote">&#8617;</a>'
+            '<a href="#fnref-%s" class="footnote">&#8617;</a>'
         ) % escape(key)
         text = text.rstrip()
         if text.endswith('</p>'):
@@ -941,16 +943,14 @@ class Renderer(JSBASE):
         return html % (self.hrule(), text)
 
 
-class Markdown(JSBASE):
+class Markdown(object):
     """The Markdown parser.
 
     :param renderer: An instance of ``Renderer``.
     :param inline: An inline lexer class or instance.
     :param block: A block lexer class or instance.
     """
-
     def __init__(self, renderer=None, inline=None, block=None, **kwargs):
-        JSBASE.__init__(self)
         if not renderer:
             renderer = Renderer(**kwargs)
         else:

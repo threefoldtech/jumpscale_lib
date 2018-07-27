@@ -3,7 +3,6 @@ from js9 import j
 
 JSBASE = j.application.jsbase_get_class()
 
-
 class HTMLPage(JSBASE):
 
     """
@@ -16,21 +15,23 @@ class HTMLPage(JSBASE):
         self.content = ""
 
         # self.currentlinenr = len(self.content.split("\n")) + 1
-        # self.actions = {}
-        # self.parent = parent
 
-        self.libs = ""
+        self.head = ""
+        self.tail = ""
         self.body = ""
-
-        self.scriptBody = ""
-        self.jscsslinks = {}
+        
         self.divlevel = []
 
         self._inBlock = False
         self._inBlockType = ""
         self._inBlockClosingStatement = ""
-        self._bulletslevel = 0
+        
+        self._listslevel = 0
+
         self._codeblockid = 0
+
+        #reused everywhere to make sure we don't add doubles
+        self._contentAddedCheck=[]
 
         self.padding = True
 
@@ -50,13 +51,27 @@ class HTMLPage(JSBASE):
         self._lineId = 0
         # self.documentReadyFunctions = []
 
+    def _contentExistsCheck(self,content):
+        """
+        checks if content was already added if ues return True
+        """
+        content = content.lower()
+        content = content.replace("\n","").replace(" ","").replace("\t","").replace("\"","").replace("'","").replace("`","")
+        md5 = j.data.hash.md5_string(content)
+        if md5 in self._contentAddedCheck:
+            return True
+        self._contentAddedCheck.append(md5)
+        return False
+            
+            
+        
 
-    def addPart(self, part, newline=False, isElement=True, blockcheck=True):
+    def part_add(self, part, newline=False, isElement=True, blockcheck=True):
         if blockcheck:
-            # print "blockcheck %s" % part
+            # print ("blockcheck %s" % part)
             self._checkBlock("", "", "")
         # else:
-            # print "no blockcheck %s" % part
+            # print ("no blockcheck %s" % part)
         part = str(part)
         part = part.replace("text:u", "")
         part.strip("'")
@@ -78,39 +93,39 @@ class HTMLPage(JSBASE):
         if part != "":
             self.body = "%s%s\n" % (self.body, part)
 
-    def addParagraph(self, part):
-        self.addPart(part, isElement=False)
+    def paragraph_add(self, part):
+        self.part_add(part, isElement=False)
 
     # def addFavicon(self, href, type):
     #     self.favicon = '<link rel="shortcut icon" type="%s" href="%s" />' % (type, href)
 
-    def addBullet(self, part, level=1, bullet_type='bullet', tag='ul', attributes=''):
-        self._checkBlock(bullet_type, "", "</{0}>".format(tag))
-        if level > self._bulletslevel:
-            for i in range(level - self._bulletslevel):
-                self.addPart("<{0} {1}>".format(tag, attributes), blockcheck=False)
-            self._bulletslevel = level
-        if level < self._bulletslevel:
-            for i in range(self._bulletslevel - level):
-                self.addPart("</{0}>".format(tag), blockcheck=False)
-            self._bulletslevel = level
-        self.addPart("<li>%s</li>" % part, blockcheck=False)
+    def listitem_add(self, part, level=1, list_type='list', tag='ul', attributes=''):
+        self._checkBlock(list_type, "", "</{0}>".format(tag))
+        if level > self._listslevel:
+            for i in range(level - self._listslevel):
+                self.part_add("<{0} {1}>".format(tag, attributes), blockcheck=False)
+            self._listslevel = level
+        if level < self._listslevel:
+            for i in range(self._listslevel - level):
+                self.part_add("</{0}>".format(tag), blockcheck=False)
+            self._listslevel = level
+        self.part_add("<li>%s</li>" % part, blockcheck=False)
 
     def _checkBlock(self, ttype, open, close):
         """
-        types are : bullet,descr
+        types are : list,descr
         """
         # print "checkblock inblock:%s ttype:%s intype:%s" %(self._inBlock,ttype,self._inBlockType)
         if self._inBlock:
             if self._inBlockType != ttype:
-                if self._inBlockType in ("bullet", "number"):
-                    for i in range(self._bulletslevel):
-                        self.addPart(self._inBlockClosingStatement, blockcheck=False)
-                    self._bulletslevel = 0
+                if self._inBlockType in ("list", "number"):
+                    for i in range(self._listslevel):
+                        self.part_add(self._inBlockClosingStatement, blockcheck=False)
+                    self._listslevel = 0
                 else:
-                    self.addPart(self._inBlockClosingStatement, blockcheck=False)
+                    self.part_add(self._inBlockClosingStatement, blockcheck=False)
                 if open != "":
-                    self.addPart(open, blockcheck=False)
+                    self.part_add(open, blockcheck=False)
                     self._inBlock = True
                     self._inBlockType = ttype
                     self._inBlockClosingStatement = close
@@ -119,7 +134,7 @@ class HTMLPage(JSBASE):
                     self._inBlockType = ""
                     self._inBlockClosingStatement = ""
         else:
-            self.addPart(open, blockcheck=False)
+            self.part_add(open, blockcheck=False)
             if ttype != "" and close != "":
                 self._inBlock = True
                 self._inBlockType = ttype
@@ -128,31 +143,32 @@ class HTMLPage(JSBASE):
 
     # def addDescr(self, name, descr):
     #     self._checkBlock("descr", "<dl class=\"dl-horizontal\">", "</dl>")
-    #     self.addPart("<dt>%s</dt>\n<dd>%s</dd>" % (name, descr), blockcheck=False)
+    #     self.part_add("<dt>%s</dt>\n<dd>%s</dd>" % (name, descr), blockcheck=False)
 
-    def addBullets(self, parts, level=1):
+    def list_add(self, parts, level=1):
         """
-        parts: list of bullets
+        parts: list of list_items
+        only works on 1 level
         """
 
-        # todo: figure a way for nested bullets!!
-        bullets = '<ul>'
+        # todo: figure a way for nested lists!!
+        lists = '<ul>'
         for part in parts:
-            bullets += '<li>%s</li>' % part
-        bullets += '</ul>'
-        self.addPart(bullets, blockcheck=False)
+            lists += '\n<li>%s</li>' % part
+        lists += '\n</ul>'
+        self.part_add(lists, blockcheck=False)
 
-    def addNewLine(self, nrlines=1):
+    def newline_add(self, nrlines=1):
         for line in range(nrlines):
-            self.addPart("", True, isElement=True)
+            self.part_add("", True, isElement=True)
 
-    def addHeading(self, part, level=1):
+    def header_add(self, part, level=1):
         part = str(part)
 
-        heading = "<h%s class=\"title\">%s</h%s>" % (level, part, level)
-        self.addPart(heading, isElement=True)
+        header = "<h%s class=\"title\">%s</h%s>" % (level, part, level)
+        self.part_add(header, isElement=True)
 
-    def addList(self, rows, headers="", showcolumns=[], columnAliases={}, classparams="table-condensed table-hover", linkcolumns=[]):
+    def table_add(self, rows, headers="", showcolumns=[], columnAliases={}, classparams="table-condensed table-hover", linkcolumns=[]):
         """
         @param rows [[col1,col2, ...]]  (array of array of column values)
         @param headers [header1, header2, ...]
@@ -172,7 +188,7 @@ class HTMLPage(JSBASE):
                 headers = [""] + headers
             if l != len(headers):
                 print("Cannot process headers, wrong nr of cols")
-                self.addPart("ERROR header wrong nr of cols:%s" % headers)
+                self.part_add("ERROR header wrong nr of cols:%s" % headers)
                 headers = []
 
         c = "<table  class='table %s'>\n" % classparams  # the content
@@ -198,21 +214,21 @@ class HTMLPage(JSBASE):
                         raise RuntimeError(
                             "column which represents a link needs to be of format $descr__$link, here was:%s" %
                             col)
-                    c += "<td>%s</td>\n" % self.getLink(col.split("__")[0], col.split("__")[1])
+                    c += "<td>%s</td>\n" % self.link_get(col.split("__")[0], col.split("__")[1])
                 else:
                     c += "<td>%s</td>\n" % self.getRound(col)
                 colnr += 1
             c += "</tr>\n"
         c += "</tbody></table>\n\n"
-        self.addPart(c, True, isElement=True)
+        self.part_add(c, True, isElement=True)
 
-    def addDict(self, dictobject, description="", keystoshow=[], aliases={}, roundingDigits=None):
+    def dict_add(self, dictobject, description="", keystoshow=[], aliases={}, roundingDigits=None):
         """
         @params aliases is dict with mapping between name in dict and name to use
         """
         if keystoshow == []:
             keystoshow = list(dictobject.keys())
-        self.addPart(description)
+        self.part_add(description)
         arr = []
         for item in keystoshow:
             if item in aliases:
@@ -220,11 +236,11 @@ class HTMLPage(JSBASE):
             else:
                 name = item
             arr.append([name, dictobject[item]])
-        self.addList(arr)
-        self.addNewLine()
+        self.list_add(arr)
+        self.newline_add()
 
     @staticmethod
-    def getLink(description, link, link_id=None, link_class=None, htmlelements="", newtab=False):
+    def _link_get(description, link, link_id=None, link_class=None, htmlelements="", newtab=False):
         if link_id:
             link_id = ' id="%s"' % link_id.strip()
         else:
@@ -248,14 +264,14 @@ class HTMLPage(JSBASE):
                                                       description)
         return anchor
 
-    def addLink(self, description, link, newtab=False):
-        anchor = self.getLink(description, link, newtab=newtab)
-        self.addParagraph(anchor)
+    def link_add(self, description, link, newtab=False):
+        anchor = self._link_get(description, link, newtab=newtab)
+        self.paragraph_add(anchor)
 
-    def addPageBreak(self,):
-        self.addPart("<hr style='page-break-after: always;'/>")
+    def pagebreak_add(self,):
+        self.part_add("<hr style='page-break-after: always;'/>")
 
-    def addComboBox(self, items):
+    def combobox_add(self, items):
         """
         @items is a list of tuples [ ('text to show', 'value'), ]
         """
@@ -267,30 +283,31 @@ class HTMLPage(JSBASE):
             for text, value in items:
                 html += '<option value="%s">%s</option>\n' % (value, text)
             html += '</select>'
-            self.addHTML(html)
+            self.html_add(html)
             return id
         else:
             return ''
 
-    def addBootstrapCombo(self, title, items, id=None):
+    def bootstrapcombobox_add(self, title, items, id=None):
         self.addBootstrap()
         html = """
-<div class="btn-group" ${id}>
-  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-      ${title}<span class="caret"></span>
-  </button>
-  <ul class="dropdown-menu">
-    {% for name, action in items %}
-    <li><a href="javascript:void(0)" onclick="${action}">${name}</a></li>
-    {% endfor %}
-  </ul>
-</div>
-"""
+        <div class="btn-group" ${id}>
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            ${title}<span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu">
+            {% for name, action in items %}
+            <li><a href="javascript:void(0)" onclick="${action}">${name}</a></li>
+            {% endfor %}
+        </ul>
+        </div>
+        """
+        html=j.data.text.strip(html)
         id = 'id="%s"' % id if id else ''
         html = self.jenv.from_string(html).render(items=items, title=title, id=id)
-        self.addHTML(html)
+        self.html_add(html)
 
-    def addActionBox(self, actions):
+    def actionbox_add(self, actions):
         """
         @actions is array of array, [[$actionname1,$params1],[$actionname2,$params2]]
         """
@@ -305,12 +322,10 @@ class HTMLPage(JSBASE):
             if action in self.actions:
                 link = self.actions[action]
                 link = link.replace("{params}", params)
-                row.append(self.getLink(actiondescr, link))
+                row.append(self.link_get(actiondescr, link))
             else:
                 raise RuntimeError("Could not find action %s" % action)
-        self.addList([row])
-
-
+        self.list_add([row])
 
     @staticmethod
     def _format_styles(styles):
@@ -326,7 +341,7 @@ class HTMLPage(JSBASE):
         except IndexError:
             return ''
 
-    def addImage(self, title, imagePath, width=None, height=None, styles=[]):
+    def image_add(self, title, imagePath, width=None, height=None, styles=[]):
         """
         @param title alt text of the image
         @param imagePath can be url or local path
@@ -342,9 +357,9 @@ class HTMLPage(JSBASE):
 
         img = "<img src='%s' alt='%s' %s style='clear:both;%s' />" % (
             imagePath, title, width_n_height, PageHTML._format_styles(styles))
-        self.addPart(img, isElement=True)
+        self.part_add(img, isElement=True)
 
-    def addTableWithContent(self, columnsWidth, colContents):
+    def tablewithcontent_add(self, columnsWidth, colContents):
         """
         @param columnsWidth = Array with each element a nr, when None then HTML does the formatting, otherwise relative to each other
         @param colContents = array with each element HTML code
@@ -356,14 +371,14 @@ class HTMLPage(JSBASE):
             else:
                 table += "<th>%s</th>" % (colContent)
         table += "</tr></head></table>"
-        self.addPart(table, isElement=True)
+        self.part_add(table, isElement=True)
 
-    def addHTML(self, htmlcode):
+    def html_add(self, htmlcode):
         #import cgi
         #html = "<pre>%s</pre>" % cgi.escape(htmlcode)
-        self.addPart(htmlcode, isElement=False)
+        self.part_add(htmlcode, isElement=False)
 
-    def removeCSS(self, exclude, permanent=False):
+    def css_remove_all(self, exclude, permanent=False):
         """
         will walk over header and remove css links
         link need to be full e.g. bootstrap.min.css
@@ -377,28 +392,31 @@ class HTMLPage(JSBASE):
             key = exclude.strip().lower()
             self.jscsslinks[key] = True
 
-    def addCSS(self, cssLink=None, cssContent=None, exlcude="", media=None):
+    def css_add(self, cssLink=None, cssContent=None, exlcude="", media=None):
         """
         """
         #TODO:*1 what is this?
-        if self.pagemirror4jscss is not None:
-            self.pagemirror4jscss.addCSS(cssLink, cssContent)
-        if cssLink is not None:
-            key = cssLink.strip().lower() + (media or '')
-            if key in self.jscsslinks:
-                return
-            self.jscsslinks[key] = True
+        # if self.pagemirror4jscss is not None:
+        #     self.pagemirror4jscss.css_add(cssLink, cssContent)
+        # if cssLink is not None:
+        #     key = cssLink.strip().lower() + (media or '')
+            # if key in self.jscsslinks:
+            #     return
+            # self.jscsslinks[key] = True
 
         mediatag = ""
         if media:
             mediatag = "media='%s'" % media
+        css = ""
         if cssContent:
-            css = "\n<style type='text/css' %s>%s\n</style>\n" % (mediatag, cssContent)
+            if not self._contentExistsCheck(cssContent):
+                css = "\n<style type='text/css' %s>%s\n</style>\n" % (mediatag, cssContent)
         else:
-            css = "<link  href='%s' type='text/css' rel='stylesheet' %s/>\n" % (cssLink, mediatag)
+            if not self._contentExistsCheck(cssLink+mediatag):
+                css = "<link  href='%s' type='text/css' rel='stylesheet' %s/>\n" % (cssLink, mediatag)
         self.head += css
 
-    def addTimeStamp(self, classname='jstimestamp'):
+    def timestamp_add(self, classname='jstimestamp'):
         js = """
         $(function() {
             var updateTime = function () {
@@ -417,30 +435,31 @@ class HTMLPage(JSBASE):
         });
         """ % classname
         if classname not in self._timestampsAdded:
-            self.addJS(jsContent=js)
+            self.js_add(jsContent=js)
             self._timestampsAdded.add(classname)
 
-    def addJS(self, jsLink=None, jsContent=None, header=True):
-        if self.pagemirror4jscss is not None:
-            self.pagemirror4jscss.addJS(jsLink, jsContent, header)
-        if jsLink is not None:
-            key = jsLink.strip().lower()
-            if key in self.jscsslinks:
-                return
-            self.jscsslinks[key] = True
-
+    def js_add(self, jsLink=None, jsContent=None, header=True):
+        # if self.pagemirror4jscss is not None:
+        #     self.pagemirror4jscss.js_add(jsLink, jsContent, header)
+        # if jsLink is not None:
+        #     key = jsLink.strip().lower()
+        #     if key in self.jscsslinks:
+        #         return
+        #     self.jscsslinks[key] = True
+        js=""
         if jsContent:
-            js = "<script type='text/javascript'>\n%s</script>\n" % jsContent
+            if not self._contentExistsCheck(jsContent):
+                js = "<script type='text/javascript'>\n%s</script>\n" % jsContent
         else:
-            js = "<script  src='%s' type='text/javascript'></script>\n" % jsLink
+            if not self._contentExistsCheck(jsLink):
+                js = "<script  src='%s' type='text/javascript'></script>\n" % jsLink
             #js = "<script  src='%s' </script>\n" % jsLink
         if header:
             self.head += js
         else:
-            if js not in self.tail:
-                self.tail.append(js)
+            self.tail += js
 
-    def removeJS(self, jsLink=None, jsContent=None):
+    def js_remove(self, jsLink=None, jsContent=None):
         out = ""
         js = ''
         if jsContent:
@@ -450,55 +469,52 @@ class HTMLPage(JSBASE):
         self.head = self.head.replace(js.strip(), '')
         self.body = self.body.replace(js.strip(), '')
 
-    def addScriptBodyJS(self, jsContent):
-        self.scriptBody = "%s%s\n" % (self.scriptBody, jsContent)
+    # def scriptbody_add(self, jsContent):
+    #     self.scriptBody = "%s%s\n" % (self.scriptBody, jsContent)
 
-    def addJQuery(self):
+    def jquery_add(self):
         #TODO: *1 fix
-        self.addJS('/jslib/jquery/jquery-2.2.1.min.js')
-        self.addJS('/jslib/jquery/jquery-migrate-1.2.1.js')
-        self.addJS("/jslib/jquery/jquery-ui.min.js")
+        self.js_add('/jslib/jquery/jquery-2.2.1.min.js')
+        self.js_add('/jslib/jquery/jquery-migrate-1.2.1.js')
+        self.js_add("/jslib/jquery/jquery-ui.min.js")
 
-    def addBootstrap3(self, jquery=True):
+    def bootstrap3_add(self, jquery=True):
         
         #TODO: *1 fix
 
         if jquery:
-            self.addJQuery()
+            self.jquery_add()
 
-        self.addJS('/jslib/bootstrap/js/bootstrap-3-3-6.min.js')
-        self.addCSS('/jslib/bootstrap/css/bootstrap-3-3-6.min.css')
+        self.js_add('/jslib/bootstrap/js/bootstrap-3-3-6.min.js')
+        self.css_add('/jslib/bootstrap/css/bootstrap-3-3-6.min.css')
 
-    def addBootstrap4(self, jquery=True):
+    def bootstrap4_add(self, jquery=True):
         
         #TODO: *1 fix
+        raise RuntimeError()
 
-    def addBodyAttribute(self, attribute):
+    def bodyattribute_add(self, attribute):
         if attribute not in self.bodyattributes:
             self.bodyattributes.append(attribute)
 
-
-
-    def addDocumentReadyJSfunction(self, function): #TODO: dont understand
+    def document_readyfunction_add(self, function): #TODO: dont understand
         """
         e.g. $('.dataTable').dataTable();
         """
         if self.pagemirror4jscss is not None:
-            self.pagemirror4jscss.addDocumentReadyJSfunction(function)
+            self.pagemirror4jscss.document_readyfunction_add(function)
         if function not in self.documentReadyFunctions:
             self.documentReadyFunctions.append(function)
 
-    
-
-    def addHTMLHeader(self, header):
+    def _htmlheader_add(self, header):
         self.head += header
 
-    def addHTMLBody(self, body):
+    def _htmlbody_add(self, body):
         self.body += body
 
-    def addAccordion(self, panels):
-        self.addJS('/jslib/codemirror/autorefresh.js', header=False)
-        self.addPart('<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">')
+    def accordion_add(self, panels):
+        self.js_add('/jslib/codemirror/autorefresh.js', header=False)
+        self.part_add('<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">')
 
         panels.sort(key=lambda x: x['title'])
 
@@ -512,19 +528,19 @@ class HTMLPage(JSBASE):
                 if item not in panel_data:
                     panel_data[item] = j.data.idgenerator.generateXCharID(10)
 
-            self.addPart("""
+            self.part_add("""
             <div class="panel panel-default">
-              <div class="panel-heading" role="tab" id="%(header_id)s">
+              <div class="panel-header" role="tab" id="%(header_id)s">
                 <h4 class="panel-title">
                   <a data-toggle="collapse" data-parent="#accordion" href="#%(section_id)s" aria-expanded="true" aria-controls="%(section_id)s">%(title)s</a>
             """ % panel_data)
 
             if 'label_content' in panel_data:
-                self.addPart("""
+                self.part_add("""
                 <a id=%(label_id)s class="label-archive label label-%(label_color)s glyphicon glyphicon glyphicon-%(label_icon)s pull-right">%(label_content)s</a>
                 """ % panel_data)
 
-            self.addPart("""
+            self.part_add("""
                 </h4>
               </div>
               <div id="%(section_id)s" class="panel-collapse collapse" role="tabpanel" aria-labelledby="%(header_id)s">
@@ -534,19 +550,36 @@ class HTMLPage(JSBASE):
             if panel_data.get('code', False):
                 self.addCodeBlock(content, edit=False, exitpage=True, spacename='', pagename='', linenr=True, autorefresh=True)
             else:
-                self.addPart(content)
+                self.part_add(content)
 
-            self.addPart("""
+            self.part_add("""
                 </div> <!-- panel body-->
               </div> <!-- panel collapse-->
             </div> <!-- panel default-->""")
 
-        self.addPart('</div>')  # close panel-group
+        self.part_add('</div>')  # close panel-group
 
-    def getContent(self):
+    def content_get(self):
         return str(self)
 
+    def html_get(self):
+        out="<!DOCTYPE html>\n"
+        out+="<html>"
+        if self.head:
+            out+="<head>\n"
+            out=out+self.head+"\n"
+            out+="</head>\n"
+        out+="<body>\n"
+        out=out+self.body+"\n"
+        out+="</body>\n"
+        out=out+self.tail+"\n"
+        out+="</html>"
+        return out
+               
+
     def __str__(self):
+        self.part_add("")
+        return self.body
         # make sure we get closures where needed (/div)
 
         # if self.documentReadyFunctions != []:
@@ -558,3 +591,4 @@ class HTMLPage(JSBASE):
         #TODO: *1
 
         
+    __repr__ = __str__

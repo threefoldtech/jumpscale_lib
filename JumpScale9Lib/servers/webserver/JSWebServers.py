@@ -15,6 +15,7 @@ class JSWebServers(JSConfigBase):
         self.__jslocation__ = "j.servers.web"
 
         JSConfigBase.__init__(self, JSWebServer)
+        self.latest = None
 
     def configure(self, instance="main", port=5050,port_ssl=0, host="localhost", secret="", ws_dir=""):
         """

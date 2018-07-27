@@ -1,6 +1,5 @@
 from js9 import j
 from .DocSite import DocSite
-from .Def import Def
 
 import imp
 import sys
@@ -214,9 +213,8 @@ class DocGenerator(JSBASE):
 
     def docsite_get(self, name, die=True):
         name = name.lower()
-        for key, ds in self.docsites.items():
-            if ds.name == name:
-                return ds
+        if name in self.docsites:
+            return self.docsites[name]
         if die:
             raise j.exceptions.Input(message="Cannot find docsite with name:%s" %
                                      name, level=1, source="", tags="", msgpub="")

@@ -181,7 +181,7 @@ class PostgresClient(JSConfigClient):
         pass
 
     # def _html2text(self, html):
-    #     return j.tools.html.html2text(html)
+    #     return j.data.html.html2text(html)
 
     # def _postgresTimeToEpoch(self,postgres_time):
     #     if postgres_time==None:
