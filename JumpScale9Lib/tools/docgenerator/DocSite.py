@@ -1,8 +1,6 @@
 from js9 import j
 from .Doc import Doc
-from .DocBase import DocBase
 from .DocWatchdog import DocWatchdog
-from .HtmlPage import HtmlPage
 JSBASE = j.application.jsbase_get_class()
 
 import copy
@@ -65,7 +63,7 @@ class DocSite(JSBASE):
         self.others = {}
         self.files = {}
         self.sidebars = {}
-        self._processed = False
+        
 
     
         # check if there are dependencies
@@ -82,7 +80,7 @@ class DocSite(JSBASE):
         self.logger.level=1
 
         self._git=None
-        self._watchdog=None
+        self._loaded = False
 
         self.logger.info("loaded:%s"%self)
         
@@ -136,9 +134,7 @@ class DocSite(JSBASE):
         fulldirpath = j.sal.fs.getDirName(path)
         rdirpath = j.sal.fs.pathRemoveDirPart(fulldirpath, self.path)
         rdirpath = rdirpath.strip("/").strip().strip("/")
-        import pudb; pudb.set_trace()
         self.data_default[rdirpath] = data
-
 
     def load(self):
         """
@@ -148,6 +144,8 @@ class DocSite(JSBASE):
         if duplicate only the first found will be used
 
         """
+        if self._loaded:
+            return
 
         j.sal.fs.remove(self.path + "errors.md")
         path = self.path
@@ -201,12 +199,13 @@ class DocSite(JSBASE):
                 self.docs[doc.name_dot_lower] = doc
             elif ext in ["html","htm"]:
                 self.logger.debug("found html:%s"%path)
-                l = len(ext)+1
-                base = base[:-l]  # remove extension
-                doc = HtmlPage(path, base, docsite=self)
-                # if base not in self.htmlpages:
-                #     self.htmlpages[base.lower()] = doc
-                self.htmlpages[doc.name_dot_lower] = doc
+                raise RuntimeError()
+                # l = len(ext)+1
+                # base = base[:-l]  # remove extension
+                # doc = HtmlPage(path, base, docsite=self)
+                # # if base not in self.htmlpages:
+                # #     self.htmlpages[base.lower()] = doc
+                # self.htmlpages[doc.name_dot_lower] = doc
             else:
                 
                 if ext in ["png", "jpg", "jpeg", "pdf", "docx", "doc", "xlsx", "xls", \
@@ -236,6 +235,8 @@ class DocSite(JSBASE):
             callbackForMatchDir=callbackForMatchDir,
             callbackForMatchFile=callbackForMatchFile)
 
+        self._loaded=True
+
     # def file_add(self, path):
     #     if not j.sal.fs.exists(path, followlinks=True):
     #         raise j.exceptions.Input(message="Cannot find path:%s" % path, level=1, source="", tags="", msgpub="")
@@ -253,10 +254,10 @@ class DocSite(JSBASE):
     #     for name, path in self.files.items():
     #         j.sal.fs.copyFile(path, j.sal.fs.joinPaths(dpath, name))
 
-    def process(self):
-        for key, doc in self.docs.items():
-            doc.process()
-        self._processed = True
+    # def process(self):
+    #     for key, doc in self.docs.items():
+    #         doc.process()
+    #     self._processed = True
 
     def error_raise(self, errormsg, doc=None):
         if doc is not None:
@@ -270,13 +271,9 @@ class DocSite(JSBASE):
             embed()
             raise RuntimeError("stop debug here")
 
-    def load_process(self):
-        self.load()
-        self.process()
 
     def file_get(self, name, die=True):
-        if not self._processed:
-            self.load_process()
+        self.load()
         
         for key, val in self.files.items():
             if key.lower() == name.lower():
@@ -286,10 +283,11 @@ class DocSite(JSBASE):
                                      (name, self), level=1, source="", tags="", msgpub="")
         return None
 
-    def doc_get(self, name, die=True):
+    def doc_get(self, name, cat="", die=True):
         
-        if not self._processed:
-            self.load_process()
+        import pudb; pudb.set_trace()
+        
+        self.load()
 
         if j.data.types.list.check(name):
             name = "/".join(name)
@@ -320,7 +318,7 @@ class DocSite(JSBASE):
             candidates.append(name+".readme")
 
         if name.endswith("index"):            
-            nr,res = self._doc_get(name[:-5]+"readme")
+            nr,res = self._doc_get(name[:-5]+"readme",cat=cat)
             if nr==1:
                 return 1,res
             name = name[:-6]
@@ -333,7 +331,7 @@ class DocSite(JSBASE):
             candidates.append(name0)
 
         for cand in candidates:
-            nr,res = self._doc_get(cand)
+            nr,res = self._doc_get(cand,cat=cat)
             if nr == 1:
                 self.docs[name] = res  #remember for caching
                 return self.docs[name]
@@ -343,41 +341,31 @@ class DocSite(JSBASE):
         else:
             return None
 
-    def _doc_get(self, name):
-                
+    def _doc_get(self, name, cat=""):
+        
         if name in self.docs:
-            return 1, self.docs[name]
-    
-        res = []
-        for key,item in self.docs.items():
-            if name in  item.name_dot_lower:
-                res.append(key)
-        if len(res)>0:
-            return  len(res),self.docs[res[0]]
-        else:
-            return 0,None
+            if cat is "":
+                return 1, self.docs[name]
+            else:
+                if self.docs[name] == cat:
+                    return 1, self.docs[name]
 
-
-    def html_get(self, name, die=True):
-        if not self._processed:
-            self.load_process()        
-        if "." in name:
-            ext =  j.sal.fs.getFileExtension(name).lower()
-            name = name[:-(len(ext)+1)] #name without extension
-        name = j.data.text.strip_to_ascii_dense(name)
-        if name in self.htmlpages:
-            return self.htmlpages[name]
-        if die:
-            raise j.exceptions.Input(message="Cannot find doc with name:%s" % name, level=1, source="", tags="", msgpub="")
         else:
-            return None       
+                
+            res = []
+            for key,item in self.docs.items():
+                if name in  item.name_dot_lower:
+                    res.append(key)
+            if len(res)>0:
+                return  len(res),self.docs[res[0]]
+            else:
+                return 0,None  
 
     def sidebar_get(self, url):
         """
         will calculate the sidebar, if not in url will return None
         """
-        if not self._processed:
-            self.load_process()        
+        self.load()        
         if j.data.types.list.check(url):
             url = "/".join(url)
         self.logger.debug("sidebar_get:%s"%url)            

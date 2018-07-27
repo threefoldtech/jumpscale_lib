@@ -309,7 +309,8 @@ class Hosts:
             for host_data in self._hosts_chunks(hosts_data, 3):
                 index = host_data[0][0]
                 ip, mac, name = map(lambda x: x[2].replace("'", ""), host_data)
-                self._hosts[name] = Host(mac, ip, name, self.sshclient, index)
+                if netaddr.IPAddress(ip) in netaddr.IPNetwork(self.subnet):
+                    self._hosts[name] = Host(mac, ip, name, self.sshclient, index)
         else:
             self._last_index = -1
 

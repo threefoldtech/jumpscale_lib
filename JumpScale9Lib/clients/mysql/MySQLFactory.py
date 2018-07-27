@@ -30,7 +30,7 @@ class MySQLClient(JSBASE):
         self.client = cl
 
     def _html2text(self, html):
-        return j.tools.html.html2text(html)
+        return j.data.html.html2text(html)
 
     def _mysqlTimeToEpoch(self, mysql_time):
         if mysql_time is None:

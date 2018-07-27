@@ -1,6 +1,5 @@
 from js9 import j
 from .DocSite import DocSite
-from .Def import Def
 
 import imp
 import sys
@@ -96,6 +95,8 @@ class DocGenerator(JSBASE):
 
 
     def load(self, path="", name=""):
+        if path.startswith("http"):
+            path = j.clients.git.getContentPathFromURLorPath(path)
         ds = DocSite(path=path, name=name)
         self.docsites[ds.name] = ds
         
@@ -212,9 +213,8 @@ class DocGenerator(JSBASE):
 
     def docsite_get(self, name, die=True):
         name = name.lower()
-        for key, ds in self.docsites.items():
-            if ds.name == name:
-                return ds
+        if name in self.docsites:
+            return self.docsites[name]
         if die:
             raise j.exceptions.Input(message="Cannot find docsite with name:%s" %
                                      name, level=1, source="", tags="", msgpub="")

@@ -1,36 +1,42 @@
 from js9 import j
-JSBASE = j.application.jsbase_get_class()
+import mistune
 
 
-class Object():
-    def __init__(self):
-        pass
+class MDBase():
+    
 
-
-    def __str__(self):
-        out=""
-        for key,val in self.__dict__.items():
-            out+="%s:%s "%(key,val)
-        out=out.strip()
+    def __repr__(self):
+        out = self.text
+        if len(out) > 0:
+            if out[-1] != "\n":
+                out += "\n"
+            if out[-2] != "\n":
+                out += "\n"
         return out
 
-    __repr__ = __str__
+    @property
+    def markdown(self):
+        return str(self)
 
+    @property
+    def html(self):
+        return mistune.markdown(self.text, escape=True, hard_wrap=True)
 
-class MDTable(JSBASE):
+    __str__ = __repr__
+
+class MDTable(MDBase):
 
     def __init__(self):
         self.header = []
         self.rows = []
         self.type = "table"
-        JSBASE.__init__(self)
 
     def rows_as_objects(self):
         nrcols=len(self.header)
         res=[]
         for row in self.rows:
-            oo=Object()
-            for x in range(0,nrcols):
+            oo = object()
+            for x in range(nrcols):
                 val=row[x]
                 if val.strip()==".":
                     val=""
@@ -45,24 +51,24 @@ class MDTable(JSBASE):
         return res
 
 
-    def addHeader(self, cols):
+    def header_add(self, cols):
         """
         cols = columns can be comma separated string or can be list
         """
         if j.data.types.string.check(cols):
-            cols=[item.strip().strip("'").strip("\"").strip() for item in cols.split(",")]
+            cols=[item.strip().strip("'").strip('"').strip() for item in cols.split(",")]
 
         self.header = cols
         for nr in range(len(self.header)):
             if self.header[nr] is None or self.header[nr].strip() == "":
                 self.header[nr] = " . "
 
-    def addRow(self, cols):
+    def row_add(self, cols):
         """
         cols = columns  can be comma separated string or can be list
         """        
         if j.data.types.string.check(cols):
-            cols=[item.strip().strip("'").strip("\"").strip() for item in cols.split(",")]
+            cols=[item.strip().strip("'").strip('"').strip() for item in cols.split(",")]
         if len(cols) != len(self.header):
             raise j.exceptions.Input(
                 "cols need to be same size as header. %s vs %s" % (len(cols), len(self.header)))
@@ -88,6 +94,10 @@ class MDTable(JSBASE):
                         m[x]=3
                 x += 1
         return m
+
+    @property
+    def text(self):        
+        return str(self)
 
     def __repr__(self):
         def pad(text, l, add=" "):
@@ -133,13 +143,13 @@ class MDTable(JSBASE):
     __str__ = __repr__
 
 
-class MDHeader(JSBASE):
+class MDHeader(MDBase):
 
     def __init__(self, level, title):
         self.level = level
         self.title = title
         self.type = "header"
-        JSBASE.__init__(self)
+        
 
     def __repr__(self):
         pre = ""
@@ -149,30 +159,33 @@ class MDHeader(JSBASE):
 
     __str__ = __repr__
 
+    @property
+    def text(self):        
+        return str(self)
 
-class MDListItem(JSBASE):
+class MDListItem(MDBase):
 
     def __init__(self, level, text):
         self.level = level
         self.text = text
         self.type = "list"
-        JSBASE.__init__(self)
+        
 
     def __repr__(self):
         pre = ''
         if self.level > 1:
-            pre = ' ' * (self.level - 1)
+            pre = '    ' * (self.level - 1)
         return "%s%s" % (pre, self.text)
 
     __str__ = __repr__
 
 
-class MDComment(JSBASE):
+class MDComment(MDBase):
 
     def __init__(self, text):
         self.text = text
         self.type = "comment"
-        JSBASE.__init__(self)
+        
 
     def __repr__(self):
         out = "<!--\n%s\n-->\n" % self.text
@@ -180,12 +193,12 @@ class MDComment(JSBASE):
     __str__ = __repr__
 
 
-class MDComment1Line(JSBASE):
+class MDComment1Line(MDBase):
 
     def __init__(self, text):
         self.text = text
         self.type = "comment1line"
-        JSBASE.__init__(self)
+        
 
     def __repr__(self):
         out = "<!--%s-->\n" % self.text
@@ -194,12 +207,12 @@ class MDComment1Line(JSBASE):
     __str__ = __repr__
 
 
-class MDBlock(JSBASE):
+class MDBlock(MDBase):
 
     def __init__(self, text):
         self.text = text
         self.type = "block"
-        JSBASE.__init__(self)
+        
 
     def __repr__(self):
         out = self.text
@@ -210,63 +223,101 @@ class MDBlock(JSBASE):
                 out += "\n"
         return out
 
+
     __str__ = __repr__
 
 
-class MDCode(JSBASE):
+class MDCodeMacroDataBase():
+
+    @property
+    def markdown(self):
+        return str(self)        
+
+    @property
+    def html(self):
+        return "<code>\n\n%s\n</code>\n\n"%self.text    
+
+    
+class MDCode(MDCodeMacroDataBase):
 
     def __init__(self, text, lang):
         self.text = text
         self.type = "code"
         self.lang = lang
-        JSBASE.__init__(self)
-
-    def __repr__(self):
-        out = self.text
-        code = "\n```$lang\n$code\n```\n"
-        if self.lang is None:
-            self.lang = ""
-        code = code.replace("$lang", self.lang)
-        code = code.replace("$code", self.text)
-        return code
+        self.method = ""
+        
+    def __repr__(self):        
+        out = "```%s\n"%self.lang
+        out += self.text.strip()
+        out += "\n```\n"
+        return out
 
     __str__ = __repr__
 
 
-class MDData(JSBASE):
+class MDMacro(MDCodeMacroDataBase):
 
-    def __init__(self, ddict, name="", guid=""):
-        JSBASE.__init__(self)
-        self.name = name
+    def __init__(self, data="", lang="", method=""):
+        self.text = data
+        self.lang = lang
+        self.type = "macro"
+        self.method = method.strip()
+
+    def __repr__(self):
+        out = "```%s\n!!!%s\n"%(self.lang,self.method)
+        t = self.text.strip()
+        out += t
+        if t:
+            out+="\n"
+        out += "```\n"
+        return out
+
+    __str__ = __repr__
+
+
+class MDData(MDCodeMacroDataBase):
+
+    def __init__(self, ddict={},toml="",yaml=""):
+        
         self.type = "data"
-        self.ddict = ddict
+
+        self._toml = toml
+        self._yaml = yaml
+        self._ddict = ddict
+        
         self._hash = ""
-        if name == "":
-            if "name" in ddict:
-                self.name = ddict["name"]
-            else:
-                raise j.exceptions.Input(
-                    "name cannot be empty and could not be retrieved from dict")
-        else:
-            self.name = name
-
-        if guid == "":
-            if "guid" in ddict:
-                self.guid = ddict["guid"]
-            elif "id" in ddict:
-                self.guid = ddict["id"]
-            elif "name" in ddict:
-                self.guid = ddict["name"]
-            else:
-                raise j.exceptions.Input(
-                    "guid cannot be empty and could not be retrieved from dict")
-        else:
-            self.guid = guid
-
 
     @property
     def datahr(self):
-        return j.data.serializer.yaml.dumps(self.ddict)
+        return j.data.serializer.toml.dumps(self.ddict)
+
+    @property
+    def toml(self):
+        if self._toml:
+            return self._toml
+        else:
+            return j.data.serializer.toml.dumps(self.ddict)
+
+    @property
+    def ddict(self):
+        if self._toml:
+            return j.data.serializer.toml.loads(self._toml)
+        elif self._yaml:
+            return j.data.serializer.yaml.loads(self._yaml)
+        elif self._ddict is not {}:            
+            return  self._ddict
+        else:
+            RuntimeError ("toml or ddict needs to be filled in in data object")
+
+    @property
+    def text(self):
+        if self._toml:            
+            return self._toml
+        elif self._yaml:
+            out = "```yaml\n!!!data\n"  #need new header
+            return self._yaml
+        else:    
+            return self.toml
 
     @property
     def hash(self):
@@ -276,13 +327,25 @@ class MDData(JSBASE):
         return self._hash
 
     def __repr__(self):
-        out = "<!--data|%s|%s-->\n" % (self.name, self.guid)
-        out += "\n"
-        out += str(MDHeader(2, "%s" % self.name))
-        out += "\n"
-        out += str(MDCode(self.datahr, "yaml"))
-        out += "\n"
+        
+        out = "```toml\n!!!data\n"
+        out += self.text.strip()
+        out += "\n```\n"
         return out
 
     __str__ = __repr__
+
+# class Object(MDBase):
+#     def __init__(self):
+#         pass
+
+
+#     def __str__(self):
+#         out=""
+#         for key,val in self.__dict__.items():
+#             out+="%s:%s "%(key,val)
+#         out=out.strip()
+#         return out
+
+#     __repr__ = __str__
 

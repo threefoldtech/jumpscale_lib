@@ -22,8 +22,10 @@ class DebugConfig(Config):
 
 class JSWebLoader(JSBASE):
     
-    def __init__(self):
+    def __init__(self,path):
+        JSBASE.__init__(self)
         self.db = SQLAlchemy()
+        self.path = path
         self.login_manager = LoginManager()
 
     def register_extensions(self,app):
@@ -31,7 +33,7 @@ class JSWebLoader(JSBASE):
         self.login_manager.init_app(app)
 
     def register_blueprints(self,app):
-        apps = j.sal.fs.listDirsInDir("blueprints", recursive=False, dirNameOnly=True, findDirectorySymlinks=True, followSymlinks=True)
+        apps = j.sal.fs.listDirsInDir("%s/blueprints"%self.path, recursive=False, dirNameOnly=True, findDirectorySymlinks=True, followSymlinks=True)
         apps = [item for item in apps if item[0] is not "_"]
         for module_name in apps:
             module = import_module('blueprints.{}.routes'.format(module_name))
