@@ -1,7 +1,8 @@
 from js9 import j
 import mistune
-
-
+import re
+from itertools import takewhile
+getindentlevel = lambda l:  len(list(takewhile(lambda c: c.isspace(), l)))
 class MDBase():
     
 
@@ -24,6 +25,33 @@ class MDBase():
 
     __str__ = __repr__
 
+
+
+class MDList(MDBase):
+    def __init__(self, text):
+        self.text = text
+        self.type = "list"
+
+
+
+
+    @property
+    def as_list(self):
+
+
+        # res = []
+        # for i, l in enumerate(1, self.text.splitlines()):
+        #     currentidnlevel = getindentlevel(l)
+        #     previdnlevel = getindentlevel(self.text[i])
+        #     if currentidnlevel - previdnlevel == 0:
+        #         res.append(l)
+        #     else:
+        #         res.append(l)
+        #     if idnlevel == 0:
+        #         res.append(l)
+        #     else:
+        #         res[-1-iden].append(l)
+    
 class MDTable(MDBase):
 
     def __init__(self):
@@ -163,21 +191,21 @@ class MDHeader(MDBase):
     def text(self):        
         return str(self)
 
-class MDListItem(MDBase):
+# class MDListItem(MDBase):
 
-    def __init__(self, level, text):
-        self.level = level
-        self.text = text
-        self.type = "list"
+#     def __init__(self, level, text):
+#         self.level = level
+#         self.text = text
+#         self.type = "list"
         
 
-    def __repr__(self):
-        pre = ''
-        if self.level > 1:
-            pre = '    ' * (self.level - 1)
-        return "%s%s" % (pre, self.text)
+#     def __repr__(self):
+#         pre = ''
+#         if self.level > 1:
+#             pre = '    ' * (self.level - 1)
+#         return "%s%s" % (pre, self.text)
 
-    __str__ = __repr__
+#     __str__ = __repr__
 
 
 class MDComment(MDBase):
@@ -207,12 +235,28 @@ class MDComment1Line(MDBase):
     __str__ = __repr__
 
 
+# def _transform_links(self, text):
+#     # replace links.
+#     # Anything that isn't a square closing bracket
+#     name_regex = "[^]]+"
+#     # http:// or https:// followed by anything but a closing paren
+#     url_regex = "http[s]?://[^)]+"
+
+#     markup_regex = '\[({0})]\(\s*({1})\s*\)'.format(name_regex, url_regex)
+
+#     return re.sub(markup_regex, r'<a href="\2">\1</a>', text)
+    
 class MDBlock(MDBase):
 
     def __init__(self, text):
         self.text = text
         self.type = "block"
-        
+
+    @property
+    def html(self):
+        return mistune.markdown(self.text, escape=True, hard_wrap=True)
+
+
 
     def __repr__(self):
         out = self.text

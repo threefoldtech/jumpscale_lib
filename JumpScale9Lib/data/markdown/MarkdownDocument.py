@@ -2,6 +2,7 @@ from js9 import j
 from .MarkdownComponents import *
 JSBASE = j.application.jsbase_get_class()
 import copy
+import mistune
 
 class MarkdownDocument(JSBASE):
 
@@ -72,6 +73,8 @@ class MarkdownDocument(JSBASE):
         prevListLevel = 0
         curListLevel = 1
 
+
+        listblocklines = []
         # substate = ""
 
         def block_add(block):
@@ -85,7 +88,6 @@ class MarkdownDocument(JSBASE):
             return
 
         for line in self.content.split("\n"):
-
             # HEADERS
             if line.startswith("#") and state == "":
                 block = block_add(block)
@@ -128,35 +130,15 @@ class MarkdownDocument(JSBASE):
 
             # LIST
             if linestripped.startswith("-") or linestripped.startswith("*") and state in ["","LIST"]:
-                if state == "":
-                    block = block_add(block)
-                    state = "LIST"
-                    curListLevel = 1
-                    prevListLevel = 0
-                    prevlevels = {0: 1}
-
-                if state == "LIST":
-                    #more complex than just counting the ' ' because there can be 2 spaces, 4 spaces, ... for 1 identation
-                    if not (linestripped.startswith("-") or linestripped.startswith("*")):
-                        state
-                    line0 = line
-                    level = 0
-                    while line0.startswith(" "):
-                        level += 1
-                        line0 = line0[1:]
-                    # see how level goes up or down
-                    if level in prevlevels:
-                        curListLevel = prevlevels[level]
-                    elif level > prevListLevel:
-                        curListLevel += 1
-                        prevlevels[level] = curListLevel
-                    prevListLevel = level
-                    self.items.append(MDListItem(curListLevel, line.strip("* ")))
-                    continue
+                state = "LIST"
+                listblocklines.append(line)
+                continue
             else:
                 # get out of state state
                 if state == "LIST":
                     state = ""
+                    self.items.append(MDList("\n".join(listblocklines)))
+                    listblocklines = [] 
 
             if state == "TABLE" and not linestripped.startswith("|"):
                 state = ""
@@ -201,7 +183,6 @@ class MarkdownDocument(JSBASE):
 
             if linestripped != "":
                 block += "%s\n" % line
-
             block = block_add(block)
 
         # from IPython import embed;embed(colors='Linux')
@@ -267,7 +248,7 @@ class MarkdownDocument(JSBASE):
         """
         out=j.data.text.strip(out)
         for item in self.items:
-            out+=item.html+"\n"
+            out+= item.html +"\n"
         out+="\n</body>\n</html>\n"
         return out
 
@@ -285,7 +266,7 @@ class MarkdownDocument(JSBASE):
 
         for item in self.items:
             if item.type=="block":
-                htmlpage.paragraph_add(item.text.strip())
+                htmlpage.paragraph_add(mistune.markdown(item.text.strip()))
             elif item.type=="header":
                 htmlpage.header_add(item.title,level= item.level)
             elif item.type=="code":
@@ -297,7 +278,7 @@ class MarkdownDocument(JSBASE):
             elif item.type=="data":
                 pass
             elif item.type=="list":
-                htmlpage.listitem_add(part=item.text, level=item.level, list_type='bullet', tag='ul', attributes='')
+                htmlpage.html_add(mistune.markdown(item.text))
             elif item.type=="macro":
                 if j.tools.docgenerator._macros_loaded is not []:
                     #means there is no doc generator so cannot load macro

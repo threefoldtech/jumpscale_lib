@@ -1,4 +1,5 @@
 from js9 import j
+import os
 
 # from JumpScale9Lib.data.markdown.mistune import *
 
@@ -41,10 +42,12 @@ class MarkdownFactory(JSBASE):
         '''
         js9 'j.data.markdown.test()'
         '''
-        from .tests.test1 import test
+        # from .tests.test1 import test
+        # test()
+        # from .tests.test2 import test
+        # test()        
+        # from .tests.test3 import test
+        # test()        
+        from .tests.test4 import test
         test()
-        from .tests.test2 import test
-        test()        
-        from .tests.test3 import test
-        test()        
 
