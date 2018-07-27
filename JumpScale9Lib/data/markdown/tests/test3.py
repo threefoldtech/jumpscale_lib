@@ -4,7 +4,7 @@ import os
 def test():
     dname = j.sal.fs.getDirName(os.path.abspath(__file__))
 
-    C = j.sal.fs.fileGetContents("%s/MarkDownExample.md"%dname)
+    C = j.sal.fs.fileGetContents("%s/MarkdownExample.md"%dname)
 
     md = j.data.markdown.document_get(C)
 
