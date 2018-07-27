@@ -35,8 +35,8 @@ class MDTable(MDBase):
         nrcols=len(self.header)
         res=[]
         for row in self.rows:
-            oo=Object()
-            for x in range(0,nrcols):
+            oo = object()
+            for x in range(nrcols):
                 val=row[x]
                 if val.strip()==".":
                     val=""
@@ -56,7 +56,7 @@ class MDTable(MDBase):
         cols = columns can be comma separated string or can be list
         """
         if j.data.types.string.check(cols):
-            cols=[item.strip().strip("'").strip("\"").strip() for item in cols.split(",")]
+            cols=[item.strip().strip("'").strip('"').strip() for item in cols.split(",")]
 
         self.header = cols
         for nr in range(len(self.header)):
@@ -68,7 +68,7 @@ class MDTable(MDBase):
         cols = columns  can be comma separated string or can be list
         """        
         if j.data.types.string.check(cols):
-            cols=[item.strip().strip("'").strip("\"").strip() for item in cols.split(",")]
+            cols=[item.strip().strip("'").strip('"').strip() for item in cols.split(",")]
         if len(cols) != len(self.header):
             raise j.exceptions.Input(
                 "cols need to be same size as header. %s vs %s" % (len(cols), len(self.header)))

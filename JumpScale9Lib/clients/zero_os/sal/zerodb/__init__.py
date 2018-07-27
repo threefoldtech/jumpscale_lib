@@ -108,3 +108,13 @@ class Zerodbs(DynamicCollection):
             mounts.append({'disk': disk.name, 'mountpoint': mount_point})
 
         return mounts
+
+
+    def create_and_mount_subvolume(self, storagepool, name, size):
+        fs = storagepool.create(name, size * (1024 ** 3))
+        mount_point = '/mnt/zdbs/{}'.format(name)
+        self._node_sal.client.filesystem.mkdir(mount_point)
+        subvol = 'subvol={}'.format(fs.subvolume)
+        self._node_sal.client.disk.mount(sp.devicename, mount_point, [subvol])
+
+        return mount_point, fs.name

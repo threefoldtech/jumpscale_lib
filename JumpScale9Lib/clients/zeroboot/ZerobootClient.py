@@ -235,12 +235,7 @@ class Host:
         :param tftp_root: str, optional
         """
         # url parse boot parameters
-        url_parts = lkrn_url.split('/')
-        i = -1
-        if url_parts[i] == '':
-            i = -2
-        url_parts[i] = urllib.parse.quote_plus(url_parts[i])
-        lkrn_url = '/'.join(url_parts)
+        lkrn_url = lkrn_url.replace(" ", "%20")
 
         lkrn_hash = hashlib.md5(lkrn_url.encode('utf8')).hexdigest()
         file_name = '01-{}'.format(str(netaddr.EUI(self.mac)).lower())
@@ -309,7 +304,8 @@ class Hosts:
             for host_data in self._hosts_chunks(hosts_data, 3):
                 index = host_data[0][0]
                 ip, mac, name = map(lambda x: x[2].replace("'", ""), host_data)
-                self._hosts[name] = Host(mac, ip, name, self.sshclient, index)
+                if netaddr.IPAddress(ip) in netaddr.IPNetwork(self.subnet):
+                    self._hosts[name] = Host(mac, ip, name, self.sshclient, index)
         else:
             self._last_index = -1
 
