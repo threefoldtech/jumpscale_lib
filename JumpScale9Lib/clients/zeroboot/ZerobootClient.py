@@ -235,12 +235,7 @@ class Host:
         :param tftp_root: str, optional
         """
         # url parse boot parameters
-        url_parts = lkrn_url.split('/')
-        i = -1
-        if url_parts[i] == '':
-            i = -2
-        url_parts[i] = urllib.parse.quote_plus(url_parts[i])
-        lkrn_url = '/'.join(url_parts)
+        lkrn_url = lkrn_url.replace(" ", "%20")
 
         lkrn_hash = hashlib.md5(lkrn_url.encode('utf8')).hexdigest()
         file_name = '01-{}'.format(str(netaddr.EUI(self.mac)).lower())
