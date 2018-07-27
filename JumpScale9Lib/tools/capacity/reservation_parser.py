@@ -17,15 +17,15 @@ class ReservationParser:
 
     def get_report(self, vms, vdisks, gateways):
         for vm in vms:
-            for k, v in _parser_vm(vm).items():
+            for k, v in _parser_vm(vm.data).items():
                 self._ressources[k] += v
 
         for vdisk in vdisks:
-            for k, v in _parse_vdisk(vdisk).items():
+            for k, v in _parse_vdisk(vdisk.data).items():
                 self._ressources[k] += v
 
         for gw in gateways:
-            for k, v in _parse_gateway(gw).items():
+            for k, v in _parse_gateway(gw.data).items():
                 self._ressources[k] += v
 
         return Report(**self._ressources)
