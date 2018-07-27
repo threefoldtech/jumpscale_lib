@@ -48,7 +48,7 @@ class ActorCommunity(JSBASE):
         if path is "":
             path = "%s/%s"%(self._path, "actors_example")
         
-        tocheck=[]
+        # tocheck=[]
         for actorpath in  j.sal.fs.listFilesInDir(path, recursive=True, filter="actor_*.py",followSymlinks=True):
             dpath = j.sal.fs.getDirName(actorpath)
             if dpath not in sys.path:
