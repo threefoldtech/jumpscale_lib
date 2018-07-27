@@ -115,6 +115,6 @@ class Zerodbs(DynamicCollection):
         mount_point = '/mnt/zdbs/{}'.format(name)
         self.node.client.filesystem.mkdir(mount_point)
         subvol = 'subvol={}'.format(fs.subvolume)
-        self.node.client.disk.mount(sp.devicename, mount_point, [subvol])
+        self.node.client.disk.mount(storagepool.devicename, mount_point, [subvol])
 
         return mount_point, fs.name
