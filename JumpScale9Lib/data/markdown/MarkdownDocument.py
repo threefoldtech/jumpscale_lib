@@ -98,7 +98,6 @@ class MarkdownDocument(JSBASE):
 
             linestripped = line.strip()
 
-            # substate
             if linestripped.startswith("<!--") and linestripped.endswith("-->") and state == "":
                 comment_part = linestripped[4:-3].strip()
                 self.comment1line_add(comment_part)

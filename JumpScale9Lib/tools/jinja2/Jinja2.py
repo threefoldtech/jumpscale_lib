@@ -88,7 +88,7 @@ class Jinja2(JSBASE):
                 continue                
             self.file_render(item,**args)
 
-    def copy_dir_render(self,src,dest,overwriteFiles=False,filter=None, ignoredir=[],ignorefiles=[],reset=False,**args):
+    def copy_dir_render(self,src,dest,overwriteFiles=False,filter=None, ignoredir=[],ignorefiles=[],reset=False,render=True,**args):
         """
         copy dir from src to dest
         use ignoredir & ignorefiles while copying
@@ -115,7 +115,8 @@ class Jinja2(JSBASE):
         j.sal.fs.copyDirTree(src, dest, keepsymlinks=False, overwriteFiles=overwriteFiles, ignoredir=ignoredir, \
             ignorefiles=ignorefiles, rsync=True, recursive=True, rsyncdelete=True, createdir=False)
 
-        self.dir_render(path=dest,filter=filter,**args)
+        if render:
+            self.dir_render(path=dest,filter=filter,**args)
 
     def test(self):
         """

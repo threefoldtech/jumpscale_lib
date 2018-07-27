@@ -25,7 +25,7 @@ class JSWebServer(JSConfigBase):
 
         # Set proper instance for j.data.schema
 
-        self.host = self.config.data["host"]
+        self.host = "0.0.0.0"#self.config.data["host"]
         self.port = int(self.config.data["port"])
         self.port_ssl = int(self.config.data["port_ssl"])
         self.address = '{}:{}'.format(self.host, self.port)
