@@ -49,6 +49,7 @@ class HTMLPage(JSBASE):
         # self.functionsAdded = {}
         self._explorerInstance = 0
         self._lineId = 0
+        self._enableprettyprint = False
         # self.documentReadyFunctions = []
 
     def _contentExistsCheck(self,content):
@@ -452,7 +453,7 @@ class HTMLPage(JSBASE):
                 js = "<script type='text/javascript'>\n%s</script>\n" % jsContent
         else:
             if not self._contentExistsCheck(jsLink):
-                js = "<script  src='%s' type='text/javascript'></script>\n" % jsLink
+                js = "<script src='%s' type='text/javascript'></script>\n" % jsLink
             #js = "<script  src='%s' </script>\n" % jsLink
         if header:
             self.head += js
@@ -474,24 +475,22 @@ class HTMLPage(JSBASE):
 
     def jquery_add(self):
         #TODO: *1 fix
-        self.js_add('/jslib/jquery/jquery-2.2.1.min.js')
-        self.js_add('/jslib/jquery/jquery-migrate-1.2.1.js')
-        self.js_add("/jslib/jquery/jquery-ui.min.js")
+        self.js_add('/static/jquery/jquery.min.js')
+        self.js_add("/static/jquery/jquery-ui.min.js")
 
     def bootstrap3_add(self, jquery=True):
-        
-        #TODO: *1 fix
-
         if jquery:
             self.jquery_add()
 
-        self.js_add('/jslib/bootstrap/js/bootstrap-3-3-6.min.js')
-        self.css_add('/jslib/bootstrap/css/bootstrap-3-3-6.min.css')
+        self.js_add('/static/bootstrap3/bootstrap.min.js')
+        self.css_add('/static/bootstrap3/bootstrap.min.css')
 
     def bootstrap4_add(self, jquery=True):
-        
-        #TODO: *1 fix
-        raise RuntimeError()
+        if jquery:
+            self.jquery_add()
+
+        self.js_add('/static/bootstrap4/bootstrap.min.js')
+        self.css_add('/static/bootstrap4/bootstrap.min.css')
 
     def bodyattribute_add(self, attribute):
         if attribute not in self.bodyattributes:
@@ -513,7 +512,7 @@ class HTMLPage(JSBASE):
         self.body += body
 
     def accordion_add(self, panels):
-        self.js_add('/jslib/codemirror/autorefresh.js', header=False)
+        self.js_add('/static/codemirror/autorefresh.js', header=False)
         self.part_add('<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">')
 
         panels.sort(key=lambda x: x['title'])

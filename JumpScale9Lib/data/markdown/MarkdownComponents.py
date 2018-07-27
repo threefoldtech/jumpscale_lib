@@ -3,8 +3,31 @@ import mistune
 import re
 from itertools import takewhile
 getindentlevel = lambda l:  len(list(takewhile(lambda c: c.isspace(), l)))
+
+
+def lines2list(lines):
+    res = []
+    i = 1
+    startindent = getindentlevel(lines[0])
+    res.append(lines[0].strip())
+    while i < len(lines):
+        l = lines[i]
+        if l.strip():
+            curidn = getindentlevel(l)
+            if curidn == startindent:
+                res.append(l.strip())
+            else:
+                if (curidn - startindent) == 4:
+                    handled = lines2list(lines[i:])
+                    res.append(handled)
+                    i += len(handled) - 1
+                elif curidn < startindent:
+                    return res
+        i += 1
+    return res
+
+
 class MDBase():
-    
 
     def __repr__(self):
         out = self.text
@@ -26,31 +49,19 @@ class MDBase():
     __str__ = __repr__
 
 
-
 class MDList(MDBase):
     def __init__(self, text):
         self.text = text
         self.type = "list"
 
-
-
-
     @property
     def as_list(self):
+        return lines2list(self.text)
 
-
-        # res = []
-        # for i, l in enumerate(1, self.text.splitlines()):
-        #     currentidnlevel = getindentlevel(l)
-        #     previdnlevel = getindentlevel(self.text[i])
-        #     if currentidnlevel - previdnlevel == 0:
-        #         res.append(l)
-        #     else:
-        #         res.append(l)
-        #     if idnlevel == 0:
-        #         res.append(l)
-        #     else:
-        #         res[-1-iden].append(l)
+    @property
+    def text(self):        
+        return str(self)
+ 
     
 class MDTable(MDBase):
 

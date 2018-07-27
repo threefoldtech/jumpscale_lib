@@ -6,6 +6,7 @@ from inspect import isfunction
 import sys
 from .HTMLPage import HTMLPage
 from .HTMLWebParts import HTMLWebParts
+from html2text import HTML2Text
 
 class HTMLFactory(JSBASE):
 
