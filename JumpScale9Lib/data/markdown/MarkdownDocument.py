@@ -54,7 +54,9 @@ class MarkdownDocument(JSBASE):
         """
         self.items.append(MDCode(text, lang=lang))
 
-    def data_add(self, ddict={}, toml="", yaml=""):
+    def data_add(self, ddict=None, toml="", yaml=""):
+        if ddict is None:
+            ddict = {}
         ddict = copy.copy(ddict)
         self.items.append(MDData(ddict=ddict,toml=toml,yaml=yaml))
 
