@@ -11,7 +11,7 @@ def _post_install(libname, libpath):
     from js9 import j
     # add this plugin to the config
     c = j.core.state.configGet('plugins', defval={})
-    c[libname] = "%s/github/jumpscale/lib9/JumpScale9Lib" % j.dirs.CODEDIR
+    c[libname] = "%s/github/threefoldtech/jumpscale_lib9/JumpScale9Lib" % j.dirs.CODEDIR
     # c[libname] = libpath
     j.core.state.configSet('plugins', c)
     j.sal.process.execute(
