@@ -3,24 +3,24 @@ from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
-from .InfluxDB import InfluxDB
+from .Capacity import Capacity
 
-class InfluxDBs(JSBASE):
+class Capacities(JSBASE):
 
     def __init__(self):
-        self.__jslocation__ = "j.sal_zos.influxdb"
+        self.__jslocation__ = "j.sal_zos.capacity"
         JSBASE.__init__(self)
 
-    def get(self, data={}):
+    def get(self, node):
         """
-        Get sal for influxdb
+        Get sal for Capacity
         
         Arguments:
-            object using jumpscale schema
+            node
         
         Returns:
             the sal layer 
         """
-        return InfluxDB(data)
+        return Capacity(node)
 
 
