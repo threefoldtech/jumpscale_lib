@@ -50,7 +50,7 @@ class Worlds(JSBASE):
         if zdb_start:
             cl = j.clients.zdb.testdb_server_start_client_get(start=True)  #starts & resets a zdb in seq mode with name test       
 
-        ws_dir = j.clients.git.getContentPathFromURLorPath("https://github.com/rivine/recordchain/tree/master/apps/master")
+        ws_dir = j.clients.git.getContentPathFromURLorPath("https://github.com/threefoldtech/digital_me/tree/master/apps/master")
 
 
         server = j.servers.gedis.configure(host = "localhost", port = "8000", websockets_port = "8001", ssl = False, \

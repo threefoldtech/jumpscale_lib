@@ -4,7 +4,7 @@ from pprint import pprint as print
 from js9 import j
 
 import sys
-sys.path.append("%s/github/rivine/recordchain/JumpScale9RecordChain/servers/raftos"%j.dirs.CODEDIR)
+sys.path.append("%s/github/threefoldtech/jumpscale_lib9/JumpScale9RecordChain/servers/raftos"%j.dirs.CODEDIR)
 
 
 from .RaftosServer import RaftosServer

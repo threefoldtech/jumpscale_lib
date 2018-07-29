@@ -96,7 +96,7 @@ class Jinja2(JSBASE):
 
         example:
 
-        src = j.clients.git.getContentPathFromURLorPath("https://github.com/rivine/recordchain/tree/development/apps/example")
+        src = j.clients.git.getContentPathFromURLorPath("https://github.com/threefoldtech/jumpscale_lib9/tree/development/apps/example")
         dest = j.sal.fs.getTmpDirPath("jumpscale/jinja2test")
         self.logger.info("copy templates to:%s"%dest)
         j.tools.jinja2.copy_dir_render(src,dest,j=j,name="aname")
@@ -123,7 +123,7 @@ class Jinja2(JSBASE):
         js9 'j.tools.jinja2.test()'
         """
 
-        src = j.clients.git.getContentPathFromURLorPath("https://github.com/rivine/recordchain/tree/development/apps/example")
+        src = j.clients.git.getContentPathFromURLorPath("https://github.com/threefoldtech/jumpscale_lib9/tree/development/apps/example")
         dest = j.sal.fs.getTmpDirPath("jumpscale/jinja2test")
         self.logger.info("copy templates to:%s"%dest)
         j.tools.jinja2.copy_dir_render(src,dest,j=j,name="aname")

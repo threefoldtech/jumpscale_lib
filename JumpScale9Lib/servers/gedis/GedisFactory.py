@@ -69,7 +69,7 @@ class GedisFactory(JSConfigBase):
             raise RuntimeError("cannot do new app because app or schema dir does exist.")  
 
         
-        src = j.clients.git.getContentPathFromURLorPath("https://github.com/rivine/recordchain/tree/development/apps/template")
+        src = j.clients.git.getContentPathFromURLorPath("https://github.com/threefoldtech/jumpscale_lib9/tree/development/apps/template")
         dest = path
         self.logger.info("copy templates to:%s"%dest)
 
@@ -145,7 +145,7 @@ class GedisFactory(JSConfigBase):
         if zdb_start:
             cl = j.clients.zdb.testdb_server_start_client_get(start=zdb_start)  #starts & resets a zdb in seq mode with name test       
 
-        dest =  j.clients.git.getContentPathFromURLorPath("https://github.com/rivine/recordchain/tree/development/apps/example")
+        dest =  j.clients.git.getContentPathFromURLorPath("https://github.com/threefoldtech/jumpscale_lib9/tree/development/apps/example")
         gedis = self.configure(instance="test",port=8888,host="localhost",app_dir=dest,ssl=False,\
             zdb_instance = "test",
             websockets_port=9999,secret = "1234",
