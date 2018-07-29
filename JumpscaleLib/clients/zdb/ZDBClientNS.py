@@ -99,8 +99,13 @@ class ZDBClientNS(JSBASE):
 
         """
         key = self._key_get(key,set=True)
-        
-        key = struct.unpack("<I",self.redis.execute_command("SET", key, data))[0]
+        res = self.redis.execute_command("SET", key, data)
+        if not res:
+            return res
+        if self.mode=="seq":
+            key = struct.unpack("<I",res)[0]
+        else:
+            key = self.redis.execute_command("SET", key, data)
         return key
 
     def get(self, key):
@@ -238,6 +243,8 @@ class ZDBClientNS(JSBASE):
         return i["entries"]
 
     def test(self):
+        if not self.mode == "seq":
+            raise RuntimeError("not implemented")
 
         nr = self.nsinfo["entries"]
         assert nr == 0
@@ -249,16 +256,11 @@ class ZDBClientNS(JSBASE):
         id2= self.set(b"b")
         assert id2 == 1
 
-        #NEED TO DO THIS WHEN DB SUPPORTS NOT TO UPDATE EXISTING VALUES
-        # newid, exists = self.set(b"r", id=id, checknew=True)
-        # assert exists is False
-        # assert newid == id
+        assert self.set(b"r", key=id) == None
+        assert self.set(b"rss", key=id) == 0 #changed the data
 
         nr = self.nsinfo["entries"]
-        assert nr==2
-
-        # self.set("test", 1)
-        # print (self.nsinfo)
+        assert nr==3
 
         # test the list function
         assert self.list() == [0, 1]
@@ -266,7 +268,7 @@ class ZDBClientNS(JSBASE):
         assert self.list(0) == [1]
 
 
-
+        #TODO:*1
         from IPython import embed;embed(colors='Linux')
         ss
 

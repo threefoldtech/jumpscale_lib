@@ -28,7 +28,10 @@ class ZDBServer(JSConfigBase):
         self._initdir()
 
     def client_get(self, secrets="",encryptionkey=""):
-        return j.clients.zdb.configure(instance=self.instance,
+        """
+        
+        """
+        cl = j.clients.zdb.configure(instance=self.instance,
                                        secrets=secrets,
                                        adminsecret=self.config.data['adminsecret_'],
                                        addr=self.config.data['addr'],
@@ -36,6 +39,21 @@ class ZDBServer(JSConfigBase):
                                        mode=self.config.data['mode'],
                                        encryptionkey=encryptionkey
                                        )
+        return cl
+
+    def client_namespace_get(self, namespace="default",secrets="",encryptionkey=""):
+        """
+        
+        """
+        cl = j.clients.zdb.configure(instance=self.instance,
+                                       secrets=secrets,
+                                       adminsecret=self.config.data['adminsecret_'],
+                                       addr=self.config.data['addr'],
+                                       port=self.config.data['port'],
+                                       mode=self.config.data['mode'],
+                                       encryptionkey=encryptionkey
+                                       )
+        return cl.namespace_get(namespace)        
 
     def _initdir(self):
         root_path = self.config.data['path']

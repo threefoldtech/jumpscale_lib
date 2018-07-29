@@ -6,10 +6,11 @@ import psutil
 
 JSBASE = j.application.jsbase_get_class()
 
+#TODO:*1 think is broken, see non existing command
 
-class Flist(JSBASE):
+class FlistMounter(JSBASE):
     def __init__(self):
-        self.__jslocation__ = "j.sal.flist"
+        self.__jslocation__ = "j.sal.flistmounter"
         JSBASE.__init__(self)
 
         self.FLISTDIR = j.sal.fs.joinPaths(j.dirs.VARDIR, "flists")

@@ -70,34 +70,34 @@ class ZDBServers(JSConfigBase):
         db = self.configure(instance="test", adminsecret="1234", reset=True, mode="direct")
         db.stop()
         db.start()
-        cl = db.client_get()
+        cl = db.client_namespace_get()
         cl.test()
 
-    def test_seq(self):
-        """
-        js_shell 'j.servers.zdb.test_seq()'
-        """
-        # self.build()
-        db = self.configure(instance="test", adminsecret="1234", reset=True, mode="seq")
-        db.stop()
-        db.start()
-        db = self.get("test")
-        cl = db.client_get()
-        nr = cl.nsinfo["entries"]
-        assert nr == 0
+    # def test_seq(self):
+    #     """
+    #     js_shell 'j.servers.zdb.test_seq()'
+    #     """
+    #     # self.build()
+    #     db = self.configure(instance="test", adminsecret="1234", reset=True, mode="seq")
+    #     db.stop()
+    #     db.start()
+    #     db = self.get("test")
+    #     cl = db.client_get()
+    #     nr = cl.nsinfo["entries"]
+    #     assert nr == 0
 
-        for i in range(10):
-            id=cl.set("test")
-            assert cl.get(id)==b"test"
+    #     for i in range(10):
+    #         id=cl.set("test")
+    #         assert cl.get(id)==b"test"
 
-        nr = cl.nsinfo["entries"]
-        assert nr == 10
+    #     nr = cl.nsinfo["entries"]
+    #     assert nr == 10
             
-        cl.set("test2",2)
-        assert cl.get(2)==b"test2"
+    #     cl.set("test2",2)
+    #     assert cl.get(2)==b"test2"
 
-        def m(id,data,result):
-            print("%s:%s"%(id,data))
+    #     def m(id,data,result):
+    #         print("%s:%s"%(id,data))
 
-        cl.iterate(m)
+    #     cl.iterate(m)
             
