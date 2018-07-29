@@ -8,7 +8,7 @@ from .ZOS_VM import ZOS_VM
 class ZOS_VMs(JSBASE):
 
     def __init__(self):
-        self.__jslocation__ = "j.zos-sal.vm"
+        self.__jslocation__ = "j.zos_sal.vm"
         JSBASE.__init__(self)
 
     def get(self, data):
