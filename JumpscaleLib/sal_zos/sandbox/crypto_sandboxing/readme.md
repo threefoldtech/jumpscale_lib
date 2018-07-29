@@ -9,7 +9,7 @@ The following diagram shows the main components of the atomicswap setup
 ![Atomicswap setup](https://raw.githubusercontent.com/Jumpscale/sandbox/master/crypto_sandboxing/atomicswap_setup.jpg)
 
 The setup shows:
-- One zero-os node running on packet.net 
+- One zero-os node running on packet.net
 - A node robot container running on top of the ZOS node
 - Two VMs created via the node robot each one is running a full node on BTC and TFT networks recpectivly
 - A js9 node where the atomicswap SAL can be executed
@@ -78,5 +78,20 @@ Once you have funds in both wallets then you can start using the atomicswap tool
 ## Atomicswap process
 Atomicswap is a method that allows two users from two different chains to exchange funds after agreeing of the amount from each cryptocurrency.
 A more detailed description and example of the atomicswap process can be found here: [https://github.com/rivine/rivine/blob/master/doc/atomicswap/atomicswap.md#theory]
-We support atomicswap between TFT and BTC and we provide a JS9 SAL that make it very easy to to automate the atomicswap process. 
+We support atomicswap between TFT and BTC and we provide a JS9 SAL that make it very easy to to automate the atomicswap process.
 You can check how to use the atomicswap SAL using the documentation here: [https://github.com/Jumpscale/lib9/tree/atomicswap/JumpScale9Lib/tools/atomicswap]
+
+
+# Creating a Jumpscale Decentralized Exchange(DEX) flist
+A Jumpscale DEX is a flist that contains all the services needed to run a container/node that can be part of a Decentralized network for exchanging cryptocurrencies.
+The flist [js9_dex](https://hub.gig.tech/abdelrahman_hussein_1/js9_dex.flist) is based on an [ubuntu image](https://hub.gig.tech/gig-official-apps/ubuntu1604-for-js.flist) and it is merged with:
+- Boot files for ubunto xenial [flist](https://hub.gig.tech/abdelrahman_hussein_1/ubuntu_xenial_boot.flist)
+- Jumpscale [flist](https://hub.gig.tech/abdelrahman_hussein_1/js9_sandbox.flist)
+- Electrum [flista](https://hub.gig.tech/abdelrahman_hussein_1/electrum.flist)
+
+To create the flist, you need to execute the following command:
+```python
+python3 /opt/code/github/jumpscale/sandbox/crypto_sandboxing/cryptosandbox_local.py
+```
+
+If everything goes well, then you will find a copy of the js9_dex.flist and electrum.flist in the account configured via the existing IYO account.
