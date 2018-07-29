@@ -9,16 +9,3 @@ class ZOSSandboxFactory(JSBASE):
         self.__jslocation__ = "j.sal_zos.sandbox"
         JSBASE.__init__(self)
 
-    def get(self, data={}):
-        """
-        Get sal for influxdb
-        
-        Arguments:
-            object using jumpscale schema
-        
-        Returns:
-            the sal layer 
-        """
-        return InfluxDB(data)
-
-
