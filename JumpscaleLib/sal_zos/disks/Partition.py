@@ -1,4 +1,4 @@
-from .abstracts import Mountable
+from ..abstracts import Mountable
 
 
 class Partition(Mountable):

@@ -1,6 +1,6 @@
 from jumpscale import j
-from .abstracts import Collection, Nics
-from .utils import authorize_zerotiers
+from ..abstracts import Collection, Nics
+from ..utils import authorize_zerotiers
 import requests
 
 IPXEURL = 'https://bootstrap.gig.tech/ipxe/master/0'
@@ -592,7 +592,7 @@ Type=simple
         return str(self)
 
 
-class ZeroOSVM(VM):
+class ZeroOSVM(ZOS_VM):
     def __init__(self, node, name, flist=None, vcpus=2, memory=2048, ipxe_url=IPXEURL):
         super().__init__(node, name, flist, vcpus, memory)
         self.ipxe_url = ipxe_url

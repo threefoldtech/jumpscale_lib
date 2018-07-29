@@ -2,8 +2,7 @@ import logging
 import os
 import time
 
-from .abstracts import Mountable
-from jumpscale import j
+from ..abstracts import Mountable
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

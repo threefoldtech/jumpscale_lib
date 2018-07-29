@@ -3,7 +3,7 @@ import re
 import logging
 import time
 import signal
-from . import templates
+from .. import templates
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

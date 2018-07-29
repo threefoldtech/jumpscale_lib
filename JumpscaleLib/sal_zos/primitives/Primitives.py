@@ -1,5 +1,5 @@
 from jumpscale import j
-from .VM import VM, ZeroOSVM, ZDBDisk
+from ..vm.ZOS_VM import ZOS_VM, ZeroOSVM, ZDBDisk
 
 
 BASEFLIST = 'https://hub.gig.tech/gig-bootable/{}.flist'
@@ -32,7 +32,7 @@ class Primitives:
             version = version or 'lts'
             flistname = '{}:{}'.format(templatename, version)
             kwargs['flist'] = BASEFLIST.format(flistname)
-            klass = VM
+            klass = ZOS_VM
         else:
             raise RuntimeError('Invalid VM type {}'.format(type_))
         return klass(**kwargs)
@@ -151,7 +151,7 @@ class Primitives:
             if data.get('ipxeUrl'):
                 vm = ZeroOSVM(self.node, data['name'])
             else:
-                vm = VM(self.node, data['name'])
+                vm = ZOS_VM(self.node, data['name'])
             vm.from_dict(data)
             return vm
         elif type_ == 'zerodb':

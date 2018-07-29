@@ -1,21 +1,16 @@
 import netaddr
-
 from zerotier.client import Client
-from jumpscale import j
 
 
-
-
-class ZTBootstrap():
-
-    def __init__(self, token, bootstap_id, grid_id, cidr):
+class ZTBootstrap:
+    def __init__(self, zt_token, bootstap_id, grid_id, cidr):
 
         self.bootstap_nwid = bootstap_id
         self.grid_nwid = grid_id
         self._cidr = cidr  # TODO validate format
         # create client and set the authentication header
         self._zt = Client()
-        self._zt.set_auth_header("Bearer " + token)
+        self._zt.set_auth_header("Bearer " + zt_token)
 
     def configure_routes(self):
         for nwid in [self.bootstap_nwid, self.grid_nwid]:
@@ -61,7 +56,6 @@ class ZTBootstrap():
         resp = self._zt.network.updateMember(member, member['nodeId'], nwid)
         resp.raise_for_status()
 
-
     def _find_free_ip(self, nwid):
 
         resp = self._zt.network.listMembers(nwid)
@@ -82,4 +76,5 @@ if __name__ == '__main__':
     grid_nwid = 'a09acf02336ce8b5'
 
     zt = ZTBootstrap(token, bootstap_nwid, grid_nwid, '192.168.10.0/24')
-    from IPython import embed; embed()
+    from IPython import embed
+    embed()

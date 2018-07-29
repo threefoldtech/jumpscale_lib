@@ -1,9 +1,6 @@
-import redis
 import time
-
 from jumpscale import j
-
-from . import templates
+from .. import templates
 
 
 logger = j.logger.get(__name__)

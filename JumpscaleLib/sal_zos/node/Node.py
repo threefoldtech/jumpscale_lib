@@ -9,16 +9,16 @@ import uuid
 import threading
 from jumpscale import j
 
-from .Capacity import Capacity
-from .Container import Containers
-from .Disk import Disks, StorageType
-from .healthcheck import HealthCheck
-from .Network import Network
-from .StoragePool import StoragePools
-from .gateway import Gateways
-from .zerodb import Zerodbs
-from .primitives import Primitives
-from .Hypervisor import Hypervisor
+from ..capacity.Capacity import Capacity
+from ..container.Container import Containers
+from ..disks.Disks import Disks, StorageType
+from ..healthcheck import HealthCheck
+from ..Network import Network
+from ..StoragePool import StoragePools
+from ..gateway import Gateways
+from ..zerodb import Zerodbs
+from ..primitives.Primitives import Primitives
+from ..hypervisor.Hypervisor import Hypervisor
 
 Mount = namedtuple('Mount', ['device', 'mountpoint', 'fstype', 'options'])
 logger = j.logger.get(__name__)
