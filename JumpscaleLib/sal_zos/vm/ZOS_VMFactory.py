@@ -5,7 +5,7 @@ JSBASE = j.application.jsbase_get_class()
 
 from .ZOS_VM import ZOS_VM
 
-class ZOS_VMs(JSBASE):
+class ZOS_VMFactory(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.sal_zos.vm"

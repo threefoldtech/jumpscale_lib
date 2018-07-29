@@ -3,24 +3,25 @@ from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
-from .Capacity import Capacity
+from .Grafana import Grafana
 
-class Capacities(JSBASE):
+class GrafanaFactory(JSBASE):
 
     def __init__(self):
-        self.__jslocation__ = "j.sal_zos.capacity"
+        self.__jslocation__ = "j.zos_sal.grafana"
         JSBASE.__init__(self)
 
-    def get(self, node):
+    def get(self, container, ip, port, url):
         """
-        Get sal for Capacity
+        Get sal for Grafana
         
         Arguments:
             node
+            name
         
         Returns:
             the sal layer 
         """
-        return Capacity(node)
+        return Grafana(container, ip, port, url)
 
 

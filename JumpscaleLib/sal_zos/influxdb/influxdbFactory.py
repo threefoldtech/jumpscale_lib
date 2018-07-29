@@ -5,7 +5,7 @@ JSBASE = j.application.jsbase_get_class()
 
 from .InfluxDB import InfluxDB
 
-class InfluxDBs(JSBASE):
+class InfluxDBFactory(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.zos_sal.influx"

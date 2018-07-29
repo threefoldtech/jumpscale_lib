@@ -5,7 +5,7 @@ JSBASE = j.application.jsbase_get_class()
 
 from .Gateway import Gateway
 
-class Gateways(JSBASE):
+class GatewayFactory(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.zos_sal.gateway"
