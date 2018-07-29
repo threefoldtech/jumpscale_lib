@@ -53,7 +53,7 @@ The method `commit` must be called to apply all pending changes to shares:
 ## Here is an example:
 
 ```python
-from js9 import j
+from jumpscale import j
 from .manager import Samba
 
 s = j.ssh.samba.get(j.ssh.connect())

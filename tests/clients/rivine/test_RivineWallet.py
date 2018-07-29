@@ -1,12 +1,12 @@
 """
-Test module for RivineWallet js9 client
+Test module for RivineWallet jumpscale client
 """
 
-from js9 import j
+from jumpscale import j
 import time
 
 
-from JumpScale9Lib.clients.rivine.types.transaction import TransactionFactory
+from JumpscaleLib.clients.rivine.types.transaction import TransactionFactory
 txn = TransactionFactory.create_transaction(1)
 # txn.add_data(bytearray('ot', encoding='utf-8'))
 # txn.add_data(b'ot')

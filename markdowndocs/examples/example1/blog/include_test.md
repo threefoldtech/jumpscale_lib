@@ -11,10 +11,10 @@
 ## from other repo in code block
 
 ```
-!!!include("core9:macros")
+!!!include("core:macros")
 ```
 
 ## macro without code block
 
 
-!!!include("core9:macros")
+!!!include("core:macros")

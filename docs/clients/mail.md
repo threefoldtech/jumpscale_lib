@@ -2,7 +2,7 @@
 
 This client can be used to send emails from the specified smtp server.
 
-Using [config manager](https://github.com/Jumpscale/core9/blob/master/docs/config/configmanager.md), user needs to specify the following data:
+Using [config manager](https://github.com/Jumpscale/core/blob/master/docs/config/configmanager.md), user needs to specify the following data:
 
 - smtp_server: server address
 - smtp_port: server port

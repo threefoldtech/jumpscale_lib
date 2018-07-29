@@ -1,7 +1,7 @@
-# How to use the JumpScale client for OpenvCloud
+# How to use the Jumpscale client for OpenvCloud
 
 
-To use the client you need to have a client instance. See [here](https://github.com/Jumpscale/core9/blob/master/docs/config/configmanager.md) for how to configure an instance. Client can then be used as follows:
+To use the client you need to have a client instance. See [here](https://github.com/Jumpscale/core/blob/master/docs/config/configmanager.md) for how to configure an instance. Client can then be used as follows:
 
 ```python
 client = j.clients.openvcloud.get('myinstance')

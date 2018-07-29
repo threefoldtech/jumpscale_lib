@@ -4,10 +4,10 @@
 
 Jumpscale provides a System Abstraction Layer (sal) for Ubuntu. In that sal a property is provided from which the report can be generated.
 
-Start the Jumpscale9 Python interpreter.
-If not installed, the jumpscale bash utilities can be used to install JS9 (https://github.com/Jumpscale/bash)
+Start the Jumpscale Python interpreter.
+If not installed, the jumpscale bash utilities can be used to install Jumpscale (https://github.com/Jumpscale/bash)
 ```bash
-js9
+jumpscale
 ```
 
 ## Step2: Call the capacity report

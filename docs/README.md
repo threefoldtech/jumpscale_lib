@@ -1,6 +1,6 @@
-# JumpScale9 Lib
+# Jumpscale Lib
 
-The docs include additional explanation/examples for select components of `JumpScale9lib`:
+The docs include additional explanation/examples for select components of `Jumpscalelib`:
 
 - [SAL](SAL/README.md)
 - [Tools](tools/README.md)

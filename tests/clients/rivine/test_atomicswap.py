@@ -1,4 +1,4 @@
-from js9 import j
+from jumpscale import j
 
 participant_address = '01cbbad52e911ebfa7e52153b3517197129ba6b7ae697ce3b25c18ed5d6f2e8da36e40008f98f6'
 refund_address = '0167fa42318444eb27a6c592bc0e3e38db65de0c5b5eeb0f7bb7ee055045bb671f90fe89406f33'

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# Install lib9 in a docker contianer using bash installers
+# Install lib in a docker contianer using bash installers
 sudo ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa
 export SSHKEYNAME=id_rsa
 
@@ -11,4 +11,4 @@ curl https://raw.githubusercontent.com/Jumpscale/bash/$ZUTILSBRANCH/install.sh?$
 
 sudo -HE bash -c "source /opt/code/github/threefoldtech/jumpscale_bash/zlibs.sh; ZKeysLoad; ZCodeGetJS"
 sudo -HE bash -c "source /opt/code/github/threefoldtech/jumpscale_bash/zlibs.sh; ZKeysLoad; ZDockerInstallLocal"
-sudo -HE bash -c "source /opt/code/github/threefoldtech/jumpscale_bash/zlibs.sh; ZKeysLoad; ZInstall_js9_full"
+sudo -HE bash -c "source /opt/code/github/threefoldtech/jumpscale_bash/zlibs.sh; ZKeysLoad; ZInstall_js_full"

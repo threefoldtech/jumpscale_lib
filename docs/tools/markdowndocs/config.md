@@ -2,8 +2,8 @@
 ```toml
 
 [[docsite]]
-name = "core9"
-url = "https://github.com/Jumpscale/core9/tree/development"
+name = "core"
+url = "https://github.com/Jumpscale/core/tree/development"
 
 [[docsite]]
 name = "tf_home"
@@ -12,7 +12,7 @@ publish = "/foundation"
 
 [[docsite]]
 name = "tf_home"
-path = "content" #starts from directly where we start js9_doc ...
+path = "content" #starts from directly where we start js_doc ...
 publish = "/"
 
 [default]

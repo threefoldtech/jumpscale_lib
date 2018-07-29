@@ -5,7 +5,7 @@
 
 ## Prerequisites
 
-The router needs first to be installed check the docs [here](https://github.com/Jumpscale/prefab9/blob/development/docs/prefab.zero_boot.md) for more information.
+The router needs first to be installed check the docs [here](https://github.com/Jumpscale/prefab/blob/development/docs/prefab.zero_boot.md) for more information.
 
 zero_boot client requires instances of the following clients before it can be used:
 
@@ -15,7 +15,7 @@ zero_boot client requires instances of the following clients before it can be us
 
 ### Configuring the clients
 
-JumpScale clients uses a [config manager](https://github.com/Jumpscale/core9/blob/master/docs/config/configmanager.md) to configure and manage client instances.
+Jumpscale clients uses a [config manager](https://github.com/Jumpscale/core/blob/master/docs/config/configmanager.md) to configure and manage client instances.
 
 Getting a new instance of a client can be done in interactive way, where the user will be prompted to enter the client data in a window. By default most clients are interactive although there are some exceptions. For example to get an instance of the ssh client in interactive mode:
 
