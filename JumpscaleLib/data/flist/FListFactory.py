@@ -161,15 +161,15 @@ class FListArchiver:
         with open(destination, "wb") as output:
             output.write(compressed)
 
-    def push_to_ipfs(self, source):
-        cmd = "%s %s add '%s'" % (self._env, self._ipfs, source)
-        out = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE)
+    # def push_to_ipfs(self, source):
+    #     cmd = "%s %s add '%s'" % (self._env, self._ipfs, source)
+    #     out = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE)
 
-        m = re.match(r'^added (.+) (.+)$', out.stdout.decode())
-        if m is None:
-            raise RuntimeError('invalid output from ipfs add: %s' % out)
+    #     m = re.match(r'^added (.+) (.+)$', out.stdout.decode())
+    #     if m is None:
+    #         raise RuntimeError('invalid output from ipfs add: %s' % out)
 
-        return m.group(1)
+    #     return m.group(1)
 
     def build(self, flist, backend):
         hashes = flist.getHashList()
