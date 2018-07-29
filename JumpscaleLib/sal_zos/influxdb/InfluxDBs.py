@@ -8,7 +8,7 @@ from .InfluxDB import InfluxDB
 class InfluxDBs(JSBASE):
 
     def __init__(self):
-        self.__jslocation__ = "j.zos_sal.influxdb"
+        self.__jslocation__ = "j.sal_zos.influxdb"
         JSBASE.__init__(self)
 
     def get(self, data={}):
