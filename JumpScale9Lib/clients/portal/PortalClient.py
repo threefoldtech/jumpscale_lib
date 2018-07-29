@@ -76,7 +76,7 @@ class Resource(BaseResource):
             with open(file) as fd:
                 swagger = json.load(fd)
         else:
-            swagger = self.system.docgenerator.prepareCatalog(group=group)
+            swagger = self.system.markdowndocs.prepareCatalog(group=group)
 
         for methodpath, methodspec in swagger['paths'].items():
             api = self

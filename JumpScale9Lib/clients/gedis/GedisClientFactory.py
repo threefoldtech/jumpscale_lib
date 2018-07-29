@@ -84,7 +84,7 @@ class GedisClientFactory(JSConfigBase):
         if self._template_engine is None:
             from jinja2 import Environment, PackageLoader
             self._template_engine = Environment(
-                loader=PackageLoader('JumpScale9RecordChain.clients.gedis', 'templates'),
+                loader=PackageLoader('JumpScale9Lib.clients.gedis', 'templates'),
                 trim_blocks=True,
                 lstrip_blocks=True,
             )

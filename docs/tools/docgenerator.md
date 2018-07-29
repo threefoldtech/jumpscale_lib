@@ -1,11 +1,11 @@
 
-# Docgenerator
+# markdowndocs
 
-see https://github.com/Jumpscale/docgenerator/tree/master/docs
+see https://github.com/Jumpscale/markdowndocs/tree/master/docs
 
 ```
 !!!
 date = "2018-05-20"
 tags = []
-title = "Docgenerator"
+title = "markdowndocs"
 ```

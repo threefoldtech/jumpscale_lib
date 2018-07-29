@@ -280,7 +280,7 @@ class MarkdownDocument(JSBASE):
             elif item.type=="list":
                 htmlpage.html_add(mistune.markdown(item.text))
             elif item.type=="macro":
-                if j.tools.docgenerator._macros_loaded is not []:
+                if j.tools.markdowndocs._macros_loaded is not []:
                     #means there is no doc generator so cannot load macro
                     j.data.html.webparts.codemirror_add(self=htmlpage,code=item.text)
                 else:

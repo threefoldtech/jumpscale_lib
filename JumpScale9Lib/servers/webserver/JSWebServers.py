@@ -60,14 +60,17 @@ class JSWebServers(JSConfigBase):
         flask
         flask_login
         flask_migrate
-        flask_wtf
+        # flask_wtf
         flask_sqlalchemy
-        gunicorn
+        # gunicorn
         gevent
         """
         #rq-dashboard,rq-scheduler,rq,flask-classy,
         p = j.tools.prefab.local
         p.runtimes.pip.install(pips) 
+
+        #will make sure we have the lobs here for web
+        j.clients.git.getContentPathFromURLorPath("https://github.com/threefoldtech/jumpscale_weblibs")
 
     def start(self, instance="main",background=False, debug=False):
 

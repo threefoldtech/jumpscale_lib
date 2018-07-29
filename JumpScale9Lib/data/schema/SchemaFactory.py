@@ -83,7 +83,7 @@ class SchemaFactory(JSBASE):
 
             self._template_engine = Environment(
                 loader=PackageLoader(
-                    'JumpScale9RecordChain.data.schema', 'templates'),
+                    'JumpScale9Lib.data.schema', 'templates'),
                 trim_blocks=True,
                 lstrip_blocks=True,
             )

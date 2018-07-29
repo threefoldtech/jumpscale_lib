@@ -5,5 +5,5 @@ A `Jumpscale9` tool is usually an abstraction interface that provides the user w
 Some of `JumpScale9` tools:
 
 - [Byte processor](ByteProcessor.md)
-- [Docgenerator](docgenerator.md)
+- [markdowndocs](markdowndocs.md)
 - [Tmux](Tmux.md)

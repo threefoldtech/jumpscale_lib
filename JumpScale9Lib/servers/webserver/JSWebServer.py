@@ -77,7 +77,7 @@ class JSWebServer(JSConfigBase):
                 path = j.clients.git.getContentPathFromURLorPath(url)
                 if not j.sal.fs.exists(path):
                     j.clients.git.pullGitRepo(url=url)
-                j.tools.docgenerator.load(path=path,name=name)       
+                j.tools.markdowndocs.load(path=path,name=name)       
 
     @property
     def path(self):
