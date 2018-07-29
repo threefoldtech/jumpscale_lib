@@ -7,7 +7,7 @@ j.tools.prefab.local.db.rocksdb.install()
 j.tools.prefab.local.zero_os.zos_stor_client.install()
 ```
 
-## Creating a plist
+## Creating a flist
 
 ```python
 kvs = j.data.kvs.getRocksDBStore('flist', namespace=None, dbpath='/tmp/demo-flist.db')
