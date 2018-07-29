@@ -256,7 +256,7 @@ class MarkdownDocument(JSBASE):
         """
         is the htmlpage, if not specified then its j.data.html.page_get()
 
-        if webparts it will get them from https://github.com/Jumpscale/web_libs/tree/master/webparts
+        if webparts it will get them from https://github.com/threefoldtech/jumpscale_weblibs/tree/master/webparts
 
         """
         if webparts:
