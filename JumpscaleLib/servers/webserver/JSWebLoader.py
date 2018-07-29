@@ -70,7 +70,7 @@ class JSWebLoader(JSBASE):
 
 
     def create_app(self,selenium=False, debug=True):
-        staticpath = j.clients.git.getContentPathFromURLorPath("https://github.com/Jumpscale/web_libs/tree/master/static")
+        staticpath = j.clients.git.getContentPathFromURLorPath("https://github.com/threefoldtech/jumpscale_weblibs/tree/master/static")
         app = Flask(__name__, static_folder=staticpath)  #'/base/static'
         app.config.from_object(DebugConfig)
 

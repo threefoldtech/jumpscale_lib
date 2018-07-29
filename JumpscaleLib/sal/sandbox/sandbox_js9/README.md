@@ -116,7 +116,7 @@ zhub_client.config.save()
 This will run the sandboxing of js9 on the local machine without the need of a remote machine.
 To run the script please run the following command after cloning the sandbox repo:
 ```python
-python3 /opt/code/github/jumpscale/sandbox/sandbox_js9_local.py
+python3 /opt/code/github/threefoldtech/sandbox/sandbox_js9_local.py
 ```
 
 The script will do the following:

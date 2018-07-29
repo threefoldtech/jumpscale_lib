@@ -53,13 +53,13 @@ class HTMLFactory(JSBASE):
 
     def webparts_enable(self,url=""):
         """
-        will load webparts from https://github.com/Jumpscale/web_libs/tree/master/webparts if not url defined
+        will load webparts from https://github.com/threefoldtech/jumpscale_weblibs/tree/master/webparts if not url defined
 
         each webpart is an add function to manipulate the html page object
 
         """
         if not url:
-            url = "https://github.com/Jumpscale/web_libs/tree/master/webparts"
+            url = "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/webparts"
         path = j.clients.git.getContentPathFromURLorPath(url)
         if path not in sys.path:
             sys.path.append(path)

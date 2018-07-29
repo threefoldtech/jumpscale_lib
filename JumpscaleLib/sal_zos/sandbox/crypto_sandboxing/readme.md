@@ -35,7 +35,7 @@ If you already have the the pre-requisites satisfied and at least exported the Z
 ```bash
 export ZT_NET_ID=<network_id>
 js9 'j.clients.git.pullGitRepo("https://github.com/Jumpscale/sandbox.git")'
-python3 /opt/code/github/jumpscale/sandbox/crypto_sandboxing/deploy.py
+python3 /opt/code/github/threefoldtech/sandbox/crypto_sandboxing/deploy.py
 ```
 The script will do the following steps:
 - Create a ZOS node on packet.net with the name of ZOS_NODE_NAME variable
@@ -91,7 +91,7 @@ The flist [js9_dex](https://hub.gig.tech/abdelrahman_hussein_1/js9_dex.flist) is
 
 To create the flist, you need to execute the following command:
 ```python
-python3 /opt/code/github/jumpscale/sandbox/crypto_sandboxing/cryptosandbox_local.py
+python3 /opt/code/github/threefoldtech/sandbox/crypto_sandboxing/cryptosandbox_local.py
 ```
 
 If everything goes well, then you will find a copy of the js9_dex.flist and electrum.flist in the account configured via the existing IYO account.
