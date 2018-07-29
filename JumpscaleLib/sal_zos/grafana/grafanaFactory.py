@@ -3,24 +3,25 @@ from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
-from .InfluxDB import InfluxDB
+from .Grafana import Grafana
 
-class InfluxDBs(JSBASE):
+class GrafanaFactory(JSBASE):
 
     def __init__(self):
-        self.__jslocation__ = "j.sal_zos.influxdb"
+        self.__jslocation__ = "j.zos_sal.grafana"
         JSBASE.__init__(self)
 
-    def get(self, data={}):
+    def get(self, container, ip, port, url):
         """
-        Get sal for influxdb
+        Get sal for Grafana
         
         Arguments:
-            object using jumpscale schema
+            node
+            name
         
         Returns:
             the sal layer 
         """
-        return InfluxDB(data)
+        return Grafana(container, ip, port, url)
 
 
