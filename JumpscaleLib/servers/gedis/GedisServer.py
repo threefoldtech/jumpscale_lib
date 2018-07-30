@@ -4,7 +4,6 @@ from jumpscale import j
 from gevent.pool import Pool
 from gevent.server import StreamServer
 from .handlers import RedisRequestHandler
-from .JSAPIServer import JSAPIServer
 from .GedisChatBot import GedisChatBotFactory
 from .GedisCmds import GedisCmds
 
@@ -197,6 +196,92 @@ class GedisServer(StreamServer, JSConfigBase):
         data["ssl"] = self.config.data["ssl"]
         
         return j.clients.gedis.get(instance=self.instance, data=data, reset=False)
+
+    def get_command(self, cmd):
+        if cmd in self.cmds:
+            return self.cmds[cmd], ''
+
+        self.logger.debug('(%s) command cache miss')
+
+        if '.' not in cmd:
+            return None, 'Invalid command (%s) : model is missing. proper format is {model}.{cmd}'
+
+        pre, post = cmd.split(".", 1)
+
+        namespace = self.instance + "." + pre
+
+        if namespace not in self.classes:
+            return None, "Cannot find namespace:%s " % (namespace)
+
+        if namespace not in self.cmds_meta:
+            return None, "Cannot find namespace:%s" % (namespace)
+
+        meta = self.cmds_meta[namespace]
+
+        if not post in meta.cmds:
+            return None, "Cannot find method with name:%s in namespace:%s" % (post, namespace)
+
+        cmd_obj = meta.cmds[post]
+
+        try:
+            cl = self.classes[namespace]
+            m = getattr(cl, post)
+        except Exception as e:
+            return None, "Could not execute code of method '%s' in namespace '%s'\n%s" % (pre, namespace, e)
+
+        cmd_obj.method = m
+
+        self.cmds[cmd] = cmd_obj
+
+        return self.cmds[cmd], ""
+
+    @staticmethod
+    def process_command(cmd, request):
+        if cmd.schema_in:
+            if len(request) < 2:
+                return None, "need to have arguments, none given"
+            if len(request) > 2:
+                return None, "more than 1 argument given, needs to be json"
+            o = cmd.schema_in.get(data=j.data.serializer.json.loads(request[1]))
+            args = [a.strip() for a in cmd.cmdobj.args.split(',')]
+            if 'schema_out' in args:
+                args.remove('schema_out')
+            params = {}
+            schema_dict = o.ddict
+            if len(args) == 1:
+                if args[0] in schema_dict:
+                    params.update(schema_dict)
+                else:
+                    params[args[0]] = o
+            else:
+                params.update(schema_dict)
+
+            if cmd.schema_out:
+                params["schema_out"] = cmd.schema_out
+        else:
+            if len(request) > 1:
+                params = request[1:]
+                if cmd.schema_out:
+                    params.append(cmd.schema_out)
+            else:
+                params = None
+
+        try:
+            if params is None:
+                result = cmd.method()
+            elif j.data.types.list.check(params):
+                result = cmd.method(*params)
+            else:
+                result = cmd.method(**params)
+            return result, None
+
+        except Exception as e:
+            print("exception in redis server")
+            eco = j.errorhandler.parsePythonExceptionObject(e)
+            msg = str(eco)
+            msg += "\nCODE:%s:%s\n" % (cmd.namespace, cmd.name)
+            print(msg)
+            return None, e.args[0]
 
     def __repr__(self):
         return '<Gedis Server address=%s  app_dir=%s generated_code_dir=%s)' % (self.address, self.app_dir, self.code_generated_dir)

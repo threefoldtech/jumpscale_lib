@@ -1,7 +1,7 @@
 from flask import Blueprint
 from jumpscale import j
 
-name =  j.sal.fs.getDirName(__file__,True)
+name = j.sal.fs.getDirName(__file__, True)
 
 blueprint = Blueprint(
     '%s_blueprint'%name,
