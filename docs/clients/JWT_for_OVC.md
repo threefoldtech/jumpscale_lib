@@ -12,12 +12,12 @@ To create a JWT you always need an application ID and secret. You get this appli
 
 You can also create a JWT by interacting directly with the ItsYou.online RESTful API using:
 
-- [JumpScale client for ItsYou.online](#jumpscale)
+- [Jumpscale client for ItsYou.online](#jumpscale)
 - [Python](#python)
 - [cURL](#curl)
 
 <a id="jumpscale"></a>
-## Using JumpScale client for ItsYou.online to get a JWT
+## Using Jumpscale client for ItsYou.online to get a JWT
 
 See [Using the ItsYou.online Client](IYO_client.md)
 

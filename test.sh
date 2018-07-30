@@ -2,5 +2,5 @@
 set -e
 set -x
 
-pytest -v /opt/code/github/jumpscale/lib9/tests/unittests
+pytest -v /opt/code/github/threefoldtech/jumpscale_lib/tests/unittests
 

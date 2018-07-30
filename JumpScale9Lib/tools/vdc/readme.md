@@ -1,5 +1,0 @@
-# VDC = Virtual Datacenter
-
-## intro
-
-...

@@ -1,7 +1,7 @@
 # Using Atom
 
 - [Create an Atom Plugin](#plugin)
-- [Autocompleting JumpScale in Atom Editor](#autocompletion)
+- [Autocompleting Jumpscale in Atom Editor](#autocompletion)
 
 <a id="plugin"></a>
 ## Create an Atom Plugin
@@ -22,7 +22,7 @@
     }
   ]
   '.tree-view.full-menu': [
-      'label': 'JumpScale Commands'
+      'label': 'Jumpscale Commands'
       'submenu': [
         #   { 'label': 'run wc', 'command': 'execjs:runwc'}
           { 'label': 'Toggle execjs', 'command': 'execjs:toggle' }
@@ -92,7 +92,7 @@ module.exports = Execjs =
     filePath = target.dataset.path
     return unless filePath
     console.log filePath
-    cmd = "jspython -c 'from js9 import j; j.tools.markdown.tidy(\"#{filePath}\")'"
+    cmd = "jspython -c 'from jumpscale import j; j.tools.markdown.tidy(\"#{filePath}\")'"
     console.log "CMD #{cmd}"
     subproc.exec cmd, (err, stdout, sdterr) -> console.log stdout
     if @modalPanel.isVisible()
@@ -104,14 +104,14 @@ module.exports = Execjs =
 ```
 
 <a id="autocompletion"></a>
-## Autocompleting JumpScale in Atom Editor (or any editor)
+## Autocompleting Jumpscale in Atom Editor (or any editor)
 
 You can use:
 ```python
 j.tools.atom.generateJumpscaleAutoCompletion()
 ```
 
-It will generate a full stub of JumpScale framework that can be used by jedi (the most common code completion library).
+It will generate a full stub of Jumpscale framework that can be used by jedi (the most common code completion library).
 ```
 !!!
 date = "2018-05-20"

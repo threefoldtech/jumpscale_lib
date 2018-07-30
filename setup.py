@@ -8,10 +8,10 @@ import os
 # libjpeg-dev/zesty
 
 def _post_install(libname, libpath):
-    from js9 import j
+    from jumpscale import j
     # add this plugin to the config
     c = j.core.state.configGet('plugins', defval={})
-    c[libname] = "%s/github/jumpscale/lib9/JumpScale9Lib" % j.dirs.CODEDIR
+    c[libname] = "%s/github/threefoldtech/jumpscale_lib/JumpscaleLib" % j.dirs.CODEDIR
     # c[libname] = libpath
     j.core.state.configSet('plugins', c)
     j.sal.process.execute(
@@ -50,11 +50,11 @@ except ImportError:
 
 
 setup(
-    name='JumpScale9Lib',
+    name='JumpscaleLib',
     version='9.4.0-rc4',
     description='Automation framework for cloud workloads library',
     long_description=long_description,
-    url='https://github.com/Jumpscale/lib9',
+    url='https://github.com/Jumpscale/lib',
     author='GreenItGlobe',
     author_email='info@gig.tech',
     license='Apache',
@@ -62,7 +62,7 @@ setup(
     install_requires=[
         'Brotli>=0.6.0',
         'Jinja2>=2.9.6',
-        'JumpScale9>=9.4.0-rc4',
+        'Jumpscale>=9.4.0-rc4',
         'Pillow>=4.1.1',
         'PyGithub>=1.34',
         'SQLAlchemy>=1.1.9',

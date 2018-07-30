@@ -9,7 +9,7 @@ The way the bot detects stories and tasks is trough the formatting of the titles
 ## Usage
 
 This chapter explains the full setup for StoryBot.  
-There is a also an example script available [here](../../JumpScale9Lib/tools/storybot/example.py) if you want to start straight away.
+There is a also an example script available [here](../../JumpscaleLib/tools/storybot/example.py) if you want to start straight away.
 
 ### Step 1: Get API keys
 
@@ -48,13 +48,13 @@ For task issues formatting, checkout the [Task formatting](#Task-formatting) cha
 Enter the Jumpscale interpreter from the terminal
 
 ```sh
-js9
+jumpscale
 ```
 
 Or import Jumpscale in your python script
 
 ```py
-from js9 import j
+from jumpscale import j
 ```
 
 Prepare the data for StoryBot

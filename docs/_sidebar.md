@@ -36,11 +36,11 @@
   * [capacityreport_from_zeroos](/docs/clients/capacityreport_from_zeroos.md)
   * [ipmi](/docs/clients/ipmi.md)
   * [mail](/docs/clients/mail.md)
-  * [zeroboot_client](/docs/clients/zeroboot_client.md)
+  * [zero_boot_client](/docs/clients/zero_boot_client.md)
   
 * [tools](/docs/tools)
   * [images](/docs/tools/images)
   * [ByteProcessor](/docs/tools/ByteProcessor.md)
   * [StoryBot](/docs/tools/StoryBot.md)
   * [Tmux](/docs/tools/Tmux.md)
-  * [docgenerator](/docs/tools/docgenerator.md)
+  * [markdowndocs](/docs/tools/markdowndocs.md)

@@ -2,7 +2,7 @@
 
 A System Abstraction Layer (SAL) is a thin abstraction layer making it easy for developers to interact with a system component locally or (partly) remotely.
 
-Some of `JumpScale9` SALs:
+Some of `Jumpscale` SALs:
 
 - [DiskLayout](Disklayout.md)
 - [KVM](KVM.md)

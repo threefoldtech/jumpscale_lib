@@ -2,9 +2,9 @@
 Test module for atomicswap
 """
 import re
-from js9 import j
+from jumpscale import j
 import os
-from JumpScale9Lib.tools.atomicswap.AtomicSwapFactory import BTCInitiator, TFTParticipant
+from JumpscaleLib.tools.atomicswap.AtomicSwapFactory import BTCInitiator, TFTParticipant
 
 os.environ.setdefault('BTC_MIN_CONFIRMATIONS', '1')
 os.environ.setdefault('TFT_MIN_CONFIRMATION_HEIGHT', '2')
