@@ -3,19 +3,22 @@ from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
-from .grafana import Grafana
-
-class GrafanaFactory(JSBASE):
+class ZOSSandboxFactory(JSBASE):
 
     def __init__(self):
-        self.__jslocation__ = "j.zos_sal.grafana"
+        self.__jslocation__ = "j.sal_zos.sandbox"
         JSBASE.__init__(self)
 
-    def get(self, container, ip, port, url):
+    def get(self, data={}):
         """
-        Get sal for Grafana
+        Get sal for influxdb
+        
+        Arguments:
+            object using jumpscale schema
         
         Returns:
             the sal layer 
         """
-        return Grafana(container, ip, port, url)
+        return (data)
+
+

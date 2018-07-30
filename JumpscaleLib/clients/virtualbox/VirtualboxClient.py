@@ -33,11 +33,9 @@ class VirtualboxClient(JSConfigBase):
         return j.tools.prefab.local
 
     def zos_iso_download(self, zerotierinstance=""):
-        if not zerotierinstance:
+        if zerotierinstance:
             print("zerotierinstance")
             zt=j.clients.zerotier.get(instance="main")
-            from IPython import embed;embed(colors='Linux')
-            s
             download = "https://bootstrap.gig.tech/iso/master/%s" % zerotierid
             dest = "/tmp/zos_%s.iso" % zerotierid
         else:
@@ -71,11 +69,11 @@ class VirtualboxClient(JSConfigBase):
 
     def vdisk_list(self):
         out=self._cmd("list hdds -l -s")
-        return self._parse(out,dentifier="UUID:")
+        return self._parse(out,identifier="UUID:")
 
     def _parse(self,txt,identifier="UUID:"):
         res=[]
-        for l in out.split("\n"):
+        for l in txt.split("\n"):
             if l.startswith(identifier):
                 res.append({})
                 last=res[-1]
@@ -116,5 +114,5 @@ class VirtualboxClient(JSConfigBase):
         vm.create(isopath=isopath, reset=reset)
 
     def zos_create(self, name="test", reset=True, zerotierinstance=""):            
-        isopath = cl.zos_iso_download(zerotierinstance)
-        cl.vm_create(name, isopath=isopath)
+        isopath = self.zos_iso_download(zerotierinstance)
+        self.vm_create(name, isopath=isopath)
