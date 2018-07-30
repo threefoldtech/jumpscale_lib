@@ -1,6 +1,5 @@
 import logging
 import time
-from jumpscale import j
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,7 +22,7 @@ class ZeroStor():
     @classmethod
     def from_ays(cls, service, password=None):
         logger.debug("create ZeroStor from service (%s)", service)
-        from .Container import Container
+        from ..container.Container import Container
 
         container = Container.from_ays(service.parent, password)
 

@@ -3,7 +3,7 @@ from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
-from .InfluxDB import InfluxDB
+from .influxdb import InfluxDB
 
 class InfluxDBFactory(JSBASE):
 

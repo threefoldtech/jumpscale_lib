@@ -3,7 +3,7 @@ from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
-from .Grafana import Grafana
+from .grafana import Grafana
 
 class GrafanaFactory(JSBASE):
 
@@ -15,13 +15,7 @@ class GrafanaFactory(JSBASE):
         """
         Get sal for Grafana
         
-        Arguments:
-            node
-            name
-        
         Returns:
             the sal layer 
         """
         return Grafana(container, ip, port, url)
-
-

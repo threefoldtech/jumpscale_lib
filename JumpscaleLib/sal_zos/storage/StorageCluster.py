@@ -4,10 +4,10 @@ import os
 
 from jumpscale import j
 
-from .Node import Node
+from ..node.Node import Node
 from .StorageEngine import StorageEngine
 from .StoragePool import StoragePool
-from .ZeroStor import ZeroStor
+from ..zstor.ZStor import ZeroStor
 
 logging.basicConfig(level=logging.INFO)
 default_logger = logging.getLogger(__name__)

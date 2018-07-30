@@ -1,11 +1,11 @@
-from js9 import j
-import threading
-import re
-from pssh.exceptions import ConnectionErrorException, SessionError
-import requests
-import time
-import os
 import json
+import os
+import re
+import time
+
+import requests
+from js9 import j
+from pssh.exceptions import ConnectionErrorException, SessionError
 
 DEFAULT_SSHKEY_NAME = 'id_rsa'
 DEFAULT_BITCOIN_DIR = '/root/.bitcoin'

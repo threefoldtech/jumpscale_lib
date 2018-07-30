@@ -87,6 +87,9 @@ class VirtualboxVM(JSBASE):
             cmd = "storageattach %s --storagectl \"IDE Controller\" --port 0 --device 0 --type dvddrive --medium %s"%(self.name,isopath)
             self._cmd(cmd)
 
+    def start(self):
+        self._cmd('startvm "%s"' % self.name)
+
     def __repr__(self):
         return "vm: %-20s%s"%(self.name,self.path)
 

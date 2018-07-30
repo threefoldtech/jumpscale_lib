@@ -19,6 +19,6 @@ class ZOSSandboxFactory(JSBASE):
         Returns:
             the sal layer 
         """
-        return InfluxDB(data)
+        return (data)
 
 

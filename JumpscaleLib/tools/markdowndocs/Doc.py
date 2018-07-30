@@ -64,6 +64,15 @@ class Doc(JSBASE):
     def error_raise(self, msg):
         return self.docsite.error_raise(msg, doc=self)            
 
+    def htmlpage_get(self,htmlpage=None):
+        if htmlpage is None:
+            htmlpage = j.data.html.page_get()
+        htmlpage = self.md.htmlpage_get(htmlpage=htmlpage, webparts=True)
+        return htmlpage
+
+    def html_get(self,htmlpage=None):
+        return str(self.htmlpage_get(htmlpage=htmlpage))
+
     @property
     def data(self):
         if self._data=={}:
@@ -80,10 +89,8 @@ class Doc(JSBASE):
         return self._md
 
     @property
-    def content_(self):
-        print('content')
-        from IPython import embed;embed(colors='Linux')
-        s
+    def content(self):
+        return j.sal.fs.fileGetContents(self.path)
 
     @property
     def content_clean(self):

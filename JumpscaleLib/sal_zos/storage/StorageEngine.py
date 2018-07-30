@@ -32,7 +32,7 @@ class StorageEngine():
     @classmethod
     def from_ays(cls, service, password=None):
         logger.debug("create storageEngine from service (%s)", service)
-        from .Container import Container
+        from ..container.Container import Container
 
         container = Container.from_ays(service.parent, password, logger=service.logger)
         if service.model.data.master != '':

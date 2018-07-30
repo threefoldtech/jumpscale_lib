@@ -3,7 +3,7 @@ from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
-from .Gateway import Gateway
+from ..gateway.gateway import Gateway
 
 class GatewayFactory(JSBASE):
 

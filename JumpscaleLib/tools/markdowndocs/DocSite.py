@@ -283,9 +283,11 @@ class DocSite(JSBASE):
                                      (name, self), level=1, source="", tags="", msgpub="")
         return None
 
+    def html_get(self, name, cat="", die=True):
+        doc = self.doc_get(name=name,cat=cat,die=die)
+        return do.html_get()
+
     def doc_get(self, name, cat="", die=True):
-        
-        import pudb; pudb.set_trace()
         
         self.load()
 
@@ -343,6 +345,9 @@ class DocSite(JSBASE):
 
     def _doc_get(self, name, cat=""):
         
+        if name.lower().startswith("_sidebar_parent"):
+            return 1,""
+    
         if name in self.docs:
             if cat is "":
                 return 1, self.docs[name]

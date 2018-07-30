@@ -239,18 +239,18 @@ class MarkdownDocument(JSBASE):
     def markdown(self):
         return str(self)
 
-    @property
-    def html(self):
-        out="""
-        <!DOCTYPE html>
-        <html>
-        <body>
-        """
-        out=j.data.text.strip(out)
-        for item in self.items:
-            out+= item.html +"\n"
-        out+="\n</body>\n</html>\n"
-        return out
+    # @property
+    # def html(self):
+    #     out="""
+    #     <!DOCTYPE html>
+    #     <html>
+    #     <body>
+    #     """
+    #     out=j.data.text.strip(out)
+    #     for item in self.items:
+    #         out+= item.html +"\n"
+    #     out+="\n</body>\n</html>\n"
+    #     return out
 
     def htmlpage_get(self,htmlpage=None, webparts=True):
         """

@@ -2,7 +2,7 @@ import datetime
 import os
 import re
 
-from ..healthcheck import HealthCheckRun
+from .healthcheck import HealthCheckRun
 
 
 descr = """

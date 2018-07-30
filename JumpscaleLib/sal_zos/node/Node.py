@@ -12,7 +12,7 @@ from jumpscale import j
 from ..capacity.Capacity import Capacity
 from ..container.Container import Containers
 from ..disks.Disks import Disks, StorageType
-from ..healthcheck import HealthCheck
+from ..healthchecks.healthcheck import HealthCheck
 from ..network.Network import Network
 from ..storagepool.StoragePool import StoragePools
 from ..gateway import Gateways
