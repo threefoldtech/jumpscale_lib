@@ -6,7 +6,7 @@ login_manager = j.servers.web.latest.loader.login_manager
 
 @blueprint.route('/')
 def route_default():
-    return redirect('/%s/chat_index.html'%name)
+    return redirect('/%s/chat_index.html' % name)
 
 # @login_required
 @blueprint.route('/session/<topic>')
@@ -21,4 +21,9 @@ def route_chattopic(topic):
 def route_template(template):
     return render_template(template)
 
-
+@ws_blueprint.route('/ws/gedis')
+def echo_socket(socket):
+    while not socket.closed:
+        message = socket.receive()
+        print(message)
+        socket.send(message)

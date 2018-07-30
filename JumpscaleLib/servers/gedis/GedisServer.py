@@ -1,18 +1,11 @@
 import sys
 import os
 from jumpscale import j
-import signal
-import gevent
-import gevent.signal
 from gevent.pool import Pool
 from gevent.server import StreamServer
-from .handlers import WebsocketRequestHandler, RedisRequestHandler
-# from geventwebsocket.handler import WebSocketHandler
+from .handlers import RedisRequestHandler
 from .JSAPIServer import JSAPIServer
 from .GedisChatBot import GedisChatBotFactory
-
-
-from .protocol import RedisCommandParser, RedisResponseWriter, WebsocketsCommandParser, WebsocketResponseWriter
 from .GedisCmds import GedisCmds
 
 JSConfigBase = j.tools.configmanager.base_class_config
@@ -21,7 +14,6 @@ JSConfigBase = j.tools.configmanager.base_class_config
 TEMPLATE = """
     host = "0.0.0.0"
     port = "9900"
-    websockets_port = "9901"
     ssl = false
     adminsecret_ = ""
     app_dir = ""
@@ -44,9 +36,8 @@ class GedisServer(StreamServer, JSConfigBase):
         self.ssl_priv_key_path = None
         self.ssl_cert_path = None
 
-        self.host = "0.0.0.0"#self.config.data["host"]
+        self.host = self.config.data["host"]
         self.port = int(self.config.data["port"])
-        self.websockets_port = int(self.config.data["websockets_port"])
         self.address = '{}:{}'.format(self.host, self.port)
         self.app_dir = self.config.data["app_dir"]
         self.ssl = self.config.data["ssl"]
@@ -54,7 +45,7 @@ class GedisServer(StreamServer, JSConfigBase):
         self.web_client_code = None
         self.code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", self.instance, "server")
 
-        self.jsapi_server = JSAPIServer()
+        # self.jsapi_server = JSAPIServer()
         self.chatbot = GedisChatBotFactory(ws=self)
         
         self.init()
@@ -156,7 +147,8 @@ class GedisServer(StreamServer, JSConfigBase):
             if 'model_' in nsfull:
                 continue
             commands.append(cmds_)        
-        self.code_js_client = j.tools.jinja2.file_render("%s/templates/client.js"%(j.servers.gedis.path),commands=commands,write=False)
+        self.code_js_client = j.tools.jinja2.file_render("%s/templates/client.js" % j.servers.gedis.path,
+                                                         commands=commands,write=False)
 
     def _servers_init(self):
         if self.ssl:
@@ -170,8 +162,6 @@ class GedisServer(StreamServer, JSConfigBase):
                 keyfile=self.ssl_priv_key_path,
                 certfile=self.ssl_cert_path
             )
-            #NO SSL ON WEBSOCKET SERVER? TODO:*1
-            # self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
         else:
             self.redis_server = StreamServer(
                 (self.host, self.port),
@@ -179,12 +169,12 @@ class GedisServer(StreamServer, JSConfigBase):
                 handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle
             )
 
-        self.websocket_server = self.jsapi_server.websocket_server  #is the server we can use     
-        self.jsapi_server.code_js_client = self.code_js_client
-        self.jsapi_server.instance = self.instance
-        self.jsapi_server.cmds = self.cmds
-        self.jsapi_server.classes = self.classes
-        self.jsapi_server.cmds_meta = self.cmds_meta
+        # self.websocket_server = self.jsapi_server.websocket_server  #is the server we can use
+        # self.jsapi_server.code_js_client = self.code_js_client
+        # self.jsapi_server.instance = self.instance
+        # self.jsapi_server.cmds = self.cmds
+        # self.jsapi_server.classes = self.classes
+        # self.jsapi_server.cmds_meta = self.cmds_meta
 
     def cmds_add(self, namespace, path=None, class_=None):
         self.logger.debug("cmds_add:%s:%s"%(namespace,path))

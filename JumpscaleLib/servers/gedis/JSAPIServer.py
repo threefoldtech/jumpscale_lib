@@ -1,19 +1,13 @@
-from jumpscale import j
-
-from .protocol import RedisCommandParser, RedisResponseWriter, WebsocketsCommandParser, WebsocketResponseWriter
 from .handlers import WebsocketRequestHandler
-from .GedisCmds import GedisCmds
-
 from geventwebsocket.handler import WebSocketHandler
-
 from gevent import pywsgi
+
 
 class JSAPIServer():
     def __init__(self):
         self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', 8001), self.websocketapp, handler_class=WebSocketHandler)
 
     def websocketapp(self, environ, start_response):
-        
         if '/static/' in environ['PATH_INFO']:
             # items = [p for p in environ['PATH_INFO'].split('/static/') if p]
             # if len(items) == 1:
@@ -22,7 +16,7 @@ class JSAPIServer():
             #         start_response('200 OK', [('Content-Type', 'application/javascript;charset=utf-8'),('Access-Control-Allow-Origin','*')])
             #         return [self.code_js_client]
 
-            
+
             # file_path = j.sal.fs.joinPaths(self.static_files_path, static_file)
             # if j.sal.fs.exists(file_path):
             #     self.static_files[static_file] = j.sal.fs.readFile(file_path).replace('%%host%%', host).encode('utf-8')
@@ -33,7 +27,7 @@ class JSAPIServer():
             code_js = code_js.replace("wss://","ws://")
             code_js=code_js.replace('%%host%%', host).encode('utf-8')
             return [code_js]
-            
+
             # start_response('404 NOT FOUND', [])
             # return []
 
@@ -45,4 +39,3 @@ class JSAPIServer():
         handler.handle(websocket, addr)
         return []
 
-        

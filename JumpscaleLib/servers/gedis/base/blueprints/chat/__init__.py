@@ -10,3 +10,5 @@ blueprint = Blueprint(
     template_folder='templates',
     static_folder='static'
 )
+
+ws_blueprint = Blueprint('%s_wsblueprint' % name, __name__, url_prefix="/%s"%name)

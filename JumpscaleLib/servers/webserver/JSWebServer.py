@@ -1,6 +1,6 @@
 from jumpscale import j
-# from .JSMainApp import JSMainApp
 from gevent.pywsgi import WSGIServer
+from geventwebsocket.handler import WebSocketHandler
 import sys
 import os
 
@@ -18,19 +18,19 @@ TEMPLATE = """
 
 
 class JSWebServer(JSConfigBase):
-    def __init__(self,instance,data={},parent=None,interactive=False,template=None):
-
-        JSConfigBase.__init__(self,instance=instance,data=data,parent=parent,
-            template=template or TEMPLATE, interactive=interactive)
+    def __init__(self, instance, data=None, parent=None, interactive=False, template=None):
+        if not data:
+            data = {}
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,
+                              template=template or TEMPLATE, interactive=interactive)
 
         # Set proper instance for j.data.schema
-
-        self.host = "0.0.0.0"#self.config.data["host"]
+        self.host = self.config.data["host"]
         self.port = int(self.config.data["port"])
         self.port_ssl = int(self.config.data["port_ssl"])
         self.address = '{}:{}'.format(self.host, self.port)
 
-        config_path = j.sal.fs.joinPaths(self.path,"site_config.toml")
+        config_path = j.sal.fs.joinPaths(self.path, "site_config.toml")
         if j.sal.fs.exists(config_path):
             self.site_config = j.data.serializer.toml.load(config_path)
         else:
@@ -39,49 +39,45 @@ class JSWebServer(JSConfigBase):
         self._inited = False
         j.servers.web.latest = self
         self.loader = JSWebLoader(path=self.path)
-    
+        self.app = None
+        self.http_server = None
+
     def init(self, debug=False):
-        
+
         if self._inited:
             return
-        
+
         self.logger.info("init server")
-    
+
         if self.path not in sys.path:
             sys.path.append(self.path)
 
         self.app = self.loader.create_app(debug=debug)
         self.app.debug = True
 
-        self.http_server = WSGIServer((self.host, self.port), self.app)
-
-        self.app.http_server = self.http_server 
-
+        self.http_server = WSGIServer((self.host, self.port), self.app, handler_class=WebSocketHandler)
+        self.app.http_server = self.http_server
         self.app.server = self
-
         self.docs_load()
-
         # self._sig_handler.append(gevent.signal(signal.SIGINT, self.stop))
-
-        self._inited = False        
-
+        self._inited = False
 
     def docs_load(self):
         if "docsite" not in self.site_config:
             return
 
         for item in self.site_config["docsite"]:
-            url=item["url"]
-            name=item["name"]
+            url = item["url"]
+            name = item["name"]
             if url is not "":
                 path = j.clients.git.getContentPathFromURLorPath(url)
                 if not j.sal.fs.exists(path):
                     j.clients.git.pullGitRepo(url=url)
-                j.tools.markdowndocs.load(path=path,name=name)       
+                j.tools.markdowndocs.load(path=path, name=name)
 
     @property
     def path(self):
-        return self.config.data['ws_dir'].rstrip("/")+"/"
+        return self.config.data['ws_dir'].rstrip("/") + "/"
 
     def sslkeys_generate(self):
         res = j.sal.ssl.ca_cert_generate(self.ws_dir)
@@ -93,14 +89,11 @@ class JSWebServer(JSConfigBase):
         cert = os.path.join(self.path, 'ca.crt')
         return key, cert
 
-    def start(self, reset=False, debug=False):
+    def start(self, debug=False):
         print("start")
-
-        # self.scaffold(reset=reset)
-
         self.init(debug=debug)
-        print ("Webserver running")
-        print (self)
+        print("Webserver running")
+        print(self)
         self.http_server.serve_forever()
 
     def stop(self):
