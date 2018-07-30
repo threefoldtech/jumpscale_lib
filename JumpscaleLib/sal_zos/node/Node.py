@@ -13,8 +13,8 @@ from ..capacity.Capacity import Capacity
 from ..container.Container import Containers
 from ..disks.Disks import Disks, StorageType
 from ..healthcheck import HealthCheck
-from ..Network import Network
-from ..StoragePool import StoragePools
+from ..network.Network import Network
+from ..storagepool.StoragePool import StoragePools
 from ..gateway import Gateways
 from ..zerodb import Zerodbs
 from ..primitives.Primitives import Primitives
@@ -253,7 +253,6 @@ class Node:
             return False
         return bool(zeroos_cache_sp.mountpoint)
 
-
     def ensure_persistance(self, name='zos-cache'):
         """
         look for a disk not used,
@@ -310,8 +309,8 @@ class Node:
             if not disk.mountpoint:
                 for part in disk.partitions:
                     if part.mountpoint:
-                        logger.debug('   * Not wiping {device} because {part} is mounted at {mountpoint}'\
-                            .format(device=disk.devicename, part=part.devicename,  mountpoint=part.mountpoint))
+                        logger.debug('   * Not wiping {device} because {part} is mounted at {mountpoint}'
+                                     .format(device=disk.devicename, part=part.devicename,  mountpoint=part.mountpoint))
                         break
                 else:
                     logger.debug('   * Wiping disk {kname}'.format(**disk._disk_info))

@@ -17,14 +17,6 @@ class ZeroOSFactory(JSConfigFactoryBase):
         super().__init__(Client)
         self.connections = {}
 
-    def get(self, instance='main'):
-        """
-        get client toward a zero-os node
-        """
-        client = self._factory.get(instance)
-        return Node(client)
-
-
     def zero_node_ovh_install(self, OVHHostName, OVHClient, zerotierNetworkID, zerotierClient):
         """
 
@@ -66,7 +58,7 @@ class ZeroOSFactory(JSConfigFactoryBase):
         return ip_pub, ipaddr_priv
 
     def zero_node_packetnet_install(self, packetnetClient, zerotierClient, project_name,
-                                  plan_type, location, server_name, zerotierNetworkID, ipxe_base='https://bootstrap.gig.tech/ipxe/master'):
+                                    plan_type, location, server_name, zerotierNetworkID, ipxe_base='https://bootstrap.gig.tech/ipxe/master'):
         """
         packetnetClient = j.clients.packetnet.get('TOKEN')
         zerotierClient = j.clients.zerotier.get(instance='main', data={'token': 'TOKEN'})
@@ -124,4 +116,3 @@ class ZeroOSFactory(JSConfigFactoryBase):
         self.logger.debug("zerotier IP: %s" % ipaddr_priv)
 
         return ip_pub, ipaddr_priv
-
