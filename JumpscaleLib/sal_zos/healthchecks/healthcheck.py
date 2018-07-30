@@ -103,77 +103,77 @@ class HealthCheck():
             return healtcheck
 
     def cpu_mem(self):
-        from .healthchecks.cpu_mem_core import CPU, Memory
+        from .cpu_mem_core import CPU, Memory
         cpu = CPU(self.node)
         memory = Memory(self.node)
         return [cpu.start(), memory.start()]
 
     def disk_usage(self):
-        from .healthchecks.diskusage import DiskUsage
+        from .diskusage import DiskUsage
         usage = DiskUsage(self.node)
         return usage.start()
 
     def network_bond(self):
-        from .healthchecks.networkbond import NetworkBond
+        from .networkbond import NetworkBond
         bond = NetworkBond(self.node)
         return bond.start()
 
     def node_temperature(self, container):
-        from .healthchecks.temperature import Temperature
+        from .temperature import Temperature
         temperature = Temperature(self.node)
         result = temperature.start(container)
         return result
 
-    def network_stability(self, nodes):
-        from .healthchecks.networkstability import NetworkStability
-        stability = NetworkStability(self.node)
-        return stability.start(nodes)
+    # def network_stability(self, nodes):
+    #     from .networkstability import NetworkStability
+    #     stability = NetworkStability(self.node)
+    #     return stability.start(nodes)
 
     def qemu_vm_logs(self):
-        from .healthchecks.qemu_vm_logs import QemuVMLogs
+        from .qemu_vm_logs import QemuVMLogs
         vmCheck = QemuVMLogs(self.node)
         return vmCheck.start()
 
     def rotate_logs(self):
-        from .healthchecks.log_rotator import RotateLogs
+        from .log_rotator import RotateLogs
         rotator = RotateLogs(self.node)
         return rotator.start()
 
     def openfiledescriptors(self):
-        from .healthchecks.openfiledescriptors import OpenFileDescriptor
+        from .openfiledescriptors import OpenFileDescriptor
         ofd = OpenFileDescriptor(self.node)
         return ofd.start()
 
     def interrupts(self):
-        from .healthchecks.interrupts import Interrupts
+        from .interrupts import Interrupts
         inter = Interrupts(self.node)
         return inter.start()
 
     def threads(self):
-        from .healthchecks.threads import Threads
+        from .threads import Threads
         thread = Threads(self.node)
         return thread.start()
 
     def ssh_cleanup(self, job):
-        from .healthchecks.ssh_cleanup import SSHCleanup
+        from .ssh_cleanup import SSHCleanup
         cleaner = SSHCleanup(self.node, job)
         return cleaner.start()
 
     def powersupply(self, container):
-        from .healthchecks.powersupply import PowerSupply
+        from .powersupply import PowerSupply
         powersupply = PowerSupply(self.node)
         return powersupply.start(container)
 
     def fan(self, container):
-        from .healthchecks.fan import Fan
+        from .fan import Fan
         fan = Fan(self.node)
         return fan.start(container)
 
     def context_switch(self):
-        from .healthchecks.context_switch import ContextSwitch
+        from .context_switch import ContextSwitch
         return ContextSwitch(self.node).start()
 
     def network_load(self):
-        from .healthchecks.networkload import NetworkLoad
+        from .networkload import NetworkLoad
         load = NetworkLoad(self.node)
         return load.start()

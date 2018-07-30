@@ -1,8 +1,8 @@
 import json
-import re
 import logging
-import time
+import re
 import signal
+
 from .. import templates
 
 logging.basicConfig(level=logging.INFO)

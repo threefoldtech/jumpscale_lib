@@ -1,9 +1,7 @@
 from jumpscale import j
 from redis import ResponseError
-import netaddr
 
 from ..abstracts import Collection
-
 
 logger = j.logger.get(__name__)
 

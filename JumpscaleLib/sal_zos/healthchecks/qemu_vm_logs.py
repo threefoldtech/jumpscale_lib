@@ -2,7 +2,7 @@ import hashlib
 
 from jumpscale import j
 
-from ..healthcheck import HealthCheckRun
+from .healthcheck import HealthCheckRun
 
 
 descr = """

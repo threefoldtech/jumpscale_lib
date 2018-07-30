@@ -1,4 +1,4 @@
-from ..healthcheck import IPMIHealthCheck
+from .healthcheck import IPMIHealthCheck
 
 
 descr = """

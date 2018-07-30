@@ -1,7 +1,7 @@
 from jumpscale import j
 from JumpscaleLib.clients.zerotier.ZerotierClient import ZerotierClient, ZeroTierNetwork
 from ..abstracts import Collection, Nic, ZTNic
-from ..VM import VM
+from ..vm.ZOS_VM import ZOS_VM
 import netaddr
 
 BASEMAC = netaddr.EUI('52:54:00:00:00:00')
@@ -126,7 +126,7 @@ class Hosts(Collection):
                 raise ValueError('MACAddress already in use by {}'.format(configuredhost.name))
 
         macaddress = macaddress or self.get_free_mac()
-        if isinstance(host, VM):
+        if isinstance(host, ZOS_VM):
             super().add(host.name)
             vm = host
             host = Host(vm.name, macaddress, ipaddress)

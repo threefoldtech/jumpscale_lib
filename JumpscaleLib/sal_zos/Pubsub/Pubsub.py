@@ -1,13 +1,11 @@
 import asyncio
 import json
-import logging
 import ssl
 import sys
 import time
 import uuid
 
 import aioredis
-from jumpscale import j
 
 
 class Response():

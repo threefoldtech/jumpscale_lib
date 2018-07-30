@@ -1,7 +1,7 @@
 import signal
 import time
 
-from zeroos.orchestrator.sal import templates
+from .. import templates
 
 from jumpscale import j
 

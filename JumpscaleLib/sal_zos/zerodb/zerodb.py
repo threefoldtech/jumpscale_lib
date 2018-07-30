@@ -5,7 +5,7 @@ from jumpscale import j
 
 from ..abstracts import Nics
 from ..utils import authorize_zerotiers
-from ..Disk import Disk
+from ..disks.Disks import Disk
 from .namespace import Namespaces
 
 logger = j.logger.get(__name__)

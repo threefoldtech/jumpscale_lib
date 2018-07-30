@@ -1,9 +1,6 @@
 from ftplib import FTP
 from io import BytesIO
 from urllib.parse import urlparse
-from jumpscale import j
-
-
 
 
 class FtpClient():

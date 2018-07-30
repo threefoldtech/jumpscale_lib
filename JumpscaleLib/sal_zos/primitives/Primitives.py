@@ -44,7 +44,6 @@ class Primitives:
         :param name: Name of the disk/namespace in zdb
         :type name: str
         :param zdb: zerodb sal object
-        :type zerodb ZeroDB sal object
         :param filesystem: Filesystem to create on the disk
         :type filesystem: str
         :param size: Size of the disk in GiB

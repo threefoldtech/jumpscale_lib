@@ -2,10 +2,6 @@ from io import BytesIO
 
 import etcd3
 import yaml
-from jumpscale import j
-
-
-
 
 
 class EtcdCluster():
@@ -94,7 +90,7 @@ class ETCD():
     def from_ays(cls, service, password=None, logger=None):
         logger = logger or default_logger
         logger.debug("create storageEngine from service (%s)", service)
-        from .Container import Container
+        from ..container.Container import Container
         container = Container.from_ays(service.parent, password, logger=service.logger)
 
         return cls(

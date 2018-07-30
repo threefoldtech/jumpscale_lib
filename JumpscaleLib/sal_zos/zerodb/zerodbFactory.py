@@ -3,9 +3,9 @@ from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
-from .Zerobd import Zerobd
+from ..zerodb.zerodb import Zerodb, DEFAULT_PORT
 
-class ZerobdFactory(JSBASE):
+class ZerodbFactory(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.zos_sal.zerodb"
@@ -21,6 +21,4 @@ class ZerobdFactory(JSBASE):
         Returns:
             the sal layer 
         """
-        return Zerobd(node, name, path, mode, sync, admin, node_port)
-
-
+        return Zerodb(node, name, path, mode, sync, admin, node_port)

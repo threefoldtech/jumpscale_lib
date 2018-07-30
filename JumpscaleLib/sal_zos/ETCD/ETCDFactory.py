@@ -2,7 +2,7 @@ from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
-from .ETCD import ETCDs
+from .ETCD import ETCD
 
 class ETCDFactory(JSBASE):
 
@@ -22,4 +22,4 @@ class ETCDFactory(JSBASE):
         Returns:
             the sal layer 
         """
-        return ETCDs(name, container, serverBind, clientBind, peers, mgmtClientBind, data_dir,password, logger)
+        return ETCD(name, container, serverBind, clientBind, peers, mgmtClientBind, data_dir,password, logger)
