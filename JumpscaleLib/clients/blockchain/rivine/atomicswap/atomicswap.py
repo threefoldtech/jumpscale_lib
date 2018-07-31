@@ -3,7 +3,7 @@ This module add the support of atomicswaps to the rivine light weight client
 """
 import time
 import hashlib
-from JumpScale9 import j
+from Jumpscale import j
 from JumpscaleLib.clients.blockchain.rivine import utils
 from JumpscaleLib.clients.blockchain.rivine.encoding import binary
 from JumpscaleLib.clients.blockchain.rivine.errors import InvalidAtomicswapContract, AtomicSwapError

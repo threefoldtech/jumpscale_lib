@@ -2,7 +2,7 @@
 Client factory for Rinive blockchain network, js entry point
 """
 
-from JumpScale9 import j
+from Jumpscale import j
 
 from JumpscaleLib.clients.blockchain.rivine.RivineClient import RivineClient
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory

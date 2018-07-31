@@ -3,7 +3,7 @@ Module that defines required classes for Mulitsignature wallets
 """
 import json
 
-from JumpScale9 import j
+from Jumpscale import j
 from JumpscaleLib.clients.blockchain.rivine import const
 from JumpscaleLib.clients.blockchain.rivine import utils
 from JumpscaleLib.clients.blockchain.rivine.merkletree import Tree

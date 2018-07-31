@@ -20,7 +20,7 @@ from .encoding import binary
 from .types.signatures import Ed25519PublicKey, SPECIFIER_SIZE
 from .types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY, UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE
 
-from JumpScale9 import j
+from Jumpscale import j
 from JumpscaleLib.clients.blockchain.rivine import utils
 from JumpscaleLib.clients.blockchain.rivine.atomicswap.atomicswap import AtomicSwapManager
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory, DEFAULT_TRANSACTION_VERSION

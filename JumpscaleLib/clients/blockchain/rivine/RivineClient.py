@@ -2,7 +2,7 @@
 Rivine Client
 """
 
-from JumpScale9 import j
+from Jumpscale import j
 
 from JumpscaleLib.clients.blockchain.rivine.RivineWallet import RivineWallet
 from JumpscaleLib.clients.blockchain.rivine.RivineMultiSigWallet import RivineMultiSignatureWallet

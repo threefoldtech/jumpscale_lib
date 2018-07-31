@@ -9,7 +9,7 @@ from random import choice
 from pyblake2 import blake2b
 from requests.auth import HTTPBasicAuth
 
-from JumpScale9 import j
+from Jumpscale import j
 from JumpscaleLib.clients.blockchain.rivine import secrets
 from JumpscaleLib.clients.blockchain.rivine.encoding import binary
 from JumpscaleLib.clients.blockchain.rivine.errors import RESTAPIError, BackendError
