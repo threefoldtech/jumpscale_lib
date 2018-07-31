@@ -1,4 +1,4 @@
-from js9 import j
+from jumpscale import j
 import gevent
 import sys
 from importlib import import_module
