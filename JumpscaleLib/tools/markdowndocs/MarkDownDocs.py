@@ -93,46 +93,12 @@ class MarkDownDocs(JSBASE):
             self.macros = loadmodule("macros", self._macroCodepath)
             self._macroPathsDone.append(path)
 
-
     def load(self, path="", name=""):
         if path.startswith("http"):
             path = j.clients.git.getContentPathFromURLorPath(path)
         ds = DocSite(path=path, name=name)
         self.docsites[ds.name] = ds
         
-    
-    # def scan_load(self, pathOrUrl="", name=""):
-    #     """
-
-    #     js_shell 'j.tools.markdowndocs.load()'
-
-    #     will look for config.toml in $source/config.toml
-
-    #     @param pathOrUrl is the location where the markdown or html docs are which need to be processed
-    #         if not specified then will look for root of git repo and add docs
-    #         source = $gitrepoRootDir/docs
-
-    #         this can also be a git url e.g. https://github.com/Jumpscale/markdowndocs/tree/master/examples
-
-    #     """
-    #     if pathOrUrl == "":
-    #         pathOrUrl = j.sal.fs.getcwd()
-    #     if pathOrUrl in self._loaded:
-    #         return
-    #     self.logger.info("load:%s" % pathOrUrl)
-    #     self._loaded.append(pathOrUrl)
-    #     self._init()
-    #     if pathOrUrl == "":
-    #         path = j.sal.fs.getcwd()
-    #     else:
-    #         path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
-
-    #     for configPath in j.sal.fs.listFilesInDir(path, recursive=True, filter="docs_config.toml"):
-    #         if configPath not in self._configs:
-    #             self.logger.debug("found configPath for doc dir:%s" % configPath)
-    #             ds = DocSite(self, configPath=configPath, name=name)
-    #             self.docsites[ds.name] = ds
-
     def git_update(self):
         if self.docsites == {}:
             self.load()
@@ -223,80 +189,36 @@ class MarkDownDocs(JSBASE):
         else:
             return None
 
-    # def process(self):
-    #     for key, ds in self.docsites.items():
-    #         ds.process()
-    
-    # def generate_examples(self, start=True):
-    #     """
-    #     js_shell 'j.tools.markdowndocs.generate_examples()'
-    #     """
-    #     self.generate(url="https://github.com/Jumpscale/markdowndocs/tree/master/examples/example2",start=start,name="example2")
 
-    # def generate_jsdoc(self, start=True):
-    #     """
-    #     js_shell 'j.tools.markdowndocs.generate_jsdoc()'
-    #     """
-    #     self.load(pathOrUrl="https://github.com/Jumpscale/core/",name="core")
-    #     self.load(pathOrUrl="https://github.com/Jumpscale/lib",name="lib")
-    #     self.load(pathOrUrl="https://github.com/Jumpscale/prefab",name="prefab")
-    #     self.generate(start=start)
 
-    # def generate(self,name="", pathOrUrl=None, start=True):
+    # def scan_load(self, pathOrUrl="", name=""):
     #     """
 
-    #     js_shell 'j.tools.markdowndocs.generate()'
+    #     js_shell 'j.tools.markdowndocs.load()'
+
+    #     will look for config.toml in $source/config.toml
+
+    #     @param pathOrUrl is the location where the markdown or html docs are which need to be processed
+    #         if not specified then will look for root of git repo and add docs
+    #         source = $gitrepoRootDir/docs
+
+    #         this can also be a git url e.g. https://github.com/Jumpscale/markdowndocs/tree/master/examples
 
     #     """
-    #     if not pathOrUrl:
+    #     if pathOrUrl == "":
     #         pathOrUrl = j.sal.fs.getcwd()
+    #     if pathOrUrl in self._loaded:
+    #         return
+    #     self.logger.info("load:%s" % pathOrUrl)
+    #     self._loaded.append(pathOrUrl)
+    #     self._init()
+    #     if pathOrUrl == "":
+    #         path = j.sal.fs.getcwd()
+    #     else:
+    #         path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
 
-    #     self.load(pathOrUrl=pathOrUrl,name=name)
-
-    #     if self.docsites == {}:
-    #         # self.load(template=template)
-    #         raise RuntimeError("no docsites found, did not specify right url")
-
-    #     for path, ds in self.docsites.items():
-    #         ds.process()
-    #     for path, ds in self.docsites.items():
-    #         ds.write()
-    #     if start:
-    #         self.webserver_start()
-    #         self.logger.debug("TO CHECK GO TO: %s" % self.webserver)
-
-
-
-    # def install(self, reset=False, hugo=False, caddy=False):
-    #     """
-    #     js_shell 'j.tools.markdowndocs.install()'
-    #     """
-    #     prefab = j.tools.prefab.local
-    #     if prefab.core.doneGet("markdowndocs:installed") == False or reset:
-    #         prefab.system.package.install('graphviz')
-    #         if "darwin" in str(j.core.platformtype.myplatform):
-    #             if hugo:
-    #                 prefab.system.package.install('hugo')
-    #             if caddy:
-    #                 prefab.system.package.install('caddy')
-    #         elif "ubuntu" in str(j.core.platformtype.myplatform):
-    #             prefab.runtimes.golang.install()
-    #             prefab.runtimes.nodejs.phantomjs()
-    #             prefab.system.package.install('graphviz')
-    #             prefab.runtimes.nodejs.install()
-    #             # Using package install will result in an old version on some machines
-    #             # prefab.core.file_download('https://github.com/gohugoio/hugo/releases/download/v0.26/hugo_0.26_Linux-64bit.tar.gz')
-    #             # prefab.core.file_expand('$TMPDIR/hugo_0.26_Linux-64bit.tar.gz')
-    #             # prefab.core.file_copy('$TMPDIR/hugo_0.26_Linux-64bit/hugo', '/usr/bin/')
-    #             # go get github.com/kardianos/govendor
-    #             # govendor get github.com/gohugoio/hugo
-    #             # go install github.com/gohugoio/hugo
-    #             if hugo:
-    #                 prefab.core.run("go get -u -v github.com/gohugoio/hugo")
-    #             prefab.web.caddy.build()
-    #             # prefab.core.run("npm install -g mermaid", profile=True)
-    #             prefab.web.caddy.configure()
-    #             prefab.core.doneSet("markdowndocs:installed")
-
-    #         # prefab.runtimes.pip.install(
-    #         #     "dash,dash-renderer,dash-html-components,dash-core-components,plotly")
+    #     for configPath in j.sal.fs.listFilesInDir(path, recursive=True, filter="docs_config.toml"):
+    #         if configPath not in self._configs:
+    #             self.logger.debug("found configPath for doc dir:%s" % configPath)
+    #             ds = DocSite(self, configPath=configPath, name=name)
+    #             self.docsites[ds.name] = ds
