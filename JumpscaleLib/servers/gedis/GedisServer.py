@@ -1,18 +1,10 @@
 import sys
 import os
 from jumpscale import j
-import signal
-import gevent
-import gevent.signal
 from gevent.pool import Pool
 from gevent.server import StreamServer
-from .handlers import WebsocketRequestHandler, RedisRequestHandler
-# from geventwebsocket.handler import WebSocketHandler
-from .JSAPIServer import JSAPIServer
+from .handlers import RedisRequestHandler
 from .GedisChatBot import GedisChatBotFactory
-
-
-from .protocol import RedisCommandParser, RedisResponseWriter, WebsocketsCommandParser, WebsocketResponseWriter
 from .GedisCmds import GedisCmds
 
 JSConfigBase = j.tools.configmanager.base_class_config
@@ -21,7 +13,6 @@ JSConfigBase = j.tools.configmanager.base_class_config
 TEMPLATE = """
     host = "0.0.0.0"
     port = "9900"
-    websockets_port = "9901"
     ssl = false
     adminsecret_ = ""
     app_dir = ""
@@ -44,9 +35,8 @@ class GedisServer(StreamServer, JSConfigBase):
         self.ssl_priv_key_path = None
         self.ssl_cert_path = None
 
-        self.host = "0.0.0.0"#self.config.data["host"]
+        self.host = self.config.data["host"]
         self.port = int(self.config.data["port"])
-        self.websockets_port = int(self.config.data["websockets_port"])
         self.address = '{}:{}'.format(self.host, self.port)
         self.app_dir = self.config.data["app_dir"]
         self.ssl = self.config.data["ssl"]
@@ -54,7 +44,7 @@ class GedisServer(StreamServer, JSConfigBase):
         self.web_client_code = None
         self.code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", self.instance, "server")
 
-        self.jsapi_server = JSAPIServer()
+        # self.jsapi_server = JSAPIServer()
         self.chatbot = GedisChatBotFactory(ws=self)
         
         self.init()
@@ -156,7 +146,8 @@ class GedisServer(StreamServer, JSConfigBase):
             if 'model_' in nsfull:
                 continue
             commands.append(cmds_)        
-        self.code_js_client = j.tools.jinja2.file_render("%s/templates/client.js"%(j.servers.gedis.path),commands=commands,write=False)
+        self.code_js_client = j.tools.jinja2.file_render("%s/templates/client.js" % j.servers.gedis.path,
+                                                         commands=commands,write=False)
 
     def _servers_init(self):
         if self.ssl:
@@ -170,8 +161,6 @@ class GedisServer(StreamServer, JSConfigBase):
                 keyfile=self.ssl_priv_key_path,
                 certfile=self.ssl_cert_path
             )
-            #NO SSL ON WEBSOCKET SERVER? TODO:*1
-            # self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
         else:
             self.redis_server = StreamServer(
                 (self.host, self.port),
@@ -179,12 +168,12 @@ class GedisServer(StreamServer, JSConfigBase):
                 handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle
             )
 
-        self.websocket_server = self.jsapi_server.websocket_server  #is the server we can use     
-        self.jsapi_server.code_js_client = self.code_js_client
-        self.jsapi_server.instance = self.instance
-        self.jsapi_server.cmds = self.cmds
-        self.jsapi_server.classes = self.classes
-        self.jsapi_server.cmds_meta = self.cmds_meta
+        # self.websocket_server = self.jsapi_server.websocket_server  #is the server we can use
+        # self.jsapi_server.code_js_client = self.code_js_client
+        # self.jsapi_server.instance = self.instance
+        # self.jsapi_server.cmds = self.cmds
+        # self.jsapi_server.classes = self.classes
+        # self.jsapi_server.cmds_meta = self.cmds_meta
 
     def cmds_add(self, namespace, path=None, class_=None):
         self.logger.debug("cmds_add:%s:%s"%(namespace,path))
@@ -207,6 +196,92 @@ class GedisServer(StreamServer, JSConfigBase):
         data["ssl"] = self.config.data["ssl"]
         
         return j.clients.gedis.get(instance=self.instance, data=data, reset=False)
+
+    def get_command(self, cmd):
+        if cmd in self.cmds:
+            return self.cmds[cmd], ''
+
+        self.logger.debug('(%s) command cache miss')
+
+        if '.' not in cmd:
+            return None, 'Invalid command (%s) : model is missing. proper format is {model}.{cmd}'
+
+        pre, post = cmd.split(".", 1)
+
+        namespace = self.instance + "." + pre
+
+        if namespace not in self.classes:
+            return None, "Cannot find namespace:%s " % (namespace)
+
+        if namespace not in self.cmds_meta:
+            return None, "Cannot find namespace:%s" % (namespace)
+
+        meta = self.cmds_meta[namespace]
+
+        if not post in meta.cmds:
+            return None, "Cannot find method with name:%s in namespace:%s" % (post, namespace)
+
+        cmd_obj = meta.cmds[post]
+
+        try:
+            cl = self.classes[namespace]
+            m = getattr(cl, post)
+        except Exception as e:
+            return None, "Could not execute code of method '%s' in namespace '%s'\n%s" % (pre, namespace, e)
+
+        cmd_obj.method = m
+
+        self.cmds[cmd] = cmd_obj
+
+        return self.cmds[cmd], ""
+
+    @staticmethod
+    def process_command(cmd, request):
+        if cmd.schema_in:
+            if len(request) < 2:
+                return None, "need to have arguments, none given"
+            if len(request) > 2:
+                return None, "more than 1 argument given, needs to be json"
+            o = cmd.schema_in.get(data=j.data.serializer.json.loads(request[1]))
+            args = [a.strip() for a in cmd.cmdobj.args.split(',')]
+            if 'schema_out' in args:
+                args.remove('schema_out')
+            params = {}
+            schema_dict = o.ddict
+            if len(args) == 1:
+                if args[0] in schema_dict:
+                    params.update(schema_dict)
+                else:
+                    params[args[0]] = o
+            else:
+                params.update(schema_dict)
+
+            if cmd.schema_out:
+                params["schema_out"] = cmd.schema_out
+        else:
+            if len(request) > 1:
+                params = request[1:]
+                if cmd.schema_out:
+                    params.append(cmd.schema_out)
+            else:
+                params = None
+
+        try:
+            if params is None:
+                result = cmd.method()
+            elif j.data.types.list.check(params):
+                result = cmd.method(*params)
+            else:
+                result = cmd.method(**params)
+            return result, None
+
+        except Exception as e:
+            print("exception in redis server")
+            eco = j.errorhandler.parsePythonExceptionObject(e)
+            msg = str(eco)
+            msg += "\nCODE:%s:%s\n" % (cmd.namespace, cmd.name)
+            print(msg)
+            return None, e.args[0]
 
     def __repr__(self):
         return '<Gedis Server address=%s  app_dir=%s generated_code_dir=%s)' % (self.address, self.app_dir, self.code_generated_dir)

@@ -204,7 +204,7 @@ class ZDBClientNS(JSBASE):
         """
         if result is None:
             result=[]
-        keyb = self._key_get(key_start,set=False)
+        keyb = self._key_get(key_start,set=True)
         if direction=="forward":
             CMD = "SCANX"
         else:
