@@ -5,7 +5,7 @@ See PEP 506 for more information.
 https://www.python.org/dev/peps/pep-0506/
 
 This file is copied from https://hg.python.org/cpython/file/3.6/Lib/secrets.py
-since js_shell is supported on python3.5 as well
+since js9 is supported on python3.5 as well
 """
 
 __all__ = ['choice', 'randbelow', 'randbits', 'SystemRandom',

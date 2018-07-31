@@ -17,11 +17,8 @@ class Tree:
     def __init__(self, hash_func):
         self.head = None
         self.hash_func = hash_func
-        self._current_index = 0
-        self._proof_index = 0
-        self._proof_set = [[]]
-    
-    
+
+
     def push(self, data):
         """
         // Push will add data to the set, building out the Merkle tree and Root. The
@@ -30,9 +27,7 @@ class Tree:
         // log(n) elements necessary to build a proof that a piece of data is in the
         // Merkle tree.
         """
-        if self._current_index == self._proof_index:
-            self._proof_set.append(data)
-        
+
         # // Hash the data to create a subtree of height 0. The sum of the new node
         # // is going to be the data for cached trees, and is going to be the result
         # // of calling leafSum() on the data for standard trees. Doing a check here
@@ -40,36 +35,16 @@ class Tree:
         self.head = SubTree(next=self.head, height=0)
 
         self.head.sum = leaf_sum(self.hash_func, data)
-        
+
         # // Insert the subTree into the Tree. As long as the height of the next
         # // subTree is the same as the height of the current subTree, the two will
         # // be combined into a single subTree of height n+1.
-        if self.head.next is not None and self.head.height == self.head.next.height:
-            # // Before combining subtrees, check whether one of the subtree hashes
-            # // needs to be added to the proof set. This is going to be true IFF the
-            # // subtrees being combined are one height higher than the previous
-            # // subtree added to the proof set. The height of the previous subtree
-            # // added to the proof set is equal to len(t.proofSet) - 1.
-            if self.head.height == len(self._proof_set) -1:
-                # // One of the subtrees needs to be added to the proof set. The
-                # // subtree that needs to be added is the subtree that does not
-                # // contain the proofIndex. Because the subtrees being compared are
-                # // the smallest and rightmost trees in the Tree, this can be
-                # // determined by rounding the currentIndex down to the number of
-                # // nodes in the subtree and comparing that index to the proofIndex.
-                leaves = 1 << self.head.height
-                mid = (self._current_index / leaves) * leaves
-                if self._proof_index < mid:
-                    self._proof_set.append(self.head.sum)
-                else:
-                    self._proof_set.append(self.head.next.sum)
-                
+        while self.head.next is not None and self.head.height == self.head.next.height:
             # // Join the two subTrees into one subTree with a greater height. Then
             # // compare the new subTree to the next subTree.
             self.head = join_subtree(self.hash_func, self.head.next, self.head)
 
-        self._current_index += 1
-    
+
     def root(self):
         """
         // Root returns the Merkle root of the data that has been pushed.
@@ -84,7 +59,7 @@ class Tree:
         while current.next is not None:
             current = join_subtree(self.hash_func, current.next, current)
         return current.sum
-    
+
 
 class SubTree:
     """
@@ -96,7 +71,7 @@ class SubTree:
         self.next = next
         self.height = height
         self.sum = bytearray()
-    
+
 
 def sum_(hash_func, data):
     """
@@ -104,7 +79,9 @@ def sum_(hash_func, data):
     """
     if data is None:
         return None
-    result = hash_func(data).digest()
+    result = hash_func(data)
+    if hasattr(result, 'digest'):
+        result = result.digest()
     # print("Data is: {} Result is: {}".format(data.hex(), result.hex()))
     return result
 
@@ -149,12 +126,11 @@ if __name__ == '__main__':
     from functools import partial
     hash_func = partial(blake2b, digest_size=32)
     tree = Tree(hash_func=hash_func)
-    a = bytearray([1])
-    b = bytearray([2])
-    c = bytearray([3])
-    tree.push(a)
-    tree.push(b)
-    tree.push(c)
+    tree.push(bytearray([1]))
+    tree.push(bytearray([2]))
+    tree.push(bytearray([3]))
+    tree.push(bytearray([4]))
+    tree.push(bytearray([5]))
     root = tree.root().hex()
-    assert root == '3029eb81c13fa0b1ed2a2130d985ba82072e9c3478b1a00c01c0407dfd5a037f'
+    assert root == '0002789a97a9feee38af3709f06377ef0ad7d91407cbcad1ccb8605556b6578e'
     print('Root is {}'.format(root))

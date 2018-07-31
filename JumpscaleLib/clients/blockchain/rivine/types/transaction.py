@@ -1,14 +1,15 @@
 """
 Module contianing all transaction types
 """
-from JumpscaleLib.clients.rivine.types.signatures import Ed25519PublicKey
-from JumpscaleLib.clients.rivine.types.unlockconditions import SingleSignatureFulfillment, UnlockHashCondition,\
- LockTimeCondition, AtomicSwapCondition, AtomicSwapFulfillment
-from JumpscaleLib.clients.rivine.encoding import binary
-from JumpscaleLib.clients.rivine.utils import hash
-from JumpscaleLib.clients.rivine.types.unlockhash import UnlockHash
+from JumpScale9Lib.clients.blockchain.rivine.types.signatures import Ed25519PublicKey
+from JumpScale9Lib.clients.blockchain.rivine.types.unlockconditions import SingleSignatureFulfillment, UnlockHashCondition,\
+ LockTimeCondition, AtomicSwapCondition, AtomicSwapFulfillment, MultiSignatureCondition, FulfillmentFactory, UnlockCondtionFactory, MultiSignatureFulfillment
+from JumpScale9Lib.clients.blockchain.rivine.encoding import binary
+from JumpScale9Lib.clients.blockchain.rivine.utils import hash
+from JumpScale9Lib.clients.blockchain.rivine.types.unlockhash import UnlockHash
 
 import base64
+import json
 
 DEFAULT_TRANSACTION_VERSION = 1
 HASHTYPE_COINOUTPUT_ID = 'coinoutputid'
@@ -27,6 +28,35 @@ class TransactionFactory:
         """
         if version == 1:
             return TransactionV1()
+
+
+    @staticmethod
+    def from_json(txn_json):
+        """
+        Creates a new transaction object from a json formated string
+
+        @param txn_json: JSON string, representing a transaction
+        """
+        txn_dict = json.loads(txn_json)
+        txn = None
+        if 'version' in txn_dict:
+            if txn_dict['version'] == DEFAULT_TRANSACTION_VERSION:
+                txn = TransactionV1()
+                if 'data' in txn_dict:
+                    txn_data = txn_dict['data']
+                    if 'coininputs' in txn_data:
+                        for ci_info in txn_data['coininputs']:
+                            ci = CoinInput.from_dict(ci_info)
+                            txn._coins_inputs.append(ci)
+                    if 'coinoutputs' in txn_data:
+                        for co_info in txn_data['coinoutputs']:
+                            co = CoinOutput.from_dict(co_info)
+                            txn._coins_outputs.append(co)
+                    if 'minerfees' in txn_data:
+                        for minerfee in txn_data['minerfees'] :
+                            txn.add_minerfee(int(minerfee))
+        return txn
+
 
 
 class TransactionV1:
@@ -65,7 +95,6 @@ class TransactionV1:
         Sets transaction id
         """
         self._id = txn_id
-
 
     @property
     def coins_inputs(self):
@@ -128,6 +157,14 @@ class TransactionV1:
         self._coins_inputs.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
 
 
+    def add_multisig_input(self, parent_id):
+        """
+        Adds a new coin input with an empty MultiSignatureFulfillment
+        """
+        fulfillment = MultiSignatureFulfillment()
+        self._coins_inputs.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
+
+
 
     def add_coin_output(self, value, recipient, locktime=None):
         """
@@ -155,6 +192,23 @@ class TransactionV1:
         self._coins_outputs.append(coin_output)
         return coin_output
 
+
+    def add_multisig_output(self, value, unlockhashes, min_nr_sig, locktime=None):
+        """
+        Add a new MultiSignature output to the transaction
+
+        @param value: Value of the output in hastings
+        @param unlockhashes: List of all unlock hashes which are authorised to spend this output by signing off
+        @param min_nr_sig: Defines the amount of signatures required in order to spend this output
+        @param locktime: If provided then a locktimecondition will be created for this output
+        """
+        condition = MultiSignatureCondition(unlockhashes=unlockhashes,
+                                            min_nr_sig=min_nr_sig)
+        if locktime is not None:
+            condition = LockTimeCondition(condition=condition, locktime=locktime)
+        coin_output = CoinOutput(value=value, condition=condition)
+        self._coins_outputs.append(coin_output)
+        return coin_output
 
 
     def add_minerfee(self, minerfee):
@@ -191,7 +245,6 @@ class TransactionV1:
             buffer.extend(binary.encode(coin_input.parent_id, type_='hex'))
 
         # encode coin outputs
-        # raise RuntimeError(binary.encode(self._coins_outputs, type_='slice').hex())
         buffer.extend(binary.encode(self._coins_outputs, type_='slice'))
 
         # encode the number of blockstakes
@@ -227,6 +280,20 @@ class CoinInput:
         """
         self._parent_id = parent_id
         self._fulfillment = fulfillment
+
+
+    @classmethod
+    def from_dict(cls, ci_info):
+        """
+        Creates a new CoinInput from dict
+
+        @param ci_info: JSON dict representing a coin input
+        """
+        if 'fulfillment' in ci_info:
+            f = FulfillmentFactory.from_dict(ci_info['fulfillment'])
+            if 'parentid' in ci_info:
+                return cls(parent_id=ci_info['parentid'],
+                           fulfillment=f)
 
     @property
     def parent_id(self):
@@ -266,6 +333,20 @@ class CoinOutput:
         """
         self._value = value
         self._condition = condition
+
+
+    @classmethod
+    def from_dict(cls, co_info):
+        """
+        Creates a new CoinOutput from dict
+
+        @param co_info: JSON dict representing a coin output
+        """
+        if 'condition' in co_info:
+            condition = UnlockCondtionFactory.from_dict(co_info['condition'])
+            if 'value' in co_info:
+                return cls(value=int(co_info['value']),
+                           condition=condition)
 
 
     @property

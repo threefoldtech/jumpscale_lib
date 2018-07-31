@@ -3,13 +3,13 @@ This module add the support of atomicswaps to the rivine light weight client
 """
 import time
 import hashlib
-from Jumpscale import j
-from JumpscaleLib.clients.rivine import utils
-from JumpscaleLib.clients.rivine.encoding import binary
-from JumpscaleLib.clients.rivine.errors import InvalidAtomicswapContract, AtomicSwapError
-from JumpscaleLib.clients.rivine.types.unlockconditions import ATOMICSWAP_CONDITION_TYPE
-from JumpscaleLib.clients.rivine.const import HASTINGS_TFT_VALUE, ATOMICSWAP_SECRET_SIZE, MINIMUM_TRANSACTION_FEE
-from JumpscaleLib.clients.rivine.types.transaction import TransactionFactory, DEFAULT_TRANSACTION_VERSION, HASHTYPE_COINOUTPUT_ID
+from JumpScale9 import j
+from JumpScale9Lib.clients.blockchain.rivine import utils
+from JumpScale9Lib.clients.blockchain.rivine.encoding import binary
+from JumpScale9Lib.clients.blockchain.rivine.errors import InvalidAtomicswapContract, AtomicSwapError
+from JumpScale9Lib.clients.blockchain.rivine.types.unlockconditions import ATOMICSWAP_CONDITION_TYPE
+from JumpScale9Lib.clients.blockchain.rivine.const import HASTINGS_TFT_VALUE, ATOMICSWAP_SECRET_SIZE, MINIMUM_TRANSACTION_FEE
+from JumpScale9Lib.clients.blockchain.rivine.types.transaction import TransactionFactory, DEFAULT_TRANSACTION_VERSION, HASHTYPE_COINOUTPUT_ID
 
 logger = j.logger.get(__name__)
 

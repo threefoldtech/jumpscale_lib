@@ -2,13 +2,41 @@
 Unlockconditions module
 """
 
-from JumpscaleLib.clients.rivine.encoding import binary
-from JumpscaleLib.clients.rivine.errors import DoubleSignatureError
-from JumpscaleLib.clients.rivine.types.unlockhash import UnlockHash
+from JumpScale9Lib.clients.blockchain.rivine.encoding import binary
+from JumpScale9Lib.clients.blockchain.rivine.errors import DoubleSignatureError
+from JumpScale9Lib.clients.blockchain.rivine.types.unlockhash import UnlockHash
+from JumpScale9Lib.clients.blockchain.rivine.types.signatures import SiaPublicKeyFactory, Ed25519PublicKey
 
-# this is the value if the locktime is less than it, it means that the locktime should be interpreted as the chain height lock instead of the timestamp
-TIMELOCK_CONDITION_HEIGHT_LIMIT = 5000000
 ATOMICSWAP_CONDITION_TYPE = bytearray([2])
+MULTISIG_CONDITION_TYPE = bytearray([4])
+
+
+class FulfillmentFactory:
+    """
+    FulfillmentFactory class
+    """
+    @staticmethod
+    def from_dict(fulfillment_dict):
+        """
+        Creates a fulfillment from a dict
+        """
+        fulfillment = None
+        if 'data' in fulfillment_dict:
+            if 'type' in fulfillment_dict:
+                if fulfillment_dict['type'] == 1:
+                    pub_key = SiaPublicKeyFactory.from_string(fulfillment_dict['data']['publickey'])
+                    fulfillment = SingleSignatureFulfillment(pub_key=pub_key)
+                    if 'signature' in fulfillment_dict['data']:
+                        fulfillment._signature = bytearray.fromhex(fulfillment_dict['data']['signature'])
+                elif fulfillment_dict['type'] == 2:
+                    pub_key = SiaPublicKeyFactory.from_string(fulfillment_dict['data']['publickey'])
+                    fulfillment = AtomicSwapFulfillment(pub_key=pub_key, secret=fulfillment_dict['data'].get('secret'))
+                    if 'signature' in fulfillment_dict['data']:
+                        fulfillment._signature = bytearray.fromhex(fulfillment_dict['data']['signature'])
+                elif fulfillment_dict['type'] == 3:
+                    fulfillment = MultiSignatureFulfillment.from_dict(fulfillment_dict['data'])
+
+        return fulfillment
 
 
 class BaseFulFillment:
@@ -52,6 +80,69 @@ class BaseFulFillment:
         self._signature = sig_ctx['secret_key'].sign(sig_hash)
 
 
+class MultiSignatureFulfillment:
+    """
+    MultiSignatureFulfillment class
+    """
+    def __init__(self):
+        """
+        Initializes new MultiSignatureFulfillment object
+        """
+        self._type = bytearray([3])
+        self._pairs = []
+
+
+    @classmethod
+    def from_dict(cls, data):
+        """
+        Create a new MultiSignatureFulfillment from a dictionary
+        """
+        f = cls()
+        if "pairs" in data:
+            for pair in data['pairs']:
+                if 'publickey' in pair and 'signature' in pair:
+                    f.add_signature_pair(public_key=SiaPublicKeyFactory.from_string(pair['publickey']),
+                                        signature=bytearray.fromhex(pair['signature']))
+        return f
+
+
+    def sign(self, sig_ctx):
+        """
+        Sign the given fulfillment, which is to be done after all properties have been filled of the parent transaction
+
+        @param sig_ctx: Signature context should be a dictionary containing the secret key, input index, and transaction object
+        """
+        pk = sig_ctx['secret_key'].get_verifying_key()
+        public_key = Ed25519PublicKey(pub_key=pk.to_bytes())
+        sig_hash = sig_ctx['transaction'].get_input_signature_hash(input_index=sig_ctx['input_idx'],
+                                                                    extra_objects=[public_key])
+        signature = sig_ctx['secret_key'].sign(sig_hash)
+        self.add_signature_pair(public_key=public_key,
+                                signature=signature)
+
+
+
+    def add_signature_pair(self, public_key, signature):
+        """
+        Adds a publickey signature pair
+        """
+        self._pairs.append({
+            'publickey': public_key,
+            'signature': signature
+        })
+
+    @property
+    def json(self):
+        """
+        Returns a json encoded versoin of the MultiSignatureFulfillment
+        """
+        return {
+            'type': binary.decode(self._type, type_=int),
+            'data': {
+                "pairs": [{'publickey': pair['publickey'].json,
+                            'signature': pair['signature'].hex()} for pair in self._pairs]
+            }
+        }
 
 
 class AtomicSwapFulfillment(BaseFulFillment):
@@ -81,7 +172,6 @@ class AtomicSwapFulfillment(BaseFulFillment):
         return result
 
 
-
 class SingleSignatureFulfillment(BaseFulFillment):
     """
     SingleSignatureFulfillment class
@@ -94,6 +184,100 @@ class SingleSignatureFulfillment(BaseFulFillment):
         self._type = bytearray([1])
 
 
+class UnlockCondtionFactory:
+    """
+    UnlockCondtionFactory class
+    """
+    @staticmethod
+    def from_dict(condition_dict):
+        """
+        Creates an unlock condition object from a dictionary
+        """
+        if 'data' in condition_dict:
+            if 'type' in condition_dict:
+                if condition_dict['type'] == 1:
+                    return UnlockHashCondition(unlockhash=UnlockHash.from_string(condition_dict['data']['unlockhash']))
+                elif condition_dict['type'] == 1:
+                    return AtomicSwapCondition.from_dict(condition_dict['data'])
+                elif condition_dict['type'] == 3:
+                    return LockTimeCondition.from_dict(condition_dict['data'])
+                elif condition_dict['type'] == 4:
+                    return MultiSignatureCondition.from_dict(condition_dict['data'])
+
+
+class MultiSignatureCondition:
+    """
+    A MultiSignatureCondition class
+    """
+
+    def __init__(self, unlockhashes, min_nr_sig):
+        """
+        Initialize a new MultiSignatureCondition object
+
+        @param unlockhashes: List of unlockhashes
+        @param min_nr_sig: Minimum number of signatures required to fulfill this condition
+        """
+        self._unlockhashes = unlockhashes
+        self._min_nr_sig = min_nr_sig
+        self._type = MULTISIG_CONDITION_TYPE
+
+    @property
+    def type(self):
+        """
+        Retruns the condition type
+        """
+        return self._type
+
+    @property
+    def data(self):
+        """
+        Retruns the binary format of the data on the condition
+        """
+        result = bytearray()
+        result.extend(binary.encode(self._min_nr_sig))
+        result.extend(binary.encode(len(self._unlockhashes)))
+        for unlockhash in self._unlockhashes:
+            result.extend(binary.encode(UnlockHash.from_string(unlockhash)))
+        return result
+
+
+    @property
+    def binary(self):
+        """
+        Returns a binary encoded versoin of the MultiSignatureCondition
+        """
+        result = bytearray()
+        result.extend(self._type)
+        condition_binary = bytearray()
+        condition_binary.extend(binary.encode(self._min_nr_sig))
+        condition_binary.extend(binary.encode(len(self._unlockhashes)))
+        for unlockhash in self._unlockhashes:
+            condition_binary.extend(binary.encode(UnlockHash.from_string(unlockhash)))
+        result.extend(binary.encode(condition_binary, type_='slice'))
+        return result
+
+
+    @property
+    def json(self):
+        """
+        Returns a json encoded version of the MultiSignatureCondition
+        """
+        return {
+            'type': binary.decode(self._type, type_=int),
+            'data': {
+                'unlockhashes': self._unlockhashes,
+                'minimumsignaturecount': self._min_nr_sig
+            }
+        }
+
+
+    @classmethod
+    def from_dict(cls, data):
+        """
+        Creates a new MultiSignatureCondition object from a dict
+        """
+        return cls(unlockhashes=data['unlockhashes'],
+                   min_nr_sig=data['minimumsignaturecount'])
 
 
 class AtomicSwapCondition:
@@ -143,6 +327,16 @@ class AtomicSwapCondition:
             }
         }
 
+
+    @classmethod
+    def from_dict(cls, data):
+        """
+        Creates a new AtomicSwapCondition object
+        """
+        return cls(sender=data['sender'],
+                  reciever=data['receiver'],
+                  hashed_secret=data['hashedsecret'],
+                  locktime=data['timelock'])
 
 
 class LockTimeCondition:
@@ -194,6 +388,13 @@ class LockTimeCondition:
             }
         }
 
+    @classmethod
+    def from_dict(cls, data):
+        """
+        Creates a new LockTimeCondition from a dict
+        """
+        innner_condtion = UnlockCondtionFactory.from_dict(data['condition'])
+        return cls(condition=innner_condtion, locktime=data['locktime'])
 
 
 class UnlockHashCondition:

@@ -3,12 +3,13 @@ Modules defines the unlockhash types
 """
 
 from pyblake2 import blake2b
-from JumpscaleLib.clients.rivine import utils
-from JumpscaleLib.clients.rivine.encoding import binary
+from JumpScale9Lib.clients.blockchain.rivine import utils
+from JumpScale9Lib.clients.blockchain.rivine.encoding import binary
 
 UNLOCK_TYPE_PUBKEY = bytearray([1])
+UNLOCK_TYPE_ATOMICSWAP = bytearray([2])
+UNLOCK_TYPE_MULTISIG = bytearray([3])
 UNLOCKHASH_SIZE = 32
-UNLOCKHASH_TYPE = 'unlockhash'
 UNLOCKHASH_CHECKSUM_SIZE = 6
 UNLOCKHASH_TYPE_ZISE = 1
 
