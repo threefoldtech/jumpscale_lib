@@ -1,12 +1,12 @@
 """
 Module contianing all transaction types
 """
-from JumpScale9Lib.clients.blockchain.rivine.types.signatures import Ed25519PublicKey
-from JumpScale9Lib.clients.blockchain.rivine.types.unlockconditions import SingleSignatureFulfillment, UnlockHashCondition,\
+from JumpscaleLib.clients.blockchain.rivine.types.signatures import Ed25519PublicKey
+from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import SingleSignatureFulfillment, UnlockHashCondition,\
  LockTimeCondition, AtomicSwapCondition, AtomicSwapFulfillment, MultiSignatureCondition, FulfillmentFactory, UnlockCondtionFactory, MultiSignatureFulfillment
-from JumpScale9Lib.clients.blockchain.rivine.encoding import binary
-from JumpScale9Lib.clients.blockchain.rivine.utils import hash
-from JumpScale9Lib.clients.blockchain.rivine.types.unlockhash import UnlockHash
+from JumpscaleLib.clients.blockchain.rivine.encoding import binary
+from JumpscaleLib.clients.blockchain.rivine.utils import hash
+from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
 
 import base64
 import json

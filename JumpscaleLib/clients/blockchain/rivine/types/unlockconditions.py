@@ -2,10 +2,10 @@
 Unlockconditions module
 """
 
-from JumpScale9Lib.clients.blockchain.rivine.encoding import binary
-from JumpScale9Lib.clients.blockchain.rivine.errors import DoubleSignatureError
-from JumpScale9Lib.clients.blockchain.rivine.types.unlockhash import UnlockHash
-from JumpScale9Lib.clients.blockchain.rivine.types.signatures import SiaPublicKeyFactory, Ed25519PublicKey
+from JumpscaleLib.clients.blockchain.rivine.encoding import binary
+from JumpscaleLib.clients.blockchain.rivine.errors import DoubleSignatureError
+from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
+from JumpscaleLib.clients.blockchain.rivine.types.signatures import SiaPublicKeyFactory, Ed25519PublicKey
 
 ATOMICSWAP_CONDITION_TYPE = bytearray([2])
 MULTISIG_CONDITION_TYPE = bytearray([4])

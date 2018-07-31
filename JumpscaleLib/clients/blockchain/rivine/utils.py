@@ -10,10 +10,10 @@ from pyblake2 import blake2b
 from requests.auth import HTTPBasicAuth
 
 from JumpScale9 import j
-from JumpScale9Lib.clients.blockchain.rivine import secrets
-from JumpScale9Lib.clients.blockchain.rivine.encoding import binary
-from JumpScale9Lib.clients.blockchain.rivine.errors import RESTAPIError, BackendError
-from JumpScale9Lib.clients.blockchain.rivine.const import HASH_SIZE, MINER_PAYOUT_MATURITY_WINDOW, TIMELOCK_CONDITION_HEIGHT_LIMIT
+from JumpscaleLib.clients.blockchain.rivine import secrets
+from JumpscaleLib.clients.blockchain.rivine.encoding import binary
+from JumpscaleLib.clients.blockchain.rivine.errors import RESTAPIError, BackendError
+from JumpscaleLib.clients.blockchain.rivine.const import HASH_SIZE, MINER_PAYOUT_MATURITY_WINDOW, TIMELOCK_CONDITION_HEIGHT_LIMIT
 
 
 DURATION_REGX_PATTERN = '^(?P<hours>\d*)h(?P<minutes>\d*)m(?P<seconds>\d*)s$'

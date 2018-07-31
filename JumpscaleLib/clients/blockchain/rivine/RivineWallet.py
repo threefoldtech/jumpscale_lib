@@ -21,10 +21,10 @@ from .types.signatures import Ed25519PublicKey, SPECIFIER_SIZE
 from .types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY, UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE
 
 from JumpScale9 import j
-from JumpScale9Lib.clients.blockchain.rivine import utils
-from JumpScale9Lib.clients.blockchain.rivine.atomicswap.atomicswap import AtomicSwapManager
-from JumpScale9Lib.clients.blockchain.rivine.types.transaction import TransactionFactory, DEFAULT_TRANSACTION_VERSION
-from JumpScale9Lib.clients.blockchain.rivine.types.unlockhash import UnlockHash
+from JumpscaleLib.clients.blockchain.rivine import utils
+from JumpscaleLib.clients.blockchain.rivine.atomicswap.atomicswap import AtomicSwapManager
+from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory, DEFAULT_TRANSACTION_VERSION
+from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
 
 from .const import MINER_PAYOUT_MATURITY_WINDOW, WALLET_ADDRESS_TYPE, ADDRESS_TYPE_SIZE, HASTINGS_TFT_VALUE, UNLOCKHASH_TYPE
 

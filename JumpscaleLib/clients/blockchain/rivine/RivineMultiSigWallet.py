@@ -4,13 +4,13 @@ Module that defines required classes for Mulitsignature wallets
 import json
 
 from JumpScale9 import j
-from JumpScale9Lib.clients.blockchain.rivine import const
-from JumpScale9Lib.clients.blockchain.rivine import utils
-from JumpScale9Lib.clients.blockchain.rivine.merkletree import Tree
-from JumpScale9Lib.clients.blockchain.rivine.encoding import binary
-from JumpScale9Lib.clients.blockchain.rivine.errors import RESTAPIError, InsufficientWalletFundsError
-from JumpScale9Lib.clients.blockchain.rivine.types.unlockhash import UnlockHash, UNLOCK_TYPE_MULTISIG
-from JumpScale9Lib.clients.blockchain.rivine.types.transaction import TransactionFactory, DEFAULT_TRANSACTION_VERSION
+from JumpscaleLib.clients.blockchain.rivine import const
+from JumpscaleLib.clients.blockchain.rivine import utils
+from JumpscaleLib.clients.blockchain.rivine.merkletree import Tree
+from JumpscaleLib.clients.blockchain.rivine.encoding import binary
+from JumpscaleLib.clients.blockchain.rivine.errors import RESTAPIError, InsufficientWalletFundsError
+from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash, UNLOCK_TYPE_MULTISIG
+from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory, DEFAULT_TRANSACTION_VERSION
 
 logger = j.logger.get(__name__)
 
