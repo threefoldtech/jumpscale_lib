@@ -75,10 +75,8 @@ class HTMLFactory(JSBASE):
                     if (key.find("_add") is not -1 or key is "add") and not key.startswith("_"):
                         self.webparts.__dict__["%s_%s"%(webpart_name,key)]=item
             
-            if j.servers.web.latest is not None:
-                print("webparts_enable for blueprint")
-                from IPython import embed;embed(colors='Linux')
-                s
+        if j.servers.web.latest is not None:
+            j.servers.web.latest.webparts = self.webparts
 
     # def register_blueprints(self,app):
     #     apps = j.sal.fs.listDirsInDir("%s/blueprints"%self.path, recursive=False, dirNameOnly=True, findDirectorySymlinks=True, followSymlinks=True)

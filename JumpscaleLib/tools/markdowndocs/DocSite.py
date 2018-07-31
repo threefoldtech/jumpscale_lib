@@ -41,16 +41,16 @@ class DocSite(JSBASE):
         if not j.sal.fs.exists(path):
             raise RuntimeError("Cannot find path:%s"%path)
 
-
-        if not name:
-            if "name" not in self.config:                        
-                self.name = j.sal.fs.getBaseName(self.path.rstrip("/")).lower()
-            else:
+        self.name = ""
+        if name is "":
+            if "name" in self.config:
                 self.name = self.config["name"].lower()
         else:
             self.name = name.lower()
 
         self.name = j.data.text.strip_to_ascii_dense(self.name)
+        if self.name == "":
+            raise RuntimeError("name cannot be empty")
 
         self.defs = {}
         self.content_default = {}  # key is relative path in docsite where default content found
@@ -82,7 +82,8 @@ class DocSite(JSBASE):
         self._git=None
         self._loaded = False
 
-        self.logger.info("loaded:%s"%self)
+        self.logger.info("found:%s"%self)
+
         
 
     @property
@@ -285,7 +286,7 @@ class DocSite(JSBASE):
 
     def html_get(self, name, cat="", die=True):
         doc = self.doc_get(name=name,cat=cat,die=die)
-        return do.html_get()
+        return doc.html_get()
 
     def doc_get(self, name, cat="", die=True):
         

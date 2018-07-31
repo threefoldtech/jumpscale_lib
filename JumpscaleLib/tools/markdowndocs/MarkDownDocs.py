@@ -207,11 +207,13 @@ class MarkDownDocs(JSBASE):
         return res
 
     def def_get(self, name):
+        name = j.data.text.strip_to_ascii_dense(name)
         if name not in self.defs:
             raise RuntimeError("cannot find def:%s" % name)
         return self.defs[name]
 
     def docsite_get(self, name, die=True):
+        name = j.data.text.strip_to_ascii_dense(name)
         name = name.lower()
         if name in self.docsites:
             return self.docsites[name]
