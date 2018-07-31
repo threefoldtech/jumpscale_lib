@@ -24,7 +24,7 @@ class JSWebServers(JSConfigBase):
 
         config_path = j.sal.fs.joinPaths(ws_dir, "site_config.toml")
         if not j.sal.fs.exists(config_path):
-            raise RuntimeError("cannot find: %s" % config_path)
+            j.sal.fs.createEmptyFile(config_path)
 
         data = {
             "port": port,
