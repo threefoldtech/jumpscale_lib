@@ -2,21 +2,34 @@ import time
 
 from jumpscale import j
 
-from .Client import Client
-
 JSConfigFactoryBase = j.tools.configmanager.base_class_configs
 logger = j.logger.get(__name__)
 
 
-class ZeroOSFactory(JSConfigFactoryBase):
+class ZeroOSClientFactory():
     """
     """
 
     def __init__(self):
         self.__jslocation__ = "j.clients.zos"
-        super().__init__(Client)
-        self.connections = {}
 
+
+
+    def get(self,instance="main",data={},interactive=False):
+        """
+        data = {}
+            host = "127.0.0.1"
+            port = 6379
+            unixsocket = ""
+            password_ = ""
+            db = 0
+            ssl = true
+            timeout = 120        
+        
+        """
+        cl = j.clients.zos_protocol.get(instance=instance,data=data,interactive=interactive)
+        return j.sal_zos.node.get(cl)
+        
     def zero_node_ovh_install(self, OVHHostName, OVHClient, zerotierNetworkID, zerotierClient):
         """
 
