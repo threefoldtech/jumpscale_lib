@@ -13,9 +13,7 @@ class ZeroOSClientFactory():
     def __init__(self):
         self.__jslocation__ = "j.clients.zos"
 
-
-
-    def get(self,instance="main",data={},interactive=False):
+    def get(self, instance="main", data={}, interactive=False):
         """
         data = {}
             host = "127.0.0.1"
@@ -24,12 +22,30 @@ class ZeroOSClientFactory():
             password_ = ""
             db = 0
             ssl = true
-            timeout = 120        
-        
+            timeout = 120
+
         """
-        cl = j.clients.zos_protocol.get(instance=instance,data=data,interactive=interactive)
+        cl = j.clients.zos_protocol.get(instance=instance, data=data, interactive=interactive)
         return j.sal_zos.node.get(cl)
-        
+
+    def list(self, prefix=''):
+        return j.clients.zos_protocol.list(prefix=prefix)
+
+    def count(self):
+        return j.clients.zos_protocol.count()
+
+    def delete(self, instance):
+        return j.clients.zos_protocol.delete(instance)
+
+    def exists(self, instance):
+        return j.clients.zos_protocol.exists(instance)
+
+    def getall(self):
+        return j.clients.zos_protocol.getall()
+
+    def new(self, instance, data={}):
+        return j.clients.zos_protocol.new(instance=instance, data=data)
+
     def zero_node_ovh_install(self, OVHHostName, OVHClient, zerotierNetworkID, zerotierClient):
         """
 
