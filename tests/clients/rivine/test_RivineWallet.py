@@ -6,7 +6,7 @@ from jumpscale import j
 import time
 
 
-from JumpscaleLib.clients.rivine.types.transaction import TransactionFactory
+from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory
 txn = TransactionFactory.create_transaction(1)
 # txn.add_data(bytearray('ot', encoding='utf-8'))
 # txn.add_data(b'ot')
