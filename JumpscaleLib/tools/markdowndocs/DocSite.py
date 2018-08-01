@@ -24,7 +24,6 @@ class DocSite(JSBASE):
         JSBASE.__init__(self)
 
         self.docgen = j.tools.markdowndocs
-
         #init initial arguments
 
         config_path = j.sal.fs.joinPaths(path,"docs_config.toml")
@@ -338,7 +337,7 @@ class DocSite(JSBASE):
             if nr == 1:
                 self.docs[name] = res  #remember for caching
                 return self.docs[name]
-
+        
         if die:
             raise j.exceptions.Input(message="Cannot find doc with name:%s" % name, level=1, source="", tags="", msgpub="")
         else:

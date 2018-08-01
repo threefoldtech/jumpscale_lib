@@ -58,9 +58,7 @@ class MDList(MDBase):
     def as_list(self):
         return lines2list(self.text)
 
-    @property
-    def text(self):        
-        return str(self)
+    
  
     
 class MDTable(MDBase):

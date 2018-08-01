@@ -47,6 +47,10 @@ class Doc(JSBASE):
 
         self._md = None
 
+        self._content = None
+
+        self.media = []
+
 
     @property
     def extension(self):
@@ -78,8 +82,6 @@ class Doc(JSBASE):
         if self._data=={}:
             self._data_default_process()    
             print("data update from md")
-            from IPython import embed;embed(colors='Linux')
-            s    
         return self._data
 
     @property
@@ -90,7 +92,9 @@ class Doc(JSBASE):
 
     @property
     def content(self):
-        return j.sal.fs.fileGetContents(self.path)
+        if not self._content:
+            self._content = j.sal.fs.fileGetContents(self.path)
+        return self._content
 
     @property
     def content_clean(self):
@@ -117,7 +121,7 @@ class Doc(JSBASE):
 
     def _data_update(self, data):
         res = {}
-        for key, val in self.data.items():
+        for key, val in self._data.items():
             if key in data:
                 valUpdate = copy.copy(data[key])
                 if j.data.types.list.check(val):
@@ -128,19 +132,19 @@ class Doc(JSBASE):
                     for item in valUpdate:
                         if item not in val and item != "":
                             val.append(item)
-                    self.data[key] = val
+                    self._data[key] = val
                 else:
-                    self.data[key] = valUpdate
+                    self._data[key] = valUpdate
         for key, valUpdate2 in data.items():
             # check for the keys not in the self.data yet and add them, the others are done above
-            if key not in self.data:
-                self.data[key] = copy.copy(valUpdate2)  # needs to be copy.copy otherwise we rewrite source later
+            if key not in self._data:
+                self._data[key] = copy.copy(valUpdate2)  # needs to be copy.copy otherwise we rewrite source later
 
     def _data_default_process(self):
         """
         empty data, go over default data's and update in self.data
         """
-        self.data = {}
+        self._data = {}
         keys = [item for item in self.docsite.data_default.keys()]
         keys.sort(key=len)
         for key in keys:
@@ -149,8 +153,6 @@ class Doc(JSBASE):
                 data = self.docsite.data_default[key]
                 self._data_update(data)
         print("data process doc")
-        from IPython import embed;embed(colors='Linux')
-        s
 
     def _macro_process(self,methodline,block):
         """
@@ -182,10 +184,8 @@ class Doc(JSBASE):
         return macro
 
     def _links_process(self):
-        
         # check links for internal images
-        return
-
+        #eturn
         ws = "wiki/" + self.docsite.name
 
         regex = "\] *\([a-zA-Z0-9\.\-\_\ \/]+\)"  # find all possible images/links
@@ -198,25 +198,23 @@ class Doc(JSBASE):
                 fnameFound = self.docsite.file_get(fname, die=False)
                 if fnameFound==None:
                     print("links process")
-                    from IPython import embed;embed(colors='Linux')
-                    s
                     msg = "**ERROR: COULD NOT FIND LINK: %s TODO: **" % fnameFound
-                    self.content = self.content.replace(match.founditem, msg)
+                    self._content = self.content.replace(match.founditem, msg)
                 else:
-                    self.content = self.content.replace(match.founditem, "](/%s/files/%s)" % (self.docsite.name, fnameFound))
+                    self._content = self.content.replace(match.founditem, "](/%s/files/%s)" % (self.docsite.name, fnameFound))
             elif j.sal.fs.getFileExtension(fname).lower() in ["md"]:
                 shortname = fname.lower()[:-3]
                 if shortname not in self.docsite.docs:
                     msg = "**ERROR: COULD NOT FIND LINK: %s TODO: **" % shortname
                     self.docsite.error_raise(msg, doc=self)
-                    self.content = self.content.replace(match.founditem, msg)
+                    self._content = self.content.replace(match.founditem, msg)
                 else:
                     thisdoc = self.docsite.docs[shortname]
-                    self.content = self.content.replace(match.founditem, "](%s)" % (thisdoc.url))
+                    self._content = self.content.replace(match.founditem, "](%s)" % (thisdoc.url))
 
         regex = "src *= *\" */?static"
         for match in j.data.regex.yieldRegexMatches(regex, self.content, flags=0):
-            self.content = self.content.replace(match.founditem, "src = \"/")
+            self._content = self.content.replace(match.founditem, "src = \"/")
 
     def render(self,**args):
         """
