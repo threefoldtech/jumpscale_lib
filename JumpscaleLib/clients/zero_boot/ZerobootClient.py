@@ -301,11 +301,14 @@ class Hosts:
         hosts_data = re.findall("dhcp.@host\[(\d+)\]\.(ip|mac|name)=(.+)", out)
         if hosts_data:
             self._last_index = int(hosts_data[-1][0])
+            host_data_json={}
             for host_data in self._hosts_chunks(hosts_data, 3):
                 index = host_data[0][0]
-                ip, mac, name = map(lambda x: x[2].replace("'", ""), host_data)
-                if netaddr.IPAddress(ip) in netaddr.IPNetwork(self.subnet):
-                    self._hosts[name] = Host(mac, ip, name, self.sshclient, index)
+                host_data_json[host_data[0][1]],host_data_json[host_data[1][1]],host_data_json[host_data[2][1]] = map(lambda x: x[2].replace("'", ""), host_data)
+                if netaddr.IPAddress(host_data_json['ip']) in netaddr.IPNetwork(self.subnet):
+                    host_data_json['sshclient'] = self.sshclient
+                    host_data_json['index'] = index
+                    self._hosts[host_data_json['name']] = Host(**host_data_json)
         else:
             self._last_index = -1
 
