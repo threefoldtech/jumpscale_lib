@@ -289,8 +289,7 @@ class MarkdownDocument(JSBASE):
                     s
             else:
                 print("htmlpage_get")
-                from IPython import embed;embed(colors='Linux')
-                s
+                
         return htmlpage
             
 
