@@ -3,7 +3,8 @@ import gevent
 from .ActorCommunity import ActorCommunity
 from .Actor import Actor
 from .ServerRack import ServerRack
-
+from .ChangeWatchdog import ChangeWatchdog
+import time
 JSBASE = j.application.jsbase_get_class()
 
 
@@ -20,6 +21,27 @@ class Worlds(JSBASE):
 
     def actor_class_get(self):
         return Actor
+
+    def monitor_changes(self, gedis_instance_name):
+        """
+        js_shell 'j.servers.gworld.monitor_changes("test")'
+        """
+        from watchdog.observers import Observer
+        cl = j.clients.gedis.get(gedis_instance_name)
+        res =  cl.system.docsite_paths()
+
+        event_handler = ChangeWatchdog(client=cl)
+        observer = Observer()
+        for source in res.paths:
+            self.logger.debug("monitor:%s" % source)
+            observer.schedule(event_handler, source, recursive=True)
+        self.logger.info("are now observing filesystem changes")
+        observer.start()
+        try:
+            while True:
+                time.sleep(0.1)
+        except KeyboardInterrupt:
+            pass         
 
     def test_actors(self):
         """

@@ -47,8 +47,11 @@ class GedisClientFactory(JSConfigBase):
         instance='main',
         data={},
         reset=False,
+        configureonly=False
     ):
-        client = super(GedisClientFactory, self).get(instance=instance, data=data, reset=reset)
+        client = super(GedisClientFactory, self).get(instance=instance, data=data, reset=reset,configureonly=configureonly)
+        if configureonly:
+            return
 
         if client._connected:
             cl = GedisClientCmds()

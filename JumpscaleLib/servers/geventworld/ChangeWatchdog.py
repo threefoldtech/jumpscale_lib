@@ -3,17 +3,24 @@ from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 from watchdog.events import FileSystemEventHandler
-from watchdog.observers import Observer
+# from watchdog.observers import Observer
 
 
 
-class DocWatchdog(FileSystemEventHandler, JSBASE):
-    def __init__(self):
+class ChangeWatchdog(FileSystemEventHandler, JSBASE):
+    def __init__(self,client):
         JSBASE.__init__(self)
+        self.client=client
         self.logger_enable()
+
+    def github_trigger_do(self):
+        """
+        simulate a github trigger
+        """
 
     def handler(self, event, action="copy"):
         self.logger.debug("%s:%s" % (event, action))
+        from IPython import embed;embed(colors='Linux')
         changedfile = event.src_path
         if event.is_directory:
             if changedfile.find("/.git") != -1:
