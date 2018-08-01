@@ -33,13 +33,15 @@ class Handler(JSBASE):
             cmd = request[0]
             redis_cmd = cmd.decode("utf-8").lower()
 
+            params = {}
+
             cmd, err = self.get_command(redis_cmd)
             if err is not "":
                 self.response.error(err)
                 continue
             if cmd.schema_in:
                 if len(request) < 2:
-                    self.response.error("need to have arguments, none given")
+                    self.response.error("can not handle with request, not enough arguments")
                     continue
                 if len(request) > 2:
                     cmd.schema_in.properties
@@ -70,20 +72,18 @@ class Handler(JSBASE):
                 else:
                     params.update(schema_dict)
 
-                if cmd.schema_out:
-                    params["schema_out"] = cmd.schema_out
+
             else:
                 if len(request) > 1:
                     params = request[1:]
-                    if cmd.schema_out:
-                        params.append(cmd.schema_out)
-                else:
-                    params = None
+
+            if cmd.schema_out:
+                params["schema_out"] = cmd.schema_out                        
 
             self.logger.debug("execute command callback:%s:%s" % (cmd, params))
             result = None
             try:
-                if params is None:
+                if params == {}:
                     result = cmd.method()
                 elif j.data.types.list.check(params):
                     result = cmd.method(*params)

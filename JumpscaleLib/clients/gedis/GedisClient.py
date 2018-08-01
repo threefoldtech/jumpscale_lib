@@ -28,7 +28,7 @@ class CmdsBase():
 
 class GedisClient(JSConfigBase):
 
-    def __init__(self, instance, data={}, parent=None, interactive=False, reset=False):
+    def __init__(self, instance, data={}, parent=None, interactive=False, reset=False,configureonly=False):
         JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,template=TEMPLATE , interactive=interactive)
 
         j.clients.gedis.latest = self
@@ -36,6 +36,9 @@ class GedisClient(JSConfigBase):
         self.code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", instance, "client")
         j.sal.fs.createDir(self.code_generated_dir)
         j.sal.fs.touch(j.sal.fs.joinPaths(self.code_generated_dir, '__init__.py'))
+
+        if configureonly:
+            return
 
         if self.code_generated_dir not in sys.path:
             sys.path.append(self.code_generated_dir)

@@ -1,6 +1,6 @@
 from jumpscale import j
 from .Doc import Doc
-from .DocWatchdog import DocWatchdog
+
 JSBASE = j.application.jsbase_get_class()
 
 import copy

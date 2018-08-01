@@ -24,7 +24,8 @@ class GedisFactory(JSConfigBase):
 
     def get(self, instance='main', data={}, interactive=False):
 
-        return super(GedisFactory, self).get(instance=instance, data=data, interactive=interactive)
+        return super(GedisFactory, self).get(instance=instance, data=data, interactive=interactive)        
+
 
     def chatbot_test(self):
         """
@@ -113,7 +114,9 @@ class GedisFactory(JSConfigBase):
             j.clients.gedis.configure(instance=instance,
                                       host=host, port=port, secret=secret, ssl=ssl, reset=True, get=False)
 
-        return self.get(instance, data, interactive=interactive)
+        server=self.get(instance, data, interactive=interactive)
+        server.client_configure() #configures the client
+        return server
 
     def cmds_get(self, namespace, capnpbin):
         """

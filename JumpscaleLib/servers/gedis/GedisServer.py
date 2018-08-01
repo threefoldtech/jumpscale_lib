@@ -82,12 +82,11 @@ class GedisServer(StreamServer, JSConfigBase):
             raise RuntimeError("appdir cannot be empty")
         j.sal.fs.createDir(self.app_dir)
         
+        #LETS NOT LONGER COPY THE BASE !!!!
         #copies the base from the jumpscale lib to the appdir
-        self.logger.debug("copy base to:%s"%self.app_dir )
-        #make sure reset stays false
-
-        j.tools.jinja2.copy_dir_render("%s/base"%j.servers.gedis.path,self.app_dir ,overwriteFiles=True, render=False, reset=False, \
-            j=j, config=self.config.data, instance=self.instance)     
+        # self.logger.debug("copy base to:%s"%self.app_dir )
+        # j.tools.jinja2.copy_dir_render("%s/base"%j.servers.gedis.path,self.app_dir ,overwriteFiles=True, render=False, reset=False, \
+        #     j=j, config=self.config.data, instance=self.instance)     
 
         # add the cmds to the server (from generated dir + app_dir)
         self.bcdb_init() #make sure we know the schemas
@@ -95,8 +94,9 @@ class GedisServer(StreamServer, JSConfigBase):
 
         #now in code generation dir we have the actors generated for the model
         #load the commands into the namespace of the server (self.cmds_add)
-        files = j.sal.fs.listFilesInDir(self.code_generated_dir,"server", filter="*.py", exclude=["__*", "test*"]) 
-        files += j.sal.fs.listFilesInDir(self.app_dir+"/actors", filter="*.py", exclude=["__*"])
+        files = j.sal.fs.listFilesInDir(self.code_generated_dir,recursive=True, filter="*.py", exclude=["__*", "test*"]) 
+        files += j.sal.fs.listFilesInDir(self.app_dir+"/actors", recursive=True, filter="*.py", exclude=["__*"])
+        files += j.sal.fs.listFilesInDir("%s/systemactors"%j.servers.gedis.path, recursive=True,filter="*.py", exclude=["__*"])
         for item in files:
             namespace = self.instance + '.' + j.sal.fs.getBaseName(item)[:-3].lower()
             self.logger.debug("cmds generated add:%s"%item)
@@ -186,6 +186,16 @@ class GedisServer(StreamServer, JSConfigBase):
             class_ = eval(classname)
         self.cmds_meta[namespace] = GedisCmds(self, namespace=namespace, class_=class_)
         self.classes[namespace] =class_()
+
+    def client_configure(self):
+    
+        data ={}
+        data["host"] = self.config.data["host"]
+        data["port"] = self.config.data["port"]
+        data["adminsecret_"] = self.config.data["adminsecret_"]
+        data["ssl"] = self.config.data["ssl"]
+        
+        return j.clients.gedis.get(instance=self.instance, data=data, reset=False,configureonly=True)
 
     def client_get(self):
 
