@@ -49,7 +49,13 @@ class Doc(JSBASE):
 
         self._content = None
 
-        self.media = []
+        self._media = []
+
+    @property
+    def media(self):
+        if not self._media:
+            self._links_process()
+        return self._media
 
 
     @property
@@ -90,6 +96,10 @@ class Doc(JSBASE):
             self._md = j.data.markdown.document_get(j.sal.fs.fileGetContents(self.path))        
         return self._md
 
+    def header_get(self, level=1, nr=0):
+        headers = [item for item in self.md.items if item.type == "header" and item.level == level]
+        return headers[nr] if len(headers) > nr else ""
+
     @property
     def content(self):
         if not self._content:
@@ -101,7 +111,10 @@ class Doc(JSBASE):
         # remove the code blocks (comments are already gone)
         print('content_clean')
         from IPython import embed;embed(colors='Linux')
-        s
+        return None
+
+    def image_name_get(self, nr=0):
+        return self.media[nr]
 
     @property
     def content_clean_summary(self):
@@ -185,15 +198,12 @@ class Doc(JSBASE):
 
     def _links_process(self):
         # check links for internal images
-        #eturn
-        ws = "wiki/" + self.docsite.name
-
         regex = "\] *\([a-zA-Z0-9\.\-\_\ \/]+\)"  # find all possible images/links
         for match in j.data.regex.yieldRegexMatches(regex, self.content, flags=0):
             self.logger.debug("##:file:link:%s" % match)
             fname = match.founditem.strip("[]").strip("()")
             if match.founditem.find("/") != -1:
-                fname = fname.split("/")[1]
+                fname = fname.split("/")[-1]
             if j.sal.fs.getFileExtension(fname).lower() in ["png", "jpg", "jpeg", "mov", "mp4"]:
                 fnameFound = self.docsite.file_get(fname, die=False)
                 if fnameFound==None:
@@ -202,6 +212,7 @@ class Doc(JSBASE):
                     self._content = self.content.replace(match.founditem, msg)
                 else:
                     self._content = self.content.replace(match.founditem, "](/%s/files/%s)" % (self.docsite.name, fnameFound))
+                    self._media.append(fname)
             elif j.sal.fs.getFileExtension(fname).lower() in ["md"]:
                 shortname = fname.lower()[:-3]
                 if shortname not in self.docsite.docs:
