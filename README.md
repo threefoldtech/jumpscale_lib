@@ -1,4 +1,4 @@
-![travis](https://travis-ci.org/Jumpscale/lib.svg?branch=master)
+[![Build Status](https://travis-ci.org/threefoldtech/jumpscale_lib.svg?branch=development)](https://travis-ci.org/threefoldtech/jumpscale_lib)
 
 # lib
 
