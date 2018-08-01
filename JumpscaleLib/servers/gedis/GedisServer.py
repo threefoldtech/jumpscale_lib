@@ -94,9 +94,9 @@ class GedisServer(StreamServer, JSConfigBase):
 
         #now in code generation dir we have the actors generated for the model
         #load the commands into the namespace of the server (self.cmds_add)
-        files = j.sal.fs.listFilesInDir(self.code_generated_dir,"server", filter="*.py", exclude=["__*", "test*"]) 
-        files += j.sal.fs.listFilesInDir(self.app_dir+"/actors", filter="*.py", exclude=["__*"])
-        files += j.sal.fs.listFilesInDir("%s/systemactors"%j.servers.gedis.path, filter="*.py", exclude=["__*"])
+        files = j.sal.fs.listFilesInDir(self.code_generated_dir,recursive=True, filter="*.py", exclude=["__*", "test*"]) 
+        files += j.sal.fs.listFilesInDir(self.app_dir+"/actors", recursive=True, filter="*.py", exclude=["__*"])
+        files += j.sal.fs.listFilesInDir("%s/systemactors"%j.servers.gedis.path, recursive=True,filter="*.py", exclude=["__*"])
         for item in files:
             namespace = self.instance + '.' + j.sal.fs.getBaseName(item)[:-3].lower()
             self.logger.debug("cmds generated add:%s"%item)

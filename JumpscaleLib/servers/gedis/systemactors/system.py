@@ -47,16 +47,52 @@ class system(JSBASE):
         s=self.server.schema_urls
         return j.data.serializer.msgpack.dumps(s)
 
-    def docsite_paths(self,schema_out):
+    def filemonitor_paths(self,schema_out):
         """
+        return all paths which should be monitored for file changes
         ```out
         paths = (LS)        
         ```
         """
+
         r = schema_out.new()
+
+        #monitor changes for the docsites (markdown)
         for key,item in j.tools.markdowndocs.docsites.items():
             r.paths.append(item.path)
+
+        #monitor change for the webserver  (schema's are in there)
+        r.paths.append(j.servers.web.latest.path)
+
+        #changes for the actors
+        r.paths.append(j.servers.gedis.latest.code_generated_dir)
+        r.paths.append(j.servers.gedis.latest.app_dir+"/actors")
+        r.paths.append("%s/systemactors"%j.servers.gedis.path)
+        
         return r
+
+    def filemonitor_event(self,changeobj):
+        """
+        used by filemonitor daemon to escalate events which happened on filesystem
+
+        ```in
+        src_path = (S)
+        event_type = (S)
+        is_directory = (B)        
+        ```
+
+        """
+
+        #now check if path is in docsites, if yes then reload that docsite only !
+        #then check if path is actor if yes, reload that one
+        #then check if schema change is yes, reload
+        #then check if blueprint, reload blueprint
+        #then let websocket subscribers know that their page changed (so we can hot reload a page in browser, through javascript trick)
+
+        print("IMPLEMENT: TODO: filemonitor_event")
+        print(changeobj)
+
+        return
 
     def test(self,name,nr,schema_out):      
         """

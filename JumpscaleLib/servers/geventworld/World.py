@@ -28,13 +28,15 @@ class Worlds(JSBASE):
         """
         from watchdog.observers import Observer
         cl = j.clients.gedis.get(gedis_instance_name)
-        res =  cl.system.docsite_paths()
 
         event_handler = ChangeWatchdog(client=cl)
         observer = Observer()
+
+        res =  cl.system.filemonitor_paths()
         for source in res.paths:
             self.logger.debug("monitor:%s" % source)
             observer.schedule(event_handler, source, recursive=True)
+
         self.logger.info("are now observing filesystem changes")
         observer.start()
         try:
