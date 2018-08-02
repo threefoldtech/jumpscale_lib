@@ -8,8 +8,6 @@ from datetime import datetime
 from . import client_support
 
 
-
-
 class PullRequestMeta(object):
     """
     auto-generated. don't touch.
@@ -26,7 +24,6 @@ class PullRequestMeta(object):
         return PullRequestMeta(**kwargs)
 
     def __init__(self, json=None, **kwargs):
-        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 
