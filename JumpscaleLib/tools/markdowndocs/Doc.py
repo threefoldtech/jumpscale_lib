@@ -93,7 +93,7 @@ class Doc(JSBASE):
     @property
     def content(self):
         if not self._content:
-            self._content = j.sal.fs.fileGetContents(self.path)
+            self._content = j.sal.fs.fileGetContents(self.path)#HACK, TODO:*1 kristof, fix this
         return self._content
 
     @property
