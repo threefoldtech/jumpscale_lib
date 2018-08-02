@@ -2,9 +2,9 @@
 Fixers module
 """
 
-from JumpscaleLib.clients.rivine.types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY
-from JumpscaleLib.clients.rivine.types.signatures import Ed25519PublicKey
-from JumpscaleLib.clients.rivine import utils, RivineWallet
+from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY
+from JumpscaleLib.clients.blockchain.rivine.types.signatures import Ed25519PublicKey
+from JumpscaleLib.clients.blockchain.rivine import utils, RivineWallet
 import pytest
 import ed25519
 
