@@ -4,7 +4,7 @@ from collections import OrderedDict
 JSBASE = j.application.jsbase_get_class()
 
 
-class ModelBase3(JSBASE):
+class ModelBase(JSBASE):
 
     def __init__(self, key="", new=False, collection=None):
 
@@ -66,7 +66,7 @@ class ModelBase3(JSBASE):
 
     def index(self):
         # put indexes in db as specified
-        if self.collection!=None:
+        if self.collection != None:
             self.collection._index.index({self.dbobj.name: self.key})
 
     def load(self, key):
@@ -236,4 +236,3 @@ class ModelBase3(JSBASE):
         return out
 
     __str__ = __repr__
-
