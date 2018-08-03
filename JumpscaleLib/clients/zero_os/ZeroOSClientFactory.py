@@ -13,7 +13,7 @@ class ZeroOSClientFactory():
     def __init__(self):
         self.__jslocation__ = "j.clients.zos"
 
-    def get(self, instance="main", data={}, interactive=False):
+    def get(self, instance='main', data={}, create=True, die=True, interactive=True, **kwargs):
         """
         data = {}
             host = "127.0.0.1"
@@ -25,7 +25,7 @@ class ZeroOSClientFactory():
             timeout = 120
 
         """
-        cl = j.clients.zos_protocol.get(instance=instance, data=data, interactive=interactive)
+        cl = j.clients.zos_protocol.get(instance=instance, data=data, create=create, die=die, interactive=interactive, **kwargs)
         return j.sal_zos.node.get(cl)
 
     def list(self, prefix=''):
@@ -59,12 +59,12 @@ class ZeroOSClientFactory():
 
         cl = OVHClient
 
-        self.logger.debug("booting server {} to zero-os".format(OVHHostName))
+        logger.debug("booting server {} to zero-os".format(OVHHostName))
         task = cl.zero_os_boot(target=OVHHostName, zerotierNetworkID=zerotierNetworkID)
-        self.logger.debug("waiting for {} to reboote".format(OVHHostName))
+        logger.debug("waiting for {} to reboote".format(OVHHostName))
         cl.server_wait_reboot(OVHHostName, task['taskId'])
         ip_pub = cl.server_detail_get(OVHHostName)["ip"]
-        self.logger.info("ip addr is:%s" % ip_pub)
+        logger.info("ip addr is:%s" % ip_pub)
 
         while True:
             try:
@@ -74,15 +74,15 @@ class ZeroOSClientFactory():
                 break
             except RuntimeError as e:
                 # case where we don't find the member in zerotier
-                self.logger.error(e)
+                logger.error(e)
                 time.sleep(1)
             except IndexError as e:
                 # case were we the member doesn't have a private ip
-                self.logger.error("please authorize the server with the public ip %s in the zerotier network" % ip_pub)
+                logger.error("please authorize the server with the public ip %s in the zerotier network" % ip_pub)
                 time.sleep(1)
 
-        self.logger.debug("server found: %s" % member['id'])
-        self.logger.debug("zerotier IP: %s" % ipaddr_priv)
+        logger.debug("server found: %s" % member['id'])
+        logger.debug("zerotier IP: %s" % ipaddr_priv)
 
         return ip_pub, ipaddr_priv
 
@@ -134,14 +134,14 @@ class ZeroOSClientFactory():
                 break
             except RuntimeError as e:
                 # case where we don't find the member in zerotier
-                self.logger.error(e)
+                logger.error(e)
                 time.sleep(1)
             except IndexError as e:
                 # case were we the member doesn't have a private ip
-                self.logger.error("please authorize the server with the public ip %s in the zerotier network" % ip_pub[0])
+                logger.error("please authorize the server with the public ip %s in the zerotier network" % ip_pub[0])
                 time.sleep(1)
 
-        self.logger.debug("server found: %s" % device.id)
-        self.logger.debug("zerotier IP: %s" % ipaddr_priv)
+        logger.debug("server found: %s" % device.id)
+        logger.debug("zerotier IP: %s" % ipaddr_priv)
 
         return ip_pub, ipaddr_priv
