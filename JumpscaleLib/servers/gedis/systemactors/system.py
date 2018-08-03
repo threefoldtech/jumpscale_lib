@@ -4,8 +4,10 @@ from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
+
 class system(JSBASE):
-    
+
+
     def __init__(self):
         JSBASE.__init__(self)
         self.server = j.servers.gedis.latest
@@ -57,14 +59,14 @@ class system(JSBASE):
 
         r = schema_out.new()
 
-        #monitor changes for the docsites (markdown)
-        for key,item in j.tools.markdowndocs.docsites.items():
+        # monitor changes for the docsites (markdown)
+        for key, item in j.tools.markdowndocs.docsites.items():
             r.paths.append(item.path)
 
-        #monitor change for the webserver  (schema's are in there)
+        # monitor change for the webserver  (schema's are in there)
         r.paths.append(j.servers.web.latest.path)
 
-        #changes for the actors
+        # changes for the actors
         r.paths.append(j.servers.gedis.latest.code_generated_dir)
         r.paths.append(j.servers.gedis.latest.app_dir+"/actors")
         r.paths.append("%s/systemactors"%j.servers.gedis.path)
@@ -82,17 +84,49 @@ class system(JSBASE):
         ```
 
         """
+        # Check if a blueprint is changed
+        if changeobj.is_directory:
+            path_parts = changeobj.src_path.split('/')
+            if path_parts[-2] == 'blueprints':
+                blueprint_name = "{}_blueprint".format(path_parts[-1])
+                bp = j.servers.web.latest.application.app.blueprints.get(blueprint_name)
+                if bp:
+                    print("reloading blueprint : {}".format(blueprint_name))
+                    #TODO: reload the blueprint (bp)
+                    return
 
-        #now check if path is in docsites, if yes then reload that docsite only !
-        #then check if path is actor if yes, reload that one
-        #then check if schema change is yes, reload
-        #then check if blueprint, reload blueprint
-        #then let websocket subscribers know that their page changed (so we can hot reload a page in browser, through javascript trick)
+        # Check if docsite is changed
+        if changeobj.is_directory:
+            docsites = j.tools.markdowndocs.docsites
+            for _, docsite in docsites.items():
+                if docsite.path in changeobj.src_path:
+                    docsite.load()
+                    print("reloading docsite: {}".format(docsite))
+                    return
 
-        print("IMPLEMENT: TODO: filemonitor_event")
-        print(changeobj)
+        # check if path is actor if yes, reload that one
+        if not changeobj.is_directory and changeobj.src_path.endswith('.py'):
+            paths = list()
+            paths.append(j.servers.gedis.latest.code_generated_dir)
+            paths.append(j.servers.gedis.latest.app_dir+"/actors")
+            paths.append("%s/systemactors" % j.servers.gedis.path)
+            # now check if path is in docsites, if yes then reload that docsite only !
+            for path in paths:
+                if path in changeobj.src_path:
+                    actor_name = j.sal.fs.getBaseName(changeobj.src_path)[:-3].lower()
+                    namespace = j.servers.gedis.latest.instance + '.' + actor_name
+                    if namespace in j.servers.gedis.latest.cmds_meta:
+                        del(j.servers.gedis.latest.cmds_meta[namespace])
+                        del(j.servers.gedis.latest.classes[namespace])
+                        for cmd in list(j.servers.gedis.latest.cmds.keys()):
+                            if actor_name in cmd:
+                                del(j.servers.gedis.latest.cmds[cmd])
+                                print("deleting from cmd")
+                        j.servers.gedis.latest.cmds_add(namespace, path=changeobj.src_path)
+                        print("reloading namespace: {}".format(namespace))
+                        return
 
-        return
+        #TODO: reload changed schemas
 
     def test(self,name,nr,schema_out):      
         """

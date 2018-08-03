@@ -8,9 +8,9 @@ from watchdog.events import FileSystemEventHandler
 
 
 class ChangeWatchdog(FileSystemEventHandler, JSBASE):
-    def __init__(self,client):
+    def __init__(self, client):
         JSBASE.__init__(self)
-        self.client=client
+        self.client = client
         self.logger_enable()
 
     def handler(self, event, action=""):
@@ -20,9 +20,9 @@ class ChangeWatchdog(FileSystemEventHandler, JSBASE):
 
         if changedfile.find("/.git/") != -1:
             return
-        elif changedfile.find("/__pycache__/") != -1:
+        elif changedfile.find("__") != -1:
             return
-        elif changedfile.endswith(".pyc"):
+        elif changedfile.endswith((".pyc", ".swp", "~", "_")):
             return
 
         self.client.system.filemonitor_event(is_directory=event.is_directory,\

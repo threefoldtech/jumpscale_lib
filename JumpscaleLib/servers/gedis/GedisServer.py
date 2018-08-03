@@ -1,5 +1,6 @@
 import sys
 import os
+import importlib
 from jumpscale import j
 from gevent.pool import Pool
 from gevent.server import StreamServer
@@ -181,9 +182,10 @@ class GedisServer(StreamServer, JSConfigBase):
             classname = j.sal.fs.getBaseName(path).split(".", 1)[0]
             dname = j.sal.fs.getDirName(path)
             if dname not in sys.path:
-                sys.path.append(dname)
-            exec("from %s import %s" % (classname, classname))
-            class_ = eval(classname)
+                sys.path.insert(0, dname)
+            module = importlib.import_module(classname)
+            module = importlib.reload(module) # make sure to reload the imported module
+            class_ = getattr(module, classname)
         self.cmds_meta[namespace] = GedisCmds(self, namespace=namespace, class_=class_)
         self.classes[namespace] =class_()
 
