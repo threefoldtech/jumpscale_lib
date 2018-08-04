@@ -14,6 +14,7 @@ class HTMLFactory(JSBASE):
         self.__jslocation__ = "j.data.html"
         JSBASE.__init__(self)
         self.webparts = HTMLWebParts()
+        self._webparts_done = []
 
     def html2text(self, html):
         """
@@ -60,6 +61,8 @@ class HTMLFactory(JSBASE):
         """
         if not url:
             url = "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/webparts"
+        if url in self._webparts_done:
+            return
         path = j.clients.git.getContentPathFromURLorPath(url)
         if path not in sys.path:
             sys.path.append(path)
@@ -77,6 +80,8 @@ class HTMLFactory(JSBASE):
             
         if j.servers.web.latest is not None:
             j.servers.web.latest.webparts = self.webparts
+
+        self._webparts_done.append(url)
 
     # def register_blueprints(self,app):
     #     apps = j.sal.fs.listDirsInDir("%s/blueprints"%self.path, recursive=False, dirNameOnly=True, findDirectorySymlinks=True, followSymlinks=True)

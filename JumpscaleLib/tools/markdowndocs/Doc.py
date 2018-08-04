@@ -25,12 +25,14 @@ class Doc(JSBASE):
         self.path_dir = j.sal.fs.getDirName(self.path)
         self.path_dir_rel = j.sal.fs.pathRemoveDirPart(self.path_dir, self.docsite.path).strip("/")
         self.name = self._clean(name)
+        if self.name == "":
+            raise RuntimeError("name cannot be empty")
         self.name_original = name
         self.path_rel = j.sal.fs.pathRemoveDirPart(path, self.docsite.path).strip("/")
 
         name_dot =  "%s/%s" % (self.path_dir_rel,self.name)
-        self.name_dot = name_dot.replace("/",".")
-        self.name_dot_lower = self.name_dot.replace("/",".").lower().strip(".")
+        # self.name_dot = name_dot.replace("/",".")
+        self.name_dot_lower = self._clean("%s/%s" % (self.path_dir_rel,self.name))
 
         # self.markdown_source = ""
         # self.show = True
@@ -58,15 +60,21 @@ class Doc(JSBASE):
     def _clean(self,name):
         return j.data.text.strip_to_ascii_dense(name)
 
-    def _get_file_path_new(self,name="image",extension="jpeg"):
+    def _get_file_path_new(self,name="",extension="jpeg"):
         nr=0
+        if name=="":
+            name=self.name
         dest = "%s/%s.%s"%(self.path_dir,name,extension)
         found = j.sal.fs.exists(dest)
         while found:
             nr+=1
             name = "%s_%s"%(name,nr) #to make sure we have a unique name
             dest = "%s/%s.%s"%(self.path_dir,name,extension)
-            found = j.sal.fs.exists(dest)
+            fname= "%s.%s"%(name,extension)
+            found = j.sal.fs.exists(dest) or fname in self.docsite._files
+        fname= "%s.%s"%(name,extension)
+        self.docsite._files[fname]=dest
+            
         return name,dest
 
     @property
@@ -108,6 +116,10 @@ class Doc(JSBASE):
         return str(self.htmlpage_get(htmlpage=htmlpage))
 
     @property
+    def html(self):
+        return self.html_get()
+
+    @property
     def data(self):
         if self._data=={}:
             self._data_default_process()    
@@ -125,7 +137,7 @@ class Doc(JSBASE):
         return headers[nr] if len(headers) > nr else ""
 
     @property
-    def markdown_processed(self):
+    def markdown(self):
         """
         markdown after processing of the full doc
         """
@@ -264,9 +276,6 @@ class Doc(JSBASE):
                 self.docsite.error_raise(block, doc=self)    
                 part.result = block
 
-            
-
-
     def _links_process(self):
         """
         results in:
@@ -282,7 +291,8 @@ class Doc(JSBASE):
         for match in j.data.regex.yieldRegexMatches(regex, self.markdown_source, flags=0):
             self.logger.debug("##:file:link:%s" % match)
             link = Link(self,match.founditem)
-            self._links.append(link)
+            if not link.link_source=="":
+                self._links.append(link)
     
 
         #whats this one?

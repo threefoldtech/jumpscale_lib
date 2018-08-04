@@ -35,6 +35,10 @@ class Link(JSBASE):
     def _process(self):
         self.link_source = self.source.split("(",1)[1].split(")",1)[0] #find inside ()
         self.link_descr = self.source.split("[",1)[1].split("]",1)[0] #find inside []
+
+        if self.link_source.strip()=="":
+            return self.error("link is empty, but url is:%s"%self.source)
+
         
         if "@" in self.link_descr:
             self.link_source_original = self.link_descr.split("@")[1].strip() #was link to original source
@@ -51,26 +55,8 @@ class Link(JSBASE):
                 else:
                     name = j.sal.fs.getBaseName(self.source,removeExtension=True)
 
-                self.logger.info("image download")
-                c=j.clients.http.getConnection()
-                link_descr = self._clean(self.link_descr)
-                if len(link_descr)>0:
-                    name = link_descr
-                
-                if name.endswith(".%s"%self.extension):
-                    name = ".".join(name.split(".")[:-1]) #remove extension
+                self.download()
 
-                if name == "":
-                    name,dest = self.doc._get_file_path_new(extension=self.extension)
-                else:            
-                    dest = "%s/%s.%s"%(self.doc.path_dir,name,self.extension)
-
-                self.link_source = "%s.%s"%(name,self.extension) #will be replaced with this name
-                
-                self.logger.info("download:%s"%self.link_source_original)
-                c.download(self.link_source_original,dest)
-                self.replace_in_doc()
-                self.logger.info ("download done")
             else:
                 #check link exists
                 self.cat = "link"
@@ -78,6 +64,13 @@ class Link(JSBASE):
                     self.link_verify()
          
         else:
+            if self.link_source.strip() == "/":
+                self.link_source = ""
+                return
+            if "#" in self.link_source:
+                self.link_source = ""
+                return
+                
 
             if self.link_source.find("/") != -1:
                 name = self.link_source.split("/")[-1]     
@@ -88,6 +81,8 @@ class Link(JSBASE):
 
             self.filename = self._clean(name) #cleanly normalized name but extension still part of it
             #e.g. balance_inspiration_motivation_life_scene_wander_big.jpg
+            if self.filename.strip()=="":
+                return self.error("filename is empty")
             self.extension = j.sal.fs.getFileExtension(self.filename)
 
             #only possible for images (video, image)
@@ -112,8 +107,9 @@ class Link(JSBASE):
             
 
             self.filepath = self.doc.docsite.file_get(self.filename, die=False)
-            if self.filepath is None:
-                return self.error("could not find file in docsite")
+            if self.filepath is None and self.source.startswith("!"):
+                #is image try re-download
+                self.download()
                 
     
     @property
@@ -130,28 +126,64 @@ class Link(JSBASE):
         c+= "[%s](%s)"%(descr,self.link_source)
         return c
 
-    def link_verify(self):
+    def download(self):
         def do():
+            self.logger.info("image download")
+            if self.link_verify():
+                link_descr = self._clean(self.link_descr)
+                name=""
+                if len(link_descr)>0:
+                    name = link_descr        
+                if name == "":
+                    name,dest = self.doc._get_file_path_new(extension=self.extension)
+                else:            
+                    dest = "%s/%s.%s"%(self.doc.path_dir,name,self.extension)
+
+                self.link_source = "%s.%s"%(name,self.extension) #will be replaced with this name
+                
+                self.logger.info("download:%s\n%s"%(self.link_source_original,dest))
+                try:
+                    j.clients.http.download(self.link_source_original,dest)
+                except Exception as e:
+                    if "404" in str(e) or "400" in str(e):
+                        return self.error("could not find file to download:%s"%self.link_source_original)
+                    # raise e
+                    print("error in download in link")
+                    from IPython import embed;embed(colors='Linux')
+                    k
+                self.replace_in_doc()
+                self.logger.info ("download done") 
+            return "OK"
+        self.cache.get("download:%s"%self.link_source_original, method=do, expire=600)
+
+
+
+    def link_verify(self):
+        def do():            
+            if "verification" in self.docsite.config:
+                for item in self.docsite.config["verification"]:
+                    if "ignore" in item:
+                        if self.link_source_original.find(item["ignore"]) != -1:
+                            return True
+                    if "error" in item:
+                        if self.link_source_original.find(item["error"]) != -1:
+                            self.error("link in error state:%s"%self.link_source_original)
+                            return False
+
             self.logger.info("check link exists:%s"%self.link_source)
-            c=j.clients.http.getConnection()
-            try:
-                resp = c.get(self.link_source)
-            except Exception as e:
-                if "unauthorized" in str(e).lower():
-                    return True #is not error, means there is answer
-                raise e
-            if resp.status is not 200:
-                return "broken link"
+            if not j.clients.http.ping(self.link_source_original):
+                self.error("link not alive:%s"%self.link_source_original)                
+                return False
             return True                 
         res =  self.cache.get(self.link_source, method=do, expire=3600)
         if res is not True:
-            return self.error(res)
+            self.error(res)
+            return False
 
     def replace_in_doc(self):
         self.logger.info("replace_in_doc")
         self.doc._content = self.doc._content.replace(self.source,self.markdown)   
         self.source = self.markdown #there is a new source now        
-        self.doc.docsite._files[self.filename]=self.link_source #need to register file in docsite
         j.sal.fs.writeFile(self.doc.path,self.doc._content)
         self._process()
 

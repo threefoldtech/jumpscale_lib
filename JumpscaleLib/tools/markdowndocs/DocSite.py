@@ -61,6 +61,8 @@ class DocSite(JSBASE):
         self._files = {}
         self._sidebars = {}
 
+        self._errors = []
+
         self.links_verify = True
         
 
@@ -84,6 +86,12 @@ class DocSite(JSBASE):
         self.logger.info("found:%s"%self)
 
     def _clean(self,name):
+        if j.data.types.list.check(name):
+            if len(name)==1:
+                name=name[0]
+            else:
+                name="/".join(name) #not sure this is correct
+                
         return j.data.text.strip_to_ascii_dense(name)
 
     @property
@@ -255,10 +263,12 @@ class DocSite(JSBASE):
 
     def error_raise(self, errormsg, doc=None):
         if doc is not None:
-            errormsg2 = "## ERROR: %s\n\n- in doc: %s\n\n%s\n" % (j.data.time.getLocalTimeHR(), doc, errormsg)
-            j.sal.fs.writeFile(filename=self.path + "errors.md", contents=errormsg2, append=True)
-            self.logger.error(errormsg2)
-            doc.errors.append(errormsg)
+            errormsg2 = "## ERROR: %s\n\n- in doc: %s\n\n%s\n\n\n" % (doc.name, doc, errormsg)
+            key = j.data.hash.md5_string("%s_%s"%(doc.name,errormsg))
+            if not key in self._errors:
+                j.sal.fs.writeFile(filename=self.path + "errors.md", contents=errormsg2, append=True)
+                self.logger.error(errormsg2)
+                doc.errors.append(errormsg)
         else:
             from IPython import embed
             self.logger.error("DEBUG NOW raise error")
@@ -386,6 +396,8 @@ class DocSite(JSBASE):
         url = url.replace("/",".")
         url = url.strip(".")
 
+        url = self._clean(url)
+
         if url == "":
             self._sidebars[url_original]=None
             return None
@@ -413,6 +425,7 @@ class DocSite(JSBASE):
         #lets look at parent
         
         if url0=="":
+            from IPython import embed;embed(colors='Linux')
             raise RuntimeError("cannot be empty")
             
         newurl = ".".join(url0.split(".")[:-1])+"._sidebar"
@@ -493,6 +506,26 @@ class DocSite(JSBASE):
                 out+="[%s](../%s/)\n"%(key,key)
 
         return out
+
+    def verify(self):
+        self.load(reset=True)
+        keys = [item for item in self.docs.keys()]
+        keys.sort()
+        for key in keys:
+            doc = self.doc_get(key,die=True)
+            doc.markdown #just to trigger the error checking
+            doc.html
+        return self.errors
+
+    @property
+    def errors(self):
+        """
+        return current found errors
+        """
+        errors = j.sal.fs.fileGetContents(self.path + "errors.md")
+        return errors
+
+
 
     def __repr__(self):
         return "docsite:%s" % ( self.path)
