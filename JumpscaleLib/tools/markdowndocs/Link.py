@@ -10,6 +10,7 @@ class Link(JSBASE):
         JSBASE.__init__(self)        
         self.docsite = doc.docsite
         self.doc = doc
+        self.extension = ""
         self.source = source #original text
         self.cat = ""  #category in image,doc,link,officedoc, imagelink  #doc is markdown
         self.link_source = "" #text to replace when rewrite is needed
@@ -44,19 +45,17 @@ class Link(JSBASE):
             self.link_source_original = self.link_descr.split("@")[1].strip() #was link to original source
             self.link_descr = self.link_descr.split("@")[0].strip()
             
-        self.extension = j.sal.fs.getFileExtension(self.link_source)
+        if "?" in self.link_source:
+            lsource=self.link_source.split("?",1)[0]
+        else:
+            lsource =self.link_source
+        self.extension = j.sal.fs.getFileExtension(lsource)
 
         if "http" in self.link_source:
             self.link_source_original = self.link_source            
-            name = ""
             if self.source.startswith("!"):
                 if not self.extension in ["png", "jpg", "jpeg", "mov", "mp4"]:
                     self.extension = "jpeg" #to support url's like https://images.unsplash.com/photo-1533157961145-8cb586c448e1?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=4e252bcd55caa8958985866ad15ec954&auto=format&fit=crop&w=1534&q=80
-                else:
-                    name = j.sal.fs.getBaseName(self.source,removeExtension=True)
-
-                self.download()
-
             else:
                 #check link exists
                 self.cat = "link"
@@ -70,26 +69,25 @@ class Link(JSBASE):
             if "#" in self.link_source:
                 self.link_source = ""
                 return
-                
 
+            if "?" in self.link_source:
+                self.link_source=self.link_source.split("?",1)[0]
+                
             if self.link_source.find("/") != -1:
                 name = self.link_source.split("/")[-1]     
             else:
                 name = self.link_source
 
-            #now we have clean name with no " and ' and spaces around and only basename
-
             self.filename = self._clean(name) #cleanly normalized name but extension still part of it
             #e.g. balance_inspiration_motivation_life_scene_wander_big.jpg
             if self.filename.strip()=="":
                 return self.error("filename is empty")
-            self.extension = j.sal.fs.getFileExtension(self.filename)
 
             #only possible for images (video, image)
             if self.source.startswith("!"):
                 self.cat = "image"
                 if not self.extension in ["png", "jpg", "jpeg", "mov", "mp4"]:
-                    return self.error("found unsupported image file")
+                    return self.error("found unsupported image file: extension:%s"%self.extension)
 
             if self.cat =="":
                 if self.extension in ["png", "jpg", "jpeg", "mov", "mp4"]:
@@ -98,9 +96,12 @@ class Link(JSBASE):
                     self.cat = "officedoc"
                 elif self.extension in ["md","",None]:
                     self.cat = "doc" #link to a markdown document
-                    self.link_to_doc =  self.docsite.doc_get(self.filename ,die=False)
-                    if self.link_to_doc==None:
-                        return self.error("COULD NOT FIND LINK: %s TODO: **" % self.filename )
+                    try:
+                        self.link_to_doc =  self.docsite.doc_get(self.link_source ,die=True)
+                    except Exception as e:
+                        if "Cannot find doc" in str(e):
+                            return self.error(str(e))
+                        raise e
                     return
                 else:
                     return self.error("found unsupported extension")

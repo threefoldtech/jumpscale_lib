@@ -294,6 +294,7 @@ class DocSite(JSBASE):
         return doc.html_get()
 
     def doc_get(self, name, cat="", die=True):
+        name=name.replace("/",".").strip(".")
         
         self.load()
         name =  self._clean(name)
@@ -346,9 +347,13 @@ class DocSite(JSBASE):
             if nr == 1:
                 self.docs[name] = res  #remember for caching
                 return self.docs[name]
+            if nr>1:
+                self.docs[name] = None #means is not there
+                break
+                
         
         if die:
-            raise j.exceptions.Input(message="Cannot find doc with name:%s" % name, level=1, source="", tags="", msgpub="")
+            raise j.exceptions.Input(message="Cannot find doc with name:%s (nr docs found:%s)" % (name,nr), level=1, source="", tags="", msgpub="")
         else:
             return None
 
@@ -368,7 +373,9 @@ class DocSite(JSBASE):
                 
             res = []
             for key,item in self.docs.items():
-                if name in  item.name_dot_lower:
+                if item is None:
+                    continue
+                if item.name_dot_lower.endswith(name):
                     res.append(key)
             if len(res)>0:
                 return  len(res),self.docs[res[0]]
@@ -513,6 +520,7 @@ class DocSite(JSBASE):
         keys.sort()
         for key in keys:
             doc = self.doc_get(key,die=True)
+            self.logger.info("verify:%s"%doc)
             doc.markdown #just to trigger the error checking
             doc.html
         return self.errors

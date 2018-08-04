@@ -31,7 +31,6 @@ class Doc(JSBASE):
         self.path_rel = j.sal.fs.pathRemoveDirPart(path, self.docsite.path).strip("/")
 
         name_dot =  "%s/%s" % (self.path_dir_rel,self.name)
-        # self.name_dot = name_dot.replace("/",".")
         self.name_dot_lower = self._clean("%s/%s" % (self.path_dir_rel,self.name))
 
         # self.markdown_source = ""
@@ -58,6 +57,8 @@ class Doc(JSBASE):
         self._links = []
 
     def _clean(self,name):
+        name=name.replace("/",".")
+        name=name.strip(".")
         return j.data.text.strip_to_ascii_dense(name)
 
     def _get_file_path_new(self,name="",extension="jpeg"):
@@ -132,9 +133,15 @@ class Doc(JSBASE):
             self._md = j.data.markdown.document_get(self.markdown_source)        
         return self._md
 
-    def header_get(self, level=1, nr=0):
-        headers = [item for item in self.markdown_obj.items if item.type == "header" and item.level == level]
-        return headers[nr] if len(headers) > nr else ""
+    def header_get(self, level=1, nr=0,html=True):
+        #TODO: implement header level
+        res = self.markdown_obj.parts_get(cat="header")
+        if len(res)<1:
+            return self.error_raise("header level:%s %s could not be found"%(level,nr))
+        if html:
+            return res[0].html
+        else:
+            return res[0]
 
     @property
     def markdown(self):
@@ -161,9 +168,6 @@ class Doc(JSBASE):
         from IPython import embed;embed(colors='Linux')
         return None
 
-    def media_name_get(self, nr=0):
-        return self.images[nr]
-
     @property
     def markdown_clean_summary(self):
         c = self.content_clean
@@ -182,7 +186,7 @@ class Doc(JSBASE):
 
     def _data_update(self, data):
         res = {}
-        for key, val in self._data.items():
+        for key, val in self._data.parts():
             if key in data:
                 valUpdate = copy.copy(data[key])
                 if j.data.types.list.check(val):
@@ -190,13 +194,13 @@ class Doc(JSBASE):
                         raise j.exceptions.Input(
                             message="(%s)\nerror in data structure, list should match list" %
                             self, level=1, source="", tags="", msgpub="")
-                    for item in valUpdate:
-                        if item not in val and item != "":
-                            val.append(item)
+                    for part in valUpdate:
+                        if part not in val and part != "":
+                            val.append(part)
                     self._data[key] = val
                 else:
                     self._data[key] = valUpdate
-        for key, valUpdate2 in data.items():
+        for key, valUpdate2 in data.parts():
             # check for the keys not in the self.data yet and add them, the others are done above
             if key not in self._data:
                 self._data[key] = copy.copy(valUpdate2)  # needs to be copy.copy otherwise we rewrite source later
@@ -206,7 +210,7 @@ class Doc(JSBASE):
         empty data, go over default data's and update in self.data
         """
         self._data = {}
-        keys = [item for item in self.docsite.data_default.keys()]
+        keys = [part for part in self.docsite.data_default.keys()]
         keys.sort(key=len)
         for key in keys:
             key = key.strip("/")
@@ -216,6 +220,9 @@ class Doc(JSBASE):
         print("data process doc")
 
     def link_get(self,filename=None,cat=None,nr=0,die=True):
+        """
+        @param cat: image, doc,link, officedoc, imagelink  #doc is markdown
+        """
         res = self.links_get(filename=filename, cat=cat)
         if len(res)== 0:
             if die:
@@ -290,7 +297,7 @@ class Doc(JSBASE):
         regex = "!*\[.*\] *\(.*\)"
         for match in j.data.regex.yieldRegexMatches(regex, self.markdown_source, flags=0):
             self.logger.debug("##:file:link:%s" % match)
-            link = Link(self,match.founditem)
+            link = Link(self,match.foundpart)
             if not link.link_source=="":
                 self._links.append(link)
     
@@ -298,7 +305,7 @@ class Doc(JSBASE):
         #whats this one?
         # regex = "src *= *\" */?static"
         # for match in j.data.regex.yieldRegexMatches(regex, self.markdown_source, flags=0):
-        #     self._content = self.markdown_source.replace(match.founditem, "src = \"/")
+        #     self._content = self.markdown_source.replace(match.foundpart, "src = \"/")
 
     def part_get(self,text_to_find=None,cat=None,nr=0,die=True):
         """
