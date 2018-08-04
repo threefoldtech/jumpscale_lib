@@ -297,7 +297,7 @@ class Doc(JSBASE):
         regex = "!*\[.*\] *\(.*\)"
         for match in j.data.regex.yieldRegexMatches(regex, self.markdown_source, flags=0):
             self.logger.debug("##:file:link:%s" % match)
-            link = Link(self,match.foundpart)
+            link = Link(self,match.founditem)
             if not link.link_source=="":
                 self._links.append(link)
     

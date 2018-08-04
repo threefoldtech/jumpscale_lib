@@ -521,8 +521,12 @@ class DocSite(JSBASE):
         for key in keys:
             doc = self.doc_get(key,die=True)
             self.logger.info("verify:%s"%doc)
-            doc.markdown #just to trigger the error checking
-            doc.html
+            try:            
+                doc.markdown #just to trigger the error checking
+            except Exception as e:
+                msg="unknown error to get markdown for doc, error:\n%s"%e
+                self.error_raise(msg,doc=doc)
+            # doc.html
         return self.errors
 
     @property

@@ -185,7 +185,10 @@ class Link(JSBASE):
         self.logger.info("replace_in_doc")
         self.doc._content = self.doc._content.replace(self.source,self.markdown)   
         self.source = self.markdown #there is a new source now        
-        j.sal.fs.writeFile(self.doc.path,self.doc._content)
+        print(678)
+        from IPython import embed;embed(colors='Linux')
+        s
+        # j.sal.fs.writeFile(self.doc.path,self.doc._content)
         self._process()
 
     def __repr__(self):
