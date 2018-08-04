@@ -4,7 +4,6 @@ import time
 from jumpscale import j
 
 from ..abstracts import Nics
-from ..utils import authorize_zerotiers
 from ..disks.Disks import Disk
 from .namespace import Namespaces
 
@@ -131,7 +130,7 @@ class Zerodb:
         if not self.zt_identity:
             self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
         zt_public = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
-        authorize_zerotiers(zt_public, self.nics)
+        j.sal_zos.utils.get().authorize_zerotiers(zt_public, self.nics)
 
         return {
             'name': self._container_name,

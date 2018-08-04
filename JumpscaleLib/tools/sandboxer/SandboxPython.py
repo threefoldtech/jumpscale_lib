@@ -207,7 +207,8 @@ class SandboxPython(JSBASE):
         # Copy startup configuration
 
         startup_file = j.dirs.JSAPPSDIR + '/0-robot-portal/autostart/startup.toml'
-        j.sal.fs.copyFile(startup_file, '%s/.startup.toml' % dest)
+        if j.sal.fs.exists(startup_file):
+            j.sal.fs.copyFile(startup_file, '%s/.startup.toml' % dest)
 
         j.sal.fs.copyFile(self.JUMPSCALEFILE, "%s/lib/jumpscale/jumpscale.py" % (dest))
 

@@ -55,7 +55,7 @@ setup(
     description='Automation framework for cloud workloads library',
     long_description=long_description,
     url='https://github.com/Jumpscale/lib',
-    author='GreenItGlobe',
+    author='ThreeFoldTech',
     author_email='info@threefold.tech',
     license='Apache',
     packages=find_packages(),
