@@ -63,7 +63,7 @@ class DocSite(JSBASE):
 
         self._errors = []
 
-        self.links_verify = True
+        self.links_verify = False
         
 
     
@@ -294,15 +294,15 @@ class DocSite(JSBASE):
         return doc.html_get()
 
     def doc_get(self, name, cat="", die=True):
+
+        if j.data.types.list.check(name):
+            name = "/".join(name)
+
         name=name.replace("/",".").strip(".")
         
         self.load()
         name =  self._clean(name)
 
-        if j.data.types.list.check(name):
-            print("docget in list?")
-            raise RuntimeError("docget in list?") #what is usecase?
-            # name = "/".join(name)
 
         name = name.strip("/")
         name = name.lower()            
@@ -516,6 +516,7 @@ class DocSite(JSBASE):
 
     def verify(self):
         self.load(reset=True)
+        self.links_verify=True
         keys = [item for item in self.docs.keys()]
         keys.sort()
         for key in keys:
