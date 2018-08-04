@@ -360,7 +360,7 @@ class Teammgr(JSBASE):
 
     def test(self):
         path = j.clients.git.pullGitRepo(
-            "ssh://git@docs.greenitglobe.com:10022/gig/data_team.git")
+            "ssh://git@docs.grid.tf:10022/gig/data_team.git")
         self.load(path=path + "/team")
 
 

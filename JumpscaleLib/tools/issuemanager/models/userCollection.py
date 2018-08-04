@@ -99,7 +99,7 @@ class UserCollection(ModelBaseCollection):
         list all entries matching kwargs. If none are specified, lists all
 
         e.g.
-        email="reem@greenitglobe.com", name="reem"
+        email="reem@threefold.tech", name="reem"
 
         """
         if kwargs:

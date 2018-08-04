@@ -26,7 +26,7 @@ for name in names:
 
 ```
 
-The client provides access to the gitea API, see [here](https://docs.greenitglobe.com/api/v1/swagger). For example to list all repos in a gitea organization taht the user belongs to using the API:
+The client provides access to the gitea API, see [here](https://docs.grid.tf/api/v1/swagger). For example to list all repos in a gitea organization taht the user belongs to using the API:
 
 ```python
 cl = j.clients.gitea.get()

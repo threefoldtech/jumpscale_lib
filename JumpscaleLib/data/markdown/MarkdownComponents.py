@@ -29,22 +29,17 @@ def lines2list(lines):
 
 class MDBase():
 
-    def __repr__(self):
-        out = self.text
-        if len(out) > 0:
-            if out[-1] != "\n":
-                out += "\n"
-            if out[-2] != "\n":
-                out += "\n"
-        return out
-
     @property
     def markdown(self):
-        return str(self)
+        return str(self.text)
+
 
     @property
     def html(self):
         return mistune.markdown(self.text, escape=True, hard_wrap=True)
+
+    def __repr__(self):
+        return "%s:\n%s"%(self.type,self.text)
 
     __str__ = __repr__
 
@@ -57,9 +52,13 @@ class MDList(MDBase):
     @property
     def as_list(self):
         return lines2list(self.text)
-
     
- 
+    @property
+    def markdown(self):
+        return self.text
+
+
+        
     
 class MDTable(MDBase):
 
@@ -134,9 +133,10 @@ class MDTable(MDBase):
 
     @property
     def text(self):        
-        return str(self)
+        return str(self.markdown)
 
-    def __repr__(self):
+    @property
+    def markdown(self):
         def pad(text, l, add=" "):
             if l<4:
                 l=4
@@ -177,7 +177,6 @@ class MDTable(MDBase):
         out += "\n"
         return out
 
-    __str__ = __repr__
 
 
 class MDHeader(MDBase):
@@ -187,18 +186,17 @@ class MDHeader(MDBase):
         self.title = title
         self.type = "header"
         
-
-    def __repr__(self):
+    @property
+    def markdown(self):
         pre = ""
         for i in range(self.level):
             pre += "#"
         return "%s %s" % (pre, self.title)
 
-    __str__ = __repr__
 
     @property
     def text(self):        
-        return str(self)
+        return self.markdown
 
 # class MDListItem(MDBase):
 
@@ -224,10 +222,9 @@ class MDComment(MDBase):
         self.type = "comment"
         
 
-    def __repr__(self):
+    def markdown(self):
         out = "<!--\n%s\n-->\n" % self.text
 
-    __str__ = __repr__
 
 
 class MDComment1Line(MDBase):
@@ -236,12 +233,11 @@ class MDComment1Line(MDBase):
         self.text = text
         self.type = "comment1line"
         
-
-    def __repr__(self):
+    @property
+    def markdown(self):
         out = "<!--%s-->\n" % self.text
         return out
 
-    __str__ = __repr__
 
 
 # def _transform_links(self, text):
@@ -266,8 +262,8 @@ class MDBlock(MDBase):
         return mistune.markdown(self.text, escape=True, hard_wrap=True)
 
 
-
-    def __repr__(self):
+    @property
+    def markdown(self):
         out = self.text
         if len(out) > 0:
             if out[-1] != "\n":
@@ -277,14 +273,10 @@ class MDBlock(MDBase):
         return out
 
 
-    __str__ = __repr__
 
 
-class MDCodeMacroDataBase():
-
-    @property
-    def markdown(self):
-        return str(self)        
+class MDCodeMacroDataBase(MDBase):
+      
 
     @property
     def html(self):
@@ -299,34 +291,44 @@ class MDCode(MDCodeMacroDataBase):
         self.lang = lang
         self.method = ""
         
-    def __repr__(self):        
+    @property
+    def markdown(self):        
         out = "```%s\n"%self.lang
         out += self.text.strip()
         out += "\n```\n"
         return out
 
-    __str__ = __repr__
 
 
 class MDMacro(MDCodeMacroDataBase):
 
     def __init__(self, data="", lang="", method=""):
-        self.text = data
+        self.data = data
         self.lang = lang
         self.type = "macro"
         self.method = method.strip()
+        self.result = ""
 
-    def __repr__(self):
+    @property
+    def _markdown(self):
         out = "```%s\n!!!%s\n"%(self.lang,self.method)
-        t = self.text.strip()
+        t = self.data.strip()
         out += t
         if t:
             out+="\n"
         out += "```\n"
         return out
 
-    __str__ = __repr__
+    @property
+    def markdown(self):
+        if self.result:
+            return self.result        
+        else:
+            return self._markdown
 
+    @property
+    def text(self):        
+        return str(self.markdown)
 
 class MDData(MDCodeMacroDataBase):
 
@@ -364,13 +366,8 @@ class MDData(MDCodeMacroDataBase):
 
     @property
     def text(self):
-        if self._toml:            
-            return self._toml
-        elif self._yaml:
-            out = "```yaml\n!!!data\n"  #need new header
-            return self._yaml
-        else:    
-            return self.toml
+        out = "```toml\n!!!data\n%s\n```\n"%self.toml  #need new header
+        return out
 
     @property
     def hash(self):
@@ -379,14 +376,32 @@ class MDData(MDCodeMacroDataBase):
             self._hash = j.data.hash.md5_string(json)
         return self._hash
 
-    def __repr__(self):
-        
-        out = "```toml\n!!!data\n"
-        out += self.text.strip()
-        out += "\n```\n"
-        return out
+    @property
+    def markdown(self):
+        # out = "```toml\n!!!data\n"
+        # out += self.text.strip()
+        # out += "\n```\n"
+        return self.text
 
-    __str__ = __repr__
+
+class MDImage(MDCodeMacroDataBase):
+    
+    def __init__(self, name, path):
+        self.path=path
+        self.name=name   
+        self.type = "image"     
+        self.extension=j.sal.fs.getFileExtension(path)
+
+    @property
+    def markdown(self):        
+        return "![](%s)"%self.name
+
+    @property
+    def text(self):        
+        return str(self.markdown)
+
+
+
 
 # class Object(MDBase):
 #     def __init__(self):

@@ -4,6 +4,7 @@ import toml
 import copy
 
 JSBASE = j.application.jsbase_get_class()
+from .Link import Link
 
 
 class Doc(JSBASE):
@@ -23,15 +24,15 @@ class Doc(JSBASE):
         
         self.path_dir = j.sal.fs.getDirName(self.path)
         self.path_dir_rel = j.sal.fs.pathRemoveDirPart(self.path_dir, self.docsite.path).strip("/")
-        self.name = j.data.text.strip_to_ascii_dense(name)
+        self.name = self._clean(name)
         self.name_original = name
         self.path_rel = j.sal.fs.pathRemoveDirPart(path, self.docsite.path).strip("/")
 
-        name_dot =  "%s/%s" % (self.path_dir_rel,name)
+        name_dot =  "%s/%s" % (self.path_dir_rel,self.name)
         self.name_dot = name_dot.replace("/",".")
         self.name_dot_lower = self.name_dot.replace("/",".").lower().strip(".")
 
-        # self.content = ""
+        # self.markdown_source = ""
         # self.show = True
         self.errors = []
 
@@ -49,13 +50,36 @@ class Doc(JSBASE):
 
         self._content = None
 
-        self._media = []
+        self._images = []
+        self._links_external = []
+        self._links_doc = []
+        self._links = []
+
+    def _clean(self,name):
+        return j.data.text.strip_to_ascii_dense(name)
+
+    def _get_file_path_new(self,name="image",extension="jpeg"):
+        nr=0
+        dest = "%s/%s.%s"%(self.path_dir,name,extension)
+        found = j.sal.fs.exists(dest)
+        while found:
+            nr+=1
+            name = "%s_%s"%(name,nr) #to make sure we have a unique name
+            dest = "%s/%s.%s"%(self.path_dir,name,extension)
+            found = j.sal.fs.exists(dest)
+        return name,dest
 
     @property
-    def media(self):
-        if not self._media:
+    def links(self):
+        if self._links == []:
             self._links_process()
-        return self._media
+        return self._links
+
+    @property
+    def images(self):
+        if not self._images:
+            self._links_process()
+        return self._images
 
 
     @property
@@ -77,7 +101,7 @@ class Doc(JSBASE):
     def htmlpage_get(self,htmlpage=None):
         if htmlpage is None:
             htmlpage = j.data.html.page_get()
-        htmlpage = self.md.htmlpage_get(htmlpage=htmlpage, webparts=True)
+        htmlpage = self.markdown_obj.htmlpage_get(htmlpage=htmlpage, webparts=True)
         return htmlpage
 
     def html_get(self,htmlpage=None):
@@ -91,33 +115,45 @@ class Doc(JSBASE):
         return self._data
 
     @property
-    def md(self):
+    def markdown_obj(self):
         if not self._md :
-            self._md = j.data.markdown.document_get(j.sal.fs.fileGetContents(self.path))        
+            self._md = j.data.markdown.document_get(self.markdown_source)        
         return self._md
 
     def header_get(self, level=1, nr=0):
-        headers = [item for item in self.md.items if item.type == "header" and item.level == level]
+        headers = [item for item in self.markdown_obj.items if item.type == "header" and item.level == level]
         return headers[nr] if len(headers) > nr else ""
 
     @property
-    def content(self):
+    def markdown_processed(self):
+        """
+        markdown after processing of the full doc
+        """
+        self._macros_process()
+        self._links_process()
+        return self.markdown_obj.markdown
+
+    @property
+    def markdown_source(self):
+        """
+        markdown coming from source
+        """
         if not self._content:
-            self._content = j.sal.fs.fileGetContents(self.path)#HACK, TODO:*1 kristof, fix this
+            self._content = j.sal.fs.fileGetContents(self.path)
         return self._content
 
     @property
-    def content_clean(self):
+    def markdown_clean(self):
         # remove the code blocks (comments are already gone)
-        print('content_clean')
+        print('markdown_clean')
         from IPython import embed;embed(colors='Linux')
         return None
 
-    def image_name_get(self, nr=0):
-        return self.media[nr]
+    def media_name_get(self, nr=0):
+        return self.images[nr]
 
     @property
-    def content_clean_summary(self):
+    def markdown_clean_summary(self):
         c = self.content_clean
         lines = c.split("\n")
         counter = 0
@@ -167,71 +203,115 @@ class Doc(JSBASE):
                 self._data_update(data)
         print("data process doc")
 
-    def _macro_process(self,methodline,block):
+    def link_get(self,filename=None,cat=None,nr=0,die=True):
+        res = self.links_get(filename=filename, cat=cat)
+        if len(res)== 0:
+            if die:
+                raise RuntimeError("could not find link %s:%s"%(filename,cat))
+            else:
+                return None
+        if nr>len(res):
+            if die:
+                raise RuntimeError("could not find link %s:%s at position:%s"%(filename,cat,nr))
+            else:
+                return None            
+        return res[nr]
+
+    def links_get(self,filename=None,cat=None):  
+        self._links_process()
+        res=[]
+        for link in self._links:
+            found=True
+            if cat is not None and not link.cat==cat:
+                found = False
+            if filename is not None and not link.filename.startswith(filename):
+                found = False
+            if found:
+                res.append(link)
+        return res
+
+    def _macros_process(self):
         """
         eval the macro
         """
-        methodcode = methodline[3:]
-        methodcode = methodcode.rstrip(", )")  # remove end )
-        methodcode = methodcode.replace("(", "(self,")
-        if not methodcode.strip() == line[3:].strip():
-            # means there are parameters
-            methodcode += ",content=block)"
-        else:
-            methodcode += "(content=block)"
-        methodcode = methodcode.replace(",,", ",")
 
-        if methodcode.strip()=="":
-            raise RuntimeError("method code cannot be empty")
+        for part in self.parts_get(cat="macro"):
+            line = part.method
+            if line.strip()=="":
+                return self.docsite.error_raise("empty macro cannot be executed", doc=self)
+            block = part.data
+            methodcode = line.rstrip(", )")  # remove end )
+            methodcode = methodcode.replace("(", "(self,")
+            if not methodcode.strip() == line.strip():
+                # means there are parameters
+                methodcode += ",content=block)"
+            else:
+                methodcode += "(content=block)"
+            methodcode = methodcode.replace(",,", ",")
 
-        cmd = "j.tools.markdowndocs.macros." + methodcode
-        # self.logger.debug(cmd)
-        # macro = eval(cmd)
-        try:
-            macro = eval(cmd) #is the result of the macro which is returned
-        except Exception as e:
-            from IPython import embed;embed(colors='Linux')
-            s
-            block = "```python\nERROR IN MACRO*** TODO: *1 ***\ncmd:\n%s\nERROR:\n%s\n```\n" % (cmd, e)
-            self.docsite.error_raise(block, doc=self)          
-        return macro
+            if methodcode.strip()=="":
+                raise RuntimeError("method code cannot be empty")
+
+            cmd = "j.tools.markdowndocs.macros." + methodcode
+            # self.logger.debug(cmd)
+            # macro = eval(cmd)
+            try:
+                macro = eval(cmd) #is the result of the macro which is returned
+                part.result = macro
+            except Exception as e:                
+                block = "```python\nERROR IN MACRO*** TODO: *1 ***\ncmd:\n%s\nERROR:\n%s\n```\n" % (cmd, e)
+                self.logger.error(block)
+                self.docsite.error_raise(block, doc=self)    
+                part.result = block
+
+            
+
 
     def _links_process(self):
+        """
+        results in:
+            self._images = []
+            self._links_external = []
+            self._links_doc = 
+        """
+        if not self._links == []:
+            return
         # check links for internal images
-        regex = "\] *\([a-zA-Z0-9\.\-\_\ \/]+\)"  # find all possible images/links
-        for match in j.data.regex.yieldRegexMatches(regex, self.content, flags=0):
+        # regex = "!+\[.*\] *\([a-zA-Z0-9\.\-\_\ \/\"]+\)"  # find all possible images/links
+        regex = "!*\[.*\] *\(.*\)"
+        for match in j.data.regex.yieldRegexMatches(regex, self.markdown_source, flags=0):
             self.logger.debug("##:file:link:%s" % match)
-            fname = match.founditem.strip("[]").strip("()")
-            if match.founditem.find("/") != -1:
-                fname = fname.split("/")[-1]
-            if j.sal.fs.getFileExtension(fname).lower() in ["png", "jpg", "jpeg", "mov", "mp4"]:
-                fnameFound = self.docsite.file_get(fname, die=False)
-                if fnameFound==None:
-                    print("links process")
-                    msg = "**ERROR: COULD NOT FIND LINK: %s TODO: **" % fnameFound
-                    self._content = self.content.replace(match.founditem, msg)
-                else:
-                    self._content = self.content.replace(match.founditem, "](/%s/files/%s)" % (self.docsite.name, fnameFound))
-                    self._media.append(fname)
-            elif j.sal.fs.getFileExtension(fname).lower() in ["md"]:
-                shortname = fname.lower()[:-3]
-                if shortname not in self.docsite.docs:
-                    msg = "**ERROR: COULD NOT FIND LINK: %s TODO: **" % shortname
-                    self.docsite.error_raise(msg, doc=self)
-                    self._content = self.content.replace(match.founditem, msg)
-                else:
-                    thisdoc = self.docsite.docs[shortname]
-                    self._content = self.content.replace(match.founditem, "](%s)" % (thisdoc.url))
+            link = Link(self,match.founditem)
+            self._links.append(link)
+    
 
-        regex = "src *= *\" */?static"
-        for match in j.data.regex.yieldRegexMatches(regex, self.content, flags=0):
-            self._content = self.content.replace(match.founditem, "src = \"/")
+        #whats this one?
+        # regex = "src *= *\" */?static"
+        # for match in j.data.regex.yieldRegexMatches(regex, self.markdown_source, flags=0):
+        #     self._content = self.markdown_source.replace(match.founditem, "src = \"/")
+
+    def part_get(self,text_to_find=None,cat=None,nr=0,die=True):
+        """
+        return part of markdown document e.g. header
+
+        @param cat is: table, header, macro, code, comment1line, comment, block, data, image
+        @param nr is the one you need to have 0 = first one which matches
+        @param text_to_find looks into the text
+        """        
+        return self.markdown_obj.part_get(text_to_find=text_to_find,cat=cat, nr=nr,die=die)
+
+    def parts_get(self,text_to_find=None,cat=None):  
+        """
+        @param cat is: table, header, macro, code, comment1line, comment, block, data, image
+        @param text_to_find looks into the text
+        """         
+        return self.markdown_obj.parts_get(text_to_find=text_to_find,cat=cat)
 
     def render(self,**args):
         """
         render markdown content using jinja2
         """
-        return j.tools.jinja2.text_render(self.content,doc=self,**args)
+        return j.tools.jinja2.text_render(doc=self,**args)
 
     def __repr__(self):
         return "doc:%s:%s" % (self.name, self.path)
