@@ -62,7 +62,7 @@ class MarkDownDocs(JSBASE):
             self.macros_load("https://github.com/Jumpscale/markdowndocs/tree/master/macros")
             self._initOK = True
 
-    def macros_load(self, pathOrUrl=""):
+    def macros_load(self, pathOrUrl="https://github.com/threefoldtech/jumpscale_weblibs/tree/master/macros"):
         """
         @param pathOrUrl can be existing path or url
         e.g. https://github.com/threefoldtech/jumpscale_lib/markdowndocs/tree/master/examples
@@ -96,10 +96,12 @@ class MarkDownDocs(JSBASE):
             self._macroPathsDone.append(path)
 
     def load(self, path="", name=""):
+        self.macros_load()
         if path.startswith("http"):
             path = j.clients.git.getContentPathFromURLorPath(path)
         ds = DocSite(path=path, name=name)
         self.docsites[ds.name] = ds
+        return self.docsites[ds.name]
         
     def git_update(self):
         if self.docsites == {}:
@@ -191,7 +193,36 @@ class MarkDownDocs(JSBASE):
         else:
             return None
 
-       
+    def test(self):
+        """
+        js_shell 'j.tools.markdowndocs.test()'
+        """
+        url = "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/docsites_examples/test/"
+        ds = self.load(url,name="test")
+
+        doc = ds.doc_get("links")
+
+        assert doc.data == {'color': 'green', 'importance': 'high', 'somelist': ['a', 'b', 'c']}
+
+        print (doc.images)
+
+        for link  in doc.links:
+            print(link)
+
+        assert str(doc.link_get(cat="image",nr=0)) == 'link:image:unsplash.jpeg'
+        assert str(doc.link_get(cat="link",nr=0)) == 'link:link:https://unsplash.com/'
+
+        doc = ds.doc_get("include_test")
+
+        print ( doc.markdown_obj)
+
+        print("### PROCESSED MARKDOWN DOC")
+
+        print(doc.markdown_processed)
+
+
+        from IPython import embed;embed(colors='Linux')
+        
 
     # def scan_load(self, pathOrUrl="", name=""):
     #     """

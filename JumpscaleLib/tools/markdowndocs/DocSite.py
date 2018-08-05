@@ -57,11 +57,13 @@ class DocSite(JSBASE):
         # need to empty again, because was used in config
         self.data_default = {}  # key is relative path in docsite where default content found
 
-        self.docs = {}
-        self.htmlpages = {}
-        self.others = {}
-        self.files = {}
-        self.sidebars = {}
+        self._docs = {}
+        self._files = {}
+        self._sidebars = {}
+
+        self._errors = []
+
+        self.links_verify = False
         
 
     
@@ -83,7 +85,14 @@ class DocSite(JSBASE):
 
         self.logger.info("found:%s"%self)
 
-        
+    def _clean(self,name):
+        if j.data.types.list.check(name):
+            if len(name)==1:
+                name=name[0]
+            else:
+                name="/".join(name) #not sure this is correct
+                
+        return j.data.text.strip_to_ascii_dense(name)
 
     @property
     def git(self):
@@ -101,6 +110,18 @@ class DocSite(JSBASE):
         urls = [item for item in self.docs.keys()]
         urls.sort()
         return urls
+
+    @property
+    def docs(self):
+        if self._docs=={}:
+            self.load()
+        return self._docs
+
+    @property
+    def files(self):
+        if self._files=={}:
+            self.load()
+        return self._files
 
     def _processData(self, path):
         ext = j.sal.fs.getFileExtension(path).lower()
@@ -136,7 +157,7 @@ class DocSite(JSBASE):
         rdirpath = rdirpath.strip("/").strip().strip("/")
         self.data_default[rdirpath] = data
 
-    def load(self):
+    def load(self,reset=False):
         """
         walk in right order over all files which we want to potentially use (include)
         and remember their paths
@@ -144,17 +165,17 @@ class DocSite(JSBASE):
         if duplicate only the first found will be used
 
         """
-        if self._loaded:
+        if reset == False and self._loaded:
             return
+
+        self._files={}
+        self._docs={}
+        self._sidebars={}
 
         j.sal.fs.remove(self.path + "errors.md")
         path = self.path
         if not j.sal.fs.exists(path=path):
             raise j.exceptions.NotFound("Cannot find source path in load:'%s'" % path)
-
-
-        def clean(name):
-            return j.data.text.strip_to_ascii_dense(name)
 
         def callbackForMatchDir(path, arg):
             base = j.sal.fs.getBaseName(path).lower()
@@ -196,7 +217,7 @@ class DocSite(JSBASE):
                 doc = Doc(path, base, docsite=self)
                 # if base not in self.docs:
                 #     self.docs[base.lower()] = doc
-                self.docs[doc.name_dot_lower] = doc
+                self._docs[doc.name_dot_lower] = doc
             elif ext in ["html","htm"]:
                 self.logger.debug("found html:%s"%path)
                 raise RuntimeError()
@@ -209,12 +230,13 @@ class DocSite(JSBASE):
             else:
                 
                 if ext in ["png", "jpg", "jpeg", "pdf", "docx", "doc", "xlsx", "xls", \
-                            "ppt", "pptx", "mp4","css","js"]:
+                            "ppt", "pptx", "mp4","css","js","mov"]:
                     self.logger.debug("found file:%s"%path)
-                    if base in self.files:
+                    base=self._clean(base)
+                    if base in self._files:
                         raise j.exceptions.Input(message="duplication file in %s,%s" %
                                                  (self, path), level=1, source="", tags="", msgpub="")
-                    self.files[base.lower()] = path
+                    self._files[base] = path
                 # else:
                 #     self.logger.debug("found other:%s"%path)
                 #     l = len(ext)+1
@@ -237,34 +259,16 @@ class DocSite(JSBASE):
 
         self._loaded=True
 
-    # def file_add(self, path):
-    #     if not j.sal.fs.exists(path, followlinks=True):
-    #         raise j.exceptions.Input(message="Cannot find path:%s" % path, level=1, source="", tags="", msgpub="")
-    #     base = j.sal.fs.getBaseName(path).lower()
-    #     self.files[base] = path
 
-    # def files_copy(self, destination=None):
-    #     if not destination:
-    #         if self.hugo:
-    #             destination = "static/files"
-    #         else:
-    #             destination = "files"
-    #     dpath = j.sal.fs.joinPaths(self.outpath, destination)
-    #     j.sal.fs.createDir(dpath)
-    #     for name, path in self.files.items():
-    #         j.sal.fs.copyFile(path, j.sal.fs.joinPaths(dpath, name))
-
-    # def process(self):
-    #     for key, doc in self.docs.items():
-    #         doc.process()
-    #     self._processed = True
 
     def error_raise(self, errormsg, doc=None):
         if doc is not None:
-            errormsg2 = "## ERROR: %s\n\n- in doc: %s\n\n%s\n" % (j.data.time.getLocalTimeHR(), doc, errormsg)
-            j.sal.fs.writeFile(filename=self.path + "errors.md", contents=errormsg2, append=True)
-            self.logger.error(errormsg2)
-            doc.errors.append(errormsg)
+            errormsg2 = "## ERROR: %s\n\n- in doc: %s\n\n%s\n\n\n" % (doc.name, doc, errormsg)
+            key = j.data.hash.md5_string("%s_%s"%(doc.name,errormsg))
+            if not key in self._errors:
+                j.sal.fs.writeFile(filename=self.path + "errors.md", contents=errormsg2, append=True)
+                self.logger.error(errormsg2)
+                doc.errors.append(errormsg)
         else:
             from IPython import embed
             self.logger.error("DEBUG NOW raise error")
@@ -273,11 +277,13 @@ class DocSite(JSBASE):
 
 
     def file_get(self, name, die=True):
+        """
+        returns path to the file
+        """
         self.load()
-        
-        for key, val in self.files.items():
-            if key.lower() == name.lower():
-                return val
+        name =  self._clean(name)
+        if name in self.files:
+            return self.files[name]
         if die:
             raise j.exceptions.Input(message="Did not find file:%s in %s" %
                                      (name, self), level=1, source="", tags="", msgpub="")
@@ -288,11 +294,15 @@ class DocSite(JSBASE):
         return doc.html_get()
 
     def doc_get(self, name, cat="", die=True):
-        
-        self.load()
 
         if j.data.types.list.check(name):
             name = "/".join(name)
+
+        name=name.replace("/",".").strip(".")
+        
+        self.load()
+        name =  self._clean(name)
+
 
         name = name.strip("/")
         name = name.lower()            
@@ -337,9 +347,13 @@ class DocSite(JSBASE):
             if nr == 1:
                 self.docs[name] = res  #remember for caching
                 return self.docs[name]
+            if nr>1:
+                self.docs[name] = None #means is not there
+                break
+                
         
         if die:
-            raise j.exceptions.Input(message="Cannot find doc with name:%s" % name, level=1, source="", tags="", msgpub="")
+            raise j.exceptions.Input(message="Cannot find doc with name:%s (nr docs found:%s)" % (name,nr), level=1, source="", tags="", msgpub="")
         else:
             return None
 
@@ -359,23 +373,25 @@ class DocSite(JSBASE):
                 
             res = []
             for key,item in self.docs.items():
-                if name in  item.name_dot_lower:
+                if item is None:
+                    continue
+                if item.name_dot_lower.endswith(name):
                     res.append(key)
             if len(res)>0:
                 return  len(res),self.docs[res[0]]
             else:
                 return 0,None  
 
-    def sidebar_get(self, url):
+    def sidebar_get(self, url, reset=False):
         """
         will calculate the sidebar, if not in url will return None
         """
-        self.load()        
+        self.load(reset=reset)        
         if j.data.types.list.check(url):
             url = "/".join(url)
         self.logger.debug("sidebar_get:%s"%url)            
-        if url in self.sidebars:
-            return self.sidebars[url]
+        if url in self._sidebars:
+            return self._sidebars[url]
 
         url_original = copy.copy(url)
         url = url.strip("/")
@@ -387,18 +403,20 @@ class DocSite(JSBASE):
         url = url.replace("/",".")
         url = url.strip(".")
 
+        url = self._clean(url)
+
         if url == "":
-            self.sidebars[url_original]=None
+            self._sidebars[url_original]=None
             return None
 
         if "_sidebar" not in url:
-            self.sidebars[url_original]=None
+            self._sidebars[url_original]=None
             return None #did not find sidebar just return None
 
 
         if url in self.docs:
-            self.sidebars[url_original] = self._sidebar_process(self.docs[url].content,url_original=url_original)
-            return self.sidebars[url_original]                        
+            self._sidebars[url_original] = self._sidebar_process(self.docs[url].content,url_original=url_original)
+            return self._sidebars[url_original]                        
             
         #did not find the usual location, lets see if we can find the doc allone
         url0=url.replace("_sidebar","").strip().strip(".").strip()
@@ -414,13 +432,14 @@ class DocSite(JSBASE):
         #lets look at parent
         
         if url0=="":
+            from IPython import embed;embed(colors='Linux')
             raise RuntimeError("cannot be empty")
             
         newurl = ".".join(url0.split(".")[:-1])+"._sidebar"
         return self.sidebar_get(newurl)
             
-        self.sidebars[url_original] = self._sidebar_process(self.docs[url].content,url_original=url_original)
-        return self.sidebars[url_original]
+        self._sidebars[url_original] = self._sidebar_process(self.docs[url].content,url_original=url_original)
+        return self._sidebars[url_original]
 
     def _sidebar_process(self,c,url_original):
         
@@ -495,6 +514,32 @@ class DocSite(JSBASE):
 
         return out
 
+    def verify(self):
+        self.load(reset=True)
+        self.links_verify=True
+        keys = [item for item in self.docs.keys()]
+        keys.sort()
+        for key in keys:
+            doc = self.doc_get(key,die=True)
+            self.logger.info("verify:%s"%doc)
+            try:            
+                doc.markdown #just to trigger the error checking
+            except Exception as e:
+                msg="unknown error to get markdown for doc, error:\n%s"%e
+                self.error_raise(msg,doc=doc)
+            # doc.html
+        return self.errors
+
+    @property
+    def errors(self):
+        """
+        return current found errors
+        """
+        errors = j.sal.fs.fileGetContents(self.path + "errors.md")
+        return errors
+
+
+
     def __repr__(self):
         return "docsite:%s" % ( self.path)
 
@@ -534,3 +579,26 @@ class DocSite(JSBASE):
     #             j.sal.fs.copyDirTree(j.sal.fs.joinPaths(self.path, "static"), j.sal.fs.joinPaths(self.outpath, "public"))
     #     else:
     #         self.logger.info("no need to write:%s"%self.path)    
+
+
+    # def file_add(self, path):
+    #     if not j.sal.fs.exists(path, followlinks=True):
+    #         raise j.exceptions.Input(message="Cannot find path:%s" % path, level=1, source="", tags="", msgpub="")
+    #     base = j.sal.fs.getBaseName(path).lower()
+    #     self.files[base] = path
+
+    # def files_copy(self, destination=None):
+    #     if not destination:
+    #         if self.hugo:
+    #             destination = "static/files"
+    #         else:
+    #             destination = "files"
+    #     dpath = j.sal.fs.joinPaths(self.outpath, destination)
+    #     j.sal.fs.createDir(dpath)
+    #     for name, path in self.files.items():
+    #         j.sal.fs.copyFile(path, j.sal.fs.joinPaths(dpath, name))
+
+    # def process(self):
+    #     for key, doc in self.docs.items():
+    #         doc.process()
+    #     self._processed = True    

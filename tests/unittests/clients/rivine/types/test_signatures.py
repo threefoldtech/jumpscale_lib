@@ -1,9 +1,9 @@
 """
-Unittests for JumpscaleLib.clients.rivine.types.signatures module
+Unittests for JumpscaleLib.clients.blockchain.rivine.types.signatures module
 """
 
 import ed25519
-from JumpscaleLib.clients.rivine.types.signatures import Ed25519PublicKey
+from JumpscaleLib.clients.blockchain.rivine.types.signatures import Ed25519PublicKey
 
 
 def test_Ed25519PublicKey_binary(ed25519_key):

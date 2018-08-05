@@ -1,9 +1,9 @@
 """
-Unittests for JumpscaleJumpscaleLib.clients.rivine.types.unlockhash module
+Unittests for JumpscaleJumpscaleLib.clients.blockchain.rivine.types.unlockhash module
 """
 
-from JumpscaleLib.clients.rivine.types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY
-from JumpscaleLib.clients.rivine import utils
+from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY
+from JumpscaleLib.clients.blockchain.rivine import utils
 
 def test_unlock_to_string(ulh):
     """

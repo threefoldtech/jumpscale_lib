@@ -58,8 +58,8 @@ class SendGridClient(JSBASE):
 
     def test(self):
 
-        SENDER = "test@greenitglobe.com"
-        RECIPENT = "test@greenitglobe.com"
+        SENDER = "test@threefold.tech"
+        RECIPENT = "test@threefold.tech"
         SUBJECT = "Sending with SendGrid is Fun"
         MESSAGE_TYPE = "text/plain"
         MESSAGE = "and easy to do anywhere, even with Python"

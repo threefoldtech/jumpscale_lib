@@ -40,8 +40,13 @@ class JSWebLoader(JSBASE):
                                       findDirectorySymlinks=True, followSymlinks=True)
         apps = [item for item in apps if item[0] is not "_"]
         for module_name in apps:
-            module = import_module('blueprints.{}.routes'.format(module_name))
-            print("blueprint register:%s" % module_name)
+            try:
+                module = import_module('blueprints.{}.routes'.format(module_name))
+                print("blueprint register:%s" % module_name)
+            except Exception as e:
+                print("WARNING: could not load required libraries for the HUB blueprint")
+                print(e)
+
             app.register_blueprint(module.blueprint)
             if sockets and hasattr(module, "ws_blueprint"):
                 sockets.register_blueprint(module.ws_blueprint)

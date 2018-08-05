@@ -1,7 +1,7 @@
 """
 Unittests for utils module
 """
-from JumpscaleLib.clients.rivine import utils
+from JumpscaleLib.clients.blockchain.rivine import utils
 import pytest
 
 def test_locktime_from_duration():
