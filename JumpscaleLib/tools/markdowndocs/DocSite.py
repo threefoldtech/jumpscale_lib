@@ -64,6 +64,8 @@ class DocSite(JSBASE):
         self._errors = []
 
         self.links_verify = False
+
+        self.error_file_path = self.path + "errors.md"
         
 
     
@@ -266,7 +268,7 @@ class DocSite(JSBASE):
             errormsg2 = "## ERROR: %s\n\n- in doc: %s\n\n%s\n\n\n" % (doc.name, doc, errormsg)
             key = j.data.hash.md5_string("%s_%s"%(doc.name,errormsg))
             if not key in self._errors:
-                j.sal.fs.writeFile(filename=self.path + "errors.md", contents=errormsg2, append=True)
+                j.sal.fs.writeFile(filename=self.error_file_path, contents=errormsg2, append=True)
                 self.logger.error(errormsg2)
                 doc.errors.append(errormsg)
         else:
@@ -404,6 +406,9 @@ class DocSite(JSBASE):
         url = url.strip(".")
 
         url = self._clean(url)
+
+        from IPython import embed;embed(colors='Linux')
+        k
 
         if url == "":
             self._sidebars[url_original]=None
