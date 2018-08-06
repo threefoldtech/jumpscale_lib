@@ -102,12 +102,22 @@ class zero_bootClient(JSConfigBase):
         return rack_client.power.getStatePortCur(moduleID=module_id, portnumber=port_number)
 
 class Network:
-    def __init__(self, subnet, sshclient, networkname="lan"):
+    def __init__(self, subnet, sshclient, networkname="lan", leasetime="60m"):
         self.subnet = subnet
         self.sshclient = sshclient
-        self.leasetime = '5m'
-        self.hosts = Hosts(self.sshclient, self.subnet, self.leasetime, networkname=networkname)
         self.networkname = networkname
+
+        # get leasetime if present, else set provided
+        self.leasetime = self._get_leasetime() or leasetime
+        self.hosts = Hosts(self.sshclient, self.subnet, self.leasetime, networkname=networkname)
+
+    def _get_leasetime(self):
+        _, out, _ = self.sshclient.execute("uci show dhcp.{name}.leasetime".format(name=self.networkname), die=False)
+        if not out or not "=" in out:
+            return None
+        out = out.strip()
+        out = out.split('=')[1]
+        return out.strip("\'")
 
     def configure_lease_time(self, leasetime):
         """configure expiration time for all the network's leases
@@ -312,7 +322,7 @@ class Hosts:
         else:
             self._last_index = -1
 
-    def add(self, mac, address, hostname, networkname="lan"):
+    def add(self, mac, address, hostname):
         """Adds a static lease to machine with the specified mac address
 
         :param mac: required mac address
