@@ -3,7 +3,7 @@ import json
 import psutil
 
 from jumpscale import j
-from JumpscaleLib.clients.zero_os.sal.Disk import StorageType
+from JumpscaleLib.sal_zos.disks.Disks import StorageType
 
 
 class Capacity:
