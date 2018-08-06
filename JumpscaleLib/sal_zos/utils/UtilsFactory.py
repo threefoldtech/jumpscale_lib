@@ -1,9 +1,8 @@
 from jumpscale import j
-# import JumpscaleLib.baselib.remote
+from JumpscaleLib.sal_zos.abstracts import ZTNic
 
 JSBASE = j.application.jsbase_get_class()
 
-from .utils import Utils
 
 class UtilsFactory(JSBASE):
 
@@ -11,11 +10,22 @@ class UtilsFactory(JSBASE):
         self.__jslocation__ = "j.sal_zos.utils"
         JSBASE.__init__(self)
 
-    def get(self):
-        """
-        Get sal utilities
-        
-        """
-        return Utils()
+    def authorize_zerotiers(self, identify, nics):
+        for nic in nics:
+            if isinstance(nic, ZTNic):
+                nic.authorize(identify)
 
+    def format_ports(self, ports):
+        """
+        Formats ports from ["80:8080"] to {80: 8080}
+        :param ports: list of ports to format
+        :return: formated ports dict
+        """
+        if ports is None:
+            return {}
+        formatted_ports = {}
+        for p in ports:
+            src, dst = p.split(":")
+            formatted_ports[int(src)] = int(dst)
 
+        return formatted_ports
