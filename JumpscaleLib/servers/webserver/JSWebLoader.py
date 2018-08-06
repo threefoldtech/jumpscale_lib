@@ -6,6 +6,7 @@ from importlib import import_module
 from logging import basicConfig, DEBUG, getLogger, StreamHandler
 from jumpscale import j
 from werkzeug.debug import DebuggedApplication
+import rq_dashboard
 
 JSBASE = j.application.jsbase_get_class()
 
@@ -40,12 +41,14 @@ class JSWebLoader(JSBASE):
                                       findDirectorySymlinks=True, followSymlinks=True)
         apps = [item for item in apps if item[0] is not "_"]
         for module_name in apps:
-            try:
-                module = import_module('blueprints.{}.routes'.format(module_name))
-                print("blueprint register:%s" % module_name)
-            except Exception as e:
-                print("WARNING: could not load required libraries for the HUB blueprint")
-                print(e)
+            module = import_module('blueprints.{}.routes'.format(module_name))
+            print("blueprint register:%s" % module_name)            
+            # try:
+            #     module = import_module('blueprints.{}.routes'.format(module_name))
+            #     print("blueprint register:%s" % module_name)
+            # except Exception as e:
+            #     print("WARNING: could not load required libraries for the HUB blueprint")
+            #     print(e)
 
             app.register_blueprint(module.blueprint)
             if sockets and hasattr(module, "ws_blueprint"):
@@ -66,22 +69,32 @@ class JSWebLoader(JSBASE):
         self.logger = getLogger()
         self.logger.addHandler(StreamHandler())
 
-    def app_load(self, app, selenium=False):
-        # app = Flask(__name__, static_folder='base/static')
-        app.config.from_object(DebugConfig)
-        # if selenium:
-        #     app.config['LOGIN_DISABLED'] = True
-        # register_extensions(app)
-        self.register_blueprints(app)
-        # configure_database(app)
-        # configure_logs(app)
-        return app
+    # def app_load(self, app, selenium=False):
+    #     # app = Flask(__name__, static_folder='base/static')
+    #     app.config.from_object(DebugConfig)
+
+    #     app.config.from_object(rq_dashboard.default_settings)
+    #     app.register_blueprint(rq_dashboard.blueprint, url_prefix="/rq")
+
+
+    #     # if selenium:
+    #     #     app.config['LOGIN_DISABLED'] = True
+    #     # register_extensions(app)
+    #     self.register_blueprints(app)
+    #     # configure_database(app)
+    #     # configure_logs(app)
+
+
+    #     return app
 
     def create_app(self, selenium=False, debug=True, websocket_support=True):
         staticpath = j.clients.git.getContentPathFromURLorPath(
             "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/static")
         app = Flask(__name__, static_folder=staticpath)  # '/base/static'
         app.config.from_object(DebugConfig)
+
+        app.config.from_object(rq_dashboard.default_settings)
+        app.register_blueprint(rq_dashboard.blueprint, url_prefix="/rq")
 
         # if selenium:
         #     app.config['LOGIN_DISABLED'] = True
