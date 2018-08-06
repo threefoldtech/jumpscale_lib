@@ -11,7 +11,7 @@ def getInt(nr):
     return int(nr)
 
 
-class ModelBaseCollection3(JSBASE):
+class ModelBaseCollection(JSBASE):
     """
     This class represent a collection
     It's used to list/find/create new Instance of Model objects

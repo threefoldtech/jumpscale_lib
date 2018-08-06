@@ -4,8 +4,8 @@ import capnp
 from collections import OrderedDict
 import capnp
 
-from .ModelBaseCollection3 import ModelBaseCollection3
-from .ModelBaseData3 import ModelBaseData
+from .ModelBaseCollection import ModelBaseCollection
+from .ModelBaseData import ModelBaseData
 JSBASE = j.application.jsbase_get_class()
 
 
@@ -44,7 +44,7 @@ class Capnp(JSBASE):
     """
 
     def __init__(self):
-        self.__jslocation__ = "j.data.capnp3"
+        self.__jslocation__ = "j.data.capnp"
         self.__imports__ = "pycapnp"
         self._schema_cache = {}
         self._capnpVarDir = j.sal.fs.joinPaths(j.dirs.VARDIR, "capnp")
@@ -71,7 +71,7 @@ class Capnp(JSBASE):
         example to use:
             ```
             #if we use a modelBaseClass do something like
-            ModelBaseWithData = j.data.capnp3.getModelBaseClass()
+            ModelBaseWithData = j.data.capnp.getModelBaseClass()
             class MyModelBase(ModelBaseWithData):
                 def index(self):
                     # put indexes in db as specified
@@ -85,7 +85,7 @@ class Capnp(JSBASE):
 
             mydb=j.data.kvs.getMemoryStore(name="mymemdb")
 
-            collection=j.data.capnp3.getModelCollection(schema=ModelCapnp,category="issue",modelBaseClass=MyModelBase,db=mydb)
+            collection=j.data.capnp.getModelCollection(schema=ModelCapnp,category="issue",modelBaseClass=MyModelBase,db=mydb)
 
             ```
         """
@@ -206,11 +206,11 @@ class Capnp(JSBASE):
 
     def test(self):
         '''
-        js_shell 'j.data.capnp3.test()'
+        js_shell 'j.data.capnp.test()'
         '''
         import time
         capnpschema = '''
-        @0x93c1ac9f09464fc9;
+        @0x9fc1ac9f09464fc9;
 
         struct Issue {
 
