@@ -2,7 +2,7 @@ import os
 
 from jumpscale import j
 
-from .zero_bootClient import zero_bootClient
+from .ZerobootClient import zero_bootClient
 JSConfigFactoryBase = j.tools.configmanager.base_class_configs
 
 class ZeroRobotFactory(JSConfigFactoryBase):
