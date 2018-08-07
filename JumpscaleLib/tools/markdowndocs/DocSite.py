@@ -272,9 +272,7 @@ class DocSite(JSBASE):
                 self.logger.error(errormsg2)
                 doc.errors.append(errormsg)
         else:
-            from IPython import embed
             self.logger.error("DEBUG NOW raise error")
-            embed()
             raise RuntimeError("stop debug here")
 
 
@@ -407,8 +405,6 @@ class DocSite(JSBASE):
 
         url = self._clean(url)
 
-        from IPython import embed;embed(colors='Linux')
-        k
 
         if url == "":
             self._sidebars[url_original]=None
@@ -437,7 +433,6 @@ class DocSite(JSBASE):
         #lets look at parent
         
         if url0=="":
-            from IPython import embed;embed(colors='Linux')
             raise RuntimeError("cannot be empty")
             
         newurl = ".".join(url0.split(".")[:-1])+"._sidebar"

@@ -133,15 +133,13 @@ class Doc(JSBASE):
             self._md = j.data.markdown.document_get(self.markdown_source)        
         return self._md
 
-    def header_get(self, level=1, nr=0,html=True):
-        #TODO: implement header level
+    def header_get(self, level=1, nr=0):
         res = self.markdown_obj.parts_get(cat="header")
         if len(res)<1:
             return self.error_raise("header level:%s %s could not be found"%(level,nr))
-        if html:
-            return res[0].html
-        else:
-            return res[0]
+        for header in res:
+            if header.level == level:
+                return header
 
     @property
     def markdown(self):
