@@ -105,9 +105,12 @@ class MDTable(MDBase):
         """        
         if j.data.types.string.check(cols):
             cols=[item.strip().strip("'").strip('"').strip() for item in cols.split(",")]
+        while len(cols) < len(self.header):
+            cols.append("  ")
         if len(cols) != len(self.header):
             raise j.exceptions.Input(
-                "cols need to be same size as header. %s vs %s" % (len(cols), len(self.header)))
+                "cols need to be same size as header.\n %s vs %s\nline:%s\n" % (len(cols), len(self.header),cols))
+
         for nr in range(len(cols)):
             if cols[nr] is None or str(cols[nr]).strip() == "":
                 cols[nr] = " . "

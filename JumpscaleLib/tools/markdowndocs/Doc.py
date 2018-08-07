@@ -130,7 +130,13 @@ class Doc(JSBASE):
     @property
     def markdown_obj(self):
         if not self._md :
-            self._md = j.data.markdown.document_get(self.markdown_source)        
+            try:
+                self._md = j.data.markdown.document_get(self.markdown_source)        
+            except Exception as e:
+                msg = "Could not parse markdown of %s"%self
+                msg += str(e)
+                self.error_raise(msg)
+                self._md = j.data.markdown.document_get(content="```\n%s\n```\n"%msg)
         return self._md
 
     def header_get(self, level=1, nr=0,html=True):
@@ -150,7 +156,14 @@ class Doc(JSBASE):
         """
         self._macros_process()
         self._links_process()
-        return self.markdown_obj.markdown
+        try:
+            res = self.markdown_obj.markdown
+        except Exception as e:
+            msg = "Could not parse markdown of %s"%self
+            msg += str(e)
+            self.error_raise(msg)
+            res = msg
+        return res
 
     @property
     def markdown_source(self):

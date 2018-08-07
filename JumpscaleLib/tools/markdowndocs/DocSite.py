@@ -222,7 +222,7 @@ class DocSite(JSBASE):
                 self._docs[doc.name_dot_lower] = doc
             elif ext in ["html","htm"]:
                 self.logger.debug("found html:%s"%path)
-                raise RuntimeError()
+                # raise RuntimeError()
                 # l = len(ext)+1
                 # base = base[:-l]  # remove extension
                 # doc = HtmlPage(path, base, docsite=self)
@@ -375,7 +375,7 @@ class DocSite(JSBASE):
                 
             res = []
             for key,item in self.docs.items():
-                if item is None:
+                if item is None or item=="":
                     continue
                 if item.name_dot_lower.endswith(name):
                     res.append(key)
@@ -407,20 +407,17 @@ class DocSite(JSBASE):
 
         url = self._clean(url)
 
-        from IPython import embed;embed(colors='Linux')
-        k
 
-        if url == "":
-            self._sidebars[url_original]=None
-            return None
+        # if url == "":
+        #     self._sidebars[url_original]=None
+        #     return None
 
-        if "_sidebar" not in url:
-            self._sidebars[url_original]=None
-            return None #did not find sidebar just return None
-
+        # if "_sidebar" not in url:
+        #     self._sidebars[url_original]=None
+        #     return None #did not find sidebar just return None
 
         if url in self.docs:
-            self._sidebars[url_original] = self._sidebar_process(self.docs[url].content,url_original=url_original)
+            self._sidebars[url_original] = self._sidebar_process(self.docs[url].markdown,url_original=url_original)
             return self._sidebars[url_original]                        
             
         #did not find the usual location, lets see if we can find the doc allone
@@ -435,8 +432,12 @@ class DocSite(JSBASE):
                     return self.get(possiblepath)
 
         #lets look at parent
+        print("need to find parent for sidebar")
+        from IPython import embed;embed(colors='Linux')
+        s
         
         if url0=="":
+            print("url0 is empty for sidebar")
             from IPython import embed;embed(colors='Linux')
             raise RuntimeError("cannot be empty")
             
@@ -507,7 +508,8 @@ class DocSite(JSBASE):
                 else:
                     out+="%s\n"%(descr)
 
-        res = self.doc_get("_sidebar_parent",False)
+
+        res = self.doc_get("_sidebar_parent",die=False)
         if res:
             out+=res.content            
         else:
