@@ -272,9 +272,7 @@ class DocSite(JSBASE):
                 self.logger.error(errormsg2)
                 doc.errors.append(errormsg)
         else:
-            from IPython import embed
             self.logger.error("DEBUG NOW raise error")
-            embed()
             raise RuntimeError("stop debug here")
 
 
@@ -408,9 +406,9 @@ class DocSite(JSBASE):
         url = self._clean(url)
 
 
-        # if url == "":
-        #     self._sidebars[url_original]=None
-        #     return None
+        if url == "":
+            self._sidebars[url_original]=None
+            return None
 
         # if "_sidebar" not in url:
         #     self._sidebars[url_original]=None
@@ -433,19 +431,16 @@ class DocSite(JSBASE):
 
         #lets look at parent
         print("need to find parent for sidebar")
-        from IPython import embed;embed(colors='Linux')
-        s
         
         if url0=="":
             print("url0 is empty for sidebar")
-            from IPython import embed;embed(colors='Linux')
+            # from IPython import embed;embed(colors='Linux')
             raise RuntimeError("cannot be empty")
             
         newurl = ".".join(url0.split(".")[:-1])+"._sidebar"
+        newurl = newurl.strip(".")
         return self.sidebar_get(newurl)
-            
-        self._sidebars[url_original] = self._sidebar_process(self.docs[url].content,url_original=url_original)
-        return self._sidebars[url_original]
+        
 
     def _sidebar_process(self,c,url_original):
         
