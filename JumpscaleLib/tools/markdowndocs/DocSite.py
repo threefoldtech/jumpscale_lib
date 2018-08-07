@@ -65,7 +65,7 @@ class DocSite(JSBASE):
 
         self.links_verify = False
 
-        self.error_file_path = self.path + "errors.md"
+        self.error_file_path = self.path + "/errors.md"
         
 
     
@@ -268,7 +268,8 @@ class DocSite(JSBASE):
             errormsg2 = "## ERROR: %s\n\n- in doc: %s\n\n%s\n\n\n" % (doc.name, doc, errormsg)
             key = j.data.hash.md5_string("%s_%s"%(doc.name,errormsg))
             if not key in self._errors:
-                j.sal.fs.writeFile(filename=self.error_file_path, contents=errormsg2, append=True)
+                errormsg3 = "```\n%s\n```\n"%errormsg2
+                j.sal.fs.writeFile(filename=self.error_file_path, contents=errormsg3, append=True)
                 self.logger.error(errormsg2)
                 doc.errors.append(errormsg)
         else:
@@ -537,9 +538,8 @@ class DocSite(JSBASE):
         return current found errors
         """
         errors = "DID NOT FIND ERRORSFILE, RUN js_doc verify in the doc directory"
-        path=self.path + "/errors.md"
-        if j.sal.fs.exists(path):
-            errors = j.sal.fs.fileGetContents(path)
+        if j.sal.fs.exists(self.error_file_path ):
+            errors = j.sal.fs.fileGetContents(self.error_file_path )
         return errors
 
 
