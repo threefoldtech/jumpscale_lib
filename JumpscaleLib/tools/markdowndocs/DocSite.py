@@ -405,29 +405,28 @@ class DocSite(JSBASE):
 
         url = self._clean(url)
 
-
         if url == "":
             self._sidebars[url_original]=None
             return None
 
-        # if "_sidebar" not in url:
-        #     self._sidebars[url_original]=None
-        #     return None #did not find sidebar just return None
+        if "_sidebar" not in url:
+            self._sidebars[url_original]=None
+            return None #did not find sidebar just return None
 
         if url in self.docs:
             self._sidebars[url_original] = self._sidebar_process(self.docs[url].markdown,url_original=url_original)
             return self._sidebars[url_original]                        
             
-        #did not find the usual location, lets see if we can find the doc allone
-        url0=url.replace("_sidebar","").strip().strip(".").strip()
-        if "." in url0: #means we can 
-            name=url0.split(".")[-1]
-            doc=self.doc_get(name,die=False)
-            if doc:
-                #we found the doc, so can return the right sidebar
-                possiblepath = doc.path_dir_rel.replace("/",".").strip(".")+"._sidebar"
-                if not possiblepath == url:
-                    return self.get(possiblepath)
+        # #did not find the usual location, lets see if we can find the doc allone
+        # url0=url.replace("_sidebar","").strip().strip(".").strip()
+        # if "." in url0: #means we can 
+        #     name=url0.split(".")[-1]
+        #     doc=self.doc_get(name,die=False)
+        #     if doc:
+        #         #we found the doc, so can return the right sidebar
+        #         possiblepath = doc.path_dir_rel.replace("/",".").strip(".")+"._sidebar"
+        #         if not possiblepath == url:
+        #             return self.get(possiblepath)
 
         #lets look at parent
         print("need to find parent for sidebar")
@@ -537,7 +536,10 @@ class DocSite(JSBASE):
         """
         return current found errors
         """
-        errors = j.sal.fs.fileGetContents(self.path + "errors.md")
+        errors = "DID NOT FIND ERRORSFILE, RUN js_doc verify in the doc directory"
+        path=self.path + "/errors.md"
+        if j.sal.fs.exists(path):
+            errors = j.sal.fs.fileGetContents(path)
         return errors
 
 
