@@ -3,7 +3,7 @@
 from jumpscale import j
 from .IYOClient import IYOClient
 import requests
-import jwt
+from jose import jwt
 import time
 
 DEFAULT_BASE_URL = "https://itsyou.online/api"
@@ -130,6 +130,5 @@ class IYOFactory(JSConfigBaseFactory):
         :return: return expiration date(timestamp) for the token
         :rtype: int
         """
-
-        jwt_data = jwt.decode(token, verify=False)
+        jwt_data = jwt.get_unverified_claims(token)
         return jwt_data['exp']

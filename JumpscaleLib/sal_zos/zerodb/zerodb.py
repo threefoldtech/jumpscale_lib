@@ -175,7 +175,7 @@ class Zerodb:
             container = self.node.containers.get(self._container_name)
         for k, v in container.ports.items():
             if v == DEFAULT_PORT:
-                self.node_port = int(k)
+                self.node_port = int(k.split(':')[-1])
                 break
         for k, v in container.mounts.items():
             if v == '/zerodb':
