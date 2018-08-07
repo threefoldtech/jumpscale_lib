@@ -478,6 +478,7 @@ class Gateway:
         """
         Update the gateway container portforwards
         """
+        publicip = self.node.get_nic_hwaddr_and_ip()[1]
         container_forwards = set([v for k, v in self.container.info['container']['arguments']['port'].items() if v == int(k)])
         wanted_forwards = {80, 443}
         container_ip = str(self.container.default_ip(self._default_nic).ip)
@@ -486,9 +487,9 @@ class Gateway:
             if str(source.ipaddress) == container_ip:
                 wanted_forwards.add(source.port)
         for port in container_forwards - wanted_forwards:
-            self.container.node.client.container.remove_portforward(self.container.id, port, port)
+            self.container.node.client.container.remove_portforward(self.container.id, '{}:{}'.format(publicip, port), port)
         for port in wanted_forwards - container_forwards:
-            self.container.node.client.container.add_portforward(self.container.id, port, port)
+            self.container.node.client.container.add_portforward(self.container.id, '{}:{}'.format(publicip, port), port)
 
     def save_certificates(self, caddy_dir="/.caddy"):
         """
