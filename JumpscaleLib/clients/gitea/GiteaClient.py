@@ -13,7 +13,6 @@ from JumpscaleLib.clients.gitea.client import Client
 TEMPLATE = """
 url = ""
 gitea_token_ = ""
-admins = ""
 """
 
 JSConfigBase = j.tools.configmanager.base_class_config

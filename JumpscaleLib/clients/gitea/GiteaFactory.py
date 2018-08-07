@@ -24,11 +24,10 @@ class GiteaFactory(JSConfigBase):
     def _path(self):
         return j.sal.fs.getDirName(os.path.abspath(__file__)).rstrip("/")
 
-    def get_by_params(self,instance,url,gitea_token, admins):
+    def get_by_params(self,instance,url,gitea_token):
         data={}
         data["url"]=instance
         data["gitea_token_"]=gitea_token
-        data["admins"]=[admin.stripr() for admin in admins.split(',')]
         self.get(instance=instance,data=data)
 
     def generate(self):

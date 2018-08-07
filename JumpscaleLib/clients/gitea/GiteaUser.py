@@ -69,8 +69,6 @@ class GiteaUser(JSBASE):
                     # current gitea client user is admin
                     if self.client.users.current.username == self.username:
                         self._is_admin = True
-                    elif self.username in self.client.config.data['admins']:
-                        self._is_admin = True
                     else:
                         self._is_admin = False
         return self._is_admin
