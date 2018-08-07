@@ -22,6 +22,8 @@ from .Response import Response
 from .RTInfoManager import RTInfoManager
 from .WebManager import WebManager
 from .ZerotierManager import ZerotierManager
+from .ZFSManager import ZFSManager
+
 
 TEMPLATE = """
 host = "127.0.0.1"
@@ -68,6 +70,7 @@ class Client(BaseClient, JSConfigClientBase):
         self._web = WebManager(self)
         self._rtinfo = RTInfoManager(self)
         self._cgroup = CGroupManager(self)
+        self._zfs = ZFSManager(self)
 
     @property
     def _redis(self):
@@ -104,6 +107,13 @@ class Client(BaseClient, JSConfigClientBase):
                                            socket_keepalive=True, socket_keepalive_options=socket_keepalive_options)
 
         return self.__redis
+
+    @property
+    def zfs(self):
+        """
+        ZFS manager
+        """
+        return self._zfs
 
     @property
     def container(self):
