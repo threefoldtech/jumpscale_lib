@@ -21,7 +21,7 @@ class Jinja2(JSBASE):
 
     def template_get(self,path,key=""):
         """
-        returns template and will be cached
+        returns jinja2 template and will be cached
         if key used then will use key as the key in the caching
         """
         if key is  "":
@@ -33,6 +33,10 @@ class Jinja2(JSBASE):
         return self.templates[key]
 
     def template_render(self,path,**args):
+        """
+        load the template, do not write back
+        render & return result as string
+        """
         self.logger.debug("template render:%s"%path)
         # print(path)
         C = j.sal.fs.readFile(path)

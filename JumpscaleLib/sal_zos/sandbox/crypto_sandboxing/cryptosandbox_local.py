@@ -2,7 +2,7 @@ import json
 import os
 
 from jose.jwt import get_unverified_claims
-from js9 import j
+from jumpscale import j
 
 
 def get_prefab_prepared():

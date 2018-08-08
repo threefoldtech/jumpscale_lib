@@ -1,5 +1,5 @@
 from . import typchk
-from js9 import j
+from jumpscale import j
 import io
 import yaml
 import re

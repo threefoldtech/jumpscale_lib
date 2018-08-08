@@ -24,7 +24,7 @@ class Zerodb:
         :type name: str
         :param pat: path zerodb stores data on
         :type path: str
-        :param mode: zerodb running mode
+        :param mode: zerodb running mode (seq, user)
         :type mode: str
         :param sync: zerodb sync
         :type sync: bool

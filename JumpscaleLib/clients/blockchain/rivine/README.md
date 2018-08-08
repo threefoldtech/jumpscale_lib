@@ -1,4 +1,4 @@
-# JumpScale Client for Rivine
+# Jumpscale Client for Rivine
 
 The client work as a lightweight wallet for the Rivine blockchain network.
 It supports the following functionalities:

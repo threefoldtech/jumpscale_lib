@@ -62,8 +62,11 @@ class Zerodbs(DynamicCollection):
         node_mountpoints = self.node.client.disk.mounts()
 
         for disk in self.node.disks.list():
+                
             # this check is there to be able to test with a qemu setup. Not needed if you start qemu with --nodefaults
-            if disk.model in ['QEMU HARDDISK   ', 'QEMU DVD-ROM    ']:
+            if disk.model.strip().lower().startswith("qemu"):
+                continue
+            if disk.type.name.lower().startswith("cdrom"):
                 continue
 
             # temporary fix to ommit overwriting the usb boot disk
