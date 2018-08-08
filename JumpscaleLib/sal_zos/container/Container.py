@@ -123,6 +123,32 @@ class Container():
                         self._identity = self.client.zerotier.info()['secretIdentity']
         return self._identity
 
+    @property
+    def ipv6(self, interface=None):
+        """
+        return a list of all the ipv6 present in the container
+
+        the local ip are skipped
+
+        :param interface: only return the ips of a certain interface.
+                          If none scan all the existing interfaces , defaults to None
+        :param interface: str, optional
+        :return: list of ip
+        :rtype: list
+        """
+
+        interfaces = [interface]
+        if interface is None:
+            interfaces = [l['name'] for l in self.client.ip.link.list() if l['name'] not in ['lo']]
+
+        ips = []
+        for interface in interfaces:
+            for ip in self.client.ip.addr.list(interface):
+                network = netaddr.IPNetwork(ip)
+                if network.version == 6 and network.is_link_local() is False:
+                    ips.append(network.ip)
+        return ips
+
     def default_ip(self, interface=None):
         """
         Returns the ip if the container has a default nic
