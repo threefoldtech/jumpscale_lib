@@ -16,7 +16,7 @@ def _post_install(libname, libpath):
     j.core.state.configSet('plugins', c)
     # needs to be done externally, at the very least detecting if electrum
     # is already installed
-    #j.sal.process.execute(
+    # j.sal.process.execute(
     #    "pip3 install 'git+https://github.com/spesmilo/electrum.git@3.2.2'")
     j.tools.jsloader.generate()
 
