@@ -1,6 +1,10 @@
 from .zerodb import Zerodb
 from ..abstracts import DynamicCollection
+from ..disks.Disks import StorageType
 
+from jumpscale import j
+
+logger = j.logger.get(__name__)
 
 class Zerodbs(DynamicCollection):
     def __init__(self, node):
@@ -62,6 +66,10 @@ class Zerodbs(DynamicCollection):
         node_mountpoints = self.node.client.disk.mounts()
 
         for disk in self.node.disks.list():
+            if disk.type not in [StorageType.HDD, StorageType.SSD, StorageType.NVME, StorageType.ARCHIVE]:
+                logger.info("skipping unsupported disk type %s" % disk.type)
+                continue
+
             # this check is there to be able to test with a qemu setup. Not needed if you start qemu with --nodefaults
             if disk.model in ['QEMU HARDDISK   ', 'QEMU DVD-ROM    ']:
                 continue
@@ -70,7 +78,10 @@ class Zerodbs(DynamicCollection):
             if disk.transport == 'usb':
                 continue
 
+            logger.info("processing disk %s" % disk.devicename)
+
             if not disk.partitions:
+                logger.info("create storage pool on %s" % disk.devicename)
                 sp = self.node.storagepools.create(disk.name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
                 devicename = sp.devices[0]
             else:
@@ -83,6 +94,7 @@ class Zerodbs(DynamicCollection):
                 if len(sps) > 1:
                     raise RuntimeError('Found more than 1 storagepool for device %s' % devicename)
                 elif not sps:
+                    logger.info("create storage pool on %s" % disk.devicename)
                     sp = self.node.storagepools.create(disk.name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
                 else:
                     sp = sps[0]
@@ -92,6 +104,7 @@ class Zerodbs(DynamicCollection):
             if sp.exists(disk.name):
                 fs = sp.get(disk.name)
             else:
+                logger.info("create filesystem on %s" % disk.devicename)
                 fs = sp.create(disk.name)
 
             mount_point = '/mnt/zdbs/{}'.format(disk.name)
@@ -102,6 +115,7 @@ class Zerodbs(DynamicCollection):
                 if device_mountpoint['mountpoint'] == mount_point:
                     break
             else:
+                logger.info("mount filesystem on %s" % mount_point)
                 subvol = 'subvol={}'.format(fs.subvolume)
                 self.node.client.disk.mount(sp.devicename, mount_point, [subvol])
 
