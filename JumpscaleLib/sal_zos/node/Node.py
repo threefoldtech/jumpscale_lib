@@ -14,7 +14,7 @@ from ..container.Container import Containers
 from ..disks.Disks import Disks, StorageType
 from ..healthchecks.healthcheck import HealthCheck
 from ..network.Network import Network
-from ..storagepool.StoragePool import StoragePools
+from ..storage.StoragePool import StoragePools
 from ..gateway import Gateways
 from ..zerodb import Zerodbs
 from ..primitives.Primitives import Primitives
