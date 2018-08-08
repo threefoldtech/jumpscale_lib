@@ -1,5 +1,5 @@
 from jumpscale import j
-import mistune
+from . import mistune
 import re
 from itertools import takewhile
 getindentlevel = lambda l:  len(list(takewhile(lambda c: c.isspace(), l)))

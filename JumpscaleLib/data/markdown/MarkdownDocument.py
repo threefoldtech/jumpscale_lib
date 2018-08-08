@@ -2,7 +2,7 @@ from jumpscale import j
 from .MarkdownComponents import *
 JSBASE = j.application.jsbase_get_class()
 import copy
-import mistune
+from . import mistune
 
 class MarkdownDocument(JSBASE):
 
