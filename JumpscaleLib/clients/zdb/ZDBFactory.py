@@ -34,12 +34,13 @@ class ZDBFactory(JSConfigBase):
         and will return client to it
 
         """
-        #will delete the config info
-        self.delete(instance="test")
+        if start:
+            #will delete the config info
+            self.delete(instance="test")
 
-        db = j.servers.zdb.configure(instance="test", adminsecret="123456", reset=True, mode="seq")
+        db = j.servers.zdb.configure(instance="test", adminsecret="123456", reset=start, mode="seq")
 
-        if start:    
+        if start:
             db.stop()
             db.start()
 
