@@ -36,7 +36,10 @@ class VirtualboxFactory(JSConfigBase):
         """
     
         cl = self.client
+        #TODO: check VM is stopped, if not do so
+        #TODO: check that VM is there, if not do not try to delete
         cl.reset_all()
-
+        vm = cl.zos_create(name="test", reset=True, zerotierinstance="")
+        vm.start()
 
         from IPython import embed;embed(colors='Linux')

@@ -112,7 +112,8 @@ class VirtualboxClient(JSConfigBase):
     def vm_create(self, name="test", reset=True, isopath=""):
         vm=self.vm_get(name)
         vm.create(isopath=isopath, reset=reset)
+        return vm
 
-    def zos_create(self, name="test", reset=True, zerotierinstance=""):            
+    def zos_create(self, name="test", reset=True, zerotierinstance=""):          
         isopath = self.zos_iso_download(zerotierinstance)
-        self.vm_create(name, isopath=isopath)
+        return self.vm_create(name, isopath=isopath)
