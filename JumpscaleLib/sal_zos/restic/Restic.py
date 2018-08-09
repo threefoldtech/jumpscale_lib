@@ -27,7 +27,8 @@ class Restic:
         logger.info('Initializing repo %s' % self.repo)
         self.container.upload_content(self._password_file, password)
 
-        cmd = '/bin/restic init -r {repo} -p {password}'.format(repo=self.repo, password=self._password_file)
+        cmd = '/bin/restic init -r {repo} -p {password}'.format(
+            repo=self.repo, password=self._password_file)
         return self.container.client.system(cmd).get()
 
     def backup(self, dir):
@@ -46,7 +47,9 @@ class Restic:
         :param dir: directory to restore to
         :param snapshot: snapshot name
         """
-        logger.info('Restoring snapshot %s to dir %s from repo %s' % (snapshot, dir, self.repo))
+        logger.info(
+            'Restoring snapshot %s to dir %s from repo %s' %
+            (snapshot, dir, self.repo))
         cmd = '/bin/restic restore {snapshot} -t {dir} -r {repo} -p {password}'.format(
             snapshot=snapshot, dir=dir, repo=self.repo, password=self._password_file)
         return self.container.client.system(cmd).get()
