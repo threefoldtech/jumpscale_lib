@@ -41,7 +41,7 @@ class VirtualboxVM(JSBASE):
     @property
     def guid(self):
         print("guid")
-        from IPython import embed;
+        from IPython import embed
         embed(colors='Linux')
 
     @property
@@ -65,7 +65,8 @@ class VirtualboxVM(JSBASE):
     def create(self, reset=True, isopath="", datadisksize=10000, memory=1000):
         if reset:
             self.delete()
-        cmd = "createvm --name %s  --ostype \"Linux_64\" --register" % (self.name)
+        cmd = "createvm --name %s  --ostype \"Linux_64\" --register" % (
+            self.name)
         self._cmd(cmd)
         self._cmd2("--memory=%s " % (memory))
         self._cmd2("--ioapic on")
@@ -77,14 +78,14 @@ class VirtualboxVM(JSBASE):
             cmd = "storagectl %s --name \"SATA Controller\" --add sata  --controller IntelAHCI" % self.name
             self._cmd(cmd)
             cmd = "storageattach %s --storagectl \"SATA Controller\" --port 0 --device 0 --type hdd --medium '%s'" % (
-            self.name, disk.path)
+                self.name, disk.path)
             self._cmd(cmd)
 
         if isopath:
             cmd = "storagectl %s --name \"IDE Controller\" --add ide" % self.name
             self._cmd(cmd)
             cmd = "storageattach %s --storagectl \"IDE Controller\" --port 0 --device 0 --type dvddrive --medium %s" % (
-            self.name, isopath)
+                self.name, isopath)
             self._cmd(cmd)
 
     def start(self):

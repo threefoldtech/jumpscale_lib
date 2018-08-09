@@ -4,6 +4,7 @@ JSConfigBase = j.tools.configmanager.base_class_configs
 
 from .VirtualboxClient import VirtualboxClient
 
+
 class VirtualboxFactory(JSConfigBase):
 
     def __init__(self):
@@ -24,17 +25,16 @@ class VirtualboxFactory(JSConfigBase):
 
     @property
     def client(self):
-        return self.get("default",interactive=False)
-        
+        return self.get("default", interactive=False)
+
     # def client_get(self,zerotiernetwork):
     #     return self.get("test",data={"zerotiernetwork":zerotiernetwork})
-
 
     def test(self, instance="main"):
         """
         js_shell 'j.clients.virtualbox.test()'
         """
-    
+
         cl = self.client
         cl.reset_all()
         vm = cl.zos_create(name="test", zerotierinstance="")
