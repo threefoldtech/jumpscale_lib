@@ -2,6 +2,7 @@ import shlex
 import json
 from .BaseClient import BaseClient
 from .Response import JSONResponse
+from .FlistManager import FlistManager
 
 from . import typchk
 
@@ -36,10 +37,10 @@ class ContainerClient(BaseClient):
 
     def __init__(self, client, container):
         super().__init__(client.timeout)
-
         self._client = client
         self._container = container
         self._zerotier = ContainerClient.ContainerZerotierManager(client, container)  # not (self) we use core0 client
+        self._flist = FlistManager(client=client, container_id=container)
 
     @property
     def container(self):
@@ -55,6 +56,10 @@ class ContainerClient(BaseClient):
         :return:
         """
         return self._zerotier
+
+    @property
+    def flist(self):
+        return self._flist
 
     def raw(self, command, arguments, queue=None, max_time=None, stream=False, tags=None, id=None):
         """
@@ -140,7 +145,7 @@ class ContainerManager():
         'env': typchk.Or(typchk.IsNone(), typchk.Map(str, str)),
         'cgroups': typchk.Or(
             typchk.IsNone(),
-            [typchk.Length((str,), 2, 2)], # array of (str, str) tuples i.e [(subsyste, name), ...]
+            [typchk.Length((str,), 2, 2)],  # array of (str, str) tuples i.e [(subsyste, name), ...]
         )
     })
 
