@@ -15,6 +15,15 @@ class PubsubFactory(JSBASE):
         """
         Get sal for pubsub
         Returns:
-            the sal layer 
+            the sal layer
         """
-        return Pubsub(loop, host, port, password, db, ctx, timeout, testConnectionAttempts, callback)
+        return Pubsub(
+            loop,
+            host,
+            port,
+            password,
+            db,
+            ctx,
+            timeout,
+            testConnectionAttempts,
+            callback)
