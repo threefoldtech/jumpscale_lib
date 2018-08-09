@@ -17,8 +17,13 @@ JSConfigBase = j.tools.configmanager.base_class_config
 class RedisConfig(JSConfigBase):
 
     def __init__(self, instance, data={}, parent=None, interactive=False):
-        JSConfigBase.__init__(self, instance=instance, data=data,
-                              parent=parent, template=TEMPLATE, interactive=interactive)
+        JSConfigBase.__init__(
+            self,
+            instance=instance,
+            data=data,
+            parent=parent,
+            template=TEMPLATE,
+            interactive=interactive)
         self._redis = None
 
     @property
@@ -44,7 +49,8 @@ class RedisConfig(JSConfigBase):
             ardb_patch = d["ardb_patch"]
             set_patch = d["set_patch"]
 
-            # NO PATHS IN CONFIG !!!!!!!, needs to come from properties above (convention over configuration)
+            # NO PATHS IN CONFIG !!!!!!!, needs to come from properties above
+            # (convention over configuration)
 
             ssl_certfile = self.ssl_certfile_path if d['ssl'] else None
             ssl_keyfile = self.ssl_keyfile_path if d['ssl'] else None
@@ -53,8 +59,9 @@ class RedisConfig(JSConfigBase):
                 unixsocket = None
 
             self._redis = j.clients.redis.get(
-                ipaddr=addr, port=port, password=password, unixsocket=unixsocket,
-                ardb_patch=ardb_patch, set_patch=set_patch, ssl=d["ssl"],
+                ipaddr=addr, port=port, password=password,
+                unixsocket=unixsocket, ardb_patch=ardb_patch,
+                set_patch=set_patch, ssl=d["ssl"],
                 ssl_keyfile=ssl_keyfile, ssl_certfile=ssl_certfile,
                 ssl_cert_reqs=None, ssl_ca_certs=None)
 
@@ -69,6 +76,9 @@ class RedisConfig(JSConfigBase):
         j.sal.fs.writeFile(self.ssl_keyfile_path, ssl_keyfile)
 
     def __str__(self):
-        return "redis:%-14s %-25s:%-4s (ssl:%s)" % (self.instance, self.config.data["addr"],  self.config.data["port"], self.config.data["ssl"])
+        return "redis:%-14s %-25s:%-4s (ssl:%s)" % (
+            self.instance, self.config.data["addr"],
+            self.config.data["port"],
+            self.config.data["ssl"])
 
     __repr__ = __str__
