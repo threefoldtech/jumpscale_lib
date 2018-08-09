@@ -5,6 +5,7 @@ from ..vm.ZOS_VM import ZOS_VM, ZeroOSVM, ZDBDisk
 BASEFLIST = 'https://hub.gig.tech/gig-bootable/{}.flist'
 ZEROOSFLIST = "https://hub.gig.tech/gig-bootable/zero-os-bootable.flist"
 
+
 class Primitives:
     def __init__(self, node):
         self.node = node
@@ -15,7 +16,7 @@ class Primitives:
 
         :param name: Name of virtual machine
         :type name: str
-        :param type_: Type of vm this defines the template to be used check 
+        :param type_: Type of vm this defines the template to be used check
                       https://hub.gig.tech/gig-bootable
 
                       eg: ubuntu:16.04, zero-os:master
@@ -24,7 +25,8 @@ class Primitives:
         kwargs = {'name': name, 'node': self.node}
         if templatename == 'zero-os':
             version = version or 'master'
-            ipxeurl = 'https://bootstrap.gig.tech/ipxe/{}/0/development'.format(version)
+            ipxeurl = 'https://bootstrap.gig.tech/ipxe/{}/0/development'.format(
+                version)
             klass = ZeroOSVM
             kwargs['flist'] = ZEROOSFLIST
             kwargs['ipxe_url'] = ipxeurl
@@ -37,7 +39,14 @@ class Primitives:
             raise RuntimeError('Invalid VM type {}'.format(type_))
         return klass(**kwargs)
 
-    def create_disk(self, name, zdb, mountpoint=None, filesystem='ext4', size=10, label=None):
+    def create_disk(
+            self,
+            name,
+            zdb,
+            mountpoint=None,
+            filesystem='ext4',
+            size=10,
+            label=None):
         """
         Create a disk on zdb and create filesystem
 
@@ -86,7 +95,14 @@ class Primitives:
         """
         self.node.hypervisor.get(name).destroy()
 
-    def create_zerodb(self, name, path=None, mode='user', sync=False, admin='', node_port=9900):
+    def create_zerodb(
+            self,
+            name,
+            path=None,
+            mode='user',
+            sync=False,
+            admin='',
+            node_port=9900):
         """
         Create zerodb object
 
@@ -106,7 +122,13 @@ class Primitives:
         :return: Zerodb object
         :rtype: Zerodb object
         """
-        return self.node.zerodbs.create(name, path=path, mode=mode, sync=sync, admin=admin, node_port=node_port)
+        return self.node.zerodbs.create(
+            name,
+            path=path,
+            mode=mode,
+            sync=sync,
+            admin=admin,
+            node_port=node_port)
 
     def drop_zerodb(self, name):
         """
@@ -157,4 +179,5 @@ class Primitives:
             zdb = self.create_zerodb(data['name'])
             zdb.from_dict(data)
             return zdb
-        raise RuntimeError('Unkown type {}, supported types are gateway, vm and zerodb'.format(type_))
+        raise RuntimeError(
+            'Unkown type {}, supported types are gateway, vm and zerodb'.format(type_))
