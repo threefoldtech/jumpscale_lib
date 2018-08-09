@@ -11,14 +11,51 @@ logger = logging.getLogger(__name__)
 
 class TfChain:
 
-    def daemon(self, name, container, data_dir='/mnt/data', rpc_addr='0.0.0.0:23112', api_addr='localhost:23110', network='standard'):
-        return TfChainDaemon(name=name, container=container, data_dir=data_dir, rpc_addr=rpc_addr, api_addr=api_addr, network=network)
+    def daemon(
+            self,
+            name,
+            container,
+            data_dir='/mnt/data',
+            rpc_addr='0.0.0.0:23112',
+            api_addr='localhost:23110',
+            network='standard'):
+        return TfChainDaemon(
+            name=name,
+            container=container,
+            data_dir=data_dir,
+            rpc_addr=rpc_addr,
+            api_addr=api_addr,
+            network=network)
 
-    def explorer(self, name, container, domain, data_dir='/mnt/data', rpc_addr='0.0.0.0:23112', api_addr='localhost:23110', network='standard'):
-        return TfChainExplorer(name=name, container=container, data_dir=data_dir, rpc_addr=rpc_addr, api_addr=api_addr, domain=domain, network=network)
+    def explorer(
+            self,
+            name,
+            container,
+            domain,
+            data_dir='/mnt/data',
+            rpc_addr='0.0.0.0:23112',
+            api_addr='localhost:23110',
+            network='standard'):
+        return TfChainExplorer(
+            name=name,
+            container=container,
+            data_dir=data_dir,
+            rpc_addr=rpc_addr,
+            api_addr=api_addr,
+            domain=domain,
+            network=network)
 
-    def client(self, name, container, wallet_passphrase, api_addr='localhost:23110'):
-        return TfChainClient(name=name, container=container, addr=api_addr, wallet_passphrase=wallet_passphrase)
+    def client(
+            self,
+            name,
+            container,
+            wallet_passphrase,
+            api_addr='localhost:23110'):
+        return TfChainClient(
+            name=name,
+            container=container,
+            addr=api_addr,
+            wallet_passphrase=wallet_passphrase)
 
 
 class TfChainDaemon:
@@ -26,7 +63,14 @@ class TfChainDaemon:
     TfChain Daemon
     """
 
-    def __init__(self, name, container, data_dir='/mnt/data', rpc_addr='localhost:23112', api_addr='localhost:23110', network='standard'):
+    def __init__(
+            self,
+            name,
+            container,
+            data_dir='/mnt/data',
+            rpc_addr='localhost:23112',
+            api_addr='localhost:23110',
+            network='standard'):
         self.name = name
         self.id = 'tfchaind.{}'.format(self.name)
         self.container = container
@@ -59,8 +103,9 @@ class TfChainDaemon:
         while not self.container.is_port_listening(port, timeout):
             if not self.is_running():
                 result = cmd.get()
-                raise RuntimeError("Could not start tfchaind.\nstdout: %s\nstderr: %s" % (
-                    result.stdout, result.stderr))
+                raise RuntimeError(
+                    "Could not start tfchaind.\nstdout: %s\nstderr: %s" %
+                    (result.stdout, result.stderr))
 
     def stop(self, timeout=30):
         """
@@ -82,7 +127,15 @@ class TfChainExplorer:
     TfChain Explorer Daemon
     """
 
-    def __init__(self, name, container, domain, data_dir='/mnt/data', rpc_addr='localhost:23112', api_addr='localhost:23110', network='standard'):
+    def __init__(
+            self,
+            name,
+            container,
+            domain,
+            data_dir='/mnt/data',
+            rpc_addr='localhost:23112',
+            api_addr='localhost:23110',
+            network='standard'):
         self.name = name
         self.domain = domain
         self.tf_ps_id = 'tfchaind.{}'.format(self.name)
@@ -126,7 +179,9 @@ class TfChainExplorer:
         while not self.container.is_port_listening(port, timeout):
             if not self.is_running():
                 result = cmd.get()
-                raise RuntimeError("Could not start tfchaind.\nstdout: %s\nstderr: %s" % (result.stdout, result.stderr))
+                raise RuntimeError(
+                    "Could not start tfchaind.\nstdout: %s\nstderr: %s" %
+                    (result.stdout, result.stderr))
 
     def _start_caddy(self, timeout=150):
         """
@@ -148,7 +203,9 @@ class TfChainExplorer:
         while not self.container.is_port_listening(port, timeout):
             if not self.is_running():
                 result = cmd.get()
-                raise RuntimeError("Could not start caddy.\nstdout: %s\nstderr: %s" % (result.stdout, result.stderr))
+                raise RuntimeError(
+                    "Could not start caddy.\nstdout: %s\nstderr: %s" %
+                    (result.stdout, result.stderr))
 
     def stop(self, timeout=30):
         """
@@ -163,14 +220,20 @@ class TfChainExplorer:
             return
 
         logger.debug('stop tf daemon %s', self)
-        self.container.stop_job(self.tf_ps_id, signal=signal.SIGINT, timeout=timeout)
+        self.container.stop_job(
+            self.tf_ps_id,
+            signal=signal.SIGINT,
+            timeout=timeout)
 
     def _stop_caddy_daemon(self, timeout=30):
         if not self._is_caddy_running():
             return
 
         logger.debug('stop caddy %s', self)
-        self.container.stop_job(self.caddy_ps_id, signal=signal.SIGINT, timeout=timeout)
+        self.container.stop_job(
+            self.caddy_ps_id,
+            signal=signal.SIGINT,
+            timeout=timeout)
 
     def is_running(self):
         return self._is_tf_running() and self._is_caddy_running()
@@ -193,7 +256,12 @@ class TfChainClient:
     TfChain Client
     """
 
-    def __init__(self, name, container, wallet_passphrase, addr='localhost:23110'):
+    def __init__(
+            self,
+            name,
+            container,
+            wallet_passphrase,
+            addr='localhost:23110'):
         self.name = name
         self.container = container
         self.addr = addr
@@ -209,19 +277,20 @@ class TfChainClient:
     def wallet_password(self):
         return self._wallet_password
 
-
     def create_new_wallet_address(self):
         """ Create a new wallet address """
 
         cmd = 'curl -A "Rivine-Agent" "{}/wallet/address"'.format(self.addr)
         result = self.container.client.system(cmd).get()
 
-        error_check(result, message='"Could not create a wallet address', parse=True)
+        error_check(
+            result,
+            message='"Could not create a wallet address',
+            parse=True)
 
         new_wallet_address = json.loads(result.stdout)
 
         return new_wallet_address['address']
-
 
     @property
     def wallet_addresses(self):
@@ -229,44 +298,47 @@ class TfChainClient:
 
         cmd = 'curl -A "Rivine-Agent" "{}/wallet/addresses"'.format(self.addr)
         result = self.container.client.system(cmd).get()
-        error_check(result, message='Could not get wallet addresses', parse=True)
-        
+        error_check(
+            result,
+            message='Could not get wallet addresses',
+            parse=True)
+
         self._wallet_addresses = json.loads(result.stdout)['addresses']
         return self._wallet_addresses
-
 
     def wallet_init(self):
         """ Initialize wallet """
 
-        cmd = 'curl -A "Rivine-Agent" --data "passphrase={}" "{}/wallet/init"'.format(self.wallet_password, self.addr)
+        cmd = 'curl -A "Rivine-Agent" --data "passphrase={}" "{}/wallet/init"'.format(
+            self.wallet_password, self.addr)
         result = self.container.client.system(cmd).get()
         error_check(result, message='Could not initialize wallet', parse=True)
         stdout = json.loads(result.stdout)
         self._recovery_seed = stdout['primaryseed']
 
-
     def wallet_unlock(self):
         """ Unlock wallet """
-        
-        cmd = 'curl -A "Rivine-Agent" --data "passphrase={}" "{}/wallet/unlock"'.format(self.wallet_password, self.addr)
-        result = self.container.client.system(cmd, stdin=self.wallet_password).get()
-        error_check(result, message="Could not unlock wallet", parse=True)
 
+        cmd = 'curl -A "Rivine-Agent" --data "passphrase={}" "{}/wallet/unlock"'.format(
+            self.wallet_password, self.addr)
+        result = self.container.client.system(
+            cmd, stdin=self.wallet_password).get()
+        error_check(result, message="Could not unlock wallet", parse=True)
 
     def wallet_lock(self):
         """ Lock wallet """
-        
-        cmd = 'curl -A "Rivine-Agent" --data " " "{}/wallet/lock"'.format(self.addr)
-        result = self.container.client.system(cmd, stdin=self.wallet_password).get()
-        error_check(result, message="Could not lock wallet", parse=True)
 
+        cmd = 'curl -A "Rivine-Agent" --data " " "{}/wallet/lock"'.format(
+            self.addr)
+        result = self.container.client.system(
+            cmd, stdin=self.wallet_password).get()
+        error_check(result, message="Could not lock wallet", parse=True)
 
     def wallet_amount(self):
         """
         return the amount of token and block stake in the wallet
         """
         return self._get_wallet_info()
-
 
     def discover_local_peers(self, link=None, port='23112'):
         """ List local peers in subnet @addr with open port @port
@@ -275,7 +347,7 @@ class TfChainClient:
             @port: port for scanning
         """
         ipn = self.container.default_ip(link)
-        subnet = "%s/%s"%(ipn.network, ipn.prefixlen)
+        subnet = "%s/%s" % (ipn.network, ipn.prefixlen)
         cmd = 'nmap {} -p {}'.format(subnet, port)
 
         scan = self.container.client.system(cmd, stdin=self.wallet_password)
@@ -285,11 +357,11 @@ class TfChainClient:
                 break
             except TimeoutError:
                 continue
-        
+
         error_check(result, "Could not list peers")
 
         ips = re.findall(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', result.stdout)
-        states = re.findall("tcp \w+", result.stdout)
+        states = re.findall(r"tcp \w+", result.stdout)
         all_peers = dict(zip(ips, states))
         active_peers = []
         for ip in all_peers:
@@ -299,12 +371,12 @@ class TfChainClient:
 
         return active_peers
 
-
     def add_peer(self, addr, port='23112'):
-        cmd = 'curl -A "Rivine-Agent" --data " " "{}/gateway/connect/{}:{}"'.format(self.addr, addr, port)
-        result = self.container.client.system(cmd, stdin=self.wallet_password).get()
-        error_check(result, "Could not connect to a peer")            
-
+        cmd = 'curl -A "Rivine-Agent" --data " " "{}/gateway/connect/{}:{}"'.format(
+            self.addr, addr, port)
+        result = self.container.client.system(
+            cmd, stdin=self.wallet_password).get()
+        error_check(result, "Could not connect to a peer")
 
     def _get_wallet_info(self):
         """ Get wallet info """
@@ -314,7 +386,6 @@ class TfChainClient:
         error_check(result, message="Could not get wallet info")
 
         return json.loads(result.stdout)
-
 
     def wallet_status(self, wallet_info=None):
         """
@@ -329,14 +400,11 @@ class TfChainClient:
         wallet_info = wallet_info or self._get_wallet_info()
         return "unlocked" if wallet_info["unlocked"] else "locked"
 
-
     def consensus_stat(self):
         return consensus_stat(self.container, self.addr)
 
-
     def gateway_stat(self):
         return gateway_stat(self.container, self.addr)
-
 
     def get_report(self):
         """ Get wallet report """
@@ -347,14 +415,16 @@ class TfChainClient:
         result["wallet_status"] = wallet_status
 
         if wallet_status == "unlocked":
-            result["active_blockstakes"] = int(wallet_info['blockstakebalance'])
-            result["confirmed_balance"] = int(wallet_info['confirmedcoinbalance'])
+            result["active_blockstakes"] = int(
+                wallet_info['blockstakebalance'])
+            result["confirmed_balance"] = int(
+                wallet_info['confirmedcoinbalance'])
             result["address"] = "not supported by tfchaind yet"
         else:
             result["active_blockstakes"] = -1
             result["confirmed_balance"] = -1
             result["address"] = "not supported by tfchaind yet"
-            
+
         consensus = self.consensus_stat()
         result["block_height"] = consensus["height"]
         gateways = self.gateway_stat()
@@ -384,7 +454,7 @@ def gateway_stat(container, addr):
 
 def error_check(result, message='', parse=False):
     """ Raise error on errorred curl call
-    
+
         @result: object returned by curl
         @message: arbitrary error message
         @parse: when set to True tries to parse result.stdout as json
