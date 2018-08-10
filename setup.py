@@ -61,6 +61,10 @@ setup(
     author_email='info@threefold.tech',
     license='Apache',
     packages=find_packages(),
+    include_package_data=True,
+    package_data={'JumpscaleLib':
+                    ['JumpscaleLib/data/flist/model.capnp',
+                     'JumpscaleLib/tools/issuemanager/model.capnp']},
     install_requires=[
         'Brotli>=0.6.0',
         'Jinja2>=2.9.6',
