@@ -3,7 +3,7 @@ from ..abstracts import Collection, Nics
 import requests
 
 IPXEURL = 'https://bootstrap.gig.tech/ipxe/master/0'
-logger = j.logger.get(__name__)
+logger = j.logging.get(__name__)
 
 
 class Disk:

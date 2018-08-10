@@ -8,7 +8,7 @@ from .path import Path
 import tarfile
 import base64
 
-logger = j.logger.get(__name__)
+logger = j.logging.get(__name__)
 
 
 class FlistManipulatorFactory:
