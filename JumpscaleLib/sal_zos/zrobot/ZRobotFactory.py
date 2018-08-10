@@ -4,7 +4,7 @@ from jumpscale import j
 JSBASE = j.application.jsbase_get_class()
 
 
-class ZeroRobotFactory(JSBASE):
+class ZeroSalZosRobotFactory(JSBASE):
     def __init__(self):
         self.__jslocation__ = "j.sal_zos.zrobot"
         JSBASE.__init__(self)
