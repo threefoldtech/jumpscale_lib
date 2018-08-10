@@ -171,7 +171,7 @@ class TestEngine(JSBASE):
         JSBASE.__init__(self)
         self.paths = []
         self.tests = []
-        self.outputpath = "%s/apps/gridportal/base/Tests/TestRuns/" % j.dirs.JSBASEDIR
+        self.outputpath = "%s/apps/gridportal/base/Tests/TestRuns/" % j.dirs.BASEDIR
 
     def initTests(self, noOsis, osisip="127.0.0.1", login="", passwd=""):  # TODO: implement remote osis
         self.noOsis = noOsis
