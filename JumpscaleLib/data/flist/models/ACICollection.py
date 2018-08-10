@@ -1,5 +1,5 @@
 from jumpscale import j
-from JumpscaleLib.data.capnp.ModelBase import ModelBaseCollection
+from JumpscaleLib.data.capnp.ModelBaseCollection import ModelBaseCollection
 
 
 class ACICollection(ModelBaseCollection):
