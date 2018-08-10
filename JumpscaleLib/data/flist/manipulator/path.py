@@ -4,7 +4,6 @@ from stat import S_ISBLK, S_ISCHR, S_ISFIFO, S_ISLNK, S_ISREG, S_ISSOCK
 import pwd
 import grp
 
-import g8storclient
 from jumpscale import j
 
 logger = j.logger.get(__name__)
@@ -314,6 +313,7 @@ class Path:
             new_inode.attributes.file.blockSize = 128  # FIXME ?
             fullpath = os.path.abspath(src)
             logger.debug("[+] populating: %s" % fullpath)
+            import g8storclient # XXX VERY BAD HACK! see issue #58
             hashs = g8storclient.encrypt(fullpath)
 
             if hashs is None:
