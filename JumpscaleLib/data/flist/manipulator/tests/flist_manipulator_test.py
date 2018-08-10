@@ -42,7 +42,17 @@ class FromExisting(TestCase):
         assert root._flist.rootpath == '/'
         assert not root._flist.namespace
         (size, nrfiles, nrdirs, nrlinks, nrspecial) = root._flist.count()
-        assert (size, nrfiles, nrdirs, nrlinks, nrspecial) == (227934503, 8970, 1083, 1811, 79)
+        assert (
+            size,
+            nrfiles,
+            nrdirs,
+            nrlinks,
+            nrspecial) == (
+            227934503,
+            8970,
+            1083,
+            1811,
+            79)
 
     def test_root_dir(self):
         root = self.manipulator.root
@@ -56,8 +66,27 @@ class FromExisting(TestCase):
         assert len(root.links()) == 0
         assert root.parent is None
 
-        assert [d.basename for d in self.manipulator.root.dirs()] == \
-            ['bin', 'boot', 'dev', 'etc', 'home', 'lib', 'lib64', 'media', 'mnt', 'opt', 'proc', 'root', 'run', 'sbin', 'srv', 'sys', 'tmp', 'usr', 'var']
+        assert [
+            d.basename for d in self.manipulator.root.dirs()] == [
+            'bin',
+            'boot',
+            'dev',
+            'etc',
+            'home',
+            'lib',
+            'lib64',
+            'media',
+            'mnt',
+            'opt',
+            'proc',
+            'root',
+            'run',
+            'sbin',
+            'srv',
+            'sys',
+            'tmp',
+            'usr',
+            'var']
 
     def test_sub_dir(self):
         dir = self.manipulator.root.dirs()[0]
@@ -123,8 +152,18 @@ class FromExisting(TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             os.makedirs(os.path.join(tmp, 'foo', 'bar'))
-            j.sal.fs.writeFile(os.path.join(tmp, 'foo/bar', 'file1'), 'content')
-            j.sal.fs.writeFile(os.path.join(tmp, 'foo/bar', 'file2'), 'content')
+            j.sal.fs.writeFile(
+                os.path.join(
+                    tmp,
+                    'foo/bar',
+                    'file1'),
+                'content')
+            j.sal.fs.writeFile(
+                os.path.join(
+                    tmp,
+                    'foo/bar',
+                    'file2'),
+                'content')
             j.sal.fs.writeFile(os.path.join(tmp, 'foo/file3'), 'content')
             j.sal.fs.writeFile(os.path.join(tmp, 'foo/file4'), 'content')
             self.manipulator.root.copytree(tmp)
@@ -138,4 +177,5 @@ class FromExisting(TestCase):
             assert bar_files == ['file1', 'file2']
 
     def test_filter(self):
-        assert [b.basename for b in self.manipulator.root.dirs('b*')] == ['bin', 'boot']
+        assert [b.basename for b in self.manipulator.root.dirs(
+            'b*')] == ['bin', 'boot']

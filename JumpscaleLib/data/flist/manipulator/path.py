@@ -94,7 +94,12 @@ class Path:
         """
         copy a file from the local filesystem into the flist
         """
-        logger.debug('copy file from %s to %s', src, os.path.join(self.abspath, os.path.basename(src)))
+        logger.debug(
+            'copy file from %s to %s',
+            src,
+            os.path.join(
+                self.abspath,
+                os.path.basename(src)))
         return self._add_file(src)
 
     def copytree(self, src):
@@ -238,7 +243,8 @@ class Path:
             return []
 
         if ttype not in ('file', 'dir', 'link', 'special'):
-            raise ValueError("type should be one of 'file','dir', 'link','special'")
+            raise ValueError(
+                "type should be one of 'file','dir', 'link','special'")
         out = []
 
         for x in self._obj.contents:
@@ -335,7 +341,9 @@ class Path:
                 new_inode.attributes.special.type = "unknown"
 
             if S_ISBLK(src_stat.st_mode) or S_ISCHR(src_stat.st_mode):
-                id = '%d,%d' % (os.major(src_stat.st_rdev), os.minor(src_stat.st_rdev))
+                id = '%d,%d' % (
+                    os.major(src_stat.st_rdev),
+                    os.minor(src_stat.st_rdev))
                 new_inode.attributes.special.data = id
 
         # set ACI on new inode

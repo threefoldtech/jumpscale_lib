@@ -39,18 +39,23 @@ class FListFactory:
         """
         schema = self.getCapnpSchema()
 
-        # now default is mem, if we want redis as default store uncomment next, but leave for now, think mem here ok
+        # now default is mem, if we want redis as default store uncomment next,
+        # but leave for now, think mem here ok
         if kvs is None:
-            kvs = j.data.kvs.getRedisStore(name="flist",
-                                           namespace=name,
-                                           unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
+            kvs = j.data.kvs.getRedisStore(
+                name="flist",
+                namespace=name,
+                unixsocket="%s/redis.sock" %
+                j.dirs.TMPDIR)
 
-        collection = j.data.capnp.getModelCollection(schema.Dir,
-                                                     category="flist_%s" % name,
-                                                     modelBaseClass=DirModel.DirModel,
-                                                     modelBaseCollectionClass=DirCollection.DirCollection,
-                                                     db=kvs,
-                                                     indexDb=kvs)
+        collection = j.data.capnp.getModelCollection(
+            schema.Dir,
+            category="flist_%s" %
+            name,
+            modelBaseClass=DirModel.DirModel,
+            modelBaseCollectionClass=DirCollection.DirCollection,
+            db=kvs,
+            indexDb=kvs)
         return collection
 
     def getACICollectionFromDB(self, name="test", kvs=None):
@@ -61,16 +66,20 @@ class FListFactory:
         schema = self.getCapnpSchema()
 
         if kvs is None:
-            kvs = j.data.kvs.getRedisStore(name="flist",
-                                           namespace=name,
-                                           unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
+            kvs = j.data.kvs.getRedisStore(
+                name="flist",
+                namespace=name,
+                unixsocket="%s/redis.sock" %
+                j.dirs.TMPDIR)
 
-        collection = j.data.capnp.getModelCollection(schema.ACI,
-                                                     category="ACI_%s" % name,
-                                                     modelBaseClass=ACIModel.ACIModel,
-                                                     modelBaseCollectionClass=ACICollection.ACICollection,
-                                                     db=kvs,
-                                                     indexDb=kvs)
+        collection = j.data.capnp.getModelCollection(
+            schema.ACI,
+            category="ACI_%s" %
+            name,
+            modelBaseClass=ACIModel.ACIModel,
+            modelBaseCollectionClass=ACICollection.ACICollection,
+            db=kvs,
+            indexDb=kvs)
         return collection
 
     def getUserGroupCollectionFromDB(self, name="usergroup", kvs=None):
@@ -80,11 +89,20 @@ class FListFactory:
         schema = self.getCapnpSchema()
 
         if kvs is None:
-            kvs = j.data.kvs.getRedisStore(name="flist", namespace=name, unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
+            kvs = j.data.kvs.getRedisStore(
+                name="flist",
+                namespace=name,
+                unixsocket="%s/redis.sock" %
+                j.dirs.TMPDIR)
 
         collection = j.data.capnp.getModelCollection(
-            schema.UserGroup, category="ug_%s" % name, modelBaseClass=ACIModel.ACIModel,
-            modelBaseCollectionClass=ACICollection.ACICollection, db=kvs, indexDb=kvs)
+            schema.UserGroup,
+            category="ug_%s" %
+            name,
+            modelBaseClass=ACIModel.ACIModel,
+            modelBaseCollectionClass=ACICollection.ACICollection,
+            db=kvs,
+            indexDb=kvs)
         return collection
 
     def getFlist(self, rootpath="/", namespace="", kvs=None):
@@ -92,9 +110,12 @@ class FListFactory:
         @param namespace, this normally is some name you cannot guess, important otherwise no security
         Return a Flist object
         """
-        dirCollection = self.getDirCollectionFromDB(name="%s:dir" % namespace, kvs=kvs)
-        aciCollection = self.getACICollectionFromDB(name="%s:aci" % namespace, kvs=kvs)
-        userGroupCollection = self.getUserGroupCollectionFromDB(name="%s:users" % namespace, kvs=kvs)
+        dirCollection = self.getDirCollectionFromDB(
+            name="%s:dir" % namespace, kvs=kvs)
+        aciCollection = self.getACICollectionFromDB(
+            name="%s:aci" % namespace, kvs=kvs)
+        userGroupCollection = self.getUserGroupCollectionFromDB(
+            name="%s:users" % namespace, kvs=kvs)
         return FList(rootpath=rootpath,
                      namespace=namespace,
                      dirCollection=dirCollection,
@@ -132,7 +153,11 @@ class FListFactory:
         def pprint(path, ddir, name):
             logger.debug(path)
 
-        flist.walk(fileFunction=pprint, dirFunction=pprint, specialFunction=pprint, linkFunction=pprint)
+        flist.walk(
+            fileFunction=pprint,
+            dirFunction=pprint,
+            specialFunction=pprint,
+            linkFunction=pprint)
 
     def destroy(self, rootpath="/", namespace="main", kvs=None):
         fl = self.getFlist(rootpath, namespace, kvs)

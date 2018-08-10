@@ -93,7 +93,8 @@ def dirFunction(dirobj, type, name, args, key):
     dest_dir = dest_parent_dir(dest_fs, src_dir)
 
     # compute key of the path of the source filesystem
-    _, key = dest_fs.path2key(j.sal.fs.joinPaths(dest_fs.rootpath, src_dir.dbobj.location))
+    _, key = dest_fs.path2key(j.sal.fs.joinPaths(
+        dest_fs.rootpath, src_dir.dbobj.location))
     if not dest_fs.dirCollection.exists(key):
         # the source dir doesn't exist yet in the destination filesystem
         dest_dirobj = dest_fs.dirCollection.new()
@@ -101,10 +102,14 @@ def dirFunction(dirobj, type, name, args, key):
         copy.pop('contents')
         dest_dirobj.dbobj.from_dict(copy)
         dest_dirobj.key = key
-        logger.debug("copy directory :{} {}".format(src_dir.dbobj.location, src_dir.key))
+        logger.debug(
+            "copy directory :{} {}".format(
+                src_dir.dbobj.location,
+                src_dir.key))
         dest_dirobj.save()
 
-        # add new inode in the current directory that poing to the newly creation directory
+        # add new inode in the current directory that poing to the newly
+        # creation directory
         inode = ModelCapnp.Inode.new_message()
         inode.name = dest_dirobj.dbobj.name
         inode.size = dest_dirobj.dbobj.size
@@ -186,15 +191,24 @@ def specialFunction(dirobj, type, name, args, subobj):
 
 
 def main():
-    kvs = j.data.kvs.getRocksDBStore(name='flist', namespace=None, dbpath="/tmp/jumpcale.db")
+    kvs = j.data.kvs.getRocksDBStore(
+        name='flist',
+        namespace=None,
+        dbpath="/tmp/jumpcale.db")
     fjs = j.tools.flist.getFlist(rootpath='/tmp/rootB', kvs=kvs)
     fjs.add('/tmp/rootB')
 
-    kvs = j.data.kvs.getRocksDBStore(name='flist', namespace=None, dbpath="/tmp/ardb.db")
+    kvs = j.data.kvs.getRocksDBStore(
+        name='flist',
+        namespace=None,
+        dbpath="/tmp/ardb.db")
     fardb = j.tools.flist.getFlist(rootpath='/tmp/rootA', kvs=kvs)
     fardb.add('/tmp/rootA')
 
-    kvs = j.data.kvs.getRocksDBStore(name='flist', namespace=None, dbpath="/tmp/merge.db")
+    kvs = j.data.kvs.getRocksDBStore(
+        name='flist',
+        namespace=None,
+        dbpath="/tmp/merge.db")
     fdest = j.tools.flist.getFlist(rootpath='/', kvs=kvs)
 
     merger = FlistMerger()
