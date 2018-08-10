@@ -5,7 +5,6 @@ This module implement path manipulation on a Flist.
 from jumpscale import j
 import os
 from .path import Path
-import g8storclient
 import tarfile
 import base64
 
@@ -111,6 +110,7 @@ class Manipulator:
                 raise RuntimeError('file not found %s' % path)
 
             logger.debug("hash %s", path)
+            import g8storclient # XXX VERY BAD HACK, see issue #58
             hashs = g8storclient.encrypt(path)
 
             if hashs is None:
