@@ -200,7 +200,7 @@ class ObjectInspector(JSBASE):
         self.__jslocation__ = "j.tools.objectinspector"
         JSBASE.__init__(self)
         self.apiFileLocation = j.sal.fs.joinPaths(
-            j.dirs.JSCFGDIR, "codecompletionapi", "JumpscaleLib.api")
+            j.dirs.CFGDIR, "codecompletionapi", "JumpscaleLib.api")
         # j.sal.fs.createDir(j.sal.fs.joinPaths(j.dirs.JSCFGDIR, "codecompletionapi"))
         self.classDocs = {}
         self.visited = []
