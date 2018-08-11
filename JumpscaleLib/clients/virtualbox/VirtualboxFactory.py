@@ -35,7 +35,7 @@ class VirtualboxFactory(JSConfigBase):
         js_shell 'j.clients.virtualbox.test()'
         """
     
-        cl = self.client
+        cl = j.clients.virtualbox.client
         #TODO: check VM is stopped, if not do so
         #TODO: check that VM is there, if not do not try to delete
         cl.reset_all()
