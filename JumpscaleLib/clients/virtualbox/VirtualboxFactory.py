@@ -34,15 +34,9 @@ class VirtualboxFactory(JSConfigBase):
         """
         js_shell 'j.clients.virtualbox.test()'
         """
-<<<<<<< HEAD
-    
         cl = j.clients.virtualbox.client
         #TODO: check VM is stopped, if not do so
         #TODO: check that VM is there, if not do not try to delete
-=======
-
-        cl = self.client
->>>>>>> 3b5276d1be882ca5086cb61377bb0f10fc4a561a
         cl.reset_all()
         vm = cl.zos_create(name="test", zerotierinstance="")
         vm.start()
