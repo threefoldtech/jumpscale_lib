@@ -8,8 +8,6 @@ from six import string_types
 from . import client_support
 
 
-
-
 class PayloadCommitVerification(object):
     """
     auto-generated. don't touch.
@@ -28,7 +26,6 @@ class PayloadCommitVerification(object):
         return PayloadCommitVerification(**kwargs)
 
     def __init__(self, json=None, **kwargs):
-        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

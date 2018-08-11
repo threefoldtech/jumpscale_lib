@@ -8,14 +8,16 @@ import os
 # libjpeg-dev/zesty
 
 def _post_install(libname, libpath):
-    from jumpscale import j
+    from Jumpscale import j
     # add this plugin to the config
     c = j.core.state.configGet('plugins', defval={})
     c[libname] = "%s/github/threefoldtech/jumpscale_lib/JumpscaleLib" % j.dirs.CODEDIR
     # c[libname] = libpath
     j.core.state.configSet('plugins', c)
-    j.sal.process.execute(
-        "pip3 install 'git+https://github.com/spesmilo/electrum.git@3.2.2'")
+    # needs to be done externally, at the very least detecting if electrum
+    # is already installed
+    # j.sal.process.execute(
+    #    "pip3 install 'git+https://github.com/spesmilo/electrum.git@3.2.2'")
     j.tools.jsloader.generate()
 
 
@@ -59,6 +61,10 @@ setup(
     author_email='info@threefold.tech',
     license='Apache',
     packages=find_packages(),
+    include_package_data=True,
+    package_data={'JumpscaleLib':
+                    ['JumpscaleLib/data/flist/model.capnp',
+                     'JumpscaleLib/tools/issuemanager/model.capnp']},
     install_requires=[
         'Brotli>=0.6.0',
         'Jinja2>=2.9.6',

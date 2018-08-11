@@ -5,11 +5,17 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-
 class ZeroStor():
     """zerostor server"""
 
-    def __init__(self, name, container, bind='0.0.0.0:8080', data_dir='/mnt/data', meta_dir='/mnt/metadata', max_size_msg=64):
+    def __init__(
+            self,
+            name,
+            container,
+            bind='0.0.0.0:8080',
+            data_dir='/mnt/data',
+            meta_dir='/mnt/metadata',
+            max_size_msg=64):
 
         self.name = name
         self.container = container
@@ -73,13 +79,16 @@ class ZeroStor():
                 break
             time.sleep(1)
         else:
-            raise RuntimeError('Failed to start zerostor server: {}'.format(self.name))
+            raise RuntimeError(
+                'Failed to start zerostor server: {}'.format(
+                    self.name))
 
     def is_running(self):
         try:
             if self.port not in self.container.node.freeports(self.port, 1):
                 for job in self.container.client.job.list():
-                    if 'name' in job['cmd']['arguments'] and job['cmd']['arguments']['name'] == '/bin/zerostorserver':
+                    if 'name' in job['cmd']['arguments'] and job['cmd'][
+                            'arguments']['name'] == '/bin/zerostorserver':
                         return (True, job)
             return (False, None)
         except Exception as err:

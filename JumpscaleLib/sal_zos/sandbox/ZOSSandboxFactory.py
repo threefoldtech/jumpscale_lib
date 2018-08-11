@@ -3,6 +3,7 @@ from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
+
 class ZOSSandboxFactory(JSBASE):
 
     def __init__(self):
@@ -12,13 +13,11 @@ class ZOSSandboxFactory(JSBASE):
     def get(self, data={}):
         """
         Get sal for influxdb
-        
+
         Arguments:
             object using jumpscale schema
-        
+
         Returns:
-            the sal layer 
+            the sal layer
         """
         return (data)
-
-

@@ -36,7 +36,8 @@ class FListMetadata(JSBASE):
         if dirObj.dbobj.state != "":
             raise RuntimeError("%s: No such file or directory" % ppath)
 
-        if fType == "D" and dirObj.dbobj.location == ppath[len(self.rootpath):].strip("/"):
+        if fType == "D" and dirObj.dbobj.location == ppath[len(
+                self.rootpath):].strip("/"):
             return dirObj.dbobj.to_dict()
         else:
             file_name = j.sal.fs.getBaseName(ppath)
@@ -56,7 +57,8 @@ class FListMetadata(JSBASE):
         ppath = j.sal.fs.joinPaths(parent_path, name)
         dirRelPath, dirKey = self._path2key(ppath)
         if self.dirCollection.exists(dirKey):
-            raise RuntimeError("cannot create directory '%s': File exists" % ppath)
+            raise RuntimeError(
+                "cannot create directory '%s': File exists" % ppath)
         dirObj = self.dirCollection.get(dirKey, autoCreate=True)
 
         _, dirKeyParent = self._path2key(parent_path)
@@ -200,8 +202,13 @@ class FListMetadata(JSBASE):
 
         if fType == "D":
             dbobj = dirObj.dbobj
-            if len(dbobj.dirs) != 0 and len(dbobj.files) != 0 and len(dbobj.links) != 0 and len(dbobj.specials) != 0:
-                raise RuntimeError("failed to remove '%s': Directory not empty" % ppath)
+            if len(
+                dbobj.dirs) != 0 and len(
+                dbobj.files) != 0 and len(
+                dbobj.links) != 0 and len(
+                    dbobj.specials) != 0:
+                raise RuntimeError(
+                    "failed to remove '%s': Directory not empty" % ppath)
             dirObj.dbobj.state = "Deleted"
         else:
             _, entityList = self._getPropertyList(dirObj.dbobj, fType)
@@ -265,18 +272,26 @@ class FListMetadata(JSBASE):
             _, parentDir = self._search_db(j.sal.fs.getDirName(old_path))
             self._move_dir(parentDir, newParentDirObj, oldDirObj, fname=fname)
         else:
-            self._move_file(oldDirObj, newParentDirObj, oldFName, fname, oldFtype)
+            self._move_file(
+                oldDirObj,
+                newParentDirObj,
+                oldFName,
+                fname,
+                oldFtype)
 
     def _move_dir(self, parentDir, newParentDirObj, dirObj, fname):
         if parentDir.key != newParentDirObj.key:
             dirProps = self._removeObj(parentDir, dirObj.dbobj.name, "D")
             dirProps["name"] = fname
             self._addObj(newParentDirObj, dirProps, "D")
-            dirObj.dbobj.location = os.path.join(newParentDirObj.dbobj.location, fname)
+            dirObj.dbobj.location = os.path.join(
+                newParentDirObj.dbobj.location, fname)
             dirObj.dbobj.name = fname
             dirObj.dbobj.parent = newParentDirObj.key
 
-            _, dirKey = self._path2key(os.path.join(self.rootpath, newParentDirObj.dbobj.location, fname))
+            _, dirKey = self._path2key(
+                os.path.join(
+                    self.rootpath, newParentDirObj.dbobj.location, fname))
             ddir = self.dirCollection.get(dirKey, autoCreate=True)
             ddir.dbobj = dirObj.dbobj
             ddir.save()
@@ -285,10 +300,13 @@ class FListMetadata(JSBASE):
             for dir in parentDir.dbobj.dirs:
                 if dir.name != dirObj.dbobj.name:
                     dir.name = fname
-            dirObj.dbobj.location = os.path.join(newParentDirObj.dbobj.location, fname)
+            dirObj.dbobj.location = os.path.join(
+                newParentDirObj.dbobj.location, fname)
             dirObj.dbobj.name = fname
             # Save new dir object
-            _, dirKey = self._path2key(self.rootpath, os.path.join(newParentDirObj.dbobj.location, fname))
+            _, dirKey = self._path2key(
+                self.rootpath, os.path.join(
+                    newParentDirObj.dbobj.location, fname))
             ddir = self.dirCollection.get(dirKey, autoCreate=True)
             ddir.dbobj = dirObj.dbobj
             ddir.save()
@@ -321,7 +339,8 @@ class FListMetadata(JSBASE):
                 newFiles.append(file.to_dict())
 
         if poppedFile == {}:
-            raise RuntimeError("cannot remove '%s': No such file or directory" % dirObj.dbobj.location)
+            raise RuntimeError(
+                "cannot remove '%s': No such file or directory" % dirObj.dbobj.location)
 
         newlist = dirObj.dbobj.init(pName, len(newFiles))
         for i, item in enumerate(newFiles):
@@ -391,8 +410,9 @@ class FListMetadata(JSBASE):
         @param fpath is full path
         """
         if not fpath.startswith(self.rootpath):
-            raise j.exceptions.Input(message="fpath:%s needs to start with rootpath:%s" %
-                                     (fpath, self.rootpath), level=1, source="", tags="", msgpub="")
+            raise j.exceptions.Input(
+                message="fpath:%s needs to start with rootpath:%s" %
+                (fpath, self.rootpath), level=1, source="", tags="", msgpub="")
         relPath = fpath[len(self.rootpath):].strip("/")
         toHash = self.namespace + relPath
         self.logger.debug("> %s" % toHash)

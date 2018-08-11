@@ -4,6 +4,7 @@ JSConfigBase = j.tools.configmanager.base_class_configs
 
 from .VirtualboxClient import VirtualboxClient
 
+
 class VirtualboxFactory(JSConfigBase):
 
     def __init__(self):
@@ -24,22 +25,27 @@ class VirtualboxFactory(JSConfigBase):
 
     @property
     def client(self):
-        return self.get("default",interactive=False)
-        
+        return self.get("default", interactive=False)
+
     # def client_get(self,zerotiernetwork):
     #     return self.get("test",data={"zerotiernetwork":zerotiernetwork})
-
 
     def test(self, instance="main"):
         """
         js_shell 'j.clients.virtualbox.test()'
         """
+<<<<<<< HEAD
     
         cl = j.clients.virtualbox.client
         #TODO: check VM is stopped, if not do so
         #TODO: check that VM is there, if not do not try to delete
-        cl.reset_all()
-        vm = cl.zos_create(name="test", reset=True, zerotierinstance="")
-        vm.start()
+=======
 
-        from IPython import embed;embed(colors='Linux')
+        cl = self.client
+>>>>>>> 3b5276d1be882ca5086cb61377bb0f10fc4a561a
+        cl.reset_all()
+        vm = cl.zos_create(name="test", zerotierinstance="")
+        vm.start()
+        print("DONE")
+
+        # from IPython import embed;embed(colors='Linux')

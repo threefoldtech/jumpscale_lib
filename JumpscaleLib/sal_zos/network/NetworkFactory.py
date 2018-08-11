@@ -14,6 +14,6 @@ class NetworkFactory(JSBASE):
         """
         Get sal for Network
         Returns:
-            the sal layer 
+            the sal layer
         """
         return Network(node)

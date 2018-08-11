@@ -314,11 +314,18 @@ class Hosts:
             host_data_json={}
             for host_data in self._hosts_chunks(hosts_data, 3):
                 index = host_data[0][0]
-                host_data_json[host_data[0][1]],host_data_json[host_data[1][1]],host_data_json[host_data[2][1]] = map(lambda x: x[2].replace("'", ""), host_data)
-                if netaddr.IPAddress(host_data_json['ip']) in netaddr.IPNetwork(self.subnet):
+                for data in host_data:
+                    if 'mac' in data:
+                        host_data_json['mac'] = data[2].replace("'", "")
+                    elif 'name' in data:
+                        host_data_json['hostname'] = data[2].replace("'", "")
+                    elif 'ip' in data:
+                        host_data_json['address'] = data[2].replace("'", "")
+                    
+                if netaddr.IPAddress(host_data_json['address']) in netaddr.IPNetwork(self.subnet):
                     host_data_json['sshclient'] = self.sshclient
                     host_data_json['index'] = index
-                    self._hosts[host_data_json['name']] = Host(**host_data_json)
+                    self._hosts[host_data_json['hostname']] = Host(**host_data_json)
         else:
             self._last_index = -1
 

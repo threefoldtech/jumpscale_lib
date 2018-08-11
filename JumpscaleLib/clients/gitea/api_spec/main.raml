@@ -1816,7 +1816,7 @@ types:
       displayName: userDeleteEmail
       description: Delete email addresses
       body:
-        text/plain:
+        application/json:
           displayName: body
           type: DeleteEmailOption
       securedBy:
@@ -2164,28 +2164,7 @@ types:
               type: array
               items:
                 type: TrackedTime
-  /{username}/orgs:
-    uriParameters:
-      username:
-        required: true
-        displayName: username
-        description: username of user
-        type: string
-    get:
-      displayName: orgListUserOrgs
-      description: List a user's organizations
-      securedBy:
-      - basicauth
-      - token
-      responses:
-        200:
-          description: Success
-          body:
-            application/json:
-              displayName: response
-              type: array
-              items:
-                type: Organization
+
 /version:
   get:
     displayName: getVersion
@@ -3192,13 +3171,6 @@ types:
               securedBy:
               - basicauth
               - token
-              queryParameters:
-                id:
-                  required: true
-                  displayName: id
-                  description: index of the issue
-                  type: integer
-                  format: int32
               responses:
                 201:
                   description: Success
@@ -3504,13 +3476,6 @@ types:
           securedBy:
           - basicauth
           - token
-          queryParameters:
-            id:
-              required: true
-              displayName: id
-              description: id of the milestone to get
-              type: integer
-              format: int32
           responses:
             200:
               description: Success
@@ -3579,13 +3544,6 @@ types:
             securedBy:
             - basicauth
             - token
-            queryParameters:
-              body:
-                required: true
-                displayName: body
-                description: id of the milestone to delete
-                type: integer
-                format: int32
       /mirror-sync:
         post:
           displayName: repoMirrorSync
@@ -3982,7 +3940,7 @@ types:
           - basicauth
           - token
         delete:
-          displayName: orgAddTeamMember
+          displayName: orgDeleteTeamMember
           description: Remove a team member
           securedBy:
           - basicauth
@@ -4016,13 +3974,13 @@ types:
             description: name of the repo to add
             type: string
         put:
-          displayName: orgAddTeamMember
+          displayName: orgAddTeamRepo
           description: Add a repository to a team
           securedBy:
           - basicauth
           - token
         delete:
-          displayName: orgAddTeamMember
+          displayName: orgDeleteTeamRepo
           description: This does not delete the repository, it only removes the repository from the team.
           securedBy:
           - basicauth
@@ -4231,3 +4189,26 @@ types:
             required: false
             displayName: name
             type: string
+
+    /orgs:
+        uriParameters:
+          username:
+            required: true
+            displayName: username
+            description: username of user
+            type: string
+        get:
+          displayName: orgListUserOrgs
+          description: List a user's organizations
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            200:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: array
+                  items:
+                    type: Organization

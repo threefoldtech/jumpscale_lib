@@ -21,7 +21,7 @@ from ..primitives.Primitives import Primitives
 from ..hypervisor.Hypervisor import Hypervisor
 
 Mount = namedtuple('Mount', ['device', 'mountpoint', 'fstype', 'options'])
-logger = j.logger.get(__name__)
+logger = j.logging.get(__name__)
 
 
 class Node:

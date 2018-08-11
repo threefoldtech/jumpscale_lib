@@ -14,6 +14,6 @@ class ResticFactory(JSBASE):
         """
         Get sal for restic
         Returns:
-            the sal layer 
+            the sal layer
         """
         return Restic(container, repo)

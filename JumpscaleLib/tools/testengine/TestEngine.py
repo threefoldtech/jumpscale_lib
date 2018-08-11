@@ -73,7 +73,9 @@ class TestResult(unittest.result.TestResult, JSBASE):
         if self._debug:
             if test in self.tests:
                 self.logger.debug((self.tests[test].getvalue()))
-                self.logger.debug((j.errorhandler.parsePythonExceptionObject(err[1], err[2])))
+                self.logger.debug(
+                    (j.errorhandler.parsePythonExceptionObject(
+                        err[1], err[2])))
             j.application.stop(1)
 
     def addError(self, test, err):
@@ -103,7 +105,9 @@ class Test(JSBASE):
         JSBASE.__init__(self)
 
     def execute(self, testrunname, debug=False):
-        self.logger.debug(("\n##TEST:%s %s" % (self.db.organization, self.db.name)))
+        self.logger.debug(
+            ("\n##TEST:%s %s" %
+             (self.db.organization, self.db.name)))
         res = {'total': 0, 'error': 0, 'success': 0, 'failed': 0}
         self.db.starttime = time.time()
         self.db.state = 'OK'
@@ -127,7 +131,8 @@ class Test(JSBASE):
                     if self.db.state != 'ERROR':
                         self.db.state == 'FAILURE'
                 with j.logger.nostdout():
-                    eco = j.errorhandler.parsePythonExceptionObject(error[1], error[2])
+                    eco = j.errorhandler.parsePythonExceptionObject(
+                        error[1], error[2])
                     eco.tags = "testrunner testrun:%s org:%s testgroup:%s testname:%s testpath:%s" % (
                         self.db.testrun, self.db.organization, self.db.name, name, self.db.path)
                     eco.process()
@@ -171,14 +176,20 @@ class TestEngine(JSBASE):
         JSBASE.__init__(self)
         self.paths = []
         self.tests = []
-        self.outputpath = "%s/apps/gridportal/base/Tests/TestRuns/" % j.dirs.JSBASEDIR
+        self.outputpath = "%s/apps/gridportal/base/Tests/TestRuns/" % j.dirs.BASEDIR
 
-    def initTests(self, noOsis, osisip="127.0.0.1", login="", passwd=""):  # TODO: implement remote osis
+    # TODO: implement remote osis
+    def initTests(self, noOsis, osisip="127.0.0.1", login="", passwd=""):
         self.noOsis = noOsis
 
     def _patchTest(self, testmod):
-        if hasattr(testmod, 'TEST') and not isinstance(testmod.TEST, unittest.TestCase):
-            testmod.TEST = new.classobj('TEST', (testmod.TEST, unittest.TestCase), {})
+        if hasattr(
+                testmod,
+                'TEST') and not isinstance(
+                testmod.TEST,
+                unittest.TestCase):
+            testmod.TEST = new.classobj(
+                'TEST', (testmod.TEST, unittest.TestCase), {})
 
     def runTests(self, testrunname=None, debug=False):
 
@@ -188,7 +199,8 @@ class TestEngine(JSBASE):
         for path in self.paths:
             self.logger.debug(("scan dir: %s" % path))
             if j.sal.fs.isDir(path):
-                for item in j.sal.fs.listFilesInDir(path, filter="*__test.py", recursive=True):
+                for item in j.sal.fs.listFilesInDir(
+                        path, filter="*__test.py", recursive=True):
                     self.testFile(testrunname, item)
             elif j.sal.fs.isFile(path):
                 self.testFile(testrunname, path)
@@ -204,7 +216,10 @@ class TestEngine(JSBASE):
             for test in priority[key]:
                 # now sorted
                 # print test
-                results.append(test.execute(testrunname=testrunname, debug=debug))
+                results.append(
+                    test.execute(
+                        testrunname=testrunname,
+                        debug=debug))
                 if not self.noOsis:
                     guid, change, new = self.osis.set(test.db)
         total = sum(x['total'] for x in results)
@@ -251,8 +266,11 @@ class TestEngine(JSBASE):
         C = j.sal.fs.fileGetContents(filepath)
         methods = j.data.regex.extractBlocks(C, ["def test"])
         for method in methods:
-            methodname = method.split("\n")[0][len("    def test_"):].split("(")[0]
-            methodsource = "\n".join([item.strip() for item in method.split("\n")[1:] if item.strip() != ""])
+            methodname = method.split(
+                "\n")[0][len("    def test_"):].split("(")[0]
+            methodsource = "\n".join([item.strip()
+                                      for item in method.split("\n")[1:]
+                                      if item.strip() != ""])
             test.db.source[methodname] = methodsource
 
         if not self.noOsis:

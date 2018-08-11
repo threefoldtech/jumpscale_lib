@@ -7,9 +7,6 @@ Auto-generated class for Permission52
 from . import client_support
 
 
-
-
-
 class Permission52(object):
     """
     auto-generated. don't touch.
@@ -27,7 +24,6 @@ class Permission52(object):
         return Permission52(**kwargs)
 
     def __init__(self, json=None, **kwargs):
-        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

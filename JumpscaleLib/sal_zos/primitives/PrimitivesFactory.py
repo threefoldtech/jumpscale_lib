@@ -14,6 +14,6 @@ class PrimitivesFactory(JSBASE):
         """
         Get sal for zos primitives
         Returns:
-            the sal layer 
+            the sal layer
         """
         return Primitives(node)

@@ -1,6 +1,6 @@
 from . import typchk
 from jumpscale import j
-logger = j.logger.get(__name__)
+logger = j.logging.get(__name__)
 
 
 class WebManager:

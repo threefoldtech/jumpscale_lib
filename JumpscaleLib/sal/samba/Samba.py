@@ -186,13 +186,17 @@ class SMBSubShare(JSBASE):
         for access in ['r', 'rw']:
             groupname = '%s%s' % (sharename, access)
             self._local.execute('groupadd %s' % groupname)
-            self._local.execute('setfacl -m g:%s:%s %s' % (groupname, access, sharepath))
+            self._local.execute(
+                'setfacl -m g:%s:%s %s' %
+                (groupname, access, sharepath))
 
         return True
 
     def list(self, path=''):
         sharepath = j.tools.path.get(BASEPATH).joinpath(path)
-        subshares = self._local.execute('find %s -maxdepth 1 -type d -exec basename {} \;' % sharepath).splitlines()
+        subshares = self._local.execute(
+            r'find %s -maxdepth 1 -type d -exec basename {} \;' %
+            sharepath).splitlines()
         result = list()
         for subshare in subshares:
             if subshare == j.tools.path.get(path.rstrip('/')).basename():
@@ -248,10 +252,12 @@ class Samba(JSBASE):
         return self._users.add(username, password)
 
     def grantaccess(self, username, sharename, sharepath, readonly=True):
-        return self._users.grantaccess(username, sharename, sharepath, readonly)
+        return self._users.grantaccess(
+            username, sharename, sharepath, readonly)
 
     def revokeaccess(self, username, sharename, sharepath, readonly=True):
-        return self._users.revokeaccess(username, sharename, sharepath, readonly)
+        return self._users.revokeaccess(
+            username, sharename, sharepath, readonly)
 
 
 # class SambaFactory:

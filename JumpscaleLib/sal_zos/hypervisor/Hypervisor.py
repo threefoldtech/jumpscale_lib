@@ -1,7 +1,7 @@
 from jumpscale import j
 from ..vm.ZOS_VM import ZOS_VM
 
-logger = j.logger.get(__name__)
+logger = j.logging.get(__name__)
 
 
 class Hypervisor:
@@ -22,4 +22,3 @@ class Hypervisor:
         vm = ZOS_VM(self.node, name)
         vm.load_from_reality()
         return vm
-

@@ -4,6 +4,7 @@ import errno
 import stat
 JSBASE = j.application.jsbase_get_class()
 
+
 def _is_block(file):
     try:
         st = os.stat(file)
@@ -96,7 +97,14 @@ class Diskmanager(JSBASE):
             self._parted = parted
         return self._parted
 
-    def partitionAdd(self, disk, free, align=None, length=None, fs_type=None, type=None):
+    def partitionAdd(
+            self,
+            disk,
+            free,
+            align=None,
+            length=None,
+            fs_type=None,
+            type=None):
         """
         Add a partition on a disk
         """
@@ -149,8 +157,17 @@ class Diskmanager(JSBASE):
         rcode, out, _ = j.sal.process.execute(cmd)
         return out
 
-    def partitionsFind(self, mounted=None, ttype=None, ssd=None, prefix="sd", minsize=5, maxsize=5000, devbusy=None,
-                       initialize=False, forceinitialize=False):
+    def partitionsFind(
+            self,
+            mounted=None,
+            ttype=None,
+            ssd=None,
+            prefix="sd",
+            minsize=5,
+            maxsize=5000,
+            devbusy=None,
+            initialize=False,
+            forceinitialize=False):
         """
         looks for disks which are know to be data disks & are formatted ext4
 
@@ -189,7 +206,9 @@ class Diskmanager(JSBASE):
                         disko.path = partition.path if disk.type != 'loop' else disk.device.path
                         disko.size = round(partition.getSize(unit="mb"), 2)
                         disko.free = 0
-                        self.logger.debug(("partition:%s %s" % (disko.path, disko.size)))
+                        self.logger.debug(
+                            ("partition:%s %s" %
+                             (disko.path, disko.size)))
                         try:
                             fs = self.parted.probeFileSystem(
                                 partition.geometry)
@@ -240,12 +259,14 @@ class Diskmanager(JSBASE):
                                     tomlpath = "%s/disk.toml" % mountpoint
 
                                     if j.sal.fs.exists(tomlpath):
-                                        toml = j.data.serializer.toml.load(tomlpath)
+                                        toml = j.data.serializer.toml.load(
+                                            tomlpath)
                                         partnr = toml.getInt("diskinfo.partnr")
                                         if partnr == 0 or forceinitialize:
                                             j.sal.fs.remove(tomlpath)
 
-                                    if not j.sal.fs.exists(tomlpath) and initialize:
+                                    if not j.sal.fs.exists(
+                                            tomlpath) and initialize:
                                         C = """
                                         title = "Disk INFO"
                                         [disk]
@@ -256,13 +277,15 @@ class Diskmanager(JSBASE):
                                         """
                                         j.sal.fs.writeFile(
                                             filename=tomlpath, contents=C)
-                                        toml = j.data.serializer.toml.load(tomlpath)
-                                        toml.set("diskinfoDescription", j.tools.console.askString(
-                                            "please give description for disk"))
+                                        toml = j.data.serializer.toml.load(
+                                            tomlpath)
+                                        toml.set(
+                                            "diskinfoDescription",
+                                            j.tools.console.askString("please give description for disk"))
                                         toml.set("diskinfoType", ",".join(j.tools.console.askChoiceMultiple(
                                             ["BOOT", "CACHE", "TMP", "DATA", "OTHER"])))
                                         toml.set("diskinfoEpoch",
-                                                j.data.time.getTimeEpoch())
+                                                 j.data.time.getTimeEpoch())
 
                                         # TODO (*4*) ---> get connection from
                                         # AYS, lets discuss this does not seem
@@ -270,7 +293,8 @@ class Diskmanager(JSBASE):
                                         j.data.models_system.connect2mongo()
 
                                         disk = j.data.models_system.Disk()
-                                        for key, val in list(disko.__dict__.items()):
+                                        for key, val in list(
+                                                disko.__dict__.items()):
                                             disk.__dict__[key] = val
 
                                         disk.description = toml.get(
@@ -289,7 +313,8 @@ class Diskmanager(JSBASE):
                                         disko.type.sort()
                                         disko.description = toml.get(
                                             "diskinfoDescription")
-                                        self.logger.debug(("found disk:\n%s" % (disko)))
+                                        self.logger.debug(
+                                            ("found disk:\n%s" % (disko)))
                                     cmd = "umount /mnt/tmp"
                                     j.sal.process.execute(cmd, die=False)
                                     if os.path.ismount("/mnt/tmp"):
@@ -303,8 +328,11 @@ class Diskmanager(JSBASE):
         looks for disks which are know to be data disks & are formatted ext4
         return [[$partpath,$gid,$partid,$size,$free]]
         """
-        result = [item for item in self.partitionsFind(
-            busy=False, ttype="ext4", ssd=False, prefix="sd", minsize=300, maxsize=5000)]
+        result = [
+            item
+            for item in self.partitionsFind(
+                busy=False, ttype="ext4", ssd=False, prefix="sd", minsize=300,
+                maxsize=5000)]
         return result
 
     def partitionsMount_Ext4Data(self):

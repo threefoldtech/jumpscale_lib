@@ -25,10 +25,14 @@ class EtcdCluster():
                 return  # connection is valid
             except (etcd3.exceptions.ConnectionFailedError, etcd3.exceptions.ConnectionTimeoutError) as err:
                 self._client = None
-                self.logger.error("Could not connect to etcd on %s:%s : %s" % (host, port, str(err)))
+                self.logger.error(
+                    "Could not connect to etcd on %s:%s : %s" %
+                    (host, port, str(err)))
 
         if self._client is None:
-            raise RuntimeError("can't connect to etcd on %s" % self.mgmtdialstrings)
+            raise RuntimeError(
+                "can't connect to etcd on %s" %
+                self.mgmtdialstrings)
 
     @classmethod
     def from_ays(cls, service, password=None, logger=None):
@@ -70,11 +74,21 @@ class EtcdCluster():
             self._connect()
             self.delete(key)
 
+
 class ETCD():
     """etced server"""
 
-    def __init__(self, name, container, serverBind, clientBind, peers, mgmtClientBind, data_dir='/mnt/data',
-                 password=None, logger=None):
+    def __init__(
+            self,
+            name,
+            container,
+            serverBind,
+            clientBind,
+            peers,
+            mgmtClientBind,
+            data_dir='/mnt/data',
+            password=None,
+            logger=None):
 
         self.name = name
         self.container = container
@@ -91,7 +105,8 @@ class ETCD():
         logger = logger or default_logger
         logger.debug("create storageEngine from service (%s)", service)
         from ..container.Container import Container
-        container = Container.from_ays(service.parent, password, logger=service.logger)
+        container = Container.from_ays(
+            service.parent, password, logger=service.logger)
 
         return cls(
             name=service.name,
@@ -108,7 +123,10 @@ class ETCD():
     def start(self):
         configpath = "/etc/etcd_{}.config".format(self.name)
 
-        client_urls = ",".join(list({"http://{}".format(self.clientBind), "http://{}".format(self.mgmtClientBind)}))
+        client_urls = ",".join(
+            list(
+                {"http://{}".format(self.clientBind),
+                 "http://{}".format(self.mgmtClientBind)}))
         config = {
             "name": self.name,
             "initial-advertise-peer-urls": "http://{}".format(self.serverBind),
@@ -125,8 +143,11 @@ class ETCD():
         self.container.client.filesystem.upload(configpath, configstream)
         cmd = '/bin/etcd --config-file %s' % configpath
         self.container.client.system(cmd, id="etcd.{}".format(self.name))
-        if not self.container.is_port_listening(int(self.serverBind.split(":")[1])):
-            raise RuntimeError('Failed to start etcd server: {}'.format(self.name))
+        if not self.container.is_port_listening(
+                int(self.serverBind.split(":")[1])):
+            raise RuntimeError(
+                'Failed to start etcd server: {}'.format(
+                    self.name))
 
     def stop(self):
         import time
@@ -163,4 +184,5 @@ class ETCD():
         cmd = '/bin/etcdctl \
           --endpoints {etcd} \
           put {key} "{value}"'.format(etcd=self.clientBind, key=key, value=value)
-        return self.container.client.system(cmd, env={"ETCDCTL_API": "3"}).get()
+        return self.container.client.system(
+            cmd, env={"ETCDCTL_API": "3"}).get()

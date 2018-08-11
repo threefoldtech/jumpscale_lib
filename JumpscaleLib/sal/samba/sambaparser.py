@@ -22,6 +22,7 @@ class SambaConfigParser(configparser.ConfigParser, JSBASE):
 
     def __init__(self):
         JSBASE.__init__(self)
+        configparser.ConfigParser.__init__(self)
 
     def _read(self, fp, fpname):
         # override optcre to allow colon on key

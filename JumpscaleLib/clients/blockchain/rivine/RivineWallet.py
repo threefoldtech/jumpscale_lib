@@ -32,7 +32,7 @@ from .errors import RESTAPIError, BackendError,\
 InsufficientWalletFundsError, NonExistingOutputError,\
 NotEnoughSignaturesFound, InvalidUnlockHashChecksumError
 
-logger = j.logger.get(__name__)
+logger = j.logging.get(__name__)
 
 class RivineWallet:
     """

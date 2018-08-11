@@ -17,7 +17,7 @@ class MongodbFactory(JSBASE):
         """
         Get sal for mongodb
         Returns:
-            the sal layer 
+            the sal layer
         """
         return Mongodb(name, node, container_name, config_replica_set,
                        config_port, config_mount, shard_replica_set,

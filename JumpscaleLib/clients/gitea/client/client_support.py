@@ -19,8 +19,6 @@ except NameError:
     basestring = str
 
 
-
-
 def timestamp_from_datetime(datetime):
     """
         Convert from datetime format to timestamp format
@@ -182,10 +180,6 @@ class DatetimeHandler(object):
     """
     output datetime objects as iso-8601 compliant strings
     """
-
-    def __init__(self):
-        pass
-
     @classmethod
     def flatten(cls, obj):
         """flatten"""
@@ -201,10 +195,6 @@ class UUIDHandler(object):
     """
     output UUID objects as a string
     """
-
-    def __init__(self):
-        pass
-
     @classmethod
     def flatten(cls, obj):
         """flatten"""
@@ -220,10 +210,6 @@ class EnumHandler(object):
     """
     output Enum objects as their value
     """
-
-    def __init__(self):
-        pass
-
     @classmethod
     def flatten(cls, obj):
         """flatten"""
