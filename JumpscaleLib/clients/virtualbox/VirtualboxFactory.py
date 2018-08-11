@@ -22,11 +22,11 @@ class VirtualboxFactory(JSConfigBase):
         js_shell 'j.clients.virtualbox.test()'
         """
     
-
-        cl = self.client
-        if reset:
-            cl.reset_all()
-        vm = cl.zos_create(name=instance, zerotierinstance="", redis_port="4444")
+        cl = j.clients.virtualbox.client
+        #TODO: check VM is stopped, if not do so
+        #TODO: check that VM is there, if not do not try to delete
+        cl.reset_all()
+        vm = cl.zos_create(name="test", reset=True, zerotierinstance="")
         vm.start()
 
         zcl = j.clients.zos.get(instance, data={
