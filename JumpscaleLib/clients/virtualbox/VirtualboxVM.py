@@ -50,8 +50,6 @@ class VirtualboxVM(JSBASE):
             if item.vm == self:
                 res.append(item.vm)        
         return res
-        print("vm disks")
-        from IPython import embed;embed(colors='Linux')
 
     def disk_create(self,name="main", size=10000,reset=True):
         path="%s/%s.vdi"%(self.path, name)
@@ -63,7 +61,7 @@ class VirtualboxVM(JSBASE):
         pass
         # member_authorize
 
-    def create(self,reset=True,isopath="",datadisksize=10000,memory=1000):
+    def create(self, reset=True, isopath="", datadisksize=10000, memory=1000, redis_port="4444"):
         if reset:
             self.delete()
         cmd = "createvm --name %s  --ostype \"Linux_64\" --register"%(self.name)
@@ -71,7 +69,9 @@ class VirtualboxVM(JSBASE):
         self._cmd2("--memory=%s "%(memory))
         self._cmd2("--ioapic on")
         self._cmd2("--boot1 dvd --boot2 disk")
-        # self._cmd2("--nic1 bridged --bridgeadapter1 e1000g0")
+        self._cmd2("--nic1 nat")
+        if redis_port:
+            self._cmd2('--natpf1 "redis,tcp,,%s,,6379"' % redis_port)
 
         if datadisksize>0:
             disk = self.disk_create(size=datadisksize,reset=reset)
@@ -89,6 +89,13 @@ class VirtualboxVM(JSBASE):
 
     def start(self):
         self._cmd('startvm "%s"' % self.name)
+
+    def stop(self):
+        try:
+            self._cmd('controlvm "%s" poweroff' % self.name)
+            self.logger.info("stopping vm : %s", self.name)
+        except Exception as e:
+            self.logger.info("vm : %s wasn't running" % self.name)
 
     def __repr__(self):
         return "vm: %-20s%s"%(self.name,self.path)
