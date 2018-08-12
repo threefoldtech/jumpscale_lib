@@ -14,8 +14,6 @@ class VirtualboxFactory(JSConfigBase):
     def client(self):
         return self.get("default",interactive=False)
 
-    # def client_get(self,zerotiernetwork):
-    #     return self.get("test",data={"zerotiernetwork":zerotiernetwork})
 
     def test(self, instance="test", reset=True):
         """
@@ -25,8 +23,11 @@ class VirtualboxFactory(JSConfigBase):
         cl = j.clients.virtualbox.client
         #TODO: check VM is stopped, if not do so
         #TODO: check that VM is there, if not do not try to delete
-        cl.reset_all()
-        vm = cl.zos_create(name="test", reset=True, zerotierinstance="")
+
+        cl = self.client
+        if reset:
+            cl.reset_all()
+        vm = cl.zos_create(name=instance, zerotierinstance="", redis_port="4444")
         vm.start()
 
         zcl = j.clients.zos.get(instance, data={
