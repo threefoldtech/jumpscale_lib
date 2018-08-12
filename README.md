@@ -2,7 +2,7 @@
 
 # lib
 
-`lib` is a component of `Jumpscale` (see [here](https://github.com/threefoldtech/jumpscale_core)). It extends `Jumpscale` functionalities by adding additional automation tools. It is the home for non core `Jumpscale` clients(e.g., Kubernetes, postgresql, rivine), tools(e.g., raml), system abstraction layers(e.g., ubuntu, docker) and different data format interactions(e.g., capnp).
+`lib` is a component of `JumpScale` (see [here](https://github.com/threefoldtech/jumpscale_core)). It extends `JumpScale` functionalities by adding additional automation tools. It is the home for non core `Jumpscale` clients(e.g., Kubernetes, postgresql, rivine), tools(e.g., raml), system abstraction layers(e.g., ubuntu, docker) and different data format interactions(e.g., capnp).
 
 See [docs](docs/README.md) for more details.
 
