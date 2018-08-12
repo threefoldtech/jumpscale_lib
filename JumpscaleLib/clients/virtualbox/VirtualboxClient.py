@@ -37,10 +37,10 @@ class VirtualboxClient(JSConfigBase):
         if zerotierinstance:
             ztcl = j.clients.zerotier.get(zerotierinstance)
             zerotierid = ztcl.config.data['networkid']
-            download = "https://bootstrap.gig.tech/iso/master/%s" % zerotierid
+            download = "https://bootstrap.gig.tech/iso/development/%s/development" % zerotierid
             dest = "/tmp/zos_%s.iso" % zerotierid
         else:
-            download = "https://bootstrap.gig.tech/iso/master"
+            download = "https://bootstrap.gig.tech/iso/development/0/development"
             dest = "/tmp/zos.iso" 
         self._p.core.file_download(download, to=dest, overwrite=False)
         return dest
@@ -112,11 +112,11 @@ class VirtualboxClient(JSConfigBase):
             self.disks[path]=VirtualboxDisk(client=self, path=path)
         return self.disks[path]
 
-    def vm_create(self, name="test", reset=True, isopath=""):
+    def vm_create(self, name="test", reset=True, isopath="", redis_port="4444"):
         vm=self.vm_get(name)
-        vm.create(isopath=isopath, reset=reset)
+        vm.create(isopath=isopath, reset=reset, redis_port=redis_port)
         return vm
 
-    def zos_create(self, name="test", zerotierinstance=""):
+    def zos_create(self, name="test", zerotierinstance="", redis_port="4444"):
         isopath = self.zos_iso_download(zerotierinstance)
-        return self.vm_create(name, isopath=isopath)
+        return self.vm_create(name, isopath=isopath, redis_port=redis_port)

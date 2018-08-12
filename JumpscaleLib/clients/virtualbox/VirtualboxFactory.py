@@ -10,37 +10,39 @@ class VirtualboxFactory(JSConfigBase):
         self.__jslocation__ = "j.clients.virtualbox"
         JSConfigBase.__init__(self, VirtualboxClient)
 
-    # def get_by_params(self, instance="main"):
-    #     """
-    #     name of redis connection
-    #     get as follows:
-
-    #     j.clients.redis_config.get_by_params(instance='coredns', ipaddr='localhost', port=6380, password='', unixsocket='', ardb_patch=False)
-
-    #     """
-    #     data = {}
-    #     data["redisconfigname"] = redisname
-    #     return self.get(instance=instance, data=data)
-
     @property
     def client(self):
         return self.get("default",interactive=False)
-        
+
     # def client_get(self,zerotiernetwork):
     #     return self.get("test",data={"zerotiernetwork":zerotiernetwork})
 
-
-    def test(self, instance="main"):
+    def test(self, instance="test", reset=True):
         """
         js_shell 'j.clients.virtualbox.test()'
         """
     
-        cl = j.clients.virtualbox.client
-        #TODO: check VM is stopped, if not do so
-        #TODO: check that VM is there, if not do not try to delete
-        cl.reset_all()
-        vm = cl.zos_create(name="test", reset=True, zerotierinstance="")
-        vm.start()
-        print("DONE")
 
-        # from IPython import embed;embed(colors='Linux')
+        cl = self.client
+        if reset:
+            cl.reset_all()
+        vm = cl.zos_create(name=instance, zerotierinstance="", redis_port="4444")
+        vm.start()
+
+        zcl = j.clients.zos.get(instance, data={
+            "port": "4444"
+        })
+        retries = 10
+        from time import sleep
+        while retries:
+            if zcl.is_running():
+                print("DONE")
+                break
+            else:
+                self.logger.debug("couldn't connect to the created vm will retry in 30s")
+                sleep(30)
+            retries -= 1
+        else:
+            print("something went wrong")
+
+
