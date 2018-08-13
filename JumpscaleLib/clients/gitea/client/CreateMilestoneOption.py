@@ -9,8 +9,6 @@ from six import string_types
 from . import client_support
 
 
-
-
 class CreateMilestoneOption(object):
     """
     auto-generated. don't touch.
@@ -28,7 +26,6 @@ class CreateMilestoneOption(object):
         return CreateMilestoneOption(**kwargs)
 
     def __init__(self, json=None, **kwargs):
-        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

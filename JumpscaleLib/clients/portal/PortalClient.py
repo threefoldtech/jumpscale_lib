@@ -51,12 +51,15 @@ class BaseResource(JSBASE):
         return resource
 
     def __call__(self, **kwargs):
-        response = self._session.request(self._method, self._url, kwargs, timeout=300)
+        response = self._session.request(
+            self._method, self._url, kwargs, timeout=300)
 
         if not response.ok:
             raise ApiError(response)
 
-        if response.headers.get('content-type', 'text/html') == 'application/json':
+        if response.headers.get(
+            'content-type',
+                'text/html') == 'application/json':
             return response.json()
 
         return response.content
@@ -98,10 +101,16 @@ class Resource(BaseResource):
 
 
 class PortalClient(JSConfigBase, Resource):
-    def __init__(self, instance, data=None, parent=None,interactive=False):
+    def __init__(self, instance, data=None, parent=None, interactive=False):
         if not data:
             data = {}
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE,interactive=interactive)
+        JSConfigBase.__init__(
+            self,
+            instance=instance,
+            data=data,
+            parent=parent,
+            template=TEMPLATE,
+            interactive=interactive)
         cfg = self.config.data
         ip = cfg['ip']
         port = cfg['port']

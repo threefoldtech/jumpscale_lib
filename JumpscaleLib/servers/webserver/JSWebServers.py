@@ -11,7 +11,14 @@ class JSWebServers(JSConfigBase):
         JSConfigBase.__init__(self, JSWebServer)
         self.latest = None
 
-    def configure(self, instance="main", port=5050, port_ssl=0, host="localhost", secret="", ws_dir=""):
+    def configure(
+            self,
+            instance="main",
+            port=5050,
+            port_ssl=0,
+            host="localhost",
+            secret="",
+            ws_dir=""):
         """
         params
             - port_ssl if 0 not used
@@ -63,7 +70,8 @@ class JSWebServers(JSConfigBase):
         p.runtimes.pip.install(pips)
 
         # will make sure we have the lobs here for web
-        j.clients.git.getContentPathFromURLorPath("https://github.com/threefoldtech/jumpscale_weblibs")
+        j.clients.git.getContentPathFromURLorPath(
+            "https://github.com/threefoldtech/jumpscale_weblibs")
 
     def start(self, instance="main", background=False, debug=False):
 
@@ -82,11 +90,16 @@ class JSWebServers(JSConfigBase):
             export LANG=de_DE.utf-8
             export FLASK_DEBUG=1
             export APP_SETTINGS=project.server.config.DevelopmentConfig
-            js_web start -i $instance -d    
+            js_web start -i $instance -d
             """
             cmd = cmd.replace("$instance", instance)
-            j.tools.tmux.execute(cmd, session='main', window=instance, pane='main', session_reset=False,
-                                 window_reset=True)
+            j.tools.tmux.execute(
+                cmd,
+                session='main',
+                window=instance,
+                pane='main',
+                session_reset=False,
+                window_reset=True)
 
             host = s.config.data["host"]
             port = s.config.data["port"]

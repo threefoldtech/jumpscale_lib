@@ -14,6 +14,7 @@ TEMPLATE = """
 token="dG9rOmNjNTRlZDFiX2E3OTZfNGFiM185Mjk5X2YzMGQyN2NjODM4ZToxOjA="
 """
 
+
 class Intercom(JSConfigFactory):
     def __init__(self):
         self.__jslocation__ = "j.clients.intercom"
@@ -22,8 +23,13 @@ class Intercom(JSConfigFactory):
 
 class IntercomClient(JSConfigClient):
     def __init__(self, instance, data={}, parent=None, interactive=False):
-        JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
+        JSConfigClient.__init__(
+            self,
+            instance=instance,
+            data=data,
+            parent=parent,
+            template=TEMPLATE,
+            interactive=interactive)
         c = self.config.data
         self.token = c['token']
         self.api = Client(personal_access_token=self.token)

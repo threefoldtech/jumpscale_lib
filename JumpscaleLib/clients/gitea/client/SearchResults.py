@@ -8,8 +8,6 @@ from .Repository import Repository
 from . import client_support
 
 
-
-
 class SearchResults(object):
     """
     auto-generated. don't touch.
@@ -26,7 +24,6 @@ class SearchResults(object):
         return SearchResults(**kwargs)
 
     def __init__(self, json=None, **kwargs):
-        pass
         if json is None and not kwargs:
             raise ValueError('No data or kwargs present')
 

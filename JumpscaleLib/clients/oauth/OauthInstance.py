@@ -26,8 +26,13 @@ client_instance = "github"
 
 class OauthClient(JSConfigClient):
     def __init__(self, instance, data={}, parent=None, interactive=False):
-        JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
+        JSConfigClient.__init__(
+            self,
+            instance=instance,
+            data=data,
+            parent=parent,
+            template=TEMPLATE,
+            interactive=interactive)
         c = self.config.data
         self.addr = c['addr']
         self.accesstokenaddr = c['accesstokenaddr']
@@ -46,11 +51,27 @@ class OauthClient(JSConfigClient):
             return self._client
 
         if self.client_instance in ('itsyouonline', 'itsyou.online'):
-            self._client = ItsYouOnline(self.addr, self.accesstokenaddr, self.client_id, self.secret, self.scope,
-                                        self.redirect_url, self.user_info_url, self.logout_url, self.instance)
+            self._client = ItsYouOnline(
+                self.addr,
+                self.accesstokenaddr,
+                self.client_id,
+                self.secret,
+                self.scope,
+                self.redirect_url,
+                self.user_info_url,
+                self.logout_url,
+                self.instance)
         else:
-            self._client = OauthInstance(self.addr, self.accesstokenaddr, self.client_id, self.secret, self.scope,
-                                         self.redirect_url, self.user_info_url, self.logout_url, self.instance)
+            self._client = OauthInstance(
+                self.addr,
+                self.accesstokenaddr,
+                self.client_id,
+                self.secret,
+                self.scope,
+                self.redirect_url,
+                self.user_info_url,
+                self.logout_url,
+                self.instance)
 
         return self._client
 
@@ -60,7 +81,7 @@ class AuthError(Exception, JSBASE):
         JSBASE.__init__(self)
 
 
-class UserInfo(object, JSBASE):
+class UserInfo(JSBASE):
 
     def __init__(self, username, emailaddress, groups):
         JSBASE.__init__(self)
@@ -71,10 +92,21 @@ class UserInfo(object, JSBASE):
 
 class OauthInstance(JSBASE):
 
-    def __init__(self, addr, accesstokenaddr, client_id, secret, scope, redirect_url, user_info_url, logout_url, instance):
+    def __init__(
+            self,
+            addr,
+            accesstokenaddr,
+            client_id,
+            secret,
+            scope,
+            redirect_url,
+            user_info_url,
+            logout_url,
+            instance):
         JSBASE.__init__(self)
         if not addr:
-            raise RuntimeError("Failed to get oauth instance, no address provided")
+            raise RuntimeError(
+                "Failed to get oauth instance, no address provided")
         else:
             self.addr = addr
             self.client_id = client_id
@@ -89,16 +121,23 @@ class OauthInstance(JSBASE):
 
     @property
     def url(self):
-        params = {'client_id': self.client_id, 'redirect_uri': self.redirect_url,
-                  'state': self.state, 'response_type': 'code'}
+        params = {
+            'client_id': self.client_id,
+            'redirect_uri': self.redirect_url,
+            'state': self.state,
+            'response_type': 'code'}
         if self.scope:
             params.update({'scope': self.scope})
         return '%s?%s' % (self.addr, urllib.parse.urlencode(params))
 
     def getAccessToken(self, code, state):
-        payload = {'code': code, 'client_id': self.client_id, 'client_secret': self.secret,
-                   'redirect_uri': self.redirect_url, 'grant_type': 'authorization_code',
-                   'state': state}
+        payload = {
+            'code': code,
+            'client_id': self.client_id,
+            'client_secret': self.secret,
+            'redirect_uri': self.redirect_url,
+            'grant_type': 'authorization_code',
+            'state': state}
         result = requests.post(self.accesstokenaddress, data=payload, headers={
             'Accept': 'application/json'})
 
@@ -121,8 +160,28 @@ class OauthInstance(JSBASE):
 
 
 class ItsYouOnline(OauthInstance):
-    def __init__(self, addr, accesstokenaddr, client_id, secret, scope, redirect_url, user_info_url, logout_url, instance):
-        OauthInstance.__init__(self, addr, accesstokenaddr, client_id, secret, scope, redirect_url, user_info_url, logout_url, instance)
+    def __init__(
+            self,
+            addr,
+            accesstokenaddr,
+            client_id,
+            secret,
+            scope,
+            redirect_url,
+            user_info_url,
+            logout_url,
+            instance):
+        OauthInstance.__init__(
+            self,
+            addr,
+            accesstokenaddr,
+            client_id,
+            secret,
+            scope,
+            redirect_url,
+            user_info_url,
+            logout_url,
+            instance)
 
     def getAccessToken(self):
         return j.clients.itsyouonline.jwt_get(self.client_id, self.secret)
@@ -136,7 +195,8 @@ class ItsYouOnline(OauthInstance):
         jwtdata = jose.jwt.get_unverified_claims(jwt)
         scopes = jwtdata['scope']
         requestedscopes = set(self.scope.split(','))
-        if set(jwtdata['scope']).intersection(requestedscopes) != requestedscopes:
+        if set(jwtdata['scope']).intersection(
+                requestedscopes) != requestedscopes:
             msg = 'Failed to get the requested scope for %s' % self.client_id
             raise AuthError(msg)
 
@@ -154,4 +214,7 @@ class ItsYouOnline(OauthInstance):
                 groups.append(parts[-1].split('.')[-1])
 
         userinfo = userinforesp.json()
-        return UserInfo(userinfo['username'], userinfo['emailaddresses'][0]['emailaddress'], groups)
+        return UserInfo(
+            userinfo['username'],
+            userinfo['emailaddresses'][0]['emailaddress'],
+            groups)

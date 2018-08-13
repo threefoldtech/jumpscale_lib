@@ -22,7 +22,7 @@ from .models import DirCollection
 from path import Path
 
 
-logger = j.logger.get(__name__)
+logger = j.logging.get(__name__)
 
 
 class FList:
@@ -76,7 +76,13 @@ class FList:
 
     """
 
-    def __init__(self, namespace="", rootpath="", dirCollection=None, aciCollection=None, userGroupCollection=None):
+    def __init__(
+            self,
+            namespace="",
+            rootpath="",
+            dirCollection=None,
+            aciCollection=None,
+            userGroupCollection=None):
         self.namespace = namespace
         self.dirCollection = dirCollection
         self.aciCollection = aciCollection
@@ -99,8 +105,10 @@ class FList:
         @param fpath is full path
         """
         if not fpath.startswith(self.rootpath):
-            m = "fpath:%s needs to start with rootpath:%s" % (fpath, self.rootpath)
-            raise j.exceptions.Input(message=m, level=1, source="", tags="", msgpub="")
+            m = "fpath:%s needs to start with rootpath:%s" % (
+                fpath, self.rootpath)
+            raise j.exceptions.Input(
+                message=m, level=1, source="", tags="", msgpub="")
 
         relPath = fpath[len(self.rootpath):].strip("/")
         toHash = self.namespace + relPath
@@ -112,14 +120,22 @@ class FList:
     def getDir(self, key):
         return self.dirCollection.get(key)
 
-    def add(self, path, excludes=[".*\.pyc", ".*__pycache__", ".*\.bak", ".*\.git"]):
+    def add(
+        self,
+        path,
+        excludes=[
+            r".*\.pyc",
+            ".*__pycache__",
+            r".*\.bak",
+            r".*\.git"]):
         """
         walk over path and put in plist
         @param excludes are regex expressions and they start inside the rootpath !
         """
         if not j.sal.fs.exists(self.rootpath, followlinks=True):
             m = "Rootpath: '%s' needs to exist" % self.rootpath
-            raise j.exceptions.Input(message=m, level=1, source="", tags="", msgpub="")
+            raise j.exceptions.Input(
+                message=m, level=1, source="", tags="", msgpub="")
 
         # compiling regex for exclusion
         _excludes = []
@@ -127,12 +143,22 @@ class FList:
             _excludes.append(re.compile(ex))
 
         if not j.sal.fs.exists(path, followlinks=True):
-            if j.sal.fs.exists(j.sal.fs.joinPaths(self.rootpath, path), followlinks=True):
+            if j.sal.fs.exists(
+                    j.sal.fs.joinPaths(
+                        self.rootpath,
+                        path),
+                    followlinks=True):
                 path = j.sal.fs.joinPaths(self.rootpath, path)
 
         if not j.sal.fs.exists(path, followlinks=True):
             m = "Could not find path:%s"
-            raise j.exceptions.Input(message=m % path, level=1, source="", tags="", msgpub="")
+            raise j.exceptions.Input(
+                message=m %
+                path,
+                level=1,
+                source="",
+                tags="",
+                msgpub="")
 
         #
         # reading the target filesystem and building root
@@ -142,7 +168,7 @@ class FList:
             # dirpath is full path need to bring it to the relative part
             dirRelPath, dirKey = self.path2key(dirpathAbsolute)
             logger.debug("[+]    add: -- /%s" % dirRelPath)
-            logger.debug("[+]         \_ %s" % dirKey)
+            logger.debug(r"[+]         \_ %s" % dirKey)
 
             # invalid directory
             if not self._valid(dirRelPath, _excludes):
@@ -155,7 +181,8 @@ class FList:
 
             else:
                 if ddir.location != dirRelPath:
-                    raise RuntimeError("Serious bug, location should always be same")
+                    raise RuntimeError(
+                        "Serious bug, location should always be same")
 
             # sec base properties of current dirobj
             statCurDir = os.stat(dirpathAbsolute, follow_symlinks=True)
@@ -205,7 +232,8 @@ class FList:
                     else:
                         sspecials.append((fname, stat))
 
-            # filter the dirs based on the exclusions (starting from the relative paths)
+            # filter the dirs based on the exclusions (starting from the
+            # relative paths)
             dirs2 = []
             for item in dirs:
                 # invalid
@@ -220,7 +248,12 @@ class FList:
                 dirs2.append(os.path.join(dirRelPath, item))
 
             # initialize right amount of objects in capnp
-            ddir.dbobj.init("contents", len(ffiles) + len(llinks) + len(sspecials) + len(dirs2))
+            ddir.dbobj.init(
+                "contents",
+                len(ffiles) +
+                len(llinks) +
+                len(sspecials) +
+                len(dirs2))
             counter = 0
 
             # process files
@@ -265,7 +298,9 @@ class FList:
                     dbobj.attributes.special.type = "unknown"
 
                 if S_ISBLK(stat.st_mode) or S_ISCHR(stat.st_mode):
-                    id = '%d,%d' % (os.major(stat.st_rdev), os.minor(stat.st_rdev))
+                    id = '%d,%d' % (
+                        os.major(stat.st_rdev),
+                        os.minor(stat.st_rdev))
                     dbobj.attributes.special.data = id
 
                 self._setMetadata(dbobj, stat, fname)
@@ -280,7 +315,7 @@ class FList:
 
                 dir_sub_relpath, dir_sub_key = self.path2key(absDirPathFull)
                 logger.debug("[+] subadd: -- /%s" % dir_sub_relpath)
-                logger.debug("[+]         \_ %s" % dir_sub_key)
+                logger.debug(r"[+]         \_ %s" % dir_sub_key)
 
                 dbobj.attributes.dir.key = dir_sub_key  # link to directory
                 dbobj.name = j.sal.fs.getBaseName(dirRelPathFull)
@@ -439,15 +474,26 @@ class FList:
 
             key = item.attributes.dir.key
 
-            if valid(j.sal.fs.joinPaths(ddir.dbobj.location, item.name), dirRegex) and "D" in types:
-                recurse = dirFunction(dirobj=ddir, type="D", name=item.name, args=args, key=key)
+            if valid(
+                    j.sal.fs.joinPaths(
+                        ddir.dbobj.location,
+                        item.name),
+                    dirRegex) and "D" in types:
+                recurse = dirFunction(
+                    dirobj=ddir,
+                    type="D",
+                    name=item.name,
+                    args=args,
+                    key=key)
 
             else:
                 recurse = True
 
             if not recurse == False:
                 if key == "":
-                    raise RuntimeError("Key cannot be empty in a subdir of ddir: %s" % ddir)
+                    raise RuntimeError(
+                        "Key cannot be empty in a subdir of ddir: %s" %
+                        ddir)
 
                 self.walk(
                     dirFunction=dirFunction,
@@ -468,16 +514,43 @@ class FList:
             which = item.attributes.which()
 
             if which == "file" and "F" in types:
-                if valid(j.sal.fs.joinPaths(ddir.dbobj.location, item.name), fileRegex):
-                    fileFunction(dirobj=ddir, type="F", name=item.name, subobj=item, args=args)
+                if valid(
+                        j.sal.fs.joinPaths(
+                            ddir.dbobj.location,
+                            item.name),
+                        fileRegex):
+                    fileFunction(
+                        dirobj=ddir,
+                        type="F",
+                        name=item.name,
+                        subobj=item,
+                        args=args)
 
             if which == "link" and "L" in types:
-                if valid(j.sal.fs.joinPaths(ddir.dbobj.location, item.name), fileRegex):
-                    linkFunction(dirobj=ddir, type="L", name=item.name, subobj=item, args=args)
+                if valid(
+                        j.sal.fs.joinPaths(
+                            ddir.dbobj.location,
+                            item.name),
+                        fileRegex):
+                    linkFunction(
+                        dirobj=ddir,
+                        type="L",
+                        name=item.name,
+                        subobj=item,
+                        args=args)
 
             if which == "special" and "S" in types:
-                if valid(j.sal.fs.joinPaths(ddir.dbobj.location, item.name), fileRegex):
-                    specialFunction(dirobj=ddir, type="S", name=item.name, subobj=item, args=args)
+                if valid(
+                        j.sal.fs.joinPaths(
+                            ddir.dbobj.location,
+                            item.name),
+                        fileRegex):
+                    specialFunction(
+                        dirobj=ddir,
+                        type="S",
+                        name=item.name,
+                        subobj=item,
+                        args=args)
 
     def count(self, dirRegex=[], fileRegex=[], types="DFLS"):
         """
@@ -515,7 +588,12 @@ class FList:
             types=types
         )
 
-        return (result["size"], result["nrfiles"], result["nrdirs"], result["nrlinks"], result["nrspecial"])
+        return (
+            result["size"],
+            result["nrfiles"],
+            result["nrdirs"],
+            result["nrlinks"],
+            result["nrspecial"])
 
     def pprint(self, dirRegex=[], fileRegex=[], types="DFLS"):
         def procDir(dirobj, type, name, args, key):
@@ -578,7 +656,8 @@ class FList:
             item = setDefault(dirobj, name, subobj)
 
             # Set filetype
-            fullpath = "%s/%s/%s" % (self.rootpath, dirobj.dbobj.location, name)
+            fullpath = "%s/%s/%s" % (self.rootpath,
+                                     dirobj.dbobj.location, name)
             item[1] = j.data.hash.md5(fullpath)
             item[6] = "2"
 
@@ -607,8 +686,11 @@ class FList:
                 if objtype == "chardev":
                     item[6] = "5"
 
-                stat = os.stat("%s/%s" % (self.rootpath, item[0]), follow_symlinks=False)
-                item[9] = '%d,%d' % (os.major(stat.st_rdev), os.minor(stat.st_rdev))
+                stat = os.stat("%s/%s" %
+                               (self.rootpath, item[0]), follow_symlinks=False)
+                item[9] = '%d,%d' % (
+                    os.major(stat.st_rdev),
+                    os.minor(stat.st_rdev))
 
             if objtype == "fifopipe":
                 item[6] = "6"
@@ -628,7 +710,8 @@ class FList:
         return "\n".join(result) + "\n"
 
     def upload(self, host="127.0.0.1", port=16379):
-        raise RuntimeError("Upload is not supported anymore, please check 'populate' method")
+        raise RuntimeError(
+            "Upload is not supported anymore, please check 'populate' method")
 
     def _dummy(self, **kwargs):
         pass
@@ -645,7 +728,8 @@ class FList:
         self.dirCollection._db.rocksdb.compact_range()
 
         def procFile(dirobj, type, name, subobj, args):
-            fullpath = "%s/%s/%s" % (self.rootpath, dirobj.dbobj.location, name)
+            fullpath = "%s/%s/%s" % (self.rootpath,
+                                     dirobj.dbobj.location, name)
             self.logger.info("[+] uploading: %s" % fullpath)
             hashs = g8storclient.encrypt(fullpath)
 
@@ -672,7 +756,8 @@ class FList:
             pass
 
         def procFile(dirobj, type, name, subobj, args):
-            fullpath = "%s/%s/%s" % (self.rootpath, dirobj.dbobj.location, name)
+            fullpath = "%s/%s/%s" % (self.rootpath,
+                                     dirobj.dbobj.location, name)
             logger.debug("[+] populating: %s" % fullpath)
             hashs = g8storclient.encrypt(fullpath)
 
@@ -721,13 +806,15 @@ class FList:
                     bykeys[chunk['hash']] = {'file': f, 'index': id}
 
         # exists_post now wants binary keys
-        # we know we are dealing with strings hash, let's simply encode them before
+        # we know we are dealing with strings hash, let's simply encode them
+        # before
         for file in all_files:
             for id, chunk in enumerate(all_files[file]):
                 all_files[file][id]['bhash'] = chunk['hash'].encode('utf-8')
 
         for path, chunks in all_files.items():
-            res = directclient.api.exists.exists_post(set([chunk['bhash'] for chunk in chunks]))
+            res = directclient.api.exists.exists_post(
+                set([chunk['bhash'] for chunk in chunks]))
             keys = res.json()
 
             # let's adding all missing keys
@@ -767,7 +854,8 @@ class FList:
                     directclient.insert.insert_put(upload)
                     currentsize = 0
                 except Exception as e:
-                    # weird error. could be an existing chunk undetected by previous check
+                    # weird error. could be an existing chunk undetected by
+                    # previous check
                     self.logger.error(e)
 
         self.logger.info("[+] uploading last data...")

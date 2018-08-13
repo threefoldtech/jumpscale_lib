@@ -4,6 +4,7 @@ JSConfigBase = j.tools.configmanager.base_class_configs
 
 from .VirtualboxClient import VirtualboxClient
 
+
 class VirtualboxFactory(JSConfigBase):
 
     def __init__(self):
