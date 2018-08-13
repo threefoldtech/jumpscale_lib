@@ -97,10 +97,18 @@ class VirtualboxClient(JSConfigBase):
     def reset_all(self):
         for vm in self.vms_get():
             vm.stop()
-            import time; time.sleep(5)
+            from time import sleep
+            sleep(5)
             vm.delete()
         for disk in self.vdisks_get():
             disk.delete()
+
+    def reset(self, name):
+        vm = self.vm_get(name)
+        vm.stop()
+        from time import sleep
+        sleep(5)
+        vm.delete()
 
     def vm_get(self, name):
         if name not in self.vms:

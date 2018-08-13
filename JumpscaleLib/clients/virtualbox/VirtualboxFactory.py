@@ -14,15 +14,13 @@ class VirtualboxFactory(JSConfigBase):
     def client(self):
         return self.get("default",interactive=False)
 
-
-    def test(self, instance="test", reset=True):
+    def test(self, instance="test"):
         """
         js_shell 'j.clients.virtualbox.test()'
         """
 
         cl = self.client
-        if reset:
-            cl.reset_all()
+        cl.reset(instance)
         vm = cl.zos_create(name=instance, zerotierinstance="", redis_port="4444")
         vm.start()
 
@@ -33,7 +31,11 @@ class VirtualboxFactory(JSConfigBase):
         from time import sleep
         while retries:
             if zcl.is_running():
-                print("DONE")
+                print("Successfully started ZOS on VirtualBox vm\n"
+                      "with port forwarding 4444 -> 6379\n"
+                      "to get zos client run:\n"
+                      "j.clients.zos.get('{instance}')\n"
+                      "**DONE**".format(instance=instance))
                 break
             else:
                 self.logger.debug("couldn't connect to the created vm will retry in 30s")
