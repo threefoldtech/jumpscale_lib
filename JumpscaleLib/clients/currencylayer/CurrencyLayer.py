@@ -49,7 +49,7 @@ class CurrencyLayer(JSConfigBase):
                 c = j.clients.http.getConnection()
                 r = c.get(url).readlines()
                 
-                data = j.data.serializer.json.loads(r[0].decode())["quotes"]
+                data = j.data.serializers.json.loads(r[0].decode())["quotes"]
 
                 data['USDETH'] = 1/cryptocompare.get_price('ETH','USD')['ETH']['USD']
 
