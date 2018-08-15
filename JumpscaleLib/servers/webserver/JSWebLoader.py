@@ -34,7 +34,7 @@ class JSWebLoader(JSBASE):
         self.login_manager = LoginManager()
 
     def register_extensions(self, app):
-        self.db.init_app(app)
+        # self.db.init_app(app)
         self.login_manager.init_app(app)
 
     def register_blueprints(self, app, sockets, path=None):
@@ -102,7 +102,7 @@ class JSWebLoader(JSBASE):
 
         # if selenium:
         #     app.config['LOGIN_DISABLED'] = True
-        # register_extensions(app)
+        self.register_extensions(app)
         sockets = None
         if websocket_support:
             sockets = Sockets(app)
