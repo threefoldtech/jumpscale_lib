@@ -207,20 +207,22 @@ class Networks:
         """
         return list(self._networks.keys())
 
-    def get(self, subnet=None):
-        """get network object from its subnet
+    def get(self, ip=None):
+        """get network object from the host ip
 
-        :param subnet: subnet required, defaults to None in that case will get first in the list
-        :type subnet: str
-        :raises KeyError: if subnet doesn't exist in available subnets
+        :param ip: ip required, defaults to None in that case will get first in the list
+        :type ip: str
+        :raises KeyError: if ip doesn't exist in available subnets
         :return: network object
         :rtype: object
         """
-        if not subnet:
-            subnet = self.list()[0]
-        if subnet not in self._networks:
-            raise KeyError("Network with specified subnet: %s doesn't exist" % subnet)
-        return self._networks[subnet]
+        if not ip:
+            ip = self.list()[0].split('/')[0]
+        for subnet in self._networks:
+            if netaddr.IPAddress(ip) in netaddr.IPNetwork(subnet):
+                return self._networks[subnet]
+        else:
+            raise KeyError("Host with specified IP: %s doesn't exist" % ip)
 
     def remove(self, subnet):
         raise NotImplementedError()
