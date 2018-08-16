@@ -100,6 +100,10 @@ class JSWebLoader(JSBASE):
         app.config.from_object(rq_dashboard.default_settings)
         app.register_blueprint(rq_dashboard.blueprint, url_prefix="/rq")
 
+        # Load iyo settings, TODO: change this dirty hack
+        app.config.from_json("%s/blueprints/user/iyo.json" % self.path)
+        from blueprints.user.user import callback
+        app.add_url_rule(app.config['IYO_CONFIG']['callback_path'], '_callback', callback)
         # if selenium:
         #     app.config['LOGIN_DISABLED'] = True
         self.register_extensions(app)
