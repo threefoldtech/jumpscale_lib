@@ -34,7 +34,7 @@ class JSWebLoader(JSBASE):
         self.login_manager = LoginManager()
 
     def register_extensions(self, app):
-        self.db.init_app(app)
+        # self.db.init_app(app)
         self.login_manager.init_app(app)
 
     def register_blueprints(self, app, sockets, path=None):
@@ -101,9 +101,13 @@ class JSWebLoader(JSBASE):
         app.config.from_object(rq_dashboard.default_settings)
         app.register_blueprint(rq_dashboard.blueprint, url_prefix="/rq")
 
+        # Load iyo settings, TODO: change this dirty hack
+        app.config.from_json("%s/blueprints/user/iyo.json" % self.path)
+        from blueprints.user.user import callback
+        app.add_url_rule(app.config['IYO_CONFIG']['callback_path'], '_callback', callback)
         # if selenium:
         #     app.config['LOGIN_DISABLED'] = True
-        # register_extensions(app)
+        self.register_extensions(app)
         sockets = None
         if websocket_support:
             sockets = Sockets(app)

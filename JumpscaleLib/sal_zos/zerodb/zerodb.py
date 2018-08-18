@@ -37,7 +37,7 @@ class Zerodb:
         self.node = node
         self.zt_identity = None
         self._container = None
-        self.flist = 'https://hub.gig.tech/gig-autobuilder/rivine-0-db-release-master.flist'
+        self.flist = 'https://hub.grid.tf/tf-autobuilder/threefoldtech-0-db-release-development.flist'
 
         self._mode = mode
         self._sync = sync

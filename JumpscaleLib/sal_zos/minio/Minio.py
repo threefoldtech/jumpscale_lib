@@ -29,7 +29,7 @@ class Minio:
         self.id = 'minio.{}'.format(self.name)
         self.node = node
         self._container = None
-        self.flist = 'https://hub.gig.tech/gig-official-apps/minio.flist'
+        self.flist = 'https://hub.grid.tf/tf-official-apps/minio.flist'
         self.node_port = node_port
         self.zdbs = zdbs
         self.namespace = namespace

@@ -184,7 +184,7 @@ class Gateway:
         self.domain = 'lan'
         self._container = None
         self.networks = Networks(self)
-        self.flist = 'https://hub.gig.tech/gig-official-apps/zero-os-gw-master.flist'
+        self.flist = 'https://hub.grid.tf/tf-official-apps/zero-os-gw-master.flist'
         self.portforwards = PortForwards(self)
         self.httpproxies = HTTPProxies(self)
         self.certificates = []

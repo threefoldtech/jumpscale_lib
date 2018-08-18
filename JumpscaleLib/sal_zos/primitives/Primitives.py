@@ -2,8 +2,8 @@ from jumpscale import j
 from ..vm.ZOS_VM import ZOS_VM, ZeroOSVM, ZDBDisk
 
 
-BASEFLIST = 'https://hub.gig.tech/gig-bootable/{}.flist'
-ZEROOSFLIST = "https://hub.gig.tech/gig-bootable/zero-os-bootable.flist"
+BASEFLIST = 'https://hub.grid.tf/tf-bootable/{}.flist'
+ZEROOSFLIST = 'https://hub.grid.tf/tf-bootablee/zero-os-bootable.flist'
 
 class Primitives:
     def __init__(self, node):
@@ -16,7 +16,7 @@ class Primitives:
         :param name: Name of virtual machine
         :type name: str
         :param type_: Type of vm this defines the template to be used check 
-                      https://hub.gig.tech/gig-bootable
+                      https://hub.grid.tf/tf-bootable
 
                       eg: ubuntu:16.04, zero-os:master
         """
