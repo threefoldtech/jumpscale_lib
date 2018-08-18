@@ -229,7 +229,7 @@ net.hosts.remove(hostname)
 
 Get host object:
 
-```python
+```python   
 net.hosts.get(hostname)
 ```
 

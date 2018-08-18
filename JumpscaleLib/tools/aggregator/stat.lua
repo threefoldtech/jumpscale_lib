@@ -20,6 +20,7 @@ local now_short_h = (math.floor(now / 3600) * 3600) + 3600
 
 local differential = type == "D"
 
+
 if prev then
     -- get previous value, it exists in a hkey
     v = cjson.decode(prev)
@@ -111,7 +112,7 @@ else
         v.h_max = 0
         v.h_nr = 0
     else
-        --gauages stats
+        --gauges stats
         v.m_avg = value
         v.m_total = value
         v.m_max = value

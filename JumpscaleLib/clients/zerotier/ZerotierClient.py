@@ -41,6 +41,17 @@ class NetworkMember(JSBASE):
     def private_ip(self):
         return self.get_private_ip()
 
+    @property
+    def nodeid(self):
+        return self.data["nodeId"]
+
+    def nodeid_check(self,nodeids=[]):
+        for item in nodeids:
+            item=item.lower()
+            if item == self.nodeid:
+                return True
+        return False
+
     def _refresh(self):
         """
         Refresh the data of the member by querying the lastest info from the server
@@ -113,6 +124,23 @@ class ZeroTierNetwork(JSBASE):
         self.config = config
         self.client = client
         self._client = client.client
+
+    @property
+    def mynode_member(self):
+        """
+        check which of my nodes exist in the network and if found return that member
+        :return: 
+        """
+        for m in self.members_list():
+            if m.nodeid_check(self.client.nodeids):
+                return m
+        return None
+
+    def mynode_member_authorise(self):
+        if self.mynode_member is None:
+            raise RuntimeError("could not find mynode")
+        self.mynode_member.authorize()
+        return self.mynode_member
 
 
     def members_list(self, raw=False):
@@ -268,6 +296,7 @@ class ZeroTierNetwork(JSBASE):
 TEMPLATE = """
 token_ = ""
 networkid = ""
+nodeids = ""
 """
 
 class ZerotierClient(JSConfigClient):
@@ -282,6 +311,11 @@ class ZerotierClient(JSConfigClient):
         # self._client = ZerotierClientInteral(self.config.data['token_'])
         self._defaultnet = None
 
+    @property
+    def nodeids(self):
+        if "nodeids" in self.config.data:
+            return [item for item in self.config.data["nodeids"].split(",") if item.strip() is not ""]
+        return []
 
     def networks_list(self):
         """
@@ -299,12 +333,12 @@ class ZerotierClient(JSConfigClient):
         """
         Retrieves details information about a netowrk
 
-        @param network_id: ID of the network
+        @param network_id: ID of the network, if not specified will check if it is in the config
         """
         if network_id is "":
-            print("YVES: fill in from config")
-            from IPython import embed;embed(colors='Linux')
-            #if not specified raise error
+            if self.config.data['networkid'] is "":
+                raise j.exceptions.Input("could not find network id in config")
+            network_id =  self.config.data['networkid']
              
         resp = self.client.network.getNetwork(id=network_id)
         if resp.status_code != 200:
