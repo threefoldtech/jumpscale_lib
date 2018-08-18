@@ -5,6 +5,7 @@ from flask_sockets import Sockets
 from importlib import import_module
 from logging import basicConfig, DEBUG, getLogger, StreamHandler
 from jumpscale import j
+import sys
 from werkzeug.debug import DebuggedApplication
 import rq_dashboard
 
@@ -36,8 +37,12 @@ class JSWebLoader(JSBASE):
         self.db.init_app(app)
         self.login_manager.init_app(app)
 
-    def register_blueprints(self, app, sockets):
-        apps = j.sal.fs.listDirsInDir("%s/blueprints" % self.path, recursive=False, dirNameOnly=True,
+    def register_blueprints(self, app, sockets, path=None):
+        if path is None:
+            "%s/blueprints" % self.path
+        if path not in sys.path:
+            sys.path.append(path)
+        apps = j.sal.fs.listDirsInDir(path, recursive=False, dirNameOnly=True,
                                       findDirectorySymlinks=True, followSymlinks=True)
         apps = [item for item in apps if item[0] is not "_"]
         for module_name in apps:
