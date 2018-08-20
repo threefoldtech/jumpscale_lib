@@ -2,7 +2,7 @@ from jumpscale import j
 from ..abstracts import Collection, Nics
 import requests
 
-IPXEURL = 'https://bootstrap.gig.tech/ipxe/master/0'
+IPXEURL = 'https://bootstrap.grid.tf/ipxe/master/0'
 logger = j.logger.get(__name__)
 
 

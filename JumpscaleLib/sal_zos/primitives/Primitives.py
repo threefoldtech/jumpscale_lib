@@ -15,7 +15,7 @@ class Primitives:
 
         :param name: Name of virtual machine
         :type name: str
-        :param type_: Type of vm this defines the template to be used check 
+        :param type_: Type of vm this defines the template to be used check
                       https://hub.grid.tf/tf-bootable
 
                       eg: ubuntu:16.04, zero-os:master
@@ -24,7 +24,7 @@ class Primitives:
         kwargs = {'name': name, 'node': self.node}
         if templatename == 'zero-os':
             version = version or 'master'
-            ipxeurl = 'https://bootstrap.gig.tech/ipxe/{}/0/development'.format(version)
+            ipxeurl = 'https://bootstrap.grid.tf/ipxe/{}/0/development'.format(version)
             klass = ZeroOSVM
             kwargs['flist'] = ZEROOSFLIST
             kwargs['ipxe_url'] = ipxeurl

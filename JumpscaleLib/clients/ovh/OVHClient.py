@@ -10,7 +10,7 @@ import requests
 import time
 
 TEMPLATE = """
-ipxeBase = "https://bootstrap.gig.tech/ipxe/master"
+ipxeBase = "https://bootstrap.grid.tf/ipxe/master"
 endpoint = "soyoustart-eu"
 appkey_ = ""
 appsecret_ = ""

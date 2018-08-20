@@ -128,7 +128,7 @@ class Space(Authorizables):
 
     def disable(self, reason):
         """Will disable the cloud space.
-        
+
         :param reason: The reason why the cloud space should be disabled.
         :type reason: str
         """
@@ -275,13 +275,13 @@ class Space(Authorizables):
         imageId = self.image_find_id(image)
         if sizeId is None:
             sizeId = self.size_find_id(memsize, vcpus)
-        
+
         self.logger.info("Cloud space ID:%s name:%s size:%s image:%s disksize:%s" %
                          (self.id, name, sizeId, imageId, disksize))
 
         if authorize_ssh:
             if not sshkeyname:
-                # if sshkey is not provided, use sshkey configured in the config manager 
+                # if sshkey is not provided, use sshkey configured in the config manager
                 sshkeyname=j.tools.configmanager.keyname
 
             if "sshkeyname:" not in description:
@@ -300,7 +300,7 @@ class Space(Authorizables):
                     stackid=stackId,
                     description=description,
                     userdata=userdata)
-                    
+
             else:
                 self.client.api.cloudapi.machines.create(cloudspaceId=self.id,
                                                         name=name,
@@ -388,10 +388,10 @@ class Space(Authorizables):
         """
 
         # url of the (ipxe)[http://ipxe.org/scripting/] script.
-        ipxe = 'https://bootstrap.gig.tech/ipxe/{branch}/{zerotier_id}/organisation={organization}%20{dev_mode}'.format(
-             branch=branch, zerotier_id=zerotier_id, organization=organization, dev_mode='development' if dev_mode else '') 
+        ipxe = 'https://bootstrap.grid.tf/ipxe/{branch}/{zerotier_id}/organisation={organization}%20{dev_mode}'.format(
+             branch=branch, zerotier_id=zerotier_id, organization=organization, dev_mode='development' if dev_mode else '')
         userdata = 'ipxe: %s' % ipxe
-        
+
         machine = self.machine_create(
             name=name,
             sizeId=sizeId,
@@ -405,7 +405,7 @@ class Space(Authorizables):
 
         # get ZeroTier client, fail if client was not yet configured
         zerotier = j.clients.zerotier.get(zerotier_client, create=False)
-        limit_timeout = time.time() + timeout          
+        limit_timeout = time.time() + timeout
         candidates = []
 
         # wait for a new member to appear in ZeroTier
@@ -420,7 +420,7 @@ class Space(Authorizables):
         else:
             raise TimeoutError('Authorization request to ZeroTier network %s was not received' % zerotier_id)
 
-        # We can only identify VMs having the same physical IP address 
+        # We can only identify VMs having the same physical IP address
         # if requests arrive one by one.
         # Ensure only one unauthorized member from required IP address
         if len(candidates) != 1:
@@ -430,8 +430,8 @@ class Space(Authorizables):
 
         # accept VM to the ZeroTier network
         candidate.authorize()
-   
-        return  {'openvcloud': machine, 
+
+        return  {'openvcloud': machine,
                  'zerotier': candidate}
 
     @property

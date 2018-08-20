@@ -42,7 +42,7 @@ class VirtualboxClient(JSConfigBase):
             download = "https://bootstrap.grid.tf/iso/development/%s/development%20debug" % zerotierid
             dest = "/tmp/zos_%s.iso" % zerotierid
         else:
-            download = "https://bootstrap.gig.tech/uefi/development/0/development%20debug"
+            download = "https://bootstrap.grid.tf/uefi/development/0/development%20debug"
             dest = "/tmp/zos.iso"
         self._p.core.file_download(download, to=dest, overwrite=False)
         self.logger.info("iso downloaded ok.")

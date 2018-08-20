@@ -87,7 +87,7 @@ class ZeroOSClientFactory():
         return ip_pub, ipaddr_priv
 
     def zero_node_packetnet_install(self, packetnetClient, zerotierClient, project_name,
-                                    plan_type, location, server_name, zerotierNetworkID, ipxe_base='https://bootstrap.gig.tech/ipxe/master'):
+                                    plan_type, location, server_name, zerotierNetworkID, ipxe_base='https://bootstrap.grid.tf/ipxe/master'):
         """
         packetnetClient = j.clients.packetnet.get('TOKEN')
         zerotierClient = j.clients.zerotier.get(instance='main', data={'token': 'TOKEN'})

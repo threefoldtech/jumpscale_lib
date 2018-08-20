@@ -144,7 +144,7 @@ class PacketNet(JSConfigClient):
         will delete if it exists when remove=True, otherwise will check if it exists, if yes will return device object
         if not will create
 
-        example ipxeUrl = https://bootstrap.gig.tech/ipxe/zero-os-master-generic
+        example ipxeUrl = https://bootstrap.grid.tf/ipxe/zero-os-master-generic
         """
         self.logger.info("start device:%s plan:%s os:%s facility:%s wait:%s" % (hostname, plan, os, facility, wait))
         if ipxeUrl is None:
@@ -168,7 +168,7 @@ class PacketNet(JSConfigClient):
             raise RuntimeError("zerotierId needs to be specified")
         if zerotierAPI.strip() == "" or zerotierAPI is None:
             raise RuntimeError("zerotierAPI needs to be specified")
-        ipxeUrl = "http://unsecure.bootstrap.gig.tech/ipxe/{}/{}".format(branch, zerotierId)
+        ipxeUrl = "http://unsecure.bootstrap.grid.tf/ipxe/{}/{}".format(branch, zerotierId)
 
 
         if params is not None:
@@ -213,7 +213,7 @@ class PacketNet(JSConfigClient):
         will delete if it exists when remove=True, otherwise will check if it exists, if yes will return device object
         if not will create
 
-        example ipxeUrl = https://bootstrap.gig.tech/ipxe/zero-os-master-generic
+        example ipxeUrl = https://bootstrap.grid.tf/ipxe/zero-os-master-generic
         """
 
         if ipxeUrl is None:

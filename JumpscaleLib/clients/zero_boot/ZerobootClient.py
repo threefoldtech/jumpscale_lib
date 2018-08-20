@@ -42,7 +42,7 @@ class zero_bootClient(JSConfigBase):
         JSConfigBase.__init__(self, instance=instance,
                               data=data, parent=parent, template=TEMPLATE)
         self.sshclient = j.clients.ssh.get(
-            instance=self.config.data['sshclient_instance'],          
+            instance=self.config.data['sshclient_instance'],
             interactive=interactive)
         self.networks = Networks(self.sshclient)
         zerotier_instance = self.config.data['zerotier_instance']
@@ -241,7 +241,7 @@ class Host:
     def configure_ipxe_boot(self, lkrn_url, tftp_root='/opt/storage'):
         """[summary]
 
-        :param lkrn_url: url that points to a LKRN file to boot from that includes boot parameters. E.g.: https://bootstrap.gig.tech/krn/master/0/
+        :param lkrn_url: url that points to a LKRN file to boot from that includes boot parameters. E.g.: https://bootstrap.grid.tf/krn/master/0/
         :type boot_url: str
         :param tftp_root: tftp root location where pxe config are stored, defaults to '/opt/storage'
         :param tftp_root: str, optional
@@ -323,7 +323,7 @@ class Hosts:
                         host_data_json['hostname'] = data[2].replace("'", "")
                     elif 'ip' in data:
                         host_data_json['address'] = data[2].replace("'", "")
-                    
+
                 if netaddr.IPAddress(host_data_json['address']) in netaddr.IPNetwork(self.subnet):
                     host_data_json['sshclient'] = self.sshclient
                     host_data_json['index'] = index
