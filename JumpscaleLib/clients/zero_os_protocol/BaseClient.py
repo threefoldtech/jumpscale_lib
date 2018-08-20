@@ -111,7 +111,7 @@ class BaseClient():
         result = response.get()
         if result.state != 'SUCCESS':
             if not result.code:
-                result.code = 500
+                result._code = 500
             raise ResultError(msg='%s' % result.data, code=result.code)
 
         return result
