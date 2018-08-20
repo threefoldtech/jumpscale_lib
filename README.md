@@ -6,7 +6,7 @@
 
 See [docs](docs/README.md) for more details.
 
-## Installtion
+## Installation
 
 To use `lib` `Jumpscale` [core](https://github.com/threefoldtech/jumpscale_core) needs to be installed, since `lib` depends on it.
 Follow the instructions to install and setup `jumpscale`:
@@ -16,7 +16,7 @@ export JUMPSCALEBRANCH={BRANCH}
 curl https://raw.githubusercontent.com/threefoldtech/jumpscale_core/$JUMPSCALEBRANCH/install.sh?$RANDOM > /tmp/install_jumpscale.sh;bash /tmp/install_jumpscale.sh
 ```
 
-Or intalling using pip:
+Or install using pip:
 
 ```bash
 pip3 install git+https://github.com/Jumpscale/lib@{BRANCH}
