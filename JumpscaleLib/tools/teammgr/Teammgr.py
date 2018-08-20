@@ -63,7 +63,7 @@ class Person(JSBASE):
         self.path_fix()
         self.images_fix()
         self.toml_fix()
-        self.readme_fix()
+        # self.readme_fix()
 
     def add_to_do(self, path, todo):
         todo = todo.replace("_", "-")
