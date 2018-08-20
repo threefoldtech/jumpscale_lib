@@ -18,7 +18,7 @@ def _post_install(libname, libpath):
     # is already installed
     # j.sal.process.execute(
     #    "pip3 install 'git+https://github.com/spesmilo/electrum.git@3.2.2'")
-    j.tools.jsloader.generate()
+    j.tools.loader.generate()
 
 
 class install(_install):
