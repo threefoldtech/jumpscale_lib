@@ -39,7 +39,7 @@ class JSWebLoader(JSBASE):
 
     def register_blueprints(self, app, sockets, path=None):
         if path is None:
-            "%s/blueprints" % self.path
+            path = "%s/blueprints" % self.path
         if path not in sys.path:
             sys.path.append(path)
         apps = j.sal.fs.listDirsInDir(path, recursive=False, dirNameOnly=True,

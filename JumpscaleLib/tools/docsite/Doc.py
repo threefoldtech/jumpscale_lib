@@ -123,8 +123,32 @@ class Doc(JSBASE):
     @property
     def data(self):
         if self._data=={}:
-            self._data_default_process()    
-            print("data update from md")
+
+            #look for parts which are data
+            for part in self.parts_get(cat="data"):
+                for key,val in part.ddict.items():
+                    print("data update")
+                    if j.data.types.list.check(val):
+                        if key not in self._data:
+                            self._data[key] = []
+                        for subval in val:
+                            if subval not in self._data[key] and subval != "":
+                                self._data[key].append(subval)
+                    else:
+                        self._data[key] = val
+
+            #now we have all data from the document itself
+
+            keys = [part for part in self.docsite.data_default.keys()]
+            keys.sort(key=len)
+            for key in keys:
+                key = key.strip("/")
+                if self.path_rel.startswith(key):
+                    data = self.docsite.data_default[key]
+                    self._data_update(data)
+            print("data process doc")
+
+
         return self._data
 
     @property
@@ -161,6 +185,10 @@ class Doc(JSBASE):
             msg += str(e)
             self.error_raise(msg)
             res = msg
+
+        if "{{" in res:
+            #TODO:*1 rendering does not seem to be perfect ok
+            res = j.tools.jinja2.text_render(text=res, **self.data)
         return res
 
     @property
@@ -197,38 +225,11 @@ class Doc(JSBASE):
 
     def _data_update(self, data):
         res = {}
-        for key, val in self._data.parts():
-            if key in data:
-                valUpdate = copy.copy(data[key])
-                if j.data.types.list.check(val):
-                    if not j.data.types.list.check(valUpdate):
-                        raise j.exceptions.Input(
-                            message="(%s)\nerror in data structure, list should match list" %
-                            self, level=1, source="", tags="", msgpub="")
-                    for part in valUpdate:
-                        if part not in val and part != "":
-                            val.append(part)
-                    self._data[key] = val
-                else:
-                    self._data[key] = valUpdate
-        for key, valUpdate2 in data.parts():
+        for key, valUpdate2 in data.items():
             # check for the keys not in the self.data yet and add them, the others are done above
             if key not in self._data:
                 self._data[key] = copy.copy(valUpdate2)  # needs to be copy.copy otherwise we rewrite source later
 
-    def _data_default_process(self):
-        """
-        empty data, go over default data's and update in self.data
-        """
-        self._data = {}
-        keys = [part for part in self.docsite.data_default.keys()]
-        keys.sort(key=len)
-        for key in keys:
-            key = key.strip("/")
-            if self.path_rel.startswith(key):
-                data = self.docsite.data_default[key]
-                self._data_update(data)
-        print("data process doc")
 
     def link_get(self,filename=None,cat=None,nr=0,die=True):
         """
@@ -282,7 +283,7 @@ class Doc(JSBASE):
             if methodcode.strip()=="":
                 raise RuntimeError("method code cannot be empty")
 
-            cmd = "j.tools.markdowndocs.macros." + methodcode
+            cmd = "j.tools.docsites.macros." + methodcode
             # self.logger.debug(cmd)
             # macro = eval(cmd)
             try:
@@ -334,12 +335,6 @@ class Doc(JSBASE):
         @param text_to_find looks into the text
         """         
         return self.markdown_obj.parts_get(text_to_find=text_to_find,cat=cat)
-
-    def render(self,**args):
-        """
-        render markdown content using jinja2
-        """
-        return j.tools.jinja2.text_render(doc=self,**args)
 
     def __repr__(self):
         return "doc:%s:%s" % (self.name, self.path)

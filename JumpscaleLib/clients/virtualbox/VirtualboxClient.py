@@ -22,6 +22,8 @@ class VirtualboxClient(JSConfigBase):
         self.vms = {}
         self.disks = {}
 
+        self.logger_enable()
+
     def _cmd(self, cmd):
         cmd = "VBoxManage %s" % cmd
         self.logger.debug("vb cmd:%s" % cmd)
@@ -37,12 +39,13 @@ class VirtualboxClient(JSConfigBase):
         if zerotierinstance:
             ztcl = j.clients.zerotier.get(zerotierinstance)
             zerotierid = ztcl.config.data['networkid']
-            download = "https://bootstrap.gig.tech/iso/development/%s/development" % zerotierid
+            download = "https://bootstrap.grid.tf/iso/development/%s/development" % zerotierid
             dest = "/tmp/zos_%s.iso" % zerotierid
         else:
-            download = "https://bootstrap.gig.tech/iso/development/0/development"
+            download = "https://bootstrap.grid.tf/iso/development/0/development"
             dest = "/tmp/zos.iso" 
         self._p.core.file_download(download, to=dest, overwrite=False)
+        self.logger.info("iso downloaded ok.")
         return dest
 
     def vm_list(self):

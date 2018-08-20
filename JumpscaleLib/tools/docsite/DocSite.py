@@ -23,7 +23,7 @@ class DocSite(JSBASE):
     def __init__(self, path,name=""):
         JSBASE.__init__(self)
 
-        self.docgen = j.tools.markdowndocs
+        self.docgen = j.tools.docsites
         #init initial arguments
 
         config_path = j.sal.fs.joinPaths(path,"docs_config.toml")
@@ -77,7 +77,7 @@ class DocSite(JSBASE):
                 name = item["name"].strip().lower()
                 url = item["url"].strip()
                 path = j.clients.git.getContentPathFromURLorPath(url)
-                j.tools.markdowndocs.load(path,name=name)
+                j.tools.docsites.load(path,name=name)
 
         self.logger_enable()
         self.logger.level=1
@@ -103,7 +103,7 @@ class DocSite(JSBASE):
             if not gitpath:
                 return
             if gitpath not in self.docgen._git_repos:
-                self._git = j.tools.markdowndocs._git_get(gitpath)
+                self._git = j.tools.docsites._git_get(gitpath)
                 self.docgen._git_repos[gitpath] = self.git   
         return self._git      
 
@@ -147,7 +147,7 @@ class DocSite(JSBASE):
             raise j.exceptions.Input(message="cannot process toml/yaml on path:%s, needs to be dict." %
                                      path, level=1, source="", tags="", msgpub="")
 
-            # dont know why we do this? something todo probably with mustache and dots?
+        # dont know why we do this? something todo probably with mustache and dots?
         keys = [str(key) for key in data.keys()]
         for key in keys:
             if key.find(".") != -1:
@@ -354,7 +354,7 @@ class DocSite(JSBASE):
                 
         
         if die:
-            raise j.exceptions.Input(message="Cannot find doc with name:%s (nr docs found:%s)" % (name,nr), level=1, source="", tags="", msgpub="")
+            raise j.exceptions.Input(message="Cannot find doc with name:%s (nr docs found:%s)" % (name,nr), level=1)
         else:
             return None
 
@@ -509,7 +509,7 @@ class DocSite(JSBASE):
             out+=res.content            
         else:
             out+="----\n\n"
-            for key,val in j.tools.markdowndocs.docsites.items():
+            for key,val in j.tools.docsites.docsites.items():
                 if key.startswith("www"):
                     continue
                 out+="[%s](../%s/)\n"%(key,key)

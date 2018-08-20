@@ -11,6 +11,7 @@ class VirtualboxVM(JSBASE):
         self.name = name
         self._guid = ""
         self._zerotier = None
+        self.logger_enable()
 
     def _cmd(self, cmd):
         cmd = "VBoxManage %s" % cmd
@@ -33,6 +34,7 @@ class VirtualboxVM(JSBASE):
         p = "%s/%s.vbox-prev" % (self.path, self.name)
         if j.sal.fs.exists(p):
             j.sal.fs.remove(p)
+        self.logger.debug("delete done")
 
     @property
     def path(self):
@@ -56,13 +58,14 @@ class VirtualboxVM(JSBASE):
         path = "%s/%s.vdi" % (self.path, name)
         d = self.client.disk_get(path=path)
         d.create(size=size, reset=reset)
+        self.logger.debug("disk create done")
         return d
 
     def ping(self):
         pass
         # member_authorize
 
-    def create(self, reset=True, isopath="", datadisksize=10000, memory=1000, redis_port="4444"):
+    def create(self, reset=True, isopath="", datadisksize=10000, memory=1000, redis_port=4444):
         if reset:
             self.delete()
         cmd = "createvm --name %s  --ostype \"Linux_64\" --register" % (self.name)
@@ -89,9 +92,11 @@ class VirtualboxVM(JSBASE):
             cmd = "storageattach %s --storagectl \"IDE Controller\" --port 0 --device 0 --type dvddrive --medium %s" % (
             self.name, isopath)
             self._cmd(cmd)
+        self.logger.debug("create done")
 
     def start(self):
         self._cmd('startvm "%s"' % self.name)
+        self.logger.debug("start done")
 
     def stop(self):
         try:
@@ -99,6 +104,7 @@ class VirtualboxVM(JSBASE):
             self.logger.info("stopping vm : %s", self.name)
         except Exception as e:
             self.logger.info("vm : %s wasn't running" % self.name)
+        self.logger.debug("stop done")
 
     def __repr__(self):
         return "vm: %-20s%s" % (self.name, self.path)

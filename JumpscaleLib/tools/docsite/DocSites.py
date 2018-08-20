@@ -15,12 +15,12 @@ def loadmodule(name, path):
     mod = imp.load_source(name, path)
     return mod
 
-class MarkDownDocs(JSBASE):
+class DocSites(JSBASE):
     """
     """
 
     def __init__(self):
-        self.__jslocation__ = "j.tools.markdowndocs"
+        self.__jslocation__ = "j.tools.docsites"
         JSBASE.__init__(self)
         self.__imports__ = "toml"
         self._macroPathsDone = []
@@ -31,7 +31,7 @@ class MarkDownDocs(JSBASE):
             j.dirs.VARDIR, "markdowndocs_internal"))
 
         self.docsites = {}  # location in the outpath per site
-        self.outpath = j.sal.fs.joinPaths(j.dirs.VARDIR, "markdowndocs")
+        self.outpath = j.sal.fs.joinPaths(j.dirs.VARDIR, "docsite")
         self._git_repos = {}
         self.defs = {}
 
@@ -59,13 +59,13 @@ class MarkDownDocs(JSBASE):
             j.clients.redis.core_get()
             j.sal.fs.remove(self._macroCodepath)
             # load the default macro's
-            self.macros_load("https://github.com/Jumpscale/markdowndocs/tree/master/macros")
+            self.macros_load("https://github.com/Jumpscale/docsite/tree/master/macros")
             self._initOK = True
 
     def macros_load(self, pathOrUrl="https://github.com/threefoldtech/jumpscale_weblibs/tree/master/macros"):
         """
         @param pathOrUrl can be existing path or url
-        e.g. https://github.com/threefoldtech/jumpscale_lib/markdowndocs/tree/master/examples
+        e.g. https://github.com/threefoldtech/jumpscale_lib/docsite/tree/master/examples
         """
         self.logger.info("load macros")
         path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
@@ -195,13 +195,14 @@ class MarkDownDocs(JSBASE):
 
     def test(self):
         """
-        js_shell 'j.tools.markdowndocs.test()'
+        js_shell 'j.tools.docsites.test()'
         """
         url = "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/docsites_examples/test/"
         ds = self.load(url,name="test")
 
         doc = ds.doc_get("links")
 
+        #data comes from directories above
         assert doc.data == {'color': 'green', 'importance': 'high', 'somelist': ['a', 'b', 'c']}
 
         print (doc.images)
@@ -214,44 +215,25 @@ class MarkDownDocs(JSBASE):
 
         doc = ds.doc_get("include_test")
 
-        print ( doc.markdown_obj)
-
-        print("### PROCESSED MARKDOWN DOC")
-
-        print(doc.markdown_processed)
+        assert "## something to include" in doc.markdown
+        assert "COULD NOT INCLUDE:core9:macros (not found)" in doc.markdown  #the to be included document does not exist in this test
 
 
-        from IPython import embed;embed(colors='Linux')
+        doc = ds.doc_get("use_data")
+        md = str(doc.markdown)
+        assert "- a" in md
+        assert "- b" in md
+        assert "high" in md
+
+        doc = ds.doc_get("has_data") #combines data from subdirs as well as data from doc itself
+
+        assert doc.data == {'color': 'blue',
+                         'colors': ['blue', 'red'],
+                         'importance': 'somewhat',
+                         'somelist': ['a', 'b', 'c']}
+
+
+        print ("test of docsite done")
+
+
         
-
-    # def scan_load(self, pathOrUrl="", name=""):
-    #     """
-
-    #     js_shell 'j.tools.markdowndocs.load()'
-
-    #     will look for config.toml in $source/config.toml
-
-    #     @param pathOrUrl is the location where the markdown or html docs are which need to be processed
-    #         if not specified then will look for root of git repo and add docs
-    #         source = $gitrepoRootDir/docs
-
-    #         this can also be a git url e.g. https://github.com/Jumpscale/markdowndocs/tree/master/examples
-
-    #     """
-    #     if pathOrUrl == "":
-    #         pathOrUrl = j.sal.fs.getcwd()
-    #     if pathOrUrl in self._loaded:
-    #         return
-    #     self.logger.info("load:%s" % pathOrUrl)
-    #     self._loaded.append(pathOrUrl)
-    #     self._init()
-    #     if pathOrUrl == "":
-    #         path = j.sal.fs.getcwd()
-    #     else:
-    #         path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
-
-    #     for configPath in j.sal.fs.listFilesInDir(path, recursive=True, filter="docs_config.toml"):
-    #         if configPath not in self._configs:
-    #             self.logger.debug("found configPath for doc dir:%s" % configPath)
-    #             ds = DocSite(self, configPath=configPath, name=name)
-    #             self.docsites[ds.name] = ds
