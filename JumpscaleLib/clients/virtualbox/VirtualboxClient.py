@@ -18,7 +18,7 @@ class VirtualboxClient(JSConfigBase):
 
     def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigBase.__init__(self, instance=instance,
-                              data=data, parent=parent, template=TEMPLATE,interactive=interactive)
+                              data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         self.vms = {}
         self.disks = {}
 
@@ -39,11 +39,11 @@ class VirtualboxClient(JSConfigBase):
         if zerotierinstance:
             ztcl = j.clients.zerotier.get(zerotierinstance)
             zerotierid = ztcl.config.data['networkid']
-            download = "https://bootstrap.grid.tf/iso/development/%s/development" % zerotierid
+            download = "https://bootstrap.grid.tf/iso/development/%s/development%20debug" % zerotierid
             dest = "/tmp/zos_%s.iso" % zerotierid
         else:
-            download = "https://bootstrap.grid.tf/iso/development/0/development"
-            dest = "/tmp/zos.iso" 
+            download = "https://bootstrap.gig.tech/uefi/development/0/development%20debug"
+            dest = "/tmp/zos.iso"
         self._p.core.file_download(download, to=dest, overwrite=False)
         self.logger.info("iso downloaded ok.")
         return dest
@@ -72,27 +72,27 @@ class VirtualboxClient(JSConfigBase):
         return res
 
     def vdisk_list(self):
-        out=self._cmd("list hdds -l -s")
-        return self._parse(out,identifier="UUID:")
+        out = self._cmd("list hdds -l -s")
+        return self._parse(out, identifier="UUID:")
 
-    def _parse(self,txt,identifier="UUID:"):
-        res=[]
+    def _parse(self, txt, identifier="UUID:"):
+        res = []
         for l in txt.split("\n"):
             if l.startswith(identifier):
                 res.append({})
-                last=res[-1]
+                last = res[-1]
             if ":" in l:
-                pre, post=l.split(":", 1)
-                name=pre.strip().strip("'").strip()
-                last[name.lower().strip()]=post.strip().strip("'").strip()
-        return res                
+                pre, post = l.split(":", 1)
+                name = pre.strip().strip("'").strip()
+                last[name.lower().strip()] = post.strip().strip("'").strip()
+        return res
 
     def hostonlyifs_list(self):
-        out=self._cmd("list hostonlyifs -l -s")
-        return self._parse(out,dentifier="Name:")
+        out = self._cmd("list hostonlyifs -l -s")
+        return self._parse(out, identifier="Name:")
 
     def vdisks_get(self):
-        res=[]
+        res = []
         for disk in self.vdisk_list():
             res.append(self.disk_get(path=disk["location"]))
         return res
@@ -115,16 +115,16 @@ class VirtualboxClient(JSConfigBase):
 
     def vm_get(self, name):
         if name not in self.vms:
-            self.vms[name]=VirtualboxVM(name=name, client=self)
+            self.vms[name] = VirtualboxVM(name=name, client=self)
         return self.vms[name]
 
     def disk_get(self, path):
         if path not in self.disks:
-            self.disks[path]=VirtualboxDisk(client=self, path=path)
+            self.disks[path] = VirtualboxDisk(client=self, path=path)
         return self.disks[path]
 
     def vm_create(self, name="test", reset=True, isopath="", redis_port="4444"):
-        vm=self.vm_get(name)
+        vm = self.vm_get(name)
         vm.create(isopath=isopath, reset=reset, redis_port=redis_port)
         return vm
 
