@@ -72,7 +72,7 @@ class VirtualboxClient(JSConfigBase):
         return res
 
     def vdisk_list(self):
-        out = self._cmd("list hdds -l -s")
+        out = self._cmd("list hdds -l")
         return self._parse(out, identifier="UUID:")
 
     def _parse(self, txt, identifier="UUID:"):
