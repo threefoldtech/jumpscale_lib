@@ -9,5 +9,6 @@ class HTMLWebParts(JSBASE):
     def __init__(self, ):
         """
         """
+        JSBase.__init__(self)
         self.modules = {}
 

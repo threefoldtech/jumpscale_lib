@@ -8,11 +8,11 @@ from .HTMLPage import HTMLPage
 from .HTMLWebParts import HTMLWebParts
 from html2text import HTML2Text
 
-class HTMLFactory(JSBASE):
+class HTMLFactory:
+
+    __jslocation__ = "j.data.html"
 
     def __init__(self):
-        self.__jslocation__ = "j.data.html"
-        JSBASE.__init__(self)
         self.webparts = HTMLWebParts()
         self._webparts_done = []
 

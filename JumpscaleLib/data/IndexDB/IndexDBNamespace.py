@@ -8,12 +8,12 @@ JSBASE = j.application.jsbase_get_class()
 class IndexDBNamespace(JSBASE):
 
     def __init__(self, namespace):
+        JSBASE.__init__(self)
         self.db = j.clients.redis.core_get()
         self.namespace = namespace
 
         self.path = "%s/indexdb/%s/" % (j.dirs.VARDIR, self.namespace)
         j.sal.fs.createDir(self.path)
-        JSBASE.__init__(self)
 
     def _hsetKeys(self, name):
         if len(name) > 3:
