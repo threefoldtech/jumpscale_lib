@@ -52,7 +52,7 @@ class VirtualboxFactory(JSConfigBase):
         retries = 100
         self.logger.info("wait till Zero-os core redis on %s answers)." % redis_port)
         while retries:
-            r = j.clients.redis.get("localhost", redis_port, fromcache=False, ping=True, die=False)
+            r = j.clients.redis.get("localhost", redis_port, fromcache=False, ping=True, die=False, ssl=True)
             if r is not None:
                 self.logger.info("zero-os core redis answers")
                 break
