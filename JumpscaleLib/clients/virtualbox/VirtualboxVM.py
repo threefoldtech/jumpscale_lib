@@ -1,4 +1,5 @@
 from jumpscale import j
+import os
 
 JSBASE = j.application.jsbase_get_class()
 from .VirtualboxDisk import VirtualboxDisk
@@ -95,7 +96,17 @@ class VirtualboxVM(JSBASE):
         self.logger.debug("create done")
 
     def start(self):
-        self._cmd('startvm "%s"' % self.name)
+        args = ""
+
+        # if running linux and environment
+        # variable DISPLAY not set, we are probably
+        # on a headless server (no X running), let's run
+        # the virtual machine in background
+        if j.core.platformtype.myplatform.isLinux:
+            if not "DISPLAY" in os.environ:
+                args += "--type headless"
+
+        self._cmd('startvm %s "%s"' % (args, self.name))
         self.logger.debug("start done")
 
     def stop(self):
