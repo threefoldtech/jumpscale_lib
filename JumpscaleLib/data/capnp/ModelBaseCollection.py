@@ -34,6 +34,7 @@ class ModelBaseCollection(JSBASE):
         @param db: connection object to the key-value store
         @param indexDb: connection object to the key-value store used for indexing
         """
+        JSBASE.__init__(self)
 
         self.category = category
         self.namespace = namespace if namespace else category
@@ -75,7 +76,6 @@ class ModelBaseCollection(JSBASE):
         self.modelBaseClass = modelBaseClass if modelBaseClass else ModelBase
 
         self._init()
-        JSBASE.__init__(self)
 
     def _init(self):
         pass
