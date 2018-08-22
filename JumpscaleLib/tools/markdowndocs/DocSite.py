@@ -32,7 +32,7 @@ class DocSite(JSBASE):
             config_path=config_path2
             path = j.sal.fs.joinPaths(path,"docs")
         if j.sal.fs.exists(config_path):
-            self.config = j.data.serializer.toml.load(config_path)
+            self.config = j.data.serializers.toml.load(config_path)
         else:
             raise RuntimeError("cannot find docs_config in %s"%config_path)
 
@@ -137,9 +137,9 @@ class DocSite(JSBASE):
             return {}
 
         if ext == "toml":
-            data = j.data.serializer.toml.load(path)
+            data = j.data.serializers.toml.load(path)
         elif ext == "yaml":
-            data = j.data.serializer.yaml.load(path)
+            data = j.data.serializers.yaml.load(path)
         else:
             raise j.exceptions.Input(message="only toml & yaml supported", level=1, source="", tags="", msgpub="")
 
@@ -605,4 +605,5 @@ class DocSite(JSBASE):
     # def process(self):
     #     for key, doc in self.docs.items():
     #         doc.process()
-    #     self._processed = True    
+    #     self._processed = True
+
