@@ -197,7 +197,7 @@ class Doc(JSBASE):
 
     def _data_update(self, data):
         res = {}
-        for key, val in self._data.parts():
+        for key, val in self._data.items():
             if key in data:
                 valUpdate = copy.copy(data[key])
                 if j.data.types.list.check(val):
