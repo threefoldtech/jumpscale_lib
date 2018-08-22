@@ -66,18 +66,29 @@ class VirtualboxVM(JSBASE):
         pass
         # member_authorize
 
+    def hostnet(self, interface="vboxnet0"):
+        # VBoxManage hostonlyif create
+        rc, out, err = j.sal.process.execute("ip l sh dev %s" % interface)
+        if rc > 0:
+            self._cmd("hostonlyif create")
+
     def create(self, reset=True, isopath="", datadisksize=10000, memory=1000, redis_port=4444):
         if reset:
             self.delete()
+
+        self.hostnet("vboxnet0")
+
         cmd = "createvm --name %s  --ostype \"Linux_64\" --register" % (self.name)
         self._cmd(cmd)
         self._cmd2("--memory=%s " % (memory))
         self._cmd2("--ioapic on")
         self._cmd2("--boot1 dvd --boot2 disk")
         self._cmd2("--nic1 nat")
+        self._cmd2("--nic2 hostonly")
+        self._cmd2("--hostonlyadapter2 vboxnet0")
+        self._cmd2("--vrde on")
         if redis_port:
             self._cmd2('--natpf1 "redis,tcp,,%s,,6379"' % redis_port)
-
 
         if datadisksize > 0:
             disk = self.disk_create(size=datadisksize, reset=reset)

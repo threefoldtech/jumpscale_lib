@@ -15,8 +15,8 @@ class VirtualboxFactory(JSConfigBase):
         self.logger_enable()
 
     @property
-    def client(self):
-        return self.get("default", interactive=False)
+    def client(self, name="default"):
+        return self.get(name, interactive=False)
 
     def zero_os_get(self, name="test", zerotierinstance="", redis_port=4444):
         """
@@ -50,7 +50,7 @@ class VirtualboxFactory(JSConfigBase):
             raise RuntimeError("could not connect to VM port %s in 60 sec." % redis_port)
 
         retries = 100
-        self.logger.info("wait till Zero-os core redis on %s answers)." % redis_port)
+        self.logger.info("wait till zero-os core redis on %s answers." % redis_port)
         while retries:
             r = j.clients.redis.get("localhost", redis_port, fromcache=False, ping=True, die=False, ssl=True)
             if r is not None:
@@ -91,6 +91,28 @@ class VirtualboxFactory(JSConfigBase):
         self.logger.info("ping test OK")
 
         return redis_port
+
+    def zero_os_private_address(self, node):
+        # assume vboxnet0 use an 192.168.0.0/16 address
+        for nic in node.client.info.nic():
+            if len(nic['addrs']) == 0:
+                continue
+
+            if nic['addrs'][0]['addr'].startswith("192.168."):
+                return nic['addrs'][0]['addr'].split('/')[0]
+
+        return None
+
+    def zero_os_private(self, node):
+        self.logger.debug("resolving private virtualbox address")
+
+        private = j.clients.virtualbox.zero_os_private_address(node)
+        self.logger.info("virtualbox machine private address: %s" % private)
+
+        node = j.clients.zos.get('builder_private', data={'host': private})
+        node.client.ping()
+
+        return node
 
     def test(self, instance="test"):
         """
