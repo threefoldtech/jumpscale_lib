@@ -309,6 +309,6 @@ class PacketNetFactory(JSConfigFactory):
     def install(self):
         j.sal.process.execute("pip3 install packet-python")
 
-    def test(self):
+    def _noninteractive_test(self):
         from IPython import embed
         embed(colors='Linux')
