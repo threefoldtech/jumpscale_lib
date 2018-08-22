@@ -76,7 +76,7 @@ class ElectrumWallet:
 
     def _init_commands(self):
         """
-        Scans the electrum commands class and bind all its methods to this class
+        Scans the electrum commands class and binds all its methods to this class
         """
         execlude_cmd = lambda item: (not item[0].startswith('_')) and item[0] not in EXECLUDED_COMMANDS
         for name, func in filter(execlude_cmd, inspect.getmembers(self._commands, inspect.ismethod)):
