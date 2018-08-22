@@ -142,5 +142,5 @@ class CurrencyLayer(JSConfigBase):
         """
         js_shell 'j.clients.currencylayer.test()'
         """
-        self.logger.error(self.cur2usd)
+        self.logger.info(self.cur2usd)
         assert 'aed' in self.cur2usd
