@@ -17,7 +17,7 @@ from .models import DirModel
 from .models import DirCollection
 from .models import ACIModel
 from .models import ACICollection
-# from .FuseExample import FuseExample
+# from .FuseExample import FuseExample # test also disabled (see below)
 
 logger = j.logging.get('j.tools.flist.merger')
 
@@ -142,6 +142,9 @@ class FListFactory:
         return FlistMerger()
 
     def test_fuse(self):
+        """ DISABLED as FuseExample has been commented out
+        """
+        return
         TEST_DIR = "/tmp/mleegy"
         FuseExample(TEST_DIR)
 
