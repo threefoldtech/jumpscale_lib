@@ -211,7 +211,7 @@ class Doc(JSBASE):
                     self._data[key] = val
                 else:
                     self._data[key] = valUpdate
-        for key, valUpdate2 in data.parts():
+        for key, valUpdate2 in data.items():
             # check for the keys not in the self.data yet and add them, the others are done above
             if key not in self._data:
                 self._data[key] = copy.copy(valUpdate2)  # needs to be copy.copy otherwise we rewrite source later
