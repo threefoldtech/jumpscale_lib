@@ -34,17 +34,19 @@ First create a Github instance::
 
 ```toml
 !!!data
+
 title = "This one needs to be overwritten"
+
 ```
 
-1
-    2
-        3
-        4
-    5
-6
-7
-    8
+* 1
+    * 2
+        * 3 
+        * 4
+    * 5
+* 6
+* 7
+    * 8
 
 ```
 !!!include("ays9:events")
@@ -66,13 +68,14 @@ title = "some title in my macro"
 ```
 
 - [link test](https://github.com/jacquev6/PyGithub/issues)
-http://stackoverflow.com/questions/10625190/most-suitable-python-library-for-github-api-v3
-    http://stackoverflow.com/questions/12379637/django-social-auth-github-authentication
-        http://www.freebsd.org/cgi/cvsweb.cgi/ports/devel/py-pygithub/
-https://bugzilla.redhat.com/show_bug.cgi?id=910565
+* http://stackoverflow.com/questions/10625190/most-suitable-python-library-for-github-api-v3
+    * http://stackoverflow.com/questions/12379637/django-social-auth-github-authentication
+        * http://www.freebsd.org/cgi/cvsweb.cgi/ports/devel/py-pygithub/
+* https://bugzilla.redhat.com/show_bug.cgi?id=910565
 
 ```toml
 !!!data
+
 title = "TOML Example (v0.4.0)"
 
 #------------------------------ Comments ------------------------------
@@ -120,5 +123,6 @@ enabled = true
   [servers.beta]
   ip = "10.0.0.2"
   dc = "eqdc10"
+
 ```
 
