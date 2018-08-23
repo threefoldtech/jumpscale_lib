@@ -1,6 +1,3 @@
-
-from jumpscale import j
-
 from JumpscaleLib.data.capnp.ModelBase import ModelBase
 
 
@@ -12,7 +9,7 @@ class ACIModel(ModelBase):
     @property
     def key(self):
         if self._key == "":
-            self._key = j.data.hash.md5_string(self.getAsText())
+            self._key = self.j.data.hash.md5_string(self.getAsText())
         return self._key
 
     @property
