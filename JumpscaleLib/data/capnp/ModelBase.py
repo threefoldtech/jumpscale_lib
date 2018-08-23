@@ -8,6 +8,8 @@ class ModelBase(JSBASE):
 
     def __init__(self, key="", new=False, collection=None):
 
+        JSBASE.__init__(self)
+
         self._propnames = []
         self.collection = collection
         self._key = ""
@@ -39,7 +41,6 @@ class ModelBase(JSBASE):
         else:
             raise j.exceptions.Input(message="key cannot be empty when no new obj is asked for.",
                                      level=1, source="", tags="", msgpub="")
-        JSBASE.__init__(self)
 
     @property
     def key(self):
