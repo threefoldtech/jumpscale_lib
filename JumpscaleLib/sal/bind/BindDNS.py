@@ -15,10 +15,10 @@ class Zone(JSBASE):
     NON_ZONE_FILES = ['/etc/bind/named.conf.options']
 
     def __init__(self, domain, type, file):
+        JSBASE.__init__(self)
         self.domain = domain
         self.type = type
         self.file = file
-        JSBASE.__init__(self)
 
     def __repr__(self):
         return "{domain:%s, type:%s, file:%s}" % (self.domain, self.type, self.file)
