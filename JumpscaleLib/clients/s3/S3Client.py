@@ -1,5 +1,8 @@
 from jumpscale import j
 
+import urllib3
+import certifi
+
 try:
     # import boto3
     from minio import Minio
@@ -8,8 +11,6 @@ try:
         BucketAlreadyOwnedByYou,
         BucketAlreadyExists
     )
-    import urllib3
-    import certifi
 except:
     print("WARNING: s3 pip client (minio) not found please install do j.clients.s3.install()")
 
