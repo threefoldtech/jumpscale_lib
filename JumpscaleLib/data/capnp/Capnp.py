@@ -1,16 +1,10 @@
-from jumpscale import j
 import sys
 import capnp
 from collections import OrderedDict
 import capnp
 
-JSBASE = j.application.jsbase_get_class()
 
-
-class Tools(JSBASE):
-
-    def __init__(self):
-        JSBASE.__init__(self)
+class Tools:
 
     def listInDictCreation(self, listInDict, name, manipulateDef=None):
         """
@@ -40,21 +34,21 @@ class Tools(JSBASE):
         return listInDict
 
 
-class Capnp(JSBASE):
+class Capnp:
     """
     """
 
     __jslocation__ = "j.data.capnp"
 
     def __init__(self):
-        JSBASE.__init__(self)
         self.__imports__ = "pycapnp"
         self._schema_cache = {}
         self._capnpVarDir = self.j.sal.fs.joinPaths(self.j.dirs.VARDIR, "capnp")
         self.j.sal.fs.createDir(self._capnpVarDir)
         if self._capnpVarDir not in sys.path:
             sys.path.append(self._capnpVarDir)
-        self.tools = Tools()
+        self.tools = self._jsbase('Tools',
+                    ['JumpscaleLib.data.capnp.Capnp.Tools'])
 
     def getModelBaseClass(self):
         return self._jsbase('ModelBase',
