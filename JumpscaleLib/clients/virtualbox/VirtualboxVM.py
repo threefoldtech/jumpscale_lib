@@ -62,14 +62,15 @@ class VirtualboxVM(JSBASE):
         self.logger.debug("disk create done")
         return d
 
-    def ping(self):
-        pass
-        # member_authorize
+    # def ping(self):
+    #     pass
+    #     # member_authorize
 
     def hostnet(self, interface="vboxnet0"):
         # VBoxManage hostonlyif create
-        rc, out, err = j.sal.process.execute("ip l sh dev %s" % interface)
-        if rc > 0:
+        if not j.sal.nettools.isNicConnected(interface):
+        # rc, out, err = j.sal.process.execute("ip l sh dev %s" % interface)
+        # if rc > 0:
             self._cmd("hostonlyif create")
 
     def create(self, reset=True, isopath="", datadisksize=10000, memory=1000, redis_port=4444):
@@ -119,6 +120,33 @@ class VirtualboxVM(JSBASE):
 
         self._cmd('startvm %s "%s"' % (args, self.name))
         self.logger.debug("start done")
+
+    @property
+    def info(self):
+        out = self._cmd("showvminfo %s"%self.name)
+        tocheck={}
+        tocheck["memory size"]="mem"
+        tocheck["Number of CPUs"] = "nr_cpu"
+        tocheck["State"] = "state"
+        res={}
+        for line in out.split("\n"):
+            if line.strip()=="":
+                continue
+            line2=line.lower().strip()
+            for key,alias in tocheck.items():
+                if line.startswith(key):
+                    res[alias]=line2.split(":",1)[1].strip()
+        if "running" in res["state"]:
+            res["state"]="running"
+        else:
+            res["state"] = "down"
+        res["nr_cpu"]=int(res["nr_cpu"])
+        return res
+
+    @property
+    def is_running(self):
+        return self.info["state"]=="running"
+
 
     def stop(self):
         try:

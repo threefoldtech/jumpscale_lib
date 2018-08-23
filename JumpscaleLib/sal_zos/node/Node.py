@@ -335,7 +335,7 @@ class Node:
         """
         Get the parent mountpoint for a path
 
-        :param path: path you want to retreive the mountpoitn for
+        :param path: path you want to retrieve the mountpoint for
         :type path: str
         :rtype: str
         :return: path to the mountpoint

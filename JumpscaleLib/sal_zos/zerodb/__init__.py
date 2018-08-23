@@ -125,7 +125,7 @@ class Zerodbs(DynamicCollection):
 
 
     def create_and_mount_subvolume(self, storagepool, name, size):
-        fs = storagepool.create(name, size * (1024 ** 3))
+        fs = storagepool.create(name, size * (1024 ** 3)) #QUESTION: why this? *3
         mount_point = '/mnt/zdbs/{}'.format(name)
         self.node.client.filesystem.mkdir(mount_point)
         subvol = 'subvol={}'.format(fs.subvolume)

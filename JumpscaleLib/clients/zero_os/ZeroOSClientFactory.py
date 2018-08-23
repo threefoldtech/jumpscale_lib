@@ -25,6 +25,9 @@ class ZeroOSClientFactory():
             timeout = 120
 
         """
+        # print("ZOSCLIENT")
+        # print(data)
+        # print("***")
         cl = j.clients.zos_protocol.get(instance=instance, data=data, create=create, die=die, interactive=interactive, **kwargs)
         return j.sal_zos.node.get(cl)
 
