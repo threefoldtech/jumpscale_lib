@@ -411,8 +411,7 @@ class FListMetadata(JSBASE):
         """
         if not fpath.startswith(self.rootpath):
             raise j.exceptions.Input(
-                message="fpath:%s needs to start with rootpath:%s" %
-                (fpath, self.rootpath), level=1, source="", tags="", msgpub="")
+                message="fpath:%s needs to start with rootpath:%s" % (fpath, self.rootpath))
         relPath = fpath[len(self.rootpath):].strip("/")
         toHash = self.namespace + relPath
         self.logger.debug("> %s" % toHash)

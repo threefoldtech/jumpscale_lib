@@ -20,8 +20,8 @@ class Doc(JSBASE):
         if "/blogs/" in path or "/blog/" in path:
             self.cat = "blog"
         if "/defs/" in path or "/def/" in path:
-            self.cat = "def"            
-        
+            self.cat = "def"
+
         self.path_dir = j.sal.fs.getDirName(self.path)
         self.path_dir_rel = j.sal.fs.pathRemoveDirPart(self.path_dir, self.docsite.path).strip("/")
         self.name = self._clean(name)
@@ -30,8 +30,8 @@ class Doc(JSBASE):
         self.name_original = name
         self.path_rel = j.sal.fs.pathRemoveDirPart(path, self.docsite.path).strip("/")
 
-        name_dot =  "%s/%s" % (self.path_dir_rel,self.name)
-        self.name_dot_lower = self._clean("%s/%s" % (self.path_dir_rel,self.name))
+        name_dot = "%s/%s" % (self.path_dir_rel, self.name)
+        self.name_dot_lower = self._clean("%s/%s" % (self.path_dir_rel, self.name))
 
         # self.markdown_source = ""
         # self.show = True
@@ -45,7 +45,7 @@ class Doc(JSBASE):
 
         self._extension = None
 
-        self._data = {} #is all data, from parents as well, also from default data
+        self._data = {}  # is all data, from parents as well, also from default data
 
         self._md = None
 
@@ -56,27 +56,27 @@ class Doc(JSBASE):
         self._links_doc = []
         self._links = []
 
-    def _clean(self,name):
-        name=name.replace("/",".")
-        name=name.strip(".")
+    def _clean(self, name):
+        name = name.replace("/", ".")
+        name = name.strip(".")
         return j.data.text.strip_to_ascii_dense(name)
 
-    def _get_file_path_new(self,name="",extension="jpeg"):
-        nr=0
-        if name=="":
-            name=self.name
-        dest = "%s/%s.%s"%(self.path_dir,name,extension)
+    def _get_file_path_new(self, name="", extension="jpeg"):
+        nr = 0
+        if name == "":
+            name = self.name
+        dest = "%s/%s.%s" % (self.path_dir, name, extension)
         found = j.sal.fs.exists(dest)
         while found:
-            nr+=1
-            name = "%s_%s"%(name,nr) #to make sure we have a unique name
-            dest = "%s/%s.%s"%(self.path_dir,name,extension)
-            fname= "%s.%s"%(name,extension)
+            nr += 1
+            name = "%s_%s" % (name, nr)  # to make sure we have a unique name
+            dest = "%s/%s.%s" % (self.path_dir, name, extension)
+            fname = "%s.%s" % (name, extension)
             found = j.sal.fs.exists(dest) or fname in self.docsite._files
-        fname= "%s.%s"%(name,extension)
-        self.docsite._files[fname]=dest
-            
-        return name,dest
+        fname = "%s.%s" % (name, extension)
+        self.docsite._files[fname] = dest
+
+        return name, dest
 
     @property
     def links(self):
@@ -90,11 +90,10 @@ class Doc(JSBASE):
             self._links_process()
         return self._images
 
-
     @property
     def extension(self):
         if not self._extension:
-           self._extension = j.sal.fs.getFileExtension(self.path)        
+            self._extension = j.sal.fs.getFileExtension(self.path)
         return self._extension
 
     @property
@@ -105,15 +104,15 @@ class Doc(JSBASE):
             self.error_raise("Could not find title in doc.")
 
     def error_raise(self, msg):
-        return self.docsite.error_raise(msg, doc=self)            
+        return self.docsite.error_raise(msg, doc=self)
 
-    def htmlpage_get(self,htmlpage=None):
+    def htmlpage_get(self, htmlpage=None):
         if htmlpage is None:
             htmlpage = j.data.html.page_get()
         htmlpage = self.markdown_obj.htmlpage_get(htmlpage=htmlpage, webparts=True)
         return htmlpage
 
-    def html_get(self,htmlpage=None):
+    def html_get(self, htmlpage=None):
         return str(self.htmlpage_get(htmlpage=htmlpage))
 
     @property
@@ -122,27 +121,27 @@ class Doc(JSBASE):
 
     @property
     def data(self):
-        if self._data=={}:
-            self._data_default_process()    
+        if self._data == {}:
+            self._data_default_process()
             print("data update from md")
         return self._data
 
     @property
     def markdown_obj(self):
-        if not self._md :
+        if not self._md:
             try:
-                self._md = j.data.markdown.document_get(self.markdown_source)        
+                self._md = j.data.markdown.document_get(self.markdown_source)
             except Exception as e:
-                msg = "Could not parse markdown of %s"%self
+                msg = "Could not parse markdown of %s" % self
                 msg += str(e)
                 self.error_raise(msg)
-                self._md = j.data.markdown.document_get(content="```\n%s\n```\n"%msg)
+                self._md = j.data.markdown.document_get(content="```\n%s\n```\n" % msg)
         return self._md
 
     def header_get(self, level=1, nr=0):
         res = self.markdown_obj.parts_get(cat="header")
-        if len(res)<1:
-            return self.error_raise("header level:%s %s could not be found"%(level,nr))
+        if len(res) < 1:
+            return self.error_raise("header level:%s %s could not be found" % (level, nr))
         for header in res:
             if header.level == level:
                 return header
@@ -157,7 +156,7 @@ class Doc(JSBASE):
         try:
             res = self.markdown_obj.markdown
         except Exception as e:
-            msg = "Could not parse markdown of %s"%self
+            msg = "Could not parse markdown of %s" % self
             msg += str(e)
             self.error_raise(msg)
             res = msg
@@ -176,7 +175,8 @@ class Doc(JSBASE):
     def markdown_clean(self):
         # remove the code blocks (comments are already gone)
         print('markdown_clean')
-        from IPython import embed;embed(colors='Linux')
+        from IPython import embed
+        embed(colors='Linux')
         return None
 
     @property
@@ -203,8 +203,7 @@ class Doc(JSBASE):
                 if j.data.types.list.check(val):
                     if not j.data.types.list.check(valUpdate):
                         raise j.exceptions.Input(
-                            message="(%s)\nerror in data structure, list should match list" %
-                            self, level=1, source="", tags="", msgpub="")
+                            message="(%s)\nerror in data structure, list should match list" % self)
                     for part in valUpdate:
                         if part not in val and part != "":
                             val.append(part)
@@ -230,29 +229,29 @@ class Doc(JSBASE):
                 self._data_update(data)
         print("data process doc")
 
-    def link_get(self,filename=None,cat=None,nr=0,die=True):
+    def link_get(self, filename=None, cat=None, nr=0, die=True):
         """
         @param cat: image, doc,link, officedoc, imagelink  #doc is markdown
         """
         res = self.links_get(filename=filename, cat=cat)
-        if len(res)== 0:
+        if len(res) == 0:
             if die:
-                raise RuntimeError("could not find link %s:%s"%(filename,cat))
+                raise RuntimeError("could not find link %s:%s" % (filename, cat))
             else:
                 return None
-        if nr>len(res):
+        if nr > len(res):
             if die:
-                raise RuntimeError("could not find link %s:%s at position:%s"%(filename,cat,nr))
+                raise RuntimeError("could not find link %s:%s at position:%s" % (filename, cat, nr))
             else:
-                return None            
+                return None
         return res[nr]
 
-    def links_get(self,filename=None,cat=None):  
+    def links_get(self, filename=None, cat=None):
         self._links_process()
-        res=[]
+        res = []
         for link in self._links:
-            found=True
-            if cat is not None and not link.cat==cat:
+            found = True
+            if cat is not None and not link.cat == cat:
                 found = False
             if filename is not None and not link.filename.startswith(filename):
                 found = False
@@ -267,7 +266,7 @@ class Doc(JSBASE):
 
         for part in self.parts_get(cat="macro"):
             line = part.method
-            if line.strip()=="":
+            if line.strip() == "":
                 return self.docsite.error_raise("empty macro cannot be executed", doc=self)
             block = part.data
             methodcode = line.rstrip(", )")  # remove end )
@@ -279,19 +278,19 @@ class Doc(JSBASE):
                 methodcode += "(content=block)"
             methodcode = methodcode.replace(",,", ",")
 
-            if methodcode.strip()=="":
+            if methodcode.strip() == "":
                 raise RuntimeError("method code cannot be empty")
 
             cmd = "j.tools.markdowndocs.macros." + methodcode
             # self.logger.debug(cmd)
             # macro = eval(cmd)
             try:
-                macro = eval(cmd) #is the result of the macro which is returned
+                macro = eval(cmd)  # is the result of the macro which is returned
                 part.result = macro
-            except Exception as e:                
+            except Exception as e:
                 block = "```python\nERROR IN MACRO*** TODO: *1 ***\ncmd:\n%s\nERROR:\n%s\n```\n" % (cmd, e)
                 self.logger.error(block)
-                self.docsite.error_raise(block, doc=self)    
+                self.docsite.error_raise(block, doc=self)
                 part.result = block
 
     def _links_process(self):
@@ -299,7 +298,7 @@ class Doc(JSBASE):
         results in:
             self._images = []
             self._links_external = []
-            self._links_doc = 
+            self._links_doc =
         """
         if not self._links == []:
             return
@@ -308,42 +307,39 @@ class Doc(JSBASE):
         regex = "!*\[.*\] *\(.*\)"
         for match in j.data.regex.yieldRegexMatches(regex, self.markdown_source, flags=0):
             self.logger.debug("##:file:link:%s" % match)
-            link = Link(self,match.founditem)
-            if not link.link_source=="":
+            link = Link(self, match.founditem)
+            if not link.link_source == "":
                 self._links.append(link)
-    
 
-        #whats this one?
+        # whats this one?
         # regex = "src *= *\" */?static"
         # for match in j.data.regex.yieldRegexMatches(regex, self.markdown_source, flags=0):
         #     self._content = self.markdown_source.replace(match.foundpart, "src = \"/")
 
-    def part_get(self,text_to_find=None,cat=None,nr=0,die=True):
+    def part_get(self, text_to_find=None, cat=None, nr=0, die=True):
         """
         return part of markdown document e.g. header
 
         @param cat is: table, header, macro, code, comment1line, comment, block, data, image
         @param nr is the one you need to have 0 = first one which matches
         @param text_to_find looks into the text
-        """        
-        return self.markdown_obj.part_get(text_to_find=text_to_find,cat=cat, nr=nr,die=die)
+        """
+        return self.markdown_obj.part_get(text_to_find=text_to_find, cat=cat, nr=nr, die=die)
 
-    def parts_get(self,text_to_find=None,cat=None):  
+    def parts_get(self, text_to_find=None, cat=None):
         """
         @param cat is: table, header, macro, code, comment1line, comment, block, data, image
         @param text_to_find looks into the text
-        """         
-        return self.markdown_obj.parts_get(text_to_find=text_to_find,cat=cat)
+        """
+        return self.markdown_obj.parts_get(text_to_find=text_to_find, cat=cat)
 
-    def render(self,**args):
+    def render(self, **args):
         """
         render markdown content using jinja2
         """
-        return j.tools.jinja2.text_render(doc=self,**args)
+        return j.tools.jinja2.text_render(doc=self, **args)
 
     def __repr__(self):
         return "doc:%s:%s" % (self.name, self.path)
 
     __str__ = __repr__
-
-
