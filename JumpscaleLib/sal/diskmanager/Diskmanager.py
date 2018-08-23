@@ -77,7 +77,7 @@ class Diskmanager(JSBASE):
         if self._parted is None:
             try:
                 import parted
-            except BaseException:
+            except ImportError:
                 j.sal.ubuntu.apt_install("python3-parted")
                 import parted
 
