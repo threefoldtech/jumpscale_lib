@@ -74,7 +74,7 @@ class GDriveFile(JSBASE):
         name = self.gmd.get('name')
         if name == 'Untitled document' or name == 'Untitled spreadsheet' or name == 'Untitled presentation' or name == "":
             # name = j.data.time.getLocalTimeHR().replace(' ', '-').replace('/', '_')
-            raise j.exceptions.Input(message="Cannot process doc:%s" % self, level=1, source="", tags="", msgpub="")
+            raise j.exceptions.Input(message="Cannot process doc:%s" % self)
 
         if "<" in name and ">" in name:
             self.sid = name.split("<", 1)[1].split(">", 1)[0]
