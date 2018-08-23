@@ -66,9 +66,9 @@ class DocSite(JSBASE):
         self.links_verify = False
 
         self.error_file_path = self.path + "/errors.md"
-        
 
-    
+
+
         # check if there are dependencies
         if 'docs' in self.config:
             for item in self.config['docs']:
@@ -93,7 +93,7 @@ class DocSite(JSBASE):
                 name=name[0]
             else:
                 name="/".join(name) #not sure this is correct
-                
+
         return j.data.text.strip_to_ascii_dense(name)
 
     @property
@@ -104,8 +104,8 @@ class DocSite(JSBASE):
                 return
             if gitpath not in self.docgen._git_repos:
                 self._git = j.tools.docsites._git_get(gitpath)
-                self.docgen._git_repos[gitpath] = self.git   
-        return self._git      
+                self.docgen._git_repos[gitpath] = self.git
+        return self._git
 
     @property
     def urls(self):
@@ -141,11 +141,10 @@ class DocSite(JSBASE):
         elif ext == "yaml":
             data = j.data.serializer.yaml.load(path)
         else:
-            raise j.exceptions.Input(message="only toml & yaml supported", level=1, source="", tags="", msgpub="")
+            raise j.exceptions.Input(message="only toml & yaml supported")
 
         if not j.data.types.dict.check(data):
-            raise j.exceptions.Input(message="cannot process toml/yaml on path:%s, needs to be dict." %
-                                     path, level=1, source="", tags="", msgpub="")
+            raise j.exceptions.Input(message="cannot process toml/yaml on path:%s, needs to be dict." % path)
 
         # dont know why we do this? something todo probably with mustache and dots?
         keys = [str(key) for key in data.keys()]
@@ -230,14 +229,13 @@ class DocSite(JSBASE):
                 # #     self.htmlpages[base.lower()] = doc
                 # self.htmlpages[doc.name_dot_lower] = doc
             else:
-                
+
                 if ext in ["png", "jpg", "jpeg", "pdf", "docx", "doc", "xlsx", "xls", \
                             "ppt", "pptx", "mp4","css","js","mov"]:
                     self.logger.debug("found file:%s"%path)
                     base=self._clean(base)
                     if base in self._files:
-                        raise j.exceptions.Input(message="duplication file in %s,%s" %
-                                                 (self, path), level=1, source="", tags="", msgpub="")
+                        raise j.exceptions.Input(message="duplication file in %s,%s" %  (self, path))
                     self._files[base] = path
                 # else:
                 #     self.logger.debug("found other:%s"%path)
@@ -247,7 +245,7 @@ class DocSite(JSBASE):
                 #     if base not in self.others:
                 #         self.others[base.lower()] = doc
                 #     self.others[doc.name_dot_lower] = doc
-                    
+
 
         callbackFunctionDir(self.path, "")  # to make sure we use first data.yaml in root
 
@@ -286,8 +284,7 @@ class DocSite(JSBASE):
         if name in self.files:
             return self.files[name]
         if die:
-            raise j.exceptions.Input(message="Did not find file:%s in %s" %
-                                     (name, self), level=1, source="", tags="", msgpub="")
+            raise j.exceptions.Input(message="Did not find file:%s in %s" % (name, self))
         return None
 
     def html_get(self, name, cat="", die=True):
@@ -300,17 +297,17 @@ class DocSite(JSBASE):
             name = "/".join(name)
 
         name=name.replace("/",".").strip(".")
-        
+
         self.load()
         name =  self._clean(name)
 
 
         name = name.strip("/")
-        name = name.lower()            
+        name = name.lower()
 
         if name.endswith(".md"):
             name=name[:-3] #remove .md
-            
+
         if "/" in name:
             name = name.replace("/",".")
 
@@ -320,7 +317,7 @@ class DocSite(JSBASE):
         #let caching work
         if name in self.docs:
             if self.docs[name] is None and die:
-                raise j.exceptions.Input(message="Cannot find doc with name:%s" % name, level=1, source="", tags="", msgpub="")    
+                raise j.exceptions.Input(message="Cannot find doc with name:%s" % name)
             return self.docs[name]
 
         #build candidates to search
@@ -330,7 +327,7 @@ class DocSite(JSBASE):
         else:
             candidates.append(name+".readme")
 
-        if name.endswith("index"):            
+        if name.endswith("index"):
             nr,res = self._doc_get(name[:-5]+"readme",cat=cat)
             if nr==1:
                 return 1,res
@@ -339,7 +336,7 @@ class DocSite(JSBASE):
             candidates.append(name+".index")
 
         #look for $fulldirname.$dirname as name of doc
-        if "." in name: 
+        if "." in name:
             name0 = name+"."+name.split(".")[-1]
             candidates.append(name0)
 
@@ -351,18 +348,18 @@ class DocSite(JSBASE):
             if nr>1:
                 self.docs[name] = None #means is not there
                 break
-                
-        
+
+
         if die:
             raise j.exceptions.Input(message="Cannot find doc with name:%s (nr docs found:%s)" % (name,nr), level=1)
         else:
             return None
 
     def _doc_get(self, name, cat=""):
-        
+
         if name.lower().startswith("_sidebar_parent"):
             return 1,""
-    
+
         if name in self.docs:
             if cat is "":
                 return 1, self.docs[name]
@@ -371,7 +368,7 @@ class DocSite(JSBASE):
                     return 1, self.docs[name]
 
         else:
-                
+
             res = []
             for key,item in self.docs.items():
                 if item is None or item=="":
@@ -381,16 +378,16 @@ class DocSite(JSBASE):
             if len(res)>0:
                 return  len(res),self.docs[res[0]]
             else:
-                return 0,None  
+                return 0,None
 
     def sidebar_get(self, url, reset=False):
         """
         will calculate the sidebar, if not in url will return None
         """
-        self.load(reset=reset)        
+        self.load(reset=reset)
         if j.data.types.list.check(url):
             url = "/".join(url)
-        self.logger.debug("sidebar_get:%s"%url)            
+        self.logger.debug("sidebar_get:%s"%url)
         if url in self._sidebars:
             return self._sidebars[url]
 
@@ -416,11 +413,11 @@ class DocSite(JSBASE):
 
         if url in self.docs:
             self._sidebars[url_original] = self._sidebar_process(self.docs[url].markdown,url_original=url_original)
-            return self._sidebars[url_original]                        
-            
+            return self._sidebars[url_original]
+
         # #did not find the usual location, lets see if we can find the doc allone
         # url0=url.replace("_sidebar","").strip().strip(".").strip()
-        # if "." in url0: #means we can 
+        # if "." in url0: #means we can
         #     name=url0.split(".")[-1]
         #     doc=self.doc_get(name,die=False)
         #     if doc:
@@ -431,19 +428,19 @@ class DocSite(JSBASE):
 
         #lets look at parent
         print("need to find parent for sidebar")
-        
+
         if url0=="":
             print("url0 is empty for sidebar")
             # from IPython import embed;embed(colors='Linux')
             raise RuntimeError("cannot be empty")
-            
+
         newurl = ".".join(url0.split(".")[:-1])+"._sidebar"
         newurl = newurl.strip(".")
         return self.sidebar_get(newurl)
-        
+
 
     def _sidebar_process(self,c,url_original):
-        
+
         def clean(c):
             out= ""
             state = "start"
@@ -470,12 +467,12 @@ class DocSite(JSBASE):
         c=clean(c)
 
         out= "* [Home](/)\n"
-        
+
         for line in c.split("\n"):
             if line.strip()=="":
                 out+="\n\n"
                 continue
-            
+
             if "(" in line and ")" in line:
                 url = line.split("(",1)[1].split(")")[0]
             else:
@@ -491,11 +488,11 @@ class DocSite(JSBASE):
             if url:
                 doc = self.doc_get(url,die=False)
                 if doc is None:
-                    out+="%s* NOTFOUND:%s"%(pre,url)                    
+                    out+="%s* NOTFOUND:%s"%(pre,url)
                 else:
                     out+="%s* [%s](/%s)\n"%(pre,descr,doc.name_dot_lower.replace(".","/"))
 
-            else:                                    
+            else:
                 if not pre:
                     pre = "    "
                 if pre is not  "<<":
@@ -506,7 +503,7 @@ class DocSite(JSBASE):
 
         res = self.doc_get("_sidebar_parent",die=False)
         if res:
-            out+=res.content            
+            out+=res.content
         else:
             out+="----\n\n"
             for key,val in j.tools.docsites.docsites.items():
@@ -524,7 +521,7 @@ class DocSite(JSBASE):
         for key in keys:
             doc = self.doc_get(key,die=True)
             self.logger.info("verify:%s"%doc)
-            try:            
+            try:
                 doc.markdown #just to trigger the error checking
             except Exception as e:
                 msg="unknown error to get markdown for doc, error:\n%s"%e
@@ -582,12 +579,12 @@ class DocSite(JSBASE):
     #         if j.sal.fs.exists(j.sal.fs.joinPaths(self.path, "static"), followlinks=True):
     #             j.sal.fs.copyDirTree(j.sal.fs.joinPaths(self.path, "static"), j.sal.fs.joinPaths(self.outpath, "public"))
     #     else:
-    #         self.logger.info("no need to write:%s"%self.path)    
+    #         self.logger.info("no need to write:%s"%self.path)
 
 
     # def file_add(self, path):
     #     if not j.sal.fs.exists(path, followlinks=True):
-    #         raise j.exceptions.Input(message="Cannot find path:%s" % path, level=1, source="", tags="", msgpub="")
+    #         raise j.exceptions.Input(message="Cannot find path:%s" % path)
     #     base = j.sal.fs.getBaseName(path).lower()
     #     self.files[base] = path
 
@@ -605,4 +602,4 @@ class DocSite(JSBASE):
     # def process(self):
     #     for key, doc in self.docs.items():
     #         doc.process()
-    #     self._processed = True    
+    #     self._processed = True

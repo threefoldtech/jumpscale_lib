@@ -179,7 +179,7 @@ class BtrfsExtension(JSBASE):
 
         disksLine = " ".join([item.name for item in res])
         if len(res) == 0:
-            raise j.exceptions.Input(message="did not find disks to format", level=1, source="", tags="", msgpub="")
+            raise j.exceptions.Input(message="did not find disks to format")
         if len(res) == 1:
             if redundant:
                 raise j.exceptions.Input(
