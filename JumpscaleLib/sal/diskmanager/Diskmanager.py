@@ -44,6 +44,7 @@ class Disk(JSBASE):
     """
 
     def __init__(self):
+        JSBASE.__init__(self)
         self.id = 0
         self.path = ""
         self.size = ""
@@ -55,7 +56,6 @@ class Disk(JSBASE):
         self.model = ""
         self.description = ""
         self.type = []
-        JSBASE.__init__(self)
 
     def __str__(self):
         return "%s %s %s free:%s ssd:%s fs:%s model:%s id:%s" % (
@@ -66,10 +66,11 @@ class Disk(JSBASE):
 
 class Diskmanager(JSBASE):
 
+    __jslocation__ = "j.sal.diskmanager"
+
     def __init__(self):
-        self.__jslocation__ = "j.sal.diskmanager"
-        self._parted = None
         JSBASE.__init__(self)
+        self._parted = None
 
     @property
     def parted(self):
