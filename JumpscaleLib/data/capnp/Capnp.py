@@ -190,7 +190,7 @@ class Capnp(JSBASE):
                     ee = ee.split("failed:")[1]
                     msg += "capnperror:%s" % ee
                     self.logger.debug(msg)
-                    raise j.exceptions.Input(message=msg, level=1, source="", tags="", msgpub="")
+                    raise j.exceptions.Input(message=msg)
                 if str(e).find("Value type mismatch") != -1:
                     msg = "cannot create data for schema from arguments, value type mismatch.\n"
                     msg += "arguments:\n%s\n" % j.data.serializer.json.dumps(args, sort_keys=True, indent=True)
@@ -199,7 +199,7 @@ class Capnp(JSBASE):
                     ee = ee.split("failed:")[1]
                     msg += "capnperror:%s" % ee
                     self.logger.debug(msg)
-                    raise j.exceptions.Input(message=msg, level=1, source="", tags="", msgpub="")
+                    raise j.exceptions.Input(message=msg)
                 raise e
 
         return obj

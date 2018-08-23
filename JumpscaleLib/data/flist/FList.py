@@ -100,7 +100,7 @@ class FList:
         """
         if not fpath.startswith(self.rootpath):
             m = "fpath:%s needs to start with rootpath:%s" % (fpath, self.rootpath)
-            raise j.exceptions.Input(message=m, level=1, source="", tags="", msgpub="")
+            raise j.exceptions.Input(message=m)
 
         relPath = fpath[len(self.rootpath):].strip("/")
         toHash = self.namespace + relPath
@@ -119,7 +119,7 @@ class FList:
         """
         if not j.sal.fs.exists(self.rootpath, followlinks=True):
             m = "Rootpath: '%s' needs to exist" % self.rootpath
-            raise j.exceptions.Input(message=m, level=1, source="", tags="", msgpub="")
+            raise j.exceptions.Input(message=m)
 
         # compiling regex for exclusion
         _excludes = []
@@ -132,7 +132,7 @@ class FList:
 
         if not j.sal.fs.exists(path, followlinks=True):
             m = "Could not find path:%s"
-            raise j.exceptions.Input(message=m % path, level=1, source="", tags="", msgpub="")
+            raise j.exceptions.Input(message=m % path)
 
         #
         # reading the target filesystem and building root

@@ -15,6 +15,7 @@ def loadmodule(name, path):
     mod = imp.load_source(name, path)
     return mod
 
+
 class DocSites(JSBASE):
     """
     """
@@ -48,7 +49,7 @@ class DocSites(JSBASE):
             try:
                 gc = j.clients.git.get(path)
             except Exception as e:
-                print("cannot load git:%s"%path)
+                print("cannot load git:%s" % path)
                 return
             self._git_repos[path] = gc
         return self._git_repos[path]
@@ -102,7 +103,7 @@ class DocSites(JSBASE):
         ds = DocSite(path=path, name=name)
         self.docsites[ds.name] = ds
         return self.docsites[ds.name]
-        
+
     def git_update(self):
         if self.docsites == {}:
             self.load()
@@ -114,7 +115,8 @@ class DocSites(JSBASE):
         """
         key = "%s_%s" % (namespace, name)
 
-        import pudb; pudb.set_trace()       
+        import pudb
+        pudb.set_trace()
 
         # we need the cache for performance reasons
         if not key in self._pointer_cache:
@@ -139,7 +141,7 @@ class DocSites(JSBASE):
 
             res = self._items_get(name=name, ext=ext)
 
-            if (first and len(res)==0) or not len(res) == 1:
+            if (first and len(res) == 0) or not len(res) == 1:
                 if die:
                     raise j.exceptions.Input(
                         message="Cannot find item with name:%s in namespace:'%s'" % (name, namespace))
@@ -188,8 +190,7 @@ class DocSites(JSBASE):
         if name in self.docsites:
             return self.docsites[name]
         if die:
-            raise j.exceptions.Input(message="Cannot find docsite with name:%s" %
-                                     name, level=1, source="", tags="", msgpub="")
+            raise j.exceptions.Input(message="Cannot find docsite with name:%s" % name)
         else:
             return None
 
@@ -198,26 +199,25 @@ class DocSites(JSBASE):
         js_shell 'j.tools.docsites.test()'
         """
         url = "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/docsites_examples/test/"
-        ds = self.load(url,name="test")
+        ds = self.load(url, name="test")
 
         doc = ds.doc_get("links")
 
-        #data comes from directories above
+        # data comes from directories above
         assert doc.data == {'color': 'green', 'importance': 'high', 'somelist': ['a', 'b', 'c']}
 
-        print (doc.images)
+        print(doc.images)
 
-        for link  in doc.links:
+        for link in doc.links:
             print(link)
 
-        assert str(doc.link_get(cat="image",nr=0)) == 'link:image:unsplash.jpeg'
-        assert str(doc.link_get(cat="link",nr=0)) == 'link:link:https://unsplash.com/'
+        assert str(doc.link_get(cat="image", nr=0)) == 'link:image:unsplash.jpeg'
+        assert str(doc.link_get(cat="link", nr=0)) == 'link:link:https://unsplash.com/'
 
         doc = ds.doc_get("include_test")
 
         assert "## something to include" in doc.markdown
-        assert "COULD NOT INCLUDE:core9:macros (not found)" in doc.markdown  #the to be included document does not exist in this test
-
+        assert "COULD NOT INCLUDE:core9:macros (not found)" in doc.markdown  # the to be included document does not exist in this test
 
         doc = ds.doc_get("use_data")
         md = str(doc.markdown)
@@ -225,15 +225,11 @@ class DocSites(JSBASE):
         assert "- b" in md
         assert "high" in md
 
-        doc = ds.doc_get("has_data") #combines data from subdirs as well as data from doc itself
+        doc = ds.doc_get("has_data")  # combines data from subdirs as well as data from doc itself
 
         assert doc.data == {'color': 'blue',
-                         'colors': ['blue', 'red'],
-                         'importance': 'somewhat',
-                         'somelist': ['a', 'b', 'c']}
+                            'colors': ['blue', 'red'],
+                            'importance': 'somewhat',
+                            'somelist': ['a', 'b', 'c']}
 
-
-        print ("test of docsite done")
-
-
-        
+        print("test of docsite done")
