@@ -107,7 +107,7 @@ class Capnp:
             namespace=namespace,
             db=db,
             indexDb=indexDb,
-            modelBaseClass=self.getModelBaseClass())
+            modelBaseClass=modelBaseClass)
 
     def getId(self, schemaInText):
         id = [item for item in schemaInText.split(
