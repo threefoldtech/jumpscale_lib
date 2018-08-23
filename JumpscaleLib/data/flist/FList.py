@@ -16,9 +16,6 @@ import capnp
 from . import model_capnp as ModelCapnp
 import base64
 
-from .models import DirModel
-from .models import DirCollection
-
 from path import Path
 
 
