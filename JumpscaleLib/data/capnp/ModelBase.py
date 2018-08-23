@@ -152,7 +152,7 @@ class ModelBase:
     @property
     def dictJson(self):
         ddict2 = OrderedDict(self.dictFiltered)
-        return self.j.data.serializer.json.dumps(ddict2, sort_keys=True, indent=True)
+        return self.j.data.serializers.json.dumps(ddict2, sort_keys=True, indent=True)
 
     def raiseError(self, msg):
         msg = "Error in dbobj:%s (%s)\n%s" % (self._category, self.key, msg)
