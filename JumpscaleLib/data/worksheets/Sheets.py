@@ -138,5 +138,7 @@ class Sheets(JSBASE):
         r2=s.addRow("amount",groupname="price")
         r2.text2row("0:100mEGP,10:1k EUR", interpolate=True)
 
-
-        from IPython import embed;embed(colors='Linux')
+        # unit tests need to be non-interactive.  if an interactive
+        # version is needed, make a test function named _interactive_test
+        # which calls the other function
+        #from IPython import embed;embed(colors='Linux')
