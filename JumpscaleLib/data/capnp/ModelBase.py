@@ -1,14 +1,9 @@
-from jumpscale import j
 from collections import OrderedDict
 
-JSBASE = j.application.jsbase_get_class()
 
-
-class ModelBase(JSBASE):
+class ModelBase:
 
     def __init__(self, key="", new=False, collection=None):
-
-        JSBASE.__init__(self)
 
         self._propnames = []
         self.collection = collection
@@ -18,12 +13,12 @@ class ModelBase(JSBASE):
         self.changed = False
         self._subobjects = {}
 
-        if j.data.types.bytes.check(key):
+        if self.j.data.types.bytes.check(key):
             key = key.decode()
 
         # if key != "":
         #     if len(key) != 16 and len(key) != 32 and len(key) != 64:
-        #         raise j.exceptions.Input("Key needs to be length 16,32,64")
+        #         raise self.j.exceptions.Input("Key needs to be length 16,32,64")
 
         if new:
             self.dbobj = self.collection.capnp_schema.new_message()
@@ -36,10 +31,10 @@ class ModelBase(JSBASE):
                 self.load(key=key)
                 self._key = key
             else:
-                raise j.exceptions.Input(message="Cannot find object:%s!%s" % (
+                raise self.j.exceptions.Input(message="Cannot find object:%s!%s" % (
                     self.collection.category, key))
         else:
-            raise j.exceptions.Input(message="key cannot be empty when no new obj is asked for.",
+            raise self.j.exceptions.Input(message="key cannot be empty when no new obj is asked for.",
                                      level=1, source="", tags="", msgpub="")
 
     @property
@@ -50,7 +45,7 @@ class ModelBase(JSBASE):
 
     @key.setter
     def key(self, value):
-        if j.data.types.bytes.check(value):
+        if self.j.data.types.bytes.check(value):
             value = value.decode()
         self._key = value
 
@@ -63,7 +58,7 @@ class ModelBase(JSBASE):
 
     def _generate_key(self):
         # return a unique key to be used in db (std the key but can be overriden)
-        return j.data.hash.md5_string(j.data.idgenerator.generateGUID())
+        return self.j.data.hash.md5_string(self.j.data.idgenerator.generateGUID())
 
     def index(self):
         # put indexes in db as specified
@@ -94,7 +89,7 @@ class ModelBase(JSBASE):
     #         print(3)
     #         #
     #     else:
-    #         raise j.exceptions.Input(message="Cannot set attr:%s in %s" %
+    #         raise self.j.exceptions.Input(message="Cannot set attr:%s in %s" %
     #                                  (attr, self))
 
     # def __dir__(self):
@@ -157,11 +152,11 @@ class ModelBase(JSBASE):
     @property
     def dictJson(self):
         ddict2 = OrderedDict(self.dictFiltered)
-        return j.data.serializer.json.dumps(ddict2, sort_keys=True, indent=True)
+        return self.j.data.serializer.json.dumps(ddict2, sort_keys=True, indent=True)
 
     def raiseError(self, msg):
         msg = "Error in dbobj:%s (%s)\n%s" % (self._category, self.key, msg)
-        raise j.exceptions.Input(message=msg)
+        raise self.j.exceptions.Input(message=msg)
 
     def updateSubItem(self, name, keys, data):
         keys = keys or []

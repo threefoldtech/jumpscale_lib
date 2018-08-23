@@ -1,6 +1,4 @@
-from jumpscale import j
 from collections import OrderedDict
-JSBASE = j.application.jsbase_get_class()
 
 
 def getText(text):
@@ -11,7 +9,7 @@ def getInt(nr):
     return int(nr)
 
 
-class ModelBaseCollection(JSBASE):
+class ModelBaseCollection:
     """
     This class represent a collection
     It's used to list/find/create new Instance of Model objects
@@ -34,7 +32,6 @@ class ModelBaseCollection(JSBASE):
         @param db: connection object to the key-value store
         @param indexDb: connection object to the key-value store used for indexing
         """
-        JSBASE.__init__(self)
 
         self.category = category
         self.namespace = namespace if namespace else category
@@ -69,11 +66,14 @@ class ModelBaseCollection(JSBASE):
 
                 self.__dict__["list_%s_constructor" % field.proto.name] = self._listConstructors[field.proto.name]
 
-        self._db = db if db else j.data.kvs.getMemoryStore(name=self.namespace, namespace=self.namespace)
+        self._db = db if db else self.j.data.kvs.getMemoryStore(name=self.namespace, namespace=self.namespace)
         # for now we do index same as database
         self._index = indexDb if indexDb else self._db
 
-        self.modelBaseClass = modelBaseClass if modelBaseClass else ModelBase
+        if modelBaseClass is None:
+            modelBaseClass = self._jsbase('ModelBase',
+                            ['JumpscaleLib.data.capnp.ModelBase.ModelBase'])
+        self.modelBaseClass = modelBaseClass
 
         self._init()
 
@@ -101,9 +101,9 @@ class ModelBaseCollection(JSBASE):
         """
         for name in names:
             if name in args:
-                if j.data.types.string.check(args[name]) and "," in args[name]:
+                if self.j.data.types.string.check(args[name]) and "," in args[name]:
                     args[name] = [item.strip().strip("'").strip() for item in args[name].split(",")]
-                elif not j.data.types.list.check(args[name]):
+                elif not self.j.data.types.list.check(args[name]):
                     args[name] = [args[name]]
                 args[name] = ",".join(["'%s'" % item for item in args[name]])
         return args
@@ -127,7 +127,7 @@ class ModelBaseCollection(JSBASE):
                 if autoCreate:
                     return self.new(key=key)
                 else:
-                    raise j.exceptions.Input(message="Could not find key:%s for model:%s" % (key, self.category))
+                    raise self.j.exceptions.Input(message="Could not find key:%s for model:%s" % (key, self.category))
         else:
 
             model = self.modelBaseClass(
