@@ -51,9 +51,9 @@ class FListFactory:
                 j.dirs.TMPDIR)
 
         DM = self._jsbase('DirModel',
-            ['JumpscaleLib.data.flist.models.DirModel.DirModel'])
+            ['JumpscaleLib.data.flist.models.DirModel'])
         DC = self._jsbase('DirCollection',
-            ['JumpscaleLib.data.flist.models.DirCollection.DirCollection'])
+            ['JumpscaleLib.data.flist.models.DirCollection'])
         collection = j.data.capnp.getModelCollection(
             schema.Dir,
             category="flist_%s" %
@@ -79,9 +79,9 @@ class FListFactory:
                 j.dirs.TMPDIR)
 
         DM = self._jsbase('ACIModel',
-            ['JumpscaleLib.data.flist.models.ACIModel.ACIModel'])
+            ['JumpscaleLib.data.flist.models.ACIModel'])
         DC = self._jsbase('ACICollection',
-            ['JumpscaleLib.data.flist.models.ACICollection.ACICollection'])
+            ['JumpscaleLib.data.flist.models.ACICollection'])
         collection = j.data.capnp.getModelCollection(
             schema.ACI,
             category="ACI_%s" %

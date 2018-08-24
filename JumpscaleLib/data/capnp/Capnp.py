@@ -48,19 +48,19 @@ class Capnp:
         if self._capnpVarDir not in sys.path:
             sys.path.append(self._capnpVarDir)
         self.tools = self._jsbase('Tools',
-                    ['JumpscaleLib.data.capnp.Capnp.Tools'])
+                    ['JumpscaleLib.data.capnp.Capnp'])
 
     def getModelBaseClass(self):
         return self._jsbase('ModelBase',
-                        ['JumpscaleLib.data.capnp.ModelBase.ModelBase'])
+                        ['JumpscaleLib.data.capnp.ModelBase'])
 
     def getModelBaseClassWithData(self):
         return self._jsbase('ModelBaseData',
-            ['JumpscaleLib.data.capnp.ModelBaseData.ModelBaseData'])
+            ['JumpscaleLib.data.capnp.ModelBaseData'])
 
     def getModelBaseClassCollection(self):
         return self._jsbase('ModelBaseCollection',
-            ['JumpscaleLib.data.capnp.ModelBaseCollection.ModelBaseCollection'])
+            ['JumpscaleLib.data.capnp.ModelBaseCollection'])
 
     def getModelCollection(
             self,

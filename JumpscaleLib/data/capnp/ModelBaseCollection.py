@@ -72,7 +72,7 @@ class ModelBaseCollection:
 
         if modelBaseClass is None:
             modelBaseClass = self._jsbase('ModelBase',
-                            ['JumpscaleLib.data.capnp.ModelBase.ModelBase'])
+                            ['JumpscaleLib.data.capnp.ModelBase'])
         self.modelBaseClass = modelBaseClass
 
         self._init()
