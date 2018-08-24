@@ -8,6 +8,11 @@ import os
 # libjpeg-dev/zesty
 
 def _post_install(libname, libpath):
+
+    if "PBASE" in os.environ:
+        #this means we are in build directory, no need to do following
+        return
+
     from jumpscale import j
     # add this plugin to the config
     c = j.core.state.configGet('plugins', defval={})
@@ -105,6 +110,6 @@ setup(
     cmdclass={
         'install': install,
         'develop': develop,
-        'developement': develop,
+        'development': develop,
     },
 )

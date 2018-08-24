@@ -44,6 +44,9 @@ class Node:
         self.capacity = Capacity(self)
         self.client = client
 
+    def ping(self):
+        return self.client.ping()
+
     @property
     def name(self):
         nics = self.client.info.nic()

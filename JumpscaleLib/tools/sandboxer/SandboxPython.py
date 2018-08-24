@@ -143,8 +143,8 @@ class SandboxPython(JSBASE):
 
         self._zip(dest=dest)
 
-        j.tools.sandboxer.sandboxLibs("%s/bin" % self.PACKAGEDIR, "%s/lib", True)
-        j.tools.sandboxer.sandboxLibs("%s/lib" % self.PACKAGEDIR, "%s/lib", True)
+        j.tools.sandboxer.libs_sandbox("%s/bin" % self.PACKAGEDIR, "%s/lib", True)
+        j.tools.sandboxer.libs_sandbox("%s/lib" % self.PACKAGEDIR, "%s/lib", True)
 
         print("to test do:")
         print("'cd %s;source env.sh;jumpscale" % self.PACKAGEDIR)

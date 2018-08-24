@@ -3,44 +3,10 @@ from jumpscale import j
 import re
 import os
 from .SandboxPython import SandboxPython
+from .Dep import Dep
 
 JSBASE = j.application.jsbase_get_class()
 
-class Dep(JSBASE):
-
-    def __init__(self, name, path):
-        JSBASE.__init__(self)
-        self.name = name
-        self.path = path
-        if j.sal.fs.isLink(self.path):
-            link = j.sal.fs.readLink(self.path)
-            if j.sal.fs.exists(path=link):
-                self.path = link
-                return
-            else:
-                base = j.sal.fs.getDirName(self.path)
-                potpath = j.sal.fs.joinPaths(base, link)
-                if j.sal.fs.exists(potpath):
-                    self.path = potpath
-                    return
-        else:
-            if j.sal.fs.exists(self.path):
-                return
-        raise j.exceptions.RuntimeError("could not find lib (dep): '%s'" % self.path)
-
-    def copyTo(self, path):
-        dest = j.sal.fs.joinPaths(path, self.name)
-        dest = dest.replace("//", "/")
-        j.sal.fs.createDir(j.sal.fs.getDirName(dest))
-        if dest != self.path:  # don't copy to myself
-            # self.logger.debug("DEPCOPY: %s %s" % (self.path, dest))
-            if not j.sal.fs.exists(dest):
-                j.sal.fs.copyFile(self.path, dest)
-
-    def __str__(self):
-        return "%-40s %s" % (self.name, self.path)
-
-    __repr__ = __str__
 
 class Sandboxer(JSBASE):
     """
@@ -102,66 +68,8 @@ class Sandboxer(JSBASE):
         return result
 
 
-    # def sandboxBinWithPrefab(self, prefab, bin_path, sandbox_dir):
-    #     """
-    #     Sandbox a binary located in `bin_path` into a sandbox / filesystem 
 
-    #     @param prefab Prefab: prefab either local or remote on a machine.
-    #     @param bin_path string: binary full path to sandbox.
-    #     @param sandbox_dir string: where to create the sandbox. 
-
-    #     """
-
-    #     prefab.core.dir_remove(sandbox_dir)
-    #     prefab.core.dir_ensure(sandbox_dir)
-
-    #     LIBSDIR = j.sal.fs.joinPaths(sandbox_dir, 'lib')
-    #     BINDIR = j.sal.fs.joinPaths(sandbox_dir, 'bin')
-    #     prefab.core.dir_ensure(LIBSDIR)
-    #     prefab.core.dir_ensure(BINDIR)
-    #     prefab.core.dir_ensure(j.sal.fs.joinPaths(sandbox_dir, 'usr'))
-
-
-    #     for directory in ['opt', 'var', 'tmp', 'root']:
-    #         prefab.core.dir_ensure(j.sal.fs.joinPaths(sandbox_dir, directory))
-
-    #     # copy needed binaries and required libs
-    #     prefab.core.execute_bash("""js_shell 'j.tools.sandboxer.sandboxLibs("{}", dest="{}")'""".format(bin_path, LIBSDIR))
-
-    #     prefab.core.file_copy(bin_path, BINDIR+'/')
-
-    # def sandboxBinLocal(self, bin_path, sandbox_dir):
-    #     """
-    #     Sandbox a binary located in `bin_path` into a sandbox / filesystem 
-
-    #     @param bin_path string: binary full path to sandbox.
-    #     @param sandbox_dir string: where to create the sandbox. 
-
-    #     """
-    #     try:
-    #         j.sal.fs.removeDir(sandbox_dir)
-    #     except Exception as e:
-    #         pass
-
-        
-    #     j.sal.fs.createDir(sandbox_dir)
-
-    #     LIBSDIR = j.sal.fs.joinPaths(sandbox_dir, 'lib')
-    #     BINDIR = j.sal.fs.joinPaths(sandbox_dir, 'bin')
-    #     j.sal.fs.createDir(LIBSDIR)
-    #     j.sal.fs.createDir(BINDIR)
-    #     j.sal.fs.createDir(j.sal.fs.joinPaths(sandbox_dir, 'usr'))
-
-    #     for directory in ['opt', 'var', 'tmp', 'root']:
-    #         j.sal.fs.createDir(j.sal.fs.joinPaths(sandbox_dir, directory))
-
-    #     # copy needed binaries and required libs
-    #     j.tools.sandboxer.sandboxLibs(bin_path, dest=LIBSDIR)
-    #     j.sal.fs.copyFile(bin_path, BINDIR+'/')
-
-
-
-    def findLibs(self, path):
+    def _libs_find(self, path):
         """
         not needed to use manually, is basically ldd
         """
@@ -170,7 +78,7 @@ class Sandboxer(JSBASE):
         result[name] = Dep(name, path)
         return result
 
-    def sandboxLibs(self, path, dest=None, recursive=False):
+    def libs_sandbox(self, path, dest=None, recursive=False):
         """
         find binaries on path and look for supporting libs, copy the libs to dest
         default dest = '%s/bin/'%j.dirs.JSBASEDIR
@@ -183,14 +91,14 @@ class Sandboxer(JSBASE):
             # do all files in dir
             for item in j.sal.fs.listFilesInDir(path, recursive=False, followSymlinks=True, listSymlinks=False):
                 if (j.sal.fs.isFile(item) and j.sal.fs.isExecutable(item)) or j.sal.fs.getFileExtension(item) == "so":
-                    self.sandboxLibs(item, dest, recursive=False)
+                    self.libs_sandbox(item, dest, recursive=False)
             if recursive:
                 for item in j.sal.fs.listFilesAndDirsInDir(path, recursive=False):
-                    self.sandboxLibs(item, dest, recursive)
+                    self.libs_sandbox(item, dest, recursive)
 
         else:
             if (j.sal.fs.isFile(path) and j.sal.fs.isExecutable(path)) or j.sal.fs.getFileExtension(path) == "so":
-                result = self.findLibs(path)
+                result = self._libs_find(path)
                 for _, deb in list(result.items()):
                     deb.copyTo(dest)
 
@@ -358,3 +266,59 @@ class Sandboxer(JSBASE):
 
     #     out = j.data.text.sort(out)
     #     j.sal.fs.writeFile(plistfile, out)
+
+    # def sandboxBinWithPrefab(self, prefab, bin_path, sandbox_dir):
+    #     """
+    #     Sandbox a binary located in `bin_path` into a sandbox / filesystem
+
+    #     @param prefab Prefab: prefab either local or remote on a machine.
+    #     @param bin_path string: binary full path to sandbox.
+    #     @param sandbox_dir string: where to create the sandbox.
+
+    #     """
+
+    #     prefab.core.dir_remove(sandbox_dir)
+    #     prefab.core.dir_ensure(sandbox_dir)
+
+    #     LIBSDIR = j.sal.fs.joinPaths(sandbox_dir, 'lib')
+    #     BINDIR = j.sal.fs.joinPaths(sandbox_dir, 'bin')
+    #     prefab.core.dir_ensure(LIBSDIR)
+    #     prefab.core.dir_ensure(BINDIR)
+    #     prefab.core.dir_ensure(j.sal.fs.joinPaths(sandbox_dir, 'usr'))
+
+    #     for directory in ['opt', 'var', 'tmp', 'root']:
+    #         prefab.core.dir_ensure(j.sal.fs.joinPaths(sandbox_dir, directory))
+
+    #     # copy needed binaries and required libs
+    #     prefab.core.execute_bash("""js_shell 'j.tools.sandboxer.libs_sandbox("{}", dest="{}")'""".format(bin_path, LIBSDIR))
+
+    #     prefab.core.file_copy(bin_path, BINDIR+'/')
+
+    # def sandboxBinLocal(self, bin_path, sandbox_dir):
+    #     """
+    #     Sandbox a binary located in `bin_path` into a sandbox / filesystem
+
+    #     @param bin_path string: binary full path to sandbox.
+    #     @param sandbox_dir string: where to create the sandbox.
+
+    #     """
+    #     try:
+    #         j.sal.fs.removeDir(sandbox_dir)
+    #     except Exception as e:
+    #         pass
+
+    #     j.sal.fs.createDir(sandbox_dir)
+
+    #     LIBSDIR = j.sal.fs.joinPaths(sandbox_dir, 'lib')
+    #     BINDIR = j.sal.fs.joinPaths(sandbox_dir, 'bin')
+    #     j.sal.fs.createDir(LIBSDIR)
+    #     j.sal.fs.createDir(BINDIR)
+    #     j.sal.fs.createDir(j.sal.fs.joinPaths(sandbox_dir, 'usr'))
+
+    #     for directory in ['opt', 'var', 'tmp', 'root']:
+    #         j.sal.fs.createDir(j.sal.fs.joinPaths(sandbox_dir, directory))
+
+    #     # copy needed binaries and required libs
+    #     j.tools.sandboxer.libs_sandbox(bin_path, dest=LIBSDIR)
+    #     j.sal.fs.copyFile(bin_path, BINDIR+'/')
+
