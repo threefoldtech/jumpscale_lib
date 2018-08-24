@@ -71,8 +71,8 @@ class ModelBaseCollection:
         self._index = indexDb if indexDb else self._db
 
         if modelBaseClass is None:
-            modelBaseClass = self._jsbase('ModelBase',
-                            ['JumpscaleLib.data.capnp.ModelBase'])
+            modelBaseClass = self._jsbase(('ModelBase',
+                            'JumpscaleLib.data.capnp.ModelBase'))
         self.modelBaseClass = modelBaseClass
 
         self._init()
