@@ -92,7 +92,7 @@ setup(
         'redis>=2.10.5',
         'requests>=2.13.0',
         'toml>=0.9.2',
-        'uvloop>=0.8.0',
+        # 'uvloop>=0.8.0',
         'watchdog>=0.8.3',
         'dnspython>=1.15.0',
         'etcd3>=0.7.0',

@@ -73,7 +73,7 @@ class VirtualboxVM(JSBASE):
         # if rc > 0:
             self._cmd("hostonlyif create")
 
-    def create(self, reset=True, isopath="", datadisksize=10000, memory=1000, redis_port=4444):
+    def create(self, reset=True, isopath="", datadisksize=10000, memory=2000, redis_port=4444):
         if reset:
             self.delete()
 
