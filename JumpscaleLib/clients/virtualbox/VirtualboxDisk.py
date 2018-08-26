@@ -54,7 +54,7 @@ class VirtualboxDisk(JSBASE):
             return self.data["UUID"]                
 
     @property
-    def vm(self):
+    def vm_name(self):
         """
         vm attached to this disk
         """
@@ -65,7 +65,7 @@ class VirtualboxDisk(JSBASE):
             name, post = c.split("(", 1)
             name = name.lower().strip()
             # uid = c.split("UUID:")[1].split(")")[0].strip()
-            return self.client.vm_get(name)
+            return name
         else:
             return None
 

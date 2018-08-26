@@ -36,7 +36,7 @@ class SandboxPython(JSBASE):
 
     def do(self, path="", dest="", build=True, reset=False):
         """
-        js_shell 'j.tools.sandboxer.python.do(build=False)'
+        js_shell 'j.tools.sandboxer.python.do(build=True)'
 
         if dest == "" will be j.dirs.BUILDDIR+"/sandbox/tfbot/"
 

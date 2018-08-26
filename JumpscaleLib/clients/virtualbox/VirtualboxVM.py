@@ -5,29 +5,35 @@ JSBASE = j.application.jsbase_get_class()
 from .VirtualboxDisk import VirtualboxDisk
 
 
+
 class VirtualboxVM(JSBASE):
-    def __init__(self, name, client):
+    def __init__(self, name):
         JSBASE.__init__(self)
-        self.client = client
+        self.client = j.clients.virtualbox.client
         self.name = name
         self._guid = ""
-        self._zerotier = None
         self.logger_enable()
 
     def _cmd(self, cmd):
         cmd = "VBoxManage %s" % cmd
         self.logger.debug("vb cmd:%s" % cmd)
-        rc, out, err = j.sal.process.execute(cmd)
+        rc, out, err = j.sal.process.execute(cmd,showout=False)
         return out
 
     def _cmd2(self, cmd):
         cmd = "VBoxManage modifyvm %s %s" % (self.name, cmd)
         self.logger.debug("vb2 cmd:%s" % cmd)
-        rc, out, err = j.sal.process.execute(cmd)
+        rc, out, err = j.sal.process.execute(cmd,showout=False)
         return out
 
     def delete(self):
-        while self.name in self.client.vm_list():
+        if self.exists is False:
+            return
+        if self.is_running:
+            self.stop()
+            from time import sleep
+            sleep(5)
+        while self.name in self.client.vms_list():
             self._cmd("unregistervm %s --delete" % self.name)
         p = "%s/%s.vbox" % (self.path, self.name)
         if j.sal.fs.exists(p):
@@ -36,6 +42,12 @@ class VirtualboxVM(JSBASE):
         if j.sal.fs.exists(p):
             j.sal.fs.remove(p)
         self.logger.debug("delete done")
+
+    @property
+    def exists(self):
+        cmd = "VBoxManage list vms"
+        rc,out,err = j.sal.process.execute(cmd,showout=False)
+        return self.name in out
 
     @property
     def path(self):
@@ -51,7 +63,7 @@ class VirtualboxVM(JSBASE):
     def disks(self):
         res = []
         for item in self.client.vdisks_get():
-            if item.vm == self:
+            if item.vm_name == self.name:
                 res.append(item.vm)
         return res
 
@@ -62,9 +74,6 @@ class VirtualboxVM(JSBASE):
         self.logger.debug("disk create done")
         return d
 
-    # def ping(self):
-    #     pass
-    #     # member_authorize
 
     def hostnet(self, interface="vboxnet0"):
         # VBoxManage hostonlyif create
@@ -109,7 +118,8 @@ class VirtualboxVM(JSBASE):
 
     def start(self):
         args = ""
-
+        if self.is_running:
+            return
         # if running linux and environment
         # variable DISPLAY not set, we are probably
         # on a headless server (no X running), let's run
@@ -123,6 +133,8 @@ class VirtualboxVM(JSBASE):
 
     @property
     def info(self):
+        if not self.exists:
+            return {}
         out = self._cmd("showvminfo %s"%self.name)
         tocheck={}
         tocheck["memory size"]="mem"
@@ -145,16 +157,18 @@ class VirtualboxVM(JSBASE):
 
     @property
     def is_running(self):
+        if "state" not in self.info:
+            return False
         return self.info["state"]=="running"
 
-
     def stop(self):
-        try:
-            self._cmd('controlvm "%s" poweroff' % self.name)
-            self.logger.info("stopping vm : %s", self.name)
-        except Exception as e:
-            self.logger.info("vm : %s wasn't running" % self.name)
-        self.logger.debug("stop done")
+        if self.is_running:
+            try:
+                self._cmd('controlvm "%s" poweroff' % self.name)
+                self.logger.info("stopping vm : %s", self.name)
+            except Exception as e:
+                self.logger.info("vm : %s wasn't running" % self.name)
+            self.logger.debug("stop done")
 
     def __repr__(self):
         return "vm: %-20s%s" % (self.name, self.path)
