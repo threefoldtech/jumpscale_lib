@@ -97,7 +97,7 @@ class HTMLFactory:
         """
 
         p = j.data.html.page_get()
-        p.heading_add("this is my heading")
+        p.header_add("this is my heading")
 
         bullets=["aa","bb","cc"]
         p.bullets_add(bullets)
