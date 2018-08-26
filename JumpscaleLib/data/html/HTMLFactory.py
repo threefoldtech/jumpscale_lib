@@ -99,18 +99,18 @@ class HTMLFactory:
         p = j.data.html.page_get()
         p.header_add("this is my heading")
 
-        bullets=["aa","bb","cc"]
-        p.bullets_add(bullets)
+        list=["aa","bb","cc"]
+        p.list_add(list)
 
         p.newline_add()
 
-        p.bullet_add("something 1", level=1)
-        p.bullet_add("something 2", level=2)
-        p.bullet_add("something 3", level=3)
-        p.bullet_add("something 4", level=2)
-        p.bullet_add("something 5", level=2)
-        p.bullet_add("something 6", level=3)
-        # p.bullet_add("something 7", level=1)
+        p.listitem_add("something 1", level=1)
+        p.listitem_add("something 2", level=2)
+        p.listitem_add("something 3", level=3)
+        p.listitem_add("something 4", level=2)
+        p.listitem_add("something 5", level=2)
+        p.listitem_add("something 6", level=3)
+        # p.listitem_add("something 7", level=1)
 
         print(p)
 
