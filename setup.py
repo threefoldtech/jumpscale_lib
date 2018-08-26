@@ -99,7 +99,7 @@ setup(
         'zerotier>=1.1.2',
         'packet-python>=1.37',
         'blosc>=1.5.1',
-        'pynacl>=1.1.2',
+        'pynacl>=1.2.1',
         'ipcalc>=1.99.0',
         'ed25519>=1.4',
         'python-jose>=1.3.2',
