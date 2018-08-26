@@ -39,7 +39,7 @@ class JSWebLoader(JSBASE):
 
     def register_blueprints(self, app, sockets, path=None):
         if path is None:
-            path = "%s/blueprints" % self.path
+            path = "%s/dm_base/blueprints" % self.path
         if path not in sys.path:
             sys.path.append(path)
         apps = j.sal.fs.listDirsInDir(path, recursive=False, dirNameOnly=True,
@@ -102,7 +102,8 @@ class JSWebLoader(JSBASE):
         app.register_blueprint(rq_dashboard.blueprint, url_prefix="/rq")
 
         # Load iyo settings, TODO: change this dirty hack
-        app.config.from_json("%s/blueprints/user/iyo.json" % self.path)
+        sys.path.append("%s/dm_base" % self.path)
+        app.config.from_json("%s/dm_base/blueprints/user/iyo.json" % self.path)
         from blueprints.user.user import callback
         app.add_url_rule(app.config['IYO_CONFIG']['callback_path'], '_callback', callback)
         # if selenium:
