@@ -2,7 +2,7 @@ import netaddr
 from jumpscale import j
 import time
 
-OVS_FLIST = 'https://hub.gig.tech/gig-official-apps/ovs.flist'
+OVS_FLIST = 'https://hub.grid.tf/tf-official-apps/ovs.flist'
 
 
 def combine(ip1, ip2, mask):
@@ -28,7 +28,6 @@ class Network():
         return self.node.client
 
     def get_management_info(self):
-        import netaddr
 
         def get_nic_ip(nics, name):
             for nic in nics:
@@ -133,10 +132,10 @@ class Network():
                 container.client.json('ovs.port-add', {"bridge": "backplane", "port": interfaces[0], "vlan": 0})
             else:
                 container.client.json('ovs.bond-add', {"bridge": "backplane",
-                                                           "port": "bond0",
-                                                           "links": interfaces,
-                                                           "lacp": True,
-                                                           "mode": "balance-tcp"})
+                                                       "port": "bond0",
+                                                       "links": interfaces,
+                                                       "lacp": True,
+                                                       "mode": "balance-tcp"})
             # TODO: this need to be turned into 0-os primitives
             self.node.client.ip.addr.add('backplane', str(addresses['storageaddr']))
             for interface in interfaces:
