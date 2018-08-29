@@ -66,6 +66,7 @@ class ZDBServer(JSConfigBase):
     def start(self):
         """
         start zdb in tmux using this directory (use prefab)
+        will only start when the server is not life yet
         """
 
         mode = self.config.data['mode']

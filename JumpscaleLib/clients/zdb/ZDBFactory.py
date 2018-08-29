@@ -27,23 +27,18 @@ class ZDBFactory(JSConfigBase):
         data["encryptionkey_"] = encryptionkey
         return self.get(instance=instance, data=data, create=True, interactive=False)
 
-    def testdb_server_start_client_get(self,start=True):
+    def testdb_server_start_client_get(self,reset=False):
         """
-        will start a ZDB server in tmux
+        will start a ZDB server in tmux (will only start when not there yet or when reset asked for)
         erase all content
         and will return client to it
 
         """
-        if start:
-            #will delete the config info
-            self.delete(instance="test")
 
-        db = j.servers.zdb.configure(instance="test", adminsecret="123456", reset=start, mode="seq")
+        db = j.servers.zdb.configure(instance="test", adminsecret="123456", reset=reset, mode="seq")
+        db.start()
 
-        if start:
-            db.stop()
-            db.start()
-
+        #if secrets only 1 secret then will be used for all namespaces
         cl = db.client_get(secrets="1234",encryptionkey="abcdefgh")
         return cl
 

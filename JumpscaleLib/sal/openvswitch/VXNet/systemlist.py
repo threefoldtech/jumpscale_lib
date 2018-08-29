@@ -261,7 +261,7 @@ def cleanup_flows(bridge_name, interface):
 
 def list_ports_in_of(interface):
     """
-    list ports in openFlow tables
+    list ports in openFlow models
     @return:
     """
     ipm = re.compile('(?<=in_port\=)\d{1,5}')
