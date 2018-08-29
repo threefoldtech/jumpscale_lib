@@ -295,10 +295,6 @@ class Container():
                 self.client.system(command=cmd, dir=pwd, stdin=stdin, env=env, id=id)
 
     def stop(self):
-        """
-        will stop the container and also his mountpoints
-        :return:
-        """
         if not self.is_running():
             return
         self.logger.debug("stop %s", self)

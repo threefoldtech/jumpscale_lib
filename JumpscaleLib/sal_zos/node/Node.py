@@ -21,7 +21,7 @@ from ..primitives.Primitives import Primitives
 from ..hypervisor.Hypervisor import Hypervisor
 
 Mount = namedtuple('Mount', ['device', 'mountpoint', 'fstype', 'options'])
-logger = j.logger.get(__name__)
+logger = j.logging.get(__name__)
 
 
 class Node:
@@ -30,7 +30,6 @@ class Node:
     def __init__(self, client):
         # g8os client to talk to the node
         self._storageAddr = None
-        self._name = None
         self.addr = client.config.data['host']
         self.port = client.config.data['port']
         self.disks = Disks(self)
@@ -45,18 +44,13 @@ class Node:
         self.capacity = Capacity(self)
         self.client = client
 
-    def ping(self):
-        return self.client.ping()
-
     @property
     def name(self):
-        if self._name is None:
-            nics = self.client.info.nic()
-            macgwdev, _ = self.get_nic_hwaddr_and_ip(nics)
-            if not macgwdev:
-                raise AttributeError("name not found for node {}".format(self))
-            self._name = macgwdev.replace(":", '')
-        return self._name
+        nics = self.client.info.nic()
+        macgwdev, _ = self.get_nic_hwaddr_and_ip(nics)
+        if not macgwdev:
+            raise AttributeError("name not found for node {}".format(self))
+        return macgwdev.replace(":", '')
 
     @property
     def kernel_args(self):
@@ -341,7 +335,7 @@ class Node:
         """
         Get the parent mountpoint for a path
 
-        :param path: path you want to retrieve the mountpoint for
+        :param path: path you want to retreive the mountpoitn for
         :type path: str
         :rtype: str
         :return: path to the mountpoint
