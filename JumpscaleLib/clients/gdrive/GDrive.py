@@ -59,7 +59,8 @@ class GDriveFactory(JSBASE):
             Credentials, the obtained credential.
         """
         if not j.sal.fs.exists(path, followlinks=True):
-            raise j.exceptions.Input(message="Could not find google secrets file in %s, please dwonload" % path)
+            raise j.exceptions.Input(message="Could not find google secrets file in %s, please dwonload" %
+                                     path, level=1, source="", tags="", msgpub="")
         store = Storage(self.secretsFilePath)
         self._credentials = store.get()
         if not j.sal.fs.exists(self.secretsFilePath) or not self._credentials or self._credentials.invalid:

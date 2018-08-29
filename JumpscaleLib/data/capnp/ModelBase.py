@@ -34,9 +34,11 @@ class ModelBase(JSBASE):
                 self.load(key=key)
                 self._key = key
             else:
-                raise j.exceptions.Input(message="Cannot find object:%s!%s" % (self.collection.category, key))
+                raise j.exceptions.Input(message="Cannot find object:%s!%s" % (
+                    self.collection.category, key), level=1, source="", tags="", msgpub="")
         else:
-            raise j.exceptions.Input(message="key cannot be empty when no new obj is asked for.")
+            raise j.exceptions.Input(message="key cannot be empty when no new obj is asked for.",
+                                     level=1, source="", tags="", msgpub="")
         JSBASE.__init__(self)
 
     @property
@@ -92,7 +94,7 @@ class ModelBase(JSBASE):
     #         #
     #     else:
     #         raise j.exceptions.Input(message="Cannot set attr:%s in %s" %
-    #                                  (attr, self))
+    #                                  (attr, self), level=1, source="", tags="", msgpub="")
 
     # def __dir__(self):
     #     propnames = ["key", "index", "load", "_post_init", "_pre_save", "_generate_key", "save", "logger",
@@ -158,7 +160,7 @@ class ModelBase(JSBASE):
 
     def raiseError(self, msg):
         msg = "Error in dbobj:%s (%s)\n%s" % (self._category, self.key, msg)
-        raise j.exceptions.Input(message=msg)
+        raise j.exceptions.Input(message=msg, level=1, source="", tags="", msgpub="")
 
     def updateSubItem(self, name, keys, data):
         keys = keys or []

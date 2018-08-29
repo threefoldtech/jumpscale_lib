@@ -127,7 +127,8 @@ class ModelBaseCollection(JSBASE):
                 if autoCreate:
                     return self.new(key=key)
                 else:
-                    raise j.exceptions.Input(message="Could not find key:%s for model:%s" % (key, self.category))
+                    raise j.exceptions.Input(message="Could not find key:%s for model:%s" %
+                                             (key, self.category), level=1, source="", tags="", msgpub="")
         else:
 
             model = self.modelBaseClass(
