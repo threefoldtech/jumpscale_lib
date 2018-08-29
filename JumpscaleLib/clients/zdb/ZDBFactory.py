@@ -42,16 +42,15 @@ class ZDBFactory(JSConfigBase):
         cl = db.client_get(secrets="1234",encryptionkey="abcdefgh")
         return cl
 
-    def test(self,start=True):
+    def test(self,reset=True):
         """
         js_shell 'j.clients.zdb.test(start=False)'
 
         """
 
-        cl = j.clients.zdb.testdb_server_start_client_get(start=start)
+        cl = j.clients.zdb.testdb_server_start_client_get(reset=reset)
 
         cl1 = cl.namespace_new("test")
         cl1.test()
-
 
         #TODO: *1 need to test the other modes as well
