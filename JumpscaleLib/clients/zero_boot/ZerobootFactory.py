@@ -5,8 +5,7 @@ from jumpscale import j
 from .ZerobootClient import zero_bootClient
 JSConfigFactoryBase = j.tools.configmanager.base_class_configs
 
-
-class ZerobootFactory(JSConfigFactoryBase):
+class ZerobootRobotFactory(JSConfigFactoryBase):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.zboot"
