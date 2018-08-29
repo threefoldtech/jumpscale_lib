@@ -19,7 +19,7 @@ class OVHFactory(JSConfigBaseFactory):
         p = j.tools.prefab.local
         p.runtimes.pip.install("ovh")
 
-    def get_manual(self, instance, appkey, appsecret, consumerkey="", endpoint='soyoustart-eu', ipxeBase="https://bootstrap.grid.tf/ipxe/master"):
+    def get_manual(self, instance, appkey, appsecret, consumerkey="", endpoint='soyoustart-eu', ipxeBase="https://bootstrap.gig.tech/ipxe/master"):
         """
 
         @PARAM instance is the name of this client

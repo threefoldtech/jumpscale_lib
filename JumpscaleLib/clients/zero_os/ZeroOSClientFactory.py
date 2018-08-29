@@ -3,7 +3,7 @@ import time
 from jumpscale import j
 
 JSConfigFactoryBase = j.tools.configmanager.base_class_configs
-logger = j.logger.get(__name__)
+logger = j.logging.get(__name__)
 
 
 class ZeroOSClientFactory():
@@ -25,9 +25,6 @@ class ZeroOSClientFactory():
             timeout = 120
 
         """
-        # print("ZOSCLIENT")
-        # print(data)
-        # print("***")
         cl = j.clients.zos_protocol.get(instance=instance, data=data, create=create, die=die, interactive=interactive, **kwargs)
         return j.sal_zos.node.get(cl)
 
@@ -90,7 +87,7 @@ class ZeroOSClientFactory():
         return ip_pub, ipaddr_priv
 
     def zero_node_packetnet_install(self, packetnetClient, zerotierClient, project_name,
-                                    plan_type, location, server_name, zerotierNetworkID, ipxe_base='https://bootstrap.grid.tf/ipxe/master'):
+                                    plan_type, location, server_name, zerotierNetworkID, ipxe_base='https://bootstrap.gig.tech/ipxe/master'):
         """
         packetnetClient = j.clients.packetnet.get('TOKEN')
         zerotierClient = j.clients.zerotier.get(instance='main', data={'token': 'TOKEN'})

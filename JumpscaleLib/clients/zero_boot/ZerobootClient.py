@@ -42,7 +42,7 @@ class zero_bootClient(JSConfigBase):
         JSConfigBase.__init__(self, instance=instance,
                               data=data, parent=parent, template=TEMPLATE)
         self.sshclient = j.clients.ssh.get(
-            instance=self.config.data['sshclient_instance'],
+            instance=self.config.data['sshclient_instance'],          
             interactive=interactive)
         self.networks = Networks(self.sshclient)
         zerotier_instance = self.config.data['zerotier_instance']
@@ -207,22 +207,20 @@ class Networks:
         """
         return list(self._networks.keys())
 
-    def get(self, ip=None):
-        """get network object from the host ip
+    def get(self, subnet=None):
+        """get network object from its subnet
 
-        :param ip: ip required, defaults to None in that case will get first in the list
-        :type ip: str
-        :raises KeyError: if ip doesn't exist in available subnets
+        :param subnet: subnet required, defaults to None in that case will get first in the list
+        :type subnet: str
+        :raises KeyError: if subnet doesn't exist in available subnets
         :return: network object
         :rtype: object
         """
-        if not ip:
-            ip = self.list()[0].split('/')[0]
-        for subnet in self._networks:
-            if netaddr.IPAddress(ip) in netaddr.IPNetwork(subnet):
-                return self._networks[subnet]
-        else:
-            raise KeyError("Host with specified IP: %s doesn't exist" % ip)
+        if not subnet:
+            subnet = self.list()[0]
+        if subnet not in self._networks:
+            raise KeyError("Network with specified subnet: %s doesn't exist" % subnet)
+        return self._networks[subnet]
 
     def remove(self, subnet):
         raise NotImplementedError()
@@ -241,7 +239,7 @@ class Host:
     def configure_ipxe_boot(self, lkrn_url, tftp_root='/opt/storage'):
         """[summary]
 
-        :param lkrn_url: url that points to a LKRN file to boot from that includes boot parameters. E.g.: https://bootstrap.grid.tf/krn/master/0/
+        :param lkrn_url: url that points to a LKRN file to boot from that includes boot parameters. E.g.: https://bootstrap.gig.tech/krn/master/0/
         :type boot_url: str
         :param tftp_root: tftp root location where pxe config are stored, defaults to '/opt/storage'
         :param tftp_root: str, optional
@@ -323,7 +321,7 @@ class Hosts:
                         host_data_json['hostname'] = data[2].replace("'", "")
                     elif 'ip' in data:
                         host_data_json['address'] = data[2].replace("'", "")
-
+                    
                 if netaddr.IPAddress(host_data_json['address']) in netaddr.IPNetwork(self.subnet):
                     host_data_json['sshclient'] = self.sshclient
                     host_data_json['index'] = index

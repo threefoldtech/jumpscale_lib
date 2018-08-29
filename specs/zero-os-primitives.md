@@ -112,7 +112,7 @@ node.primitives.drop_vm("my-little-ubuntu-vm")
 
 # Create a new zero-os vm
 zeroos_vm = node.primitives.create_virtual_machine(name="my-little-ubuntu-vm", type_='zero-os')
-zeroos_vm.ipxe_url = 'https://bootstrap.grid.tf/ipxe/master/abcef01234567890/organization=myorg'
+zeroos_vm.ipxe_url = 'https://bootstrap.gig.tech/ipxe/master/abcef01234567890/organization=myorg'
 zeroos_vm.memory = 1024   # 1024 MiB
 zeroos_vm.cpu_nr = 1      # 1 vcpu
 
