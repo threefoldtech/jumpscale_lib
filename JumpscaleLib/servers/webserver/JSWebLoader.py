@@ -39,7 +39,7 @@ class JSWebLoader(JSBASE):
 
     def register_blueprints(self, app, sockets, path=None):
         if path is None:
-            "%s/blueprints" % self.path
+            path = "%s/dm_base/blueprints" % self.path
         if path not in sys.path:
             sys.path.append(path)
         apps = j.sal.fs.listDirsInDir(path, recursive=False, dirNameOnly=True,
@@ -47,7 +47,7 @@ class JSWebLoader(JSBASE):
         apps = [item for item in apps if item[0] is not "_"]
         for module_name in apps:
             module = import_module('blueprints.{}.routes'.format(module_name))
-            print("blueprint register:%s" % module_name)
+            print("blueprint register:%s" % module_name)            
             # try:
             #     module = import_module('blueprints.{}.routes'.format(module_name))
             #     print("blueprint register:%s" % module_name)
@@ -70,8 +70,7 @@ class JSWebLoader(JSBASE):
             self.db.session.remove()
 
     def configure_logs(self, app):
-        # TODO:*1 is this ok this?
-        basicConfig(filename='error.log', level=DEBUG)
+        basicConfig(filename='error.log', level=DEBUG)  # TODO:*1 is this ok this?
         self.logger = getLogger()
         self.logger.addHandler(StreamHandler())
 
@@ -82,12 +81,14 @@ class JSWebLoader(JSBASE):
     #     app.config.from_object(rq_dashboard.default_settings)
     #     app.register_blueprint(rq_dashboard.blueprint, url_prefix="/rq")
 
+
     #     # if selenium:
     #     #     app.config['LOGIN_DISABLED'] = True
     #     # register_extensions(app)
     #     self.register_blueprints(app)
     #     # configure_database(app)
     #     # configure_logs(app)
+
 
     #     return app
 
@@ -101,7 +102,8 @@ class JSWebLoader(JSBASE):
         app.register_blueprint(rq_dashboard.blueprint, url_prefix="/rq")
 
         # Load iyo settings, TODO: change this dirty hack
-        app.config.from_json("%s/blueprints/user/iyo.json" % self.path)
+        sys.path.append("%s/dm_base" % self.path)
+        app.config.from_json("%s/dm_base/blueprints/user/iyo.json" % self.path)
         from blueprints.user.user import callback
         app.add_url_rule(app.config['IYO_CONFIG']['callback_path'], '_callback', callback)
         # if selenium:
