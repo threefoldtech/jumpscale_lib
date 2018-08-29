@@ -23,7 +23,7 @@ class DocSite(JSBASE):
     def __init__(self, path,name=""):
         JSBASE.__init__(self)
 
-        self.docgen = j.tools.markdowndocs
+        self.docgen = j.tools.docsites
         #init initial arguments
 
         config_path = j.sal.fs.joinPaths(path,"docs_config.toml")
@@ -32,7 +32,7 @@ class DocSite(JSBASE):
             config_path=config_path2
             path = j.sal.fs.joinPaths(path,"docs")
         if j.sal.fs.exists(config_path):
-            self.config = j.data.serializers.toml.load(config_path)
+            self.config = j.data.serializer.toml.load(config_path)
         else:
             raise RuntimeError("cannot find docs_config in %s"%config_path)
 
@@ -77,7 +77,7 @@ class DocSite(JSBASE):
                 name = item["name"].strip().lower()
                 url = item["url"].strip()
                 path = j.clients.git.getContentPathFromURLorPath(url)
-                j.tools.markdowndocs.load(path,name=name)
+                j.tools.docsites.load(path,name=name)
 
         self.logger_enable()
         self.logger.level=1
@@ -103,7 +103,7 @@ class DocSite(JSBASE):
             if not gitpath:
                 return
             if gitpath not in self.docgen._git_repos:
-                self._git = j.tools.markdowndocs._git_get(gitpath)
+                self._git = j.tools.docsites._git_get(gitpath)
                 self.docgen._git_repos[gitpath] = self.git
         return self._git
 
@@ -137,16 +137,16 @@ class DocSite(JSBASE):
             return {}
 
         if ext == "toml":
-            data = j.data.serializers.toml.load(path)
+            data = j.data.serializer.toml.load(path)
         elif ext == "yaml":
-            data = j.data.serializers.yaml.load(path)
+            data = j.data.serializer.yaml.load(path)
         else:
             raise j.exceptions.Input(message="only toml & yaml supported")
 
         if not j.data.types.dict.check(data):
             raise j.exceptions.Input(message="cannot process toml/yaml on path:%s, needs to be dict." % path)
 
-            # dont know why we do this? something todo probably with mustache and dots?
+        # dont know why we do this? something todo probably with mustache and dots?
         keys = [str(key) for key in data.keys()]
         for key in keys:
             if key.find(".") != -1:
@@ -235,8 +235,7 @@ class DocSite(JSBASE):
                     self.logger.debug("found file:%s"%path)
                     base=self._clean(base)
                     if base in self._files:
-                        raise j.exceptions.Input(message="duplication file in %s,%s" %
-                                                 (self, path))
+                        raise j.exceptions.Input(message="duplication file in %s,%s" %  (self, path))
                     self._files[base] = path
                 # else:
                 #     self.logger.debug("found other:%s"%path)
@@ -285,8 +284,7 @@ class DocSite(JSBASE):
         if name in self.files:
             return self.files[name]
         if die:
-            raise j.exceptions.Input(message="Did not find file:%s in %s" %
-                                     (name, self))
+            raise j.exceptions.Input(message="Did not find file:%s in %s" % (name, self))
         return None
 
     def html_get(self, name, cat="", die=True):
@@ -353,7 +351,7 @@ class DocSite(JSBASE):
 
 
         if die:
-            raise j.exceptions.Input(message="Cannot find doc with name:%s (nr docs found:%s)" % (name,nr))
+            raise j.exceptions.Input(message="Cannot find doc with name:%s (nr docs found:%s)" % (name,nr), level=1)
         else:
             return None
 
@@ -508,7 +506,7 @@ class DocSite(JSBASE):
             out+=res.content
         else:
             out+="----\n\n"
-            for key,val in j.tools.markdowndocs.docsites.items():
+            for key,val in j.tools.docsites.docsites.items():
                 if key.startswith("www"):
                     continue
                 out+="[%s](../%s/)\n"%(key,key)
@@ -605,4 +603,3 @@ class DocSite(JSBASE):
     #     for key, doc in self.docs.items():
     #         doc.process()
     #     self._processed = True
-
