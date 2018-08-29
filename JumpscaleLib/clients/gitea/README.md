@@ -620,6 +620,16 @@ In [4]: [a for a in u.repos]
 Out[4]:
 []
 ```
+**repo milestones**
+
+```
+In [2]: x = cl.repos.get(447)
+In [3]: [m for m in x.milestones ]
+Out[3]: 
+[Milestone {"closed_issues": 0, "due_on": null, "open_issues": 1, "description": "test", "title": "test_milestone-01", "id": 771, "closed_at": null},
+ Milestone {"closed_issues": 0, "due_on": "2018-09-20T00:00:00Z", "open_issues": 1, "description": "test-02", "title": "test_milestone-02", "id": 772, "closed_at": null}]
+
+```
 
 **Create repo for another user (requires admin permissions)**
 

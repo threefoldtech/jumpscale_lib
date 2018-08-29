@@ -30,6 +30,7 @@ class Node:
     def __init__(self, client):
         # g8os client to talk to the node
         self._storageAddr = None
+        self._name = None
         self.addr = client.config.data['host']
         self.port = client.config.data['port']
         self.disks = Disks(self)
@@ -49,11 +50,13 @@ class Node:
 
     @property
     def name(self):
-        nics = self.client.info.nic()
-        macgwdev, _ = self.get_nic_hwaddr_and_ip(nics)
-        if not macgwdev:
-            raise AttributeError("name not found for node {}".format(self))
-        return macgwdev.replace(":", '')
+        if self._name is None:
+            nics = self.client.info.nic()
+            macgwdev, _ = self.get_nic_hwaddr_and_ip(nics)
+            if not macgwdev:
+                raise AttributeError("name not found for node {}".format(self))
+            self._name = macgwdev.replace(":", '')
+        return self._name
 
     @property
     def kernel_args(self):

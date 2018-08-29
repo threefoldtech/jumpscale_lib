@@ -3,7 +3,7 @@ from ..vm.ZOS_VM import ZOS_VM, ZeroOSVM, ZDBDisk
 
 
 BASEFLIST = 'https://hub.grid.tf/tf-bootable/{}.flist'
-ZEROOSFLIST = 'https://hub.grid.tf/tf-bootablee/zero-os-bootable.flist'
+ZEROOSFLIST = 'https://hub.grid.tf/tf-bootable/zero-os-bootable.flist'
 
 class Primitives:
     def __init__(self, node):

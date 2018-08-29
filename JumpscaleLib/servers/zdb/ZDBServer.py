@@ -4,7 +4,7 @@ from pprint import pprint as print
 import time
 
 TEMPLATE = """
-addr = "localhost"
+addr = "127.0.0.1"
 port = 9900
 path = ""
 mode = ""
