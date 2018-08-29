@@ -62,7 +62,7 @@ class ZDBClientNS(JSBASE):
         del redis.response_callbacks['SET']
         return redis
 
-    def _key_get(self, key, set=True):
+    def _key_get(self, key, set=True, iterate=False):
 
         if self.mode == "seq":
             if key is None:
@@ -79,7 +79,7 @@ class ZDBClientNS(JSBASE):
                 if key in ["", None]:
                     raise j.exceptions.Input("key cannot be None or empty string")
         elif self.mode == "user":
-            if key in ["", None]:
+            if not iterate and key in ["", None]:
                 raise j.exceptions.Input("key cannot be None or empty string")
         return key
 
@@ -100,12 +100,12 @@ class ZDBClientNS(JSBASE):
         """
         key = self._key_get(key, set=True)
         res = self.redis.execute_command("SET", key, data)
-        if not res:
+        if not res:  # if nothing get return, that means the data is already present and 0-db did nothing.
             return res
+
         if self.mode == "seq":
             key = struct.unpack("<I", res)[0]
-        else:
-            key = self.redis.execute_command("SET", key, data)
+
         return key
 
     def get(self, key):
@@ -180,6 +180,7 @@ class ZDBClientNS(JSBASE):
         def do(arg, result):
             result.append(arg)
             return result
+
         self.iterate(do, key_start=key_start, direction=direction, nrrecords=nrrecords, _keyonly=True, result=result)
         return result
 
@@ -204,7 +205,8 @@ class ZDBClientNS(JSBASE):
         """
         if result is None:
             result = []
-        keyb = self._key_get(key_start, set=True)
+
+        next = self._key_get(key_start, set=False, iterate=True)
         if direction == "forward":
             CMD = "SCANX"
         else:
@@ -213,26 +215,32 @@ class ZDBClientNS(JSBASE):
         nr = 0
         while nr < nrrecords:
             try:
-                if keyb in [None, ""]:
-                    keyb_new = self.redis.execute_command(CMD)[0]
+                if next in [None, ""]:
+                    resp = self.redis.execute_command(CMD)
                 else:
-                    keyb_new = self.redis.execute_command(CMD, keyb)[0]
+                    resp = self.redis.execute_command(CMD, next)
+
+                # format of the response
+                # - next key to use to continue the scan
+                # - array of 3 items [key, size, timestamp]
+                next = resp[0]
+                keyb = resp[1][0][0]
+
             except redis.ResponseError as e:
                 if e.args[0] == 'No more data':
                     return result
 
             if self.mode == "seq":
-                key_new = struct.unpack("<I", keyb_new)[0]
+                key_new = struct.unpack("<I", keyb)[0]
             else:
-                key_new = keyb_new
+                key_new = keyb
 
             if _keyonly:
                 result = method(key_new, result)
             else:
-                data = self.redis.execute_command("GET", keyb_new)
+                data = self.redis.execute_command("GET", keyb)
                 result = method(key_new, data, result)
 
-            keyb = keyb_new
             nr += 1
 
         return result
