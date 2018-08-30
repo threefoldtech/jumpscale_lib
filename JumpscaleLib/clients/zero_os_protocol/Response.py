@@ -201,7 +201,7 @@ class Response():
 
                          Note: if callback is none, a default callback will be used that prints output on stdout/stderr
                          based on level.
-        :return: None
+        :return: the number of message received during the streaming
         """
         if callback is None:
             callback = Response.__default
@@ -212,6 +212,7 @@ class Response():
         queue = 'stream:%s' % self.id
         r = self._client._redis
 
+        count = 0
         while True:
             data = r.blpop(queue, 10)
             if data is None:
@@ -224,15 +225,17 @@ class Response():
             line = message['message']
             meta = message['meta']
             callback(meta >> 16, line, meta & 0xff)
+            count += 1
 
             if meta & 0x6 != 0:
                 break
+
+        return count
 
     @staticmethod
     def __default(level, line, meta):
         w = sys.stdout if level == 1 else sys.stderr
         w.write(line)
-        w.write('\n')
 
     def get(self, timeout=None):
         """

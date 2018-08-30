@@ -5,7 +5,7 @@ from jumpscale import j
 from .Client import Client
 
 JSConfigFactoryBase = j.tools.configmanager.base_class_configs
-logger = j.logging.get(__name__)
+logger = j.logger.get(__name__)
 
 
 class ZeroOSFactory(JSConfigFactoryBase):
