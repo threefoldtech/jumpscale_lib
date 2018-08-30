@@ -7,7 +7,7 @@ from ..abstracts import Nics
 from ..disks.Disks import Disk
 from .namespace import Namespaces
 
-logger = j.logging.get(__name__)
+logger = j.logger.get(__name__)
 DEFAULT_PORT = 9900
 
 
@@ -37,7 +37,7 @@ class Zerodb:
         self.node = node
         self.zt_identity = None
         self._container = None
-        self.flist = 'https://hub.gig.tech/gig-autobuilder/rivine-0-db-release-master.flist'
+        self.flist = 'https://hub.grid.tf/tf-autobuilder/threefoldtech-0-db-release-development.flist'
 
         self._mode = mode
         self._sync = sync
@@ -137,7 +137,8 @@ class Zerodb:
             'flist': self.flist,
             'identity': self.zt_identity,
             'mounts': {self.path: '/zerodb'},
-            'ports': {"zt*:%s" % self.node_port: DEFAULT_PORT},
+            # 'ports': {"zt*:%s" % self.node_port: DEFAULT_PORT},
+            'ports': {"%s" % self.node_port: DEFAULT_PORT},
             'nics': [nic.to_dict(forcontainer=True) for nic in self.nics]
         }
 
