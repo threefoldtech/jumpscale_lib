@@ -6,7 +6,7 @@ btc_address = 'mrHqjq3t7imHTFGAn84tbvL1nVeSff6B9z'
 btc_node_address = 'localhost:2200'
 tft_node_address = 'localhost:2222'
 amount = 2
-wallet = j.clients.rivine.get('mytestwallet').wallet
+wallet = j.clients.blockchain.rivine.get('mytestwallet').wallet
 # duration=1531059743
 try:
     initiator = j.tools.atomicswap.get_btc_initiator(btc_node_address, amount=0.01234, recipient_address=btc_address,

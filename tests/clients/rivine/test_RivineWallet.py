@@ -24,7 +24,7 @@ client_data = {'bc_address': 'https://explorer.testnet.threefoldtoken.com/',
                'nr_keys_per_seed': 15,
                'seed_': seed}
 
-rivine_client = j.clients.rivine.get('mytestwallet', data=client_data)
+rivine_client = j.clients.blockchain.rivine.get('mytestwallet', data=client_data)
 rivine_client.config.save()
 
 
