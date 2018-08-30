@@ -184,7 +184,8 @@ class ZDBClientNS(JSBASE):
         self.iterate(do, key_start=key_start, direction=direction, nrrecords=nrrecords, _keyonly=True, result=result)
         return result
 
-    def iterate(self, method, key_start=None, direction="forward", nrrecords=100000, _keyonly=False, result=None):
+    def iterate(self, method, key_start=None, direction="forward", nrrecords=100000,
+                _keyonly=False, result=None):
         """walk over the data and apply method as follows
 
         ONLY works for when id_enable is True
@@ -250,9 +251,7 @@ class ZDBClientNS(JSBASE):
         i = self.nsinfo
         return i["entries"]
 
-    def test(self):
-        if not self.mode == "seq":
-            raise RuntimeError("not implemented")
+    def test_seq(self):
 
         nr = self.nsinfo["entries"]
         assert nr == 0

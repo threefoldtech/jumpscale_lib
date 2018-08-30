@@ -11,7 +11,6 @@ port = "9900"
 adminsecret_ = ""
 secrets_ = ""
 mode = "direct"
-encryptionkey_ = ""
 """
 
 JSConfigBase = j.tools.configmanager.base_class_config
@@ -28,7 +27,7 @@ class ZDBClient(JSConfigBase):
         config params:
             secrets {str} -- format: $ns:$secret,... or $secret then will be same for all namespaces
             port {[int} -- (default: 9900)
-            mode -- user,direct,seq(uential) see https://github.com/rivine/0-db/blob/master/README.md
+            mode -- user,seq(uential) see https://github.com/rivine/0-db/blob/master/README.md
             adminsecret does not have to be set, but when you want to create namespaces it is a must
 
         """
