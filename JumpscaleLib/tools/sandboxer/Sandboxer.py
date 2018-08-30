@@ -151,7 +151,7 @@ class Sandboxer(JSBASE):
         else:
             if (j.sal.fs.isFile(path) and j.sal.fs.isExecutable(path)) or j.sal.fs.getFileExtension(path) == "so":
                 result = self._libs_find(path)	                
-                for _, deb in list(result.items()):	
+                for _,deb in list(result.items()):	
                     deb.copyTo(dest)
 
     def copyTo(self, path, dest, excludeFileRegex=[], excludeDirRegex=[], excludeFiltersExt=["pyc", "bak"]):
