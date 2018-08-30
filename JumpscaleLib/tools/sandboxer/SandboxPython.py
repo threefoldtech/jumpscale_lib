@@ -196,6 +196,8 @@ class SandboxPython(JSBASE):
             dest = j.dirs.BUILDDIR + "/sandbox/python3/"
         cmd = "cd %s;rm -f ../js_sandbox.tar.gz;tar -czf ../js_sandbox.tar.gz .;" % dest
         j.sal.process.execute(cmd)
+        cmd = "cd %s;rm -f ../tfboot/lib/python.zip;zip -r ../tfbot/lib/python.zip .;" % dest
+        j.sal.process.execute(cmd)
 
 
     def jumpscale_add(self, dest=""):
