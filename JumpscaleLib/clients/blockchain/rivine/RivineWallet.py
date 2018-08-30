@@ -48,9 +48,9 @@ class RivineWallet:
         @param bc_network_password: Password to send to the explorer node when posting requests.
         @param nr_keys_per_seed: Number of keys generated from the seed.
         @param minerfee: Amount of hastings that should be minerfee (default to 0.1 TFT)
-        @param client: Name of the insance of the j.clients.rivine that is used to create the wallet
+        @param client: Name of the insance of the j.clients.blockchain.rivine that is used to create the wallet
         """
-        self._client = j.clients.rivine.get(client) if client else None
+        self._client = j.clients.blockchain.rivine.get(client) if client else None
         self._seed = j.data.encryption.mnemonic.to_entropy(seed)
         self._unspent_coins_outputs = {}
         self._keys = {}
@@ -94,7 +94,7 @@ class RivineWallet:
             # we need to update the config with the new nr_of_keys_per_seed for this wallet
             data = dict(self._client.config.data)
             data['nr_keys_per_seed'] = self._nr_keys_per_seed
-            cl = j.clients.rivine.get(instance=self._client.instance,
+            cl = j.clients.blockchain.rivine.get(instance=self._client.instance,
                                        data=data,
                                        create=True,
                                        interactive=False)
