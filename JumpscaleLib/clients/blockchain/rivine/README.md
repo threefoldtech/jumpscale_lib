@@ -13,6 +13,18 @@ It supports the following functionalities:
 - Create and spend multisig outputs
 
 
+# Dependencies
+The client depends on the following python libraries to be able to function properly:
+- ed25519
+- pyblake2
+
+If you installed jumpscale on your system in dev mode and without setting the full installation flag (JSFULL=1) then you will need to install these libs manually if you want to continue using the client, to do that simply execute the following commands:
+```python
+pip3 install ed25519
+pip3 install pyblake2
+```
+
+
 # How to use
 
 ## Creating a wallet
