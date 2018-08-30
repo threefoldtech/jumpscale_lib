@@ -19,7 +19,7 @@ from .models import ACIModel
 from .models import ACICollection
 # from .FuseExample import FuseExample
 
-logger = j.logger.get('j.tools.flist.merger')
+logger = j.logging.get('j.tools.flist.merger')
 
 
 class FListFactory:

@@ -12,7 +12,7 @@ from JumpscaleLib.clients.blockchain.rivine.errors import RESTAPIError, Insuffic
 from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash, UNLOCK_TYPE_MULTISIG
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory, DEFAULT_TRANSACTION_VERSION
 
-logger = j.logger.get(__name__)
+logger = j.logging.get(__name__)
 
 class RivineMultiSignatureWallet:
     """
