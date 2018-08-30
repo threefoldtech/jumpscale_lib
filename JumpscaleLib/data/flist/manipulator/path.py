@@ -4,9 +4,10 @@ from stat import S_ISBLK, S_ISCHR, S_ISFIFO, S_ISLNK, S_ISREG, S_ISSOCK
 import pwd
 import grp
 
+import g8storclient
 from jumpscale import j
 
-logger = j.logging.get(__name__)
+logger = j.logger.get(__name__)
 
 
 class Path:
@@ -93,12 +94,7 @@ class Path:
         """
         copy a file from the local filesystem into the flist
         """
-        logger.debug(
-            'copy file from %s to %s',
-            src,
-            os.path.join(
-                self.abspath,
-                os.path.basename(src)))
+        logger.debug('copy file from %s to %s', src, os.path.join(self.abspath, os.path.basename(src)))
         return self._add_file(src)
 
     def copytree(self, src):
@@ -242,8 +238,7 @@ class Path:
             return []
 
         if ttype not in ('file', 'dir', 'link', 'special'):
-            raise ValueError(
-                "type should be one of 'file','dir', 'link','special'")
+            raise ValueError("type should be one of 'file','dir', 'link','special'")
         out = []
 
         for x in self._obj.contents:
@@ -313,7 +308,6 @@ class Path:
             new_inode.attributes.file.blockSize = 128  # FIXME ?
             fullpath = os.path.abspath(src)
             logger.debug("[+] populating: %s" % fullpath)
-            import g8storclient # XXX VERY BAD HACK! see issue #58
             hashs = g8storclient.encrypt(fullpath)
 
             if hashs is None:
@@ -341,9 +335,7 @@ class Path:
                 new_inode.attributes.special.type = "unknown"
 
             if S_ISBLK(src_stat.st_mode) or S_ISCHR(src_stat.st_mode):
-                id = '%d,%d' % (
-                    os.major(src_stat.st_rdev),
-                    os.minor(src_stat.st_rdev))
+                id = '%d,%d' % (os.major(src_stat.st_rdev), os.minor(src_stat.st_rdev))
                 new_inode.attributes.special.data = id
 
         # set ACI on new inode

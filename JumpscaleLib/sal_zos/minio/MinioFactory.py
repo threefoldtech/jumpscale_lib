@@ -16,7 +16,7 @@ class MinioFactory(JSBASE):
         """
         Get sal for minio
         Returns:
-            the sal layer
+            the sal layer 
         """
         return Minio(name, node, login, password, zdbs, namespace, private_key,
                      namespace_secret, node_port, block_size, restic_username,

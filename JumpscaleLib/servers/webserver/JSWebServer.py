@@ -18,22 +18,11 @@ TEMPLATE = """
 
 
 class JSWebServer(JSConfigBase):
-    def __init__(
-            self,
-            instance,
-            data=None,
-            parent=None,
-            interactive=False,
-            template=None):
+    def __init__(self, instance, data=None, parent=None, interactive=False, template=None):
         if not data:
             data = {}
-        JSConfigBase.__init__(
-            self,
-            instance=instance,
-            data=data,
-            parent=parent,
-            template=template or TEMPLATE,
-            interactive=interactive)
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,
+                              template=template or TEMPLATE, interactive=interactive)
 
         # Set proper instance for j.data.schema
         self.host = self.config.data["host"]
@@ -66,9 +55,7 @@ class JSWebServer(JSConfigBase):
         self.app = self.loader.create_app(debug=debug)
         self.app.debug = True
 
-        self.http_server = WSGIServer(
-            (self.host, self.port),
-            self.app, handler_class=WebSocketHandler)
+        self.http_server = WSGIServer((self.host, self.port), self.app, handler_class=WebSocketHandler)
         self.app.http_server = self.http_server
         self.app.server = self
         self.docs_load()
@@ -86,7 +73,7 @@ class JSWebServer(JSConfigBase):
                 path = j.clients.git.getContentPathFromURLorPath(url)
                 if not j.sal.fs.exists(path):
                     j.clients.git.pullGitRepo(url=url)
-                j.tools.markdowndocs.load(path=path, name=name)
+                j.tools.docsites.load(path=path, name=name)
 
     @property
     def path(self):
@@ -97,9 +84,7 @@ class JSWebServer(JSConfigBase):
         if res:
             self.logger.info("generated sslkeys for gedis in %s" % self.ws_dir)
         else:
-            self.logger.info(
-                'using existing key and cerificate for gedis @ %s' %
-                self.ws_dir)
+            self.logger.info('using existing key and cerificate for gedis @ %s' % self.ws_dir)
         key = os.path.join(self.path, 'ca.key')
         cert = os.path.join(self.path, 'ca.crt')
         return key, cert
@@ -124,7 +109,6 @@ class JSWebServer(JSConfigBase):
         self.server.stop()
 
     def __repr__(self):
-        return '<Flask Server http://%s  app_dir=%s)' % (
-            self.address, self.path)
+        return '<Flask Server http://%s  app_dir=%s)' % (self.address, self.path)
 
     __str__ = __repr__

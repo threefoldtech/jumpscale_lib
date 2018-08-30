@@ -53,8 +53,7 @@ class FuseOperations(llfuse.Operations):
             inode = self._get_parent_inode(inode_p)
         else:
             for content in self.contents:
-                if inode_p == content['parent_inode'] and name.decode(
-                        "utf-8") == content['name']:
+                if inode_p == content['parent_inode'] and name.decode("utf-8") == content['name']:
                     inode = content['inode']
                     break
         try:
@@ -80,8 +79,7 @@ class FuseOperations(llfuse.Operations):
 
         entry.st_blksize = 4096
 
-        entry.st_blocks = 0 if entity['size'] == 0 else int(
-            ((entity['size'] - 1) / entry.st_blksize + 1)) * 8
+        entry.st_blocks = 0 if entity['size'] == 0 else int(((entity['size'] - 1) / entry.st_blksize + 1)) * 8
         entry.st_atime_ns = int(time() * 1e9)
         entry.st_mtime_ns = entity["modificationTime"] * 1e9
         entry.st_ctime_ns = entity["creationTime"] * 1e9
@@ -101,8 +99,7 @@ class FuseOperations(llfuse.Operations):
             ppath = os.path.join(self.rootpath, subdir.location)
             if self.max_inode_count + 1 not in self.inode_path and ppath not in self.inode_path.values():
                 self.max_inode_count += 1
-                self.inode_path[self.max_inode_count] = os.path.join(
-                    self.rootpath, subdir.location)
+                self.inode_path[self.max_inode_count] = os.path.join(self.rootpath, subdir.location)
                 self.contents.append({
                     "inode": self.max_inode_count,
                     "parent_inode": inode,
@@ -111,14 +108,10 @@ class FuseOperations(llfuse.Operations):
             entries.append(entry)
 
         for entry in ddir['files']:
-            ppath = os.path.join(
-                self.rootpath,
-                ddir['location'],
-                entry['name'])
+            ppath = os.path.join(self.rootpath, ddir['location'], entry['name'])
             if self.max_inode_count + 1 not in self.inode_path and ppath not in self.inode_path.values():
                 self.max_inode_count += 1
-                self.inode_path[self.max_inode_count] = os.path.join(
-                    self.rootpath, ddir['location'], entry['name'])
+                self.inode_path[self.max_inode_count] = os.path.join(self.rootpath, ddir['location'], entry['name'])
                 self.contents.append({
                     "inode": self.max_inode_count,
                     "parent_inode": inode,
@@ -127,14 +120,10 @@ class FuseOperations(llfuse.Operations):
             entries.append(entry)
 
         for entry in ddir['links']:
-            ppath = os.path.join(
-                self.rootpath,
-                ddir['location'],
-                entry['name'])
+            ppath = os.path.join(self.rootpath, ddir['location'], entry['name'])
             if self.max_inode_count + 1 not in self.inode_path and ppath not in self.inode_path.values():
                 self.max_inode_count += 1
-                self.inode_path[self.max_inode_count] = os.path.join(
-                    self.rootpath, ddir['location'], entry['name'])
+                self.inode_path[self.max_inode_count] = os.path.join(self.rootpath, ddir['location'], entry['name'])
                 self.contents.append({
                     "inode": self.max_inode_count,
                     "parent_inode": inode,
@@ -143,14 +132,10 @@ class FuseOperations(llfuse.Operations):
             entries.append(entry)
 
         for entry in ddir['specials']:
-            ppath = os.path.join(
-                self.rootpath,
-                ddir['location'],
-                entry['name'])
+            ppath = os.path.join(self.rootpath, ddir['location'], entry['name'])
             if self.max_inode_count + 1 not in self.inode_path and ppath not in self.inode_path.values():
                 self.max_inode_count += 1
-                self.inode_path[self.max_inode_count] = os.path.join(
-                    self.rootpath, ddir['location'], entry['name'])
+                self.inode_path[self.max_inode_count] = os.path.join(self.rootpath, ddir['location'], entry['name'])
                 self.contents.append({
                     "inode": self.max_inode_count,
                     "parent_inode": inode,
@@ -214,8 +199,7 @@ class FuseOperations(llfuse.Operations):
         if self.inode_buffer.get(fh, None):
             ppath = '/tmp/{}'.format(j.sal.fs.getBaseName(self.inode_path[fh]))
             if self.inode_hash.get(fh, None):
-                g8os_stor.downloadFile0(
-                    self.client, ppath, self.inode_hash[fh])
+                g8os_stor.downloadFile0(self.client, ppath, self.inode_hash[fh])
                 with open(ppath) as f:
                     data = f.read()
 

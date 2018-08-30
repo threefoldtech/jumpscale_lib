@@ -25,6 +25,15 @@ class GiteaFactory(JSConfigBase):
         return j.sal.fs.getDirName(os.path.abspath(__file__)).rstrip("/")
 
     def get_by_params(self,instance,url,gitea_token):
+        """get gitea client instance without using config manager
+
+        :param instance: name of the instance
+        :type instance: str
+        :param url: url of gitea server
+        :type url: str
+        :param gitea_token: generated gittea user token
+        :type gitea_token: str
+        """
         data={}
         data["url"]=instance
         data["gitea_token_"]=gitea_token
@@ -42,21 +51,33 @@ class GiteaFactory(JSConfigBase):
 
     def test(self):
         """
-        js9 'j.clients.gitea.test()'
+        js_shell 'j.clients.gitea.test()'
         """
         # self.generate()
         cl = self.get()
         cl.cache.reset()
 
-        # Test start
-        j.logger.logger.info('\n\n\n### Test Start\n\n\n')
+        print(cl.orgs_currentuser_list())
 
-        # Print API version
-        j.logger.logger.info(cl.version)
+        names = [item for item in cl.orgs_currentuser_list().keys()]
+        names.sort()
+        if "test" in names:
+            name = "test"
+        else:
+            raise RuntimeError("can only run test if test org exists")
 
-        # Admin
+        org = cl.org_get(name)
 
-        admin = cl.admin
-        admin.test()
+        if "testrepo" not in org.repos_list():
+            #means no test repo yet, lets create one
+            org.repo_new("testrepo")
 
-        j.logger.logger.info('\n\n\n### Test End\n\n\n')
+
+        print(org.repos_list())
+        repo_name = [item for item in org.repos_list(refresh=True).keys()][0]  # first reponame
+
+        repo = org.repo_get(repo_name)
+
+        print(repo.issues_get())
+
+        org.labels_milestones_add(remove_old=True)

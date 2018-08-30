@@ -1,12 +1,14 @@
+import time
+
+import yaml
 from jumpscale import j
-from .http import HTTPServer
+
+from ..abstracts import Collection
+from .cloudinit import CloudInit
 from .dhcp import DHCP
 from .firewall import Firewall
-from ..abstracts import Collection
+from .http import HTTPServer
 from .network import Networks
-from .cloudinit import CloudInit
-import yaml
-import time
 
 
 class DestBind:
@@ -170,6 +172,57 @@ class HTTPProxies(Collection):
         return proxy
 
 
+class Route:
+
+    def __init__(self, name, dev, dest, gateway=None):
+        """
+        Route instance
+
+
+        :param name: logcal name of the route
+        :type name: str
+        :param dev: device name
+        :type dev: str
+        :param dest: destination network
+        :type dest: str
+        :param gateway: optional gateway, defaults to None
+        :param gateway: str, optional
+        """
+
+        self.name = name
+        self.dev = dev
+        self.dest = dest
+        self.gateway = gateway
+
+    def __str__(self):
+        return "Route <{} via {} dev {}>".format(self.dest, self.gateway, self.dev)
+
+    __repr__ = __str__
+
+
+class Routes(Collection):
+
+    def add(self, name, dev, dest, gateway=None):
+        """
+        Add a route to the gateway
+
+
+        :param name: logical name of the route
+        :type name: str
+        :param dev: device name
+        :type dev: str
+        :param dest: destination network
+        :type dest: str
+        :param gateway: optional gateway, defaults to None
+        :param gateway: str, optional
+        """
+
+        super().add(name)
+        route = Route(name, dev, dest, gateway)
+        self._items.append(route)
+        return route
+
+
 class Gateway:
     def __init__(self, node, name):
         """
@@ -184,7 +237,8 @@ class Gateway:
         self.domain = 'lan'
         self._container = None
         self.networks = Networks(self)
-        self.flist = 'https://hub.gig.tech/gig-official-apps/zero-os-gw-master.flist'
+        self.routes = Routes(self)
+        self.flist = 'https://hub.grid.tf/tf-official-apps/zero-os-gw-master.flist'
         self.portforwards = PortForwards(self)
         self.httpproxies = HTTPProxies(self)
         self.certificates = []
@@ -199,6 +253,7 @@ class Gateway:
         :type data: dict following the schema of the gateway template https://github.com/zero-os/0-templates/tree/master/templates/gateway/schema.capnp
         """
         self.networks = Networks(self)
+        self.routes = Routes(self)
         self.portforwards = PortForwards(self)
         self.httpproxies = HTTPProxies(self)
         self.zt_identity = data.get('ztIdentity')
@@ -233,6 +288,8 @@ class Gateway:
                                   forward.get('protocols'))
         for proxy in data['httpproxies']:
             self.httpproxies.add(proxy['name'], proxy['host'], proxy['destinations'], proxy['types'])
+        for route in data['routes']:
+            self.routes.add(route['name'], route['dev'], route['dest'], route['gateway'])
 
     def deploy(self):
         """
@@ -267,6 +324,7 @@ class Gateway:
         self.configure_cloudinit()
         self.configure_http()
         self.save_certificates()
+        self.configure_routes()
 
     def stop(self):
         """
@@ -372,6 +430,7 @@ class Gateway:
         """
         data = {
             'networks': [],
+            'routes': [],
             'hostname': self.name,
             'portforwards': [],
             'httpproxies': [],
@@ -417,6 +476,13 @@ class Gateway:
                 'dstip': forward.target.ipaddress,
                 'protocols': forward.protocols,
                 'name': forward.name,
+            })
+        for route in self.routes:
+            data['routes'].append({
+                'name': route.name,
+                'dev': route.dev,
+                'dest': route.dest,
+                'gateway': route.gateway
             })
         return data
 
@@ -465,6 +531,28 @@ class Gateway:
 
         firewall = Firewall(self.container, self.networks, self.portforwards)
         firewall.apply_rules()
+
+    def configure_routes(self):
+        """
+        Configure routing table
+        """
+        if self.container is None:
+            raise RuntimeError('Can not configure fw when gateway is not deployed')
+        existing_routes = self.container.client.ip.route.list()
+
+        def exists(route):
+            for r in existing_routes:
+                if r['dev'] == route.dev and r['dst'] == route.dest:
+                    return True
+            return False
+
+        for route in self.routes:
+            if not exists(route):
+                self.container.client.ip.route.add(
+                    dev=route.dev,
+                    dst=route.dest,
+                    gw=route.gateway
+                )
 
     def _remove_container_portforwards(self):
         """

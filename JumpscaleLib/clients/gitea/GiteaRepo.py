@@ -1,360 +1,165 @@
-import os
-import json
 from jumpscale import j
-
-from .GiteaLabels import GiteaLabels
-from .GiteaMilestones import GiteaMilestones
-from .GiteaIssues import GiteaIssues
-from .GiteaRepoPullRequests import GiteaRepoPullRequests
-from .GiteaIssueTime import GiteaIssueTime
-from .GiteaRepoPublicKeys import GiteaRepoPublicKeys
-from .GiteaRepoHooks import GiteaRepoHooks
-from .GiteaCommits import GiteaCommits
-from .GiteaCollaborators import GiteaCollaborators
-from .GiteaBranches import GiteaBranches
+from datetime import datetime
+import calendar
 
 JSBASE = j.application.jsbase_get_class()
 
 
-
 class GiteaRepo(JSBASE):
 
-    def __init__(
-            self,
-            client,
-            user,
-            clone_url=None,
-            created_at=None,
-            default_branch='master',
-            description=None,
-            empty=False,
-            fork=False,
-            forks_count=None,
-            full_name=None,
-            html_url=None,
-            ssh_url=None,
-            id=None,
-            mirror=None,
-            name=None,
-            open_issues_count=None,
-            owner=None,
-            auto_init=True,
-            gitignores=None,
-            license=None,
-            private=True,
-            readme=None,
-            size=None,
-            stars_count=0,
-            watchers_count=0,
-            permissions=None
-
-    ):
+    def __init__(self, org, name, data):
         JSBASE.__init__(self)
-        self.user = user
-        self.client = client
-        self.clone_url = clone_url
-        self.description = description
-        self.full_name = full_name
-        self.id = id
-        self.created_at = created_at
-        self.default_branch = default_branch
-        self.empty = empty
-        self.fork = fork
-        self.forks_count = forks_count
-        self.html_url = html_url
-        self.mirror = mirror
-        self.name = name
-        self.open_issues_count = open_issues_count
-        self.owner = owner
-        self.auto_init = auto_init
-        self.gitignores = gitignores
-        self.license=license
-        self.private = private
-        self.readme = readme
-        self.size=size
-        self.stars_count=stars_count
-        self.watchers_count=watchers_count
-        self.permossions=permissions
-        self.ssh_url=ssh_url
-        self.archive_type = None
+        self.name = data.name
+        self.owner = data.owner.login
+        self.data = data
+        self.org = org
+        self.id = data.id
+        self.client = org.client
+        self.api = self.client.api.repos
 
-    @property
-    def data(self):
-        d = {}
+    def labels_add(self, labels=None, remove_old=False):
+        """Add multiple labels to 1 or more repo's.
+        If a label with the same name exists on a repo, it won't be added.
 
-        for attr in [
-            'id',
-            'clone_url',
-            'description',
-            'full_name',
-            'created_at',
-            'default_branch',
-            'empty',
-            'fork',
-            'forks_count',
-            'html_url',
-            'mirror',
-            'name',
-            'open_issues_count',
-            'owner',
-            'size',
-            'stars_count',
-            'watchers_count',
-            'permossions',
-            'ssh_url'
-        ]:
-
-            v = getattr(self, attr)
-            if v:
-                d[attr] = v
-        return d
-
-    def _validate(self, create=False, delete=False, archive=False):
-        """
-            Validate required attributes are set before doing any operation
-        """
-        errors = {}
-        is_valid = True
-
-        operation = 'create'
-
-        if create:
-            if not self.user.is_current and not self.client.users.current.is_admin:
-                is_valid = False
-                errors['permissions'] = 'Admin permissions required'
-
-            if self.id:
-                is_valid = False
-                errors['id'] = 'Already existing'
-            else:
-                if not self.user.username:
-                    is_valid = False
-                    errors['user'] = {'username':'Missing'}
-
-                if not self.name:
-                    is_valid = False
-                    errors['name'] = 'Missing'
-        elif delete:
-            operation = 'delete'
-            if not hasattr(self, 'user') or not hasattr(self.user, 'username'):
-                return False, 'User is required'
-            if not self.name:
-                return False, 'Repo name is required'
-        elif archive:
-            operation = 'archive'
-            if not hasattr(self, 'user') or not hasattr(self.user, 'username'):
-                return False, 'User is required'
-            if not self.name:
-                return False, 'Repo name is required'
-            if not self.archive_type in ['zip', 'tar.gz']:
-                return False, 'Only zip and tar.gz are accepted archive types'
-
-        if is_valid:
-            return True, ''
-
-        return False, '{0} Error '.format(operation) + json.dumps(errors)
-
-    def save(self, commit=True):
-        is_valid, err = self._validate(create=True)
-
-        if not commit or not is_valid:
-            self.logger.debug(err)
-            return is_valid
-
-        try:
-            if not self.user.is_current:
-                resp = self.user.client.api.admin.adminCreateRepo(data=self.data, username=self.user.username)
-            else:
-                resp = self.user.client.api.user.createCurrentUserRepo(data=self.data)
-
-            repo = resp.json()
-            for k, v in repo.items():
-                setattr(self, k, v)
-
-            return True
-        except Exception as e:
-            if e.response.status_code == 404:
-                self.logger.error('not found')
-            else:
-                self.logger.error(e.response.content)
-            return False
-
-    def delete(self, commit=True):
-        is_valid, err = self._validate(delete=True)
-
-        if not commit or not is_valid:
-            self.logger.debug(err)
-            return is_valid
-        try:
-            self.user.client.api.repos.repoDelete(repo=self.name, owner=self.user.username)
-            self.id = None
-            return True
-        except Exception as e:
-            return False, e.response.content
-
-    def star(self):
-        try:
-
-            self.user.client.api.user.userCurrentPutStar(
-                data={},
-                owner=self.user.username,
-                repo=self.name
-            )
-
-            return True
-
-        except Exception as e:
-            if e.response.status_code == 404:
-                self.logger.debug('Repo or owner not found')
-            else:
-                self.logger.debug(e.response.content)
-
-        return False
-
-    def unstar(self):
-        try:
-            self.user.client.api.user.userCurrentDeleteStar(
-                owner=self.user.username,
-                repo=self.name
-            )
-            return True
-
-        except Exception as e:
-
-            if e.response.status_code == 404:
-                self.logger.debug('Repo or owner not found')
-            else:
-                self.logger.debug(e.response.content)
-        return False
-
-    @property
-    def is_starred_by_current_user(self):
-        try:
-            self.user.client.api.user.userCurrentCheckStarring(
-                owner=self.user.username,
-                repo=self.name
-            )
-
-            return True
-
-        except Exception as e:
-
-            if e.response.status_code == 404:
-                self.logger.debug('Repo or owner not found')
-            else:
-                self.logger.debug(e.response.content)
-        return False
-
-    def download(self, destination_dir, branch='master', type='zip'):
-        self.archive_type = type
-
-        is_valid, err = self._validate(archive=True)
-
-        if not is_valid:
-            self.logger.debug(err)
-            return is_valid
-
-        try:
-            resp = self.user.client.api.repos.repoGetArchive(
-                archive=None,
-                filepath='%s.%s' % (branch, type),
-                repo=self.name, owner=self.user.username
-            )
-
-            if not os.path.exists(destination_dir):
-                j.sal.fs.createDir(destination_dir)
-
-            path = os.path.join(destination_dir, '%s.%s' % (branch, type))
-
-            with open(path, 'wb') as f:
-                f.write(resp.content)
-            self.logger.debug('Successfully downloaded %s' % path)
-            return True
-        except Exception as e:
-            if e.response.status_code == 404:
-                self.logger.debug('Repo or owner not found')
-            else:
-                self.logger.debug(e.response.content)
-            return False
-
-    def download_file(self, destination_dir, filename, branch='master'):
-        """
-        get_file('master/knn.py')
+        :param labels: a list of labels  ex: [{'color': '#fef2c0', 'name': 'state_blocked'}] if none will use default org labels, defaults to None
+        :param labels: list, optional
+        :param remove_old: removes old labels if true, defaults to False
+        :param remove_old: bool, optional
         """
 
-        try:
-            resp = self.user.client.api.repos.repoGetRawFile(
-                filepath='%s/%s' % (branch, filename),
-                repo=self.name,
-                owner=self.user.username
-            )
+        self.logger.info("labels add")
 
-            if not os.path.exists(destination_dir):
-                j.sal.fs.createDir(destination_dir)
+        labels_default = labels or self.org.labels_default_get()
 
-            path = os.path.join(destination_dir, filename)
+        repo_labels = self.api.issueListLabels(self.name, self.owner)[0]
+        # @TODO: change the way we check on label name when this is fixed
+        names = [l.name for l in repo_labels]
+        for label in labels_default:
+            if label["name"] in names:
+                continue
+            self.client.api.repos.issueCreateLabel(label, self.name, self.owner)
 
-            with open(path, 'wb') as f:
-                f.write(resp.content)
-            self.logger.debug('Successfully downloaded %s' % path)
-            return True
-        except Exception as e:
-            if e.response.status_code == 404:
-                self.logger.debug('Repo or owner not found')
-            else:
-                self.logger.debug(e.response.content)
-            return False
+        def get_label_id(name):
+            for item in repo_labels:
+                if item.name == name:
+                    return str(item.id)
+
+        if remove_old:
+            labels_on_repo = [item.name for item in repo_labels]
+            labels_default = [item['name'] for item in labels_default]
+            for label in labels_on_repo:
+                if label not in labels_default:
+                    self.client.api.repos.issueDeleteLabel(get_label_id(label), self.name, self.owner)
+
+    def milestones_add(self, milestones=None, remove_old=False):
+        """Add multiple milestones to multiple repos.
+        If a milestone with the same title exists on a repo, it won't be added.
+        If no milestones are supplied, the default milestones for the current quarter will be added.
+
+        :param milestones: a list of milestones ex: [['Q1','2018-03-31'],...], defaults to None
+        :param milestones: list, optional
+        :param remove_old: removes old milestones if true, defaults to False
+        :param remove_old: bool, optional
+        """
+
+        self.logger.info("milestones add")
+
+        if not milestones:
+            milestones = self.milestones_default
+
+        def deadline_get(year_month_day):
+            year, month, day = year_month_day.split("-")
+            return '%s-%s-%sT23:59:00Z' % (year, str(month).zfill(2), str(day).zfill(2))
+
+        def milestone_get(title, deadline):
+            deadline = deadline_get(deadline)
+            return {"title": title, "due_on": deadline}
+
+        repo_milestones = self.client.api.repos.issueGetMilestones(self.name, self.owner)[0]
+        # @TODO: change the way we check on milestone title when this is fixed https://github.com/Jumpscale/go-raml/issues/396
+        names = [m.title for m in repo_milestones]
+        for title, deadline in milestones:
+            if title in names:
+                continue
+            milestone = milestone_get(title, deadline)
+            self.client.api.repos.issueCreateMilestone(milestone, self.name, self.owner)
+
+        milestone = milestone_get("roadmap", "2100-12-30")
+        self.client.api.repos.issueCreateMilestone(milestone, self.name, self.owner)
+
+        if remove_old:
+            milestones_default = [item[0] for item in milestones]
+            for item in repo_milestones:
+                if item.title not in milestones_default:
+                    self.client.api.repos.issueDeleteMilestone(str(item.id), self.name, self.owner)
 
     @property
-    def branches(self):
-        return GiteaBranches(self.user.client, self, self.user)
+    def milestones_default(self):
+        """property for generating default milestones
 
-    @property
-    def collaborators(self):
-        return GiteaCollaborators(self.user.client, self, self.user)
-
-    @property
-    def commits(self):
-        return GiteaCommits(self.user.client, self, self.user)
-
-    @property
-    def hooks(self):
-        return GiteaRepoHooks(self.user.client, self, self.user)
-
-    @property
-    def keys(self):
-        return GiteaRepoPublicKeys(self.user, self)
-
-    @property
-    def tracked_times(self):
-        result = []
-        resp = self.user.client.api.repos.repoTrackedTimes(repo=self.name, owner=self.user.username).json()
-        for item in resp:
-            t = GiteaIssueTime(self.user)
-            for k, v in item.items():
-                setattr(t, k, v)
-            result.append(t)
-        return result
-
-    @property
-    def pull_requests(self):
-        return GiteaRepoPullRequests(self.user.client, self, self.user)
-
-    @property
-    def issues(self):
-        return GiteaIssues(self.user, self)
-
-    @property
-    def milestones(self):
-        return GiteaMilestones(self.user.client, self, self.user)
-
-    @property
-    def labels(self):
-        return GiteaLabels(self.user.client, self, self.user)
+        :return: default milestones according to the cuurent quarter
+        :rtype: list
+        """
 
 
+        today = datetime.today()
+        thismonth = today.month
+        months = [i for i in range(thismonth, thismonth + 5)]
+        year = today.year
+        milestones = []
 
-    def __str__(self):
-        return '\n<Repo>\n%s' % json.dumps(self.data, indent=4)
+        # Set the begining of the week to Sunday
+        c = calendar.Calendar(calendar.SUNDAY)
 
-    __repr__ = __str__
+        # Add weekly milestones
+        for month in months:
+            lastdate = [item for item in c.itermonthdates(2018, month) if item.month == month][-1]
+            month_name = calendar.month_name[month].lower()[0:3]
+            # weeks = c.monthdayscalendar(year, month)
+
+            due_on = '%s-%s-%s' % (lastdate.year, str(lastdate.month).zfill(2), str(lastdate.day).zfill(2))
+            milestones.append((month_name, due_on))
+
+            # if month == thismonth:
+            #     for i, week in enumerate(weeks):
+            #         # check if this week has a value for Saturday
+            #         day = week[6]
+            #         if day:
+            #             title = '%s_w%s' % (month_name, i + 1)
+            #             due_on = '%s-%s-%s' % (year, str(month).zfill(2), str(day).zfill(2))
+            #             milestones.append((title, due_on))
+            # else:
+            #     res=[]
+            #     for i, week in enumerate(weeks):
+            #         # check if this week has a value for Saturday
+            #         day = week[6]
+            #         if day:
+            #             res.append((i,day))
+            #     i,day=res[-1]
+            #     title = '%s_w%s' % (month_name, i + 1)
+            #     due_on = '%s-%s-%s' % (year, str(month).zfill(2), str(day).zfill(2))
+            #     milestones.append((title, due_on))
+
+        # Add quarter milestone
+        for quarter in range(1, 5):
+            title = 'Q%s' % quarter
+            quarter_month = quarter * 3
+            last_day = calendar.monthrange(year, quarter_month)[1]
+            due_on = '%s-%s-%s' % (year, str(quarter_month).zfill(2), last_day)
+            milestones.append((title, due_on))
+
+        return milestones
+
+    def issues_get(self):
+        """used to get issues in the repo
+
+        :return: a list of issue objects from the generated client
+        :rtype: list
+        """
+
+        return self.api.issueListIssues(self.name, self.owner)[0]
+
+    def __repr__(self):
+        return "repo:%s" % self.name
+
+    __str__ = __repr__

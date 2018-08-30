@@ -4,7 +4,7 @@ from pprint import pprint as print
 import time
 
 TEMPLATE = """
-addr = "localhost"
+addr = "127.0.0.1"
 port = 9900
 path = ""
 mode = ""
@@ -27,7 +27,7 @@ class ZDBServer(JSConfigBase):
 
         self._initdir()
 
-    def client_get(self, secrets="",encryptionkey=""):
+    def client_get(self, secrets=""):
         """
         
         """
@@ -36,8 +36,7 @@ class ZDBServer(JSConfigBase):
                                        adminsecret=self.config.data['adminsecret_'],
                                        addr=self.config.data['addr'],
                                        port=self.config.data['port'],
-                                       mode=self.config.data['mode'],
-                                       encryptionkey=encryptionkey
+                                       mode=self.config.data['mode']
                                        )
         return cl
 
@@ -50,8 +49,7 @@ class ZDBServer(JSConfigBase):
                                        adminsecret=self.config.data['adminsecret_'],
                                        addr=self.config.data['addr'],
                                        port=self.config.data['port'],
-                                       mode=self.config.data['mode'],
-                                       encryptionkey=encryptionkey
+                                       mode=self.config.data['mode']
                                        )
         return cl.namespace_get(namespace)        
 
@@ -66,6 +64,7 @@ class ZDBServer(JSConfigBase):
     def start(self):
         """
         start zdb in tmux using this directory (use prefab)
+        will only start when the server is not life yet
         """
 
         mode = self.config.data['mode']

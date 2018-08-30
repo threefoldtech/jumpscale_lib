@@ -38,31 +38,16 @@ class MarkdownFactory(JSBASE):
         return MDData()
 
 
-    def test1(self):
-        ''' js_shell 'j.data.markdown.test1()'
-            TODO: assert if test suceeded
+    def test(self):
         '''
-        from .tests.test1 import test
-        test()
-
-    def test2(self):
-        ''' js_shell 'j.data.markdown.test2()'
-            TODO: assert if test suceeded
+        js_shell 'j.data.markdown.test()'
         '''
-        from .tests.test2 import test
-        test()
-
-    def test3(self):
-        ''' js_shell 'j.data.markdown.test3()'
-            TODO: assert if test suceeded
-        '''
-        from .tests.test3 import test
-        test()
-
-    def test4(self):
-        ''' js_shell 'j.data.markdown.test4()'
-            TODO: assert if test suceeded
-        '''
+        # from .tests.test1 import test
+        # test()
+        # from .tests.test2 import test
+        # test()        
+        # from .tests.test3 import test
+        # test()        
         from .tests.test4 import test
         test()
 

@@ -6,7 +6,7 @@ BASECMD = "btrfs"
 JSBASE = j.application.jsbase_get_class()
 
 
-class BtfsExtensionFactory(JSBASE):
+class BtfsExtensionFactory(object, JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.btrfs"
@@ -20,11 +20,8 @@ class BtfsExtensionFactory(JSBASE):
 class BtrfsExtension(JSBASE):
 
     def __init__(self, executor):
-        self.__conspattern = re.compile(
-            "^(?P<key>[^:]+): total=(?P<total>[^,]+), used=(?P<used>.+)$",
-            re.MULTILINE)
-        self.__listpattern = re.compile(
-            r"^ID (?P<id>\d+).+?path (?P<name>.+)$", re.MULTILINE)
+        self.__conspattern = re.compile("^(?P<key>[^:]+): total=(?P<total>[^,]+), used=(?P<used>.+)$", re.MULTILINE)
+        self.__listpattern = re.compile("^ID (?P<id>\d+).+?path (?P<name>.+)$", re.MULTILINE)
         self._executor = executor
         self._disks = None
         JSBASE.__init__(self)
@@ -34,8 +31,7 @@ class BtrfsExtension(JSBASE):
         return self._executor.prefab
 
     def __btrfs(self, command, action, *args):
-        cmd = "%s %s %s %s" % (BASECMD, command, action, " ".join(
-            ['"%s"' % a for a in args]))
+        cmd = "%s %s %s %s" % (BASECMD, command, action, " ".join(['"%s"' % a for a in args]))
         code, out, err = self._executor.execute(cmd, die=True, showout=False)
 
         # if code > 0:
@@ -92,8 +88,7 @@ class BtrfsExtension(JSBASE):
             return False
 
         rc, res, err = self._executor.prefab.core.run(
-            "btrfs subvolume list %s" %
-            path, checkok=False, die=False, showout=False)
+            "btrfs subvolume list %s" % path, checkok=False, die=False, showout=False)
 
         if rc > 0:
             if res.find("can't access") != -1:
@@ -135,18 +130,15 @@ class BtrfsExtension(JSBASE):
         filter e.g. /docker/
         """
         for i in range(4):
-            # ugly for now, but cannot delete subvols, by doing this, it words
-            # brute force
-            for path2 in self.subvolumeList(
-                    path, filter=filter, filterExclude=filterExclude):
+            # ugly for now, but cannot delete subvols, by doing this, it words brute force
+            for path2 in self.subvolumeList(path, filter=filter, filterExclude=filterExclude):
                 self.logger.debug("delete:%s" % path2)
                 try:
                     self.subvolumeDelete(path2)
                 except BaseException:
                     pass
 
-    def storagePoolCreateOnAllNonRootDisks(
-            self, path="/storage", redundant=False):
+    def storagePoolCreateOnAllNonRootDisks(self, path="/storage", redundant=False):
         """
         look for all disks which do not have a partition mounted on /
         and add them in btrfs storage pool
@@ -169,7 +161,10 @@ class BtrfsExtension(JSBASE):
         if not foundRoot:
             raise j.exceptions.Input(
                 message="Did not find root disk, cannot create storage pool for btrfs on all other disks",
-                level=1, source="", tags="", msgpub="")
+                level=1,
+                source="",
+                tags="",
+                msgpub="")
 
         # TODO: need to remove potential partitons, make sure they are erased,
         # TODO: for each disk found which has a partition (/), all remaining
@@ -178,24 +173,21 @@ class BtrfsExtension(JSBASE):
 
         for disk in res:
             if disk.mountpoint == path:
-                self.logger.debug(
-                    "no need to format btrfs, was already done, warning: did not check if redundant")
+                self.logger.debug("no need to format btrfs, was already done, warning: did not check if redundant")
                 return
             disk.erase()
 
         disksLine = " ".join([item.name for item in res])
         if len(res) == 0:
-            raise j.exceptions.Input(
-                message="did not find disks to format",
-                level=1,
-                source="",
-                tags="",
-                msgpub="")
+            raise j.exceptions.Input(message="did not find disks to format")
         if len(res) == 1:
             if redundant:
                 raise j.exceptions.Input(
                     message="did only find 1 disk for btrfs and redundancy was asked for, cannot continue.",
-                    level=1, source="", tags="", msgpub="")
+                    level=1,
+                    source="",
+                    tags="",
+                    msgpub="")
             cmd = "mkfs.btrfs -f %s" % disksLine
         elif len(res) == 2:
             cmd = "mkfs.btrfs -f -m raid1 -d raid1 %s" % disksLine
@@ -238,12 +230,8 @@ class BtrfsExtension(JSBASE):
             cons = m.groupdict()
             key = cons['key'].lower()
             key = key.replace(", ", "-")
-            values = {
-                'total': j.data_units.bytes.toSize(
-                    value=int(
-                        cons['total']), output='M'), 'used': j.data_units.bytes.toSize(
-                    value=int(
-                        cons['used']), output='M')}
+            values = {'total': j.data_units.bytes.toSize(value=int(cons['total']), output='M'),
+                      'used': j.data_units.bytes.toSize(value=int(cons['used']), output='M')}
             result[key] = values
 
         return result

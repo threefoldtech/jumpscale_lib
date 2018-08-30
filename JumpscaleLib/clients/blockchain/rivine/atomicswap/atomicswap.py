@@ -11,7 +11,7 @@ from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import ATOMIC
 from JumpscaleLib.clients.blockchain.rivine.const import HASTINGS_TFT_VALUE, ATOMICSWAP_SECRET_SIZE, MINIMUM_TRANSACTION_FEE
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory, DEFAULT_TRANSACTION_VERSION, HASHTYPE_COINOUTPUT_ID
 
-logger = j.logging.get(__name__)
+logger = j.logger.get(__name__)
 
 class AtomicSwapManager:
     """

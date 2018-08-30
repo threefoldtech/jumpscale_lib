@@ -48,11 +48,18 @@ class ZDBServers(JSConfigBase):
 
         return instance
 
-    def start(self, instance="main"):
+    def start(self, reset=False, instance="main"):
         """
         js_shell 'j.servers.zdb.start(instance="main")'
+
+        will only start when the server is not running yet
+        if reset then will erase data and force a restart
+
+
         """
         s = self.get(instance=instance)
+        if reset:
+            s.destroy()
         s.start()
 
     def build(self):

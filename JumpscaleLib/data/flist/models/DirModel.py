@@ -36,6 +36,7 @@ class DirModel(ModelBase):
     def fileGet(self, name):
         return self.get(name=name, type_='file')
 
+
     def fileReplace(self, file_obj, create=True):
         """
         Replace a file object in the directory with the provided file

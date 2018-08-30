@@ -11,7 +11,6 @@ port = "9900"
 adminsecret_ = ""
 secrets_ = ""
 mode = "direct"
-encryptionkey_ = ""
 """
 
 JSConfigBase = j.tools.configmanager.base_class_config
@@ -28,13 +27,13 @@ class ZDBClient(JSConfigBase):
         config params:
             secrets {str} -- format: $ns:$secret,... or $secret then will be same for all namespaces
             port {[int} -- (default: 9900)
-            mode -- user,direct,seq(uential) see https://github.com/rivine/0-db/blob/master/README.md
+            mode -- user,seq(uential) see https://github.com/rivine/0-db/blob/master/README.md
             adminsecret does not have to be set, but when you want to create namespaces it is a must
 
         """
         self.init(instance=instance, data=data, parent=parent, interactive=interactive,started=started)
 
-    def init(self, instance, data={}, parent=None, interactive=False, reset=False,started=True):
+    def init(self, instance, data={}, parent=None, interactive=False, reset=False, started=True):
 
         JSConfigBase.__init__(self, instance=instance, data=data,
                               parent=parent, template=TEMPLATE, ui=None, interactive=interactive)
@@ -82,6 +81,14 @@ class ZDBClient(JSConfigBase):
         if not name in self.namespaces:
             self.namespaces[name] = ZDBClientNS(self,name)
         return self.namespaces[name]
+
+    def ping(self):
+        """
+        go to default namespace & ping
+        :return:
+        """
+        d=self.namespace_get("default")
+        return d.redis.ping()
 
     @property
     def namespace_system(self):

@@ -5,10 +5,11 @@ This module implement path manipulation on a Flist.
 from jumpscale import j
 import os
 from .path import Path
+import g8storclient
 import tarfile
 import base64
 
-logger = j.logging.get(__name__)
+logger = j.logger.get(__name__)
 
 
 class FlistManipulatorFactory:
@@ -57,8 +58,7 @@ class Manipulator:
 
     def __init__(self, root, kvs, output_path):
         # keep a set of all the files added to the existing flist
-        # so we can upload them to a backend after we're done manipulating the
-        # flist
+        # so we can upload them to a backend after we're done manipulating the flist
         self.add_files = []
         self.root = root
         self._kvs = kvs
@@ -87,7 +87,7 @@ class Manipulator:
         return dir
 
     def export(self):
-        output = self.output_path + '.tgz'
+        output = self.output_path+'.tgz'
         logger.info("export the flist at %s", output)
 
         with tarfile.open(output, 'w:gz') as tar:
@@ -110,7 +110,6 @@ class Manipulator:
                 raise RuntimeError('file not found %s' % path)
 
             logger.debug("hash %s", path)
-            import g8storclient # XXX VERY BAD HACK, see issue #58
             hashs = g8storclient.encrypt(path)
 
             if hashs is None:
@@ -127,8 +126,7 @@ class Manipulator:
         """
         @param backend_instance: instance name of the hubdirect client to use
         """
-        directclient = j.clients.hubdirect.get(
-            backend_instance, create=False, interactive=False)
+        directclient = j.clients.hubdirect.get(backend_instance, create=False, interactive=False)
 
         hash_data = {}
         to_upload = []

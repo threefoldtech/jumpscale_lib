@@ -98,11 +98,11 @@ class PostgresClient(JSConfigClient):
         """
         Base = automap_base()
 
-        # engine, suppose it has two tables 'user' and 'address' set up
+        # engine, suppose it has two models 'user' and 'address' set up
         engine = create_engine(
             "postgresql://%(login)s:%(passwd)s@%(ipaddr)s:%(port)s/%(dbname)s" % self.__dict__)
 
-        # reflect the tables
+        # reflect the models
         Base.prepare(engine, reflect=True)
 
         session = Session(engine)

@@ -13,7 +13,18 @@ class ZDBFactory(JSConfigBase):
         self.__jslocation__ = "j.clients.zdb"
         super(ZDBFactory, self).__init__(ZDBClient)
 
-    def configure(self, instance="main", secrets="", addr="localhost", port=None, adminsecret="", mode="user",encryptionkey=""):
+    def configure(self, instance="main", secrets="", addr="localhost", port=None,
+                  adminsecret="", mode="user"):
+        """
+
+        :param instance:
+        :param secrets: $ns:$secret,... or $secret which will be defaulf for all namespaces
+        :param addr:
+        :param port:
+        :param adminsecret: the main secret
+        :param mode: seq or user
+        :return:
+        """
 
         if port is None:
             raise InputError("port cannot be None")
@@ -24,39 +35,33 @@ class ZDBFactory(JSConfigBase):
         data["mode"] = str(mode)
         data["adminsecret_"] = adminsecret
         data["secrets_"] = secrets  #is now multiple secrets or 1 default one, in future will be our own serializion lib (the schemas)
-        data["encryptionkey_"] = encryptionkey
         return self.get(instance=instance, data=data, create=True, interactive=False)
 
-    def testdb_server_start_client_get(self,start=True):
+    def testdb_server_start_client_get(self,reset=False,mode="seq"):
         """
-        will start a ZDB server in tmux
+        will start a ZDB server in tmux (will only start when not there yet or when reset asked for)
         erase all content
         and will return client to it
 
         """
-        if start:
-            #will delete the config info
-            self.delete(instance="test")
 
-        db = j.servers.zdb.configure(instance="test", adminsecret="123456", reset=start, mode="seq")
+        db = j.servers.zdb.configure(instance="test", adminsecret="123456", reset=reset, mode=mode)
+        db.start()
 
-        if start:
-            db.stop()
-            db.start()
-
-        cl = db.client_get(secrets="1234",encryptionkey="abcdefgh")
+        #if secrets only 1 secret then will be used for all namespaces
+        cl = db.client_get(secrets="1234")
         return cl
 
-    def test(self,start=True):
+    def test(self,reset=True):
         """
-        js_shell 'j.clients.zdb.test(start=False)'
+        js_shell 'j.clients.zdb.test(reset=True)'
 
         """
 
-        cl = j.clients.zdb.testdb_server_start_client_get(start=start)
+        cl = j.clients.zdb.testdb_server_start_client_get(reset=reset,mode="seq")
 
         cl1 = cl.namespace_new("test")
-        cl1.test()
+        cl1.test_seq()
 
 
         #TODO: *1 need to test the other modes as well

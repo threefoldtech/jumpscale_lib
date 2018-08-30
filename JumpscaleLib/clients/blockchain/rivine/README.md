@@ -1,25 +1,27 @@
 # Jumpscale Client for Rivine
 
-The client work as a lightweight wallet for the Rivine blockchain network.
+This is a thin client/wallet for Rivine blockchains.
+This means that it communicates with full nodes but does not store the blockchain locally and does not participate in the peer to peer protocol.
+
 It supports the following functionalities:
 
-- Starting from a seed, be able to derive the public and private keypairs.
-- Use the public keys to create wallet addresses.
-- These addresses can be used to query the explorer to get the coininputs
+- Starting from a seed, generate addresses and it's private keys.
+- These addresses can be used to get the balances ( outputs)
 - Remove those that are already spent
-- When creating the transaction, select the coin inputs to have equal or more coins than the required output + minerfee. Change can be written back to one of your own addresses. Note that an input must be consumed in its entirety.
-- For every public key in the input, the corresponding private key is required to sign the transaction to be valid
+- When creating a transaction, select and use the the right amount of unspent outputs as inputs to have equal or more coins than the required output + transactionfee. Change can be written back to one of your own addresses.
+- Initiate/participate in atomic swaps
+- Create and spend multisig outputs
 
 
 # How to use
-Starting from a seed which can be a sentence of [12, 15, 18, 21, 24] words, for more information about the seed please check: https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
+
+## Creating a wallet
+
+A wallet is a collection of addresses thatbut  addresses are not random, they are generated from a single seed so it can be fully restored using this seed as well.
+
+A seed which is a random byte array translated to a sentence of [12, 15, 18, 21, 24] words, for more information see https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
 
 You can generate new seed by using the following commands in your js9 shell
-```python
-        j.data.encryption.mnemonic.generate(256)
-```
-
-Alternativly, you can generate a seed from the client factory
 ```python
 seed = j.clients.rivine.generate_seed()
 ```
@@ -39,7 +41,7 @@ From a seed you can create new wallet
         # minerfee: How many hastings should be added as minerfee
 ```
 
-Or alternatively you can configure the jumpscale client instance using the following code:
+Or alternatively you can configure the wallet instance using the following code:
 ```python
     client_data = {'bc_address': 'https://explorer.testnet.threefoldtoken.com/',
 'password_': 'test123',
@@ -52,6 +54,8 @@ Or alternatively you can configure the jumpscale client instance using the follo
     wallet = rivine_client.wallet
 ```
 
+## basic commands
+
 After creating the wallet you can check your wallet balance
 ```python
         wallet.current_balance
@@ -62,7 +66,7 @@ You should see something similar to the following output
 Out[2]: 16.7
 ```
 
-You can check the addresses of in your wallet
+You can check the addresses in your wallet
 ```python
 wallet.addresses
 ```

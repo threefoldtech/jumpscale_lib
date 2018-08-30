@@ -3,7 +3,7 @@ from jumpscale import j
 from .. import templates
 
 
-logger = j.logging.get(__name__)
+logger = j.logger.get(__name__)
 DEFAULT_PORT = 9000
 
 
@@ -12,21 +12,7 @@ class Minio:
     Minio gateway
     """
 
-    def __init__(
-            self,
-            name,
-            node,
-            login,
-            password,
-            zdbs,
-            namespace,
-            private_key,
-            namespace_secret='',
-            node_port=DEFAULT_PORT,
-            block_size=1048576,
-            restic_username='',
-            restic_password='',
-            meta_private_key=''):
+    def __init__(self, name, node, login, password, zdbs, namespace, private_key, namespace_secret='', node_port=DEFAULT_PORT, block_size=1048576, restic_username='', restic_password='', meta_private_key=''):
         """
 
         :param name: instance name
@@ -43,7 +29,7 @@ class Minio:
         self.id = 'minio.{}'.format(self.name)
         self.node = node
         self._container = None
-        self.flist = 'https://hub.gig.tech/gig-official-apps/minio.flist'
+        self.flist = 'https://hub.grid.tf/tf-official-apps/minio.flist'
         self.node_port = node_port
         self.zdbs = zdbs
         self.namespace = namespace
@@ -67,17 +53,16 @@ class Minio:
         """
         ports = self.node.freeports(self.node_port, 1)
         if len(ports) <= 0:
-            raise RuntimeError(
-                "can't install minio, no free port available on the node")
+            raise RuntimeError("can't install minio, no free port available on the node")
 
         self.node_port = ports[0]
 
         envs = {
-            'MINIO_ACCESS_KEY': self.login,
-            'MINIO_SECRET_KEY': self.password,
-            'AWS_ACCESS_KEY_ID': self.restic_username,
-            'AWS_SECRET_ACCESS_KEY': self.restic_password,
-            'MINIO_ZEROSTOR_META_PRIVKEY': self.meta_private_key,
+                'MINIO_ACCESS_KEY': self.login,
+                'MINIO_SECRET_KEY': self.password,
+                'AWS_ACCESS_KEY_ID': self.restic_username,
+                'AWS_SECRET_ACCESS_KEY': self.restic_password,
+                'MINIO_ZEROSTOR_META_PRIVKEY': self.meta_private_key,
         }
 
         return {
@@ -105,11 +90,9 @@ class Minio:
         """
         if self._container is None:
             try:
-                self._container = self.node.containers.get(
-                    self._container_name)
+                self._container = self.node.containers.get(self._container_name)
             except LookupError:
-                self._container = self.node.containers.create(
-                    **self._container_data)
+                self._container = self.node.containers.create(**self._container_data)
         return self._container
 
     def stop(self, timeout=30):
@@ -137,9 +120,7 @@ class Minio:
             is_running = self.is_running()
 
         if is_running:
-            raise RuntimeError(
-                'Failed to stop minio server: {}'.format(
-                    self.name))
+            raise RuntimeError('Failed to stop minio server: {}'.format(self.name))
 
         self.container.node.client.nft.drop_port(self.node_port)
         self.container.stop()
@@ -168,9 +149,7 @@ class Minio:
             is_running = self.is_running()
 
         if not is_running:
-            raise RuntimeError(
-                'Failed to start minio server: {}'.format(
-                    self.name))
+            raise RuntimeError('Failed to start minio server: {}'.format(self.name))
 
         self.container.node.client.nft.open_port(self.node_port)
 
@@ -187,19 +166,9 @@ class Minio:
     def create_config(self):
         logger.info('Creating minio config for %s' % self.name)
         config = templates.render(
-            'minio.conf',
-            namespace=self.namespace,
-            namespace_secret=self.namespace_secret,
-            zdbs=self.zdbs,
-            private_key=self.private_key,
-            block_size=self.block_size,
-            nr_shards=len(
-                self.zdbs)).strip()
-        self.container.upload_content(
-            j.sal.fs.joinPaths(
-                self._config_dir,
-                self._config_name),
-            config)
+            'minio.conf', namespace=self.namespace, namespace_secret=self.namespace_secret,
+            zdbs=self.zdbs, private_key=self.private_key, block_size=self.block_size, nr_shards=len(self.zdbs)).strip()
+        self.container.upload_content(j.sal.fs.joinPaths(self._config_dir, self._config_name), config)
 
     def destroy(self):
         self.stop()

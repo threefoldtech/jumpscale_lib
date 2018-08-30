@@ -2,7 +2,7 @@ import netaddr
 from jumpscale import j
 import time
 
-OVS_FLIST = 'https://hub.gig.tech/gig-official-apps/ovs.flist'
+OVS_FLIST = 'https://hub.grid.tf/tf-official-apps/ovs.flist'
 
 
 def combine(ip1, ip2, mask):
@@ -28,7 +28,6 @@ class Network():
         return self.node.client
 
     def get_management_info(self):
-        import netaddr
 
         def get_nic_ip(nics, name):
             for nic in nics:
@@ -37,8 +36,7 @@ class Network():
                         return netaddr.IPNetwork(ip['addr'])
                     return
 
-        defaultgwdev = self.client.bash(
-            "ip route | grep default | awk '{print $5}'").get().stdout.strip()
+        defaultgwdev = self.client.bash("ip route | grep default | awk '{print $5}'").get().stdout.strip()
         nics = self.client.info.nic()
         mgmtaddr = None
         if defaultgwdev:
@@ -54,8 +52,7 @@ class Network():
         try:
             container = self.node.containers.get(name)
         except LookupError:
-            container = self.node.containers.create(
-                name, OVS_FLIST, 'ovs', host_network=True, privileged=True)
+            container = self.node.containers.create(name, OVS_FLIST, 'ovs', host_network=True, privileged=True)
         return container
 
     def get_addresses(self, network):
@@ -69,20 +66,15 @@ class Network():
         devices = []
         for device in self.client.ip.link.list():
             if device['type'] == 'device':
-                if not device['up']:
+                if device['up'] == False:
                     self.client.ip.link.up(device['name'])
                 devices.append(device['name'])
-        nics = list(
-            filter(
-                lambda nic: nic['name'] in devices,
-                self.client.info.nic()))
+        nics = list(filter(lambda nic: nic['name'] in devices, self.client.info.nic()))
         nics.sort(key=lambda nic: nic['speed'])
         availablenics = {}
         for nic in nics:
             # skip all interface that have an ipv4 address
-            if any(
-                    netaddr.IPNetwork(addr['addr']).version == 4
-                    for addr in nic['addrs'] if 'addr' in addr):
+            if any(netaddr.IPNetwork(addr['addr']).version == 4 for addr in nic['addrs'] if 'addr' in addr):
                 continue
             if nic['speed'] == 0:
                 continue
@@ -109,7 +101,7 @@ class Network():
                 break
             time.sleep(1)
 
-    def configure(self, cidr, vlan_tag, ovs_container_name, bonded=False):
+    def configure(self, cidr, vlan_tag, ovs_container_name,  bonded=False):
         container = self._ensure_ovs_container(ovs_container_name)
         if not container.is_running():
             container.start()
@@ -132,16 +124,12 @@ class Network():
                     interfaces = interfaces[:2]
                     break
             else:
-                raise j.exceptions.RuntimeError(
-                    "Could not find two equal available nics")
+                raise j.exceptions.RuntimeError("Could not find two equal available nics")
 
         if 'backplane' not in nicmap:
             container.client.json('ovs.bridge-add', {"bridge": "backplane"})
             if not bonded:
-                container.client.json(
-                    'ovs.port-add',
-                    {"bridge": "backplane", "port": interfaces[0],
-                     "vlan": 0})
+                container.client.json('ovs.port-add', {"bridge": "backplane", "port": interfaces[0], "vlan": 0})
             else:
                 container.client.json('ovs.bond-add', {"bridge": "backplane",
                                                        "port": "bond0",
@@ -149,19 +137,14 @@ class Network():
                                                        "lacp": True,
                                                        "mode": "balance-tcp"})
             # TODO: this need to be turned into 0-os primitives
-            self.node.client.ip.addr.add(
-                'backplane', str(
-                    addresses['storageaddr']))
+            self.node.client.ip.addr.add('backplane', str(addresses['storageaddr']))
             for interface in interfaces:
-                self.node.client.system(
-                    'ip link set dev {} mtu 2000'.format(interface)).get()
+                self.node.client.system('ip link set dev {} mtu 2000'.format(interface)).get()
                 self.node.client.ip.link.up(interface)
             self.node.client.ip.link.up('backplane')
 
         if 'vxbackend' not in nicmap:
-            container.client.json(
-                'ovs.vlan-ensure',
-                {'master': 'backplane', 'vlan': vlan_tag, 'name': 'vxbackend'})
+            container.client.json('ovs.vlan-ensure', {'master': 'backplane', 'vlan': vlan_tag, 'name': 'vxbackend'})
             # TODO: this need to be turned into 0-os primitives
             self.node.client.ip.addr.add('vxbackend', str(addresses['vxaddr']))
             self.node.client.system('ip link set dev vxbackend mtu 2000').get()

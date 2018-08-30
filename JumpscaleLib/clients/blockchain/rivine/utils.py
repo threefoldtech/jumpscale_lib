@@ -19,7 +19,7 @@ from JumpscaleLib.clients.blockchain.rivine.const import HASH_SIZE, MINER_PAYOUT
 DURATION_REGX_PATTERN = '^(?P<hours>\d*)h(?P<minutes>\d*)m(?P<seconds>\d*)s$'
 DURATION_TEMPLATE = 'XXhXXmXXs'
 
-logger = j.logging.get(__name__)
+logger = j.logger.get(__name__)
 
 def hash(data, encoding_type=None):
     """

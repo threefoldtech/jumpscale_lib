@@ -1,4 +1,6 @@
+from jumpscale import j
 from collections import OrderedDict
+JSBASE = j.application.jsbase_get_class()
 
 
 def getText(text):
@@ -9,7 +11,7 @@ def getInt(nr):
     return int(nr)
 
 
-class ModelBaseCollection:
+class ModelBaseCollection(JSBASE):
     """
     This class represent a collection
     It's used to list/find/create new Instance of Model objects
@@ -66,16 +68,14 @@ class ModelBaseCollection:
 
                 self.__dict__["list_%s_constructor" % field.proto.name] = self._listConstructors[field.proto.name]
 
-        self._db = db if db else self.j.data.kvs.getMemoryStore(name=self.namespace, namespace=self.namespace)
+        self._db = db if db else j.data.kvs.getMemoryStore(name=self.namespace, namespace=self.namespace)
         # for now we do index same as database
         self._index = indexDb if indexDb else self._db
 
-        if modelBaseClass is None:
-            modelBaseClass = self._jsbase(('ModelBase',
-                            'JumpscaleLib.data.capnp.ModelBase'))
-        self.modelBaseClass = modelBaseClass
+        self.modelBaseClass = modelBaseClass if modelBaseClass else ModelBase
 
         self._init()
+        JSBASE.__init__(self)
 
     def _init(self):
         pass
@@ -101,9 +101,9 @@ class ModelBaseCollection:
         """
         for name in names:
             if name in args:
-                if self.j.data.types.string.check(args[name]) and "," in args[name]:
+                if j.data.types.string.check(args[name]) and "," in args[name]:
                     args[name] = [item.strip().strip("'").strip() for item in args[name].split(",")]
-                elif not self.j.data.types.list.check(args[name]):
+                elif not j.data.types.list.check(args[name]):
                     args[name] = [args[name]]
                 args[name] = ",".join(["'%s'" % item for item in args[name]])
         return args
@@ -127,7 +127,7 @@ class ModelBaseCollection:
                 if autoCreate:
                     return self.new(key=key)
                 else:
-                    raise self.j.exceptions.Input(message="Could not find key:%s for model:%s" % (key, self.category))
+                    raise j.exceptions.Input(message="Could not find key:%s for model:%s" % (key, self.category))
         else:
 
             model = self.modelBaseClass(
