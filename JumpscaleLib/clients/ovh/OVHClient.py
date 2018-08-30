@@ -10,7 +10,7 @@ import requests
 import time
 
 TEMPLATE = """
-ipxeBase = "https://bootstrap.gig.tech/ipxe/master"
+ipxeBase = "https://bootstrap.grid.tf/ipxe/master"
 endpoint = "soyoustart-eu"
 appkey_ = ""
 appsecret_ = ""
@@ -27,7 +27,7 @@ class OVHClient(JSConfigBase):
 
     def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigBase.__init__(self, instance=instance,
-                              data=data, parent=parent, template=TEMPLATE,interactive=interactive)
+                              data=data, parent=parent, template=TEMPLATE, interactive=interactive)
 
         c = self.config.data
         self.client = ovh.Client(
@@ -165,17 +165,14 @@ class OVHClient(JSConfigBase):
 
         """
         if name == "" or name is None:
-            raise j.exceptions.Input(
-                message="please specify name", level=1, source="", tags="", msgpub="")
+            raise j.exceptions.Input(message="please specify name")
 
         if ovh_id == "" or ovh_id is None:
-            raise j.exceptions.Input(
-                message="please specify ovh_id", level=1, source="", tags="", msgpub="")
+            raise j.exceptions.Input(message="please specify ovh_id")
 
         self.ovh_id_check(ovh_id)
         if installationTemplate not in self.installationtemplates_get():
-            raise j.exceptions.Input(message="could not find install template:%s" %
-                                     name, level=1, source="", tags="", msgpub="")
+            raise j.exceptions.Input(message="could not find install template:%s" % name)
 
         if sshKeyName == None:
             items = j.clients.sshkey.list()
