@@ -59,7 +59,8 @@ class ZDBClientNS(JSBASE):
     def _patch_redis_client(self, redis):
         # don't auto parse response for set, cause it's not 100% redis compatible
         # 0-db does return a key after in set
-        del redis.response_callbacks['SET']
+        if 'SET' in redis.response_callbacks:
+            del redis.response_callbacks['SET']
         return redis
 
     def _key_get(self, key, set=True, iterate=False):
