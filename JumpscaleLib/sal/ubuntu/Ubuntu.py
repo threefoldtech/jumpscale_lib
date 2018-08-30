@@ -326,6 +326,7 @@ stop on runlevel [016]
 
     @property
     def version(self):
-        cmd = "cat /etc/lsb-release | grep RELEASE"
+        # use command, don't bypass it by going directly to /etc/lsb-release
+        cmd = "lsb_release -r"
         rc, out, err = self._local.executeInteractive(cmd)
-        return (out.split("=")[1]).strip()
+        return (out.split(":")[-1]).strip()
