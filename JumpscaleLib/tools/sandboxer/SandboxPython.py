@@ -43,7 +43,10 @@ class SandboxPython(JSBASE):
         """
         self.logger.info("sandbox:%s" % path)
         j.tools.prefab.local.system.package.install("zip")
-        j.tools.prefab.local.system.package.install("redis-server")
+        if j.core.platformtype.myplatform.isMac:
+            j.tools.prefab.local.system.package.install("redis")
+        else:
+            j.tools.prefab.local.system.package.install("redis-server")
 
         if build:
             path = self.build(reset=reset)
