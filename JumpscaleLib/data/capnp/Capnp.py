@@ -1,18 +1,10 @@
-from jumpscale import j
 import sys
 import capnp
 from collections import OrderedDict
 import capnp
 
-from .ModelBaseCollection import ModelBaseCollection
-from .ModelBaseData import ModelBaseData
-JSBASE = j.application.jsbase_get_class()
 
-
-class Tools(JSBASE):
-
-    def __init__(self):
-        JSBASE.__init__(self)
+class Tools:
 
     def listInDictCreation(self, listInDict, name, manipulateDef=None):
         """
@@ -22,16 +14,19 @@ class Tools(JSBASE):
         @param manipulateDef if None then will make it a string, could be e.g. int if you want to have all elements to be converted to int
         """
         if name in listInDict:
-            if j.data.types.list.check(listInDict[name]):
+            if self.j.data.types.list.check(listInDict[name]):
                 if manipulateDef is None:
-                    listInDict[name] = [str(item).strip() for item in listInDict[name]]
+                    listInDict[name] = [str(item).strip()
+                                        for item in listInDict[name]]
                 else:
-                    listInDict[name] = [manipulateDef(item) for item in listInDict[name]]
+                    listInDict[name] = [
+                        manipulateDef(item) for item in listInDict[name]]
             else:
                 if manipulateDef is None:
                     if "," in str(listInDict[name]):
                         listInDict[name] = [item.strip()
-                                            for item in listInDict[name].split(",") if item.strip() != ""]
+                                            for item in listInDict[name].split(",")
+                                            if item.strip() != ""]
                     else:
                         listInDict[name] = [str(listInDict[name])]
                 else:
@@ -39,39 +34,48 @@ class Tools(JSBASE):
         return listInDict
 
 
-class Capnp(JSBASE):
+class Capnp:
     """
     """
+
+    __jslocation__ = "j.data.capnp"
 
     def __init__(self):
-        self.__jslocation__ = "j.data.capnp"
         self.__imports__ = "pycapnp"
         self._schema_cache = {}
-        self._capnpVarDir = j.sal.fs.joinPaths(j.dirs.VARDIR, "capnp")
-        j.sal.fs.createDir(self._capnpVarDir)
+        self._capnpVarDir = self.j.sal.fs.joinPaths(self.j.dirs.VARDIR, "capnp")
+        self.j.sal.fs.createDir(self._capnpVarDir)
         if self._capnpVarDir not in sys.path:
             sys.path.append(self._capnpVarDir)
-        self.tools = Tools()
-        JSBASE.__init__(self)
+        self.tools = self._jsbase(('Tools', 'JumpscaleLib.data.capnp.Capnp'))
 
     def getModelBaseClass(self):
-        return ModelBase
+        return self._jsbase(('ModelBase', 'JumpscaleLib.data.capnp.ModelBase'))
 
     def getModelBaseClassWithData(self):
-        return ModelBaseWithData
+        return self._jsbase(('ModelBaseData',
+            'JumpscaleLib.data.capnp.ModelBaseData'))
 
     def getModelBaseClassCollection(self):
-        return ModelBaseCollection
+        return self._jsbase(('ModelBaseCollection',
+            'JumpscaleLib.data.capnp.ModelBaseCollection'))
 
-    def getModelCollection(self, schema, category, namespace=None, modelBaseClass=None,
-                           modelBaseCollectionClass=None, db=None, indexDb=None):
+    def getModelCollection(
+            self,
+            schema,
+            category,
+            namespace=None,
+            modelBaseClass=None,
+            modelBaseCollectionClass=None,
+            db=None,
+            indexDb=None):
         """
         @param schema is capnp_schema
 
         example to use:
             ```
             #if we use a modelBaseClass do something like
-            ModelBaseWithData = j.data.capnp.getModelBaseClass()
+            ModelBaseWithData = self.j.data.capnp.getModelBaseClass()
             class MyModelBase(ModelBaseWithData):
                 def index(self):
                     # put indexes in db as specified
@@ -83,20 +87,29 @@ class Capnp(JSBASE):
             #there is model.capnp in $libdir/Jumpscale/tools/issuemanager
             from Jumpscale.tools.issuemanager import model as ModelCapnp
 
-            mydb=j.data.kvs.getMemoryStore(name="mymemdb")
+            mydb=self.j.data.kvs.getMemoryStore(name="mymemdb")
 
-            collection=j.data.capnp.getModelCollection(schema=ModelCapnp,category="issue",modelBaseClass=MyModelBase,db=mydb)
+            collection=self.j.data.capnp.getModelCollection(schema=ModelCapnp,
+                                    category="issue",
+                                    modelBaseClass=MyModelBase,
+                                    db=mydb)
 
             ```
         """
         if modelBaseCollectionClass is None:
-            modelBaseCollectionClass = ModelBaseCollection
+            modelBaseCollectionClass = self.getModelBaseClassCollection()
 
-        return modelBaseCollectionClass(schema=schema, category=category, namespace=namespace,
-                                        db=db, indexDb=indexDb, modelBaseClass=modelBaseClass)
+        return modelBaseCollectionClass(
+            schema=schema,
+            category=category,
+            namespace=namespace,
+            db=db,
+            indexDb=indexDb,
+            modelBaseClass=modelBaseClass)
 
     def getId(self, schemaInText):
-        id = [item for item in schemaInText.split("\n") if item.strip() != ""][0][3:-1]
+        id = [item for item in schemaInText.split(
+            "\n") if item.strip() != ""][0][3:-1]
         return id
 
     def removeFromCache(self, schemaId):
@@ -105,18 +118,21 @@ class Capnp(JSBASE):
     def resetSchema(self, schemaId):
         self._schema_cache.pop(schemaId, None)
         nameOnFS = "schema_%s.capnp" % (schemaId)
-        path = j.sal.fs.joinPaths(self._capnpVarDir, nameOnFS)
-        if j.sal.fs.exists(path):
-            j.sal.fs.remove(path)
+        path = self.j.sal.fs.joinPaths(self._capnpVarDir, nameOnFS)
+        if self.j.sal.fs.exists(path):
+            self.j.sal.fs.remove(path)
 
     def _getSchemas(self, schemaInText):
-        schemaInText = j.data.text.strip(schemaInText)
+        schemaInText = self.j.data.text.strip(schemaInText)
         schemaInText = schemaInText.strip() + "\n"
         schemaId = self.getId(schemaInText)
         if schemaId not in self._schema_cache:
             nameOnFS = "schema_%s.capnp" % (schemaId)
-            path = j.sal.fs.joinPaths(self._capnpVarDir, nameOnFS)
-            j.sal.fs.writeFile(filename=path, contents=schemaInText, append=False)
+            path = self.j.sal.fs.joinPaths(self._capnpVarDir, nameOnFS)
+            self.j.sal.fs.writeFile(
+                filename=path,
+                contents=schemaInText,
+                append=False)
             parser = capnp.SchemaParser()
             schema = parser.load(path)
             self._schema_cache[schemaId] = schema
@@ -129,7 +145,7 @@ class Capnp(JSBASE):
             struct Schema {
 
             }
-            """ % j.data.idgenerator.generateCapnpID()
+            """ % self.j.data.idgenerator.generateCapnpID()
 
         schemas = self._getSchemas(schemaInText)
         schema = eval("schemas.%s" % name)
@@ -139,7 +155,7 @@ class Capnp(JSBASE):
         """
         @param path is path to schema
         """
-        content = j.sal.fs.fileGetContents(path)
+        content = self.j.sal.fs.fileGetContents(path)
         return self.getSchemaFromText(schemaInText=content, name=name)
 
     def _ensure_dict(self, args):
@@ -162,13 +178,15 @@ class Capnp(JSBASE):
         @PARAM schemaInText is capnp schema
         @PARAM name is the name of the obj in the schema e.g. Issue
         @PARAM args are the starting date for the obj, normally a dict
-        @PARAM binaryData is this is given then its the binary data to create the obj from, cannot be sed together with args (its one or the other)
+        @PARAM binaryData is this is given then its the binary data to
+               create the obj from, cannot be sed together with args
+               (its one or the other)
         """
 
         # . are removed from . to Uppercase
         args = args.copy()  # to not change the args passed in argument
         for key in list(args.keys()):
-            sanitize_key = j.data.text.sanitize_key(key)
+            sanitize_key = self.j.data.text.sanitize_key(key)
             if key != sanitize_key:
                 args[sanitize_key] = args[key]
                 args.pop(key)
@@ -183,23 +201,31 @@ class Capnp(JSBASE):
                 obj = schema.new_message(**args)
             except Exception as e:
                 if str(e).find("has no such member") != -1:
-                    msg = "cannot create data for schema from arguments, property missing\n"
-                    msg += "arguments:\n%s\n" % j.data.serializer.json.dumps(args, sort_keys=True, indent=True)
+                    msg = "cannot create data for schema from "
+                    msg += "arguments, property missing\n"
+                    msg += "arguments:\n%s\n" % self.j.data.serializer.json.dumps(
+                        args,
+                        sort_keys=True,
+                        indent=True)
                     msg += "schema:\n%s" % schemaInText
                     ee = str(e).split("stack:")[0]
                     ee = ee.split("failed:")[1]
                     msg += "capnperror:%s" % ee
                     self.logger.debug(msg)
-                    raise j.exceptions.Input(message=msg)
+                    raise self.j.exceptions.Input(message=msg)
                 if str(e).find("Value type mismatch") != -1:
-                    msg = "cannot create data for schema from arguments, value type mismatch.\n"
-                    msg += "arguments:\n%s\n" % j.data.serializer.json.dumps(args, sort_keys=True, indent=True)
+                    msg = "cannot create data for schema from "
+                    msg += "arguments, value type mismatch.\n"
+                    msg += "arguments:\n%s\n" % self.j.data.serializer.json.dumps(
+                        args,
+                        sort_keys=True,
+                        indent=True)
                     msg += "schema:\n%s" % schemaInText
                     ee = str(e).split("stack:")[0]
                     ee = ee.split("failed:")[1]
                     msg += "capnperror:%s" % ee
                     self.logger.debug(msg)
-                    raise j.exceptions.Input(message=msg)
+                    raise self.j.exceptions.Input(message=msg)
                 raise e
 
         return obj
@@ -236,10 +262,11 @@ class Capnp(JSBASE):
         # now we just get the capnp schema for this object
         schema = self.getSchemaFromText(capnpschema, name="Issue")
 
-        # mydb = j.data.kvs.getRedisStore(name="mymemdb")
+        # mydb = self.j.data.kvs.getRedisStore(name="mymemdb")
         mydb = None  # is memory
 
-        collection = self.getModelCollection(schema, category="test", modelBaseClass=None, db=mydb)
+        collection = self.getModelCollection(
+            schema, category="test", modelBaseClass=None, db=mydb)
         start = time.time()
         self.logger.debug("start populate 100.000 records")
         collection.logger.disabled = True
@@ -257,8 +284,10 @@ class Capnp(JSBASE):
         self.logger.debug("population in %.2fs" % (end_populate - start))
         self.logger.debug("find in %.2fs" % (end_find - end_populate))
 
-        from IPython import embed
-        embed(colors='Linux')
+        # tests need to be non-interactive.  use a different function name
+        # (e.g. noninteractive_test or just _test())
+        #from IPython import embed
+        #embed(colors='Linux')
 
     def testWithRedis(self):
         capnpschema = '''
@@ -287,17 +316,26 @@ class Capnp(JSBASE):
           }
         }
         '''
-        # mydb = j.data.kvs.getRedisStore("test")
-        mydb = j.data.kvs.getRedisStore(name="test", unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
+        # mydb = self.j.data.kvs.getRedisStore("test")
+        mydb = self.j.data.kvs.getRedisStore(
+            name="test",
+            unixsocket="%s/redis.sock" %
+            self.j.dirs.TMPDIR)
         schema = self.getSchemaFromText(capnpschema, name="Issue")
-        collection = self.getModelCollection(schema, category="test", modelBaseClass=None, db=mydb, indexDb=mydb)
+        collection = self.getModelCollection(
+            schema,
+            category="test",
+            modelBaseClass=None,
+            db=mydb,
+            indexDb=mydb)
         for i in range(100):
             obj = collection.new()
             obj.dbobj.name = "test%s" % i
             obj.save()
             self.logger.debug(collection.list())
 
-        subobj = collection.list_olist_constructor(state="new", text="something")
+        subobj = collection.list_olist_constructor(
+            state="new", text="something")
         obj.addSubItem("olist", subobj)
 
         subobj = collection.list_tlist_constructor("sometext")
@@ -317,7 +355,8 @@ class Capnp(JSBASE):
     def getJSON(self, obj):
         configdata2 = obj.to_dict()
         ddict2 = OrderedDict(configdata2)
-        return j.data.serializer.json.dumps(ddict2, sort_keys=True, indent=True)
+        return self.j.data.serializer.json.dumps(
+            ddict2, sort_keys=True, indent=True)
 
     def getBinaryData(self, obj):
         return obj.to_bytes_packed()
