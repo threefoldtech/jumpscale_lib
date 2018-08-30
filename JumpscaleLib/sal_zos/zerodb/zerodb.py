@@ -137,8 +137,7 @@ class Zerodb:
             'flist': self.flist,
             'identity': self.zt_identity,
             'mounts': {self.path: '/zerodb'},
-            # 'ports': {"zt*:%s" % self.node_port: DEFAULT_PORT},
-            'ports': {"%s" % self.node_port: DEFAULT_PORT},
+            'ports': {"zt*:%s" % self.node_port: DEFAULT_PORT},
             'nics': [nic.to_dict(forcontainer=True) for nic in self.nics]
         }
 
