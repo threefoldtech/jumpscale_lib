@@ -33,7 +33,7 @@ class ZDBClient(JSConfigBase):
         """
         self.init(instance=instance, data=data, parent=parent, interactive=interactive,started=started)
 
-    def init(self, instance, data={}, parent=None, interactive=False, reset=False,started=True):
+    def init(self, instance, data={}, parent=None, interactive=False, reset=False, started=True):
 
         JSConfigBase.__init__(self, instance=instance, data=data,
                               parent=parent, template=TEMPLATE, ui=None, interactive=interactive)
@@ -81,6 +81,14 @@ class ZDBClient(JSConfigBase):
         if not name in self.namespaces:
             self.namespaces[name] = ZDBClientNS(self,name)
         return self.namespaces[name]
+
+    def ping(self):
+        """
+        go to default namespace & ping
+        :return:
+        """
+        d=self.namespace_get("default")
+        return d.redis.ping()
 
     @property
     def namespace_system(self):
