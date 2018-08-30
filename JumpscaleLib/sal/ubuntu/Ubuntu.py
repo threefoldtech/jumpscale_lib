@@ -328,5 +328,5 @@ stop on runlevel [016]
     def version(self):
         # use command, don't bypass it by going directly to /etc/lsb-release
         cmd = "lsb_release -r"
-        rc, out, err = self._local.executeInteractive(cmd)
+        rc, out, err = self._local.execute(cmd)
         return (out.split(":")[-1]).strip()
