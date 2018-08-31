@@ -18,31 +18,33 @@ JSConfigBase = j.tools.configmanager.base_class_config
 
 class ZDBClient(JSConfigBase):
 
-    def __init__(self, instance, data={}, parent=None, interactive=False,started=True):
+    def __init__(self, instance, data={}, parent=None, interactive=False,
+                                 started=True):
+        """ is connection to ZDB
+
+            - secret is also the name of the directory where zdb data
+              is for this namespace/secret
+
+            config params:
+                secrets {str} -- format: $ns:$secret,... or $secret
+                        then will be same for all namespaces
+                port {[int} -- (default: 9900)
+                mode -- user,seq(uential) see
+                        https://github.com/rivine/0-db/blob/master/README.md
+                adminsecret does not have to be set, but
+                        when you want to create namespaces it is a must
         """
-        is connection to ZDB
-
-        - secret is also the name of the directory where zdb data is for this namespace/secret
-
-        config params:
-            secrets {str} -- format: $ns:$secret,... or $secret then will be same for all namespaces
-            port {[int} -- (default: 9900)
-            mode -- user,seq(uential) see https://github.com/rivine/0-db/blob/master/README.md
-            adminsecret does not have to be set, but when you want to create namespaces it is a must
-
-        """
-        self.init(instance=instance, data=data, parent=parent, interactive=interactive,started=started)
-
-    def init(self, instance, data={}, parent=None, interactive=False, reset=False, started=True):
-
         JSConfigBase.__init__(self, instance=instance, data=data,
-                              parent=parent, template=TEMPLATE, ui=None, interactive=interactive)
-        
+                              parent=parent, template=TEMPLATE,
+                              ui=None, interactive=interactive)
+        self.init()
+
+    def init(self): # if you find this isn't working, see issue #116.
+
         # if not started:
         #     return
 
         self.mode = self.config.data["mode"]
-
         self.namespaces = {}
 
         #default namespace should always exist
