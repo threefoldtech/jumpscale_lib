@@ -30,50 +30,55 @@ class JSWebServer(JSConfigBase):
         self.port_ssl = int(self.config.data["port_ssl"])
         self.address = '{}:{}'.format(self.host, self.port)
 
-        config_path = j.sal.fs.joinPaths(self.path, "site_config.toml")
-        if j.sal.fs.exists(config_path):
-            self.site_config = j.data.serializer.toml.load(config_path)
-        else:
-            self.site_config = {}
+        # config_path = j.sal.fs.joinPaths(self.path, "site_config.toml")
+        # if j.sal.fs.exists(config_path):
+        #     self.site_config = j.data.serializer.toml.load(config_path)
+        # else:
+        #     self.site_config = {}
 
         self._inited = False
         j.servers.web.latest = self
-        self.loader = JSWebLoader(path=self.path)
-        self.app = None
         self.http_server = None
+
+    def register_blueprints(self,app=app):
+        self.init()
+        self._loader.register_blueprints(app)
+
 
     def init(self, debug=False):
 
         if self._inited:
             return
 
+        self._loader = JSWebLoader(path=self.path)
+
         self.logger.info("init server")
 
         if self.path not in sys.path:
             sys.path.append(self.path)
 
-        self.app = self.loader.create_app(debug=debug)
+        self.app = self._loader.app
         self.app.debug = True
 
         self.http_server = WSGIServer((self.host, self.port), self.app, handler_class=WebSocketHandler)
         self.app.http_server = self.http_server
         self.app.server = self
-        self.docs_load()
+        # self.docs_load()
         # self._sig_handler.append(gevent.signal(signal.SIGINT, self.stop))
         self._inited = False
 
-    def docs_load(self):
-        if "docsite" not in self.site_config:
-            return
-
-        for item in self.site_config["docsite"]:
-            url = item["url"]
-            name = item["name"]
-            if url is not "":
-                path = j.clients.git.getContentPathFromURLorPath(url)
-                if not j.sal.fs.exists(path):
-                    j.clients.git.pullGitRepo(url=url)
-                j.tools.docsites.load(path=path, name=name)
+    # def docs_load(self):
+    #     if "docsite" not in self.site_config:
+    #         return
+    #
+    #     for item in self.site_config["docsite"]:
+    #         url = item["url"]
+    #         name = item["name"]
+    #         if url is not "":
+    #             path = j.clients.git.getContentPathFromURLorPath(url)
+    #             if not j.sal.fs.exists(path):
+    #                 j.clients.git.pullGitRepo(url=url)
+    #             j.tools.docsites.load(path=path, name=name)
 
     @property
     def path(self):
