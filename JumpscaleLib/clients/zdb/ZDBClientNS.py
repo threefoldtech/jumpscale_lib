@@ -25,7 +25,7 @@ class ZDBClientNS(JSBASE):
             adminsecret does not have to be set, but when you want to create namespaces it is a must
 
         """
-
+        JSBASE.__init__(self)
         self.zdbclient = zdbclient
         self.redis = j.clients.redis.get(ipaddr=zdbclient.config.data['addr'],
                                          port=zdbclient.config.data['port'],
