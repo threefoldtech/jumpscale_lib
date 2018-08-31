@@ -379,7 +379,7 @@ Type=simple
             config['/var/lib/zerotier-one/identity.public'] = publiczt
             if not nics:
                 nics.append({'type': 'default'})
-                j.sal_zos.utils.authorize_zerotiers(publiczt, self.nics)
+            j.sal_zos.utils.authorize_zerotiers(publiczt, self.nics)
         self.node.client.kvm.create(self.name, media, self.flist, self.vcpus,
                                     self.memory, nics, ports, mounts, self.tags, config)
 
