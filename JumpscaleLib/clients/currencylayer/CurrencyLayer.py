@@ -39,33 +39,37 @@ class CurrencyLayer(JSConfigBase):
         if reset:
             self.cache.reset()
         def get():
-            if self.fake==False and \
+            if not self.fake and \
                 j.sal.nettools.tcpPortConnectionTest("currencylayer.com", 443):
                 key = self.config.data["api_key_"]
-                if key.strip()=="":
+                if key.strip():
+                    url = "http://apilayer.net/api/live?access_key=%s" % key
+
+                    c = j.clients.http.getConnection()
+                    r = c.get(url).readlines()
+
+                    data = r[0].decode()
+                    data = j.data.serializers.json.loads(data)["quotes"]
+
+                    data['USDETH'] = 1/cc.get_price('ETH','USD')['ETH']['USD']
+                    data['USDXRP'] = cc.get_price('USD', 'XRP')['USD']['XRP']
+                    data['USDBTC'] = 1/cc.get_price('BTC','USD')['BTC']['USD']
+
+                    self.logger.error("fetch currency from internet")
+                    return data
+                elif not self.fallback:
                     raise RuntimeError("api key for currency layer "
                                         "needs to be specified")
-
-                url = "http://apilayer.net/api/live?access_key=%s" % key
-
-                c = j.clients.http.getConnection()
-                r = c.get(url).readlines()
-                
-                data = j.data.serializers.json.loads(r[0].decode())["quotes"]
-
-                data['USDETH'] = 1/cc.get_price('ETH','USD')['ETH']['USD']
-                data['USDXRP'] = cc.get_price('USD', 'XRP')['USD']['XRP']
-                data['USDBTC'] = 1/cc.get_price('BTC','USD')['BTC']['USD']
-
-                self.logger.error("fetch currency from internet")
-                return data
-            else:
-                if self.fake or self.fallback:
-                    self.logger.warning("cannot reach: currencylayer.com, "
+                else:
+                    self.logger.warning("currencylayer api_key not set, "
                                     "use fake local data.")
-                    from .currencies import currencies
-                    return currencies
-                raise RuntimeError("could not data from currencylayers")
+
+            if self.fake or self.fallback:
+                self.logger.warning("cannot reach: currencylayer.com, "
+                                "use fake local data.")
+                from .currencies import currencies
+                return currencies
+            raise RuntimeError("could not data from currencylayers")
         
         data = self.cache.get("currency_data", get, expire=3600 * 24)
         for key, item in data.items():
