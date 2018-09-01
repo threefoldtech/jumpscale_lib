@@ -63,4 +63,4 @@ class OVHFactory(JSConfigBaseFactory):
         js_shell 'j.clients.ovh.test()'
         """
         client = self.get()
-        self.logger.debug(client.serversGet())
+        self.logger.debug(client.servers_list())

@@ -6,10 +6,11 @@ BASECMD = "btrfs"
 JSBASE = j.application.jsbase_get_class()
 
 
-class BtfsExtensionFactory(object, JSBASE):
+class BtfsExtensionFactory(JSBASE):
+
+    __jslocation__ = "j.sal.btrfs"
 
     def __init__(self):
-        self.__jslocation__ = "j.sal.btrfs"
         JSBASE.__init__(self)
 
     def getBtrfs(self, executor=None):
