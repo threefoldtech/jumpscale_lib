@@ -1,7 +1,7 @@
 from jumpscale import j
-import JumpscaleLib.sal.disklayout.mount as mount
-import JumpscaleLib.sal.disklayout.lsblk as lsblk
-import JumpscaleLib.sal.disklayout.disks as disks
+from ..disklayout import mount
+from ..disklayout import lsblk
+from ..disklayout import disks
 
 JSBASE = j.application.jsbase_get_class()
 
