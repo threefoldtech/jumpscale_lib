@@ -27,7 +27,6 @@ class VMTestCases(BaseTest):
 
         """
         self.log("Create vm [VM1] with default values, should succeed.")
-        import ipdb; ipdb.set_trace()
         self.vm.data = self.set_vm_default_values(os_type="ubuntu")
         vm1 = self.vm._vm_sal
         self.assertTrue(vm1)
@@ -68,7 +67,6 @@ class VMTestCases(BaseTest):
         """
         pass
 
-    @parameterized.expand(["zero-os", "ubuntu"])
     def test004_destroy_vm(self, os_type):
         """ SAL-004 destroy the vm .
 
@@ -79,7 +77,15 @@ class VMTestCases(BaseTest):
         #. Check that vm [vm1] has been removed successfully.
 
         """
-        pass
+        self.log(" Create vm [VM1], should succeed.")
+        self.vm.data = self.set_vm_default_values(os_type="ubuntu")
+        self.vm.install()
+        self.assertTrue(self.vm._vm_sal.is_running())
+
+        self.log("Destroy vm [VM1], should succeed.")
+        self.vm.uninstall()
+        self.assertFalse(self.vm._vm_sal.is_running())
+
 
     @parameterized.expand(["zero-os", "ubuntu"])
     def test005_add_and_delete_disk_from_vm(self, os_type):
