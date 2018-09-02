@@ -4,15 +4,17 @@ from pprint import pprint as print
 
 from .ZDBServer import ZDBServer
 
-JSConfigBase = j.tools.configmanager.base_class_configs
+class ZDBServers:
 
-
-class ZDBServers(JSConfigBase):
+    __jslocation__ = "j.servers.zdb"
+    __jsbase__ = 'j.tools.configmanager._base_class_configs'
 
     def __init__(self):
-        self.__jslocation__ = "j.servers.zdb"
-        super().__init__(child_class=ZDBServer)
         self.rootdir = j.sal.fs.joinPaths(j.dirs.VARDIR, 'zdb')
+
+    @property
+    def _child_class(self):
+        return self._jsbase(('ZDBServer', 'JumpscaleLib.servers.zdb.ZDBServer'))
 
     def configure(self, instance="main", adminsecret="", mode="user", rootdir=None, addr="127.0.0.1", port=9900, verbose=True, reset=False, start=False):
         """

@@ -12,16 +12,16 @@ verbose = true
 adminsecret_ = ""
 """
 
-JSConfigBase = j.tools.configmanager.base_class_config
 
 
-class ZDBServer(JSConfigBase):
+class ZDBServer:
+
+    __jsbase__ = 'j.tools.configmanager._base_class_config'
+    _template = TEMPLATE
 
     def __init__(self, instance, data={}, parent=None, interactive=False):
         """
         """
-        JSConfigBase.__init__(self, instance=instance, data=data,
-                              parent=parent, template=TEMPLATE, ui=None, interactive=interactive)
         
         j.sal.fs.createDir(self.config.data["path"])
 
