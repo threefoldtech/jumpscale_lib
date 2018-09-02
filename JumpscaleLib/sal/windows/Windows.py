@@ -52,8 +52,9 @@ class WindowsSystem(JSBASE):
     except:
         pass
 
+    __jslocation__ = "j.sal.windows"
+
     def __init__(self):
-        self.__jslocation__ = "j.sal.windows"
         JSBASE.__init__(self)
         self.__dict__ = self.__shared_state
 
