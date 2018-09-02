@@ -272,7 +272,7 @@ class Gateway:
             dhcpserver = nic.get('dhcpserver')
             if not dhcpserver:
                 continue
-            network.hosts.nameservers = dhcpserver['nameservers']
+            network.hosts.nameservers = dhcpserver.get('nameservers', [])
             network.hosts.pool_size = dhcpserver.get('poolSize', network.hosts.pool_size)
             network.hosts.pool_start = dhcpserver.get('poolStart', network.hosts.pool_start)
             for host in dhcpserver['hosts']:
