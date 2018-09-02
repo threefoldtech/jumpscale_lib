@@ -16,10 +16,10 @@ JSBASE = j.application.jsbase_get_class()
 class SMBUser(JSBASE):
 
     def __init__(self, verbose=False):
+        JSBASE.__init__(self)
         # self._smb = cmd_sambatool(self._stdout, self._stderr)
         self._local = j.tools.executorLocal
         self._verbose = verbose
-        JSBASE.__init__(self)
 
     def _smbrun(self, args):
         output = self._local.execute('samba-tool user %s ' % args)
