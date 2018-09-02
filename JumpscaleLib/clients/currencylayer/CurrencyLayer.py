@@ -5,21 +5,20 @@ TEMPLATE = """
 api_key_ = ""
 """
 
-JSConfigBase = j.tools.configmanager.base_class_config
 
 from pprint import pprint
 
 
-class CurrencyLayer(JSConfigBase):
+class CurrencyLayer:
     """
     get key from https://currencylayer.com/quickstart
     """
 
     __jslocation__ = 'j.clients.currencylayer'
+    __jsbase__ = 'j.tools.configmanager._base_class_config'
+    _template = TEMPLATE
 
     def __init__(self):
-        JSConfigBase.__init__(self, instance="main", data={},
-                              parent=None, template=TEMPLATE)
         self._data_cur = {}
         self._id2cur = {}
         self._cur2id = {}
