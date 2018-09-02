@@ -70,9 +70,9 @@ class SMBUser(JSBASE):
 class SMBShare(JSBASE):
 
     def __init__(self):
+        JSBASE.__init__(self)
         self._config = SambaConfigParser()
         self._load()
-        JSBASE.__init__(self)
 
     def _load(self):
         config = j.tools.path.get(CONFIG_FILE)
@@ -151,9 +151,9 @@ class SMBShare(JSBASE):
 class SMBSubShare(JSBASE):
 
     def __init__(self):
+        JSBASE.__init__(self)
         j.tools.path.get(BASEPATH).mkdir_p()
         self._local = j.tools.executorLocal
-        JSBASE.__init__(self)
 
     def get(self, sharename, sharepath):
         sharepath = j.tools.path.get(BASEPATH).joinpath(sharepath, sharename)
@@ -207,8 +207,9 @@ class SMBSubShare(JSBASE):
 
 class Samba(JSBASE):
 
+    __jslocation__ = "j.sal.samba"
+
     def __init__(self):
-        self.__jslocation__ = "j.sal.samba"
         JSBASE.__init__(self)
         self._local = j.tools.executorLocal
         self._users = SMBUser(True)
