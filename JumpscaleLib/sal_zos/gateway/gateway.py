@@ -529,7 +529,7 @@ class Gateway:
         if self._default_nic and self.networks[self._default_nic].public:
             self._update_container_portforwards()
 
-        firewall = Firewall(self.container, self.networks, self.portforwards)
+        firewall = Firewall(self.container, self.networks, self.portforwards, self.routes)
         firewall.apply_rules()
 
     def configure_routes(self):
