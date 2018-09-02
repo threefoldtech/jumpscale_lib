@@ -1,4 +1,3 @@
-from jumpscale import j
 import cryptocompare as cc
 
 TEMPLATE = """
@@ -39,16 +38,16 @@ class CurrencyLayer:
             self.cache.reset()
         def get():
             if not self.fake and \
-                j.sal.nettools.tcpPortConnectionTest("currencylayer.com", 443):
+                self.j.sal.nettools.tcpPortConnectionTest("currencylayer.com", 443):
                 key = self.config.data["api_key_"]
                 if key.strip():
                     url = "http://apilayer.net/api/live?access_key=%s" % key
 
-                    c = j.clients.http.getConnection()
+                    c = self.j.clients.http.getConnection()
                     r = c.get(url).readlines()
 
                     data = r[0].decode()
-                    data = j.data.serializers.json.loads(data)["quotes"]
+                    data = self.j.data.serializers.json.loads(data)["quotes"]
 
                     data['USDETH'] = 1/cc.get_price('ETH','USD')['ETH']['USD']
                     data['USDXRP'] = cc.get_price('USD', 'XRP')['USD']['XRP']
