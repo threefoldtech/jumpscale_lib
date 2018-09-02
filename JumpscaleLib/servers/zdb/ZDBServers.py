@@ -1,4 +1,4 @@
-from pprint import pprint as print
+from pprint import pprint as pprint
 
 from .ZDBServer import ZDBServer
 
@@ -104,7 +104,7 @@ class ZDBServers:
     #     assert cl.get(2)==b"test2"
 
     #     def m(id,data,result):
-    #         print("%s:%s"%(id,data))
+    #         pprint("%s:%s"%(id,data))
 
     #     cl.iterate(m)
             
