@@ -1,5 +1,3 @@
-
-from jumpscale import j
 from pprint import pprint as print
 import time
 
@@ -23,7 +21,7 @@ class ZDBServer:
         """
         """
         
-        j.sal.fs.createDir(self.config.data["path"])
+        self.j.sal.fs.createDir(self.config.data["path"])
 
         self._initdir()
 
@@ -31,7 +29,7 @@ class ZDBServer:
         """
         
         """
-        cl = j.clients.zdb.configure(instance=self.instance,
+        cl = self.j.clients.zdb.configure(instance=self.instance,
                                        secrets=secrets,
                                        adminsecret=self.config.data['adminsecret_'],
                                        addr=self.config.data['addr'],
@@ -44,7 +42,7 @@ class ZDBServer:
         """
         
         """
-        cl = j.clients.zdb.configure(instance=self.instance,
+        cl = self.j.clients.zdb.configure(instance=self.instance,
                                        secrets=secrets,
                                        adminsecret=self.config.data['adminsecret_'],
                                        addr=self.config.data['addr'],
@@ -56,9 +54,9 @@ class ZDBServer:
     def _initdir(self):
         root_path = self.config.data['path']
         if root_path == "":
-            root_path = j.sal.fs.joinPaths(j.dirs.DATADIR, 'zdb', self.instance)
+            root_path = self.j.sal.fs.joinPaths(self.j.dirs.DATADIR, 'zdb', self.instance)
         # make sure directories exists
-        j.sal.fs.createDir(root_path)
+        self.j.sal.fs.createDir(root_path)
         self.root_path = root_path
 
     def start(self):
@@ -70,12 +68,12 @@ class ZDBServer:
         mode = self.config.data['mode']
 
         d=self.config.data
-        if j.sal.nettools.tcpPortConnectionTest(d["addr"],d["port"]):
-            r=j.clients.redis.get(ipaddr=d["addr"], port=d["port"])
+        if self.j.sal.nettools.tcpPortConnectionTest(d["addr"],d["port"]):
+            r=self.j.clients.redis.get(ipaddr=d["addr"], port=d["port"])
             r.ping()
             return()
 
-        j.tools.prefab.local.zero_os.zos_db.start(instance=self.instance,
+        self.j.tools.prefab.local.zero_os.zos_db.start(instance=self.instance,
                                                   host=self.config.data['addr'],
                                                   port=self.config.data['port'],
                                                   index=self.root_path,
@@ -85,16 +83,16 @@ class ZDBServer:
                                                   adminsecret=self.config.data['adminsecret_'])
         self.logger.info("waiting for zdb server to start on (%s:%s)" % (self.config.data['addr'], self.config.data['port']))
         # time.sleep(0.5)
-        res = j.sal.nettools.waitConnectionTest(self.config.data['addr'], self.config.data['port'])
+        res = self.j.sal.nettools.waitConnectionTest(self.config.data['addr'], self.config.data['port'])
         if res is False:
             raise RuntimeError("could not start zdb:'%s' (%s:%s)" % (self.instance, self.config.data['addr'], self.config.data['port']))
 
     def stop(self):
-        j.tools.prefab.local.zero_os.zos_db.stop(self.instance)
+        self.j.tools.prefab.local.zero_os.zos_db.stop(self.instance)
 
     def destroy(self):
         self.stop()
-        j.sal.fs.removeDirTree(self.root_path)
-        ipath = j.dirs.VARDIR + "/zdb/index/%s.db" % self.instance
-        j.sal.fs.remove(ipath)
+        self.j.sal.fs.removeDirTree(self.root_path)
+        ipath = self.j.dirs.VARDIR + "/zdb/index/%s.db" % self.instance
+        self.j.sal.fs.remove(ipath)
         self._initdir()

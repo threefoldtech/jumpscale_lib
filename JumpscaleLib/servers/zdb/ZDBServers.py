@@ -1,5 +1,3 @@
-
-from jumpscale import j
 from pprint import pprint as print
 
 from .ZDBServer import ZDBServer
@@ -10,7 +8,7 @@ class ZDBServers:
     __jsbase__ = 'j.tools.configmanager._base_class_configs'
 
     def __init__(self):
-        self.rootdir = j.sal.fs.joinPaths(j.dirs.VARDIR, 'zdb')
+        self.rootdir = self.j.sal.fs.joinPaths(self.j.dirs.VARDIR, 'zdb')
 
     @property
     def _child_class(self):
@@ -31,7 +29,7 @@ class ZDBServers:
         if not rootdir:
             rootdir = self.rootdir
 
-        path = j.sal.fs.joinPaths(rootdir, instance)
+        path = self.j.sal.fs.joinPaths(rootdir, instance)
 
         data = {}
         data["path"] = path
@@ -68,7 +66,7 @@ class ZDBServers:
         """
         js_shell 'j.servers.zdb.build()'
         """
-        j.tools.prefab.local.zero_os.zos_db.build(install=True,reset=True)
+        self.j.tools.prefab.local.zero_os.zos_db.build(install=True,reset=True)
 
     def test(self,build=False):
         """
