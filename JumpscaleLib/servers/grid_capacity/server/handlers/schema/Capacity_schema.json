@@ -17,6 +17,15 @@
 		"os_version": {
 			"type": "string"
 		},
+		"parameters": {
+			"type": [
+				"array",
+				"null"
+			],
+			"items": {
+				"type": "string"
+			}
+		},
 		"reserved_resources": {
 			"$ref": "ResourceUnits_schema.json"
 		},
