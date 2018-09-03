@@ -79,7 +79,7 @@ class ZDBClientNS(JSBASE):
                 key = struct.pack("<I", key)
         elif self.mode == "direct":
             if set:
-                if not key in ["", None]:
+                if key not in ["", None]:
                     raise j.exceptions.Input("key need to be None or "
                                              "empty string")
                 if key is None:
@@ -160,7 +160,7 @@ class ZDBClientNS(JSBASE):
         #     return self.redis.execute_command("EXISTS", pos)
 
     @property
-    def type(self): # BCDBModel is expecting ZDBClientNS to look like ZDBClient
+    def type(self):  # BCDBModel is expecting ZDBClientNS to look like ZDBClient
         return self.zdbclient.type
 
     @property
@@ -179,19 +179,19 @@ class ZDBClientNS(JSBASE):
                     val = int(val)
                     res[key] = val
                     continue
-                except:
+                except BaseException:
                     pass
                 try:
                     val = float(val)
                     res[key] = val
                     continue
-                except:
+                except BaseException:
                     pass
                 res[key] = str(val).strip()
         return res
 
     def list(self, key_start=None, direction="forward", nrrecords=100000,
-                   result=None):
+             result=None):
         if result is None:
             result = []
 
@@ -200,11 +200,11 @@ class ZDBClientNS(JSBASE):
             return result
 
         self.iterate(do, key_start=key_start, direction=direction,
-                   nrrecords=nrrecords, _keyonly=True, result=result)
+                     nrrecords=nrrecords, _keyonly=True, result=result)
         return result
 
     def iterate(self, method, key_start=None, direction="forward",
-                   nrrecords=100000, _keyonly=False, result=None):
+                nrrecords=100000, _keyonly=False, result=None):
         """walk over the data and apply method as follows
 
         ONLY works for when id_enable is True
@@ -284,7 +284,7 @@ class ZDBClientNS(JSBASE):
         id2 = self.set(b"b")
         assert id2 == 1
 
-        assert self.set(b"r", key=id) == None
+        assert self.set(b"r", key=id) is None
         assert self.set(b"rss", key=id) == 0  # changed the data
 
         nr = self.nsinfo["entries"]
@@ -374,7 +374,7 @@ class ZDBClientNS(JSBASE):
         except Exception as e:
             assert "No space left" in str(e)
 
-        self.nsname_new(nsname+"2", secret="1234", instance=None)
+        self.nsname_new(nsname + "2", secret="1234", instance=None)
 
         nritems = 100000
         j.tools.timer.start("zdb")
