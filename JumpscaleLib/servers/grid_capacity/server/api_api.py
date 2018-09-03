@@ -7,6 +7,51 @@ from . import handlers
 api_api = Blueprint('api_api', __name__)
 
 
+@api_api.route('/api/nodes', methods=['GET'])
+def ListCapacity():
+    """
+    List all the nodes capacity
+    It is handler for GET /api/nodes
+    """
+    return handlers.ListCapacityHandler()
+
+
+@api_api.route('/api/nodes', methods=['POST'])
+def RegisterCapacity():
+    """
+    Register a node capacity
+    It is handler for POST /api/nodes
+    """
+    return handlers.RegisterCapacityHandler()
+
+
+@api_api.route('/api/nodes/<node_id>', methods=['GET'])
+def GetCapacity(node_id):
+    """
+    Get detail about capacity of a node
+    It is handler for GET /api/nodes/<node_id>
+    """
+    return handlers.GetCapacityHandler(node_id)
+
+
+@api_api.route('/api/nodes/<node_id>/actual', methods=['PUT'])
+def UpdateActualUsedCapacity(node_id):
+    """
+    Set the actual usage of the capacity of a node
+    It is handler for PUT /api/nodes/<node_id>/actual
+    """
+    return handlers.UpdateActualUsedCapacityHandler(node_id)
+
+
+@api_api.route('/api/nodes/<node_id>/reserved', methods=['PUT'])
+def UpdateReservedCapacity(node_id):
+    """
+    Mark some capacity on a node to be reserved
+    It is handler for PUT /api/nodes/<node_id>/reserved
+    """
+    return handlers.UpdateReservedCapacityHandler(node_id)
+
+
 @api_api.route('/api/farmer_create', methods=['GET'])
 def RegisterFarmer():
     """
@@ -41,48 +86,3 @@ def GetFarmer(iyo_organization):
     It is handler for GET /api/farmers/<iyo_organization>
     """
     return handlers.GetFarmerHandler(iyo_organization)
-
-
-@api_api.route('/api/nodes', methods=['GET'])
-def ListCapacity():
-    """
-    List all the nodes capacity
-    It is handler for GET /api/nodes
-    """
-    return handlers.ListCapacityHandler()
-
-
-@api_api.route('/api/nodes', methods=['POST'])
-def RegisterCapacity():
-    """
-    Register a node capacity
-    It is handler for POST /api/nodes
-    """
-    return handlers.RegisterCapacityHandler()
-
-
-@api_api.route('/api/nodes/<node_id>', methods=['GET'])
-def GetCapacity(node_id):
-    """
-    Get detail about capacity of a node
-    It is handler for GET /api/nodes/<node_id>
-    """
-    return handlers.GetCapacityHandler(node_id)
-
-
-@api_api.route('/api/nodes/<node_id>/reserved', methods=['PUT'])
-def UpdateReservedCapacity(node_id):
-    """
-    Mark some capacity on a node to be reserved
-    It is handler for PUT /api/nodes/<node_id>/reserved
-    """
-    return handlers.UpdateReservedCapacityHandler(node_id)
-
-
-@api_api.route('/api/nodes/<node_id>/actual', methods=['PUT'])
-def UpdateActualUsedCapacity(node_id):
-    """
-    Set the actual usage of the capacity of a node
-    It is handler for PUT /api/nodes/<node_id>/actual
-    """
-    return handlers.UpdateActualUsedCapacityHandler(node_id)
