@@ -51,12 +51,14 @@ class Ubuntu(JSBASE):
             osname = j.core.platformtype.myplatform.osname
             osversion = j.core.platformtype.myplatform.osversion
             if osname not in ('ubuntu', 'linuxmint'):
-                raise j.exceptions.RuntimeError("Only Ubuntu/Mint are supported")
+                raise j.exceptions.RuntimeError("Only Ubuntu/Mint supported")
             # safe cast to the release to a number
             else:
                 release = float(osversion)
-                if release < 14:
-                    raise j.exceptions.RuntimeError("Only ubuntu version 14+ supported")
+                # disable as it stops debian 8 and debian 9 (etc.) working
+                #if release < 14:
+                #    raise j.exceptions.RuntimeError("Only ubuntu version "
+                #                                    "14+ supported")
                 self._checked = True
 
         return self._checked
