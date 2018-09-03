@@ -89,6 +89,7 @@ setup(
         'pyblake2>=0.9.3',
         'pycapnp>=0.5.12',
         'pymux>=0.13',
+        'pypandoc>=1.3.3',
         'redis>=2.10.5',
         'requests>=2.13.0',
         'toml>=0.9.2',
