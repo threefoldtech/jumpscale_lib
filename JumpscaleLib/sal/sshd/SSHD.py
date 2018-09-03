@@ -1,3 +1,4 @@
+import os
 from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
@@ -14,15 +15,20 @@ class SSHError(Exception, JSBASE):
 
 class SSHD(JSBASE):
 
-    SSH_ROOT = j.tools.path.get('/root/.ssh')
-    SSH_AUTHORIZED_KEYS = j.tools.path.get(SSH_ROOT).joinpath('authorized_keys')
-
     def __init__(self):
         self.__jslocation__ = "j.sal.sshd"
         JSBASE.__init__(self)
         self._local = j.tools.executorLocal
         self._keys = None
         self._transactions = []
+
+    @property
+    def SSH_ROOT(self):
+        return j.tools.path.get(j.dirs.HOMEDIR).joinpath(".ssh")
+
+    @property
+    def SSH_AUTHORIZED_KEYS(self):
+        return j.tools.path.get(self.SSH_ROOT).joinpath('authorized_keys')
 
     @property
     def keys(self):
