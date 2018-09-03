@@ -82,7 +82,7 @@ setup(
         'paramiko>=2.2.3',  # for parallel-ssh
         'path.py>=10.3.1',
         'peewee>=2.9.2',
-        'psycopg2>=2.7.1',
+        'psycopg2>=2.6.2',
         'pudb>=2017.1.2',
         'cryptography>=2.2.0',
         'pyOpenSSL>=17.0.0',
