@@ -5,8 +5,9 @@ Auto-generated class for Capacity
 """
 from .Location import Location
 from .ResourceUnits import ResourceUnits
-from six import string_types
+from .client_support import Timestamp
 from datetime import datetime
+from six import string_types
 
 from . import client_support
 
@@ -61,8 +62,10 @@ class Capacity(object):
             'total_resources', data, data_types, False, [], False, True, class_name)
         data_types = [int]
         self.uptime = client_support.set_property('uptime', data, data_types, False, [], False, False, class_name)
-        data_types = [datetime]
+        data_types = [Timestamp]
         self.updated = client_support.set_property('updated', data, data_types, False, [], False, False, class_name)
+        # data_types = [datetime]
+        # self.updated = client_support.set_property('updated', data, data_types, False, [], False, False, class_name)
         data_types = [ResourceUnits]
         self.used_resources = client_support.set_property(
             'used_resources', data, data_types, False, [], False, False, class_name)
