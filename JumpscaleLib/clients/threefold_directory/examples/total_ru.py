@@ -5,7 +5,7 @@ compute the total number of ressource units present on the grid.
 from jumpscale import j
 
 
-directory = j.clients.grid_capacity.get('main')
+directory = j.clients.threefold_directory.get('main')
 nodes, _ = directory.api.ListCapacity()
 
 resource_units = {

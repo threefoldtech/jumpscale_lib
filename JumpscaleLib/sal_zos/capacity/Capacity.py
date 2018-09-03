@@ -93,7 +93,7 @@ class Capacity:
         elif not data['robot_address']:
             raise RuntimeError('Can not register a node without robot_address')
 
-        client = j.clients.grid_capacity.get(interactive=False)
+        client = j.clients.threefold_directory.get(interactive=False)
         _, resp = client.api.RegisterCapacity(data)
         resp.raise_for_status()
 
@@ -112,7 +112,7 @@ class Capacity:
             sru=report.SRU,
         )
 
-        client = j.clients.grid_capacity.get(interactive=False)
+        client = j.clients.threefold_directory.get(interactive=False)
         resp = client.api.UpdateActualUsedCapacity(data=data, node_id=self._node.name)
         resp.raise_for_status()
 
@@ -131,6 +131,6 @@ class Capacity:
             sru=report.SRU,
         )
 
-        client = j.clients.grid_capacity.get(interactive=False)
+        client = j.clients.threefold_directory.get(interactive=False)
         resp = client.api.UpdateReservedCapacity(data=data, node_id=self._node.name)
         resp.raise_for_status()

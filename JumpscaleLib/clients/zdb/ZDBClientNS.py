@@ -45,6 +45,9 @@ class ZDBClientNS(JSBASE):
         else:
             self.redis.execute_command("SELECT", self.nsname, self.secret)
 
+    def test(self):
+        return self.zdbclient.test()
+
     @property
     def adminsecret(self):
         return self.zdbclient.adminsecret

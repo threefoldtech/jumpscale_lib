@@ -1,18 +1,18 @@
-
-from jumpscale import j
-from pprint import pprint as print
+from pprint import pprint as pprint
 
 from .ZDBServer import ZDBServer
 
-JSConfigBase = j.tools.configmanager.base_class_configs
+class ZDBServers:
 
-
-class ZDBServers(JSConfigBase):
+    __jslocation__ = "j.servers.zdb"
+    __jsbase__ = 'j.tools.configmanager._base_class_configs'
 
     def __init__(self):
-        self.__jslocation__ = "j.servers.zdb"
-        super().__init__(child_class=ZDBServer)
-        self.rootdir = j.sal.fs.joinPaths(j.dirs.VARDIR, 'zdb')
+        self.rootdir = self.j.sal.fs.joinPaths(self.j.dirs.VARDIR, 'zdb')
+
+    @property
+    def _child_class(self):
+        return self._jsbase(('ZDBServer', 'JumpscaleLib.servers.zdb.ZDBServer'))
 
     def configure(self, instance="main", adminsecret="", mode="user", rootdir=None, addr="127.0.0.1", port=9900, verbose=True, reset=False, start=False):
         """
@@ -29,7 +29,7 @@ class ZDBServers(JSConfigBase):
         if not rootdir:
             rootdir = self.rootdir
 
-        path = j.sal.fs.joinPaths(rootdir, instance)
+        path = self.j.sal.fs.joinPaths(rootdir, instance)
 
         data = {}
         data["path"] = path
@@ -66,7 +66,7 @@ class ZDBServers(JSConfigBase):
         """
         js_shell 'j.servers.zdb.build()'
         """
-        j.tools.prefab.local.zero_os.zos_db.build(install=True,reset=True)
+        self.j.tools.prefab.local.zero_os.zos_db.build(install=True,reset=True)
 
     def test(self,build=False):
         """
@@ -104,7 +104,7 @@ class ZDBServers(JSConfigBase):
     #     assert cl.get(2)==b"test2"
 
     #     def m(id,data,result):
-    #         print("%s:%s"%(id,data))
+    #         pprint("%s:%s"%(id,data))
 
     #     cl.iterate(m)
             
