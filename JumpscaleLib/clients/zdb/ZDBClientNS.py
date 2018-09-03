@@ -1,6 +1,5 @@
-
 from jumpscale import j
-from pprint import pprint as print
+from pprint import pprint 
 import os
 import struct
 import copy
@@ -300,12 +299,12 @@ class ZDBClientNS(JSBASE):
         embed(colors='Linux')
         ss
 
-        print(res)
+        pprint(res)
 
         result = {}
 
         def test(id, data, result):
-            print("%s:%s" % (id, data))
+            pprint("%s:%s" % (id, data))
             result[id] = data
             return result
 
@@ -347,7 +346,7 @@ class ZDBClientNS(JSBASE):
             if not exists:
                 break
 
-        print("count:%s" % self.count)
+        pprint("count:%s" % self.count)
 
         self.nsname_new(nsname, secret="1234", maxsize=1000, instance=None)
 
@@ -379,7 +378,7 @@ class ZDBClientNS(JSBASE):
         nritems = 100000
         j.tools.timer.start("zdb")
 
-        print("perftest for 100.000 records, should get above 10k per sec")
+        pprint("perftest for 100.000 records, should get above 10k per sec")
         for i in range(nritems):
             id = self.set(b"a")
 
