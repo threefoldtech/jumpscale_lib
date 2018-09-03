@@ -61,10 +61,23 @@ class Capacity:
             used_memory=self._node.client.info.mem()['used']
         )
 
+    def node_parameters(self):
+        params = []
+        checking = ['development', 'debug', 'support']
+
+        for check in checking:
+            if self._node.kernel_args.get(check) is not None:
+                params.append(check)
+
+        return params
+
     def register(self):
         farmer_id = self._node.kernel_args.get('farmer_id')
         if not farmer_id:
             return False
+
+        # checking kernel parameters enabled
+        parameters = self.node_parameters()
 
         robot_address = ""
         public_addr = self._node.public_addr
@@ -84,6 +97,7 @@ class Capacity:
             ),
             robot_address=robot_address,
             os_version=os_version,
+            parameters=parameters,
             uptime=int(self._node.uptime())
         )
         data['farmer_id'] = farmer_id

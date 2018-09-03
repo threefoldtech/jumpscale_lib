@@ -1,8 +1,8 @@
-six==1.11.0
-jsonschema==2.6.0
+requests==2.18.4
 python_jose==1.4.0
 Flask==0.12.2
-requests==2.18.4
+jsonschema==2.6.0
+six==1.11.0
 python_dateutil==2.7.3
 flask_mongoengine==0.9.5
 geocoder==1.38.1
