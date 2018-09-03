@@ -1,6 +1,4 @@
-
 from jumpscale import j
-from pprint import pprint as print
 
 from .ZDBClient import ZDBClient
 
