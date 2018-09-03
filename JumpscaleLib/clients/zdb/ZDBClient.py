@@ -1,6 +1,5 @@
 
 from jumpscale import j
-from pprint import pprint as print
 import os
 import struct
 from .ZDBClientNS import ZDBClientNS
