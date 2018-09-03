@@ -2,7 +2,7 @@ from testconfig import config
 from termcolor import colored
 import unittest
 from jumpscale import j
-import uuid, time
+import uuid, time, os
 import subprocess
 from framework.utils import Utils
 from framework.base.vms import VM
@@ -113,13 +113,16 @@ class BaseTest(Utils):
         return node_info
 
     def load_ssh_key(self):
-        with open('/root/.ssh/id_rsa.pub', 'r') as file:
-            ssh = file.readline().replace('\n', '')
-        if not ssh:
-            cmd = 'mkdir /root/.ssh; ssh-keygen -t rsa -f /root/.ssh/id_rsa -q -P ""'
+        if os.path.exists('/tmp/id_rsa.pub'):
+            with open('/tmp/id_rsa.pub', 'r') as file:
+                ssh = file.readline().replace('\n', '')
+        else:              
+            print(colored('[+] Generate sshkey.', 'white'))
+            cmd = 'ssh-keygen -t rsa -f /tmp/id_rsa -q -P ""; eval `ssh-agent -s`; ssh-add  /tmp/id_rsa'
             subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            self.load_ssh_key()
+            ssh = self.load_ssh_key()
         return ssh
+
 
     def execute_command(self, ip, cmd):
         target = """ssh -o "StrictHostKeyChecking no" root@%s '%s'""" % (ip, cmd)
@@ -157,3 +160,17 @@ class BaseTest(Utils):
                 return result
         else:
             raise RuntimeError(colored(' [-] {}'.format(error), 'red'))
+
+    def set_gw_default_values(self, status="halted"):
+        gw_parms = {
+                    'status': status,
+                    'hostname': self.random_string(),
+                    'networks': [],
+                    'portforwards': [],
+                    'httpproxies': [],
+                    'domain': 'domain',
+                    'certificates': [],
+                    'ztIdentity': '',
+                    }
+
+        return gw_parms
