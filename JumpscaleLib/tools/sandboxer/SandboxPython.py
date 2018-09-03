@@ -108,6 +108,7 @@ class SandboxPython(JSBASE):
             if "parso" in path:
                 return True
             files = j.sal.fs.listFilesInDir(path, recursive=True, filter="*.so", followSymlinks=True)
+            files += j.sal.fs.listFilesInDir(path, recursive=True, filter="*.so.*", followSymlinks=True)
             if len(files) > 0:
                 self.logger.debug("found binary files in:%s" % path)
                 return True
@@ -135,7 +136,7 @@ class SandboxPython(JSBASE):
             for item in j.sal.fs.listFilesInDir(src, recursive=False, exclude=ignorefiles, followSymlinks=True):
                 fname = j.sal.fs.getBaseName(item)
                 dest0 = ""
-                if fname.endswith(".so"):
+                if fname.endswith(".so") or ".so." in fname:
                     dest0 = "%s/lib/pythonbin/%s" % (dest, fname)
                 if fname.endswith(".py"):
                     dest0 = "%s/lib/python/%s" % (dest, fname)
