@@ -297,6 +297,7 @@ class SandboxPython(JSBASE):
         export LANG=C.UTF-8
 
         export HOME=$PBASE/root
+        export HOMEDIR=/root
 
         export PS1="TF: "
 
