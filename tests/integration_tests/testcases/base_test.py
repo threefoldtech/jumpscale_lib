@@ -27,9 +27,9 @@ class BaseTest(Utils):
         cls.node_sal = j.clients.zos.get(NODE_CLIENT, data={'host': config['main']['nodeip']})
         cls.node_info = self.get_zos_info()
         cls.vm_flist = "https://hub.grid.tf/tf-bootable/ubuntu:16.04.flist"
-        cls.vm = VM(node=cls.node_sal)
-        cls.gw = GW(node=cls.node_sal)
-        cls.zdb = ZDB(node=cls.node_sal)
+        cls.vm = VM
+        cls.gw = GW
+        cls.zdb = ZDB
         cls.ssh_key = self.load_ssh_key()
         cls.zt_token = config['main']['zt_token']
         cls.zt_network_name = self.random_string()
@@ -40,7 +40,7 @@ class BaseTest(Utils):
     @classmethod
     def tearDownClass(cls):
         self = cls()
-        #self.host_leave_zt()
+        self.host_leave_zt()
 
     def setUp(self):
         super(BaseTest, self).setUp()
@@ -170,6 +170,7 @@ class BaseTest(Utils):
                     'httpproxies': [],
                     'domain': 'domain',
                     'certificates': [],
+                    'routes': [],
                     'ztIdentity': '',
                     }
 
