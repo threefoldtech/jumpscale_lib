@@ -11,6 +11,10 @@ addr = "localhost"
 port = "2379"
 """
 
+def key_to_etcd(pattern):
+    pattern = pattern.replace(':', '/')
+    return "/" + pattern
+
 class EtcdClient:
 
     __jsbase__ = 'j.tools.configmanager._base_class_config'
@@ -33,10 +37,25 @@ class EtcdClient:
 
         return self._etcd
 
-    def keys(self, tree=""):
+    def _set(self, pattern, val):
+        return self.etcd.write(key_to_etcd(pattern), val)
+
+    def _get(self, pattern):
+        return self.etcd.read(key_to_etcd(pattern))
+
+    def incr(self, name, amount=1):
+        try:
+            r = self._get(name)
+            value = int(r.value)
+        except etcd.EtcdKeyNotFound:
+            value = amount
+        self._set(name, str(value))
+        return value
+
+    def keys(self, pattern=""):
         res = []
         try:
-            r = self.etcd.read('/%s' % tree)
+            r = self._get(pattern)
         except etcd.EtcdKeyNotFound:
             return res
         for child in r.children:
