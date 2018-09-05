@@ -1,4 +1,7 @@
 """ A Jumpscale wrapper around the python3 etcd client
+
+    info on etcd client API here:
+    https://python-etcd.readthedocs.io/en/latest/
 """
 
 import etcd
@@ -29,6 +32,17 @@ class EtcdClient:
             self._etcd = etcd.Client(host=addr, port=port)
 
         return self._etcd
+
+    def keys(self, tree=""):
+        res = []
+        try:
+            r = self.etcd.read('/%s' % tree)
+        except etcd.EtcdKeyNotFound:
+            return res
+        for child in r.children:
+            print("%s: %s" % (child.key, child.value))
+            res.append(child.key)
+        return res
 
     def __str__(self):
         return "etcd:%-14s %-25s:%-4s" % (
