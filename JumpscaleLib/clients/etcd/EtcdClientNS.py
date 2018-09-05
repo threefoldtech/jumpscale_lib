@@ -22,6 +22,10 @@ class EtcdClientNS:
             return self.dbclient.secrets["default"]
 
     @property
+    def dbtype(self):
+        return self.dbclient.dbtype
+
+    @property
     def etcd(self):
         if self._etcd is None:
             d = self.dbclient.config.data
