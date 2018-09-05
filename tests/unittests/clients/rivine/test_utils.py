@@ -2,7 +2,6 @@
 Unittests for utils module
 """
 import pytest
-from unittest.mock import MagicMock, patch
 from JumpscaleLib.clients.blockchain.rivine import utils
 from JumpscaleLib.clients.blockchain.rivine.errors import RESTAPIError
 
@@ -29,16 +28,9 @@ def test_get_secret():
     assert len(utils.get_secret(size=size)) == size
 
 
-@patch('JumpscaleLib.clients.blockchain.rivine.utils.requests.get')
-def test_get_current_chain_height(mock_get):
+def test_get_current_chain_height():
     """
     Tests getting the current chain height
     """
     with pytest.raises(RESTAPIError):
         utils.get_current_chain_height([])
-
-    mock_response = MagicMock()
-    mock_response.status_code.return_value = 200
-    mock_response.json.return_value = {'height': 10}
-    mock_get.return_value = mock_response
-    utils.get_current_chain_height(['https://explorer.testnet.threefoldtoken.com/'])
