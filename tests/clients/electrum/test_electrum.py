@@ -66,7 +66,7 @@ def _start_daemon_and_get_client(wallet_name):
         "testnet": 1
     }
 
-    electrum_cl = j.clients.electrum.get(instance=wallet_name,
+    electrum_cl = j.clients.btc_electrum.get(instance=wallet_name,
                                                     data=client_data)
     electrum_cl.config.save()
     return electrum_cl
