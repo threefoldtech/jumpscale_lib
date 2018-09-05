@@ -12,6 +12,7 @@ class EtcdClient:
 
     __jsbase__ = 'j.tools.configmanager._base_class_config'
     _template = TEMPLATE
+    dbtype = 'ETCD'
 
     def __init__(self, instance, data={}, parent=None, interactive=False,
                                  started=True):

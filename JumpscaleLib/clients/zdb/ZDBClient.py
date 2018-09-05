@@ -17,6 +17,8 @@ JSConfigBase = j.tools.configmanager.base_class_config
 
 class ZDBClient(JSConfigBase):
 
+    dbtype = 'ZDB'
+
     def __init__(self, instance, data=None, parent=None, interactive=False,
                                  started=True):
         """ is connection to ZDB
