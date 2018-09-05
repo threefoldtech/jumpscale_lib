@@ -41,7 +41,7 @@ class EtcdClient:
         return res
 
     def namespace_exists(self, name):
-        return self.namespaces.has_key(name)
+        return name in self.namespaces
 
     def namespace_get(self, name, *args, **kwargs):
         if not name in self.namespaces:
