@@ -18,13 +18,13 @@ txn = TransactionFactory.create_transaction(1)
 # use specific seed that has some funds
 seed = 'siren own oil clean often undo castle sure creek squirrel group income size boost cart picture wing cram candy dutch congress actor taxi prosper'
 
-client_data = {'bc_address': 'https://explorer.testnet.threefoldtoken.com/',
+client_data = {'bc_addresses': ['https://explorer.testnet.threefoldtoken.com/'],
                'password_': 'test123',
                'minerfee': 100000000,
                'nr_keys_per_seed': 15,
                'seed_': seed}
 
-rivine_client = j.clients.blockchain.rivine.get('mytestwallet', data=client_data)
+rivine_client = j.clients.rivine.get('mytestwallet', data=client_data)
 rivine_client.config.save()
 
 

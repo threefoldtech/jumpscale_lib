@@ -38,23 +38,23 @@ class RivineWallet:
     """
     Wallet class
     """
-    def __init__(self, seed, bc_network, bc_network_password, nr_keys_per_seed=50, minerfee=100000000, client=None):
+    def __init__(self, seed, bc_networks, bc_network_password, nr_keys_per_seed=50, minerfee=100000000, client=None):
         """
         Creates new wallet
         TODO: check if we need to support multiple seeds from the begining
 
         @param seed: Starting point seed to generate keys.
-        @param bc_network: Blockchain network to use.
+        @param bc_networks: List of blockchain networks to use.
         @param bc_network_password: Password to send to the explorer node when posting requests.
         @param nr_keys_per_seed: Number of keys generated from the seed.
         @param minerfee: Amount of hastings that should be minerfee (default to 0.1 TFT)
-        @param client: Name of the insance of the j.clients.blockchain.rivine that is used to create the wallet
+        @param client: Name of the insance of the j.clients.rivine that is used to create the wallet
         """
-        self._client = j.clients.blockchain.rivine.get(client) if client else None
+        self._client = j.clients.rivine.get(client) if client else None
         self._seed = j.data.encryption.mnemonic.to_entropy(seed)
         self._unspent_coins_outputs = {}
         self._keys = {}
-        self._bc_network = bc_network.strip("/")
+        self._bc_networks = bc_networks
         self._minerfee = minerfee
         self._bc_network_password = bc_network_password
         self._nr_keys_per_seed = nr_keys_per_seed
@@ -94,7 +94,7 @@ class RivineWallet:
             # we need to update the config with the new nr_of_keys_per_seed for this wallet
             data = dict(self._client.config.data)
             data['nr_keys_per_seed'] = self._nr_keys_per_seed
-            cl = j.clients.blockchain.rivine.get(instance=self._client.instance,
+            cl = j.clients.rivine.get(instance=self._client.instance,
                                        data=data,
                                        create=True,
                                        interactive=False)
@@ -122,7 +122,7 @@ class RivineWallet:
         """
         Retrieves the current chain height
         """
-        return utils.get_current_chain_height(self._bc_network)
+        return utils.get_current_chain_height(self._bc_networks)
 
 
     def _check_address(self, address, log_errors=True):
@@ -135,7 +135,7 @@ class RivineWallet:
 
         @raises: @RESTAPIError if failed to check address
         """
-        return utils.check_address(self._bc_network, address, log_errors)
+        return utils.check_address(self._bc_networks, address, log_errors)
 
 
     def _check_balance(self):
@@ -221,7 +221,7 @@ class RivineWallet:
                'data': {'unlockhash': '012bdb563a4b3b630ddf32f1fde8d97466376a67c0bc9a278c2fa8c8bd760d4dcb4b9564cdea6f'}}}],
             'minerfees': ['100000000']}}]}
         """
-        return utils.get_unconfirmed_transactions(self._bc_network, format_inputs=format_inputs)
+        return utils.get_unconfirmed_transactions(self._bc_networks, format_inputs=format_inputs)
 
 
     def send_money(self, amount, recipient, data=None, locktime=None):
@@ -447,7 +447,7 @@ class RivineWallet:
 
         @param transaction: Transaction object to be committed
         """
-        return utils.commit_transaction(self._bc_network, self._bc_network_password, transaction)
+        return utils.commit_transaction(self._bc_networks, self._bc_network_password, transaction)
 
 
     def sign_transaction(self, transaction, multisig=False, commit=False):
