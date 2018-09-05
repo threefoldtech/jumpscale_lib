@@ -29,13 +29,7 @@ class JSWebServer(JSConfigBase):
         self.port = int(self.config.data["port"])
         self.port_ssl = int(self.config.data["port_ssl"])
         self.address = '{}:{}'.format(self.host, self.port)
-
-        # config_path = j.sal.fs.joinPaths(self.path, "site_config.toml")
-        # if j.sal.fs.exists(config_path):
-        #     self.site_config = j.data.serializer.toml.load(config_path)
-        # else:
-        #     self.site_config = {}
-
+        self.loader = JSWebLoader()
         self._inited = False
         j.servers.web.latest = self
         self.http_server = None
@@ -50,15 +44,13 @@ class JSWebServer(JSConfigBase):
 
         if self._inited:
             return
-
-        self._loader = JSWebLoader(path=self.path)
-
+        self.loader.load()
         self.logger.info("init server")
 
         if self.path not in sys.path:
             sys.path.append(self.path)
 
-        self.app = self._loader.app
+        self.app = self.loader.app
         self.app.debug = True
 
         self.http_server = WSGIServer((self.host, self.port), self.app, handler_class=WebSocketHandler)

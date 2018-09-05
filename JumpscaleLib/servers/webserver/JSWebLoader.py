@@ -27,36 +27,32 @@ class DebugConfig(Config):
 
 
 class JSWebLoader(JSBASE):
-    def __init__(self, path):
+    def __init__(self):
         JSBASE.__init__(self)
         self.db = SQLAlchemy()
-        self.path = path
         self.login_manager = LoginManager()
-        self._init_app()
-        # self._configure_database()
-        # self._configure_logs(app)
+        self.paths = []
+        self.app = None
 
-    def register_blueprints(self, sockets, path=None):
-        if path is None:
-            path = "%s/dm_base/blueprints" % self.path
-        if path not in sys.path:
-            sys.path.append(path)
-        apps = j.sal.fs.listDirsInDir(path, recursive=False, dirNameOnly=True,
-                                      findDirectorySymlinks=True, followSymlinks=True)
-        apps = [item for item in apps if item[0] is not "_"]
-        for module_name in apps:
-            module = import_module('blueprints.{}.routes'.format(module_name))
-            print("blueprint register:%s" % module_name)            
-            # try:
-            #     module = import_module('blueprints.{}.routes'.format(module_name))
-            #     print("blueprint register:%s" % module_name)
-            # except Exception as e:
-            #     print("WARNING: could not load required libraries for the HUB blueprint")
-            #     print(e)
-
-            self.app.register_blueprint(module.blueprint)
-            if sockets and hasattr(module, "ws_blueprint"):
-                sockets.register_blueprint(module.ws_blueprint)
+    def register_blueprints(self, sockets, paths):
+        for path in paths:
+            ppath = '/'.join(path.split('/')[:-1])
+            if ppath not in sys.path:
+                sys.path.append(ppath)
+            apps = j.sal.fs.listDirsInDir(path, recursive=False, dirNameOnly=True,
+                                          findDirectorySymlinks=True, followSymlinks=True)
+            apps = [item for item in apps if item[0] is not "_"]
+            for module_name in apps:
+                try:
+                    module = import_module('blueprints.{}.routes'.format(module_name))
+                    print("blueprint register:%s" % module_name)
+                    self.app.register_blueprint(module.blueprint)
+                    if sockets and hasattr(module, "ws_blueprint"):
+                        sockets.register_blueprint(module.ws_blueprint)
+                except Exception as e:
+                    # TODO: errors should be handled correctly, this is temp thing till we finish fixing gedis and docsites
+                    print(e)
+                    print("%s not loaded due to an error" % module_name)
 
     def _configure_database(self):
 
@@ -92,7 +88,7 @@ class JSWebLoader(JSBASE):
 
     #     return app
 
-    def _init_app(self, selenium=False, debug=True, websocket_support=True):
+    def load(self, selenium=False, debug=True, websocket_support=True):
         staticpath = j.clients.git.getContentPathFromURLorPath(
             "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/static")
         app = Flask(__name__, static_folder=staticpath)  # '/base/static'
@@ -118,12 +114,6 @@ class JSWebLoader(JSBASE):
         if websocket_support:
             sockets = Sockets(app)
 
-        # self.register_blueprints(app, sockets)
-        print(app.url_map)
-
-        if debug is True:
-            app = DebuggedApplication(app, evalex=True)
-
         self.app = app
-
-
+        self.register_blueprints(sockets, self.paths)
+        print(app.url_map)

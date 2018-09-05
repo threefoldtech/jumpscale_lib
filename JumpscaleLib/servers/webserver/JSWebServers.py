@@ -41,8 +41,8 @@ class JSWebServers(JSConfigBase):
         will return server which can be attached in a gevent_servers_rack
         """
         ws = self.get(instance)
-        ws.init(debug=debug)
-        return ws.http_server
+        ws.init()
+        return ws
 
     def install(self):
         """
