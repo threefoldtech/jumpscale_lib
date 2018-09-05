@@ -83,7 +83,11 @@ def get_current_chain_height(rivine_explorer_addresses):
     for rivine_explorer_address in rivine_explorer_addresses:
         url = '{}/explorer'.format(rivine_explorer_address.strip('/'))
         headers = {'user-agent': 'Rivine-Agent'}
-        response = requests.get(url, headers=headers)
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+        except requests.exceptions.ConnectionError as ex:
+            logger.warn(msg)
+            continue
         if response.status_code != 200:
             logger.warn('{} {}'.format(msg, response.text))
         else:
@@ -116,7 +120,12 @@ def check_address(rivine_explorer_addresses, address, log_errors=True):
     for rivine_explorer_address in rivine_explorer_addresses:
         url = '{}/explorer/hashes/{}'.format(rivine_explorer_address.strip('/'), address)
         headers = {'user-agent': 'Rivine-Agent'}
-        response = requests.get(url, headers=headers)
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+        except requests.exceptions.ConnectionError as ex:
+            if log_errors:
+                logger.warn(msg)
+            continue
         if response.status_code != 200:
             if log_errors:
                 logger.warn('{} {}'.format(msg, response.text.strip('\n')))
@@ -159,7 +168,11 @@ def get_unconfirmed_transactions(rivine_explorer_addresses, format_inputs=False)
     for rivine_explorer_address in rivine_explorer_addresses:
         url = "{}/transactionpool/transactions".format(rivine_explorer_address.strip('/'))
         headers = {'user-agent': 'Rivine-Agent'}
-        response = requests.get(url, headers=headers)
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+        except requests.exceptions.ConnectionError as ex:
+            logger.warn(msg)
+            continue
         if response.status_code != 200:
             logger.warn('{} {}'.format(msg, response.text))
         else:
@@ -195,7 +208,11 @@ def commit_transaction(rivine_explorer_addresses, rivine_explorer_api_password, 
         url = '{}/transactionpool/transactions'.format(rivine_explorer_address.strip('/'))
         headers = {'user-agent': 'Rivine-Agent'}
         auth = HTTPBasicAuth('', rivine_explorer_api_password)
-        res = requests.post(url, headers=headers, auth=auth, json=data)
+        try:
+            res = requests.post(url, headers=headers, auth=auth, json=data, timeout=30)
+        except requests.exceptions.ConnectionError as ex:
+            logging.warn(msg)
+            continue
         if res.status_code != 200:
             msg = 'Faield to commit transaction to chain network.{}'.format(res.text)
             logger.warn('{} {}'.format(msg, res.text))
