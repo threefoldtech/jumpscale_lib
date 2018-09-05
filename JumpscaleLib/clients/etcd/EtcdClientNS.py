@@ -5,6 +5,8 @@
 """
 
 import etcd
+import base64
+import zlib
 
 class EtcdClientNS:
 
@@ -12,7 +14,7 @@ class EtcdClientNS:
         self._etcd = None
         self.dbclient = dbclient
         self.nsname = nsname.lower().strip()
-        print ("EtcdClient", dbclient)
+        #print ("EtcdClient", dbclient)
 
     @property
     def secret(self):
@@ -42,6 +44,7 @@ class EtcdClientNS:
         prefix = "/%s/%s/" % (self.dbclient.instance, self.nsname)
         plen = len(prefix)
         assert key[:plen] == prefix, "key %s wrong namespace %s" % (key, prefix)
+        #print ("_etcd_to_key", key, key[plen])
         return key[plen:]
 
     def _key_to_etcd(self, pattern):
@@ -53,14 +56,32 @@ class EtcdClientNS:
             (taken from the config) to create separate namespaces.
         """
         #pattern = pattern.replace(':', '/')
-        return "/%s/%s/%s" % (self.dbclient.instance, self.nsname, pattern)
+        res = "/%s/%s" % (self.dbclient.instance, self.nsname)
+        if pattern:
+            res = "%s/%s" % (res, pattern)
+        return res
 
     def set(self, name, value):
-        return self.etcd.write(self._key_to_etcd(name), value)
+        if value is not None:
+            v = zlib.compress(value)
+            v = base64.encodestring(v)
+        else:
+            v = None
+        #print ("set", name, repr(v))
+        self.etcd.write(self._key_to_etcd(name), v)
+        v = self.get(name)
+        assert v == value, "value %s %s" % (repr(v), repr(value))
 
-    def get(self, name):
-        r = self.etcd.read(self._key_to_etcd(name))
-        return r.value
+    def get(self, name, wait=False):
+        etckey = self._key_to_etcd(name)
+        r = self.etcd.read(etckey, wait=wait)
+        #print ("get", name, etckey, repr(r.value))
+        if r.value is None:
+            return None
+        value = base64.decodestring(r.value.encode())
+        value = zlib.decompress(value)
+        #print ("get", name, value)
+        return value
 
     def incr(self, name, amount=1):
         try:
@@ -68,23 +89,26 @@ class EtcdClientNS:
             value = int(r) + amount
         except etcd.EtcdKeyNotFound:
             value = amount
-        self.set(name, str(value))
+        self.set(name, str(value).encode())
         return value
 
     def delete_all(self):
-        self.etcd.delete(self._key_to_etcd(''), recursive=True)
+        try:
+            self.etcd.delete(self._key_to_etcd(''), recursive=True)
+        except etcd.EtcdKeyNotFound:
+            pass
 
     def keys(self, pattern=""):
         res = []
         try:
-            r = self.get(pattern)
+            r = self.etcd.read(self._key_to_etcd(pattern))
         except etcd.EtcdKeyNotFound:
             return res
         if r.children is None:
             return res
         for child in r.children:
-            print("%s: %s" % (child.key, child.value))
-            res.append(self._etcd_to_key(child.key))
+            #print("child %s: %s" % (child.key, child.value))
+            res.append(self._etcd_to_key(child.key)[len(pattern)+1:])
         return res
 
     def __str__(self):
