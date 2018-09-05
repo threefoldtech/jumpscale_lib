@@ -16,7 +16,7 @@ class RivineClientFactory(JSConfigBaseFactory):
     """
 
     def __init__(self):
-        self.__jslocation__ = "j.clients.blockchain.rivine"
+        self.__jslocation__ = "j.clients.rivine"
         self.__imports__ = "rivine"
         JSConfigBaseFactory.__init__(self, RivineClient)
 

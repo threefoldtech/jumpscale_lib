@@ -35,19 +35,19 @@ A seed which is a random byte array translated to a sentence of [12, 15, 18, 21,
 
 You can generate new seed by using the following commands in your js9 shell
 ```python
-seed = j.clients.blockchain.rivine.generate_seed()
+seed = j.clients.rivine.generate_seed()
 ```
 
 From a seed you can create new wallet
 ```python
         from JumpscaleLib.clients.blockchain.rivine.RivineWallet import RivineWallet
         wallet = RivineWallet(seed=seed,
-                                    bc_network='https://explorer.testnet.threefoldtoken.com/',
+                                    bc_networks=['https://explorer.testnet.threefoldtoken.com/'],
                                     bc_network_password='test123',
                                     nr_keys_per_seed=5,
                                     minerfee=100000000)
         # where seed is the seed you have or generated
-        # bc_network: is the url to the blockchain network explorer node
+        # bc_networks: is list of the url to the blockchain network explorer nodes to try to connect to.
         # bc_network_password: is the password to use while communicating with the chain explorer node
         # nr_keys_per_seed: is how many keys to generate per seed
         # minerfee: How many hastings should be added as minerfee
@@ -55,13 +55,13 @@ From a seed you can create new wallet
 
 Or alternatively you can configure the wallet instance using the following code:
 ```python
-    client_data = {'bc_address': 'https://explorer.testnet.threefoldtoken.com/',
+    client_data = {'bc_addresses': ['https://explorer.testnet.threefoldtoken.com/'],
 'password_': 'test123',
  'minerfee': 10,
  'nr_keys_per_seed': 5,
  'seed_': seed}
 
-    rivine_client = j.clients.blockchain.rivine.get('mytestwallet', data=client_data)
+    rivine_client = j.clients.rivine.get('mytestwallet', data=client_data)
     rivine_client.config.save()
     wallet = rivine_client.wallet
 ```
@@ -129,7 +129,7 @@ To learn more about the different use cases of Multi-Signatures transactions ple
 ### Creating Walllets
 Beside the main wallet we created before in this document, we will create 4 more wallets and 1 Multisig wallet. To create the 4 extra wallets, you should run the following commands:
 ```python
-client_data = {'bc_address': 'https://explorer.testnet.threefoldtoken.com/',
+client_data = {'bc_addresses': ['https://explorer.testnet.threefoldtoken.com/'],
                'password_': 'test123',
                'minerfee': 100000000,
                'nr_keys_per_seed': 15
@@ -140,17 +140,17 @@ carlos_seed = 'basic ranch raise cattle giraffe boost joy release jazz gaze frie
 sam_seed = 'marine company planet empty marble salon summer van skirt valid venture drastic breeze cushion detect catalog radar thing renew magnet resource movie hill harsh'
 
 client_data['seed_'] = bob_seed
-bob_wallet = j.clients.blockchain.rivine.get('bobwallet', data=client_data).wallet
+bob_wallet = j.clients.rivine.get('bobwallet', data=client_data).wallet
 
 
 client_data['seed_'] = alice_seed
-alice_wallet = j.clients.blockchain.rivine.get('alicewallet', data=client_data).wallet
+alice_wallet = j.clients.rivine.get('alicewallet', data=client_data).wallet
 
 client_data['seed_'] = carlos_seed
-carlos_wallet = j.clients.blockchain.rivine.get('carlos_wallet', data=client_data).wallet
+carlos_wallet = j.clients.rivine.get('carlos_wallet', data=client_data).wallet
 
 client_data['seed_'] = sam_seed
-sam_wallet = j.clients.blockchain.rivine.get('sam_wallet', data=client_data).wallet
+sam_wallet = j.clients.rivine.get('sam_wallet', data=client_data).wallet
 
 ```
 ### Sending tokens to multiple participants
@@ -197,7 +197,7 @@ cosigners = [bob_wallet.addresses[0],
 
 required_sig = 3
 
-client_data = {'bc_address': 'https://explorer.testnet.threefoldtoken.com/',
+client_data = {'bc_addresses': ['https://explorer.testnet.threefoldtoken.com/'],
                'password_': 'test123',
                'minerfee': 100000000,
                'multisig': True,
@@ -205,7 +205,7 @@ client_data = {'bc_address': 'https://explorer.testnet.threefoldtoken.com/',
                'required_sig': required_sig
                }
 
-multisig_wallet = j.clients.blockchain.rivine.get('shared_wallet', data=client_data).wallet
+multisig_wallet = j.clients.rivine.get('shared_wallet', data=client_data).wallet
 ```
 
 Once you have created the wallet, you can already check the current balance
@@ -226,7 +226,7 @@ txn_json = multisig_wallet.create_transaction(amount=amount,
 # txn_json is a json representation of the transaction we just created, this should be sent to participants to sing it.
 
 #2. Create a transaction object from the transaction json
-txn = j.clients.blockchain.rivine.create_transaction_from_json(txn_json)
+txn = j.clients.rivine.create_transaction_from_json(txn_json)
 
 #3. Bob signs the transaction
 bob_wallet.sign_transaction(transaction=txn, multisig=True)
