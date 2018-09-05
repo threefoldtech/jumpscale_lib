@@ -1,6 +1,5 @@
-
 from jumpscale import j
-from pprint import pprint as print
+from pprint import pprint 
 import os
 import struct
 import copy
@@ -15,14 +14,18 @@ class ZDBClientNS(JSBASE):
         """
         is connection to ZDB
 
-        - secret is also the name of the directory where zdb data is for this namespace/secret
+        - secret is also the name of the directory where zdb data
+          is for this namespace/secret
 
         config params:
-            secret {str} -- is same as namespace id, is a secret to access the data (default: {None})
+            secret {str} -- is same as namespace id, is a secret to
+                            access the data (default: {None})
             port {[int} -- (default: 9900)
-            mode -- user,direct,seq(uential) see https://github.com/rivine/0-db/blob/master/README.md
+            mode -- user,direct,seq(uential) see
+                        https://github.com/rivine/0-db/blob/master/README.md
             namespace -- zdb supports namespace
-            adminsecret does not have to be set, but when you want to create namespaces it is a must
+            adminsecret does not have to be set, but when you
+            want to create namespaces it is a must
 
         """
         JSBASE.__init__(self)
@@ -60,7 +63,7 @@ class ZDBClientNS(JSBASE):
             return self.zdbclient.secrets["default"]
 
     def _patch_redis_client(self, redis):
-        # don't auto parse response for set, cause it's not 100% redis compatible
+        # don't auto parse response for set, it's not 100% redis compatible
         # 0-db does return a key after in set
         if 'SET' in redis.response_callbacks:
             del redis.response_callbacks['SET']
@@ -75,13 +78,15 @@ class ZDBClientNS(JSBASE):
                 key = struct.pack("<I", key)
         elif self.mode == "direct":
             if set:
-                if not key in ["", None]:
-                    raise j.exceptions.Input("key need to be None or empty string")
+                if key not in ["", None]:
+                    raise j.exceptions.Input("key need to be None or "
+                                             "empty string")
                 if key is None:
                     key = ""
             else:
                 if key in ["", None]:
-                    raise j.exceptions.Input("key cannot be None or empty string")
+                    raise j.exceptions.Input("key cannot be None or "
+                                             "empty string")
         elif self.mode == "user":
             if not iterate and key in ["", None]:
                 raise j.exceptions.Input("key cannot be None or empty string")
@@ -96,7 +101,8 @@ class ZDBClientNS(JSBASE):
         Keyword Arguments:
             key {int} -- when used in sequential mode
                         can be None or int
-                        when None it means its a new object, so will be appended
+                        when None it means its a new object,
+                        so will be appended
 
             key {[type]} -- string, only usable for user mode
 
@@ -104,7 +110,7 @@ class ZDBClientNS(JSBASE):
         """
         key = self._key_get(key, set=True)
         res = self.redis.execute_command("SET", key, data)
-        if not res:  # if nothing get return, that means the data is already present and 0-db did nothing.
+        if not res:  # data already present, 0-db did nothing.
             return res
 
         if self.mode == "seq":
@@ -118,7 +124,8 @@ class ZDBClientNS(JSBASE):
         Keyword Arguments:
             key {int} -- when used in sequential mode
                         can be None or int
-                        when None it means its a new object, so will be appended
+                        when None it means its a new object,
+                        so will be appended
 
             key {[type]} -- string, only usable for user mode
 
@@ -152,13 +159,14 @@ class ZDBClientNS(JSBASE):
         #     return self.redis.execute_command("EXISTS", pos)
 
     @property
-    def type(self): # BCDBModel is expecting ZDBClientNS to look like ZDBClient
+    def type(self):  # BCDBModel is expecting ZDBClientNS to look like ZDBClient
         return self.zdbclient.type
 
     @property
     def nsinfo(self):
         res = {}
-        for item in self.redis.execute_command("NSINFO", self.nsname).decode().split("\n"):
+        cmd = self.redis.execute_command("NSINFO", self.nsname)
+        for item in cmd.decode().split("\n"):
             item = item.strip()
             if item == "":
                 continue
@@ -170,18 +178,19 @@ class ZDBClientNS(JSBASE):
                     val = int(val)
                     res[key] = val
                     continue
-                except:
+                except BaseException:
                     pass
                 try:
                     val = float(val)
                     res[key] = val
                     continue
-                except:
+                except BaseException:
                     pass
                 res[key] = str(val).strip()
         return res
 
-    def list(self, key_start=None, direction="forward", nrrecords=100000, result=None):
+    def list(self, key_start=None, direction="forward", nrrecords=100000,
+             result=None):
         if result is None:
             result = []
 
@@ -189,11 +198,12 @@ class ZDBClientNS(JSBASE):
             result.append(arg)
             return result
 
-        self.iterate(do, key_start=key_start, direction=direction, nrrecords=nrrecords, _keyonly=True, result=result)
+        self.iterate(do, key_start=key_start, direction=direction,
+                     nrrecords=nrrecords, _keyonly=True, result=result)
         return result
 
-    def iterate(self, method, key_start=None, direction="forward", nrrecords=100000,
-                _keyonly=False, result=None):
+    def iterate(self, method, key_start=None, direction="forward",
+                nrrecords=100000, _keyonly=False, result=None):
         """walk over the data and apply method as follows
 
         ONLY works for when id_enable is True
@@ -206,10 +216,12 @@ class ZDBClientNS(JSBASE):
         result is the result of the previous call to the method
 
         Arguments:
-            method {python method} -- will be called for each item found in the file
+            method {python method} -- will be called for each item
+                                      found in the file
 
         Keyword Arguments:
-            key_start is the start key, if not given will be start of database when direction = forward, else end
+            key_start is the start key, if not given will be
+                      start of database when direction = forward, else end
 
         """
         if result is None:
@@ -271,7 +283,7 @@ class ZDBClientNS(JSBASE):
         id2 = self.set(b"b")
         assert id2 == 1
 
-        assert self.set(b"r", key=id) == None
+        assert self.set(b"r", key=id) is None
         assert self.set(b"rss", key=id) == 0  # changed the data
 
         nr = self.nsinfo["entries"]
@@ -287,12 +299,12 @@ class ZDBClientNS(JSBASE):
         embed(colors='Linux')
         ss
 
-        print(res)
+        pprint(res)
 
         result = {}
 
         def test(id, data, result):
-            print("%s:%s" % (id, data))
+            pprint("%s:%s" % (id, data))
             result[id] = data
             return result
 
@@ -334,7 +346,7 @@ class ZDBClientNS(JSBASE):
             if not exists:
                 break
 
-        print("count:%s" % self.count)
+        pprint("count:%s" % self.count)
 
         self.nsname_new(nsname, secret="1234", maxsize=1000, instance=None)
 
@@ -361,12 +373,12 @@ class ZDBClientNS(JSBASE):
         except Exception as e:
             assert "No space left" in str(e)
 
-        self.nsname_new(nsname+"2", secret="1234", instance=None)
+        self.nsname_new(nsname + "2", secret="1234", instance=None)
 
         nritems = 100000
         j.tools.timer.start("zdb")
 
-        print("perftest for 100.000 records, should get above 10k per sec")
+        pprint("perftest for 100.000 records, should get above 10k per sec")
         for i in range(nritems):
             id = self.set(b"a")
 

@@ -1,6 +1,6 @@
+import uuid
 
 from jumpscale import j
-from pprint import pprint as print
 
 from .ZDBClient import ZDBClient
 
@@ -58,9 +58,14 @@ class ZDBFactory(JSConfigBase):
 
         """
 
-        cl = j.clients.zdb.testdb_server_start_client_get(reset=reset,mode="seq")
+        # create a random namespace
+        def random_string(length=10):
+            return str(uuid.uuid4()).replace('-', '')[:length]
 
-        cl1 = cl.namespace_new("test")
+        cl = j.clients.zdb.testdb_server_start_client_get(reset=reset,
+                                                          mode="seq")
+
+        cl1 = cl.namespace_new("test%s" % random_string())
         cl1.test_seq()
 
 

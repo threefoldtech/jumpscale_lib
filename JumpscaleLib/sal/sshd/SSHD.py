@@ -1,67 +1,60 @@
-from jumpscale import j
-
-JSBASE = j.application.jsbase_get_class()
-
 OP_ADD = '+'
 OP_DEL = '-'
 OP_ERS = '--'
 
 
-class SSHError(Exception, JSBASE):
+# TODO: add to JSExceptions Factory
+#class SSHError(Exception, JSBASE):
+#    def __init__(self):
+#        JSBASE.__init__(self)
+
+
+class SSHD:
+
+    __jslocation__ = "j.sal.sshd"
+
     def __init__(self):
-        JSBASE.__init__(self)
-
-
-class SSHD(JSBASE):
-
-    SSH_ROOT = j.tools.path.get('/root/.ssh')
-    SSH_AUTHORIZED_KEYS = j.tools.path.get(SSH_ROOT).joinpath('authorized_keys')
-
-    def __init__(self):
-        self.__jslocation__ = "j.sal.sshd"
-        JSBASE.__init__(self)
-        self._local = j.tools.executorLocal
+        self._local = self.j.tools.executorLocal
         self._keys = None
         self._transactions = []
+
+    @property
+    def SSH_ROOT(self):
+        return self.j.tools.path.get(self.j.dirs.HOMEDIR).joinpath(".ssh")
+
+    @property
+    def SSH_AUTHORIZED_KEYS(self):
+        return self.j.tools.path.get(self.SSH_ROOT).joinpath('authorized_keys')
 
     @property
     def keys(self):
         if self._keys is None:
             self.SSH_ROOT.makedirs_p()
             if self.SSH_AUTHORIZED_KEYS.exists():
-                self._keys = [_f for _f in self.SSH_AUTHORIZED_KEYS.text().splitlines() if _f]
+                self._keys = self.SSH_AUTHORIZED_KEYS.text().splitlines()
+                self._keys = list(filter(None, self._keys))
             else:
                 self._keys = []
 
         return self._keys
 
     def addKey(self, key):
+        """ Add pubkey to authorized_keys
         """
-        Add pubkey to authorized_keys
-        """
-        self._transactions.append(
-            (OP_ADD, key.strip())
-        )
+        self._transactions.append( (OP_ADD, key.strip()))
 
     def deleteKey(self, key):
+        """ Delete pubkey from authorized_keys
         """
-        Delete pubkey from authorized_keys
-        """
-        self._transactions.append(
-            (OP_DEL, key.strip())
-        )
+        self._transactions.append( (OP_DEL, key.strip()))
 
     def erase(self):
+        """ Erase all keys from authorized_keys
         """
-        Erase all keys from authorized_keys
-        """
-        self._transactions.append(
-            (OP_ERS, None)
-        )
+        self._transactions.append( (OP_ERS, None))
 
     def commit(self):
-        """
-        Apply all pending changes to authorized_keys
+        """ Apply all pending changes to authorized_keys
         """
         keys = set(self.keys)
         while self._transactions:
@@ -79,13 +72,16 @@ class SSHD(JSBASE):
         self._keys = None
 
     def disableNonKeyAccess(self):
-        """
-        Disable passowrd login to server. This action doens't require
-        calling to commit and applies immediately. So if you added your key
-        make sure to commit it before you call this method.
+        """ Disable passowrd login to server. This action doens't require
+            calling to commit and applies immediately. So if you added your key
+            make sure to commit it before you call this method.
+
+            XXX this is not a smart way to do this: there could be
+            entries "PasswordAuthentication yes" already in the file
         """
 
-        j.tools.path.get('/etc/ssh/sshd_config').write_text('PasswordAuthentication no', append=True)
+        pth = self.j.tools.path.get('/etc/ssh/sshd_config')
+        pth.write_text('PasswordAuthentication no', append=True)
 
         self._local.execute('service ssh restart')
 
@@ -107,14 +103,14 @@ class SSHD(JSBASE):
     #         errormsg = "Could not find SSH agent, please start by 'eval \"$(ssh-agent -s)\"' before self.running this cmd,\nand make sure appropriate keys are added with ssh-add ..."
     #         sshkeypubcontent = sshkeypub.rsplit(' ', maxsplit=1)[0]
     #         # check if current priv key is in ssh-agent
-    #         local = j.tools.executorLocal
-    #         pids = j.sal.process.getPidsByFilter('ssh-agent')
+    #         local = self.j.tools.executorLocal
+    #         pids = self.j.sal.process.getPidsByFilter('ssh-agent')
     #         if not pids:
-    #             j.events.opserror_critical(errormsg)
+    #             self.j.events.opserror_critical(errormsg)
 
     #         rc, keys = local.execute('ssh-add -L')
     #         if keys == 'The agent has no identities.':
-    #             j.events.opserror_critical(errormsg)
+    #             self.j.events.opserror_critical(errormsg)
 
     #         for key in keys.splitlines():
     #             key, path = key.rsplit(maxsplit=1)
@@ -122,25 +118,25 @@ class SSHD(JSBASE):
     #                 return True
     #         return False
 
-    #     if sshkeypath != "" and not j.tools.path.get(sshkeypath).exists():
-    #         j.events.opserror_critical("Cannot find key on %s" % sshkeypath)
+    #     if sshkeypath != "" and not self.j.tools.path.get(sshkeypath).exists():
+    #         self.j.events.opserror_critical("Cannot find key on %s" % sshkeypath)
 
     #     if recoverypasswd == "" and "recoverypasswd" in os.environ:
     #         recoverypasswd = os.environ["recoverypasswd"]
 
     #     if len(recoverypasswd) < 6:
-    #         j.events.opserror_critical(
+    #         self.j.events.opserror_critical(
     #             "Choose longer passwd (min 6), do this by doing 'export recoverypasswd=something' before self.running this script.")
 
     #     if sshkeypath != "":
-    #         sshkeypub = j.tools.path.get(sshkeypath).joinpath(".pub").text()
+    #         sshkeypub = self.j.tools.path.get(sshkeypath).joinpath(".pub").text()
 
     #     if sshkeypath != "" and not checkkeyavailable(sshkeypub):
     #         # add the new key
     #         self._local.execute("ssh-add %s" % sshkeypath)
 
     #     # make sure recovery user exists
-    #     recoverypath = j.tools.path.get("/home/recovery")
+    #     recoverypath = self.j.tools.path.get("/home/recovery")
     #     if recoverypath.exists():
     #         recoverypath.rmtree_p()
     #         self._local.execute("userdel recovery")
@@ -162,7 +158,7 @@ class SSHD(JSBASE):
     #     print("ssh recovery user ok")
 
     #     if sshkeypath != "":
-    #         sshpath = j.tools.path.get("/root/.ssh")
+    #         sshpath = self.j.tools.path.get("/root/.ssh")
     #         sshpath.rmtree_p()
     #         sshpath.makedirs_p("/root/.ssh")
 

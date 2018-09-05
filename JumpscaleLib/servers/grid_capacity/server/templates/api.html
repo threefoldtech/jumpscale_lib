@@ -49,11 +49,11 @@
       .parent {
         color: #999;
       }
-      .list-group-item>.badge {
+      .list-group-item > .badge {
         float: none;
         margin-right: 6px;
       }
-      .panel-title>.methods {
+      .panel-title > .methods {
         float: right;
       }
       .badge {
@@ -79,8 +79,7 @@
       .badge_patch {
         background-color: #ccc444;
       }
-      .list-group,
-      .panel-group {
+      .list-group, .panel-group {
         margin-bottom: 0;
       }
       .panel-group .panel+.panel-white {
@@ -172,7 +171,7 @@
       .examples {
         margin-left: 0.5em;
       }
-      .resource-modal li>ul {
+      .resource-modal li > ul {
         margin-bottom: 1em;
       }
     </style>
@@ -182,9 +181,7 @@
       <div class="row">
         <div class="col-md-9" role="main">
           <div class="page-header">
-            <h1>TFT Grid capacity API documentation
-              <small>version 0.1.0</small>
-            </h1>
+            <h1>TFT Grid capacity API documentation <small>version 0.1.0</small></h1>
             <p></p>
             <p>API of the TFT grid, used to register/track the capacity available on the grid</p>
           </div>
@@ -282,6 +279,12 @@
                                   <em>required (string)
       </em>
                                   <p>branch and revision of 0-OS</p>
+                                </li>
+                                <li>
+                                  <strong>parameters</strong>:
+                                  <em>(array of string)
+      </em>
+                                  <p>flags enabled on 0-OS kernel parameters</p>
                                 </li>
                                 <li>
                                   <strong>location</strong>:
@@ -446,9 +449,7 @@
                               </div>
                             </div>
                             <div class="tab-pane" id="api_nodes_post_response">
-                              <h2>HTTP status code
-                                <a href="http://httpstatus.es/201" target="_blank">201</a>
-                              </h2>
+                              <h2>HTTP status code <a href="http://httpstatus.es/201" target="_blank">201</a></h2>
                               <h3>Body</h3>
                               <p><strong>Media type</strong>: application/json</p>
                               <p><strong>Type</strong>: object</p>
@@ -470,6 +471,12 @@
                                   <em>required (string)
       </em>
                                   <p>branch and revision of 0-OS</p>
+                                </li>
+                                <li>
+                                  <strong>parameters</strong>:
+                                  <em>(array of string)
+      </em>
+                                  <p>flags enabled on 0-OS kernel parameters</p>
                                 </li>
                                 <li>
                                   <strong>location</strong>:
@@ -696,9 +703,7 @@
                               </ul>
                             </div>
                             <div class="tab-pane" id="api_nodes_get_response">
-                              <h2>HTTP status code
-                                <a href="http://httpstatus.es/200" target="_blank">200</a>
-                              </h2>
+                              <h2>HTTP status code <a href="http://httpstatus.es/200" target="_blank">200</a></h2>
                               <h3>Body</h3>
                               <p><strong>Media type</strong>: application/json</p>
                               <p><strong>Type</strong>: array of object</p>
@@ -721,6 +726,12 @@
                                     <em>required (string)
       </em>
                                     <p>branch and revision of 0-OS</p>
+                                  </li>
+                                  <li>
+                                    <strong>parameters</strong>:
+                                    <em>(array of string)
+      </em>
+                                    <p>flags enabled on 0-OS kernel parameters</p>
                                   </li>
                                   <li>
                                     <strong>location</strong>:
@@ -933,9 +944,7 @@
                               </ul>
                             </div>
                             <div class="tab-pane" id="api_nodes__node_id__get_response">
-                              <h2>HTTP status code
-                                <a href="http://httpstatus.es/200" target="_blank">200</a>
-                              </h2>
+                              <h2>HTTP status code <a href="http://httpstatus.es/200" target="_blank">200</a></h2>
                               <h3>Body</h3>
                               <p><strong>Media type</strong>: application/json</p>
                               <p><strong>Type</strong>: object</p>
@@ -957,6 +966,12 @@
                                   <em>required (string)
       </em>
                                   <p>branch and revision of 0-OS</p>
+                                </li>
+                                <li>
+                                  <strong>parameters</strong>:
+                                  <em>(array of string)
+      </em>
+                                  <p>flags enabled on 0-OS kernel parameters</p>
                                 </li>
                                 <li>
                                   <strong>location</strong>:
@@ -1238,9 +1253,7 @@
                               </div>
                             </div>
                             <div class="tab-pane" id="api_nodes__node_id__reserved_put_response">
-                              <h2>HTTP status code
-                                <a href="http://httpstatus.es/204" target="_blank">204</a>
-                              </h2>
+                              <h2>HTTP status code <a href="http://httpstatus.es/204" target="_blank">204</a></h2>
                             </div>
                           </div>
                         </div>
@@ -1360,9 +1373,7 @@
                               </div>
                             </div>
                             <div class="tab-pane" id="api_nodes__node_id__actual_put_response">
-                              <h2>HTTP status code
-                                <a href="http://httpstatus.es/204" target="_blank">204</a>
-                              </h2>
+                              <h2>HTTP status code <a href="http://httpstatus.es/204" target="_blank">204</a></h2>
                             </div>
                           </div>
                         </div>
@@ -1440,9 +1451,7 @@
                               </ul>
                             </div>
                             <div class="tab-pane" id="api_farmer_create_get_response">
-                              <h2>HTTP status code
-                                <a href="http://httpstatus.es/302" target="_blank">302</a>
-                              </h2>
+                              <h2>HTTP status code <a href="http://httpstatus.es/302" target="_blank">302</a></h2>
                               <p>Page with information how to use your farm</p>
                             </div>
                           </div>
@@ -1516,9 +1525,7 @@
                               </ul>
                             </div>
                             <div class="tab-pane" id="api_farmer_update_get_response">
-                              <h2>HTTP status code
-                                <a href="http://httpstatus.es/302" target="_blank">302</a>
-                              </h2>
+                              <h2>HTTP status code <a href="http://httpstatus.es/302" target="_blank">302</a></h2>
                               <p>Page with all the farmers</p>
                             </div>
                           </div>
@@ -1579,9 +1586,7 @@
                           <!-- Tab panes -->
                           <div class="tab-content">
                             <div class="tab-pane active" id="api_farmers_get_response">
-                              <h2>HTTP status code
-                                <a href="http://httpstatus.es/200" target="_blank">200</a>
-                              </h2>
+                              <h2>HTTP status code <a href="http://httpstatus.es/200" target="_blank">200</a></h2>
                               <h3>Body</h3>
                               <p><strong>Media type</strong>: application/json</p>
                               <p><strong>Type</strong>: array of object</p>
@@ -1677,9 +1682,7 @@
                               </ul>
                             </div>
                             <div class="tab-pane" id="api_farmers__iyo_organization__get_response">
-                              <h2>HTTP status code
-                                <a href="http://httpstatus.es/200" target="_blank">200</a>
-                              </h2>
+                              <h2>HTTP status code <a href="http://httpstatus.es/200" target="_blank">200</a></h2>
                               <h3>Body</h3>
                               <p><strong>Media type</strong>: application/json</p>
                               <p><strong>Type</strong>: object</p>
@@ -1715,9 +1718,7 @@
         <div class="col-md-3">
           <div id="sidebar" class="hidden-print affix" role="complementary">
             <ul class="nav nav-pills nav-stacked">
-              <li>
-                <a href="#api">/api</a>
-              </li>
+              <li><a href="#api">/api</a></li>
             </ul>
           </div>
         </div>
