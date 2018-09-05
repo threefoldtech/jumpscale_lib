@@ -9,11 +9,8 @@ import etcd
 TEMPLATE = """
 addr = "localhost"
 port = "2379"
+secrets_ = ""
 """
-
-def key_to_etcd(pattern):
-    pattern = pattern.replace(':', '/')
-    return "/" + pattern
 
 class EtcdClient:
 
@@ -25,43 +22,46 @@ class EtcdClient:
                                  started=True):
         self._etcd = None
         print ("EtcdClient", instance)
+        self.namespaces = {}
+        self.EtcdClientNS = self._jsbase(('EtcdClientNS',
+                        'JumpscaleLib.clients.etcd.EtcdClientNS'))
 
     @property
-    def etcd(self):
-        if self._etcd is None:
-            d = self.config.data
-            addr = d["addr"]
-            port = int(d["port"])
-
-            self._etcd = etcd.Client(host=addr, port=port)
-
-        return self._etcd
-
-    def _set(self, pattern, val):
-        return self.etcd.write(key_to_etcd(pattern), val)
-
-    def _get(self, pattern):
-        return self.etcd.read(key_to_etcd(pattern))
-
-    def incr(self, name, amount=1):
-        try:
-            r = self._get(name)
-            value = int(r.value)
-        except etcd.EtcdKeyNotFound:
-            value = amount
-        self._set(name, str(value))
-        return value
-
-    def keys(self, pattern=""):
-        res = []
-        try:
-            r = self._get(pattern)
-        except etcd.EtcdKeyNotFound:
-            return res
-        for child in r.children:
-            print("%s: %s" % (child.key, child.value))
-            res.append(child.key)
+    def secrets(self):
+        res={}
+        if "," in self.config.data["secrets_"]:
+            items = self.config.data["secrets_"].split(",")
+            for item in items:
+                if item.strip()=="":
+                    continue
+                nsname,secret = item.split(":")
+                res[nsname.lower().strip()]=secret.strip()
+        else:
+            res["default"]=self.config.data["secrets_"].strip()
         return res
+
+    def namespace_exists(self, name):
+        return self.namespaces.has_key(name)
+
+    def namespace_get(self, name, *args, **kwargs):
+        if not name in self.namespaces:
+            self.namespaces[name] = self.EtcdClientNS(self, name)
+        return self.namespaces[name]
+
+    @property
+    def namespace_system(self):
+        return self.namespace_get("default")
+
+    def namespace_new(self, name, secret="", maxsize=0, die=False):
+        if self.namespace_exists(name):
+            if die:
+                raise RuntimeError("namespace already exists:%s" % name)
+            return self.namespace_get(name)
+
+        #if secret is "" and "default" in self.secrets.keys():
+        #    secret = self.secrets["default"]
+
+        return self.namespace_get(name)
 
     def __str__(self):
         return "etcd:%-14s %-25s:%-4s" % (
@@ -70,3 +70,5 @@ class EtcdClient:
             )
 
     __repr__ = __str__
+
+
