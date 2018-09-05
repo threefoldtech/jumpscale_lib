@@ -3,34 +3,27 @@
 
 import etcd
 
-
-class Etcd(etcd.Client):
-    pass
-
-import os
-
 TEMPLATE = """
 addr = "localhost"
 port = "2379"
 """
 
+class EtcdClient:
 
-
-class ZDBClient(JSConfigBase):
-
-    __jsbase = 'j.tools.configmanager._base_class_config'
+    __jsbase__ = 'j.tools.configmanager._base_class_config'
     _template = TEMPLATE
 
     def __init__(self, instance, data={}, parent=None, interactive=False,
                                  started=True):
         self._etcd = None
+        print ("EtcdClient", instance)
 
     @property
     def etcd(self):
         if self._etcd is None:
             d = self.config.data
             addr = d["addr"]
-            port = d["port"]
+            port = int(d["port"])
 
             self._etcd = etcd.Client(host=addr, port=port)
 

@@ -1,8 +1,13 @@
+""" A Jumpscale-configurable wrapper around the python3 etcd client library
+
+    configuration file options will be in {[myconfig].path}/j.clients.etcd
+"""
+
 import uuid
 
 class EtcFactory:
 
-    __jslocation__ = "j.clients.zdb"
+    __jslocation__ = "j.clients.etcd"
     __jsbase__ = 'j.tools.configmanager._base_class_configs'
 
     @property
@@ -11,7 +16,7 @@ class EtcFactory:
                              'JumpscaleLib.clients.etcd.EtcdClient'))
 
     def configure(self, instance="main", addr="localhost",
-                                         port=None,
+                                         port=2379,
                   ):
         """ :param instance:
             :param addr:
@@ -25,7 +30,6 @@ class EtcFactory:
         data = {}
         data["addr"] = addr
         data["port"] = str(port)
-        data["mode"] = str(mode)
 
         return self.get(instance=instance, data=data, create=True,
                         interactive=False)
@@ -41,3 +45,5 @@ class EtcFactory:
             return str(uuid.uuid4()).replace('-', '')[:length]
 
         cl1 = self.get()
+        import IPython
+        IPython.embed()
