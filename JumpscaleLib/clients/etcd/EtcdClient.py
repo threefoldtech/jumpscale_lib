@@ -43,6 +43,12 @@ class EtcdClient:
     def namespace_exists(self, name):
         return name in self.namespaces
 
+    def namespace_del(self, name):
+        ns = self.namespaces[name]
+        ns.delete_all()
+        self.namespaces.pop(name)
+        del ns
+
     def namespace_get(self, name, *args, **kwargs):
         if not name in self.namespaces:
             self.namespaces[name] = self.EtcdClientNS(self, name)

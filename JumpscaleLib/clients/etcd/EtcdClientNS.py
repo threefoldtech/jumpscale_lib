@@ -65,17 +65,22 @@ class EtcdClientNS:
     def incr(self, name, amount=1):
         try:
             r = self.get(name)
-            value = int(r.value) + amount
+            value = int(r) + amount
         except etcd.EtcdKeyNotFound:
             value = amount
         self.set(name, str(value))
         return value
+
+    def delete_all(self):
+        self.etcd.delete(self._key_to_etcd(''), recursive=True)
 
     def keys(self, pattern=""):
         res = []
         try:
             r = self.get(pattern)
         except etcd.EtcdKeyNotFound:
+            return res
+        if r.children is None:
             return res
         for child in r.children:
             print("%s: %s" % (child.key, child.value))
