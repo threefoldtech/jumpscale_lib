@@ -55,3 +55,21 @@ try:
 finally:
     import IPython
     IPython.embed()
+
+
+# test HA configs
+
+client_data = {'bc_addresses': ['https://explorer.testnet.threefoldtoken.com/',
+                                'https://unreachable.com'],
+               'password_': 'test123',
+               'minerfee': 100000000,
+               'nr_keys_per_seed': 15,
+               'seed_': seed}
+
+
+ha_rivine_client = j.clients.rivine.get('hatestwallet', data=client_data)
+ha_rivine_client.config.save()
+
+ha_wallet = ha_rivine_client.wallet
+
+ha_wallet.current_balance
