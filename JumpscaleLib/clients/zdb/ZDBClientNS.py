@@ -159,8 +159,8 @@ class ZDBClientNS(JSBASE):
         #     return self.redis.execute_command("EXISTS", pos)
 
     @property
-    def type(self):  # BCDBModel is expecting ZDBClientNS to look like ZDBClient
-        return self.zdbclient.type
+    def dbtype(self):  # BCDBModel is expecting ZDBClientNS to look like ZDBClient
+        return self.zdbclient.dbtype
 
     @property
     def nsinfo(self):
