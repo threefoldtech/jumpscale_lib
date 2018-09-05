@@ -17,7 +17,7 @@ JSConfigBase = j.tools.configmanager.base_class_config
 
 class ZDBClient(JSConfigBase):
 
-    def __init__(self, instance, data={}, parent=None, interactive=False,
+    def __init__(self, instance, data=None, parent=None, interactive=False,
                                  started=True):
         """ is connection to ZDB
 
@@ -33,6 +33,8 @@ class ZDBClient(JSConfigBase):
                 adminsecret does not have to be set, but
                         when you want to create namespaces it is a must
         """
+        if data is None:
+            data = {}
         JSConfigBase.__init__(self, instance=instance, data=data,
                               parent=parent, template=TEMPLATE,
                               ui=None, interactive=interactive)
