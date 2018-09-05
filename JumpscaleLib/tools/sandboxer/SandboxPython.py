@@ -43,7 +43,10 @@ class SandboxPython(JSBASE):
         """
         self.logger.info("sandbox:%s" % path)
         j.tools.prefab.local.system.package.install("zip")
-        j.tools.prefab.local.system.package.install("redis-server")
+        if j.core.platformtype.myplatform.isMac:
+            j.tools.prefab.local.system.package.install("redis")
+        else:
+            j.tools.prefab.local.system.package.install("redis-server")
 
         if build:
             path = self.build(reset=reset)
@@ -105,6 +108,7 @@ class SandboxPython(JSBASE):
             if "parso" in path:
                 return True
             files = j.sal.fs.listFilesInDir(path, recursive=True, filter="*.so", followSymlinks=True)
+            files += j.sal.fs.listFilesInDir(path, recursive=True, filter="*.so.*", followSymlinks=True)
             if len(files) > 0:
                 self.logger.debug("found binary files in:%s" % path)
                 return True
@@ -132,7 +136,7 @@ class SandboxPython(JSBASE):
             for item in j.sal.fs.listFilesInDir(src, recursive=False, exclude=ignorefiles, followSymlinks=True):
                 fname = j.sal.fs.getBaseName(item)
                 dest0 = ""
-                if fname.endswith(".so"):
+                if fname.endswith(".so") or ".so." in fname:
                     dest0 = "%s/lib/pythonbin/%s" % (dest, fname)
                 if fname.endswith(".py"):
                     dest0 = "%s/lib/python/%s" % (dest, fname)
@@ -192,6 +196,8 @@ class SandboxPython(JSBASE):
         if dest == "":
             dest = j.dirs.BUILDDIR + "/sandbox/python3/"
         cmd = "cd %s;rm -f ../js_sandbox.tar.gz;tar -czf ../js_sandbox.tar.gz .;" % dest
+        j.sal.process.execute(cmd)
+        cmd = "cd %s;rm -f ../tfboot/lib/python.zip;zip -r ../tfbot/lib/python.zip .;" % dest
         j.sal.process.execute(cmd)
 
 
@@ -291,6 +297,7 @@ class SandboxPython(JSBASE):
         export LANG=C.UTF-8
 
         export HOME=$PBASE/root
+        export HOMEDIR=/root
 
         export PS1="TF: "
 
