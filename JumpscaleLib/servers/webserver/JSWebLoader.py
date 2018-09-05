@@ -31,8 +31,8 @@ class JSWebLoader(JSBASE):
         JSBASE.__init__(self)
         self.db = SQLAlchemy()
         self.path = path
-        self._init_app()
         self.login_manager = LoginManager()
+        self._init_app()
         # self._configure_database()
         # self._configure_logs(app)
 
@@ -118,7 +118,7 @@ class JSWebLoader(JSBASE):
         if websocket_support:
             sockets = Sockets(app)
 
-        self.register_blueprints(app, sockets)
+        # self.register_blueprints(app, sockets)
         print(app.url_map)
 
         if debug is True:
