@@ -46,7 +46,7 @@ client_data = {
       "testnet": 1
   }
 
-  electrum_cl = j.clients.electrum.get(instance=WALLET_NAME,
+  electrum_cl = j.clients.btc_electrum.get(instance=WALLET_NAME,
                                                   data=client_data)
   electrum_cl.config.save()
 
@@ -57,7 +57,7 @@ Once you have configured the client you can start using the wallet, the client s
 
 ```python
 WALLET_NAME = 'testwallet'
-electrum_cl = j.clients.electrum.get(WALLET_NAME)
+electrum_cl = j.clients.btc_electrum.get(WALLET_NAME)
 electrum_cl.wallet.[TAP]
 
 # list addresses

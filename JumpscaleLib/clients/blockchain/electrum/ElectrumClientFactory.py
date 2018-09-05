@@ -15,6 +15,6 @@ class ElectrumClientFactory(JSConfigBaseFactory):
     """
 
     def __init__(self):
-        self.__jslocation__ = "j.clients.electrum"
+        self.__jslocation__ = "j.clients.btc_electrum"
         # self.__imports__ = "electrum"
         JSConfigBaseFactory.__init__(self, ElectrumClient)
