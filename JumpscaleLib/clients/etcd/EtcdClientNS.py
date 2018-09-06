@@ -102,8 +102,8 @@ class EtcdClientNS:
     def delete_all(self):
         try:
             self.etcd.delete(self._key_to_etcd(''), recursive=True)
-        except etcd.EtcdKeyNotFound:
-            pass
+        except etcd.EtcdKeyNotFound as e:
+            raise KeyError(e)
 
     def keys(self, pattern=""):
         res = []
