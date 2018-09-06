@@ -46,24 +46,26 @@ class VirtualboxClient(JSBASE):
             res.append(self.vm_get(name=key))
         return res
 
+    def _parse(self, txt, identifier="UUID:"):
+        res = []
+        for l in txt.split("\n"):
+            if l.startswith(identifier):
+                res.append({})
+                last = res[-1]
+            if ":" in l:
+                pre, post = l.split(":", 1)
+                name = pre.strip().strip("'").strip()
+                last[name.lower().strip()] = post.strip().strip("'").strip()
+        return res
+
     def vdisks_list(self):
         """
         :return: list of disk paths
         """
         out = self._cmd("list hdds -l")
 
-        def _parse(txt, identifier="UUID:"):
-            res = []
-            for l in txt.split("\n"):
-                if l.startswith(identifier):
-                    res.append({})
-                    last = res[-1]
-                if ":" in l:
-                    pre, post = l.split(":", 1)
-                    name = pre.strip().strip("'").strip()
-                    last[name.lower().strip()] = post.strip().strip("'").strip()
-            return res
-        return _parse(out, identifier="UUID:")
+
+        return self._parse(out, identifier="UUID:")
 
     def hostonlyifs_list(self):
         out = self._cmd("list hostonlyifs -l -s")

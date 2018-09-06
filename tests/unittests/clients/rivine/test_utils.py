@@ -1,8 +1,9 @@
 """
 Unittests for utils module
 """
-from JumpscaleLib.clients.blockchain.rivine import utils
 import pytest
+from JumpscaleLib.clients.blockchain.rivine import utils
+from JumpscaleLib.clients.blockchain.rivine.errors import RESTAPIError
 
 def test_locktime_from_duration():
     """
@@ -25,3 +26,11 @@ def test_get_secret():
     """
     size = 32
     assert len(utils.get_secret(size=size)) == size
+
+
+def test_get_current_chain_height():
+    """
+    Tests getting the current chain height
+    """
+    with pytest.raises(RESTAPIError):
+        utils.get_current_chain_height([])
