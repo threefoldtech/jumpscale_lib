@@ -23,8 +23,7 @@ class EtcdClient:
         self._etcd = None
         print ("EtcdClient", instance)
         self.namespaces = {}
-        self.EtcdClientNS = self._jsbase(('EtcdClientNS',
-                        'JumpscaleLib.clients.etcd.EtcdClientNS'))
+        self.EtcdClientNS = self._jsbase(('EtcdClientNS', '.EtcdClientNS'))
 
     @property
     def secrets(self):
