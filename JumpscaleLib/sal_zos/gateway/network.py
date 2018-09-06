@@ -328,7 +328,7 @@ class Networks(Collection):
         elif isinstance(network, ZerotierClient):
             if not name:
                 raise ValueError('Need to provide a name for network')
-            net = ZTNetwork(name, network, self._parent)
+            net = ZTNetwork(name, network.id, self._parent)
             net.client = network
         else:
             raise ValueError('Unsupported value password for network')
@@ -455,7 +455,7 @@ class ZTNetwork(ZTNic):
 
     def __init__(self, name, networkid, gateway):
         self._networkid = None
-        super().__init__(name, networkid.config.data['networkid'], None, gateway)
+        super().__init__(name, networkid, None, gateway)
         self.ip = IP(self)
         self.hosts = Hosts(gateway, self)
         self.client = None
