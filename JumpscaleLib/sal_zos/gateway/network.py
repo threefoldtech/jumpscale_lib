@@ -455,7 +455,7 @@ class ZTNetwork(ZTNic):
 
     def __init__(self, name, networkid, gateway):
         self._networkid = None
-        super().__init__(name, networkid.config.data['networkid'], None, gateway)
+        super().__init__(name, networkid, None, gateway)
         self.ip = IP(self)
         self.hosts = Hosts(gateway, self)
         self.client = None
