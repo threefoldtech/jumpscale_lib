@@ -69,8 +69,6 @@ class EtcdClientNS:
             v = None
         #print ("set", name, repr(v))
         self.etcd.write(self._key_to_etcd(name), v)
-        v = self.get(name)
-        assert v == value, "value %s %s" % (repr(v), repr(value))
 
     def get(self, name, wait=False):
         etckey = self._key_to_etcd(name)
