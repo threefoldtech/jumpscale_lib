@@ -20,7 +20,7 @@ class DocSite(JSBASE):
     """
     """
 
-    def __init__(self, path,name=""):
+    def __init__(self, path, name=""):
         JSBASE.__init__(self)
 
         self.docgen = j.tools.docsites
@@ -31,21 +31,12 @@ class DocSite(JSBASE):
         if not j.sal.fs.exists(config_path) and j.sal.fs.exists(config_path2):
             config_path=config_path2
             path = j.sal.fs.joinPaths(path,"docs")
-        if j.sal.fs.exists(config_path):
-            self.config = j.data.serializer.toml.load(config_path)
-        else:
-            raise RuntimeError("cannot find docs_config in %s"%config_path)
 
         self.path = path
         if not j.sal.fs.exists(path):
             raise RuntimeError("Cannot find path:%s"%path)
 
-        self.name = ""
-        if name is "":
-            if "name" in self.config:
-                self.name = self.config["name"].lower()
-        else:
-            self.name = name.lower()
+        self.name = name.lower()
 
         self.name = j.data.text.strip_to_ascii_dense(self.name)
         if self.name == "":
@@ -66,18 +57,6 @@ class DocSite(JSBASE):
         self.links_verify = False
 
         self.error_file_path = self.path + "/errors.md"
-
-
-
-        # check if there are dependencies
-        if 'docs' in self.config:
-            for item in self.config['docs']:
-                if "name" not in item or "url" not in item:
-                    raise RuntimeError("config docs item:%s not well defined in %s"%(item,self))
-                name = item["name"].strip().lower()
-                url = item["url"].strip()
-                path = j.clients.git.getContentPathFromURLorPath(url)
-                j.tools.docsites.load(path,name=name)
 
         self.logger_enable()
         self.logger.level=1
