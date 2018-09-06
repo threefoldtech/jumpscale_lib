@@ -74,7 +74,10 @@ class EtcdClientNS:
 
     def get(self, name, wait=False):
         etckey = self._key_to_etcd(name)
-        r = self.etcd.read(etckey, wait=wait)
+        try:
+            r = self.etcd.read(etckey, wait=wait)
+        except etcd.EtcdKeyNotFound as e:
+            raise KeyError(e)
         #print ("get", name, etckey, repr(r.value))
         if r.value is None:
             return None
