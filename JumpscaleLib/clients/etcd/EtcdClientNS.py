@@ -113,9 +113,14 @@ class EtcdClientNS:
             return res
         if r.children is None:
             return res
+        if pattern:
+            l = len(pattern)+1
+            #print ("pattern", pattern, l)
+        else:
+            l = 0
         for child in r.children:
-            #print("child %s: %s" % (child.key, child.value))
-            res.append(self._etcd_to_key(child.key)[len(pattern)+1:])
+            #print("child %s: %s" % (child.key, self._etcd_to_key(child.key)))
+            res.append(self._etcd_to_key(child.key)[l:])
         return res
 
     def __str__(self):
