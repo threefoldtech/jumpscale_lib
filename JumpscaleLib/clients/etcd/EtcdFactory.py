@@ -1,6 +1,8 @@
 """ A Jumpscale-configurable wrapper around the python3 etcd client library
 
     configuration file options will be in {[myconfig].path}/j.clients.etcd
+
+    unit tests are in core9 tests/jumpscale_tests/test11_keyvalue_stores.py
 """
 
 import uuid
@@ -33,17 +35,3 @@ class EtcFactory:
 
         return self.get(instance=instance, data=data, create=True,
                         interactive=False)
-
-    def test(self,reset=True):
-        """
-        js_shell 'j.clients.etcd.test()'
-
-        """
-
-        # create a random namespace
-        def random_string(length=10):
-            return str(uuid.uuid4()).replace('-', '')[:length]
-
-        cl1 = self.get()
-        import IPython
-        IPython.embed()
