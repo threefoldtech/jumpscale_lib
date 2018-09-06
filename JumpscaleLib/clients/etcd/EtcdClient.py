@@ -45,7 +45,10 @@ class EtcdClient:
 
     def namespace_del(self, name):
         ns = self.namespaces[name]
-        ns.delete_all()
+        try:
+            ns.delete_all()
+        except KeyError:
+            pass
         self.namespaces.pop(name)
         del ns
 
