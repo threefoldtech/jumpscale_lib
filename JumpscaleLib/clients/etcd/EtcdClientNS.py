@@ -88,7 +88,7 @@ class EtcdClientNS:
         try:
             r = self.get(name)
             value = int(r) + amount
-        except etcd.EtcdKeyNotFound:
+        except KeyError:
             value = amount
         self.set(name, str(value).encode())
         return value
