@@ -93,6 +93,12 @@ class EtcdClientNS:
         self.set(name, str(value).encode())
         return value
 
+    def delete(self, key):
+        try:
+            self.etcd.delete(self._key_to_etcd(key), recursive=True)
+        except etcd.EtcdKeyNotFound as e:
+            raise KeyError(e)
+
     def delete_all(self):
         try:
             self.etcd.delete(self._key_to_etcd(''), recursive=True)
