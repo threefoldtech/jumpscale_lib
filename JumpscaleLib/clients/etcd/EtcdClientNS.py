@@ -64,7 +64,7 @@ class EtcdClientNS:
     def set(self, name, value):
         if value is not None:
             v = zlib.compress(value)
-            v = base64.encodestring(v)
+            v = base64.encodebytes(v)
         else:
             v = None
         #print ("set", name, repr(v))
@@ -79,7 +79,7 @@ class EtcdClientNS:
         #print ("get", name, etckey, repr(r.value))
         if r.value is None:
             return None
-        value = base64.decodestring(r.value.encode())
+        value = base64.decodebytes(r.value.encode())
         value = zlib.decompress(value)
         #print ("get", name, value)
         return value
