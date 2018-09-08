@@ -1,12 +1,16 @@
-""" A Jumpscale wrapper around the python3 etcd client
+""" A Jumpscale wrapper around the python3 etcd-v3 client
+    https://github.com/kragniz/python-etcd3
 
-    info on etcd client API here:
-    https://python-etcd.readthedocs.io/en/latest/
+    the etcd v2 APIs cannot cope with binary key/value data.
+    the etcd v3 API can
+
 """
 
-import etcd
+import etcd3
 import base64
 import zlib
+
+from etcd3.exceptions import Etcd3Exception
 
 class EtcdClientNS:
 
@@ -34,7 +38,7 @@ class EtcdClientNS:
             addr = d["addr"]
             port = int(d["port"])
 
-            self._etcd = etcd.Client(host=addr, port=port)
+            self._etcd = etcd3.client(host=addr, port=port)
 
         return self._etcd
 
@@ -62,32 +66,39 @@ class EtcdClientNS:
         return res
 
     def set(self, name, value):
-        if value is not None:
-            v = zlib.compress(value)
-            v = base64.encodebytes(v)
-        else:
-            v = None
+        v = value
+        #if value is not None:
+        #    v = zlib.compress(value)
+        #    v = base64.encodebytes(v)
+        #else:
+        #    v = None
         #print ("set", name, repr(v))
-        self.etcd.write(self._key_to_etcd(name), v)
+        self.etcd.put(self._key_to_etcd(name), v)
 
-    def get(self, name, wait=False):
+    def get(self, name):
         etckey = self._key_to_etcd(name)
         try:
-            r = self.etcd.read(etckey, wait=wait)
-        except etcd.EtcdKeyNotFound as e:
+            r = self.etcd.get(etckey)
+        except Etcd3Exception as e:
             raise KeyError(e)
-        #print ("get", name, etckey, repr(r.value))
-        if r.value is None:
-            return None
-        value = base64.decodebytes(r.value.encode())
-        value = zlib.decompress(value)
+
+        #print ("get", name, etckey, repr(r))
+        if r[1] is None:
+            raise KeyError('etcd key not found %s' % repr(etckey))
+        return r[0]
+        value = r.value
+        #value = base64.decodebytes(r.value.encode())
+        #value = zlib.decompress(value)
         #print ("get", name, value)
         return value
 
     def incr(self, name, amount=1):
         try:
             r = self.get(name)
-            value = int(r) + amount
+            if r is None or r == '':
+                value = amount
+            else:
+                value = int(r) + amount
         except KeyError:
             value = amount
         self.set(name, str(value).encode())
@@ -95,32 +106,37 @@ class EtcdClientNS:
 
     def delete(self, key):
         try:
-            self.etcd.delete(self._key_to_etcd(key), recursive=True)
-        except etcd.EtcdKeyNotFound as e:
+            res = self.etcd.delete(self._key_to_etcd(key))
+        except Etcd3Exception as e:
             raise KeyError(e)
+        if not res:
+            raise KeyError(key)
 
     def delete_all(self):
         try:
-            self.etcd.delete(self._key_to_etcd(''), recursive=True)
-        except etcd.EtcdKeyNotFound as e:
+            res = self.etcd.delete_prefix(self._key_to_etcd(''))
+        except Etcd3Exception as e:
             raise KeyError(e)
+        if not res:
+            raise KeyError(key)
 
     def keys(self, pattern=""):
         res = []
         try:
-            r = self.etcd.read(self._key_to_etcd(pattern))
-        except etcd.EtcdKeyNotFound:
-            return res
-        if r.children is None:
+            getp = self._key_to_etcd(pattern)
+            #print ("keys", getp)
+            r = self.etcd.get_prefix(getp)
+        except Etcd3Exception:
             return res
         if pattern:
             l = len(pattern)+1
             #print ("pattern", pattern, l)
         else:
             l = 0
-        for child in r.children:
-            #print("child %s: %s" % (child.key, self._etcd_to_key(child.key)))
-            res.append(self._etcd_to_key(child.key)[l:])
+        for child in r:
+            #print("child %s:" % repr(child))
+            key = child[1].key.decode()
+            res.append(self._etcd_to_key(key)[l:])
         return res
 
     def __str__(self):
