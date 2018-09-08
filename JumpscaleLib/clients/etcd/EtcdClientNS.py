@@ -4,6 +4,11 @@
     the etcd v2 APIs cannot cope with binary key/value data.
     the etcd v3 API can
 
+    CAVEAT: this particular python-etcd-v3 client cannot
+    distinguish between keys with a prefix using "/" as
+    separators.  therefore, in e.g. BCDBModel.py it was
+    necessary to put data under the prefix "bcdb" and
+    the unique index reference under "_bcdb".
 """
 
 import etcd3
