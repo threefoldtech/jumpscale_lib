@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 # from collections import OrderedDict
 
 from .ModelBase import ModelBase

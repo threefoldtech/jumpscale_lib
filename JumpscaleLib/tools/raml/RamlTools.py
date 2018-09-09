@@ -2,7 +2,7 @@
 import os
 import sys
 
-from jumpscale import j
+from Jumpscale import j
 
 from .SwaggerSpec import *
 JSBASE = j.application.jsbase_get_class()

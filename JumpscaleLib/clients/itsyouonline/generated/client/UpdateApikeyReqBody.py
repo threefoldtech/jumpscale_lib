@@ -2,7 +2,7 @@
 Auto-generated class for UpdateApikeyReqBody
 """
 from .Label import Label
-from jumpscale import j
+from Jumpscale import j
 from . import client_support
 
 

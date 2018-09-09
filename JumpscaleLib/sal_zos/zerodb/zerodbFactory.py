@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 # import JumpscaleLib.baselib.remote
 
 JSBASE = j.application.jsbase_get_class()

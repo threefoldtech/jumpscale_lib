@@ -1,5 +1,5 @@
 from . import typchk
-from jumpscale import j
+from Jumpscale import j
 
 
 class Nft():

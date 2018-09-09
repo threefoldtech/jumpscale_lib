@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 from dateutil import parser
 import copy
 from apiclient.http import *

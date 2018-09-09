@@ -7,7 +7,7 @@ import time
 import random
 
 
-from jumpscale import j
+from Jumpscale import j
 
 JSConfigClient = j.tools.configmanager.base_class_config
 JSBASE = j.application.jsbase_get_class()

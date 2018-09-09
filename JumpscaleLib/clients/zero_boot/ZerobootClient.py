@@ -4,7 +4,7 @@ import time
 import urllib
 
 import netaddr
-from jumpscale import j
+from Jumpscale import j
 
 JSConfigBase = j.tools.configmanager.base_class_config
 

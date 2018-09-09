@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 import netaddr
 import time
 
@@ -140,7 +140,7 @@ class Netconfig(JSBASE):
             iface $int inet static
 
             """
-        C = j.data.text.strip(C)
+        C = j.core.text.strip(C)
 
         if bridgedev is not None:
             C += "    bridge_fd 0\n"

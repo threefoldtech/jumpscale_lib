@@ -1,5 +1,5 @@
 import JumpscaleLib.tools.aggregator.Dumper as Dumper
-from jumpscale import j
+from Jumpscale import j
 
 
 class MongoDumper(Dumper.BaseDumper):

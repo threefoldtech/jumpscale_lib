@@ -8,7 +8,7 @@ from datetime import datetime
 from uuid import UUID
 from enum import Enum
 from dateutil import parser
-from jumpscale import j
+from Jumpscale import j
 
 # python2/3 compatible basestring, for use in to_dict
 try:

@@ -1,5 +1,5 @@
 from xml.etree import ElementTree
-from jumpscale import j
+from Jumpscale import j
 from JumpscaleLib.sal.kvm.BaseKVMComponent import BaseKVMComponent
 
 

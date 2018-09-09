@@ -7,7 +7,7 @@ import subprocess
 import sys
 import math
 
-from jumpscale import j
+from Jumpscale import j
 from Jumpscale.data.time.TimeInterval import TimeInterval as TimeIntervalUnit
 #from JumpscaleLib.core.decorators import deprecated
 

@@ -8,7 +8,7 @@ from .GiteaBot import GiteaBot
 from .utils import _extend_stories
 
 import gevent
-from jumpscale import j
+from Jumpscale import j
 
 TEMPLATE =  """
 github_token_ = ""

@@ -2,7 +2,7 @@
 Auto-generated class for GetOrganizationUsersResponseBody
 """
 from .OrganizationUser import OrganizationUser
-from jumpscale import j
+from Jumpscale import j
 from . import client_support
 
 

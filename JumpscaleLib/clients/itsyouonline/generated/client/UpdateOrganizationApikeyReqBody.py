@@ -2,7 +2,7 @@
 Auto-generated class for UpdateOrganizationApikeyReqBody
 """
 from .OrganizationAPIKey import OrganizationAPIKey
-from jumpscale import j
+from Jumpscale import j
 from . import client_support
 
 

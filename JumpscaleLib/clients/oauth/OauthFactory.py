@@ -1,7 +1,7 @@
 import os
 
 
-from jumpscale import j
+from Jumpscale import j
 from .OauthInstance import OauthClient
 
 JSConfigFactory = j.tools.configmanager.base_class_configs

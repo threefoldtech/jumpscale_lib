@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 from .PortalClient import PortalClient
 
 JSConfigBaseFactory = j.tools.configmanager.base_class_configs

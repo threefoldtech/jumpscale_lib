@@ -16,7 +16,7 @@ from .ValidityTime import ValidityTime
 from .api_response import APIResponse
 from .unhandled_api_error import UnhandledAPIError
 from .unmarshall_error import UnmarshallError
-from jumpscale import j
+from Jumpscale import j
 
 
 

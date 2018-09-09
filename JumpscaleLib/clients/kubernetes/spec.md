@@ -1,5 +1,5 @@
 ```python
-from jumpscale import j
+from Jumpscale import j
 
 # pip install kube
 

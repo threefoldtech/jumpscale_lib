@@ -8,7 +8,7 @@ import pexpect
 import string
 import time
 import os
-from jumpscale import j
+from Jumpscale import j
 SCRIPT_LOG = 'Script Logs.log'
 IOS = 'IOS'
 IOS_XR = 'IOS XR'

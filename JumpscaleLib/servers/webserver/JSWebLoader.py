@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_sockets import Sockets
 from importlib import import_module
 from logging import basicConfig, DEBUG, getLogger, StreamHandler
-from jumpscale import j
+from Jumpscale import j
 import sys
 from werkzeug.debug import DebuggedApplication
 import rq_dashboard

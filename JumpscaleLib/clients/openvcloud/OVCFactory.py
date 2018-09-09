@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 
 from pprint import pprint as print
 from .OVCClient import OVCClient

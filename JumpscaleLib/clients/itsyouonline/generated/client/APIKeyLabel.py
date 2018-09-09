@@ -3,7 +3,7 @@ Auto-generated class for APIKeyLabel
 """
 
 from . import client_support
-from jumpscale import j
+from Jumpscale import j
 
 
 

@@ -1,6 +1,6 @@
 import os
 import time
-from jumpscale import j
+from Jumpscale import j
 from random import SystemRandom
 from string import ascii_uppercase
 from string import digits

@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 from .Doc import Doc
 
 JSBASE = j.application.jsbase_get_class()
@@ -38,7 +38,7 @@ class DocSite(JSBASE):
 
         self.name = name.lower()
 
-        self.name = j.data.text.strip_to_ascii_dense(self.name)
+        self.name = j.core.text.strip_to_ascii_dense(self.name)
         if self.name == "":
             raise RuntimeError("name cannot be empty")
 
@@ -73,7 +73,7 @@ class DocSite(JSBASE):
             else:
                 name="/".join(name) #not sure this is correct
 
-        return j.data.text.strip_to_ascii_dense(name)
+        return j.core.text.strip_to_ascii_dense(name)
 
     @property
     def git(self):

@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 # import copy
 
 JSBASE = j.application.jsbase_get_class()
@@ -304,7 +304,7 @@ class HTMLPage(JSBASE):
         </ul>
         </div>
         """
-        html=j.data.text.strip(html)
+        html=j.core.text.strip(html)
         id = 'id="%s"' % id if id else ''
         html = self.jenv.from_string(html).render(items=items, title=title, id=id)
         self.html_add(html)

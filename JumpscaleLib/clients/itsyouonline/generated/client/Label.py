@@ -3,7 +3,7 @@ Auto-generated class for Label
 """
 
 from . import client_support
-from jumpscale import j
+from Jumpscale import j
 
 
 

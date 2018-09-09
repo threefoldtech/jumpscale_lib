@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 
 from .capacity_parser import CapacityParser
 from .reservation_parser import ReservationParser

@@ -1,7 +1,7 @@
 import requests
 import os
 
-from jumpscale import j
+from Jumpscale import j
 
 from .CapacityServer import CapacityServer
 

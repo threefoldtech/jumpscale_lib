@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 import unittest, uuid, requests
 from github import Github
 from testconfig import config

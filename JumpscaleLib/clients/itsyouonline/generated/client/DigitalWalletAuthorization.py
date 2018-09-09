@@ -3,7 +3,7 @@ Auto-generated class for DigitalWalletAuthorization
 """
 from .Label import Label
 from six import string_types
-from jumpscale import j
+from Jumpscale import j
 from . import client_support
 
 

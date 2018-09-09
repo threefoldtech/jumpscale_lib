@@ -1,6 +1,6 @@
 import uuid
 
-from jumpscale import j
+from Jumpscale import j
 
 from .ZDBClient import ZDBClient
 

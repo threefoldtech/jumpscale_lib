@@ -36,7 +36,7 @@ cl = j.clients.ays.getWithClientID(url=url, clientID=client_id, secret=secret)
 
 Or in case you saved the client ID and password in a YAML formated configuration file:
 ```python
-from jumpscale import j
+from Jumpscale import j
 config = j.data.serializer.yaml.load("config.yaml")
 client_id = config["iyo"]["client_id"]
 secret = config["iyo"]["secret"]

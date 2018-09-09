@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 from redis import ResponseError
 
 from ..abstracts import Collection

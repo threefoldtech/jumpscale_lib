@@ -3,7 +3,7 @@ import time
 
 from .. import templates
 
-from jumpscale import j
+from Jumpscale import j
 
 
 

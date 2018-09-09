@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 from ..abstracts import Collection, Nics
 import requests
 

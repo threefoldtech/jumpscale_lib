@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 from .Issue import Issue
 from .Base import replacelabels
 import copy

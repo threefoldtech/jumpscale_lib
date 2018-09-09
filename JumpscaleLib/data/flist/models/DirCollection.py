@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 
 from JumpscaleLib.data.capnp.ModelBaseCollection import ModelBaseCollection
 

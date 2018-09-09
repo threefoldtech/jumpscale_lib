@@ -2,7 +2,7 @@
 Test module for atomicswap
 """
 import re
-from jumpscale import j
+from Jumpscale import j
 import os
 from JumpscaleLib.tools.atomicswap.AtomicSwapFactory import BTCInitiator, TFTParticipant
 

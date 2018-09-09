@@ -2,7 +2,7 @@ import signal
 import sys
 from io import StringIO
 
-from jumpscale import j
+from Jumpscale import j
 # from samba.netcmd.main import cmd_sambatool
 from .sambaparser import SambaConfigParser
 

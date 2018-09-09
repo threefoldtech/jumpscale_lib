@@ -1,6 +1,6 @@
 from .Ipmi import Ipmi
 
-from jumpscale import j
+from Jumpscale import j
 
 JSConfigBaseFactory = j.tools.configmanager.base_class_configs
 

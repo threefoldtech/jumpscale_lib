@@ -6,7 +6,7 @@ import requests
 
 import time
 import pprint
-from jumpscale import j
+from Jumpscale import j
 
 JSConfigFactory = j.tools.configmanager.base_class_configs
 JSConfigClient = j.tools.configmanager.base_class_config

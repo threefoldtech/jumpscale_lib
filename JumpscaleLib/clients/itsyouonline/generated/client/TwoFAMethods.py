@@ -2,7 +2,7 @@
 Auto-generated class for TwoFAMethods
 """
 from .Phonenumber import Phonenumber
-from jumpscale import j
+from Jumpscale import j
 from . import client_support
 
 

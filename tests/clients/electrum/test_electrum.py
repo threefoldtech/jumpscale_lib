@@ -3,7 +3,7 @@ Test script to test different commands of electrum wallet
 """
 
 import os
-from jumpscale import j
+from Jumpscale import j
 
 BASE_VAR_DIR = '/opt/var/data/'
 RPC_USER = 'user'

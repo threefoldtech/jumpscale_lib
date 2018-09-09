@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 
 order = ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']
 JSBASE = j.application.jsbase_get_class()

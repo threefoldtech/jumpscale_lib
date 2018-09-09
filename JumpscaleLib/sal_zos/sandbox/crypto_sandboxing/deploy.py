@@ -4,7 +4,7 @@ import re
 import time
 
 import requests
-from jumpscale import j
+from Jumpscale import j
 from pssh.exceptions import ConnectionErrorException, SessionError
 
 DEFAULT_SSHKEY_NAME = 'id_rsa'

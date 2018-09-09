@@ -2,7 +2,7 @@
 This module implement path manipulation on a Flist.
 """
 
-from jumpscale import j
+from Jumpscale import j
 import os
 from .path import Path
 import g8storclient

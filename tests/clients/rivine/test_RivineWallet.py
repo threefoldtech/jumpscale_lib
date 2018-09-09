@@ -2,7 +2,7 @@
 Test module for RivineWallet jumpscale client
 """
 
-from jumpscale import j
+from Jumpscale import j
 import time
 
 

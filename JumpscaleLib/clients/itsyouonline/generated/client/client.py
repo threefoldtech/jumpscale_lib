@@ -2,7 +2,7 @@ import requests
 
 from .organizations_service import OrganizationsService
 from .users_service import UsersService
-from jumpscale import j
+from Jumpscale import j
 
 
 

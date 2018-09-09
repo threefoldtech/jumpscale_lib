@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 from OpenSSL import crypto
 import OpenSSL
 from socket import gethostname

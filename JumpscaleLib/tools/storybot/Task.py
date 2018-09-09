@@ -1,6 +1,6 @@
 from .utils import _find_second, _check_broken_links
 
-from jumpscale import j
+from Jumpscale import j
 
 class Task():
     """Represents a task

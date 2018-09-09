@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 import urllib.request
 import tempfile
 from urllib.parse import urlparse

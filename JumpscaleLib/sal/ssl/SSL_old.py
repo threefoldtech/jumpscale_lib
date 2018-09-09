@@ -1,5 +1,5 @@
 # M2Crypto is not supported on python3
-from jumpscale import j
+from Jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
@@ -9,7 +9,7 @@ class Empty(JSBASE):
         JSBASE.__init__(self)
 
 
-# from jumpscale import j
+# from Jumpscale import j
 #
 # # from OpenSSL import crypto
 # import os

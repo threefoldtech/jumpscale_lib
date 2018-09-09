@@ -1,7 +1,7 @@
 import redis
 import time
 
-from jumpscale import j
+from Jumpscale import j
 
 from ..abstracts import Nics
 from ..disks.Disks import Disk

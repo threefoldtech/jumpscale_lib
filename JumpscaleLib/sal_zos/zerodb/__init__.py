@@ -2,7 +2,7 @@ from .zerodb import Zerodb
 from ..abstracts import DynamicCollection
 from ..disks.Disks import StorageType
 
-from jumpscale import j
+from Jumpscale import j
 
 logger = j.logging.get(__name__)
 

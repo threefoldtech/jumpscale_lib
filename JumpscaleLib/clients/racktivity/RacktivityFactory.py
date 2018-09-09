@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 from .energyswitch.client import RackSal
 
 JSConfigFactory = j.tools.configmanager.base_class_configs

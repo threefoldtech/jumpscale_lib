@@ -123,7 +123,7 @@ class Capnp:
             self.j.sal.fs.remove(path)
 
     def _getSchemas(self, schemaInText):
-        schemaInText = self.j.data.text.strip(schemaInText)
+        schemaInText = self.j.core.text.strip(schemaInText)
         schemaInText = schemaInText.strip() + "\n"
         schemaId = self.getId(schemaInText)
         if schemaId not in self._schema_cache:
@@ -186,7 +186,7 @@ class Capnp:
         # . are removed from . to Uppercase
         args = args.copy()  # to not change the args passed in argument
         for key in list(args.keys()):
-            sanitize_key = self.j.data.text.sanitize_key(key)
+            sanitize_key = self.j.core.text.sanitize_key(key)
             if key != sanitize_key:
                 args[sanitize_key] = args[key]
                 args.pop(key)

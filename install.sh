@@ -13,4 +13,4 @@ pip3 install -U cryptography
 #for development mode
 pip3 install -e .
 
-python3 -c "from jumpscale import j;j.tools.jsloader.generate()"
+python3 -c "from Jumpscale import j;j.tools.jsloader.generate()"

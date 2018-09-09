@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 
 def test():
     
@@ -20,7 +20,7 @@ def test():
     |1    |2               |3      |
     |1    |2               |3      |
     """
-    r=j.data.text.strip(r)
+    r=j.core.text.strip(r)
     assert str(t).strip()==r.strip()
 
     # t2=self.document_get(r)

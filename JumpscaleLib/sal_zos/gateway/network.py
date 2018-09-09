@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 from JumpscaleLib.clients.zerotier.ZerotierClient import ZerotierClient, ZeroTierNetwork
 from ..abstracts import Collection, Nic, ZTNic
 from ..vm.ZOS_VM import ZOS_VM

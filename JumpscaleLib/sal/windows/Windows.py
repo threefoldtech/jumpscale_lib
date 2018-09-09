@@ -5,7 +5,7 @@ import threading
 import time
 import os.path
 import ctypes
-from jumpscale import j
+from Jumpscale import j
 
 if j.core.platformtype.myplatform.isWindows:
     # raise j.exceptions.RuntimeError("WindowsSystem module only supported on Windows operating system")
@@ -32,7 +32,7 @@ if j.core.platformtype.myplatform.isWindows:
     from JumpscaleLib.core.enumerators.WinRegHiveType import WinRegHiveType
     from JumpscaleLib.core.enumerators.WinRegValueType import WinRegValueType
 
-    from jumpscale import j
+    from Jumpscale import j
     # from JumpscaleLib.core.inifile.IniFile import IniFile
     import shutil
 

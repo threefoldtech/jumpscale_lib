@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 import smtplib
 import mimetypes
 from email import encoders

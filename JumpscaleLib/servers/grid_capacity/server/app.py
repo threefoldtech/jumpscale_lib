@@ -3,7 +3,7 @@ import sys
 import datetime
 
 from flask import Flask, jsonify
-from jumpscale import j
+from Jumpscale import j
 
 from . import settings
 from .flask_itsyouonline import configure

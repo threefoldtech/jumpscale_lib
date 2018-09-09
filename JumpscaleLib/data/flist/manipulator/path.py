@@ -5,7 +5,7 @@ import pwd
 import grp
 
 import g8storclient
-from jumpscale import j
+from Jumpscale import j
 
 logger = j.logging.get(__name__)
 

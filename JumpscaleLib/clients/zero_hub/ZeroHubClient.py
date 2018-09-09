@@ -1,5 +1,5 @@
 from zeroos.zerohub import Client as ZHubClient
-from jumpscale import j
+from Jumpscale import j
 
 JSConfigClient = j.tools.configmanager.base_class_config
 

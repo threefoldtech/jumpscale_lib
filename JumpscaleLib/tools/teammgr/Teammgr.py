@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 
 TEMPLATE_PERSON_TOML = """
 login =""
@@ -129,7 +129,7 @@ class Person(JSBASE):
         C = C.replace("$name", self.name)
         C = C.replace("$url", url)
         C = C.replace("$rawurl", rawurl)
-        C = j.data.text.strip(C)
+        C = j.core.text.strip(C)
         dpath = j.sal.fs.getDirName(self.path).rstrip("/") + "/%s/readme.md" % self.name
         j.sal.fs.writeFile(dpath, C)
 
@@ -178,7 +178,7 @@ class Person(JSBASE):
             """
             C = C.replace("$name", self.name)
             C = C.replace("$url", url)
-            C = j.data.text.strip(C)
+            C = j.core.text.strip(C)
             dpath = j.sal.fs.getDirName(self.path).rstrip("/") + "/%s.md" % bn
             j.sal.fs.writeFile(dpath, C)
 

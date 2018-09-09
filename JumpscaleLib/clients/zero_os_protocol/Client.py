@@ -4,7 +4,7 @@ import time
 import uuid
 
 import redis
-from jumpscale import j
+from Jumpscale import j
 
 from . import typchk
 from .AggregatorManager import AggregatorManager

@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 from .TextLineEditor import TextLineEditor
 from .TextCharEditor import TextCharEditor
 

@@ -1,5 +1,5 @@
 import netaddr
-from jumpscale import j
+from Jumpscale import j
 import time
 
 OVS_FLIST = 'https://hub.grid.tf/tf-official-apps/ovs.flist'

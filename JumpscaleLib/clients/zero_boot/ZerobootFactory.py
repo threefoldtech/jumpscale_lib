@@ -1,6 +1,6 @@
 import os
 
-from jumpscale import j
+from Jumpscale import j
 
 from .ZerobootClient import zero_bootClient
 JSConfigFactoryBase = j.tools.configmanager.base_class_configs

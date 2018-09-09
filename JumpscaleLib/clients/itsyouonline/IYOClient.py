@@ -1,7 +1,7 @@
 import urllib
 import requests
 
-from jumpscale import j
+from Jumpscale import j
 from JumpscaleLib.clients.itsyouonline.generated.client import Client
 
 TEMPLATE = """

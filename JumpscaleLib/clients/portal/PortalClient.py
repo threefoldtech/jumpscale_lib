@@ -1,7 +1,7 @@
 import requests
 import os
 import json
-from jumpscale import j
+from Jumpscale import j
 
 TEMPLATE = """
 ip = ""

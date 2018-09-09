@@ -7,7 +7,7 @@ import netaddr
 import redis
 import uuid
 import threading
-from jumpscale import j
+from Jumpscale import j
 
 from ..capacity.Capacity import Capacity
 from ..container.Container import Containers

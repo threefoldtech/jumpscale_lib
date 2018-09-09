@@ -1,7 +1,7 @@
 import signal
 
 from . import typchk
-from jumpscale import j
+from Jumpscale import j
 
 
 

@@ -2,7 +2,7 @@ import time
 import jwt
 import jose.jwt
 from paramiko.ssh_exception import BadAuthenticationType
-from jumpscale import j
+from Jumpscale import j
 
 from .Account import Account
 from .Machine import Machine

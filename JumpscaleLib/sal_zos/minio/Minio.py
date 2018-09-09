@@ -1,5 +1,5 @@
 import time
-from jumpscale import j
+from Jumpscale import j
 from .. import templates
 
 

@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 import toml
 
 import copy
@@ -59,7 +59,7 @@ class Doc(JSBASE):
     def _clean(self,name):
         name=name.replace("/",".")
         name=name.strip(".")
-        return j.data.text.strip_to_ascii_dense(name)
+        return j.core.text.strip_to_ascii_dense(name)
 
     def _get_file_path_new(self,name="",extension="jpeg"):
         nr=0

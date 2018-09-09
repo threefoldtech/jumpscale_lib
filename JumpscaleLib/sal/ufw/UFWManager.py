@@ -2,7 +2,7 @@ import re
 import collections
 
 
-from jumpscale import j
+from Jumpscale import j
 
 
 STATUS_LINE = re.compile('^Status:\s*(.+)')

@@ -6,7 +6,7 @@ import tarfile
 import time
 import pytest
 
-from jumpscale import j
+from Jumpscale import j
 
 from ..flist_manipulator import FlistManipulatorFactory
 

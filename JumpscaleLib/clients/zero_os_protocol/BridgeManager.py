@@ -1,6 +1,6 @@
 import json
 
-from jumpscale import j
+from Jumpscale import j
 
 from . import typchk
 

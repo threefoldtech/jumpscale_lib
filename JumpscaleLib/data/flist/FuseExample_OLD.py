@@ -9,7 +9,7 @@ from time import time
 import g8os_stor  # nim module to talk to ardb
 from llfuse import FUSEError
 
-from jumpscale import j
+from Jumpscale import j
 
 
 try:

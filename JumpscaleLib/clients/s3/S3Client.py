@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 
 import urllib3
 import certifi

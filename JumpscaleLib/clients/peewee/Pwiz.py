@@ -8,7 +8,7 @@ from peewee import *
 # from peewee import print_
 from peewee import __version__ as peewee_version
 from playhouse.reflection import *
-from jumpscale import j
+from Jumpscale import j
 # TODO: *2 cannot execute, times out on gogs db, should try again
 
 TEMPLATE = """from peewee import *%s

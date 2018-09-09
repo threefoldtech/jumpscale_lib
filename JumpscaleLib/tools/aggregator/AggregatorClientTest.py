@@ -1,9 +1,9 @@
-from jumpscale import j
+from Jumpscale import j
 from .InfluxDumper import InfluxDumper
 import time
 import random
 import io
-from jumpscale import j
+from Jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 

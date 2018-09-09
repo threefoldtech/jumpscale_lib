@@ -1,7 +1,7 @@
 from jinja2 import Environment, FileSystemLoader
 import libvirt
 import atexit
-from jumpscale import j
+from Jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 class KVMController(JSBASE):

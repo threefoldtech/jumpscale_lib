@@ -1,6 +1,6 @@
 import requests
 
-from jumpscale import j
+from Jumpscale import j
 
 logger = j.logging.get("j.tools.StoryBot")
 

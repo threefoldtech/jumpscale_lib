@@ -34,7 +34,7 @@ discarded. [1]_
 
 import time
 from heapq import heappush, heappop, heapify
-from jumpscale import j
+from Jumpscale import j
 JSBASE = j.application.jsbase_get_class()
 
 __version__ = "0.2"

@@ -1,7 +1,7 @@
 """
 Factory Module for atomic swap
 """
-from jumpscale import j
+from Jumpscale import j
 import re
 import requests
 import time

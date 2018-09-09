@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 from kubernetes import client, config
 from .Kubernetes import KubernetesMaster
 

@@ -1,5 +1,5 @@
 
-from jumpscale import j
+from Jumpscale import j
 from .Row import *
 
 JSBASE = j.application.jsbase_get_class()

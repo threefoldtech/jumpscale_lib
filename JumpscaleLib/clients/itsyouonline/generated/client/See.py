@@ -3,7 +3,7 @@ Auto-generated class for See
 """
 from .SeeVersion import SeeVersion
 from six import string_types
-from jumpscale import j
+from Jumpscale import j
 from . import client_support
 
 

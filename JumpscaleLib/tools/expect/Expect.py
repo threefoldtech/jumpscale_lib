@@ -2,7 +2,7 @@
 import os
 import subprocess
 import errno
-from jumpscale import j
+from Jumpscale import j
 
 PIPE = subprocess.PIPE
 

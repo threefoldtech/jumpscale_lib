@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 
 # IMPORTANT
 # use functionality in j.clients.ssh to deal with SSH-Agent & getting key info, improve if required

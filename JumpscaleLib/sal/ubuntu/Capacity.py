@@ -2,7 +2,7 @@ import json
 
 import psutil
 
-from jumpscale import j
+from Jumpscale import j
 from JumpscaleLib.sal_zos.disks.Disks import StorageType
 
 

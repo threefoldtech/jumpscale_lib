@@ -4,7 +4,7 @@ from .Task import Task
 from .Story import Story
 from .utils import _index_story, _parse_body, _repoowner_reponame
 
-from jumpscale import j
+from Jumpscale import j
 
 class GithubBot:
     """Github specific bot for Storybot

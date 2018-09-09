@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 from ..vm.ZOS_VM import ZOS_VM, ZeroOSVM, ZDBDisk
 
 

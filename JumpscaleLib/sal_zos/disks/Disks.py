@@ -2,7 +2,7 @@ from enum import Enum
 
 from ..abstracts import Mountable
 from .Partition import Partition
-from jumpscale import j
+from Jumpscale import j
 
 
 class StorageType(Enum):

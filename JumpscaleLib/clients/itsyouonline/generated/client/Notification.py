@@ -4,7 +4,7 @@ Auto-generated class for Notification
 from .ContractSigningRequest import ContractSigningRequest
 from .JoinOrganizationInvitation import JoinOrganizationInvitation
 from .MissingScopes import MissingScopes
-from jumpscale import j
+from Jumpscale import j
 from . import client_support
 
 

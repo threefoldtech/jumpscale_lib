@@ -1,5 +1,5 @@
 # from JumpscaleLib.core.System import System
-from jumpscale import j
+from Jumpscale import j
 from urllib import parse as urllib_parse
 
 JSBASE = j.application.jsbase_get_class()

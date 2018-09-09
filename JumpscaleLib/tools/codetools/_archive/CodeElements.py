@@ -2,7 +2,7 @@
 from PropertyDef import PropertyDef
 from MethodDef import MethodDef
 from ClassDef import ClassDef
-from jumpscale import j
+from Jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 

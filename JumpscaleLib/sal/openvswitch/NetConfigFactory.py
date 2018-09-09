@@ -2,7 +2,7 @@
 import netaddr
 import pprint
 
-from jumpscale import j
+from Jumpscale import j
 from .VXNet import vxlan as vxlan
 from .VXNet import netclasses as netcl
 from .VXNet.utils import *

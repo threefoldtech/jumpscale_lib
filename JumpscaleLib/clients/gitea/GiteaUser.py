@@ -1,5 +1,5 @@
 import json
-from jumpscale import j
+from Jumpscale import j
 
 from .GiteaUserCurrentGpgKeys import GiteaUserCurrentGpgKeys
 from .GiteaUserCurrentPublicKeys import GiteaUserCurrentPublicKeys

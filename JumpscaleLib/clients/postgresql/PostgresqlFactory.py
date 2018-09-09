@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 import psycopg2
 import time
 import datetime

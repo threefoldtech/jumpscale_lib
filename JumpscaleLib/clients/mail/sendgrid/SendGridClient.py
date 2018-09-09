@@ -1,5 +1,5 @@
 import os
-from jumpscale import j
+from Jumpscale import j
 import base64
 from collections import namedtuple
 import sendgrid

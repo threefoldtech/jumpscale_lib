@@ -3,7 +3,7 @@ import inspect
 import types
 from collections import OrderedDict
 import json
-from jumpscale import j
+from Jumpscale import j
 
 # api codes
 # 4 function with params
@@ -77,8 +77,8 @@ class MethodDoc(JSBASE):
         self.comments = inspect.getdoc(method)
         if self.comments is None:
             self.comments = ""
-        self.comments = j.data.text.strip(self.comments)
-        self.comments = j.data.text.wrap(self.comments, 90)
+        self.comments = j.core.text.strip(self.comments)
+        self.comments = j.core.text.wrap(self.comments, 90)
 
         self.linenr = inspect.getsourcelines(method)[1]
         self.name = name

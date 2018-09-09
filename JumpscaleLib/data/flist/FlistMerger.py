@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 import capnp
 from . import model_capnp as ModelCapnp
 

@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 from JumpscaleLib.tools.capacity.registration import Capacity, Location
 import random
 

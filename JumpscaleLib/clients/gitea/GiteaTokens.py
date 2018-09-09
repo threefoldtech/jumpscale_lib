@@ -1,5 +1,5 @@
 import requests
-from jumpscale import j
+from Jumpscale import j
 
 from .GiteaToken import GiteaToken
 

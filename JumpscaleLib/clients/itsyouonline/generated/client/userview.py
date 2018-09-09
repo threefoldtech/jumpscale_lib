@@ -12,7 +12,7 @@ from .Ownerof import Ownerof
 from .Phonenumber import Phonenumber
 from .PublicKey import PublicKey
 from six import string_types
-from jumpscale import j
+from Jumpscale import j
 from . import client_support
 
 

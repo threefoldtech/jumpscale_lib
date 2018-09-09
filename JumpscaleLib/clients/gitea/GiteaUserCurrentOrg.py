@@ -1,5 +1,5 @@
 import json
-from jumpscale import j
+from Jumpscale import j
 
 from .GiteaTeams import GiteaTeams
 from .GiteaOrgMembers import GiteaOrgMembers

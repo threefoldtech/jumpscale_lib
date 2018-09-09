@@ -2,7 +2,7 @@ import http.cookiejar
 import urllib.error
 import urllib.parse
 import urllib.request
-from jumpscale import j
+from Jumpscale import j
 
 def Connect(username, password, hostname="127.0.0.1", port=8080):
     return BlockingConnection(username, password, hostname, port)

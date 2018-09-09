@@ -2,7 +2,7 @@ import hashlib
 import json
 import os
 import traceback
-from jumpscale import j
+from Jumpscale import j
 
 
 

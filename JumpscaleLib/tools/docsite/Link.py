@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 import toml
 
 import copy
@@ -23,7 +23,7 @@ class Link(JSBASE):
         self._process()
 
     def _clean(self,name):
-        return j.data.text.strip_to_ascii_dense(name)        
+        return j.core.text.strip_to_ascii_dense(name)
 
     def error(self,msg):
         self.error_msg = msg

@@ -2,7 +2,7 @@
 This example script show how to use the capacity directory client to
 compute the total number of ressource units present on the grid.
 """
-from jumpscale import j
+from Jumpscale import j
 
 
 directory = j.clients.threefold_directory.get('main')

@@ -1,5 +1,5 @@
 from __future__ import print_function
-from jumpscale import j
+from Jumpscale import j
 
 
 try:

@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import class_mapper

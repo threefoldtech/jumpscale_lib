@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 import libvirt
 from xml.etree import ElementTree
 from JumpscaleLib.sal.kvm.BaseKVMComponent import BaseKVMComponent

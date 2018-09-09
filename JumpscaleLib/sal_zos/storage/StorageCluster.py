@@ -2,7 +2,7 @@ import json
 import logging
 import os
 
-from jumpscale import j
+from Jumpscale import j
 
 from ..node.Node import Node
 from .StorageEngine import StorageEngine

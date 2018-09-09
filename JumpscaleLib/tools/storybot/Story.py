@@ -1,6 +1,6 @@
 from .utils import _find_second, _parse_body, _check_broken_links
 
-from jumpscale import j
+from Jumpscale import j
 
 class Story():
     """Represents a story

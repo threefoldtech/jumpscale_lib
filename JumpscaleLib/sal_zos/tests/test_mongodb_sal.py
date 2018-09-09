@@ -11,7 +11,7 @@ This test script executes the following scenario:
 
 import time
 import re
-from jumpscale import j
+from Jumpscale import j
 
 FLIST = 'https://hub.gig.tech/ekaterina_evdokimova_1/ubuntu-16.04-mongodb.flist'
 

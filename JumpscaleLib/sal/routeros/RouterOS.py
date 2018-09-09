@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 # import JumpscaleLib.baselib.remote
 import time
 from netaddr import EUI
@@ -22,7 +22,7 @@ import binascii
 import socket
 import select
 import netaddr
-from jumpscale import j
+from Jumpscale import j
 JSBASE = j.application.jsbase_get_class()
 
 

@@ -6,7 +6,7 @@ from .EnumJoinOrganizationInvitationRole import EnumJoinOrganizationInvitationRo
 from .EnumJoinOrganizationInvitationStatus import EnumJoinOrganizationInvitationStatus
 from datetime import datetime
 from six import string_types
-from jumpscale import j
+from Jumpscale import j
 from . import client_support
 
 

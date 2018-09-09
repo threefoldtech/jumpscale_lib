@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 from .MarkdownComponents import *
 JSBASE = j.application.jsbase_get_class()
 import copy
@@ -284,7 +284,7 @@ class MarkdownDocument(JSBASE):
     #     <html>
     #     <body>
     #     """
-    #     out=j.data.text.strip(out)
+    #     out=j.core.text.strip(out)
     #     for part in self.parts:
     #         out+= part.html +"\n"
     #     out+="\n</body>\n</html>\n"

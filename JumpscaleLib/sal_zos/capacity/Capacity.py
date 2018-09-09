@@ -1,5 +1,5 @@
 import io
-from jumpscale import j
+from Jumpscale import j
 
 
 class Capacity:

@@ -2,7 +2,7 @@ import pytest
 import unittest
 import sys
 from unittest import mock
-from jumpscale import j
+from Jumpscale import j
 
 
 class TestOpencCloudClientFactory(unittest.TestCase):

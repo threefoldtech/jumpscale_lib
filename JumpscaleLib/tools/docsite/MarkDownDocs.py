@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 from .DocSite import DocSite
 
 
@@ -89,8 +89,8 @@ class MarkDownDocs(JSBASE):
                     code += newdata
                     self._macros_loaded.append(md5)
 
-            code = code.replace("from jumpscale import j", "")
-            code = "from jumpscale import j\n\n" + code
+            code = code.replace("from Jumpscale import j", "")
+            code = "from Jumpscale import j\n\n" + code
 
             j.sal.fs.writeFile(self._macroCodepath, code)
             self.macros = loadmodule("macros", self._macroCodepath)
@@ -124,9 +124,9 @@ class MarkDownDocs(JSBASE):
             # make sure we have the most dense ascii name for search
             ext = j.sal.fs.getFileExtension(name).lower()
             name = name[:-(len(ext)+1)]  # name without extension
-            name = j.data.text.strip_to_ascii_dense(name)
+            name = j.core.text.strip_to_ascii_dense(name)
 
-            namespace = j.data.text.strip_to_ascii_dense(namespace)
+            namespace = j.core.text.strip_to_ascii_dense(namespace)
 
             if not namespace == "":
                 ds = self.docsite_get(namespace)
@@ -179,13 +179,13 @@ class MarkDownDocs(JSBASE):
         return res
 
     def def_get(self, name):
-        name = j.data.text.strip_to_ascii_dense(name)
+        name = j.core.text.strip_to_ascii_dense(name)
         if name not in self.defs:
             raise RuntimeError("cannot find def:%s" % name)
         return self.defs[name]
 
     def docsite_get(self, name, die=True):
-        name = j.data.text.strip_to_ascii_dense(name)
+        name = j.core.text.strip_to_ascii_dense(name)
         name = name.lower()
         if name in self.docsites:
             return self.docsites[name]

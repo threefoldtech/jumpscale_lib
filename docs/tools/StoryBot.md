@@ -54,7 +54,7 @@ jumpscale
 Or import Jumpscale in your python script
 
 ```py
-from jumpscale import j
+from Jumpscale import j
 ```
 
 Prepare the data for StoryBot

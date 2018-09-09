@@ -1,5 +1,5 @@
 
-from jumpscale import j
+from Jumpscale import j
 import JumpscaleLib.tools.codetools.PropertyDef as PropertyDef
 
 JSBASE = j.application.jsbase_get_class()

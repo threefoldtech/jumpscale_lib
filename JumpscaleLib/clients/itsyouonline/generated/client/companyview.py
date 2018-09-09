@@ -3,7 +3,7 @@ Auto-generated class for companyview
 """
 from datetime import datetime
 from six import string_types
-from jumpscale import j
+from Jumpscale import j
 from . import client_support
 
 

@@ -4,7 +4,7 @@ import time
 import logging
 import sys
 
-from jumpscale import j
+from Jumpscale import j
 
 logger = logging.getLogger('g8core')
 

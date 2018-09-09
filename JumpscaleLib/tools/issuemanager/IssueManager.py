@@ -1,5 +1,5 @@
 
-from jumpscale import j
+from Jumpscale import j
 
 from JumpscaleLib.tools.issuemanager.models.IssueModel import IssueModel
 from JumpscaleLib.tools.issuemanager.models.IssueCollection import IssueCollection

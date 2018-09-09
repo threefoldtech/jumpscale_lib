@@ -5,7 +5,7 @@ from .Party import Party
 from .Signature import Signature
 from datetime import datetime
 from six import string_types
-from jumpscale import j
+from Jumpscale import j
 from . import client_support
 
 

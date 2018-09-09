@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 
 ZT_ID = '12ac4a1e716b16cc'
 ZT_TOKEN = '8DaFJC9cyQBaQnHB6gsgwVKJsuRrUySG'

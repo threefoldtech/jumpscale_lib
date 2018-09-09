@@ -1,5 +1,5 @@
 import threading
-from jumpscale import j
+from Jumpscale import j
 from .Base import Base
 from .Base import replacelabels
 from .Milestone import RepoMilestone

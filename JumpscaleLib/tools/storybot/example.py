@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 
 # Get the storybot instance and ask for the configuration settings interactively
 bot = j.tools.storybot.get(instance="main", interactive=True)

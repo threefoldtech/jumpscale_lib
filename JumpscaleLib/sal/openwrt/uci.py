@@ -1,7 +1,7 @@
 import collections
 from io import StringIO
 
-from jumpscale import j
+from Jumpscale import j
 JSBASE = j.application.jsbase_get_class()
 
 class UCISection(collections.OrderedDict, JSBASE):

@@ -2,7 +2,7 @@
 Auto-generated class for Ownerof
 """
 from .EmailAddress import EmailAddress
-from jumpscale import j
+from Jumpscale import j
 from . import client_support
 
 

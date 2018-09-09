@@ -3,7 +3,7 @@ __author__ = 'delandtj'
 from netaddr import *
 from .netclasses import *
 from .systemlist import *
-from jumpscale import j
+from Jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 

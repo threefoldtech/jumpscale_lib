@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 
 from .GiteaRepoForNonOwner import GiteaRepoForNonOwner
 from .GiteaRepoForOwner import GiteaRepoForOwner

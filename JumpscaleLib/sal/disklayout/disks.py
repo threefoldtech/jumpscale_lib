@@ -1,6 +1,6 @@
 import re
 
-from jumpscale import j
+from Jumpscale import j
 import JumpscaleLib.sal.disklayout.mount as mount
 import JumpscaleLib.sal.disklayout.lsblk as lsblk
 

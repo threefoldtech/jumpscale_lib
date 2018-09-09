@@ -1,7 +1,7 @@
 import time
 
 import yaml
-from jumpscale import j
+from Jumpscale import j
 
 from ..abstracts import Collection
 from .cloudinit import CloudInit

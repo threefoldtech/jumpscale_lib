@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 from intercom.errors import HttpError
 import intercom
 intercom.HttpError = HttpError

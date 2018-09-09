@@ -1,6 +1,6 @@
 from time import sleep
 
-from jumpscale import j
+from Jumpscale import j
 
 from .VirtualboxClient import VirtualboxClient
 

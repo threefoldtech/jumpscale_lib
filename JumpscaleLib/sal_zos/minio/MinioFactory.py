@@ -1,5 +1,5 @@
 from .Minio import Minio, DEFAULT_PORT
-from jumpscale import j
+from Jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 

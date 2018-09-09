@@ -1,5 +1,5 @@
 import base64
-from jumpscale import j
+from Jumpscale import j
 
 
 

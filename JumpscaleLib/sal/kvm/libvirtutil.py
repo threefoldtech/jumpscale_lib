@@ -6,7 +6,7 @@ import time
 import shutil
 import random
 from qcow2 import Qcow2
-from jumpscale import j
+from Jumpscale import j
 import atexit
 
 LOCKCREATED = 1

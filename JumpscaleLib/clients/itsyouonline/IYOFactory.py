@@ -1,6 +1,6 @@
 
 
-from jumpscale import j
+from Jumpscale import j
 from .IYOClient import IYOClient
 import requests
 from jose import jwt

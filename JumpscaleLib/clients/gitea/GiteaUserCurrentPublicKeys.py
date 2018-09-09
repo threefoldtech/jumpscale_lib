@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 
 from .GiteaUserCurrentPublicKey import GiteaUserCurrentPublicKey
 from .GiteaPublicKeys import GiteaPublicKeys

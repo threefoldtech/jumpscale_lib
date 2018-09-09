@@ -1,7 +1,7 @@
 from kubernetes import client, config
 import time
 import urllib
-from jumpscale import j
+from Jumpscale import j
 
 TEMPLATE = """
 config_path = ""

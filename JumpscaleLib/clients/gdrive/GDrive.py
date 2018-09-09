@@ -1,5 +1,5 @@
 
-from jumpscale import j
+from Jumpscale import j
 from dateutil import parser
 import os
 import httplib2

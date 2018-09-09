@@ -1,4 +1,4 @@
-from jumpscale import j
+from Jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
@@ -302,7 +302,7 @@ class SandboxPython(JSBASE):
         export PS1="TF: "
 
         """
-        j.sal.fs.writeFile("%s/env.sh" % dest, j.data.text.strip(C))
+        j.sal.fs.writeFile("%s/env.sh" % dest, j.core.text.strip(C))
         # make sure to make the env.sh file executable
         j.sal.process.execute('chmod +x %s/env.sh' % dest)
 

@@ -2,7 +2,7 @@
 import time
 from heapq import heappush, heappop, heapify
 
-from jumpscale import j
+from Jumpscale import j
 from .LRUCache import LRUCache
 
 from operator import itemgetter, attrgetter
