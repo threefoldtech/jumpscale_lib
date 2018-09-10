@@ -412,7 +412,7 @@ class RivineWallet:
                 address = self.generate_address()
 
             transaction.add_coin_output(value=remainder, recipient=address)
-            
+
         # add minerfee to the transaction
         transaction.add_minerfee(minerfee)
 
