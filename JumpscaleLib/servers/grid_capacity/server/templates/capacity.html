@@ -151,7 +151,9 @@
           <div class="modal-body">
             <p>Node ID: <code>{{node.node_id}}</code></p>
             <p>Node 0-robot address: <code>{{node.robot_address}}</code></p>
-            <p>0-OS version: <code>{{node.os_version}}</code></p>
+            <p>OS version: <code>{{node.os_version}}</code></p>
+            <p>OS parameters: <code>{{node.parameters}}</code></p>
+            <p>Last update: <code>{{node.updated}}</code></p>
             <p>Farm: <code><a href="/farmers#{{node.farmer.id}}">{{node.farmer.name}}</a></code></p>
             <!-- <p>Uptime: <span class="badge badge-{{node.updated | deltatime_color}}">{{ node.uptime | uptime }}</span></p> -->
             {% if node.farmer.wallet_addresses|length > 0 %}
