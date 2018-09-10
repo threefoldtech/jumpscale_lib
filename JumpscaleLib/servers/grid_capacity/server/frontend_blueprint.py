@@ -42,9 +42,6 @@ def capacity():
 
         nodes = NodeRegistration.search(**form, order='-updated')
 
-        for node in nodes.items:
-            print(node.parameters)
-
     return render_template('capacity.html', nodes=nodes, form=form, countries=countries, farmers=farmers)
 
 
