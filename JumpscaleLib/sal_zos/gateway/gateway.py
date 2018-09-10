@@ -566,8 +566,7 @@ class Gateway:
         """
         Update the gateway container portforwards
         """
-        nics = self.node.client.info.nic()
-        publicip = self.node.get_nic_hwaddr_and_ip(nics)[1]
+        publicip = self.node.get_nic_hwaddr_and_ip()[1]
         container_forwards = set([v for k, v in self.container.info['container']['arguments']['port'].items() if v == int(k)])
         wanted_forwards = {80, 443}
         container_ip = str(self.container.default_ip(self._default_nic).ip)
