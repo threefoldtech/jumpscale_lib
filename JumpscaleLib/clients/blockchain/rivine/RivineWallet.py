@@ -6,7 +6,8 @@ the wallet will need the following functionality:
 - Use the public keys to create unlockcondition objects, which can be hashed to get the addresses.
 - These addresses can be used to query the explorer to get the coininputs
 - Remove those that are already spent
-- When creating the transaction, select the coin inputs to have equal or more coins than the required output + minerfee. Change can be written back to one of your own addresses. Note that an input must be consumed in its entirety.
+- When creating the transaction, select the coin inputs to have equal or more
+  coins than the required output + minerfee. Change can be written back to one of your own addresses. Note that an input must be consumed in its entirety.
 - For every public key in the input, the corresponding private key is required to sign the transaction to be valid
 """
 
@@ -224,12 +225,13 @@ class RivineWallet:
         return utils.get_unconfirmed_transactions(self._bc_networks, format_inputs=format_inputs)
 
 
-    def send_money(self, amount, recipient, data=None, locktime=None):
+    def send_money(self, amount, recipient, reuse_addr=True, data=None, locktime=None):
         """
         Sends TFT tokens from the user's wallet to the recipient address
 
         @param amount: Amount to be transfered in TF tokens
         @param recipient: Address of the fund recipient
+        @param reuse_addr: Reuse the address of the first input for a possible return output
         @param data: Custom data to be sent with the transaction
         @param locktime: Identifies the height or timestamp until which this transaction is locked
         """
@@ -240,13 +242,14 @@ class RivineWallet:
         transaction = self._create_transaction(amount=amount,
                                                 recipient=recipient,
                                                 sign_transaction=True,
+                                                reuse_addr=reuse_addr,
                                                 custom_data=data,
                                                 locktime=locktime)
         self._commit_transaction(transaction=transaction)
         return transaction
 
 
-    def send_to_many(self, amount, recipients, required_nr_of_signatures, data=None, locktime=None):
+    def send_to_many(self, amount, recipients, required_nr_of_signatures, reuse_addr=True, data=None, locktime=None):
         """
         Sends funds to multiple recipients
         Also specificies how many recipients need to sign before the funds can be spent
@@ -254,6 +257,7 @@ class RivineWallet:
         @param amount: The amount needed to be transfered in TF Tokens
         @param recipients: List of recipients addresses.
         @param required_nr_of_signatures: Defines the amount of signatures required in order to spend this fund.
+        @param reuse_addr: Reuse the address of the first input for a possible return output
         @param data: Custom data to add to the transaction record
         @type custom_data: bytearray
         @param locktime: Identifies the height or timestamp until which this transaction is locked
@@ -267,6 +271,7 @@ class RivineWallet:
                                                         recipients=recipients,
                                                         min_nr_sig=required_nr_of_signatures,
                                                         sign_transaction=True,
+                                                        reuse_addr=reuse_addr,
                                                         custom_data=data,
                                                         locktime=locktime)
         self._commit_transaction(transaction=transaction)
@@ -363,7 +368,7 @@ class RivineWallet:
         return transaction
 
 
-    def _create_transaction(self, amount, recipient, minerfee=None, sign_transaction=True, custom_data=None, locktime=None):
+    def _create_transaction(self, amount, recipient, minerfee=None, sign_transaction=True, reuse_addr=True, custom_data=None, locktime=None):
         """
         Creates new transaction and sign it
         creates a new transaction of the specified ammount to a specified address. A remainder address
@@ -374,6 +379,7 @@ class RivineWallet:
         @param recipient: Address of the recipient.
         @param minerfee: The minerfee for this transaction in hastings
         @param sign_transaction: If True, the created transaction will be singed
+        @param reuse_addr: Reuse the address of the first input for a possible return output
         @param custom_data: Custom data to add to the transaction record
         @type custom_data: bytearray
         @param locktime: Identifies the height or timestamp until which this transaction is locked
@@ -383,7 +389,6 @@ class RivineWallet:
         # set the the custom data on the transaction
         if custom_data is not None:
             transaction.add_data(custom_data)
-
 
         input_results, used_addresses, minerfee, remainder = self._get_inputs(amount=amount)
         for input_result in input_results:
@@ -400,11 +405,13 @@ class RivineWallet:
         # to send the remainder back to the original user
         if remainder > 0:
             # we have leftover fund, so we create new transaction, and pick on user key that is not used
-            for address in self._keys.keys():
-                if address in used_addresses.values():
-                    continue
-                transaction.add_coin_output(value=remainder, recipient=address)
-                break
+            address = None
+            if reuse_addr:
+                address = list(used_addresses.values())[0]
+            else:
+                address = self.generate_address()
+
+            transaction.add_coin_output(value=remainder, recipient=address)
 
         # add minerfee to the transaction
         transaction.add_minerfee(minerfee)
