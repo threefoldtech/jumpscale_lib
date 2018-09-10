@@ -18,7 +18,7 @@ class CapacityFactory(JSConfigBase):
         server = self.get(instance, interactive=False)
 
         if background:
-            cmd = "js_shell '%s.start(instance=\"%s\")'" % (self.__jslocation__, instance)
+            cmd = "js_shell '%s.start(instance=\"%s\")'" % (self.__jslocation__, instance)  #IGNORELOCATION
             j.tools.tmux.execute(cmd, session='capacity_server', window=instance, pane='main', session_reset=False, window_reset=True)
             res = j.sal.nettools.waitConnectionTest("localhost", int(server.config.data["port"]), timeoutTotal=1000)
             if res == False:

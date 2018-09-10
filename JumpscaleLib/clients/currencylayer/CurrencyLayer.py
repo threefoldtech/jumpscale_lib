@@ -38,16 +38,16 @@ class CurrencyLayer:
             self.cache.reset()
         def get():
             if not self.fake and \
-                self.j.sal.nettools.tcpPortConnectionTest("currencylayer.com", 443):
+                j.sal.nettools.tcpPortConnectionTest("currencylayer.com", 443):
                 key = self.config.data["api_key_"]
                 if key.strip():
                     url = "http://apilayer.net/api/live?access_key=%s" % key
 
-                    c = self.j.clients.http.getConnection()
+                    c = j.clients.http.getConnection()
                     r = c.get(url).readlines()
 
                     data = r[0].decode()
-                    data = self.j.data.serializers.json.loads(data)["quotes"]
+                    data = j.data.serializers.json.loads(data)["quotes"]
 
                     data['USDETH'] = 1/cc.get_price('ETH','USD')['ETH']['USD']
                     data['USDXRP'] = cc.get_price('USD', 'XRP')['USD']['XRP']

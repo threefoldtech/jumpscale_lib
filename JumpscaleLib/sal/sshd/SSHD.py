@@ -14,17 +14,17 @@ class SSHD:
     __jslocation__ = "j.sal.sshd"
 
     def __init__(self):
-        self._local = self.j.tools.executorLocal
+        self._local = j.tools.executorLocal
         self._keys = None
         self._transactions = []
 
     @property
     def SSH_ROOT(self):
-        return self.j.tools.path.get(self.j.dirs.HOMEDIR).joinpath(".ssh")
+        return j.tools.path.get(j.dirs.HOMEDIR).joinpath(".ssh")
 
     @property
     def SSH_AUTHORIZED_KEYS(self):
-        return self.j.tools.path.get(self.SSH_ROOT).joinpath('authorized_keys')
+        return j.tools.path.get(self.SSH_ROOT).joinpath('authorized_keys')
 
     @property
     def keys(self):
@@ -80,7 +80,7 @@ class SSHD:
             entries "PasswordAuthentication yes" already in the file
         """
 
-        pth = self.j.tools.path.get('/etc/ssh/sshd_config')
+        pth = j.tools.path.get('/etc/ssh/sshd_config')
         pth.write_text('PasswordAuthentication no', append=True)
 
         self._local.execute('service ssh restart')
@@ -103,14 +103,14 @@ class SSHD:
     #         errormsg = "Could not find SSH agent, please start by 'eval \"$(ssh-agent -s)\"' before self.running this cmd,\nand make sure appropriate keys are added with ssh-add ..."
     #         sshkeypubcontent = sshkeypub.rsplit(' ', maxsplit=1)[0]
     #         # check if current priv key is in ssh-agent
-    #         local = self.j.tools.executorLocal
-    #         pids = self.j.sal.process.getPidsByFilter('ssh-agent')
+    #         local = j.tools.executorLocal
+    #         pids = j.sal.process.getPidsByFilter('ssh-agent')
     #         if not pids:
-    #             self.j.events.opserror_critical(errormsg)
+    #             j.events.opserror_critical(errormsg)
 
     #         rc, keys = local.execute('ssh-add -L')
     #         if keys == 'The agent has no identities.':
-    #             self.j.events.opserror_critical(errormsg)
+    #             j.events.opserror_critical(errormsg)
 
     #         for key in keys.splitlines():
     #             key, path = key.rsplit(maxsplit=1)
@@ -118,25 +118,25 @@ class SSHD:
     #                 return True
     #         return False
 
-    #     if sshkeypath != "" and not self.j.tools.path.get(sshkeypath).exists():
-    #         self.j.events.opserror_critical("Cannot find key on %s" % sshkeypath)
+    #     if sshkeypath != "" and not j.tools.path.get(sshkeypath).exists():
+    #         j.events.opserror_critical("Cannot find key on %s" % sshkeypath)
 
     #     if recoverypasswd == "" and "recoverypasswd" in os.environ:
     #         recoverypasswd = os.environ["recoverypasswd"]
 
     #     if len(recoverypasswd) < 6:
-    #         self.j.events.opserror_critical(
+    #         j.events.opserror_critical(
     #             "Choose longer passwd (min 6), do this by doing 'export recoverypasswd=something' before self.running this script.")
 
     #     if sshkeypath != "":
-    #         sshkeypub = self.j.tools.path.get(sshkeypath).joinpath(".pub").text()
+    #         sshkeypub = j.tools.path.get(sshkeypath).joinpath(".pub").text()
 
     #     if sshkeypath != "" and not checkkeyavailable(sshkeypub):
     #         # add the new key
     #         self._local.execute("ssh-add %s" % sshkeypath)
 
     #     # make sure recovery user exists
-    #     recoverypath = self.j.tools.path.get("/home/recovery")
+    #     recoverypath = j.tools.path.get("/home/recovery")
     #     if recoverypath.exists():
     #         recoverypath.rmtree_p()
     #         self._local.execute("userdel recovery")
@@ -158,7 +158,7 @@ class SSHD:
     #     print("ssh recovery user ok")
 
     #     if sshkeypath != "":
-    #         sshpath = self.j.tools.path.get("/root/.ssh")
+    #         sshpath = j.tools.path.get("/root/.ssh")
     #         sshpath.rmtree_p()
     #         sshpath.makedirs_p("/root/.ssh")
 

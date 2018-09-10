@@ -66,7 +66,7 @@ class ModelBaseCollection:
 
                 self.__dict__["list_%s_constructor" % field.proto.name] = self._listConstructors[field.proto.name]
 
-        self._db = db if db else self.j.data.kvs.getMemoryStore(name=self.namespace, namespace=self.namespace)
+        self._db = db if db else j.data.kvs.getMemoryStore(name=self.namespace, namespace=self.namespace)
         # for now we do index same as database
         self._index = indexDb if indexDb else self._db
 
@@ -101,9 +101,9 @@ class ModelBaseCollection:
         """
         for name in names:
             if name in args:
-                if self.j.data.types.string.check(args[name]) and "," in args[name]:
+                if j.data.types.string.check(args[name]) and "," in args[name]:
                     args[name] = [item.strip().strip("'").strip() for item in args[name].split(",")]
-                elif not self.j.data.types.list.check(args[name]):
+                elif not j.data.types.list.check(args[name]):
                     args[name] = [args[name]]
                 args[name] = ",".join(["'%s'" % item for item in args[name]])
         return args
@@ -127,7 +127,7 @@ class ModelBaseCollection:
                 if autoCreate:
                     return self.new(key=key)
                 else:
-                    raise self.j.exceptions.Input(message="Could not find key:%s for model:%s" % (key, self.category))
+                    raise j.exceptions.Input(message="Could not find key:%s for model:%s" % (key, self.category))
         else:
 
             model = self.modelBaseClass(

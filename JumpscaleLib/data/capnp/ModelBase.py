@@ -13,12 +13,12 @@ class ModelBase:
         self.changed = False
         self._subobjects = {}
 
-        if self.j.data.types.bytes.check(key):
+        if j.data.types.bytes.check(key):
             key = key.decode()
 
         # if key != "":
         #     if len(key) != 16 and len(key) != 32 and len(key) != 64:
-        #         raise self.j.exceptions.Input("Key needs to be length 16,32,64")
+        #         raise j.exceptions.Input("Key needs to be length 16,32,64")
 
         if new:
             self.dbobj = self.collection.capnp_schema.new_message()
@@ -31,10 +31,10 @@ class ModelBase:
                 self.load(key=key)
                 self._key = key
             else:
-                raise self.j.exceptions.Input(message="Cannot find object:%s!%s" % (
+                raise j.exceptions.Input(message="Cannot find object:%s!%s" % (
                     self.collection.category, key))
         else:
-            raise self.j.exceptions.Input(message="key cannot be empty when no new obj is asked for.",
+            raise j.exceptions.Input(message="key cannot be empty when no new obj is asked for.",
                                      level=1, source="", tags="", msgpub="")
 
     @property
@@ -45,7 +45,7 @@ class ModelBase:
 
     @key.setter
     def key(self, value):
-        if self.j.data.types.bytes.check(value):
+        if j.data.types.bytes.check(value):
             value = value.decode()
         self._key = value
 
@@ -58,7 +58,7 @@ class ModelBase:
 
     def _generate_key(self):
         # return a unique key to be used in db (std the key but can be overriden)
-        return self.j.data.hash.md5_string(self.j.data.idgenerator.generateGUID())
+        return j.data.hash.md5_string(j.data.idgenerator.generateGUID())
 
     def index(self):
         # put indexes in db as specified
@@ -89,7 +89,7 @@ class ModelBase:
     #         print(3)
     #         #
     #     else:
-    #         raise self.j.exceptions.Input(message="Cannot set attr:%s in %s" %
+    #         raise j.exceptions.Input(message="Cannot set attr:%s in %s" %
     #                                  (attr, self))
 
     # def __dir__(self):
@@ -152,11 +152,11 @@ class ModelBase:
     @property
     def dictJson(self):
         ddict2 = OrderedDict(self.dictFiltered)
-        return self.j.data.serializers.json.dumps(ddict2, sort_keys=True, indent=True)
+        return j.data.serializers.json.dumps(ddict2, sort_keys=True, indent=True)
 
     def raiseError(self, msg):
         msg = "Error in dbobj:%s (%s)\n%s" % (self._category, self.key, msg)
-        raise self.j.exceptions.Input(message=msg)
+        raise j.exceptions.Input(message=msg)
 
     def updateSubItem(self, name, keys, data):
         keys = keys or []

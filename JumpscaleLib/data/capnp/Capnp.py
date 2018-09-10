@@ -14,7 +14,7 @@ class Tools:
         @param manipulateDef if None then will make it a string, could be e.g. int if you want to have all elements to be converted to int
         """
         if name in listInDict:
-            if self.j.data.types.list.check(listInDict[name]):
+            if j.data.types.list.check(listInDict[name]):
                 if manipulateDef is None:
                     listInDict[name] = [str(item).strip()
                                         for item in listInDict[name]]
@@ -43,8 +43,8 @@ class Capnp:
     def __init__(self):
         self.__imports__ = "pycapnp"
         self._schema_cache = {}
-        self._capnpVarDir = self.j.sal.fs.joinPaths(self.j.dirs.VARDIR, "capnp")
-        self.j.sal.fs.createDir(self._capnpVarDir)
+        self._capnpVarDir = j.sal.fs.joinPaths(j.dirs.VARDIR, "capnp")
+        j.sal.fs.createDir(self._capnpVarDir)
         if self._capnpVarDir not in sys.path:
             sys.path.append(self._capnpVarDir)
         self.tools = self._jsbase(('Tools', 'JumpscaleLib.data.capnp.Capnp'))
@@ -75,7 +75,7 @@ class Capnp:
         example to use:
             ```
             #if we use a modelBaseClass do something like
-            ModelBaseWithData = self.j.data.capnp.getModelBaseClass()
+            ModelBaseWithData = j.data.capnp.getModelBaseClass()
             class MyModelBase(ModelBaseWithData):
                 def index(self):
                     # put indexes in db as specified
@@ -87,9 +87,9 @@ class Capnp:
             #there is model.capnp in $libdir/Jumpscale/tools/issuemanager
             from Jumpscale.tools.issuemanager import model as ModelCapnp
 
-            mydb=self.j.data.kvs.getMemoryStore(name="mymemdb")
+            mydb=j.data.kvs.getMemoryStore(name="mymemdb")
 
-            collection=self.j.data.capnp.getModelCollection(schema=ModelCapnp,
+            collection=j.data.capnp.getModelCollection(schema=ModelCapnp,
                                     category="issue",
                                     modelBaseClass=MyModelBase,
                                     db=mydb)
@@ -118,18 +118,18 @@ class Capnp:
     def resetSchema(self, schemaId):
         self._schema_cache.pop(schemaId, None)
         nameOnFS = "schema_%s.capnp" % (schemaId)
-        path = self.j.sal.fs.joinPaths(self._capnpVarDir, nameOnFS)
-        if self.j.sal.fs.exists(path):
-            self.j.sal.fs.remove(path)
+        path = j.sal.fs.joinPaths(self._capnpVarDir, nameOnFS)
+        if j.sal.fs.exists(path):
+            j.sal.fs.remove(path)
 
     def _getSchemas(self, schemaInText):
-        schemaInText = self.j.core.text.strip(schemaInText)
+        schemaInText = j.core.text.strip(schemaInText)
         schemaInText = schemaInText.strip() + "\n"
         schemaId = self.getId(schemaInText)
         if schemaId not in self._schema_cache:
             nameOnFS = "schema_%s.capnp" % (schemaId)
-            path = self.j.sal.fs.joinPaths(self._capnpVarDir, nameOnFS)
-            self.j.sal.fs.writeFile(
+            path = j.sal.fs.joinPaths(self._capnpVarDir, nameOnFS)
+            j.sal.fs.writeFile(
                 filename=path,
                 contents=schemaInText,
                 append=False)
@@ -145,7 +145,7 @@ class Capnp:
             struct Schema {
 
             }
-            """ % self.j.data.idgenerator.generateCapnpID()
+            """ % j.data.idgenerator.generateCapnpID()
 
         schemas = self._getSchemas(schemaInText)
         schema = eval("schemas.%s" % name)
@@ -155,7 +155,7 @@ class Capnp:
         """
         @param path is path to schema
         """
-        content = self.j.sal.fs.fileGetContents(path)
+        content = j.sal.fs.fileGetContents(path)
         return self.getSchemaFromText(schemaInText=content, name=name)
 
     def _ensure_dict(self, args):
@@ -186,7 +186,7 @@ class Capnp:
         # . are removed from . to Uppercase
         args = args.copy()  # to not change the args passed in argument
         for key in list(args.keys()):
-            sanitize_key = self.j.core.text.sanitize_key(key)
+            sanitize_key = j.core.text.sanitize_key(key)
             if key != sanitize_key:
                 args[sanitize_key] = args[key]
                 args.pop(key)
@@ -203,7 +203,7 @@ class Capnp:
                 if str(e).find("has no such member") != -1:
                     msg = "cannot create data for schema from "
                     msg += "arguments, property missing\n"
-                    msg += "arguments:\n%s\n" % self.j.data.serializer.json.dumps(
+                    msg += "arguments:\n%s\n" % j.data.serializer.json.dumps(
                         args,
                         sort_keys=True,
                         indent=True)
@@ -212,11 +212,11 @@ class Capnp:
                     ee = ee.split("failed:")[1]
                     msg += "capnperror:%s" % ee
                     self.logger.debug(msg)
-                    raise self.j.exceptions.Input(message=msg)
+                    raise j.exceptions.Input(message=msg)
                 if str(e).find("Value type mismatch") != -1:
                     msg = "cannot create data for schema from "
                     msg += "arguments, value type mismatch.\n"
-                    msg += "arguments:\n%s\n" % self.j.data.serializer.json.dumps(
+                    msg += "arguments:\n%s\n" % j.data.serializer.json.dumps(
                         args,
                         sort_keys=True,
                         indent=True)
@@ -225,7 +225,7 @@ class Capnp:
                     ee = ee.split("failed:")[1]
                     msg += "capnperror:%s" % ee
                     self.logger.debug(msg)
-                    raise self.j.exceptions.Input(message=msg)
+                    raise j.exceptions.Input(message=msg)
                 raise e
 
         return obj
@@ -262,7 +262,7 @@ class Capnp:
         # now we just get the capnp schema for this object
         schema = self.getSchemaFromText(capnpschema, name="Issue")
 
-        # mydb = self.j.data.kvs.getRedisStore(name="mymemdb")
+        # mydb = j.data.kvs.getRedisStore(name="mymemdb")
         mydb = None  # is memory
 
         collection = self.getModelCollection(
@@ -316,11 +316,11 @@ class Capnp:
           }
         }
         '''
-        # mydb = self.j.data.kvs.getRedisStore("test")
-        mydb = self.j.data.kvs.getRedisStore(
+        # mydb = j.data.kvs.getRedisStore("test")
+        mydb = j.data.kvs.getRedisStore(
             name="test",
             unixsocket="%s/redis.sock" %
-            self.j.dirs.TMPDIR)
+            j.dirs.TMPDIR)
         schema = self.getSchemaFromText(capnpschema, name="Issue")
         collection = self.getModelCollection(
             schema,
@@ -355,7 +355,7 @@ class Capnp:
     def getJSON(self, obj):
         configdata2 = obj.to_dict()
         ddict2 = OrderedDict(configdata2)
-        return self.j.data.serializer.json.dumps(
+        return j.data.serializer.json.dumps(
             ddict2, sort_keys=True, indent=True)
 
     def getBinaryData(self, obj):
