@@ -2,7 +2,7 @@ from Jumpscale import j
 import capnp
 from . import model_capnp as ModelCapnp
 
-logger = j.logging.get(__name__)
+logger = j.logger.get(__name__)
 
 
 class FlistMerger:

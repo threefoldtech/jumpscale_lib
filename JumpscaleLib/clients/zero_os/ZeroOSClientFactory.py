@@ -3,7 +3,7 @@ import time
 from Jumpscale import j
 
 JSConfigFactoryBase = j.tools.configmanager.JSBaseClassConfigs
-logger = j.logging.get(__name__)
+logger = j.logger.get(__name__)
 
 
 class ZeroOSClientFactory():

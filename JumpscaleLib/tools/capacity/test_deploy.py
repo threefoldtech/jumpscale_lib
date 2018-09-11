@@ -5,7 +5,7 @@ ZT_TOKEN = '8DaFJC9cyQBaQnHB6gsgwVKJsuRrUySG'
 KEY_PUB = 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCtRRg+Hj3CB/1kPaWMExXFmUAIti6wirVrURsEvz/d0eJeQJok7Fy1npoAgtBEGn9LVrmL2jyefAZSggPkxtRLbUvWBDraZoJGRtzrEo9nf5z6YrCnGG+Od+HbP5aoHkq9ykEsyDcdTNInvW+qeClE0vtA4zuQ/QxcAV293yq+4HQRRoH1EosodONjsLDb8D20Z36Fmc6VTxtMC5yvvNal+si/XelKha7ri/Su/mCSV+IwnA2Ph5XZPe4JYUdD529CTdfjcwyN3CShtwNNFG72YYWwxKPHQFs/5QlwvbXUmLEjz7gF50qaeeGKibDRWOkxjV8wnBUXKShC5waZCRTd zaibon@zaibon.be'
 NODES = ['local']
 
-logger = j.logging.get("deploy")
+logger = j.logger.get("deploy")
 
 
 def main():

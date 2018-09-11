@@ -22,7 +22,7 @@ from .models import DirCollection
 from path import Path
 
 
-logger = j.logging.get(__name__)
+logger = j.logger.get(__name__)
 
 
 class FList:

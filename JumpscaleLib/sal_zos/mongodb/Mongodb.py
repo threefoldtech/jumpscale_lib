@@ -5,7 +5,7 @@ from random import SystemRandom
 from string import ascii_uppercase
 from string import digits
 
-logger = j.logging.get(__name__)
+logger = j.logger.get(__name__)
 
 
 DEF_PORTS = {

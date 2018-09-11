@@ -5,7 +5,7 @@ import capnp
 
 from .ModelBaseCollection import ModelBaseCollection
 from .ModelBaseData import ModelBaseData
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class Tools(JSBASE):

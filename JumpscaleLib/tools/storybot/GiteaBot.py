@@ -39,7 +39,7 @@ class GiteaBot:
         self.api_url = api_url
         self.base_url = base_url
         self._repos = repos
-        self.logger = j.logging.get("j.tools.StoryBot")
+        self.logger = j.logger.get("j.tools.StoryBot")
 
     @property
     def repos(self):

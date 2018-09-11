@@ -9,7 +9,7 @@ import g8storclient
 import tarfile
 import base64
 
-logger = j.logging.get(__name__)
+logger = j.logger.get(__name__)
 
 
 class FlistManipulatorFactory:

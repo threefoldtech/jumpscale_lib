@@ -33,7 +33,7 @@ class Story():
         self.url = url
         self.description = description
         self.state = state
-        self.logger = j.logging.get("j.tools.StoryBot")
+        self.logger = j.logger.get("j.tools.StoryBot")
         self._body = body
         self._update_func = update_func
 

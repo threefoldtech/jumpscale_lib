@@ -2,7 +2,7 @@ import requests
 
 from Jumpscale import j
 
-logger = j.logging.get("j.tools.StoryBot")
+logger = j.logger.get("j.tools.StoryBot")
 
 def _parse_body(body, item):
     """Parses story or task item into the provided body

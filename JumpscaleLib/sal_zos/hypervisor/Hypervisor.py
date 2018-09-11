@@ -1,7 +1,7 @@
 from Jumpscale import j
 from ..vm.ZOS_VM import ZOS_VM
 
-logger = j.logging.get(__name__)
+logger = j.logger.get(__name__)
 
 
 class Hypervisor:

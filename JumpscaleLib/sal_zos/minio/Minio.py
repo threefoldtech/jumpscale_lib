@@ -3,7 +3,7 @@ from Jumpscale import j
 from .. import templates
 
 
-logger = j.logging.get(__name__)
+logger = j.logger.get(__name__)
 DEFAULT_PORT = 9000
 
 

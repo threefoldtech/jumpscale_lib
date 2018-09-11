@@ -31,7 +31,7 @@ class GithubBot:
         self.client = j.clients.github.get(data=data, interactive=False)
         self.username = self.client.api.get_user().login
         self._repos = repos
-        self.logger = j.logging.get("j.tools.StoryBot")
+        self.logger = j.logger.get("j.tools.StoryBot")
 
     @property
     def repos(self):

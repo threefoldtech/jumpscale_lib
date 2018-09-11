@@ -7,7 +7,7 @@ from ..abstracts import Nics
 from ..disks.Disks import Disk
 from .namespace import Namespaces
 
-logger = j.logging.get(__name__)
+logger = j.logger.get(__name__)
 DEFAULT_PORT = 9900
 
 

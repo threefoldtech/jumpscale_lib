@@ -32,7 +32,7 @@ class Task():
         self.state = state
         self.body = body
         self._update_func = update_func
-        self.logger = j.logging.get("j.tools.StoryBot")
+        self.logger = j.logger.get("j.tools.StoryBot")
 
     def __repr__(self):
         return self.description
