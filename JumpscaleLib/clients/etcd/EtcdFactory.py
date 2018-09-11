@@ -6,6 +6,7 @@
 """
 
 import uuid
+from .EtcdClient import EtcdClient
 
 class EtcFactory:
 
@@ -14,8 +15,7 @@ class EtcFactory:
 
     @property
     def _child_class(self):
-        return self._jsbase(('EtcdClient',
-                             'JumpscaleLib.clients.etcd.EtcdClient'))
+        return EtcdClient
 
     def configure(self, instance="main", addr="localhost",
                                          port=2379,

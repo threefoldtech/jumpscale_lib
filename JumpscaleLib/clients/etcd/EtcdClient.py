@@ -5,7 +5,7 @@
 """
 
 import etcd
-
+from .EtcdClientNS import EtcdClientNS
 TEMPLATE = """
 addr = "localhost"
 port = "2379"
@@ -23,7 +23,6 @@ class EtcdClient:
         self._etcd = None
         print ("EtcdClient", instance)
         self.namespaces = {}
-        self.EtcdClientNS = self._jsbase(('EtcdClientNS', '.EtcdClientNS'))
 
     @property
     def secrets(self):
@@ -53,7 +52,7 @@ class EtcdClient:
 
     def namespace_get(self, name, *args, **kwargs):
         if not name in self.namespaces:
-            self.namespaces[name] = self.EtcdClientNS(self, name)
+            self.namespaces[name] = EtcdClientNS(self, name)
         return self.namespaces[name]
 
     @property

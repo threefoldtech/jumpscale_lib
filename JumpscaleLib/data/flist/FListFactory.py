@@ -50,16 +50,12 @@ class FListFactory:
                 unixsocket="%s/redis.sock" %
                 j.dirs.TMPDIR)
 
-        DM = self._jsbase(('DirModel',
-            'JumpscaleLib.data.flist.models.DirModel'))
-        DC = self._jsbase(('DirCollection',
-            'JumpscaleLib.data.flist.models.DirCollection'))
         collection = j.data.capnp.getModelCollection(
             schema.Dir,
             category="flist_%s" %
             name,
-            modelBaseClass=DM,
-            modelBaseCollectionClass=DC,
+            modelBaseClass=DirModel,
+            modelBaseCollectionClass=DirCollection,
             db=kvs,
             indexDb=kvs)
         return collection
