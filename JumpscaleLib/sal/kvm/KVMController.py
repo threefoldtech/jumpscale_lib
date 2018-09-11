@@ -3,7 +3,7 @@ import libvirt
 import atexit
 from Jumpscale import j
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 class KVMController(JSBASE):
 
     def __init__(self, executor=None, base_path=None):

@@ -1,7 +1,7 @@
 from Jumpscale import j
 
 order = ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class Sizes(JSBASE):

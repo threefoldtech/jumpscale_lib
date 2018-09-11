@@ -6,7 +6,7 @@ import os
 
 from .JSWebLoader import JSWebLoader
 
-JSConfigBase = j.tools.configmanager.base_class_config
+JSConfigBase = j.tools.configmanager.JSBaseClassConfig
 
 TEMPLATE = """
     host = "localhost"

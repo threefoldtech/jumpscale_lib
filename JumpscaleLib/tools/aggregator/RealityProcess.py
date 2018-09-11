@@ -4,7 +4,7 @@ from .InfluxDumper import InfluxDumper
 from .MongoDumper import MongoDumper
 from .ECODumper import ECODumper
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class RealitProcess(JSBASE):

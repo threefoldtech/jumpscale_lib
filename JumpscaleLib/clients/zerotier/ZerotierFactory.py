@@ -11,13 +11,13 @@ mymember.deauthorize()
 
 from Jumpscale import j
 
-JSConfigFactory = j.tools.configmanager.base_class_configs
+JSConfigFactory = j.tools.configmanager.JSBaseClassConfigs
 
 
 from .ZerotierClient import ZerotierClient
 
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 

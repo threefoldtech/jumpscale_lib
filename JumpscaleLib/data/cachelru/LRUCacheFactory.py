@@ -1,7 +1,7 @@
 from .LRUCache import LRUCache
 from .RWCache import RWCache
 from Jumpscale import j
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class LRUCacheFactory(JSBASE):

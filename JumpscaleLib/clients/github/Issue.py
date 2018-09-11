@@ -4,7 +4,7 @@ from .Base import Base
 from .Base import replacelabels
 from .Milestone import RepoMilestone
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class Issue(Base):

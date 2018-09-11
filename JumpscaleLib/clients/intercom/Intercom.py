@@ -7,8 +7,8 @@ intercom.__version__ = '3.1.0'
 from intercom.client import Client
 
 
-JSConfigFactory = j.tools.configmanager.base_class_configs
-JSConfigClient = j.tools.configmanager.base_class_config
+JSConfigFactory = j.tools.configmanager.JSBaseClassConfigs
+JSConfigClient = j.tools.configmanager.JSBaseClassConfig
 
 TEMPLATE = """
 token="dG9rOmNjNTRlZDFiX2E3OTZfNGFiM185Mjk5X2YzMGQyN2NjODM4ZToxOjA="

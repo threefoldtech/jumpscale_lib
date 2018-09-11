@@ -5,7 +5,7 @@ from googleapiclient import discovery
 from oauth2client.client import GoogleCredentials
 
 # https://cloud.google.com/compute/docs/reference/latest/instances/list
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GoogleCompute(JSBASE):

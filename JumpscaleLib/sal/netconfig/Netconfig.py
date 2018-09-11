@@ -3,7 +3,7 @@ import netaddr
 import time
 
 # MAYBE WE SHOULD STANDARDISE ON ARCH LINUX & USE SYSTEMDNETWORKING
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 class Netconfig(JSBASE):
     """

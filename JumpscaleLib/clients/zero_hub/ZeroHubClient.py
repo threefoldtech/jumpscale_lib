@@ -1,7 +1,7 @@
 from zeroos.zerohub import Client as ZHubClient
 from Jumpscale import j
 
-JSConfigClient = j.tools.configmanager.base_class_config
+JSConfigClient = j.tools.configmanager.JSBaseClassConfig
 
 TEMPLATE = """
 token_ = ""

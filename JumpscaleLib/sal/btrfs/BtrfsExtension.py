@@ -3,7 +3,7 @@ import re
 
 BASECMD = "btrfs"
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class BtfsExtensionFactory(JSBASE):

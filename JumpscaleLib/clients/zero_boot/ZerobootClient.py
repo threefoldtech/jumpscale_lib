@@ -6,7 +6,7 @@ import urllib
 import netaddr
 from Jumpscale import j
 
-JSConfigBase = j.tools.configmanager.base_class_config
+JSConfigBase = j.tools.configmanager.JSBaseClassConfig
 
 TEMPLATE = """
 sshclient_instance = ""

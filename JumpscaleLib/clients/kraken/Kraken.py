@@ -6,8 +6,8 @@ api_key_ = ""
 private_key_ = ""
 """
 
-JSConfigClient = j.tools.configmanager.base_class_config
-JSConfigFactory = j.tools.configmanager.base_class_configs
+JSConfigClient = j.tools.configmanager.JSBaseClassConfig
+JSConfigFactory = j.tools.configmanager.JSBaseClassConfigs
 
 
 class KrakenClient(JSConfigClient):

@@ -6,7 +6,7 @@ from JumpscaleLib.clients.racktivity.energyswitch.common.GUIDTable import Value
 from JumpscaleLib.clients.racktivity.energyswitch.modelfactory.modelfactory import ModelFactory
 from Jumpscale import j
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class RackSal(JSBASE):

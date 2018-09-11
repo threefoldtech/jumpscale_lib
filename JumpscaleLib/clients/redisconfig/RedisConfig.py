@@ -11,7 +11,7 @@ ssl = false
 sslkey = false
 """
 
-JSConfigBase = j.tools.configmanager.base_class_config
+JSConfigBase = j.tools.configmanager.JSBaseClassConfig
 
 
 class RedisConfig(JSConfigBase):

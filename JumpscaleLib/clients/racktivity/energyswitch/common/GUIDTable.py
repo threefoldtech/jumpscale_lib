@@ -1,7 +1,7 @@
 # pylint: disable=W0201
 from Jumpscale import j
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class Value(JSBASE):

@@ -2,7 +2,7 @@ from Jumpscale import j
 
 from .GiteaPublicKey import GiteaPublicKey
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GiteaPublicKeys(JSBASE):

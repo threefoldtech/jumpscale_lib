@@ -3,7 +3,7 @@ from Jumpscale import j
 
 from .GiteaGpgKey import GiteaGpgKey
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GiteaGpgKeys(JSBASE):

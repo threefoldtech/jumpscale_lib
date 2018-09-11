@@ -4,7 +4,7 @@ import tarfile
 import time
 from io import BytesIO
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class Container(JSBASE):

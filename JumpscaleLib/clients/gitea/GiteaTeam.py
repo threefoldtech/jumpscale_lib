@@ -3,7 +3,7 @@ from Jumpscale import j
 
 from JumpscaleLib.clients.gitea import GiteaRepos
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 from .GiteaTeamMembers import GiteTeamMembers
 

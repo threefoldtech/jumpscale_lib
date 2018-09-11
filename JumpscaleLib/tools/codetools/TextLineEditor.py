@@ -3,7 +3,7 @@ from Jumpscale import j
 
 # TODO: P2 S4 :eduard TextLineEditor tool does not work any more, is a
 # pitty because ideal to parse config files on a filesystem (id:83)
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class TextLineEditor(JSBASE):

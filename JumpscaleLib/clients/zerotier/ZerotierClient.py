@@ -6,8 +6,8 @@ import copy
 import time
 import ipcalc
 
-JSBASE = j.application.jsbase_get_class()
-JSConfigClient = j.tools.configmanager.base_class_config
+JSBASE = j.application.JSBaseClass
+JSConfigClient = j.tools.configmanager.JSBaseClassConfig
 
 class NetworkMember(JSBASE):
     """

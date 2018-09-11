@@ -3,7 +3,7 @@ from ..disklayout import mount
 from ..disklayout import lsblk
 from ..disklayout import disks
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class DiskManager(JSBASE):
@@ -16,7 +16,7 @@ class DiskManager(JSBASE):
         JSBASE.__init__(self)
         self.disks = []
         self._executor = j.tools.executorLocal
-        # self.cache = j.data.cache.get(
+        # self.cache = j.core.cache.get(
         #     db=j.data.kvs.getRedisStore(name="cache",
         #                                    unixsocket=j.sal.fs.joinPaths(j.dirs.TMPDIR, 'redis.sock')))
 

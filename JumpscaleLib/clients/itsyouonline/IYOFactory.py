@@ -8,7 +8,7 @@ import time
 
 DEFAULT_BASE_URL = "https://itsyou.online/api"
 
-JSConfigBaseFactory = j.tools.configmanager.base_class_configs
+JSConfigBaseFactory = j.tools.configmanager.JSBaseClassConfigs
 
 
 class IYOFactory(JSConfigBaseFactory):

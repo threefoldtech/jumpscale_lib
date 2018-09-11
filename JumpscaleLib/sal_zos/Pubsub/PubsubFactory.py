@@ -1,7 +1,7 @@
 from .Pubsub import Pubsub
 from Jumpscale import j
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class PubsubFactory(JSBASE):

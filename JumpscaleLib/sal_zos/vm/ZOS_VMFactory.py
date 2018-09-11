@@ -1,5 +1,5 @@
 from Jumpscale import j
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 from .ZOS_VM import ZOS_VM
 

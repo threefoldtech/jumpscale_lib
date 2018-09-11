@@ -17,7 +17,7 @@ from Jumpscale.data.time.TimeInterval import TimeInterval as TimeIntervalUnit
 # TODO: move many of these methods to prefab2 (our prefab) or to system if more appropriate
 # TODO: this file needs to go away
 # TODO: make sure we use proper names & add to right prefab module
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 def user_in_group(username, groupname):

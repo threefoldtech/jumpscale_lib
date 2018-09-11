@@ -3,7 +3,7 @@ import toml
 
 import copy
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 from .Link import Link
 
 

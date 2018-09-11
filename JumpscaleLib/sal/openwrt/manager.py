@@ -10,7 +10,7 @@ from network import Network
 from firewall import Firewall
 
 from Jumpscale import j
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 WRITE_CHUNK_SIZE = 512
 

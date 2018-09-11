@@ -3,7 +3,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 import os
 
-JSConfigBaseFactory = j.tools.configmanager.base_class_configs
+JSConfigBaseFactory = j.tools.configmanager.JSBaseClassConfigs
 
 
 class GrafanaFactory(JSConfigBaseFactory):
@@ -21,7 +21,7 @@ password_ = ""
 verify_ssl = 1
 """
 
-JSConfigBase = j.tools.configmanager.base_class_config
+JSConfigBase = j.tools.configmanager.JSBaseClassConfig
 
 
 class GrafanaClient(JSConfigBase):

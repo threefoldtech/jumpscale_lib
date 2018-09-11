@@ -9,7 +9,7 @@ from JumpscaleLib.sal.kvm.Machine import Machine
 from JumpscaleLib.sal.kvm.CloudMachine import CloudMachine
 from JumpscaleLib.sal.kvm.MachineSnapshot import MachineSnapshot
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 class KVM(JSBASE):
 
     def __init__(self):

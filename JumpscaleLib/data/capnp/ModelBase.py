@@ -1,7 +1,9 @@
 from collections import OrderedDict
 
+JSBASE = j.application.jsbase_get_class()
 
-class ModelBase:
+
+class ModelBase(JSBASE):
 
     def __init__(self, key="", new=False, collection=None):
 

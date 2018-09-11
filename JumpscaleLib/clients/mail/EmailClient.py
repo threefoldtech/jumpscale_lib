@@ -8,8 +8,8 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-JSConfigFactory = j.tools.configmanager.base_class_configs
-JSConfigClient = j.tools.configmanager.base_class_config
+JSConfigFactory = j.tools.configmanager.JSBaseClassConfigs
+JSConfigClient = j.tools.configmanager.JSBaseClassConfig
 TEMPLATE = """
 smtp_server = ""
 smtp_port = 0

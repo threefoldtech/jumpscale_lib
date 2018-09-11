@@ -2,7 +2,7 @@ from Jumpscale import j
 from kubernetes import client, config
 from .Kubernetes import KubernetesMaster
 
-JSConfigBaseFactory = j.tools.configmanager.base_class_configs
+JSConfigBaseFactory = j.tools.configmanager.JSBaseClassConfigs
 
 
 class KubernetesFactory(JSConfigBaseFactory):

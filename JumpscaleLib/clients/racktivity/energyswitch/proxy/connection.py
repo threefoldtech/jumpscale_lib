@@ -7,7 +7,7 @@ from Jumpscale import j
 def Connect(username, password, hostname="127.0.0.1", port=8080):
     return BlockingConnection(username, password, hostname, port)
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 class BlockingConnection(JSBASE):
 
     def __init__(self, username, password, hostname="127.0.0.1", port=8080):

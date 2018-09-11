@@ -3,7 +3,7 @@ from Jumpscale import j
 import time
 import calendar
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class MySQLFactory(JSBASE):

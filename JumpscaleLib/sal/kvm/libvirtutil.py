@@ -14,7 +14,7 @@ LOCKREMOVED = 2
 NOLOCK = 3
 LOCKEXIST = 4
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class LibvirtUtil(JSBASE):

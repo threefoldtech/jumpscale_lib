@@ -3,7 +3,7 @@ from Jumpscale import j
 
 from .GiteaRepoPublicKey import GiteaRepoPublicKey
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GiteaRepoPublicKeys(JSBASE):

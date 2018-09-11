@@ -1,6 +1,6 @@
 from Jumpscale import j
 from .MarkdownComponents import *
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 import copy
 from . import mistune
 

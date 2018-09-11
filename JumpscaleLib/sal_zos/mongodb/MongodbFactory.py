@@ -1,7 +1,7 @@
 from .Mongodb import Mongodb
 from Jumpscale import j
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class MongodbFactory(JSBASE):

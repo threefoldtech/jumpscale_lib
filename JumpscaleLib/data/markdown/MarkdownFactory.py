@@ -11,7 +11,7 @@ import copy
 
 from .MarkdownDocument import *
 from .MarkdownComponents import *
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class MarkdownFactory(JSBASE):

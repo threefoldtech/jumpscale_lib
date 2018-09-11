@@ -2,7 +2,7 @@ from Jumpscale import j
 from .TextLineEditor import TextLineEditor
 from .TextCharEditor import TextCharEditor
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class TextFileEditor(JSBASE):

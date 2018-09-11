@@ -3,7 +3,7 @@ from OpenSSL import crypto
 import OpenSSL
 from socket import gethostname
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class SSLFactory(JSBASE):

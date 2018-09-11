@@ -3,9 +3,9 @@ from Jumpscale import j
 import re
 import random
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class Synonym(JSBASE):

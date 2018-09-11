@@ -3,7 +3,7 @@ from Jumpscale import j
 
 from .HubDirectClient import HubDirectClient
 
-JSConfigBaseFactory = j.tools.configmanager.base_class_configs
+JSConfigBaseFactory = j.tools.configmanager.JSBaseClassConfigs
 
 
 class HubDirectFactory(JSConfigBaseFactory):

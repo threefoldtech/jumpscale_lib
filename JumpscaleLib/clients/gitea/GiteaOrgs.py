@@ -4,7 +4,7 @@ from .GiteaOrgForMember import GiteaOrgForMember
 from .GiteaOrgForNonMember import GiteaOrgForNonMember
 
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GiteaOrgs(JSBASE):

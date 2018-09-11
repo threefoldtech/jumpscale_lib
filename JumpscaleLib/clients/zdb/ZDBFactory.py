@@ -4,7 +4,7 @@ from Jumpscale import j
 
 from .ZDBClient import ZDBClient
 
-JSConfigBase = j.tools.configmanager.base_class_configs
+JSConfigBase = j.tools.configmanager.JSBaseClassConfigs
 
 
 class ZDBFactory(JSConfigBase):

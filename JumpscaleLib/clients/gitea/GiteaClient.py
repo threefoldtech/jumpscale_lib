@@ -10,8 +10,8 @@ url = ""
 gitea_token_ = ""
 """
 
-JSConfigBase = j.tools.configmanager.base_class_config
-JSBASE = j.application.jsbase_get_class()
+JSConfigBase = j.tools.configmanager.JSBaseClassConfig
+JSBASE = j.application.JSBaseClass
 
 
 class GiteaClient(JSConfigBase):

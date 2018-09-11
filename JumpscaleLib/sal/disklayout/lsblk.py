@@ -6,7 +6,7 @@ COMMAND = 'lsblk -bnP -o NAME,TYPE,UUID,FSTYPE,SIZE,MOUNTPOINT,PARTLABEL -e 7,1'
 
 _extract_pattern = re.compile('\s*([^=]+)="([^"]*)"')
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 class LsblkError(Exception, JSBASE):
     def __init__(self):

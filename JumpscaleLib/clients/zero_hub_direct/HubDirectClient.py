@@ -2,7 +2,7 @@ from Jumpscale import j
 from .client import Client
 import base64
 
-JSConfigBase = j.tools.configmanager.base_class_config
+JSConfigBase = j.tools.configmanager.JSBaseClassConfig
 
 
 TEMPLATE = """

@@ -7,7 +7,7 @@ import docker
 import time
 from urllib import parse
 import copy
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class Docker(JSBASE):

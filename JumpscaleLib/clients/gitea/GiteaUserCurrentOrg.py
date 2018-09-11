@@ -6,7 +6,7 @@ from .GiteaOrgMembers import GiteaOrgMembers
 from .GiteaOrgRepos import GiteaOrgRepos
 from .GiteaOrgHooks import GiteaOrgHooks
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GiteaUserCurrentOrg(JSBASE):

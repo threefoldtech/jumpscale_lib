@@ -17,7 +17,7 @@ STRIP_ASCII_CHAR = '\x08'
 
 # TODO: Fix STRIP_ASCII_CHAR
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 def printable_out(str_in):

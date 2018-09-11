@@ -6,7 +6,7 @@ from .Issue import Issue
 import github
 NotSet = github.GithubObject.NotSet
 
-JSConfigClient = j.tools.configmanager.base_class_config
+JSConfigClient = j.tools.configmanager.JSBaseClassConfig
 
 TEMPLATE = """
 login = ""

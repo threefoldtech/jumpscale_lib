@@ -3,8 +3,15 @@ import capnp
 from collections import OrderedDict
 import capnp
 
+from .ModelBaseCollection import ModelBaseCollection
+from .ModelBaseData import ModelBaseData
+JSBASE = j.application.jsbase_get_class()
 
-class Tools:
+
+class Tools(JSBASE):
+
+    def __init__(self):
+        JSBASE.__init__(self)
 
     def listInDictCreation(self, listInDict, name, manipulateDef=None):
         """
@@ -34,7 +41,7 @@ class Tools:
         return listInDict
 
 
-class Capnp:
+class Capnp(JSBASE):
     """
     """
 
@@ -47,18 +54,17 @@ class Capnp:
         j.sal.fs.createDir(self._capnpVarDir)
         if self._capnpVarDir not in sys.path:
             sys.path.append(self._capnpVarDir)
-        self.tools = self._jsbase(('Tools', 'JumpscaleLib.data.capnp.Capnp'))
+        self.tools = Tools()
+        JSBASE.__init__(self)
 
     def getModelBaseClass(self):
-        return self._jsbase(('ModelBase', 'JumpscaleLib.data.capnp.ModelBase'))
+        return ModelBase
 
     def getModelBaseClassWithData(self):
-        return self._jsbase(('ModelBaseData',
-            'JumpscaleLib.data.capnp.ModelBaseData'))
+        return ModelBaseWithData
 
     def getModelBaseClassCollection(self):
-        return self._jsbase(('ModelBaseCollection',
-            'JumpscaleLib.data.capnp.ModelBaseCollection'))
+        return ModelBaseCollection
 
     def getModelCollection(
             self,
@@ -97,7 +103,7 @@ class Capnp:
             ```
         """
         if modelBaseCollectionClass is None:
-            modelBaseCollectionClass = self.getModelBaseClassCollection()
+            modelBaseCollectionClass = ModelBaseCollection
 
         return modelBaseCollectionClass(
             schema=schema,

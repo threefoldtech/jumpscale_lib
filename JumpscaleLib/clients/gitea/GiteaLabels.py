@@ -2,7 +2,7 @@ from Jumpscale import j
 
 from .GiteaLabel import GiteaLabel
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GiteaLabels(JSBASE):

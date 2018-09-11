@@ -2,7 +2,7 @@
 from Jumpscale import j
 import JumpscaleLib.tools.codetools.PropertyDef as PropertyDef
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class ClassDef(JSBASE):

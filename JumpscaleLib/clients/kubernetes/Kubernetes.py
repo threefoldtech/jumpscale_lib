@@ -11,8 +11,8 @@ incluster_config = false
 """
 
 
-JSConfigBase = j.tools.configmanager.base_class_config
-JSBASE = j.application.jsbase_get_class()
+JSConfigBase = j.tools.configmanager.JSBaseClassConfig
+JSBASE = j.application.JSBaseClass
 
 
 class KubernetesMaster(JSConfigBase):

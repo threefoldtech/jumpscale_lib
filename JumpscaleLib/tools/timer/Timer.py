@@ -1,6 +1,6 @@
 import time
 from Jumpscale import j
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 class TIMER(JSBASE):
     def __init__(self):

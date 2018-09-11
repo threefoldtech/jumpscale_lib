@@ -2,7 +2,7 @@
 from Jumpscale import j
 from .Row import *
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class Sheet(JSBASE):

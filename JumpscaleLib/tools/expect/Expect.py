@@ -38,7 +38,7 @@ if j.core.platformtype.myplatform.isUnix:
         except BaseException:
             pass
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class Popen(subprocess.Popen, JSBASE):

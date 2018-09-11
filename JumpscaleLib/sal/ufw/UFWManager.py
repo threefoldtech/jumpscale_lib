@@ -12,7 +12,7 @@ RULE_LINE = re.compile('^\[\s*(\d+)\] (.+?)\s{2,}(.+?)\s{2,}(.+)$')
 ParsedDestination = collections.namedtuple('ParsedDestination',
                                            'ip proto port dev')
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class UFWError(Exception, JSBASE):

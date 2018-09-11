@@ -10,7 +10,7 @@ from .GiteaOrgs import  GiteaOrgs
 from .GiteaRepos import  GiteaRepos
 from .GiteaPublicKeys import GiteaPublicKeys
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GiteaUser(JSBASE):

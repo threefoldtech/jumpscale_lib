@@ -4,7 +4,7 @@ from Jumpscale import j
 from .GiteaLabels import GiteaLabels
 from .GiteaIssueComments import GiteaIssueComments
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GiteaIssue(JSBASE):

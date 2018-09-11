@@ -9,7 +9,7 @@ iyo_clientid = ""
 iyo_secret = ""
 iyo_callback = ""
 """
-JSConfigBase = j.tools.configmanager.base_class_config
+JSConfigBase = j.tools.configmanager.JSBaseClassConfig
 
 
 class CapacityServer(JSConfigBase):

@@ -3,7 +3,7 @@ from Jumpscale import j
 import time
 
 # TODO: *3 despiegk very early spec, needs to be done todo
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class LogDumper(JSBASE):

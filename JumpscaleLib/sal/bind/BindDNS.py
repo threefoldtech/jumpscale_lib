@@ -7,7 +7,7 @@ from dns.rdtypes.IN.A import A
 from JumpscaleLib.sal.bind.base import DNS
 from Jumpscale import j
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class Zone(JSBASE):

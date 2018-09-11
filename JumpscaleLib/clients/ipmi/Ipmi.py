@@ -3,7 +3,7 @@ import time
 
 from Jumpscale import j
 
-JSConfigBase = j.tools.configmanager.base_class_config
+JSConfigBase = j.tools.configmanager.JSBaseClassConfig
 
 TEMPLATE = """
 bmc = ""

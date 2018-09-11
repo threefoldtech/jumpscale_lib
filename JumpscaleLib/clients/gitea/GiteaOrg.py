@@ -17,7 +17,7 @@ default_labels = [
     {'color': '#fef2c0', 'name': 'type_question'}
 ]
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GiteaOrg(JSBASE):

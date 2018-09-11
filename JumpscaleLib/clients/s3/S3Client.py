@@ -24,7 +24,7 @@ bucket = ""
 bucket_ok = false
 """
 
-JSConfigBase = j.tools.configmanager.base_class_config
+JSConfigBase = j.tools.configmanager.JSBaseClassConfig
 
 
 class S3Client(JSConfigBase):

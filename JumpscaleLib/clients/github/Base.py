@@ -17,7 +17,7 @@ replacelabels = {
     'type_story': 'type_unknown'
 }
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class Base(JSBASE):

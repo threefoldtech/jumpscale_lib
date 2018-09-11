@@ -2,7 +2,7 @@ import configparser
 import re
 from Jumpscale import j
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 DEFAULTSECT = "DEFAULT"
 
 """

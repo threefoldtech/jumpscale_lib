@@ -1,7 +1,7 @@
 from Jumpscale import j
 import pickle
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class JS8Stub(JSBASE):

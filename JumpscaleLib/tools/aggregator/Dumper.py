@@ -5,7 +5,7 @@ import time
 import logging
 from queue import Empty
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 NUM_WORKERS = 4
 
 

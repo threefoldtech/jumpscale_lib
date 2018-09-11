@@ -1,7 +1,7 @@
 from .ZeroHubClient import ZeroHubClient
 from Jumpscale import j
 
-JSConfigFactory = j.tools.configmanager.base_class_configs
+JSConfigFactory = j.tools.configmanager.JSBaseClassConfigs
 
 
 class ZeroHubFactory(JSConfigFactory):

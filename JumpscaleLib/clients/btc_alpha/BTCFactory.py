@@ -1,6 +1,6 @@
 from Jumpscale import j
 
-JSConfigFactory = j.tools.configmanager.base_class_configs
+JSConfigFactory = j.tools.configmanager.JSBaseClassConfigs
 
 from .BTCClient import BTCClient
 

@@ -2,8 +2,8 @@ from Jumpscale import j
 
 from pymongo import MongoClient, MongoReplicaSetClient
 
-JSConfigFactory = j.tools.configmanager.base_class_configs
-JSConfigClient = j.tools.configmanager.base_class_config
+JSConfigFactory = j.tools.configmanager.JSBaseClassConfigs
+JSConfigClient = j.tools.configmanager.JSBaseClassConfig
 TEMPLATE = """
 host = "localhost"
 port = 27017

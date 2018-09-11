@@ -28,7 +28,7 @@ rank = 0
 core = false
 """
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class Todo(JSBASE):

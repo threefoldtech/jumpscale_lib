@@ -3,7 +3,7 @@ from Jumpscale import j
 from .GiteaRepoForNonOwner import GiteaRepoForNonOwner
 from .GiteaRepoForOwner import GiteaRepoForOwner
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GiteaRepos(JSBASE):

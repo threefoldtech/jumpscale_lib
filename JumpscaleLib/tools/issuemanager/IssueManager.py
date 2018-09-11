@@ -14,7 +14,7 @@ from JumpscaleLib.tools.issuemanager import model_capnp as ModelCapnp
 from peewee import *
 from playhouse.sqlite_ext import SqliteExtDatabase
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class IssueManager(JSBASE):

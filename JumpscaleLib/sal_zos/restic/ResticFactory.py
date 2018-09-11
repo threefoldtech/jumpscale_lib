@@ -1,7 +1,7 @@
 from .Restic import Restic
 from Jumpscale import j
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class ResticFactory(JSBASE):

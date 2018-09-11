@@ -35,7 +35,7 @@ discarded. [1]_
 import time
 from heapq import heappush, heappop, heapify
 from Jumpscale import j
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 __version__ = "0.2"
 __all__ = ['CacheKeyError', 'LRUCache', 'DEFAULT_SIZE']

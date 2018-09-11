@@ -33,7 +33,7 @@ DATABASE_MAP = dict((value, key)
                     for key in DATABASE_ALIASES
                     for value in DATABASE_ALIASES[key])
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class Pwiz(JSBASE):

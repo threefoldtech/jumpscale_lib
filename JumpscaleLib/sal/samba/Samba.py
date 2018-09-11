@@ -10,7 +10,7 @@ CONFIG_FILE = '/etc/samba/smb.conf'
 EXCEPT_SHARES = ['global', 'printers', 'homes']
 BASEPATH = '/VNASSHARE/'
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class SMBUser(JSBASE):

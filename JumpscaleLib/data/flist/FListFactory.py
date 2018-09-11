@@ -78,18 +78,12 @@ class FListFactory:
                 unixsocket="%s/redis.sock" %
                 j.dirs.TMPDIR)
 
-        DM = self._jsbase(('ACIModel',
-            'JumpscaleLib.data.flist.models.ACIModel'))
-        DC = self._jsbase(('ACICollection',
-            'JumpscaleLib.data.flist.models.ACICollection'))
-        collection = j.data.capnp.getModelCollection(
-            schema.ACI,
-            category="ACI_%s" %
-            name,
-            modelBaseClass=DM,
-            modelBaseCollectionClass=DC,
-            db=kvs,
-            indexDb=kvs)
+        collection = j.data.capnp.getModelCollection(schema.ACI,
+                                                     category="ACI_%s" % name,
+                                                     modelBaseClass=ACIModel.ACIModel,
+                                                     modelBaseCollectionClass=ACICollection.ACICollection,
+                                                     db=kvs,
+                                                     indexDb=kvs)
         return collection
 
     def getUserGroupCollectionFromDB(self, name="usergroup", kvs=None):

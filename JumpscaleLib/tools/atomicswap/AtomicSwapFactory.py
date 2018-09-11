@@ -10,7 +10,7 @@ import os
 
 
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 SUPPORTED_CURRENCIES = ['BTC', 'TFT']
 DEFAULT_LOCKTIME_THRESHOLD = 25

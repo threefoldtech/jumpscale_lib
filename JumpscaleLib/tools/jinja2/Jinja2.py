@@ -2,7 +2,7 @@ from Jumpscale import j
 
 from jinja2 import Template
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 class Jinja2(JSBASE):
     """

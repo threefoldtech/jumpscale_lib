@@ -2,8 +2,8 @@ from Jumpscale import j
 
 import importlib
 
-JSConfigFactory = j.tools.configmanager.base_class_configs
-JSConfigClient = j.tools.configmanager.base_class_config
+JSConfigFactory = j.tools.configmanager.JSBaseClassConfigs
+JSConfigClient = j.tools.configmanager.JSBaseClassConfig
 
 TEMPLATE = """
 ipaddr = "localhost"

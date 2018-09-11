@@ -8,7 +8,7 @@ from Jumpscale import j
 from .Machine import Machine
 from .Space import Space
 from .Authorizables import Authorizables
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class Account(Authorizables):

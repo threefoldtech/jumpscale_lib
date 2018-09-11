@@ -1,7 +1,7 @@
 from Jumpscale import j
 from .Doc import Doc
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 import copy
 

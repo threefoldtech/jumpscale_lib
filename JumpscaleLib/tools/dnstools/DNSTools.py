@@ -12,7 +12,7 @@ try:
 except Exception as e:
     print("WARNING install dnspython: 'pip3 install dnspython'")
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class DNSTools(JSBASE):

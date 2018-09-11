@@ -2,7 +2,7 @@ from Jumpscale import j
 from .ZeroStorFactory import ZeroStorFactory
 
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class ZeroStorFactoryDeprecated(ZeroStorFactory, JSBASE):

@@ -2,7 +2,7 @@ from Jumpscale import j
 
 from .GiteaOrgRepo import GiteaOrgRepo
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GiteaOrgRepos(JSBASE):

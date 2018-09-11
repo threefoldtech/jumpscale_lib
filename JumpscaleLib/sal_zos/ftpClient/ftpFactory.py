@@ -1,7 +1,7 @@
 from Jumpscale import j
 # import JumpscaleLib.baselib.remote
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 from .FtpClient import FtpClient
 

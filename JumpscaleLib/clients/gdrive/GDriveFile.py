@@ -20,7 +20,7 @@ GOOGLEMIME = ['application/vnd.google-apps.audio',
               'application/vnd.google-apps.video',
               'application/vnd.google-apps.drive-sdk']
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GDriveFile(JSBASE):

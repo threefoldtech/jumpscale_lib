@@ -27,7 +27,7 @@ from urllib.parse import urlparse
 # h = AllHandler()
 # logging.getLogger("asyncio").addHandler(h)
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class Offliner(JSBASE):

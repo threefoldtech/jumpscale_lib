@@ -4,7 +4,7 @@ import time
 import datetime
 # import jose.jwt
 # from paramiko.ssh_exception import BadAuthenticationType
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class Machine(JSBASE):

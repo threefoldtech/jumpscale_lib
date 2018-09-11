@@ -2,7 +2,7 @@ from Jumpscale import j
 
 from .GiteaOrgHook import GiteaOrgHook
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GiteaOrgHooks(JSBASE):

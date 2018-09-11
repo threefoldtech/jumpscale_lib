@@ -37,7 +37,7 @@ def jsonrpc(func):
         return result
     return wrapper
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GeventWSServer(JSBASE):

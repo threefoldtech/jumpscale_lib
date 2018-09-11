@@ -5,7 +5,7 @@ import netaddr
 
 # class NetworkingErro(Exception):
 #     pass
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 class NetworkingError(Exception, JSBASE):
     def __init__(self, msg=""):

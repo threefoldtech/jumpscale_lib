@@ -7,7 +7,7 @@ from Jumpscale import j
 from .SwaggerSpec import *
 from .RamlTools import RamlTools
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class RamlToolsFactory(JSBASE):

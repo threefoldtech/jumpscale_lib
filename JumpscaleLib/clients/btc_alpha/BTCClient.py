@@ -15,7 +15,7 @@ secret_ = ""
 # TODO:*1 FROM CLIENT import .... and put in client property
 # TODO:*1 regenerate using proper goraml new file & newest generation tools ! (had to fix manually quite some issues?)
 
-JSConfigBase = j.tools.configmanager.base_class_config
+JSConfigBase = j.tools.configmanager.JSBaseClassConfig
 
 
 class BTCClient(JSConfigBase):

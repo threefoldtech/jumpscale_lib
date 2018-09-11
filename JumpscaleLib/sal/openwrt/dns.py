@@ -4,7 +4,7 @@ from io import StringIO
 from base import BaseService
 from Jumpscale import j
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 class DNSError(Exception, JSBASE):
     def __init__(self):

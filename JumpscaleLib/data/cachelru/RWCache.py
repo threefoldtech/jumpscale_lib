@@ -6,7 +6,7 @@ from Jumpscale import j
 from .LRUCache import LRUCache
 
 from operator import itemgetter, attrgetter
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 class RWCache(JSBASE):
 

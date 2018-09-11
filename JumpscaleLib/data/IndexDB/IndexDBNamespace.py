@@ -2,7 +2,7 @@
 from Jumpscale import j
 from pprint import pprint as print
 from functools import reduce
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class IndexDBNamespace(JSBASE):

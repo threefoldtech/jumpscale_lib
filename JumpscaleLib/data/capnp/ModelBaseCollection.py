@@ -1,4 +1,5 @@
 from collections import OrderedDict
+JSBASE = j.application.jsbase_get_class()
 
 
 def getText(text):
@@ -9,7 +10,7 @@ def getInt(nr):
     return int(nr)
 
 
-class ModelBaseCollection:
+class ModelBaseCollection(JSBASE):
     """
     This class represent a collection
     It's used to list/find/create new Instance of Model objects
@@ -70,12 +71,10 @@ class ModelBaseCollection:
         # for now we do index same as database
         self._index = indexDb if indexDb else self._db
 
-        if modelBaseClass is None:
-            modelBaseClass = self._jsbase(('ModelBase',
-                            'JumpscaleLib.data.capnp.ModelBase'))
-        self.modelBaseClass = modelBaseClass
+        self.modelBaseClass = modelBaseClass if modelBaseClass else ModelBase
 
         self._init()
+        JSBASE.__init__(self)
 
     def _init(self):
         pass

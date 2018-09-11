@@ -6,7 +6,7 @@ import imp
 import time
 import sys
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 def loadmodule(name, path):

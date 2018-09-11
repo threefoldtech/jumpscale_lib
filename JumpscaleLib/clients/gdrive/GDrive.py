@@ -24,7 +24,7 @@ SCOPES = ['https://www.googleapis.com/auth/drive',
           'https://www.googleapis.com/auth/drive.metadata']
 
 APPLICATION_NAME = 'Google Drive Exporter'
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GDriveFactory(JSBASE):

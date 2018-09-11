@@ -2,7 +2,7 @@ import time
 
 from Jumpscale import j
 
-JSConfigFactoryBase = j.tools.configmanager.base_class_configs
+JSConfigFactoryBase = j.tools.configmanager.JSBaseClassConfigs
 logger = j.logging.get(__name__)
 
 

@@ -3,7 +3,7 @@ from Jumpscale import j
 
 from PIL import Image
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class ImageLib(JSBASE):

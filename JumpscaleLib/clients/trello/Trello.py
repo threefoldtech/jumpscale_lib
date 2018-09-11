@@ -8,8 +8,8 @@ token_ = ""
 token_secret_= ""
 """
 
-JSConfigClient = j.tools.configmanager.base_class_config
-JSConfigFactory = j.tools.configmanager.base_class_configs
+JSConfigClient = j.tools.configmanager.JSBaseClassConfig
+JSConfigFactory = j.tools.configmanager.JSBaseClassConfigs
 
 
 class TrelloClient(JSConfigClient):

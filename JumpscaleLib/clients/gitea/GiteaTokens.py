@@ -3,7 +3,7 @@ from Jumpscale import j
 
 from .GiteaToken import GiteaToken
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GiteaTokens(JSBASE):

@@ -2,7 +2,7 @@ from Jumpscale import j
 
 from .GiteaTeam import GiteaTeam
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GiteaTeams(JSBASE):

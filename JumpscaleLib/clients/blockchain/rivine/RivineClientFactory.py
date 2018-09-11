@@ -7,7 +7,7 @@ from Jumpscale import j
 from JumpscaleLib.clients.blockchain.rivine.RivineClient import RivineClient
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory
 
-JSConfigBaseFactory = j.tools.configmanager.base_class_configs
+JSConfigBaseFactory = j.tools.configmanager.JSBaseClassConfigs
 
 
 class RivineClientFactory(JSConfigBaseFactory):

@@ -4,8 +4,8 @@ from influxdb import client as influxdb
 import requests
 from requests.auth import HTTPBasicAuth
 
-JSConfigFactory = j.tools.configmanager.base_class_configs
-JSConfigClient = j.tools.configmanager.base_class_config
+JSConfigFactory = j.tools.configmanager.JSBaseClassConfigs
+JSConfigClient = j.tools.configmanager.JSBaseClassConfig
 
 TEMPLATE = """
 host = "localhost"

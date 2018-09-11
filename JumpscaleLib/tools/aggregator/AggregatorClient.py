@@ -9,7 +9,7 @@ Stats = collections.namedtuple('Stats', 'h_nr m_nr h_avg m_epoch m_total h_total
                                'm_max val h_max key tags h_epoch')
 
 Log = collections.namedtuple('Log', 'level message node epoch tags')
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class AggregatorClient(JSBASE):

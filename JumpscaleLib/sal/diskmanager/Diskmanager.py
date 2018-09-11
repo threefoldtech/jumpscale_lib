@@ -2,7 +2,7 @@ from Jumpscale import j
 import os
 import errno
 import stat
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 def _is_block(file):

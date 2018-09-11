@@ -5,9 +5,9 @@ from .api_service import ApiService
 
 from .http_client import HTTPClient
 
-JSBASE = j.application.jsbase_get_class()
-JSConfigClient = j.tools.configmanager.base_class_config
-JSConfigFactory = j.tools.configmanager.base_class_configs
+JSBASE = j.application.JSBaseClass
+JSConfigClient = j.tools.configmanager.JSBaseClassConfig
+JSConfigFactory = j.tools.configmanager.JSBaseClassConfigs
 TEMPLATE =  """
 base_uri = "https://capacity.threefoldtoken.com"
 """

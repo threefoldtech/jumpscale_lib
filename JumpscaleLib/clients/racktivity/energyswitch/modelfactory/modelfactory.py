@@ -9,7 +9,7 @@ from JumpscaleLib.clients.racktivity.energyswitch.common import convert
 from JumpscaleLib.clients.racktivity.energyswitch.common.GUIDTable import Value
 from Jumpscale import j
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class ModelFactory(JSBASE):

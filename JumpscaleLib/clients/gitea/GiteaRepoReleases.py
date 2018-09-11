@@ -2,7 +2,7 @@ from Jumpscale import j
 
 from .GiteaRepoPullRequest import GiteaRepoPullRequest
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GiteaRepoPullRequests(JSBASE):

@@ -4,7 +4,7 @@ from MethodDef import MethodDef
 from ClassDef import ClassDef
 from Jumpscale import j
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class CodeElements(JSBASE):

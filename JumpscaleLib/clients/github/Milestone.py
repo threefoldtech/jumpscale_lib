@@ -1,7 +1,7 @@
 from Jumpscale import j
 from .Base import Base
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class RepoMilestone(Base):

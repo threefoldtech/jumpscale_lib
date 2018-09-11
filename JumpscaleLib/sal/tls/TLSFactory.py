@@ -1,7 +1,7 @@
 from Jumpscale import j
 from .TLS import TLS
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class TLSFactory(JSBASE):

@@ -10,7 +10,7 @@ from .Milestone import RepoMilestone
 from Jumpscale.errorhandling.JSExceptions import Input
 from github.GithubException import UnknownObjectException
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GithubRepo(JSBASE):

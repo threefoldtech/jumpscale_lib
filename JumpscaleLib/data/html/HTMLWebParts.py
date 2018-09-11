@@ -2,7 +2,7 @@
 from Jumpscale import j
 # import copy
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 class HTMLWebParts(JSBASE):
 

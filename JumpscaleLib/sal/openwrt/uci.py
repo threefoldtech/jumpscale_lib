@@ -2,7 +2,7 @@ import collections
 from io import StringIO
 
 from Jumpscale import j
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 class UCISection(collections.OrderedDict, JSBASE):
     _option = '\toption {key} \'{value}\'\n'

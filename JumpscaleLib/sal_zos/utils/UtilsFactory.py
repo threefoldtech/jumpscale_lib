@@ -1,7 +1,7 @@
 from Jumpscale import j
 from JumpscaleLib.sal_zos.abstracts import ZTNic
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class UtilsFactory(JSBASE):

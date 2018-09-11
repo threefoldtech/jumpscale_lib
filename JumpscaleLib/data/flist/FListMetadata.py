@@ -7,7 +7,7 @@ import time
 import stat
 import pwd
 import grp
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class FListMetadata(JSBASE):

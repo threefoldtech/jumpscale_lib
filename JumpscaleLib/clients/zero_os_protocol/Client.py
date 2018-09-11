@@ -35,7 +35,7 @@ ssl = true
 timeout = 120
 """
 
-JSConfigClientBase = j.tools.configmanager.base_class_config
+JSConfigClientBase = j.tools.configmanager.JSBaseClassConfig
 
 
 class Client(BaseClient, JSConfigClientBase):

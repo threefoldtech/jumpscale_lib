@@ -2,7 +2,7 @@ from Jumpscale import j
 
 from .GiteaMilestone import GiteaMilestone
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GiteaMilestones(JSBASE):

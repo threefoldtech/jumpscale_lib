@@ -1,7 +1,7 @@
 from Jumpscale import j
 import JumpscaleLib.tools.aggregator.Dumper as Dumper
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class Stats(JSBASE):

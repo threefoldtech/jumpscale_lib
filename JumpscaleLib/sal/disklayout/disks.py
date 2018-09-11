@@ -10,7 +10,7 @@ _formatters = {
     'ntfs': lambda name, fstype: 'mkfs.ntfs -f {name}'.format(name=name)
 }
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 def isValidFS(v): return v.startswith('ext') or v in ('btrfs', 'ntfs')

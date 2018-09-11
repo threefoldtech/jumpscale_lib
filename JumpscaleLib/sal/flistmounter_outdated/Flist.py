@@ -4,7 +4,7 @@ import tempfile
 from urllib.parse import urlparse
 import psutil
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 #TODO:*1 think is broken, see non existing command
 

@@ -2,7 +2,7 @@ from Jumpscale import j
 
 from .OVHClient import OVHClient
 
-JSConfigBaseFactory = j.tools.configmanager.base_class_configs
+JSConfigBaseFactory = j.tools.configmanager.JSBaseClassConfigs
 
 
 class OVHFactory(JSConfigBaseFactory):

@@ -4,7 +4,7 @@ from Jumpscale import j
 from .GiteaUser import GiteaUser
 from .GiteaUserCurrent import GiteaUserCurrent
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GiteaUsers(JSBASE):

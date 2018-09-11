@@ -3,7 +3,7 @@ __author__ = 'delandtj'
 from .utils import *
 from Jumpscale import j
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class VXlan(JSBASE):

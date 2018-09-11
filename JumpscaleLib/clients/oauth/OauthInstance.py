@@ -9,8 +9,8 @@ import random
 
 from Jumpscale import j
 
-JSConfigClient = j.tools.configmanager.base_class_config
-JSBASE = j.application.jsbase_get_class()
+JSConfigClient = j.tools.configmanager.JSBaseClassConfig
+JSBASE = j.application.JSBaseClass
 TEMPLATE = """
 addr = ""
 accesstokenaddr = ""

@@ -3,7 +3,7 @@ from Jumpscale import j
 # IMPORTANT
 # use functionality in j.clients.ssh to deal with SSH-Agent & getting key info, improve if required
 # use j.data.nacl for underlying encryption/decryption/signing when possible
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 from .mnemonic.mnemonic import Mnemonic
 
 class EncryptionFactory(JSBASE):

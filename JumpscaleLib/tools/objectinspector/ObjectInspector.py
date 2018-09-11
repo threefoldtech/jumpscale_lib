@@ -9,7 +9,7 @@ from Jumpscale import j
 # 4 function with params
 # 7 ???
 # 8 property
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class Arg(JSBASE):

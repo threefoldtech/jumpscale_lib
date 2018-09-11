@@ -2,7 +2,7 @@ from Jumpscale import j
 
 from .GiteaUserCurrentEmail import GiteaUserCurrentEmail
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class GiteaUserCurrentEmails(JSBASE):

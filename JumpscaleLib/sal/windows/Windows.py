@@ -36,7 +36,7 @@ if j.core.platformtype.myplatform.isWindows:
     # from JumpscaleLib.core.inifile.IniFile import IniFile
     import shutil
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class WindowsSystem(JSBASE):

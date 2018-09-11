@@ -2,7 +2,7 @@
 
 from base import BaseService, BaseServiceSection
 from Jumpscale import j
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class FirewallError(Exception, JSBASE):

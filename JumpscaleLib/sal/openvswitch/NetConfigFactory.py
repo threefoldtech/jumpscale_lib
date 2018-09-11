@@ -7,7 +7,7 @@ from .VXNet import vxlan as vxlan
 from .VXNet import netclasses as netcl
 from .VXNet.utils import *
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class NetConfigFactory(JSBASE):

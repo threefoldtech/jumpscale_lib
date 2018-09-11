@@ -17,7 +17,7 @@ appsecret_ = ""
 consumerkey_ = ""
 """
 
-JSConfigBase = j.tools.configmanager.base_class_config
+JSConfigBase = j.tools.configmanager.JSBaseClassConfig
 
 
 class OVHClient(JSConfigBase):

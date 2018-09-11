@@ -9,7 +9,7 @@ except BaseException:
 # TODO: UGLY, validation should not happen on object (file) where you read
 # from but on file where you populate values (kds)
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class InifileTool(JSBASE):

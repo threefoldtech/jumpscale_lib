@@ -4,7 +4,7 @@ from .capacity_parser import CapacityParser
 from .reservation_parser import ReservationParser
 from .reality_parser import RealityParser
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class Factory(JSBASE):

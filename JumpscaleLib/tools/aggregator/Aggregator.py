@@ -2,7 +2,7 @@ from .AggregatorClient import AggregatorClient
 from .AggregatorClientTest import AggregatorClientTest
 
 from Jumpscale import j
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 

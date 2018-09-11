@@ -6,7 +6,7 @@ from Jumpscale import j
 
 from .ElectrumClient import ElectrumClient
 
-JSConfigBaseFactory = j.tools.configmanager.base_class_configs
+JSConfigBaseFactory = j.tools.configmanager.JSBaseClassConfigs
 
 
 class ElectrumClientFactory(JSConfigBaseFactory):

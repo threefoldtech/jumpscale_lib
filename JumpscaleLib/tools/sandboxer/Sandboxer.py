@@ -5,7 +5,7 @@ import os
 from .SandboxPython import SandboxPython
 from .Dep import Dep
 
-JSBASE = j.application.jsbase_get_class()
+JSBASE = j.application.JSBaseClass
 
 
 class Sandboxer(JSBASE):
