@@ -1,23 +1,24 @@
 import cryptocompare as cc
-
+from Jumpscale import j
 TEMPLATE = """
 api_key_ = ""
 """
 
+JSConfigBase = j.tools.configmanager.JSBaseClassConfig
+JSBASE = j.application.JSBaseClass
 
-from pprint import pprint
+from pprint import pprint as print
 
 
-class CurrencyLayer:
+class CurrencyLayer(JSConfigBase):
     """
     get key from https://currencylayer.com/quickstart
     """
 
-    __jslocation__ = 'j.clients.currencylayer'
-    __jsbase__ = 'j.tools.configmanager._base_class_config'
-    _template = TEMPLATE
-
     def __init__(self):
+        self.__jslocation__ = 'j.clients.currencylayer'
+        JSConfigBase.__init__(self, instance="main", data={},
+                              parent=None, template=TEMPLATE)
         self._data_cur = {}
         self._id2cur = {}
         self._cur2id = {}
@@ -87,7 +88,7 @@ class CurrencyLayer:
         return self._data_cur
 
     def cur2usd_print(self):
-        pprint(self.cur2usd)
+        print(self.cur2usd)
 
     @property
     def id2cur(self):
