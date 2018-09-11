@@ -114,11 +114,14 @@ class Node:
     def generate_zerotier_identity(self):
         return self.client.system('zerotier-idtool generate').get().stdout.strip()
 
-    def get_gateway_nic(self):
+    def get_gateway_route(self):
         for route in self.client.ip.route.list():
             if route['gw'] and not route['dst']:
-                return route['dev']
-        raise LookupError('Could not find nic with default gw')
+                return route
+        raise LookupError('Could not find route with default gw')
+
+    def get_gateway_nic(self):
+        return self.get_gateway_route()['dev']
 
     def get_nic_hwaddr_and_ip(self, nics=None, name=None):
         if nics is None:

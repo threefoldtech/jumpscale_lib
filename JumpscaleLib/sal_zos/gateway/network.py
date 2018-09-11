@@ -520,6 +520,15 @@ class DefaultNetwork(Network):
 
     def to_dict(self, forcontainer=False, live=False):
         data = Nic.to_dict(self, forcontainer=forcontainer)
+        route = self._parent.node.get_gateway_route()
+        for nic in self._parent.node.client.info.nic():
+            if nic['name'] == route['dev']:
+                break
+        else:
+            nic = None
+        if nic:
+            cidr = self._parent.node.get_ip_from_nic(nic['addrs'])
+            data['config'] = {'cidr': str(cidr), 'gateway': route['gw']}
         if not forcontainer:
             data['public'] = self.public
         return data
