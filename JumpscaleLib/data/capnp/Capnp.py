@@ -1,5 +1,5 @@
 import sys
-import capnp
+from Jumpscale import j
 from collections import OrderedDict
 import capnp
 

@@ -1,4 +1,4 @@
-import time
+from Jumpscale import j
 
 TEMPLATE = """
 addr = "127.0.0.1"

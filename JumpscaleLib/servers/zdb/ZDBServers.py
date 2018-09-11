@@ -1,4 +1,4 @@
-from pprint import pprint as pprint
+from Jumpscale import j
 
 from .ZDBServer import ZDBServer
 
