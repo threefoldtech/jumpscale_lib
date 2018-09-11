@@ -1,4 +1,6 @@
 from collections import OrderedDict
+from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
 
 

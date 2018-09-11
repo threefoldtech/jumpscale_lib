@@ -10,8 +10,8 @@ class SandboxPython(JSBASE):
 
     def __init__(self):
         JSBASE.__init__(self)
-        import jumpscale
-        self.JUMPSCALEFILE = jumpscale.__file__
+        import Jumpscale
+        self.JUMPSCALEFILE = Jumpscale.__file__
         self.logger_enable()
 
     @property
