@@ -107,7 +107,13 @@ class Capacity:
         elif not data['robot_address']:
             raise RuntimeError('Can not register a node without robot_address')
 
-        client = j.clients.threefold_directory.get(interactive=False)
+        if 'staging' in self._node.kernel_args:
+            client = j.clients.threefold_directory.get('staging',
+                                                       data={'base_uri': 'https://staging.capacity.threefoldtoken.com'},
+                                                       interactive=False)
+        else:
+            client = j.clients.threefold_directory.get(interactive=False)
+
         _, resp = client.api.RegisterCapacity(data)
         resp.raise_for_status()
 
