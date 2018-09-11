@@ -12,7 +12,12 @@
                 <input readonly type="text" class="form-control" name="organization" id="updateOrganizationIdInput" value="{{farmer.iyo_organization}}">
                 <small id="organizationIdInputHelp" class="form-text text-muted">Itsyou.online organization ID.</small>
             </div>
-    
+            <div class="form-group">
+                <label for="walletInput">Wallet address</label>
+                <input type="text" class="form-control" name="wallet_addresses" id="walletInput" value="{{farmer.wallet_addresses}}">
+                <small id="walletInputHelp" class="form-text text-muted">You can put multiple addresses by separating them by a coma. e.g: addr1,addr2,addr3</small>
+            </div>
+
             <div class="form-group">
                 <label for="updateFarmAddressInput">Farm Location</label>
                 <div class="mapdiv" id="mapupdate" style="width: 100%; height: 400px;"></div>
@@ -23,7 +28,7 @@
                 {% else %}
                     // default location
                     var updateLat = 3.7174;
-                    var updateLng = 51.0543; 
+                    var updateLng = 51.0543;
                 {% endif %}
                 generateUpdateMap(updateLat, updateLng);
                 </script>
