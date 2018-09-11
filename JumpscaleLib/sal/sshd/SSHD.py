@@ -1,3 +1,5 @@
+from Jumpscale import j
+
 OP_ADD = '+'
 OP_DEL = '-'
 OP_ERS = '--'
