@@ -66,6 +66,8 @@ class Capacity(object):
         self.updated = client_support.set_property('updated', data, data_types, False, [], False, False, class_name)
         # data_types = [datetime]
         # self.updated = client_support.set_property('updated', data, data_types, False, [], False, False, class_name)
+        data_types = [string_types]
+        self.flags = client_support.set_property('parameters', data, data_types, False, [], True, False, class_name)
         data_types = [ResourceUnits]
         self.used_resources = client_support.set_property(
             'used_resources', data, data_types, False, [], False, False, class_name)
