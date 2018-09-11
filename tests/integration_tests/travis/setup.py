@@ -1,4 +1,4 @@
-from js import j
+from jumpscale import j
 from termcolor import colored
 import argparse, time, uuid
 
