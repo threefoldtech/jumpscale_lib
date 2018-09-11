@@ -5,11 +5,10 @@ from termcolor import colored
 
 class GW:
 
-    def __init__(self, node, name=None, guid=None, data=None):
-        self.name = name 
+    def __init__(self, node, guid=None, data=None):
         self.data = data
         self.node_sal = node
-        self. guid= guid
+        self.guid= guid
 
     def validate(self):
         if not self.data['hostname']:
@@ -18,16 +17,19 @@ class GW:
     @property
     def _gateway_sal(self):
         data = self.data.copy()
-        data['name'] = self.name
         gw = self.node_sal.primitives.from_dict('gateway', data)
         gw.name = self.guid
         return gw
 
-    def install(self):
-        print(colored('Install gateway {}'.format(self.name), 'white'))
-        gateway_sal = self._gateway_sal
+    def install(self, gateway_sal=None):
+        print(colored('Install gateway {}'.format(self.data["name"]), 'white'))
+        gateway_sal = gateway_sal or self._gateway_sal
         gateway_sal.deploy()
         self.data['ztIdentity'] = gateway_sal.zt_identity
+
+    def destroy(self, gateway_name=None):
+        gateway_name = gateway_name or self.data["name"] 
+        self.node_sal.drop_gateway(gateway_name)
 
     def add_portforward(self, forward):
         print(colored('Add portforward {}'.format(forward['name']), 'white'))
@@ -205,24 +207,24 @@ class GW:
             self.data['networks'].append(network)
             self._gateway_sal.deploy()
             raise
-
+            
     def info(self):
         data = self._gateway_sal.to_dict(live=True)
         return {
-            'name': self.name,
+            'name': self.data["name"],
             'portforwards': data['portforwards'],
             'httpproxies': data['httpproxies'],
             'networks': data['networks']
         }
 
     # def uninstall(self):
-    #     print(colored('Uninstall gateway {}'.format(self.name), 'white'))
+    #     print(colored('Uninstall gateway {}'.format(self.data["name"]), 'white'))
     #     self._gateway_sal.stop()
 
     def stop(self):
-        print(colored('Stop gateway {}'.format(self.name), 'white'))
+        print(colored('Stop gateway {}'.format(self.data["name"]), 'white'))
         self._gateway_sal.stop()
 
     def start(self):
-        print(colored('Start gateway {}'.format(self.name), 'white'))
+        print(colored('Start gateway {}'.format(self.data["name"]), 'white'))
         self.install()

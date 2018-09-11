@@ -23,7 +23,9 @@ testing_zt_network=$(cat /tmp/testing_zt_network.txt)
 join_zerotier_network ${testing_zt_network} ${zerotier_token}
 
 echo "[+] Get zerotier ip of packet node."
-packet_vm_ip=$(cat /tmp/ip.text)
+packet_vm_ip=$(cat /tmp/ip.txt)
 
 echo "[+] Running tests ..."
+sudo ln -sf /usr/sbin/zerotier-cli /opt/bin/zerotier-cli
+cd tests/integration_tests
 nosetests -v -s ${tests_path} --tc-file=config.ini --tc=main.zt_token:${zerotier_token} --tc=main.nodeip:${packet_vm_ip} 
