@@ -128,7 +128,7 @@ class Primitives:
         :return: primitive object
         :rtype: mixed
         """
-        data = j.data.serializer.json.loads(json)
+        data = j.data.serializers.json.loads(json)
         return self.from_dict(type_, data)
 
     def from_dict(self, type_, data):

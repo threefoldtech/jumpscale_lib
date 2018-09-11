@@ -260,7 +260,7 @@ class Diskmanager(JSBASE):
                                     tomlpath = "%s/disk.toml" % mountpoint
 
                                     if j.sal.fs.exists(tomlpath):
-                                        toml = j.data.serializer.toml.load(
+                                        toml = j.data.serializers.toml.load(
                                             tomlpath)
                                         partnr = toml.getInt("diskinfo.partnr")
                                         if partnr == 0 or forceinitialize:
@@ -278,7 +278,7 @@ class Diskmanager(JSBASE):
                                         """
                                         j.sal.fs.writeFile(
                                             filename=tomlpath, contents=C)
-                                        toml = j.data.serializer.toml.load(
+                                        toml = j.data.serializers.toml.load(
                                             tomlpath)
                                         toml.set(
                                             "diskinfoDescription",

@@ -347,21 +347,21 @@ class MDData(MDCodeMacroDataBase):
 
     @property
     def datahr(self):
-        return j.data.serializer.toml.dumps(self.ddict)
+        return j.data.serializers.toml.dumps(self.ddict)
 
     @property
     def toml(self):
         if self._toml:
             return self._toml
         else:
-            return j.data.serializer.toml.dumps(self.ddict)
+            return j.data.serializers.toml.dumps(self.ddict)
 
     @property
     def ddict(self):
         if self._toml:
-            return j.data.serializer.toml.loads(self._toml)
+            return j.data.serializers.toml.loads(self._toml)
         elif self._yaml:
-            return j.data.serializer.yaml.loads(self._yaml)
+            return j.data.serializers.yaml.loads(self._yaml)
         elif self._ddict is not {}:            
             return  self._ddict
         else:
@@ -375,7 +375,7 @@ class MDData(MDCodeMacroDataBase):
     @property
     def hash(self):
         if self._hash == "":
-            json = j.data.serializer.json.dumps(self.ddict, True, True)
+            json = j.data.serializers.json.dumps(self.ddict, True, True)
             self._hash = j.data.hash.md5_string(json)
         return self._hash
 

@@ -25,7 +25,7 @@ class KubernetesFactory(JSConfigBaseFactory):
             directory = '%s/.kube/' % j.dirs.HOMEDIR
             j.sal.fs.createDir(directory)
             path = j.sal.fs.joinPaths(directory, 'config')
-        data = j.data.serializer.yaml.dumps(config)
+        data = j.data.serializers.yaml.dumps(config)
         j.sal.fs.writeFile(path, data)
         self.logger.info('file saved at %s' % path)
 

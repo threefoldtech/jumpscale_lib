@@ -148,7 +148,7 @@ class OVHClient(JSConfigBase):
                 self.cache.delete(key)
                 if status != "active":
                     self.logger.debug(item)
-                    self.logger.debug(j.data.serializer.yaml.dumps(status))
+                    self.logger.debug(j.data.serializers.yaml.dumps(status))
                     self.logger.debug("-------------")
                     nrInstalling += 1
             time.sleep(2)

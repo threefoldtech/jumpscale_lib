@@ -55,7 +55,7 @@ class Model(BaseModule):
 
     def getModules(self):
         data = self._parent.client.getModList()
-        return j.data.serializer.json.loads(data)
+        return j.data.serializers.json.loads(data)
 
     # Temperature
     def getTemperature(self):

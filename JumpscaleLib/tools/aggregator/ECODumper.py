@@ -38,7 +38,7 @@ class ECODumper(Dumper.BaseDumper):
             data = redis.get("eco:%s" % key)
             data = data.decode()
 
-            obj = j.data.serializer.json.loads(data)
+            obj = j.data.serializers.json.loads(data)
 
             eco = j.data.models_system.Errorcondition()
             eco.guid = obj['key']

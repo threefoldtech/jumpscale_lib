@@ -129,7 +129,7 @@ class AggregatorClient(JSBASE):
         if data is None:
             return {"val": None}
 
-        return Stats(**j.data.serializer.json.loads(data))
+        return Stats(**j.data.serializers.json.loads(data))
 
     @property
     def stats(self):
@@ -141,7 +141,7 @@ class AggregatorClient(JSBASE):
         while True:
             cursor, keys = self.redis.scan(cursor, match)
             for key in keys:
-                yield Stats(**j.data.serializer.json.loads(self.redis.get(key)))
+                yield Stats(**j.data.serializers.json.loads(self.redis.get(key)))
 
             if cursor == 0:
                 break
@@ -154,7 +154,7 @@ class AggregatorClient(JSBASE):
         if data is None:
             return None
 
-        Log(**j.data.serializer.json.loads(data))
+        Log(**j.data.serializers.json.loads(data))
 
     @property
     def logs(self):
@@ -163,7 +163,7 @@ class AggregatorClient(JSBASE):
         """
         logs = self.redis.lrange('queues:logs', 0, 5000)
         for log in logs:
-            yield Log(**j.data.serializer.json.loads(log))
+            yield Log(**j.data.serializers.json.loads(log))
 
     def ecoGet(self, key=None, removeFromQueue=True):
         """
@@ -188,7 +188,7 @@ class AggregatorClient(JSBASE):
             # shouldn't happen
             return None
 
-        return j.data.serializer.json.loads(data)
+        return j.data.serializers.json.loads(data)
 
     @property
     def ecos(self):
@@ -249,7 +249,7 @@ class AggregatorClient(JSBASE):
             # shouldn't happen
             return None
 
-        return j.data.serializer.json.loads(data)
+        return j.data.serializers.json.loads(data)
 
     @property
     def realities(self):

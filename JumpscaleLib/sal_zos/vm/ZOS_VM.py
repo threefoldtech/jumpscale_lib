@@ -456,7 +456,7 @@ Type=simple
         return data
 
     def to_json(self):
-        return j.data.serializer.json.dumps(self.to_dict())
+        return j.data.serializers.json.dumps(self.to_dict())
 
     def from_dict(self, data):
         self.loading = True
@@ -487,7 +487,7 @@ Type=simple
             self.loading = False
 
     def from_json(self, data):
-        data = j.data.serializer.json.loads(data)
+        data = j.data.serializers.json.loads(data)
         self.from_dict(data)
 
     def deploy(self):

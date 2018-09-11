@@ -116,9 +116,9 @@ class DocSite(JSBASE):
             return {}
 
         if ext == "toml":
-            data = j.data.serializer.toml.load(path)
+            data = j.data.serializers.toml.load(path)
         elif ext == "yaml":
-            data = j.data.serializer.yaml.load(path)
+            data = j.data.serializers.yaml.load(path)
         else:
             raise j.exceptions.Input(message="only toml & yaml supported")
 

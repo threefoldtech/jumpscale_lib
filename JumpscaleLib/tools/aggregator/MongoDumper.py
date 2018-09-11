@@ -18,7 +18,7 @@ class MongoDumper(Dumper.BaseDumper):
             data = redis.get("reality:%s" % key)
             data = data.decode()
 
-            obj = j.data.serializer.json.loads(data)
+            obj = j.data.serializers.json.loads(data)
 
             ns, _, objtype = obj['modeltype'].rpartition('.')
             if ns == '':

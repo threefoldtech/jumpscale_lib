@@ -209,7 +209,7 @@ class Capnp(JSBASE):
                 if str(e).find("has no such member") != -1:
                     msg = "cannot create data for schema from "
                     msg += "arguments, property missing\n"
-                    msg += "arguments:\n%s\n" % j.data.serializer.json.dumps(
+                    msg += "arguments:\n%s\n" % j.data.serializers.json.dumps(
                         args,
                         sort_keys=True,
                         indent=True)
@@ -222,7 +222,7 @@ class Capnp(JSBASE):
                 if str(e).find("Value type mismatch") != -1:
                     msg = "cannot create data for schema from "
                     msg += "arguments, value type mismatch.\n"
-                    msg += "arguments:\n%s\n" % j.data.serializer.json.dumps(
+                    msg += "arguments:\n%s\n" % j.data.serializers.json.dumps(
                         args,
                         sort_keys=True,
                         indent=True)
@@ -361,7 +361,7 @@ class Capnp(JSBASE):
     def getJSON(self, obj):
         configdata2 = obj.to_dict()
         ddict2 = OrderedDict(configdata2)
-        return j.data.serializer.json.dumps(
+        return j.data.serializers.json.dumps(
             ddict2, sort_keys=True, indent=True)
 
     def getBinaryData(self, obj):

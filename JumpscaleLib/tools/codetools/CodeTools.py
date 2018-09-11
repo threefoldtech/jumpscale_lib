@@ -317,15 +317,15 @@ class CodeTools(JSBASE):
         return out
 
     def object2yaml(self, obj):
-        return j.data.serializer.yaml.dumps(self.object2dict(obj))
+        return j.data.serializers.yaml.dumps(self.object2dict(obj))
 
     def object2json(self, obj, pretty=False, skiperrors=False, ignoreKeys=[], ignoreUnderscoreKeys=False):
         obj = self.object2dict(obj, dieOnUnknown=not skiperrors, ignoreKeys=ignoreKeys,
                                ignoreUnderscoreKeys=ignoreUnderscoreKeys)
         if pretty:
-            return j.data.serializer.json.dumps(obj, indent=2, sort_keys=True)
+            return j.data.serializers.json.dumps(obj, indent=2, sort_keys=True)
         else:
-            return j.data.serializer.json.dumps(obj)
+            return j.data.serializers.json.dumps(obj)
 
     def pprint(self, obj):
         result = self.object2yaml(obj)

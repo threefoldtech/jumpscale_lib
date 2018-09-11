@@ -25,8 +25,8 @@ class Nginx(JSBASE):
         return self.configPath.files()
 
     def configure(self, fwObject):
-        json = j.data.serializer.serializers.getSerializerType('j')
-        fwDict = j.data.serializer.json.loads(fwObject)
+        json = j.data.serializers.serializers.getSerializerType('j')
+        fwDict = j.data.serializers.json.loads(fwObject)
         wsForwardRules = fwDict.get('wsForwardRules')
         configfile = self.configPath.joinpath('%s.conf' % fwDict['name'])
         config = ''

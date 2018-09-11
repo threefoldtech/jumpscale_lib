@@ -127,7 +127,7 @@ class InfluxDumper(Dumper.BaseDumper):
                 stats.key = stats.key.split('@')[0]
 
             if info is not None:
-                info = j.data.serializer.json.loads(info)
+                info = j.data.serializers.json.loads(info)
             else:
                 info = dict()
 

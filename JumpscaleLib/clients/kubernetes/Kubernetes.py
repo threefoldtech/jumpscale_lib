@@ -42,7 +42,7 @@ class KubernetesMaster(JSConfigBase):
             api_client=self._v1.api_client)
         if not config_path:
             config_path = '%s/.kube/config' % j.dirs.HOMEDIR
-        self._config = j.data.serializer.yaml.load(config_path)
+        self._config = j.data.serializers.yaml.load(config_path)
 
         self.sshkey_path = sshkey_path
         if not sshkey_path:

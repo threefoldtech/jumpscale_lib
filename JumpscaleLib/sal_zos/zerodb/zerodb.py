@@ -252,7 +252,7 @@ class Zerodb:
         :return: a json formatted string of self.to_dict
         :rtype: str
         """
-        return j.data.serializer.json.dumps(self.to_dict())
+        return j.data.serializers.json.dumps(self.to_dict())
 
     def deploy(self):
         """

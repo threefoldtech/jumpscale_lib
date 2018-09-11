@@ -50,7 +50,7 @@ class GrafanaClient(JSConfigBase):
 
     def updateDashboard(self, dashboard):
         if j.data.types.string.check(dashboard):
-            dashboard = j.data.serializer.json.loads(dashboard)
+            dashboard = j.data.serializers.json.loads(dashboard)
         url = os.path.join(self._url, 'api/dashboards/db')
         data = {'dashboard': dashboard, 'overwrite': True}
         result = self._session.post(url, json=data, verify=self._verify_ssl)

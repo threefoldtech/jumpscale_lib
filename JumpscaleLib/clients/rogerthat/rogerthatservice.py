@@ -17,7 +17,7 @@ def jsonrpc(func):
         data = environ['wsgi.input'].read()
         msg = dict()
         try:
-            msg = j.data.serializer.json.loads(data)
+            msg = j.data.serializers.json.loads(data)
         except Exception as e:
             print(e)
             result = s.invalidRequest()
@@ -32,7 +32,7 @@ def jsonrpc(func):
 
         statuscode = '500 Internal Server Error' if result.get(
             'error') else '200 OK'
-        result = j.data.serializer.json.dumps(result)
+        result = j.data.serializers.json.dumps(result)
         start_response(statuscode, (('Content-type', 'application/json-rpc'),))
         return result
     return wrapper

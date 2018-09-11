@@ -28,7 +28,7 @@ class DiskManager(JSBASE):
         path = path + '/.partition_config.yaml'
         if self.prefab.core.file_exists(path):
             yaml = self.prefab.core.file_read(path)
-            return j.data.serializer.yaml.loads(yaml)
+            return j.data.serializers.yaml.loads(yaml)
         return {}
 
     def set_executor(self, executor):

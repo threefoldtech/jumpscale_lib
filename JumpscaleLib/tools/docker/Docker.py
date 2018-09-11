@@ -559,7 +559,7 @@ class Docker(JSBASE):
         client.timeout = 36000
         out = []
         for l in client.push(image, stream=True):
-            line = j.data.serializer.json.loads(l)
+            line = j.data.serializers.json.loads(l)
             id = line['id'] if 'id' in line else ''
             s = "%s " % id
             if 'status' in line:
@@ -591,7 +591,7 @@ class Docker(JSBASE):
         if force:
             nocache = True
         for l in self.client.build(path=path, tag=tag, nocache=nocache):
-            line = j.data.serializer.json.loads(l)
+            line = j.data.serializers.json.loads(l)
             if 'stream' in line:
                 line = line['stream'].strip()
                 if output:

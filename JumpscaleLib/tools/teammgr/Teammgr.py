@@ -193,13 +193,13 @@ class Person(JSBASE):
             toml_path = "%s/%s.toml" % (self.path, name)
             if j.sal.fs.exists(toml_path):
                 try:
-                    tomlupdate = j.data.serializer.toml.load(toml_path)
+                    tomlupdate = j.data.serializers.toml.load(toml_path)
                 except Exception:
                     self.department.add_to_do(
                         self.path, "toml file is corrupt:%s" % toml_path)
                     return newtoml
 
-                newtoml, errors = j.data.serializer.toml.merge(newtoml, tomlupdate, keys_replace={
+                newtoml, errors = j.data.serializers.toml.merge(newtoml, tomlupdate, keys_replace={
                                                                'name': 'first_name'}, add_non_exist=False, die=False, errors=[])
 
                 for error in errors:
@@ -212,7 +212,7 @@ class Person(JSBASE):
         j.sal.fs.remove("%s/fixed.yaml" % self.path)
         j.sal.fs.remove("%s/fixed.toml" % self.path)
 
-        new_toml = j.data.serializer.toml.loads(
+        new_toml = j.data.serializers.toml.loads(
             TEMPLATE_PERSON_TOML)  # load the template
 
         new_toml = process(new_toml, "fixed_donotchange")
@@ -237,7 +237,7 @@ class Person(JSBASE):
         for key in ["login", "first_name", "last_name", "telegram", "skype"]:
             new_toml[key] = new_toml[key].lower().strip()
 
-        t = j.data.serializer.toml.fancydumps(new_toml)
+        t = j.data.serializers.toml.fancydumps(new_toml)
 
         final_toml_path = "%s/person.toml" % self.path
         j.sal.fs.writeFile(final_toml_path, t)

@@ -490,7 +490,7 @@ class Gateway:
         """
         Create a json string of the result of to_dict function
         """
-        return j.data.serializer.json.dumps(self.to_dict())
+        return j.data.serializers.json.dumps(self.to_dict())
 
     def configure_dhcp(self):
         """

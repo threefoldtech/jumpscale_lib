@@ -28,7 +28,7 @@ class Device(JSBASE):
         self.name="unknown"
 
         try:
-            data=j.data.serializer.toml.load(tomlpath)
+            data=j.data.serializers.toml.load(tomlpath)
         except Exception as e:
             self.todo.append(TODO(self,"cannot parse toml file\n```\n%s```\n\n"%e))
             self.status="ERROR"
@@ -37,27 +37,27 @@ class Device(JSBASE):
         self.data = data
         self.ipaddr=[]
         try:
-            self.ipaddr = j.data.serializer.fixType(data["ssh_ipaddr"],[])
+            self.ipaddr = j.data.serializers.fixType(data["ssh_ipaddr"],[])
         except:
             self.todo.append(TODO(self,"cannot find ipaddr: ssh_ipaddr in toml"))
 
         try:
-            self.name = j.data.serializer.fixType(data["name"],"")
+            self.name = j.data.serializers.fixType(data["name"],"")
         except:
             self.todo.append(TODO(self,"cannot find name in toml"))
 
         try:
-            self.status = j.data.serializer.fixType(data["status"],"")
+            self.status = j.data.serializers.fixType(data["status"],"")
         except:
             self.todo.append(TODO(self,"cannot find status in toml"))
 
         try:
-            self.location = j.data.serializer.fixType(data["location"],"")
+            self.location = j.data.serializers.fixType(data["location"],"")
         except:
             self.todo.append(TODO(self,"cannot find location in toml"))
 
         try:
-            self.id = j.data.serializer.fixType(data["id"],"")
+            self.id = j.data.serializers.fixType(data["id"],"")
         except:
             self.todo.append(TODO(self,"cannot find id in toml"))
 
@@ -100,7 +100,7 @@ class Device(JSBASE):
         return md    
 
     def save(self):
-        j.data.serializer.toml.dump(self.path,self.data)
+        j.data.serializers.toml.dump(self.path,self.data)
         self.saveToMeConfig()
 
     @property
@@ -151,7 +151,7 @@ class Client(JSBASE):
         self.name="unknown"
 
         try:
-            data=j.data.serializer.toml.load(tomlpath)
+            data=j.data.serializers.toml.load(tomlpath)
         except Exception as e:
             self.todo.append(TODO(self,"cannot parse toml file\n```\n%s```\n\n"%e))
             self.status="ERROR"

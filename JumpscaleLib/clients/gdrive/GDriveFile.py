@@ -62,7 +62,7 @@ class GDriveFile(JSBASE):
             json = self.gmd["description"]
 
         try:
-            self.__dict__.update(j.data.serializer.json.loads(json))
+            self.__dict__.update(j.data.serializers.json.loads(json))
 
         except BaseException:
             j.clients.gdrive.logger.warning("description was wrong format, was not json, lets re-write")
@@ -133,7 +133,7 @@ class GDriveFile(JSBASE):
         data.pop("_mime_type")
         data.pop("fileChanged")
         data.pop("changed")
-        return j.data.serializer.json.dumps(data, True, True)
+        return j.data.serializers.json.dumps(data, True, True)
 
     def saveMetadata(self):
         if self.changed:

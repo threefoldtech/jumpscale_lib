@@ -173,7 +173,7 @@ class SQLAlchemy(JSConfigClient):
     def data2toml(self, mapper, connection, target):
         if target._totoml and self.tomlpath != "":
             data = target.getDataAsDict()
-            out = j.data.serializer.toml.dumps(data)
+            out = j.data.serializers.toml.dumps(data)
             path = target._tomlpath(self)
             j.sal.fs.createDir(j.sal.fs.getDirName(path))
             j.sal.fs.writeFile(filename=path, contents=out)
