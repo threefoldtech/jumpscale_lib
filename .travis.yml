@@ -4,17 +4,26 @@ matrix:
       sudo: true
       dist: trusty
       python: 3.5
-      if: type IN (api, cron)
+      before_install:
+        - sudo apt-get install -y python3.5 python3.5-dev
+        - sudo rm -f /usr/bin/python
+        - sudo rm -f /usr/bin/python3
+        - sudo ln -s /usr/bin/python3.5 /usr/bin/python
+        - sudo ln -s /usr/bin/python3.5 /usr/bin/python3
+
+
       install:
-        - pip3 install -r tests/integration_tests/requirements.txt
         - curl -s https://install.zerotier.com/ | sudo bash
-        - ./tests/integration_tests/travis/jumspcale_install.sh ${js_branch}
-        - python3 ./tests/integration_tests/travis/setup.py --action create --zos-version ${core_0_branch} --zt-token ${zerotier_token} --pckt_token ${packet_token}
+        - sudo ./tests/integration_tests/travis/jumspcale_install.sh ${js_branch}
+        - sudo apt-get install python3-pip
+        - sudo pip3 install -r tests/integration_tests/requirements.txt
+        - sudo python3 ./tests/integration_tests/travis/setup.py --action create --zos-version ${core_0_branch} --zt-token ${zerotier_token} --pckt_token ${packet_token}
 
       script:
-        - bash tests/integration_tests/travis/travis_script.sh
+        - sudo bash tests/integration_tests/travis/travis_script.sh
       after_script:
-        - python3 ./tests/integration_tests/travis/setup.py --action delete --zos-version ${core_0_branch} --zt-token ${zerotier_token} --pckt_token ${packet_token}
+        - sudo python3 ./tests/integration_tests/travis/setup.py --action delete --zos-version ${core_0_branch} --zt-token ${zerotier_token} --pckt_token ${packet_token}
+
 
     - language: python
       sudo: enabled

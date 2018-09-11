@@ -161,8 +161,9 @@ class BaseTest(Utils):
         else:
             raise RuntimeError(colored(' [-] {}'.format(error), 'red'))
 
-    def set_gw_default_values(self, status="halted"):
+    def set_gw_default_values(self, status="halted", name=None):
         gw_parms = {
+                    'name': name or self.random_string(),
                     'status': status,
                     'hostname': self.random_string(),
                     'networks': [],
@@ -175,3 +176,9 @@ class BaseTest(Utils):
                     }
 
         return gw_parms
+
+    def get_gw_network(self, gw, name):
+        networks = gw.networks.list()
+        network = [network for network in networks if network.name == name ]
+        return network
+
