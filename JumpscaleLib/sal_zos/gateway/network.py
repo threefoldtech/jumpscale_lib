@@ -323,6 +323,8 @@ class Networks(Collection):
         """
         if isinstance(network, ZeroTierNetwork):
             name = name or network.name
+            if not name:
+                raise ValueError('Need to provide a name for network')
             net = ZTNetwork(name, network.id, self._parent)
             net.client = network.client
         elif isinstance(network, ZerotierClient):
