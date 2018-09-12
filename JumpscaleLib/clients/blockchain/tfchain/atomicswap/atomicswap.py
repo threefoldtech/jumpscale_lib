@@ -1,5 +1,5 @@
 """
-This module add the support of atomicswaps to the rivine light weight client
+This module add the support of atomicswaps to the tfchain light weight client
 """
 import time
 import hashlib
