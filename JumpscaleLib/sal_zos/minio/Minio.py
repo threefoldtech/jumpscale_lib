@@ -171,7 +171,7 @@ class Minio:
 
     @property
     def mode(self):
-        return "replication" if self._nr_parityshards == 0 else "distribution"
+        return "replication" if self._nr_parityshards <= 0 else "distribution"
 
     def create_config(self):
         logger.info('Creating minio config for %s' % self.name)
