@@ -44,6 +44,7 @@ class Node:
         self.healthcheck = HealthCheck(self)
         self.capacity = Capacity(self)
         self.client = client
+        self.support_network = "172.29.0.0/16"
 
     def ping(self):
         return self.client.ping()
@@ -107,9 +108,25 @@ class Node:
         nics = self.client.info.nic()
         for nic in nics:
             if nic['name'].startswith('zt'):
-                return self.get_ip_from_nic(nic['addrs'])
+                ipAdress = self.get_ip_from_nic(nic['addrs'])
+                if netaddr.IPAddress(ipAdress) not in netaddr.IPNetwork(self.support_network):
+                    return ipAdress
         _, ip = self.get_nic_hwaddr_and_ip(nics)
         return ip
+
+    @property
+    def support_address(self):
+        nics = self.client.info.nic()
+        for nic in nics:
+            if nic['name'].startswith('zt'):
+                ipAdress = self.get_ip_from_nic(nic['addrs'])
+                if netaddr.IPAddress(ipAdress) in netaddr.IPNetwork(self.support_network):
+                    return ipAdress
+        raise LookupError('their is no support zerotier interface (support_address)')
+    
+    @property
+    def management_address(self):
+        return self.public_addr
 
     def generate_zerotier_identity(self):
         return self.client.system('zerotier-idtool generate').get().stdout.strip()
