@@ -58,11 +58,11 @@ class Minio:
         self.node_port = ports[0]
 
         envs = {
-                'MINIO_ACCESS_KEY': self.login,
-                'MINIO_SECRET_KEY': self.password,
-                'AWS_ACCESS_KEY_ID': self.restic_username,
-                'AWS_SECRET_ACCESS_KEY': self.restic_password,
-                'MINIO_ZEROSTOR_META_PRIVKEY': self.meta_private_key,
+            'MINIO_ACCESS_KEY': self.login,
+            'MINIO_SECRET_KEY': self.password,
+            'AWS_ACCESS_KEY_ID': self.restic_username,
+            'AWS_SECRET_ACCESS_KEY': self.restic_password,
+            'MINIO_ZEROSTOR_META_PRIVKEY': self.meta_private_key,
         }
 
         return {
@@ -135,6 +135,8 @@ class Minio:
             return
 
         logger.info('start minio %s' % self.name)
+
+        self.create_config()
 
         cmd = '/bin/minio gateway zerostor --address 0.0.0.0:{port} --config-dir {dir}'.format(
             port=DEFAULT_PORT, dir=self._config_dir)
