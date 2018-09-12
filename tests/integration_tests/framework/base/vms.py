@@ -24,7 +24,6 @@ class VM:
     def install(self, vm_sal=None):
         print(colored('Installing vm %s' % self.data["name"], 'white'))
         vm_sal = vm_sal or self._vm_sal
-        import ipdb; ipdb.set_trace()
         vm_sal.deploy()
         self.data['uuid'] = vm_sal.uuid
         self.data['ztIdentity'] = vm_sal.zt_identity
