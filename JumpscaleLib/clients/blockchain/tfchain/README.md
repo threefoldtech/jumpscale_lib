@@ -161,4 +161,17 @@ If we are the last to sign, the `commit` parameter can be set to `True`, which w
 push the transaction to the public explorers, to get it included in the network. By default
 it is not published.
 
-## TODO: AtomicSwap
+## How to use AtomicSwap
+The light wallet client supports the different atomicswap operations. It allows the user to:
+- Initiate a new atomicswap contract
+- Participate in an exsisting atomicswap contract
+- Validate the information of an atomicswap contract
+- Withdraw funds from atomicswap contract
+- Refund funds from atomicswap contract
+
+For more details about the atomicswap process, it is recommended to check the documentation at the Rivine offical repository here: https://github.com/rivine/rivine/blob/master/doc/atomicswap/atomicswap.md
+
+The light wallet client exposes the APIs via the following hook:
+```python
+wallet.atomicswap.[TAB]
+```
