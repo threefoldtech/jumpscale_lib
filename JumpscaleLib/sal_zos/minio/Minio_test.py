@@ -7,6 +7,7 @@ def test_replication_config():
     conf = m.config_as_text()
     assert "parity_shards" not in conf 
     assert "data_shards: 6" in conf
+    assert m.mode == "replication"
 
 
 def test_distribution_config():
@@ -14,4 +15,4 @@ def test_distribution_config():
     conf = m.config_as_text()
     assert "parity_shards: 4" in conf
     assert "data_shards: 6" in conf
-
+    assert m.mode == "distribution"
