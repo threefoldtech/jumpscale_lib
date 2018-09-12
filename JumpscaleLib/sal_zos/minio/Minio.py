@@ -175,10 +175,10 @@ class Minio:
 
     def create_config(self):
         logger.info('Creating minio config for %s' % self.name)
-        config = self.config_as_text()
+        config = self._config_as_text()
         self.container.upload_content(j.sal.fs.joinPaths(self._config_dir, self._config_name), config)
 
-    def config_as_text(self):
+    def _config_as_text(self):
         return templates.render(
             'minio.conf', namespace=self.namespace, namespace_secret=self.namespace_secret,
             zdbs=self.zdbs, private_key=self.private_key, block_size=self.block_size, nr_datashards=self._nr_datashards, nr_parityshards=self._nr_parityshards).strip()
