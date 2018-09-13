@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_login import LoginManager
-from flask_sqlalchemy import SQLAlchemy
+# from flask_sqlalchemy import SQLAlchemy
 from flask_sockets import Sockets
 from importlib import import_module
 from logging import basicConfig, DEBUG, getLogger, StreamHandler
@@ -14,8 +14,8 @@ JSBASE = j.application.JSBaseClass
 
 class Config(object):
     SECRET_KEY = 'key'
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///database.db'
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # SQLALCHEMY_DATABASE_URI = 'sqlite:///database.db'
+    # SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
 class ProductionConfig(Config):
@@ -29,7 +29,7 @@ class DebugConfig(Config):
 class JSWebLoader(JSBASE):
     def __init__(self):
         JSBASE.__init__(self)
-        self.db = SQLAlchemy()
+        # self.db = SQLAlchemy()
         self.login_manager = LoginManager()
         self.paths = []
         self.app = None

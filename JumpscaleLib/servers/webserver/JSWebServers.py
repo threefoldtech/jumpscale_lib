@@ -54,7 +54,7 @@ class JSWebServers(JSConfigBase):
         flask_login
         flask_migrate
         # flask_wtf
-        flask_sqlalchemy
+        # flask_sqlalchemy
         # gunicorn
         gevent
         """
