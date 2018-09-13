@@ -135,7 +135,7 @@ class GWTestCases(BaseTest):
         #. Deploy [GW2], should fail as we can create only one gateway with type defaulgt public network.
         """
         self.log("Create gateways[GW1],[GW2], should succeed.")
-        gw2_data = self.set_gw_default_values()eshtat
+        gw2_data = self.set_gw_default_values()
 
         gateway2 = self.gw(node=self.node_sal, data=gw2_data)
         gw1 = self.gateway._gateway_sal
