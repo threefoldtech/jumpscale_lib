@@ -7,7 +7,7 @@ from Jumpscale import j
 from JumpscaleLib.clients.blockchain.tfchain.TfchainClient import TfchainClient
 from JumpscaleLib.clients.blockchain.tfchain.types.transaction import TransactionFactory
 
-JSConfigBaseFactory = j.tools.configmanager.base_class_configs
+JSConfigBaseFactory = j.tools.configmanager.JSBaseClassConfigs
 
 class TfchainClientFactory(JSConfigBaseFactory):
     """

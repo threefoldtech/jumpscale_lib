@@ -9,12 +9,7 @@ import os
 
 def _post_install(libname, libpath):
     from Jumpscale import j
-    # add this plugin to the config
-    c = j.core.state.configGet('plugins', defval={})
-    c[libname] = "%s/github/threefoldtech/jumpscale_lib/JumpscaleLib" % j.dirs.CODEDIR
-    # c[libname] = libpath
-    j.core.state.configSet('plugins', c)
-    j.tools.jsloader.generate_json(libname)
+    j.core.jsgenerator.generate()
 
 
 class install(_install):
@@ -49,7 +44,7 @@ except ImportError:
 
 setup(
     name='JumpscaleLib',
-    version='9.4.0-rc4',
+    version='9.5.1',
     description='Automation framework for cloud workloads library',
     long_description=long_description,
     url='https://github.com/Jumpscale/lib',
@@ -64,7 +59,7 @@ setup(
     install_requires=[
         'Brotli>=0.6.0',
         'Jinja2>=2.9.6',
-        'Jumpscale>=9.4.0-rc4',
+        'Jumpscale>=9.5.1',
         'Pillow>=4.1.1',
         'PyGithub>=1.34',
         'SQLAlchemy>=1.1.9',

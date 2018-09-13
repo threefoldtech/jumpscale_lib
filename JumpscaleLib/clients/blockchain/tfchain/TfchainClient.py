@@ -16,7 +16,7 @@ required_sig = 0
 nr_keys_per_seed = 50
 """
 
-JSConfigBase = j.tools.configmanager.base_class_config
+JSConfigBase = j.tools.configmanager.JSBaseClassConfig
 
 class TfchainClient(JSConfigBase):
     """
