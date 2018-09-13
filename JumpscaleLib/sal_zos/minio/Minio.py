@@ -12,7 +12,7 @@ class Minio:
     Minio gateway
     """
 
-    def __init__(self, name, node, login, password, zdbs, namespace, private_key, namespace_secret='', node_port=DEFAULT_PORT, block_size=1048576, restic_username='', restic_password='', meta_private_key='', nr_datashards=1, nr_parityshards=0):
+    def __init__(self, name, node, login, password, zdbs, namespace, private_key, namespace_secret='', node_port=DEFAULT_PORT, block_size=1048576, meta_private_key='', nr_datashards=1, nr_parityshards=0):
         """
 
         :param name: instance name
@@ -42,8 +42,6 @@ class Minio:
         self.block_size = block_size
         self.login = login
         self.password = password
-        self.restic_username = restic_username
-        self.restic_password = restic_password
         self.meta_private_key = meta_private_key
 
         self._config_dir = '/bin'
@@ -64,8 +62,6 @@ class Minio:
         envs = {
             'MINIO_ACCESS_KEY': self.login,
             'MINIO_SECRET_KEY': self.password,
-            'AWS_ACCESS_KEY_ID': self.restic_username,
-            'AWS_SECRET_ACCESS_KEY': self.restic_password,
             'MINIO_ZEROSTOR_META_PRIVKEY': self.meta_private_key,
         }
 
