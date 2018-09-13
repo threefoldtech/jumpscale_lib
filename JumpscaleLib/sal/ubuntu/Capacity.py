@@ -99,7 +99,7 @@ class Capacity:
         if not farmer_id:
             return False
         data = self.get(farmer_id)
-        client = j.clients.grid_capacity.get(interactive=False)
+        client = j.clients.threefold_directory.get(interactive=False)
         _, resp = client.api.RegisterCapacity(data)
         resp.raise_for_status()
         return True

@@ -31,13 +31,12 @@ class JSWebLoader(JSBASE):
         JSBASE.__init__(self)
         self.db = SQLAlchemy()
         self.path = path
+        self._init_app()
         self.login_manager = LoginManager()
+        # self._configure_database()
+        # self._configure_logs(app)
 
-    def register_extensions(self, app):
-        # self.db.init_app(app)
-        self.login_manager.init_app(app)
-
-    def register_blueprints(self, app, sockets, path=None):
+    def register_blueprints(self, sockets, path=None):
         if path is None:
             path = "%s/dm_base/blueprints" % self.path
         if path not in sys.path:
@@ -55,11 +54,11 @@ class JSWebLoader(JSBASE):
             #     print("WARNING: could not load required libraries for the HUB blueprint")
             #     print(e)
 
-            app.register_blueprint(module.blueprint)
+            self.app.register_blueprint(module.blueprint)
             if sockets and hasattr(module, "ws_blueprint"):
                 sockets.register_blueprint(module.ws_blueprint)
 
-    def configure_database(self, app):
+    def _configure_database(self):
 
         @app.before_first_request
         def initialize_database():
@@ -69,8 +68,9 @@ class JSWebLoader(JSBASE):
         def shutdown_session(exception=None):
             self.db.session.remove()
 
-    def configure_logs(self, app):
-        basicConfig(filename='error.log', level=DEBUG)  # TODO:*1 is this ok this?
+    def _configure_logs(self):
+        # TODO: why can we not use jumpscale logging?
+        basicConfig(filename='error.log', level=DEBUG)
         self.logger = getLogger()
         self.logger.addHandler(StreamHandler())
 
@@ -92,7 +92,7 @@ class JSWebLoader(JSBASE):
 
     #     return app
 
-    def create_app(self, selenium=False, debug=True, websocket_support=True):
+    def _init_app(self, selenium=False, debug=True, websocket_support=True):
         staticpath = j.clients.git.getContentPathFromURLorPath(
             "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/static")
         app = Flask(__name__, static_folder=staticpath)  # '/base/static'
@@ -101,14 +101,19 @@ class JSWebLoader(JSBASE):
         app.config.from_object(rq_dashboard.default_settings)
         app.register_blueprint(rq_dashboard.blueprint, url_prefix="/rq")
 
-        # Load iyo settings, TODO: change this dirty hack
-        sys.path.append("%s/dm_base" % self.path)
-        app.config.from_json("%s/dm_base/blueprints/user/iyo.json" % self.path)
-        from blueprints.user.user import callback
-        app.add_url_rule(app.config['IYO_CONFIG']['callback_path'], '_callback', callback)
+        # Load iyo settings, TODO: change this dirty hack & re-enable this section
+        # sys.path.append("%s/dm_base" % self.path)
+        # app.config.from_json("%s/dm_base/blueprints/user/iyo.json" % self.path)
+        # from blueprints.user.user import callback
+        # app.add_url_rule(app.config['IYO_CONFIG']['callback_path'], '_callback', callback)
+
         # if selenium:
         #     app.config['LOGIN_DISABLED'] = True
-        self.register_extensions(app)
+
+
+        # self.db.init_app(app)
+        self.login_manager.init_app(app)
+
         sockets = None
         if websocket_support:
             sockets = Sockets(app)
@@ -119,6 +124,6 @@ class JSWebLoader(JSBASE):
         if debug is True:
             app = DebuggedApplication(app, evalex=True)
 
-        # configure_database(app)
-        # configure_logs(app)
-        return app
+        self.app = app
+
+

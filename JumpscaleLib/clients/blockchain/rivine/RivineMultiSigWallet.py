@@ -19,20 +19,20 @@ class RivineMultiSignatureWallet:
     RivineMultiSignatureWallet class
     """
 
-    def __init__(self, cosigners, required_sig, bc_network, bc_network_password, minerfee=100000000, client=None):
+    def __init__(self, cosigners, required_sig, bc_networks, bc_network_password, minerfee=100000000, client=None):
         """
         Initializes a new RivineMultiSignatureWallet
 
         @param cosigners: List of lists, the length of outer list indicates the number of cosigners and the length of the inner lists indicates the number of unlockhashes
         @param required_sig: Minimum number of signatures required for the output sent to any of the Multisig addresses to be spent
-        @param bc_network: Blockchain network to use.
+        @param bc_networks: List blockchain networks to use.
         @param bc_network_password: Password to send to the explorer node when posting requests.
         @param minerfee: Amount of hastings that should be minerfee (default to 0.1 TFT)
         @param client: Name of the insance of the j.clients.rivine that is used to create the wallet
         """
         self._cosigners = cosigners
         self._required_sig = required_sig
-        self._bc_network = bc_network
+        self._bc_networks = bc_networks
         self._bc_network_password = bc_network_password
         self._minerfee = minerfee
         self._client = client
@@ -129,12 +129,12 @@ class RivineMultiSignatureWallet:
         Retrieves the unpent outputs for this wallets addresses
         """
         addresses_info = {}
-        current_chain_height = utils.get_current_chain_height(self._bc_network)
-        unconfirmed_txs = utils.get_unconfirmed_transactions(self._bc_network, format_inputs=True)
+        current_chain_height = utils.get_current_chain_height(self._bc_networks)
+        unconfirmed_txs = utils.get_unconfirmed_transactions(self._bc_networks, format_inputs=True)
         logger.info('Current chain height is: {}'.format(current_chain_height))
         for address in self.addresses:
             try:
-                address_info = utils.check_address(self._bc_network, address, log_errors=False)
+                address_info = utils.check_address(self._bc_networks, address, log_errors=False)
             except RESTAPIError:
                 pass
             else:

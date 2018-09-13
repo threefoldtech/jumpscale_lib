@@ -124,11 +124,37 @@ class Zerodbs(DynamicCollection):
         return mounts
 
 
-    def create_and_mount_subvolume(self, storagepool, name, size):
-        fs = storagepool.create(name, size * (1024 ** 3)) #QUESTION: why this? *3
-        mount_point = '/mnt/zdbs/{}'.format(name)
+    def create_and_mount_subvolume(self, zdb_name, size, disktypes):
+        # filter storagepools that have the correct disk type and whose (total size - reserved subvolume quota) >= size
+        storagepools = list(filter(lambda sp: self.node.disks.get_device(sp.devices[0]).disk.type.value in disktypes and (sp.size - sp.total_quota() / (1024 ** 3)) >= size,
+                                    self.node.storagepools.list()))
+        storagepools.sort(key=lambda sp: sp.size - sp.total_quota(), reverse=True)
+        if not storagepools:
+            return '', ''
+
+        storagepool = storagepools[0] 
+        fs = storagepool.create('zdb_{}'.format(zdb_name), size * (1024 ** 3)) #QUESTION: why this? *3
+        mount_point = '/mnt/zdbs/{}'.format(zdb_name)
         self.node.client.filesystem.mkdir(mount_point)
         subvol = 'subvol={}'.format(fs.subvolume)
         self.node.client.disk.mount(storagepool.devicename, mount_point, [subvol])
 
         return mount_point, fs.name
+    
+    def mount_subvolume(self, zdb_name, mount_point):
+        if self.node.client.filesystem.exists(mount_point):
+            node_mountpoints = self.node.client.disk.mounts()
+            for device in node_mountpoints:
+                for mp in node_mountpoints[device]:
+                    if mp['mountpoint'] == mount_point:
+                        return
+    
+        for storagepool in self.node.storagepools.list():
+            for fs in storagepool.list():
+                if fs.name == '{}'.format(zdb_name):
+                    self.node.client.filesystem.mkdir(mount_point)
+                    subvol = 'subvol={}'.format(fs.subvolume)
+                    self.node.client.disk.mount(storagepool.devicename, mount_point, [subvol])
+                    break
+        else:
+            raise RuntimeError('Failed to find filesystem for zerodb {}'.format(zdb_name))

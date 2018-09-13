@@ -272,7 +272,7 @@ class Gateway:
             dhcpserver = nic.get('dhcpserver')
             if not dhcpserver:
                 continue
-            network.hosts.nameservers = dhcpserver['nameservers']
+            network.hosts.nameservers = dhcpserver.get('nameservers', [])
             network.hosts.pool_size = dhcpserver.get('poolSize', network.hosts.pool_size)
             network.hosts.pool_start = dhcpserver.get('poolStart', network.hosts.pool_start)
             for host in dhcpserver['hosts']:
@@ -529,7 +529,7 @@ class Gateway:
         if self._default_nic and self.networks[self._default_nic].public:
             self._update_container_portforwards()
 
-        firewall = Firewall(self.container, self.networks, self.portforwards)
+        firewall = Firewall(self.container, self.networks, self.portforwards, self.routes)
         firewall.apply_rules()
 
     def configure_routes(self):
@@ -567,7 +567,7 @@ class Gateway:
         Update the gateway container portforwards
         """
         publicip = self.node.get_nic_hwaddr_and_ip()[1]
-        container_forwards = set([v for k, v in self.container.info['container']['arguments']['port'].items() if v == int(k)])
+        container_forwards = set([v for k, v in self.container.info['container']['arguments']['port'].items() if v == int(k.split(':')[-1])])
         wanted_forwards = {80, 443}
         container_ip = str(self.container.default_ip(self._default_nic).ip)
         for forward in self.portforwards:

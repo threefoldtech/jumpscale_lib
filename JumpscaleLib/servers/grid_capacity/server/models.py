@@ -175,6 +175,7 @@ class Capacity(db.Document):
     used_resources = EmbeddedDocumentField(Resources)
     robot_address = StringField()
     os_version = StringField()
+    parameters = ListField(StringField(), default=list)
     uptime = IntField()
     updated = DateTimeField(required=True)
 

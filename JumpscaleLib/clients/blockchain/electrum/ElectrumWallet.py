@@ -41,7 +41,7 @@ class ElectrumWallet:
         self._config['testnet'] = bool(self._config['testnet'])
         if self._config['testnet'] is True:
             constants.set_testnet()
-            
+
         self._config['verbos'] = False
         self._electrum_config = SimpleConfig(self._config)
         self._wallet_path = os.path.join(self._electrum_config.path, 'wallets', self._name)

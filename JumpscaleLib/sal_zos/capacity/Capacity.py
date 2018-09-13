@@ -61,10 +61,23 @@ class Capacity:
             used_memory=self._node.client.info.mem()['used']
         )
 
+    def node_parameters(self):
+        params = []
+        checking = ['development', 'debug', 'support']
+
+        for check in checking:
+            if self._node.kernel_args.get(check) is not None:
+                params.append(check)
+
+        return params
+
     def register(self):
         farmer_id = self._node.kernel_args.get('farmer_id')
         if not farmer_id:
             return False
+
+        # checking kernel parameters enabled
+        parameters = self.node_parameters()
 
         robot_address = ""
         public_addr = self._node.public_addr
@@ -84,6 +97,7 @@ class Capacity:
             ),
             robot_address=robot_address,
             os_version=os_version,
+            parameters=parameters,
             uptime=int(self._node.uptime())
         )
         data['farmer_id'] = farmer_id
@@ -93,7 +107,13 @@ class Capacity:
         elif not data['robot_address']:
             raise RuntimeError('Can not register a node without robot_address')
 
-        client = j.clients.grid_capacity.get(interactive=False)
+        if 'staging' in self._node.kernel_args:
+            client = j.clients.threefold_directory.get('staging',
+                                                       data={'base_uri': 'https://staging.capacity.threefoldtoken.com'},
+                                                       interactive=False)
+        else:
+            client = j.clients.threefold_directory.get(interactive=False)
+
         _, resp = client.api.RegisterCapacity(data)
         resp.raise_for_status()
 
@@ -112,7 +132,7 @@ class Capacity:
             sru=report.SRU,
         )
 
-        client = j.clients.grid_capacity.get(interactive=False)
+        client = j.clients.threefold_directory.get(interactive=False)
         resp = client.api.UpdateActualUsedCapacity(data=data, node_id=self._node.name)
         resp.raise_for_status()
 
@@ -131,6 +151,6 @@ class Capacity:
             sru=report.SRU,
         )
 
-        client = j.clients.grid_capacity.get(interactive=False)
+        client = j.clients.threefold_directory.get(interactive=False)
         resp = client.api.UpdateReservedCapacity(data=data, node_id=self._node.name)
         resp.raise_for_status()

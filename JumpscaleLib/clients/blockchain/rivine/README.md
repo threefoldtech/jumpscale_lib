@@ -13,6 +13,18 @@ It supports the following functionalities:
 - Create and spend multisig outputs
 
 
+# Dependencies
+The client depends on the following python libraries to be able to function properly:
+- ed25519
+- pyblake2
+
+If you installed jumpscale on your system in dev mode and without setting the full installation flag (JSFULL=1) then you will need to install these libs manually if you want to continue using the client, to do that simply execute the following commands:
+```python
+pip3 install ed25519
+pip3 install pyblake2
+```
+
+
 # How to use
 
 ## Creating a wallet
@@ -30,12 +42,12 @@ From a seed you can create new wallet
 ```python
         from JumpscaleLib.clients.blockchain.rivine.RivineWallet import RivineWallet
         wallet = RivineWallet(seed=seed,
-                                    bc_network='https://explorer.testnet.threefoldtoken.com/',
+                                    bc_networks=['https://explorer.testnet.threefoldtoken.com/'],
                                     bc_network_password='test123',
                                     nr_keys_per_seed=5,
                                     minerfee=100000000)
         # where seed is the seed you have or generated
-        # bc_network: is the url to the blockchain network explorer node
+        # bc_networks: is list of the url to the blockchain network explorer nodes to try to connect to.
         # bc_network_password: is the password to use while communicating with the chain explorer node
         # nr_keys_per_seed: is how many keys to generate per seed
         # minerfee: How many hastings should be added as minerfee
@@ -43,7 +55,7 @@ From a seed you can create new wallet
 
 Or alternatively you can configure the wallet instance using the following code:
 ```python
-    client_data = {'bc_address': 'https://explorer.testnet.threefoldtoken.com/',
+    client_data = {'bc_addresses': ['https://explorer.testnet.threefoldtoken.com/'],
 'password_': 'test123',
  'minerfee': 10,
  'nr_keys_per_seed': 5,
@@ -117,7 +129,7 @@ To learn more about the different use cases of Multi-Signatures transactions ple
 ### Creating Walllets
 Beside the main wallet we created before in this document, we will create 4 more wallets and 1 Multisig wallet. To create the 4 extra wallets, you should run the following commands:
 ```python
-client_data = {'bc_address': 'https://explorer.testnet.threefoldtoken.com/',
+client_data = {'bc_addresses': ['https://explorer.testnet.threefoldtoken.com/'],
                'password_': 'test123',
                'minerfee': 100000000,
                'nr_keys_per_seed': 15
@@ -185,7 +197,7 @@ cosigners = [bob_wallet.addresses[0],
 
 required_sig = 3
 
-client_data = {'bc_address': 'https://explorer.testnet.threefoldtoken.com/',
+client_data = {'bc_addresses': ['https://explorer.testnet.threefoldtoken.com/'],
                'password_': 'test123',
                'minerfee': 100000000,
                'multisig': True,

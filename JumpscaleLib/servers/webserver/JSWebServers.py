@@ -19,12 +19,12 @@ class JSWebServers(JSConfigBase):
         js_shell 'j.servers.web.configure()'
 
         """
-        if ws_dir is "":
-            ws_dir = j.sal.fs.getcwd()
-
-        config_path = j.sal.fs.joinPaths(ws_dir, "site_config.toml")
-        if not j.sal.fs.exists(config_path):
-            j.sal.fs.createEmptyFile(config_path)
+        # if ws_dir is "":
+        #     ws_dir = j.sal.fs.getcwd()
+        #
+        # config_path = j.sal.fs.joinPaths(ws_dir, "site_config.toml")
+        # if not j.sal.fs.exists(config_path):
+        #     j.sal.fs.createEmptyFile(config_path)
 
         data = {
             "port": port,

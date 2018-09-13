@@ -71,52 +71,81 @@ def get_secret(size):
     return secrets.token_bytes(nbytes=size)
 
 
-def get_current_chain_height(rivine_explorer_address):
+def get_current_chain_height(rivine_explorer_addresses):
     """
     Retrieves the current chain height
+
+    @param rivine_explorer_addresses: List of explorer nodes addresses to connect to.
     """
+    msg = 'Failed to get current chain height.'
     result = None
-    url = '{}/explorer'.format(rivine_explorer_address.strip('/'))
-    headers = {'user-agent': 'Rivine-Agent'}
-    response = requests.get(url, headers=headers)
-    if response.status_code != 200:
-        msg = 'Failed to get current chain height. {}'.format(response.text)
-        logger.error(msg)
-        raise RESTAPIError(msg)
+    response = None
+    for rivine_explorer_address in rivine_explorer_addresses:
+        url = '{}/explorer'.format(rivine_explorer_address.strip('/'))
+        headers = {'user-agent': 'Rivine-Agent'}
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+        except requests.exceptions.ConnectionError as ex:
+            logger.warn(msg)
+            continue
+        if response.status_code != 200:
+            logger.warn('{} {}'.format(msg, response.text))
+        else:
+            result = response.json().get('height', None)
+            break
+
+    if result is not None:
+        result = int(result)
     else:
-        result = response.json().get('height', None)
-        if result is not None:
-            result = int(result)
+        if response:
+            raise RESTAPIError('{} {}'.format(msg, response.text))
+        else:
+            raise RESTAPIError(msg)
     return result
 
 
-def check_address(rivine_explorer_address, address, log_errors=True):
+def check_address(rivine_explorer_addresses, address, log_errors=True):
     """
     Check if an address is valid and return its details
 
+    @param rivine_explorer_addresses: List of explorer nodes addresses to connect to.
     @param address: Address to check
     @param log_errors: If False, no logging will be executed
 
     @raises: @RESTAPIError if failed to check address
     """
+    msg = 'Failed to retrieve address information.'
     result = None
-    url = '{}/explorer/hashes/{}'.format(rivine_explorer_address.strip('/'), address)
-    headers = {'user-agent': 'Rivine-Agent'}
-    response = requests.get(url, headers=headers)
-    if response.status_code != 200:
-        msg = "Failed to retrieve address information. {}".format(response.text.strip('\n'))
-        if log_errors:
-            logger.error(msg)
-        raise RESTAPIError(msg)
-    else:
-        result = response.json()
+    response = None
+    for rivine_explorer_address in rivine_explorer_addresses:
+        url = '{}/explorer/hashes/{}'.format(rivine_explorer_address.strip('/'), address)
+        headers = {'user-agent': 'Rivine-Agent'}
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+        except requests.exceptions.ConnectionError as ex:
+            if log_errors:
+                logger.warn(msg)
+            continue
+        if response.status_code != 200:
+            if log_errors:
+                logger.warn('{} {}'.format(msg, response.text.strip('\n')))
+        else:
+            result = response.json()
+            break
+
+    if result is None:
+        if response:
+            raise RESTAPIError('{} {}'.format(msg, response.text.strip('\n')))
+        else:
+            raise RESTAPIError(msg)
     return result
 
 
-def get_unconfirmed_transactions(rivine_explorer_address, format_inputs=False):
+def get_unconfirmed_transactions(rivine_explorer_addresses, format_inputs=False):
     """
     Retrieves the unconfirmed transaction from a remote node that runs the Transaction pool module
 
+    @param rivine_explorer_addresses: List of explorer nodes addresses to connect to.
     @param format_inputs: If True, the output will be formated to get a list of the inputs parent ids
 
     # example output
@@ -133,43 +162,68 @@ def get_unconfirmed_transactions(rivine_explorer_address, format_inputs=False):
            'data': {'unlockhash': '012bdb563a4b3b630ddf32f1fde8d97466376a67c0bc9a278c2fa8c8bd760d4dcb4b9564cdea6f'}}}],
         'minerfees': ['100000000']}}]}
     """
+    msg = 'Failed to retrieve unconfirmed transactions.'
     result = []
-    url = "{}/transactionpool/transactions".format(rivine_explorer_address.strip('/'))
-    headers = {'user-agent': 'Rivine-Agent'}
-    res = requests.get(url, headers=headers)
-    if res.status_code != 200:
-        msg = 'Failed to retrieve unconfirmed transactions. Error: {}'.format(res.text)
-        logger.error(msg)
-        raise BackendError(msg)
-    transactions = res.json()['transactions']
-    if transactions is None:
-        transactions = []
-    if format_inputs:
-        for txn in transactions:
-            result.extend([coininput['parentid'] for coininput in txn['data']['coininputs']])
-        return result
-    return transactions
+    response = None
+    for rivine_explorer_address in rivine_explorer_addresses:
+        url = "{}/transactionpool/transactions".format(rivine_explorer_address.strip('/'))
+        headers = {'user-agent': 'Rivine-Agent'}
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+        except requests.exceptions.ConnectionError as ex:
+            logger.warn(msg)
+            continue
+        if response.status_code != 200:
+            logger.warn('{} {}'.format(msg, response.text))
+        else:
+            transactions = response.json()['transactions']
+            if transactions is None:
+                transactions = []
+            if format_inputs:
+                for txn in transactions:
+                    result.extend([coininput['parentid'] for coininput in txn['data']['coininputs']])
+
+            break
+
+    if result:
+        if response:
+            raise RESTAPIError('{} {}'.format(msg, response.text))
+        else:
+            raise RESTAPIError(msg)
+    return result
 
 
-def commit_transaction(rivine_explorer_address, rivine_explorer_api_password, transaction):
+
+def commit_transaction(rivine_explorer_addresses, rivine_explorer_api_password, transaction):
     """
     Commits a singed transaction to the chain
 
+    @param rivine_explorer_addresses: List of explorer nodes addresses to connect to.
     @param transaction: Transaction object to be committed
     """
     data = transaction.json
-    url = '{}/transactionpool/transactions'.format(rivine_explorer_address.strip('/'))
-    headers = {'user-agent': 'Rivine-Agent'}
-    auth = HTTPBasicAuth('', rivine_explorer_api_password)
-    res = requests.post(url, headers=headers, auth=auth, json=data)
-    if res.status_code != 200:
-        msg = 'Faield to commit transaction to chain network.{}'.format(res.text)
-        logger.error(msg)
-        raise BackendError(msg)
+    res = None
+    msg = 'Faield to commit transaction to chain network.'
+    for rivine_explorer_address in rivine_explorer_addresses:
+        url = '{}/transactionpool/transactions'.format(rivine_explorer_address.strip('/'))
+        headers = {'user-agent': 'Rivine-Agent'}
+        auth = HTTPBasicAuth('', rivine_explorer_api_password)
+        try:
+            res = requests.post(url, headers=headers, auth=auth, json=data, timeout=30)
+        except requests.exceptions.ConnectionError as ex:
+            logging.warn(msg)
+            continue
+        if res.status_code != 200:
+            msg = 'Faield to commit transaction to chain network.{}'.format(res.text)
+            logger.warn('{} {}'.format(msg, res.text))
+        else:
+            transaction.id = res.json()['transactionid']
+            logger.info('Transaction committed successfully')
+            return transaction.id
+    if res:
+        raise BackendError('{} {}'.format(msg, res.text))
     else:
-        transaction.id = res.json()['transactionid']
-        logger.info('Transaction committed successfully')
-        return transaction.id
+        raise BackendError(msg)
 
 
 def get_unlockhash_from_output(output, address, current_height):
