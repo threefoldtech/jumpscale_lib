@@ -58,10 +58,14 @@ class BaseTest(Utils):
         return str(uuid.uuid4()).replace('-', '')[:size]        
 
     def set_vm_default_values(self, os_type, os_version=None):
+        if self.node_info['core'] == 1:
+            cpu = 1
+        else:
+            cpu = random.randint(1, self.node_info['core']) 
 
         vm_parms = {'flist':"",
-                    'cpu': 1, #random.randint(1, self.node_info['core']),
-                    'memory': 1024, #random.randint(1, self.node_info['memory']) * 1024,
+                    'cpu': cpu ,
+                    'memory':  random.randint(1, self.node_info['memory']) * 1024,
                     'name': self.random_string(),
                     'nics': [],
                     'configs': [{'path': '/root/.ssh/authorized_keys',
@@ -129,6 +133,7 @@ class BaseTest(Utils):
     def execute_command(self, cmd, ip='', port=22):
         target = "ssh -o 'StrictHostKeyChecking no' -p {} root@{} '{}'".format(port, ip, cmd)
         response = subprocess.run(target, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # "response" has stderr, stdout and returncode(should be 0 in successful case)
         return response
 
     def host_join_zt(self, zt_network=None):
