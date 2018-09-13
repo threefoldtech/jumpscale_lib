@@ -17,7 +17,10 @@ class VMTestCases(BaseTest):
         super().setUp()
     
     def tearDown(self):
-        pass
+        vms = self.node_sal.client.kvm.list()
+        for vm in vms:
+            self.node_sal.client.kvm.destroy(vm['uuid'])
+
     @parameterized.expand(["zero-os", "ubuntu"])
     def test001_create_vm(self, os_type):
         """ SAL-001 Install zerotier vm.
@@ -37,7 +40,7 @@ class VMTestCases(BaseTest):
         vm.data = self.set_vm_default_values(os_type=os_type)
         created_vm = vm._vm_sal
         self.assertTrue(created_vm)
-        
+       
         self.log(" Add zerotier network to VM1, should succeed.")
         self.add_zerotier_network_to_vm(created_vm)
         vm.install(created_vm)
@@ -48,82 +51,48 @@ class VMTestCases(BaseTest):
         result = self.ssh_vm_execute_command(vm_ip=vm_zt_ip, cmd='pwd')
         self.assertEqual(result, '/root')
 
-        self.log("Destroy vm [VM1], should succeed.")
-        vm.uninstall()
-        self.assertFalse(created_vm.is_running())
-
     @parameterized.expand(["zero-os", "ubuntu"])
     def test002_create_vm_with_different_os_types(self, os_type):
         """SAL-002 
-        * Test case for creating a vm with ubuntue and zero-os operating system .
+        * Test case for creating a vm with ubuntu and zero-os operating system .
         Test Scenario:
 
-        #. Create a vm [vm1] with 16.04 version of ubuntue, should succeed.
-        #. Create a vm[vm2] with 18.04 version of ubuntue, should succeed.
-        #. Check that vm1 and vm2 created with right ubuntue versions.
-        #. Create vm[vm3] with zero-os master branch, should succeed.
-        #. Create vm [vm4] with zero-os developement branch, should succeed.
-        #. Check that [vm3] and [vm4] created with right zero-os version and works well.
+        #. Create a vm [vm1] with one of (ubuntu/zero-os) version, should succeed.
+        #. Check that vm1 created with right (ubuntu/zero-os) versions.
+
         """
         if os_type == 'ubuntu':
             self.skipTest('https://github.com/threefoldtech/jumpscale_lib/issues/111')
-            version_release1 = '16.04'
-            version_release2 = '18.04'
+            version_release = random.choice(["16.04", "18.04"])
             cmd = 'lsb_release -r'
         else:
             self.skipTest('https://github.com/threefoldtech/jumpscale_lib/issues/102')
-            version_release1 = 'master'
-            version_release2 = 'development'
+            version_release = random.choice(["master", "development"])
             cmd = 'core0'
 
-        self.log(" Create a vm [vm1] with {} version of {}, should succeed.".format(version_release1, os_type))
-        vm1 = self.vm(node=self.node_sal)
-        vm1.data = self.set_vm_default_values(os_type=os_type, os_version=version_release1)
-        created_vm1 = vm1._vm_sal
-        self.assertTrue(created_vm1)
-
-        self.log(" Create a vm [vm2] with {} version of {}, should succeed.".format(version_release2, os_type))
-        vm2 = self.vm(node=self.node_sal)
-        vm2.data = self.set_vm_default_values(os_type=os_type, os_version=version_release2)
-        created_vm2 = vm2._vm_sal
-        self.assertTrue(created_vm2)
+        self.log(" Create a vm [vm1] with {} version of {}, should succeed.".format(version_release, os_type))
+        vm = self.vm(node=self.node_sal)
+        vm.data = self.set_vm_default_values(os_type=os_type, os_version=version_release)
+        created_vm = vm._vm_sal
+        self.assertTrue(created_vm)
 
         self.log(" Add zerotier network to VM1, should succeed.")
-        self.add_zerotier_network_to_vm(created_vm1)
-        vm1.install(created_vm1)
-
-        self.log(" Add zerotier network to VM2, should succeed.")
-        self.add_zerotier_network_to_vm(created_vm2)
-        vm2.install(created_vm2)
+        self.add_zerotier_network_to_vm(created_vm)
+        vm.install(created_vm)
         
         self.log("Check that vm2 added to zerotier network and can access it using it, should succeed.")
-        ztIdentity1 = vm1.data["ztIdentity"]
-        vm_zt_ip1 = self.get_machine_zerotier_ip(ztIdentity1)
-        result1 = self.ssh_vm_execute_command(vm_ip=vm_zt_ip1, cmd=cmd)
-
-        self.log("Check that vm2 added to zerotier network and can access it using it, should succeed.")
-        ztIdentity2 = vm2.data["ztIdentity"]
-        vm_zt_ip2 = self.get_machine_zerotier_ip(ztIdentity2)
-        result2 = self.ssh_vm_execute_command(vm_ip=vm_zt_ip2, cmd=cmd)
+        ztIdentity = vm.data["ztIdentity"]
+        vm_zt_ip = self.get_machine_zerotier_ip(ztIdentity)
+        result = self.ssh_vm_execute_command(vm_ip=vm_zt_ip, cmd=cmd)
 
         self.log("Check that vm1 and vm2 created with right {} versions.".format(os_type))
         if os_type == 'ubuntu':
-            result1 = result1.replace('\t', '')
-            release1 = result1[result1.find(':') + 1 :]
-            result2 = result2.replace('\t', '')
-            release2 = result2[result2.find(':') + 1 :]
+            result = result.replace('\t', '')
+            release = result[result.find(':') + 1 :]
         else:
-            release1 = result1[result1.find(':') + 2 : result1.find('@') - 1]
-            release2 = result2[result2.find(':') + 2 : result2.find('@') - 1]
+            release = result[result.find(':') + 2 : result.find('@') - 1]
         
-        self.assertEqual(release1, version_release1)
-        self.assertEqual(release2, version_release2)
-
-        self.log("Destroy vm1 and vm2, should succeed.")
-        vm1.uninstall()
-        vm2.uninstall()
-        self.assertFalse(created_vm1.is_running())
-        self.assertFalse(created_vm2.is_running())
+        self.assertEqual(release, version_release)
 
     def test003_create_vm_with_type_default(self):
         """ SAL-003 create vm with type default.
@@ -132,7 +101,7 @@ class VMTestCases(BaseTest):
  
         #. Create vm [VM1] with type default nics, should succeed.
         #. Add a port forword to port 22.
-        #. Check that vm can reach internet, should suucceed.
+        #. Check that vm can reach internet, should succeed.
 
         """
         self.log("Create vm [VM1] with default values, should succeed.")
@@ -153,13 +122,9 @@ class VMTestCases(BaseTest):
         
         vm.install(created_vm)
         
-        self.log("Check that vm can reach internet, should suucceed.")
+        self.log("Check that vm can reach internet, should succeed.")
         result = self.ssh_vm_execute_command(vm_ip=self.node_ip, port=23, cmd='ping -w5 8.8.8.8')
         self.assertIn('0% packet loss', result) 
-
-        self.log("Destroy vm [VM1], should succeed.")
-        vm.uninstall()
-        self.assertFalse(created_vm.is_running())
 
     @parameterized.expand(["zero-os", "ubuntu"])
     def test004_destroy_vm(self, os_type):
@@ -246,11 +211,8 @@ class VMTestCases(BaseTest):
         self.log('Check that disk removed successfully.')
         self.assertFalse(created_vm.info['params']['media'])
 
-        self.log("Destroy vm [VM1], should succeed.")
-        vm.uninstall()
-        self.assertFalse(created_vm.is_running())
-
-    def test006_add_server_on_vm_port(self):
+    @unittest.skip('https://github.com/threefoldtech/jumpscale_lib/issues/93')
+    def test006_add_remove_port_to_vm(self):
         """ SAL-006 add server on vm port .
 
         **Test Scenario:**
@@ -258,7 +220,9 @@ class VMTestCases(BaseTest):
         #. Create vm [VM1], should succeed.
         #. Add port to [p1] to [VM1], should succeed.
         #. Start server on P1, should succeed.
-        #. Check that u can access that server through [P1].
+        #. Check that you can access that server through [P1].
+        #. Drop port [p1]
+        #. Check that you can't access the server anymore, should succeed.
 
         """
         self.log("Create vm [VM1] with default values, should succeed.")
@@ -289,15 +253,20 @@ class VMTestCases(BaseTest):
         time.sleep(10)
         
         self.log("Get the content of authorized_key file from the vm using the server created ")
-        response = requests.get('http://{}:{}/.ssh/authorized_keys'.format(self.node_ip, host_port))
-        content = response.content.decode('utf-8')
+        response1 = requests.get('http://{}:{}/.ssh/authorized_keys'.format(self.node_ip, host_port))
+        content1 = response1.content.decode('utf-8')
 
         self.log("Make sure that ssh key is in the authorized_key")
-        self.assertEqual(content, self.ssh_key)
+        self.assertEqual(response1.status_code, 200)
+        self.assertEqual(content1, self.ssh_key)
+      
+        self.log("Drop port [p1]")
+        created_vm.ports.remove(port_name2)
+        vm.install()
 
-        self.log("Destroy vm [VM1], should succeed.")
-        vm.uninstall()
-        self.assertFalse(created_vm.is_running())
+        self.log("Check that you can't access the server anymore, should succeed")
+        with self.assertRaises(ConnectionError):
+            requests.get('http://{}:{}/.ssh/authorized_keys'.format(self.node_ip, host_port))
 
     @parameterized.expand(["zero-os", "ubuntu"])
     def test007_add_and_delete_zerotier_network_to_vm(self, os_type):
@@ -314,7 +283,7 @@ class VMTestCases(BaseTest):
         if os_type == 'zero-os':
             self.skipTest('https://github.com/threefoldtech/jumpscale_lib/issues/102')
 
-        self.log("reate vm [VM1] and deploy it , should succeed.")
+        self.log("create vm [VM1] and deploy it , should succeed.")
         vm1 = self.vm(node=self.node_sal)
         vm1.data = self.set_vm_default_values(os_type=os_type)
         created_vm1 = vm1._vm_sal
@@ -343,11 +312,6 @@ class VMTestCases(BaseTest):
         result = self.ssh_vm_execute_command(vm_ip=vm_zt_ip, cmd='pwd')
         self.assertEqual(result, '/root')
 
-        self.log("Destroy vm [VM2], should succeed.")
-        vm2.uninstall()
-        self.assertFalse(created_vm2.is_running())
-
-
 class VMActionsBase(BaseTest):
 
     @classmethod
@@ -359,7 +323,9 @@ class VMActionsBase(BaseTest):
         super().setUp()
                         
     def tearDown(self):
-        pass
+        vms = self.node_sal.client.kvm.list()
+        for vm in vms:
+            self.node_sal.client.kvm.destroy(vm['uuid'])
 
     def create_booted_vm(self, os_type):
         self.log("Create a vm[vm1]  on node, should succeed.")
@@ -418,10 +384,6 @@ class VMActionsBase(BaseTest):
         self.assertTrue(response3.returncode)
         self.assertIn('timeout caused connection failure', response3.stderr.strip())
 
-        self.log("Destroy vm, should succeed.")
-        self.vm.uninstall()
-        self.assertFalse(self.created_vm.is_running())
-
     @parameterized.expand(["zero-os", "ubuntu"])
     def test002_pause_and_resume_vm(self, os_type):
         """ SAL-008 pause and resume the vm with type default.
@@ -444,6 +406,7 @@ class VMActionsBase(BaseTest):
         self.vm.pause()
 
         self.log("Check that [vm1] has been paused successfully.")
+        self.assertEqual(self.created_vm.info['state'], 'paused')
         result1 = self.execute_command(ip=self.vm_zt_ip, cmd='pwd')
         self.assertTrue(result1.returncode)
 
@@ -451,16 +414,13 @@ class VMActionsBase(BaseTest):
         self.vm.resume()
 
         self.log("Check that [vm1] is runninng and can access it again.")
+        self.assertEqual(self.created_vm.info['state'], 'running')
         result2 = self.ssh_vm_execute_command(vm_ip=self.vm_zt_ip, cmd='pwd')
         self.assertEqual(result2, '/root')
 
-        self.log("Destroy vm, should succeed.")
-        self.vm.uninstall()
-        self.assertFalse(self.created_vm.is_running())
-
-    @parameterized.expand(["zero-os", "ubuntu"])
+    @parameterized.expand([["zero-os", "ubuntu"], ["reset", "reboot"]])
     @unittest.skip('https://github.com/threefoldtech/0-core/issues/35')
-    def test003_reset_and_reboot_vm(self, os_type):
+    def test003_reset_and_reboot_vm(self, os_type, operation):
         """ SAL-009 reset and reboot the vm.
 
         **Test Scenario:**
@@ -473,30 +433,20 @@ class VMActionsBase(BaseTest):
         self.log("Create a vm[vm1], should succeed.")
         self.create_booted_vm(os_type)
 
-        self.log("Reboot the VM")
-        self.vm.reboot()
+        self.log("{} the VM".format(operation))
+        if operation == "reset":
+            self.vm.reset()
+        else:
+            self.vm.reboot()
 
         self.log("Check that [vm] has been rebooted successfully.")
         reboot_response = self.ssh_vm_execute_command(vm_ip=self.vm_zt_ip, cmd='uptime')
         x = reboot_response.stdout.strip()
         uptime = int(x[x.find('up') + 2 : x.find('min')])
         self.assertAlmostEqual(uptime, 1 , delta=3)
-
-        self.log("Reset the VM")
-        self.vm.reset()
-
-        self.log("Check that [vm] has been reset successfully")
-        reset_response = self.ssh_vm_execute_command(vm_ip=self.vm_zt_ip, cmd='uptime')
-        x = reset_response.stdout.strip()
-        uptime = int(x[x.find('up') + 2 : x.find('min')])
-        self.assertAlmostEqual(uptime, 1 , delta=2)
-
-        self.log("Destroy vm, should succeed.")
-        self.vm.uninstall()
-        self.assertFalse(self.created_vm.is_running())
     
     @parameterized.expand(["zero-os", "ubuntu"])
-    @unittest.skip('sometimes it fails to shutdown, or fails to take ip after start')
+    # @unittest.skip('sometimes it fails to shutdown, or fails to take ip after start')
     def test004_shutdown_and_start_vm(self, os_type):
         """ SAL-010
         *Test case for testing shutdown and start vm*
@@ -514,11 +464,18 @@ class VMActionsBase(BaseTest):
 
         self.log("Create a vm[vm1], should succeed.")
         self.create_booted_vm(os_type)
-
+            
         self.log("Shutdown [vm1], should succeed.")
         self.vm.shutdown()
-        self.is_completely_shutdown(self.created_vm)
 
+        for _ in range(200):
+            if not self.created_vm.is_running():
+                break
+            else:
+                time.sleep(1)
+        else:
+            self.assertFalse(self.created_vm.is_running(),'Take long time to shutdown')
+        
         self.log("Check that [vm1] has been forced shutdown successfully.")
         result1 = self.execute_command(ip=self.vm_zt_ip, cmd='pwd')
         self.assertTrue(result1.returncode)
@@ -530,6 +487,3 @@ class VMActionsBase(BaseTest):
         result2 = self.ssh_vm_execute_command(vm_ip=self.vm_zt_ip, cmd='pwd')
         self.assertEqual(result2, '/root')
 
-        self.log("Destroy vm, should succeed.")
-        self.vm.uninstall()
-        self.assertFalse(self.created_vm.is_running())

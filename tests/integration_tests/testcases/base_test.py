@@ -182,15 +182,6 @@ class BaseTest(Utils):
         network = [network for network in networks if network.name == name ]
         return network
 
-    def is_completely_shutdown(self, created_vm):
-        for _ in range(200):
-            if not created_vm.is_running():
-                return
-            else:
-                time.sleep(1)
-        else:
-            self.assertFalse(created_vm.is_running(),'Take long time to shutdown')
-
     def check_vnc_connection(self, vnc_ip_port):
         vnc = 'vncdotool -s {} type {} key enter'.format(vnc_ip_port, repr('ls'))
         response = subprocess.run(vnc, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
