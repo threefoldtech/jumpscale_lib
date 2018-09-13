@@ -16,6 +16,7 @@ resource_units = {
 }
 
 for node in nodes:
+    j.shell()
     resource_units['cru'] += node.total_resources.cru
     resource_units['mru'] += node.total_resources.mru
     resource_units['hru'] += node.total_resources.hru
