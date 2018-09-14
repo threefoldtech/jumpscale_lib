@@ -6,6 +6,7 @@ from jumpscale import j
 
 logger = j.logger.get(__name__)
 
+
 class Zerodbs(DynamicCollection):
     def __init__(self, node):
         self.node = node
@@ -34,7 +35,7 @@ class Zerodbs(DynamicCollection):
         zdbs = []
         for container in self.node.containers.list():
             if container.name.startswith('zdb_'):
-                zdb = Zerodb(self.node, container.name.replace('zdb_', ''))
+                zdb = Zerodb(self.node, container.name)
                 zdb.load_from_reality(container)
                 zdbs.append(zdb)
         return zdbs
@@ -123,24 +124,23 @@ class Zerodbs(DynamicCollection):
 
         return mounts
 
-
     def create_and_mount_subvolume(self, zdb_name, size, disktypes):
         # filter storagepools that have the correct disk type and whose (total size - reserved subvolume quota) >= size
         storagepools = list(filter(lambda sp: self.node.disks.get_device(sp.devices[0]).disk.type.value in disktypes and (sp.size - sp.total_quota() / (1024 ** 3)) >= size,
-                                    self.node.storagepools.list()))
+                                   self.node.storagepools.list()))
         storagepools.sort(key=lambda sp: sp.size - sp.total_quota(), reverse=True)
         if not storagepools:
             return '', ''
 
-        storagepool = storagepools[0] 
-        fs = storagepool.create('zdb_{}'.format(zdb_name), size * (1024 ** 3)) #QUESTION: why this? *3
+        storagepool = storagepools[0]
+        fs = storagepool.create('zdb_{}'.format(zdb_name), size * (1024 ** 3))  # QUESTION: why this? *3
         mount_point = '/mnt/zdbs/{}'.format(zdb_name)
         self.node.client.filesystem.mkdir(mount_point)
         subvol = 'subvol={}'.format(fs.subvolume)
         self.node.client.disk.mount(storagepool.devicename, mount_point, [subvol])
 
         return mount_point, fs.name
-    
+
     def mount_subvolume(self, zdb_name, mount_point):
         if self.node.client.filesystem.exists(mount_point):
             node_mountpoints = self.node.client.disk.mounts()
@@ -148,7 +148,7 @@ class Zerodbs(DynamicCollection):
                 for mp in node_mountpoints[device]:
                     if mp['mountpoint'] == mount_point:
                         return
-    
+
         for storagepool in self.node.storagepools.list():
             for fs in storagepool.list():
                 if fs.name == '{}'.format(zdb_name):
