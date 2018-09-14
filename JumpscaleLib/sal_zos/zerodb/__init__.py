@@ -133,7 +133,9 @@ class Zerodbs(DynamicCollection):
             return '', ''
 
         storagepool = storagepools[0]
-        fs = storagepool.create('zdb_{}'.format(zdb_name), size * (1024 ** 3))  # QUESTION: why this? *3
+        # QUESTION: why this? *3 it's not, it's **3 which is "to the power"
+        # so the size is specified in gigabytes (1024x1024x1024)
+        fs = storagepool.create('zdb_{}'.format(zdb_name), size * (1024 ** 3))
         mount_point = '/mnt/zdbs/{}'.format(zdb_name)
         self.node.client.filesystem.mkdir(mount_point)
         subvol = 'subvol={}'.format(fs.subvolume)
