@@ -52,9 +52,9 @@ class ZDBFactory(JSConfigBase):
         cl = db.client_get(secrets="1234")
         return cl
 
-    def test(self,reset=True):
+    def test(self):
         """
-        js_shell 'j.clients.zdb.test(reset=True)'
+        js_shell 'j.clients.zdb.test()'
 
         """
 
@@ -62,10 +62,9 @@ class ZDBFactory(JSConfigBase):
         def random_string(length=10):
             return str(uuid.uuid4()).replace('-', '')[:length]
 
-        cl = j.clients.zdb.testdb_server_start_client_get(reset=reset,
-                                                          mode="seq")
+        cl = j.clients.zdb.testdb_server_start_client_get(reset=True,mode="seq")
 
-        cl1 = cl.namespace_new("test%s" % random_string())
+        cl1 = cl.namespace_new("test")
         cl1.test_seq()
 
 

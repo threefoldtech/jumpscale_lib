@@ -108,11 +108,13 @@ class ZDBClientNS(JSBASE):
 
 
         """
-        key = self._key_get(key, set=True)
-        res = self.redis.execute_command("SET", key, data)
+        key1 = self._key_get(key)
+        print("key:%s"%key1)
+        print(data[:100])
+        res = self.redis.execute_command("SET", key1, data)
         if not res:  # data already present, 0-db did nothing.
             return res
-
+        print(res)
         if self.mode == "seq":
             key = struct.unpack("<I", res)[0]
 
@@ -224,16 +226,28 @@ class ZDBClientNS(JSBASE):
                       start of database when direction = forward, else end
 
         """
+
         if result is None:
             result = []
 
-        next = self._key_get(key_start, set=False, iterate=True)
+        nr = 0
+
+        if key_start is not None:
+            next = self.redis.execute_command("KEYCUR", self._key_get(key_start))
+            if _keyonly:
+                result = method(key_start, result)
+            else:
+                data = self.redis.execute_command("GET", self._key_get(key_start))
+                result = method(key_new, data, result)
+            nr += 1
+        else:
+            next = None
+
         if direction == "forward":
             CMD = "SCANX"
         else:
             CMD = "RSCAN"
 
-        nr = 0
         while nr < nrrecords:
             try:
                 if next in [None, ""]:
@@ -242,27 +256,36 @@ class ZDBClientNS(JSBASE):
                     resp = self.redis.execute_command(CMD, next)
 
                 # format of the response
-                # - next key to use to continue the scan
-                # - array of 3 items [key, size, timestamp]
-                next = resp[0]
-                keyb = resp[1][0][0]
+                # see https://github.com/threefoldtech/0-db/tree/development#scan
 
             except redis.ResponseError as e:
                 if e.args[0] == 'No more data':
                     return result
+                j.shell()
+                raise e
 
-            if self.mode == "seq":
-                key_new = struct.unpack("<I", keyb)[0]
+            (next,res) = resp
+
+            if len(res)>0:
+                for item in res:
+                    #there can be more than 1
+
+                    keyb,size,epoch = item
+
+                    if self.mode == "seq":
+                        key_new = struct.unpack("<I", keyb)[0]
+                    else:
+                        key_new = keyb
+
+                    if _keyonly:
+                        result = method(key_new, result)
+                    else:
+                        data = self.redis.execute_command("GET", keyb)
+                        result = method(key_new, data, result)
+                    nr += 1
             else:
-                key_new = keyb
-
-            if _keyonly:
-                result = method(key_new, result)
-            else:
-                data = self.redis.execute_command("GET", keyb)
-                result = method(key_new, data, result)
-
-            nr += 1
+                j.shell()
+                w
 
         return result
 
@@ -287,19 +310,13 @@ class ZDBClientNS(JSBASE):
         assert self.set(b"rss", key=id) == 0  # changed the data
 
         nr = self.nsinfo["entries"]
-        assert nr == 3
+        assert nr == 2 #nr of real data inside
 
         # test the list function
         assert self.list() == [0, 1]
-        assert self.list(1) == []
-        assert self.list(0) == [1]
+        assert self.list(1) == [1]
+        assert self.list(0) == [0,1]
 
-        # TODO:*1
-        from IPython import embed
-        embed(colors='Linux')
-        ss
-
-        pprint(res)
 
         result = {}
 
@@ -309,42 +326,31 @@ class ZDBClientNS(JSBASE):
             return result
 
         result = self.iterate(test, result={})
+        assert {0: b'rss', 1: b'b'} == result
 
-        assert self.list(start=newid, end=newid) == [newid]
+        assert self.list(key_start=id2, nrrecords=1) == [id2]
 
-        result = self.iterate(test, result={}, start=newid, end=newid)
+        assert self.exists(id2)
 
-        assert result == {newid: b'r'}
-
-        assert self.exists(newid)
-
+        print("write 10000 entries")
         def dumpdata():
 
-            if self.key_enable:
-                inputs = {}
-                for i in range(4):
-                    data = os.urandom(4096)
-                    key = self.set(data, key=str(i))
-                    inputs[key] = data
-
-            elif self.id_enable:  # NO LONGER SUPPORTED
-                inputs = {}
-                for i in range(4):
-                    data = os.urandom(4096)
-                    key = self.set(data)
-                    inputs[key] = data
+            inputs = {}
+            for i in range(100):
+                data = os.urandom(4096)
+                key = self.set(data)
+                inputs[key] = data
 
             for k, expected in inputs.items():
                 actual = self.get(k)
+                if expected != actual:
+                    j.shell()
+                    wac
                 assert expected == actual
 
         dumpdata()  # is in default namespace
 
-        for i in range(1000):
-            nsname = "testns_%s" % i
-            exists = self.nsname_exists(nsname)
-            if not exists:
-                break
+        j.shell()
 
         pprint("count:%s" % self.count)
 
