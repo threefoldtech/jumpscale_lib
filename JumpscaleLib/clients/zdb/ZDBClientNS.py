@@ -109,12 +109,12 @@ class ZDBClientNS(JSBASE):
 
         """
         key1 = self._key_get(key)
-        print("key:%s"%key1)
-        print(data[:100])
+        # print("key:%s"%key1)
+        # print(data[:100])
         res = self.redis.execute_command("SET", key1, data)
         if not res:  # data already present, 0-db did nothing.
             return res
-        print(res)
+        # print(res)
         if self.mode == "seq":
             key = struct.unpack("<I", res)[0]
 
@@ -238,7 +238,7 @@ class ZDBClientNS(JSBASE):
                 result = method(key_start, result)
             else:
                 data = self.redis.execute_command("GET", self._key_get(key_start))
-                result = method(key_new, data, result)
+                result = method(key_start, data, result)
             nr += 1
         else:
             next = None
@@ -333,10 +333,10 @@ class ZDBClientNS(JSBASE):
         assert self.exists(id2)
 
         print("write 10000 entries")
-        def dumpdata():
+        def dumpdata(self):
 
             inputs = {}
-            for i in range(100):
+            for i in range(1000):
                 data = os.urandom(4096)
                 key = self.set(data)
                 inputs[key] = data
@@ -348,38 +348,36 @@ class ZDBClientNS(JSBASE):
                     wac
                 assert expected == actual
 
-        dumpdata()  # is in default namespace
+        dumpdata(self)  # is in default namespace
 
-        j.shell()
 
         pprint("count:%s" % self.count)
 
-        self.nsname_new(nsname, secret="1234", maxsize=1000, instance=None)
+        nsname="newnamespace"
+        ns = self.zdbclient.namespace_new(nsname, secret="1234", maxsize=1000)
+        assert ns.nsinfo["data_limits_bytes"] == 1000
+        assert ns.nsinfo["data_size_bytes"] == 0
+        assert ns.nsinfo["data_size_mb"] == 0.0
+        assert ns.nsinfo["entries"] == 0
+        assert ns.nsinfo["index_size_bytes"] == 0
+        assert ns.nsinfo["index_size_kb"] == 0.0
+        assert ns.nsinfo["name"] == nsname
+        assert ns.nsinfo["password"] == "yes"
+        assert ns.nsinfo["public"] == "no"
 
-        assert self.nsinfo["data_limits_bytes"] == 1000
-        assert self.nsinfo["data_size_bytes"] == 0
-        assert self.nsinfo["data_size_mb"] == 0.0
-        assert self.nsinfo["entries"] == 0
-        assert self.nsinfo["index_size_bytes"] == 0
-        assert self.nsinfo["index_size_kb"] == 0.0
-        assert self.nsinfo["name"] == nsname
-        assert self.nsinfo["password"] == "yes"
-        assert self.nsinfo["public"] == "no"
-
-        assert self.nsname == nsname
+        assert ns.nsname == nsname
 
         # both should be same
-        id = self.set(b"a")
-        assert self.get(id) == b"a"
-        assert self._indexfile.count == 1
-        assert self.nsinfo["entries"] == 1
+        id = ns.set(b"a")
+        assert ns.get(id) == b"a"
+        assert ns.nsinfo["entries"] == 1
 
         try:
-            dumpdata()
+            dumpdata(ns)
         except Exception as e:
             assert "No space left" in str(e)
 
-        self.nsname_new(nsname + "2", secret="1234", instance=None)
+        self.zdbclient.namespace_new(nsname + "2", secret="1234")
 
         nritems = 100000
         j.tools.timer.start("zdb")
