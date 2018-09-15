@@ -49,7 +49,7 @@ class ZDBClientNS(JSBASE):
             self.redis.execute_command("SELECT", self.nsname, self.secret)
 
     def test(self):
-        return self.zdbclient.test()
+        return self.test_seq()
 
     @property
     def adminsecret(self):
@@ -379,10 +379,10 @@ class ZDBClientNS(JSBASE):
 
         self.zdbclient.namespace_new(nsname + "2", secret="1234")
 
-        nritems = 100000
+        nritems = 10000
         j.tools.timer.start("zdb")
 
-        pprint("perftest for 100.000 records, should get above 10k per sec")
+        pprint("perftest for 10.000 records, should get above 10k per sec")
         for i in range(nritems):
             id = self.set(b"a")
 
