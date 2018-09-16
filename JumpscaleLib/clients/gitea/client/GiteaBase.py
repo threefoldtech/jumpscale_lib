@@ -1,5 +1,5 @@
 import json
-from js9 import j
+from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
