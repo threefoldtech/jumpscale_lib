@@ -37,7 +37,7 @@ class AtomicSwapManager:
         if refund_address is None:
             refund_address = self._wallet.generate_address()
         # convert amount to hastings
-        actuall_amount = amount * HASTINGS_TFT_VALUE
+        actuall_amount = int(amount * HASTINGS_TFT_VALUE)
         if type(duration) == int:
             locktime = duration
         else:
@@ -242,7 +242,7 @@ class AtomicSwapManager:
 
     def redeem(self, output_id, secret):
         """
-        Complete the atomicswap contract by spending a the output as the receiver of the atomicswap
+        Complete the atomicswap contract by spending the output as the receiver of the atomicswap
 
         @param output_id: Output ID to be spent
         @param secret: Atomicswap secert
