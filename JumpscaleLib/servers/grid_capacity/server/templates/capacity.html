@@ -156,18 +156,6 @@
             <p>Last update: <code>{{node.updated}}</code></p>
             <p>Farm: <code><a href="/farmers#{{node.farmer.id}}">{{node.farmer.name}}</a></code></p>
             <!-- <p>Uptime: <span class="badge badge-{{node.updated | deltatime_color}}">{{ node.uptime | uptime }}</span></p> -->
-            {% if node.farmer.wallet_addresses|length > 0 %}
-            <p>
-              Wallet addresses:
-              <ul>
-              {% for addr in node.farmer.wallet_addresses %}
-                <li>
-                  <pre>{{addr}}</pre>
-                </li>
-              {% endfor %}
-              </ul>
-            </p>
-           {% endif %}
            <div>
              <table class="table table-sm table-hover">
                 <thead class="thead-light">

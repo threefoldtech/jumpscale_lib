@@ -131,26 +131,18 @@ class Zerodb:
             self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
         zt_public = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
         j.sal_zos.utils.authorize_zerotiers(zt_public, self.nics)
-        ports = {"zt*:{}".format(self.node_port): DEFAULT_PORT}
+        ports = {self.node_port: DEFAULT_PORT}
         if self.node.storageAddr != self.node.addr:
             ports["backplane:{}".format(self.node_port)] = DEFAULT_PORT
 
         return {
-            'name': self._container_name,
+            'name': self.name,
             'flist': self.flist,
             'identity': self.zt_identity,
             'mounts': {self.path: '/zerodb'},
             'ports': ports,
             'nics': [nic.to_dict(forcontainer=True) for nic in self.nics]
         }
-
-    @property
-    def _container_name(self):
-        """
-        :return: name used for zerodb container
-        :rtype: string
-        """
-        return 'zdb_{}'.format(self.name)
 
     @property
     def container(self):
@@ -161,7 +153,7 @@ class Zerodb:
         """
         if self._container is None:
             try:
-                self._container = self.node.containers.get(self._container_name)
+                self._container = self.node.containers.get(self.name)
             except LookupError:
                 self._container = self.node.containers.create(**self._container_data)
         return self._container
@@ -175,7 +167,7 @@ class Zerodb:
         :type container: container sal object
         """
         if not container:
-            container = self.node.containers.get(self._container_name)
+            container = self.node.containers.get(self.name)
         for k, v in container.ports.items():
             if v == DEFAULT_PORT:
                 self.node_port = int(k.split(':')[-1])

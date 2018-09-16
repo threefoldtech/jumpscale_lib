@@ -2,7 +2,7 @@
 
 import os
 from flask import request, redirect, jsonify, flash
-from ..flask_itsyouonline import requires_auth 
+from ..flask_itsyouonline import requires_auth
 
 import json as JSON
 import jsonschema
@@ -23,10 +23,16 @@ def UpdateFarmerHandler():
     farmer = Farmer.objects.filter(iyo_organization=iyo_organization).first()
     if not farmer:
         return jsonify(code=404, message="itsyou.online organization: {} not found.".format(iyo_organization)), 404
- 
+
     new_farm_name = request.args.get('name')
     if new_farm_name:
         farmer.name = new_farm_name
+
+    if 'wallet_addresses' in request.args:
+        farmer.wallet_addresses = []
+        for addr in request.args['wallet_addresses'].split(','):
+            farmer.wallet_addresses.append(addr.strip())
+
     farm_address = request.args.get('farmAddress')
     if farm_address:
         lng = lat = 0

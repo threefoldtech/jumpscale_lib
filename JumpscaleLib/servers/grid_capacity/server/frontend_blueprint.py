@@ -90,6 +90,7 @@ def edit_farmer(organization):
             return redirect("/edit_farm/{}".format(organization))
         try:
             farmer = FarmerRegistration.get(organization)
+            farmer.wallet_addresses = ', '.join(farmer.wallet_addresses)
         except FarmerNotFoundError as e:
             abort(404)
         else:

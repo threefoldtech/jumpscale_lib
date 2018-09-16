@@ -81,7 +81,7 @@ class Disk(Mountable):
         self.mountpoint = None
         self.model = None
         self._filesystems = []
-        self.type = None
+        self._type = None
         self.partitions = []
         self.transport = None
         self._disk_info = disk_info
@@ -101,6 +101,30 @@ class Disk(Mountable):
         self._populate_filesystems()
         return self._filesystems
 
+    @property
+    def type(self):
+        """
+        return the type of the disk
+        """
+        if self._type is None:
+            if self._disk_info['type'] == 'rom':
+                self._type = StorageType.CDROM
+            else:
+                res = self.node.client.disk.seektime(self.devicename)
+
+                # assume that if a disk is more than 7TB it's a SMR disk
+                if res['type'] == 'HDD':
+                    if int(self._disk_info['size']) > (1024 * 1024 * 1024 * 1024 * 7):
+                        self._type = StorageType.ARCHIVE
+                    else:
+                        self._type = StorageType.HDD
+                elif res['type'] == 'SSD':
+                    if "nvme" in self._disk_info['name']:
+                        self._type = StorageType.NVME
+                    else:
+                        self._type = StorageType.SSD
+        return self._type
+
     def _load(self, disk_info):
         self.name = disk_info['name']
         self.size = int(disk_info['size'])
@@ -109,7 +133,6 @@ class Disk(Mountable):
             self.partition_table = disk_info['table']
         self.mountpoint = disk_info['mountpoint']
         self.model = disk_info['model']
-        self.type = self._disk_type(disk_info)
         self.transport = disk_info['tran']
         for partition_info in disk_info.get('children', []) or []:
             self.partitions.append(
@@ -130,24 +153,6 @@ class Disk(Mountable):
                 if device['path'] == "/dev/{}".format(self.name):
                     self._filesystems.append(fs)
                     break
-
-    def _disk_type(self, disk_info):
-        """
-        return the type of the disk
-        """
-        if disk_info['rota'] == "1":
-            if disk_info['type'] == 'rom':
-                return StorageType.CDROM
-            # assume that if a disk is more than 7TB it's a SMR disk
-            elif int(disk_info['size']) > (1024 * 1024 * 1024 * 1024 * 7):
-                return StorageType.ARCHIVE
-            else:
-                return StorageType.HDD
-        else:
-            if "nvme" in disk_info['name']:
-                return StorageType.NVME
-            else:
-                return StorageType.SSD
 
     def mktable(self, table_type='gpt', overwrite=False):
         """
