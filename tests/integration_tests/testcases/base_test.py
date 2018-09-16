@@ -59,7 +59,7 @@ class BaseTest(Utils):
 
     def set_vm_default_values(self, os_type, os_version=None):
         cpu_info = self.node_info['core']
-        if cpu_info == 1:
+        if cpu_info == 0:
             cpu = 1
         else:
             cpu = random.randint(1, cpu_info) 
@@ -114,7 +114,7 @@ class BaseTest(Utils):
 
     def get_zos_info(self):
         info = self.node_sal.capacity.total_report()
-        node_info = {'ssd': int(info.SRU), 'hdd': int(info.HRU), 'core': info.CRU,
+        node_info = {'ssd': int(info.SRU), 'hdd': int(info.HRU), 'core': int(info.CRU),
                      'memory': int(info.MRU)}
         return node_info
 
