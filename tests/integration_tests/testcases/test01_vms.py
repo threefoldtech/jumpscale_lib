@@ -312,6 +312,45 @@ class VMTestCases(BaseTest):
         result = self.ssh_vm_execute_command(vm_ip=vm_zt_ip, cmd='pwd')
         self.assertEqual(result, '/root')
 
+    def test008_add_port_without_type_default_nics_to_vm(self):
+        """ SAL-003 create vm without type default and add port.
+
+        **Test Scenario:**
+ 
+        #. Create vm [vm1] with default values, should succeed.
+        #. Add a port forword to port 22, should fail.
+        #. Add type default to [vm1].
+        #. Add a port forword to port 22 again, should succeed.
+        #. Check that you can access [vm1], should succeed.
+
+        """
+        self.log("Create vm [VM1] with default values, should succeed.")
+        vm = self.vm(node=self.node_sal)
+        vm.data = self.set_vm_default_values(os_type="ubuntu")
+        created_vm = vm._vm_sal
+        self.assertTrue(created_vm)
+
+        self.log("Add a port forword to port 22, should fail.")
+        port_name = self.random_string()
+        host_port = random.randint(3000, 4000)
+        try:
+            created_vm.ports.add(port_name, source=host_port, target=22)
+        except ValueError as e:
+            self.assertIn('Can not add ports when no default nic is added', e.args[0])
+
+        self.log("Add type default to [vm1].")
+        network_name = self.random_string()
+        created_vm.nics.add(type_='default', name=network_name)
+
+        self.log("Add a port forword to port 22.")
+        created_vm.ports.add(port_name, source=23, target=22)
+        
+        vm.install(created_vm)
+        
+        self.log("Check that you can access [vm1], should succeed.")
+        result = self.ssh_vm_execute_command(vm_ip=self.node_ip, port=host_port, cmd='pwd')
+        self.assertEqual(result, '/root') 
+
 class VMActionsBase(BaseTest):
 
     @classmethod
@@ -446,7 +485,7 @@ class VMActionsBase(BaseTest):
         self.assertAlmostEqual(uptime, 1 , delta=3)
     
     @parameterized.expand(["zero-os", "ubuntu"])
-    @unittest.skip('sometimes it fails to shutdown, or fails to take ip after start')
+    # @unittest.skip('sometimes it fails to shutdown, or fails to take ip after start')
     def test004_shutdown_and_start_vm(self, os_type):
         """ SAL-010
         *Test case for testing shutdown and start vm*
@@ -464,7 +503,8 @@ class VMActionsBase(BaseTest):
 
         self.log("Create a vm[vm1], should succeed.")
         self.create_booted_vm(os_type)
-            
+        
+        time.sleep(15)
         self.log("Shutdown [vm1], should succeed.")
         self.vm.shutdown()
 

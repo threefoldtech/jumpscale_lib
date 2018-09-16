@@ -58,10 +58,11 @@ class BaseTest(Utils):
         return str(uuid.uuid4()).replace('-', '')[:size]        
 
     def set_vm_default_values(self, os_type, os_version=None):
-        if self.node_info['core'] == 1:
+        cpu_info = self.node_info['core']
+        if cpu_info == 1:
             cpu = 1
         else:
-            cpu = random.randint(1, self.node_info['core']) 
+            cpu = random.randint(1, cpu_info) 
 
         vm_parms = {'flist':"",
                     'cpu': cpu ,
@@ -163,8 +164,8 @@ class BaseTest(Utils):
             else:
                 print(colored(' [+] Execute command passed.', 'green'))
                 return resposne.stdout.strip()
-        else:
-            raise RuntimeError(colored(' [-] {}'.format(resposne.stderr.strip()), 'red'))
+        # else:
+        #     raise RuntimeError(colored(' [-] {}'.format(resposne.stderr.strip()), 'red'))
 
     def set_gw_default_values(self, status="halted", name=None):
         gw_parms = {

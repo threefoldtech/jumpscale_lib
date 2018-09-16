@@ -48,7 +48,7 @@ class VM:
 
     def start(self):
         print(colored('Starting vm {}'.format(self.data["name"]), 'white'))
-        self._vm_sal.deploy()
+        self._vm_sal.start()
 
     def resume(self):
         print(colored('Resuming vm %s' % self.data["name"],'white')) 
