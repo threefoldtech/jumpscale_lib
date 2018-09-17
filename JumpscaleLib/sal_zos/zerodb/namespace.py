@@ -8,7 +8,7 @@ logger = j.logger.get(__name__)
 
 class NamespaceInfo:
     def __init__(self, name, public, password, index_size_kb, index_size_bytes,
-                 entries, data_size_mb, data_size_bytes, data_limits_bytes):
+                 entries, data_size_mb, data_size_bytes, data_limits_bytes, mode, **kwargs):
         self.name = name
         self.public = True if public == 'yes' else False
         self.password = True if password == 'yes' else False
@@ -18,6 +18,7 @@ class NamespaceInfo:
         self.data_size_mb = float(data_size_mb)
         self.data_size_bytes = int(data_size_bytes)
         self.data_limits_bytes = int(data_limits_bytes)
+        self.mode = mode
 
     def to_dict(self):
         return {
@@ -30,6 +31,7 @@ class NamespaceInfo:
             'data_size_mb': self.data_size_mb,
             'data_size_bytes': self.data_size_bytes,
             'data_limits_bytes': self.data_limits_bytes,
+            'mode': self.mode,
         }
 
     def __str__(self):
