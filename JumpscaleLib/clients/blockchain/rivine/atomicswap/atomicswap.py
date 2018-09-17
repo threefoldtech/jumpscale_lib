@@ -37,7 +37,7 @@ class AtomicSwapManager:
         if refund_address is None:
             refund_address = self._wallet.generate_address()
         # convert amount to hastings
-        actuall_amount = amount * HASTINGS_TFT_VALUE
+        actuall_amount = int(amount * HASTINGS_TFT_VALUE)
         if type(duration) == int:
             locktime = duration
         else:

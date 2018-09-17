@@ -4,7 +4,8 @@ Jumpscale client module that define a client for electrum wallet
 
 from Jumpscale import j
 
-from .ElectrumWallet import ElectrumWallet
+from JumpscaleLib.clients.blockchain.electrum.ElectrumWallet import ElectrumWallet
+from JumpscaleLib.clients.blockchain.electrum.ElectrumAtomicswap import ElectrumAtomicswap
 
 
 TEMPLATE = """
@@ -38,6 +39,7 @@ class ElectrumClient(JSConfigBase):
         JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,
                               template=TEMPLATE, interactive=interactive)
         self._wallet = None
+        self._atomicswap = None
 
 
     @property
@@ -48,3 +50,19 @@ class ElectrumClient(JSConfigBase):
                 config_data[key.strip('_')] = value
             self._wallet = ElectrumWallet(name=self.instance, config=config_data)
         return self._wallet
+
+
+    @property
+    def atomicswap(self):
+        """
+        Atomicswap support for BTC electrum
+        """
+        if self._atomicswap is None:
+            self._atomicswap = ElectrumAtomicswap(wallet_name=self.instance,
+                                                  data_dir=self.config.data['electrum_path'],
+                                                  rpcuser=self.config.data['rpc_user'],
+                                                  rpcpass=self.config.data['rpc_pass_'],
+                                                  rpchost=self.config.data['server'].split(':')[0],
+                                                  rpcport=self.config.data['server'].split(':')[1],
+                                                  testnet=self.config.data['testnet'])
+        return self._atomicswap

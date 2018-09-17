@@ -40,7 +40,7 @@ client_data = {
       'rpc_user': RPC_USER,
       'rpc_pass_': RPC_PASS,
       'seed_': SEED,
-      'password_': "pass",
+      'password_': "",
       "passphrase_": "",
       "electrum_path": ELECTRUM_DIR,
       "testnet": 1
@@ -66,3 +66,25 @@ electrum_cl.wallet.listaddresses()
 # check balance
 electrum_cl.wallet.getbalance()
 ```
+
+
+## Atomicwap Support
+Atomicswap support is supported via the electrum client. The automicswap support depends on the Golang implementation of electrum atomicswap provided by [Rivine](https://github.com/rivine/atomicswap)
+
+To perform atomicswap operations you will need to execute the following commands:
+```python
+WALLET_NAME = 'testwallet'
+electrum_cl = j.clients.btc_electrum.get(WALLET_NAME)
+
+electrum_cl.wallet.getbalance()
+
+electrum_cl.atomicswap.[TAP]
+
+```
+Supported APIs are:
+- Initiate
+- Participate
+- Auditcontract
+- Redeem
+- Refund
+- Extractsecret
