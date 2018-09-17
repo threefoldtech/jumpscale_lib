@@ -1,7 +1,8 @@
 from testcases.base_test import BaseTest
 from nose_parameterized import parameterized
 from termcolor import colored
-
+import unittest
+import time
 
 class GWTestCases(BaseTest):
 
@@ -14,7 +15,7 @@ class GWTestCases(BaseTest):
         super().setUp()
         self.gateway_data = self.set_gw_default_values()
         self.gateway = self.gw(node=self.node_sal, data=self.gateway_data)
-        self.vm_data = self.set_vm_default_values()
+        self.vm_data = self.set_vm_default_values(os_type="ubuntu")
         self.vm = self.vm(node=self.node_sal, data=self.vm_data)
 
     def tearDown(self):
@@ -32,7 +33,6 @@ class GWTestCases(BaseTest):
         try:
             self.gateway.install()
         except RuntimeError as e:
-            print(colored(e.args[0],'red'))
             self.assertIn("Need exactly one public network", e.args[0])
 
     def test002_deploy_getway_with_public_network(self):
@@ -56,7 +56,6 @@ class GWTestCases(BaseTest):
         try:
             self.gateway.install()
         except RuntimeError as e:
-            print(colored(e.args[0],'red'))            
             self.assertIn("Need exactly one public network", e.args[0])
 
         self.log("Set network public to True.")
@@ -87,14 +86,12 @@ class GWTestCases(BaseTest):
         try:
             created_gateway.networks.add(name=network_name, type_="default")
         except ValueError as e:
-            print(colored(e.args[0],'red'))            
             self.assertIn(" Element with name %s already exists"%network_name, e.args[0])
 
-        self.log("Add network [N2] with same type and same name as [N1] to [GW1],should fail .")
+        self.log("Add network [N2] with different type and same name as [N1] to [GW1],should fail .")
         try:
             created_gateway.networks.add(name=network_name, type_="zerotier", networkid=self.zt_network.id)
         except ValueError as e:
-            print(colored(e.args[0],'red'))            
             self.assertIn(" Element with name %s already exists"%network_name, e.args[0])
 
     def test04_remove_network(self):
@@ -155,7 +152,6 @@ class GWTestCases(BaseTest):
             gateway2.install(gw2)
 
         except RuntimeError as e:
-            print(colored(e.args[0], "red"))
             self.assertIn("port already in use", e.args[0])
 
     def test06_create_gateway_with_public_and_zerotier_vm(self):
@@ -189,30 +185,40 @@ class GWTestCases(BaseTest):
         result = self.ssh_vm_execute_command(vm_ip=vm_zt_ip, cmd='pwd')
         self.assertNotEqual(len(result), 0)
 
-    def test06_create_gateway_with_public_and_zerotier_vm(self):
+    @unittest.skip("we don't know what's the configuration of network we should use")
+    def test007_create_gateway_with_passthrough_and_zerotier_vm(self):
         """SAL-GW-000
-        *Test case for deploying gateways with public and zerotier networks. *
+        *Test case for deploying gateways with passthrough and zerotier networks . *
         Test Scenario:
 
-        #. Create gateway with public default network, should succeed.
-        #. Add zerotier network as private network, should succeed.
+        #. Create new zerotier network.
+        #. Create gateway with public passthrough network , should succeed.
+        #. Add zerotier network as private network by pass zerotier client, should succeed.
         #. Adding a new vm t to gateway private network , should succeed.
-        #. Check that the vm has been join the zerotier network.
+        #. Check that the vm has been join the zerotier .
         """
+        self.log("[*] Create new zerotier network.")
+        zt_network_name = self.random_string()
+        zt_network = self.zt_client.network_create(public=False, name=zt_network_name, auto_assign=True, subnet='10.142.13.0/24')
+        self.host_join_zt(zt_network)
+        zt_node_ip = self.zos_node_join_zt(zt_network.id)
+
+        self.log("[*] Create gateway with public passthrough public network, should succeed.")
         created_gateway = self.gateway._gateway_sal
-        self.log("Create gateway with public default network, should succeed.")
-        network_name = self.random_string()
-        created_network = created_gateway.networks.add(name=network_name, type_="default")        
+        public_network_name = self.random_string()
+        public_net = created_gateway.networks.add(name=public_network_name, type_="passthrough", networkid='eth1')        
+        public_net.ip.cidr = "%s/24"%zt_node_ip
+        public_net.ip.gateway = zt_node_ip.replace(zt_node_ip.rsplit(".")[3], '1')
 
         self.log("Add zerotier network as private network, should succeed.")
-        
         zt_network = created_gateway.networks.add_zerotier(self.zt_network)
+        created_gateway.deploy()
 
         self.log("Adding a new vm t to gateway private network , should succeed.")
         self.vm.deploy()
         zt_network.hosts.add(self.vm)
-        self.gateway.deploy()
         self.vm.deploy()
+        created_gateway.deploy()
 
         self.log("Check that the vm has been join the zerotier network.")
         ztIdentity = self.vm.data["ztIdentity"]
@@ -221,18 +227,6 @@ class GWTestCases(BaseTest):
         self.assertNotEqual(len(result), 0)
 
 
-    # def test007_create_gateway_with_passthrough_and_zerotier_vm():
-    #     """SAL-GW-000
-    #     *Test case for deploying gateways with passthrough and zerotier networks . *
-    #     Test Scenario:
-
-    #     #. Create new zerotier network.
-    #     #. Create gateway with public passthrough network , should succeed.
-    #     #. Add zerotier network as private network by pass zerotier client, should succeed.
-    #     #. Adding a new vm t to gateway private network , should succeed.
-    #     #. Check that the vm has been join the zerotier network.
-    #     """
-    #     pass
 
     # def test008_create_gateway_portforwards():
     #     """SAL-GW-000
@@ -288,12 +282,9 @@ class GWTestCases(BaseTest):
     # def test21_add_network(self):
     #     pass
 
-    # def test22_add_network_name_exist(self):
+    # def test22_stop(self):
     #     pass
 
-    # def test23_stop(self):
-    #     pass
-
-    # def test24_gateway_cloudinit(self):
+    # def test23_gateway_cloudinit(self):
     #     pass
 

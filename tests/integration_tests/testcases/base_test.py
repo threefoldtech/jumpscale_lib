@@ -149,6 +149,12 @@ class BaseTest(Utils):
         host_ip = host_member.private_ip
         return host_ip 
 
+    def zos_node_join_zt(self, network_id):
+        self.node_sal.client.zerotier.join(network_id)
+        ztIdentity = self.node_sal.client.zerotier.info()['publicIdentity']
+        node_ip = self.get_machine_zerotier_ip(ztIdentity)
+        return node_ip
+        
     def ssh_vm_execute_command(self, vm_ip, cmd):
         for _ in range(10):            
             result, error = self.execute_command(ip=vm_ip, cmd=cmd)
