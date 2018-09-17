@@ -131,7 +131,8 @@ class Zerodb:
             self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
         zt_public = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
         j.sal_zos.utils.authorize_zerotiers(zt_public, self.nics)
-        ports = {self.node_port: DEFAULT_PORT}
+        ports = {"zt*:{}".format(self.node_port): DEFAULT_PORT,
+                 "{}:{}".format(self.node.get_gateway_nic(), self.node_port): DEFAULT_PORT}
         if self.node.storageAddr != self.node.addr:
             ports["backplane:{}".format(self.node_port)] = DEFAULT_PORT
 
