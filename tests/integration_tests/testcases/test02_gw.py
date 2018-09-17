@@ -54,7 +54,7 @@ class GWTestCases(BaseTest):
 
         self.log("Deploy [GW1], should fail ,need at least one public network.")
         try:
-            self.gateway.install()
+            self.gateway.install(created_gateway)
         except RuntimeError as e:
             self.assertIn("Need exactly one public network", e.args[0])
 
@@ -62,7 +62,7 @@ class GWTestCases(BaseTest):
         network.public = True
 
         self.log("Deploy [GW1], should succeed.")
-        self.gateway.install()
+        self.gateway.install(created_gateway)
 
     def test003_add_network_name_exist(self):
         """SAL-GW-000
@@ -80,6 +80,7 @@ class GWTestCases(BaseTest):
         self.log(" Add network [N1] to [GW1], should succeed.")
         network_name = self.random_string()
         network = created_gateway.networks.add(name=network_name, type_="default")
+        network.public = True
         self.gateway.install(created_gateway)
 
         self.log("Add network [N2] with same type and same name as [N1] to [GW1],should fail .")
@@ -110,9 +111,10 @@ class GWTestCases(BaseTest):
         self.log("Add network [N1] to [GW1], should succeed.")
         network_name = self.random_string()
         created_network = created_gateway.networks.add(name=network_name, type_="default")        
-
+        created_network.public = True
+    
         self.log("Deploy [GW1], should succeed.")
-        self.gateway.install()
+        self.gateway.install(created_gateway)
         
         self.log("remove N1, should succeed.")
         created_gateway.networks.remove(created_network)
@@ -154,6 +156,7 @@ class GWTestCases(BaseTest):
         except RuntimeError as e:
             self.assertIn("port already in use", e.args[0])
 
+    @unittest.skip("https://github.com/threefoldtech/jumpscale_lib/issues/132")
     def test06_create_gateway_with_public_and_zerotier_vm(self):
         """SAL-GW-000
         *Test case for deploying gateways with public and zerotier networks. *
@@ -168,16 +171,16 @@ class GWTestCases(BaseTest):
         self.log("Create gateway with public default network, should succeed.")
         network_name = self.random_string()
         created_network = created_gateway.networks.add(name=network_name, type_="default")        
-
+        created_network.public = True
         self.log("Add zerotier network as private network, should succeed.")
         
         zt_network = created_gateway.networks.add_zerotier(self.zt_network)
 
         self.log("Adding a new vm t to gateway private network , should succeed.")
-        self.vm.deploy()
+        self.vm.install()
         zt_network.hosts.add(self.vm)
         self.gateway.deploy()
-        self.vm.deploy()
+        self.vm.install()
 
         self.log("Check that the vm has been join the zerotier network.")
         ztIdentity = self.vm.data["ztIdentity"]

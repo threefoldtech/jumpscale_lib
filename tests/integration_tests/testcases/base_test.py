@@ -109,8 +109,10 @@ class BaseTest(Utils):
                 member_ip = member.get_private_ip(timeout)
                 return member_ip
             except (RuntimeError, ValueError) as e:
-                print(colored('Failed to retreive zt ip: {}'.format(str(e)), 'red'))
                 time.sleep(1)
+        else:
+            raise RuntimeError("Failed to retreive zt ip: Cannot get private ip address for zerotier member")
+
 
     def get_zos_info(self):
         info = self.node_sal.capacity.total_report()

@@ -29,7 +29,7 @@ class GW:
 
     def destroy(self, gateway_name=None):
         gateway_name = gateway_name or self.data["name"] 
-        self.node_sal.drop_gateway(gateway_name)
+        self.node_sal.primitives.drop_gateway(gateway_name)
 
     def add_portforward(self, forward):
         print(colored('Add portforward {}'.format(forward['name']), 'white'))
