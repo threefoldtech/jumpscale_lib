@@ -24,7 +24,6 @@ class VM:
     def install(self, vm_sal=None):
         print(colored('Installing vm %s' % self.data["name"], 'white'))
         vm_sal = vm_sal or self._vm_sal
-        import ipdb; ipdb.set_trace()
         vm_sal.deploy()
         self.data['uuid'] = vm_sal.uuid
         self.data['ztIdentity'] = vm_sal.zt_identity
@@ -49,7 +48,7 @@ class VM:
 
     def start(self):
         print(colored('Starting vm {}'.format(self.data["name"]), 'white'))
-        self._vm_sal.deploy()
+        self._vm_sal.start()
 
     def resume(self):
         print(colored('Resuming vm %s' % self.data["name"],'white')) 

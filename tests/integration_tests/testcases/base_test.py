@@ -32,9 +32,10 @@ class BaseTest(Utils):
         cls.zdb = ZDB
         cls.ssh_key = self.load_ssh_key()
         cls.zt_token = config['main']['zt_token']
+        cls.node_ip = config['main']['nodeip']
         cls.zt_network_name = self.random_string()
         cls.zt_client = j.clients.zerotier.get(instance=ZT_CLIENT_INSTANCE, data={'token_': cls.zt_token})
-        cls.zt_network = cls.zt_client.network_create(public=False, name=self.zt_network_name, auto_assign=True, subnet='10.147.19.0/24')
+        cls.zt_network = cls.zt_client.network_create(public=False, name=self.zt_network_name, auto_assign=True, subnet='10.147.17.0/24')
         cls.host_ip = self.host_join_zt()
 
     @classmethod
@@ -57,10 +58,15 @@ class BaseTest(Utils):
         return str(uuid.uuid4()).replace('-', '')[:size]        
 
     def set_vm_default_values(self, os_type, os_version=None):
+        cpu_info = self.node_info['core']
+        if cpu_info == 0:
+            cpu = 1
+        else:
+            cpu = random.randint(1, cpu_info) 
 
         vm_parms = {'flist':"",
-                    'cpu': random.randint(1, self.node_info['core']),
-                    'memory': 1024, #random.randint(1, self.node_info['memory']) * 1024,
+                    'cpu': cpu ,
+                    'memory':  random.randint(1, self.node_info['memory']) * 1024,
                     'name': self.random_string(),
                     'nics': [],
                     'configs': [{'path': '/root/.ssh/authorized_keys',
@@ -103,33 +109,33 @@ class BaseTest(Utils):
                 member_ip = member.get_private_ip(timeout)
                 return member_ip
             except (RuntimeError, ValueError) as e:
-                print(colored('Failed to retreive zt ip: %s', str(e), 'red'))
+                print(colored('Failed to retreive zt ip: {}'.format(str(e)), 'red'))
                 time.sleep(1)
 
     def get_zos_info(self):
         info = self.node_sal.capacity.total_report()
-        node_info = {'ssd': int(info.SRU), 'hdd': int(info.HRU), 'core': info.CRU,
+        node_info = {'ssd': int(info.SRU), 'hdd': int(info.HRU), 'core': int(info.CRU),
                      'memory': int(info.MRU)}
         return node_info
 
     def load_ssh_key(self):
-        if os.path.exists('/tmp/id_rsa.pub'):
-            with open('/tmp/id_rsa.pub', 'r') as file:
+
+        home_user = os.path.expanduser('~')
+        if os.path.exists('{}/.ssh/id_rsa.pub'.format(home_user)):
+            with open('{}/.ssh/id_rsa.pub'.format(home_user), 'r') as file:
                 ssh = file.readline().replace('\n', '')
         else:              
-            print(colored('[+] Generate sshkey.', 'white'))
-            cmd = 'ssh-keygen -t rsa -f /tmp/id_rsa -q -P ""; eval `ssh-agent -s`; ssh-add  /tmp/id_rsa'
-            subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            cmd = 'ssh-keygen -t rsa -N "" -f {}/.ssh/id_rsa -q -P ""; ssh-add {}/.ssh/id_rsa'.format(home_user, home_user)
+            subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             ssh = self.load_ssh_key()
         return ssh
 
 
-    def execute_command(self, ip, cmd):
-        target = """ssh -o "StrictHostKeyChecking no" root@%s '%s'""" % (ip, cmd)
-        ssh = subprocess.Popen(target, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        result = ssh.stdout.readlines()
-        error = ssh.stderr.readlines()
-        return result, error
+    def execute_command(self, cmd, ip='', port=22):
+        target = "ssh -o 'StrictHostKeyChecking no' -p {} root@{} '{}'".format(port, ip, cmd)
+        response = subprocess.run(target, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # "response" has stderr, stdout and returncode(should be 0 in successful case)
+        return response
 
     def host_join_zt(self, zt_network=None):
         zt_network = zt_network or self.zt_network
@@ -155,17 +161,16 @@ class BaseTest(Utils):
         node_ip = self.get_machine_zerotier_ip(ztIdentity)
         return node_ip
         
-    def ssh_vm_execute_command(self, vm_ip, cmd):
+    def ssh_vm_execute_command(self, vm_ip, cmd, port=22):
         for _ in range(10):            
-            result, error = self.execute_command(ip=vm_ip, cmd=cmd)
-            if error:
-                print(colored(' [-] Execute command error : {}'.format(error), 'red'))
+            resposne = self.execute_command(ip=vm_ip, cmd=cmd, port=port)
+            if resposne.returncode:
                 time.sleep(30)
             else:
-                print(colored(' [+] Execute command passed.', 'green'))
-                return result
+                return resposne.stdout.strip()
         else:
-            raise RuntimeError(colored(' [-] {}'.format(error), 'red'))
+            print(colored(' [-] Execute command error : {}'.format(resposne.stderr.strip()), 'red'))
+            raise RuntimeError(colored(' [-] {}'.format(resposne.stderr.strip()), 'red'))
 
     def set_gw_default_values(self, status="halted", name=None):
         gw_parms = {
@@ -188,3 +193,7 @@ class BaseTest(Utils):
         network = [network for network in networks if network.name == name ]
         return network
 
+    def check_vnc_connection(self, vnc_ip_port):
+        vnc = 'vncdotool -s {} type {} key enter'.format(vnc_ip_port, repr('ls'))
+        response = subprocess.run(vnc, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return response
