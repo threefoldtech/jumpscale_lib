@@ -63,15 +63,15 @@ class BaseTest(Utils):
         return str(uuid.uuid4()).replace('-', '')[:size]        
 
     def set_vm_default_values(self, os_type, os_version=None):
-        cpu_info = self.node_info['core']
-        if cpu_info == 0:
-            cpu = 1
+        self.cpu_info = self.node_info['core']
+        if self.cpu_info == 0:
+            self.cpu_info = 1
         else:
-            cpu = random.randint(1, cpu_info) 
+            self.cpu_info = random.randint(1, self.cpu_info) 
 
         vm_parms = {'flist':"",
-                    'cpu': cpu ,
                     'memory':  random.randint(1,3) * 1024,
+                    'cpu': self.cpu_info,
                     'name': self.random_string(),
                     'nics': [],
                     'configs': [{'path': '/root/.ssh/authorized_keys',
@@ -107,16 +107,17 @@ class BaseTest(Utils):
         ztAddress = ztIdentity.split(':')[0]
         zt_client = zt_client or self.zt_client
         zt_network = zt_network or self.zt_network
-        for _ in range(300):
+        for _ in range(30):
             try:
                 member = zt_network.member_get(address=ztAddress)
                 member.timeout = None
                 member_ip = member.get_private_ip(timeout)
                 return member_ip
             except (RuntimeError, ValueError) as e:
-                time.sleep(1)
+                time.sleep(10)
         else:
             raise RuntimeError("Failed to retreive zt ip: Cannot get private ip address for zerotier member")
+
 
 
     def get_zos_info(self):
@@ -173,11 +174,10 @@ class BaseTest(Utils):
         for _ in range(10):            
             resposne = self.execute_command(ip=vm_ip, cmd=cmd, port=port)
             if resposne.returncode:
-                time.sleep(30)
+                time.sleep(25)
             else:
                 return resposne.stdout.strip()
         else:
-            print(colored(' [-] Execute command error : {}'.format(resposne.stderr.strip()), 'red'))
             raise RuntimeError(colored(' [-] {}'.format(resposne.stderr.strip()), 'red'))
 
     def set_gw_default_values(self, status="halted", name=None):
