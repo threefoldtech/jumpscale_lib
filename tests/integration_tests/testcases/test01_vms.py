@@ -203,10 +203,10 @@ class VMTestCases(BaseTest):
         self.log("Try to attach disk[D1] again to vm1, should failed.")
         disk_name2 = self.random_string()
         created_vm.disks.add(name_or_disk=disk_name2, url=disk_url)
-        try:
+        
+        with self.assertRaises(RuntimeError) as e:
             created_vm.update_disks()
-        except RuntimeError as e:
-            self.assertIn('The disk you tried is already attached to the vm', e.args[0])
+        self.assertIn('The disk you tried is already attached to the vm', e.exception.args[0])
 
         self.log('Remove the disk[D1] from the disk ,should succeed.')
         created_vm.disks.remove(disk_name1)
@@ -298,10 +298,9 @@ class VMTestCases(BaseTest):
         self.vms.append(created_vm1.uuid)
 
         self.log("Add Zerotier network to [VM1], should fail as vm is running.")
-        try:
+        with self.assertRaises(RuntimeError) as e:
             self.add_zerotier_network_to_vm(created_vm1)
-        except RuntimeError as e:
-            self.assertIn('Zerotier can not be added when the VM is running', e.args[0])
+        self.assertIn('Zerotier can not be added when the VM is running', e.exception.args[0])
 
         self.log("Create vm [VM2] ,should succeed.")
         vm2 = self.vm(node=self.node_sal)
@@ -341,10 +340,10 @@ class VMTestCases(BaseTest):
         self.log("Add a port forword to port 22, should fail.")
         port_name = self.random_string()
         host_port = random.randint(3000, 4000)
-        try:
+
+        with self.assertRaises(ValueError) as e:
             created_vm.ports.add(port_name, source=host_port, target=22)
-        except ValueError as e:
-            self.assertIn('Can not add ports when no default nic is added', e.args[0])
+        self.assertIn('Can not add ports when no default nic is added', e.exception.args[0])
 
         self.log("Add type default to [vm1].")
         network_name = self.random_string()
@@ -359,6 +358,75 @@ class VMTestCases(BaseTest):
         self.log("Check that you can access [vm1], should succeed.")
         result = self.ssh_vm_execute_command(vm_ip=self.node_ip, port=host_port, cmd='pwd')
         self.assertEqual(result, '/root') 
+
+    def test009_change_vm_params(self):
+        """ SAL-021 change vm parameters.
+
+        **Test Scenario:**
+ 
+        #. Create vm [VM1] with default values, should succeed.
+        #. Try to change vm parameters while it is running, should fail.
+        #. Force shutdown the vm.
+        #. Change vm paramters, should succeed.
+        #. Start the vm again.
+        #. Check that vm parameters are changed.
+
+        """
+        self.log("Create vm [VM1] with default values, should succeed.")
+        vm = self.vm(node=self.node_sal)
+        vm.data = self.set_vm_default_values(os_type="ubuntu")
+        created_vm = vm._vm_sal
+        self.assertTrue(created_vm)
+       
+        self.log(" Add zerotier network to VM1, should succeed.")
+        self.add_zerotier_network_to_vm(created_vm)
+        vm.install(created_vm)
+
+        self.log("Check that vm added to zerotier network and can access it using it, should succeed.")
+        ztIdentity = vm.data["ztIdentity"]
+        vm_zt_ip = self.get_machine_zerotier_ip(ztIdentity)
+        result = self.ssh_vm_execute_command(vm_ip=vm_zt_ip, cmd='pwd')
+        self.assertEqual(result, '/root')
+
+        name = self.random_string()
+        vcpus = random.randint(1, self.cpu_info)
+        memory = random.randint(1, self.node_info['memory']) * 1024
+        flist = 'https://hub.grid.tf/tf-bootable/ubuntu:16.04.flist'
+
+        self.log("Try to change vm parameters while it is running, should fail.")
+        with self.assertRaises(RuntimeError) as e:
+            created_vm.name = name
+        self.assertIn('Can not change name of running vm', e.exception.args[0])
+
+        with self.assertRaises(RuntimeError) as e:
+            created_vm.vcpus = vcpus
+        self.assertIn('Can not change cpu of running vm', e.exception.args[0])
+
+        with self.assertRaises(RuntimeError) as e:
+            created_vm.memory = memory
+        self.assertIn('Can not change memory of running vm', e.exception.args[0])
+
+        with self.assertRaises(RuntimeError) as e:
+            created_vm.flist = flist
+        self.assertIn('Can not change flist of running vm', e.exception.args[0])
+
+        self.log("Force shutdown the vm.")
+        created_vm.destroy()
+
+        self.log("Change vm parameters, should succeed.")
+        created_vm.name = name
+        created_vm.vcpus = vcpus
+        created_vm.memory = memory
+        created_vm.flist = flist
+
+        self.log("Start the vm again.")
+        created_vm.start()
+
+        self.log("Check that vm parameters are changed.")
+        self.assertEqual(created_vm.info['params']['name'], name)
+        self.assertEqual(created_vm.info['params']['cpu'], vcpus)
+        self.assertEqual(created_vm.info['params']['memory'], memory)
+        self.assertEqual(created_vm.info['params']['flist'], flist)
 
 class VMActionsBase(BaseTest):
 
@@ -416,12 +484,12 @@ class VMActionsBase(BaseTest):
         vnc_port = self.created_vm.info.get('vnc') - 5900
 
         self.log("Enable vnc port of [vm1] and connect to it , should succeed.")
-        self.vm.enable_vnc()
+        self.created_vm.enable_vnc()
         response2 = self.check_vnc_connection('{}:{}'.format(self.node_ip, vnc_port))
         self.assertFalse(response2.returncode)
 
         self.log("Disable vnc port of [vm1] , should succeed.")
-        self.vm.disable_vnc()   
+        self.created_vm.disable_vnc()   
 
         self.log("Try to connect to vnc port again , should fail.")
         response3 = self.check_vnc_connection('{}:{}'.format(self.node_ip, vnc_port))
@@ -447,7 +515,7 @@ class VMActionsBase(BaseTest):
         self.create_booted_vm(os_type)
 
         self.log("Pause [vm1], should succeed.")
-        self.vm.pause()
+        self.created_vm.pause()
 
         self.log("Check that [vm1] has been paused successfully.")
         self.assertEqual(self.created_vm.info['state'], 'paused')
@@ -455,7 +523,7 @@ class VMActionsBase(BaseTest):
         self.assertTrue(result1.returncode)
 
         self.log("Resume [vm1], should succeed.")
-        self.vm.resume()
+        self.created_vm.resume()
 
         self.log("Check that [vm1] is runninng and can access it again.")
         self.assertEqual(self.created_vm.info['state'], 'running')
@@ -479,9 +547,9 @@ class VMActionsBase(BaseTest):
 
         self.log("{} the VM".format(operation))
         if operation == "reset":
-            self.vm.reset()
+            self.created_vm.reset()
         else:
-            self.vm.reboot()
+            self.created_vm.reboot()
 
         self.log("Check that [vm] has been rebooted successfully.")
         reboot_response = self.ssh_vm_execute_command(vm_ip=self.vm_zt_ip, cmd='uptime')
@@ -490,7 +558,6 @@ class VMActionsBase(BaseTest):
         self.assertAlmostEqual(uptime, 1 , delta=3)
     
     @parameterized.expand(["zero-os", "ubuntu"])
-    @unittest.skip('sometimes it fails to take ip after start')
     def test004_shutdown_and_start_vm(self, os_type):
         """ SAL-010
         *Test case for testing shutdown and start vm*
@@ -508,28 +575,24 @@ class VMActionsBase(BaseTest):
 
         self.log("Create a vm[vm1], should succeed.")
         self.create_booted_vm(os_type)
-        
-        time.sleep(15)
 
         self.log("Shutdown [vm1], should succeed.")
-        self.vm.shutdown()
+        time.sleep(15)
+        self.created_vm.shutdown()
+        
 
-        for _ in range(200):
+        self.log("Wait till vm1 shutdown")
+        for _ in range(30):
             if not self.created_vm.is_running():
                 break
             else:
-                time.sleep(1)
+                time.sleep(5)
         else:
             self.assertFalse(self.created_vm.is_running(),'Take long time to shutdown')
-        
-        self.log("Check that [vm1] has been forced shutdown successfully.")
-        result1 = self.execute_command(ip=self.vm_zt_ip, cmd='pwd')
-        self.assertTrue(result1.returncode)
 
         self.log("Start [vm1], should succeed.")
-        self.vm.start()
+        self.created_vm.start()
 
         self.log("Check that [vm1] is running again.")
         result2 = self.ssh_vm_execute_command(vm_ip=self.vm_zt_ip, cmd='pwd')
         self.assertEqual(result2, '/root')
-
