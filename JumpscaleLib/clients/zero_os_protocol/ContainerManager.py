@@ -139,6 +139,10 @@ class ContainerManager():
             str,
             typchk.IsNone()
         ),
+        'config': typchk.Or(
+            typchk.IsNone(),
+            typchk.Map(str, str)
+        ),
         'storage': typchk.Or(str, typchk.IsNone()),
         'name': typchk.Or(str, typchk.IsNone()),
         'identity': typchk.Or(str, typchk.IsNone()),
@@ -177,7 +181,7 @@ class ContainerManager():
     def create(
         self, root_url, mount=None, host_network=False, nics=DefaultNetworking, port=None,
         hostname=None, privileged=False, storage=None, name=None, tags=None, identity=None, env=None,
-        cgroups=None,
+        cgroups=None, config=None
     ):
         """
         Creater a new container with the given root flist, mount points and
@@ -224,12 +228,18 @@ class ContainerManager():
         :param env: a dict with the environment variables needed to be set for the container
         :param cgroups: custom list of cgroups to apply to this container on creation. formated as [(subsystem, name), ...]
                         please refer to the cgroup api for more detailes.
+        :param config: a map with the config file path as a key and content as a value. This only works when creating a VM from an flist. The
+                config files are written to the machine before booting.
+                Example:
+                config = {'/root/.ssh/authorized_keys': '<PUBLIC KEYS>'}
         """
 
         if nics == self.DefaultNetworking:
             nics = [{'type': 'default'}]
         elif nics is None:
             nics = []
+
+        config = config or {}
 
         args = {
             'root': root_url,
@@ -244,6 +254,7 @@ class ContainerManager():
             'identity': identity,
             'env': env,
             'cgroups': cgroups,
+            'config': config,
         }
 
         # validate input
