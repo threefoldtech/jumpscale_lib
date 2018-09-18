@@ -100,7 +100,7 @@ class Node:
                 if nic['name'] == 'backplane':
                     self._storageAddr = self.get_ip_from_nic(nic['addrs'])
                     return self._storageAddr
-            self._storageAddr = self.addr
+            self._storageAddr = self.public_addr
         return self._storageAddr
 
     @property
@@ -123,7 +123,7 @@ class Node:
                 if netaddr.IPAddress(ipAdress) in netaddr.IPNetwork(self.support_network):
                     return ipAdress
         raise LookupError('their is no support zerotier interface (support_address)')
-    
+
     @property
     def management_address(self):
         return self.public_addr
