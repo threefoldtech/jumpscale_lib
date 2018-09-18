@@ -141,7 +141,7 @@ class Zerodbs(DynamicCollection):
         subvol = 'subvol={}'.format(fs.subvolume)
         self.node.client.disk.mount(storagepool.devicename, mount_point, [subvol])
 
-        return mount_point, fs.name
+        return mount_point
 
     def mount_subvolume(self, zdb_name, mount_point):
         if self.node.client.filesystem.exists(mount_point):
@@ -151,9 +151,10 @@ class Zerodbs(DynamicCollection):
                     if mp['mountpoint'] == mount_point:
                         return
 
+        old_zdb = zdb_name.split('_')[-1] # this is for backward compatability
         for storagepool in self.node.storagepools.list():
             for fs in storagepool.list():
-                if fs.name == 'zdb_{}'.format(zdb_name):
+                if fs.name == 'zdb_{}'.format(zdb_name) or fs.name == 'zdb_{}'.format(old_zdb):
                     self.node.client.filesystem.mkdir(mount_point)
                     subvol = 'subvol={}'.format(fs.subvolume)
                     self.node.client.disk.mount(storagepool.devicename, mount_point, [subvol])
