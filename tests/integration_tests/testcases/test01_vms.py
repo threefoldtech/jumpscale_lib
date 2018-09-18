@@ -47,8 +47,6 @@ class VMTestCases(BaseTest):
         vm.install(created_vm)
         self.vms.append(created_vm.uuid)
 
-        import ipdb; ipdb.set_trace()
-
         self.log("Check that vm added to zerotier network and can access it using it, should succeed.")
         ztIdentity = vm.data["ztIdentity"]
         vm_zt_ip = self.get_machine_zerotier_ip(ztIdentity)
@@ -423,7 +421,7 @@ class VMTestCases(BaseTest):
         self.assertEqual(created_vm.info['params']['flist'], flist)
 
     def test010_ping_vms(self):
-        """ SAL-001 check that vms with type default nics can reach each other
+        """ SAL-022 check that vms with type default nics can reach each other
 
         **Test Scenario:**
  
@@ -487,7 +485,7 @@ class VMTestCases(BaseTest):
 
     @unittest.skip('https://github.com/threefoldtech/jumpscale_lib/issues/97')
     def test011_ssh_with_different_ways(self):
-        """ SAL-022 ssh with different ways
+        """ SAL-023 ssh with different ways
 
         **Test Scenario:**
  
@@ -525,8 +523,9 @@ class VMTestCases(BaseTest):
         port_name = self.random_string()
         host_port_ssh = random.randint(8000, 9000)        
         created_vm.ports.add(name=port_name, source=host_port_ssh, target=22)
+        
+        self.log("Update the network and try to ssh using port forword, should succeed.")
         created_vm.update_nics()
-
         result2 = self.ssh_vm_execute_command(vm_ip=self.node_ip, port=host_port_ssh, cmd='pwd')
         self.assertEqual(result2, '/root') 
 
