@@ -153,7 +153,7 @@ class Zerodbs(DynamicCollection):
 
         for storagepool in self.node.storagepools.list():
             for fs in storagepool.list():
-                if fs.name == '{}'.format(zdb_name):
+                if fs.name == 'zdb_{}'.format(zdb_name):
                     self.node.client.filesystem.mkdir(mount_point)
                     subvol = 'subvol={}'.format(fs.subvolume)
                     self.node.client.disk.mount(storagepool.devicename, mount_point, [subvol])
