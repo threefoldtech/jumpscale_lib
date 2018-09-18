@@ -29,7 +29,7 @@ class Node:
 
     def __init__(self, client):
         # g8os client to talk to the node
-        self._storageAddr = None
+        self._storage_addr = None
         self._name = None
         self.addr = client.config.data['host']
         self.port = client.config.data['port']
@@ -93,15 +93,20 @@ class Node:
         self.client.job.kill(proc.id, 9)
 
     @property
-    def storageAddr(self):
-        if not self._storageAddr:
+    def storage_addr(self):
+        if not self._storage_addr:
             nic_data = self.client.info.nic()
             for nic in nic_data:
                 if nic['name'] == 'backplane':
-                    self._storageAddr = self.get_ip_from_nic(nic['addrs'])
-                    return self._storageAddr
-            self._storageAddr = self.public_addr
-        return self._storageAddr
+                    self._storage_addr = self.get_ip_from_nic(nic['addrs'])
+                    return self._storage_addr
+            self._storage_addr = self.public_addr
+        return self._storage_addr
+
+    @property
+    def storageAddr(self):
+        logger.warning("storageAddr is deprecated, use storage_addr instead")
+        return self.storage_addr
 
     @property
     def public_addr(self):
