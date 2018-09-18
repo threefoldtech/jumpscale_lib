@@ -138,7 +138,6 @@ class Port:
     def __str__(self):
         return "Port <{}:{}:{}>".format(self.name, self.source, self.target)
 
-
     __repr__ = __str__
 
 

@@ -1,5 +1,6 @@
 from jumpscale import j
-import re, ipaddress
+import re
+import ipaddress
 from JumpscaleLib.sal_zos.abstracts import ZTNic
 
 JSBASE = j.application.jsbase_get_class()
@@ -39,27 +40,43 @@ class UtilsFactory(JSBASE):
     def _valid_portnum(self, portstr):
         try:
             intport = int(portstr)
-            if intport > 0: # number
-                return True
         except ValueError:
-                return False
-        return False
-
+            return False
+        else:
+            return intport > 0
 
     def _valid_portforward_component_format(self, portstr):
         # port as number or ip:port or interface:port
         if not isinstance(portstr, str):
             portstr = str(portstr)
-    
+
         if self._valid_portnum(portstr):
             return True
 
         if not re.match(".+?:\d+", portstr):
             return False
 
-        first, portcomponent = portstr.split(":") # first can ip or interface.
-        
+        first, portcomponent = portstr.split(":")  # first can ip or interface.
+
         if not self._valid_portnum(portcomponent):
             return False
-        
+
+        if "." in first:
+            # check if ill formatted ip
+            try:
+                ipaddress.IPv4Address(first)
+            except ipaddress.AddressValueError:
+                pass
+            else:
+                return True
+
+            # not ip4
+            try:
+                ipaddress.IPv6Address(first)
+            except ipaddress.AddressValueError:
+                return False
+            else:
+                return True
+
+        # not ip4, ip6
         return True
