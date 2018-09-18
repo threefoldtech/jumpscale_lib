@@ -1,5 +1,5 @@
 from Jumpscale import j
-
+JSBASE = j.application.JSBaseClass
 
 class Rexplorer(JSBASE):
     def __init__(self):
@@ -9,6 +9,24 @@ class Rexplorer(JSBASE):
     def install(self):
         """
         use prefab to install rexplorer & get it started
+
+        js_shell 'j.tools.rexplorer.install()'
         :return:
         """
-        j.shell()
+        p = j.tools.prefab.local
+        p.runtimes.golang.install()
+        p.runtimes.golang.get("github.com/threefoldfoundation/rexplorer")
+
+    def start(self):
+        """
+        starts rexplorer in tmux
+        result goes to redis
+        js_shell 'j.tools.rexplorer.start()'
+        :return:
+        """
+        cmd="cd /tmp;rexplorer -f 'threefold:*'"
+        j.tools.tmux.execute(
+            cmd,
+            session='main',window='rexplorer',pane='rexplorer',session_reset=False,window_reset=True
+        )
+
