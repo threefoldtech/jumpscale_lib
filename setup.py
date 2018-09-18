@@ -8,9 +8,8 @@ import os
 # libjpeg-dev/zesty
 
 def _post_install(libname, libpath):
-    from Jumpscale import j
-    j.core.jsgenerator.generate()
-
+    os.environ["JSRELOAD"] = "1"
+    from Jumpscale import j 
 
 class install(_install):
 
