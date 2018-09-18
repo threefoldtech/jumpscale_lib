@@ -121,12 +121,23 @@ class Disks(Collection):
 
 class Port:
     def __init__(self, name, source, target):
+        # Normalize source, target to strings if they were ints.
+        if isinstance(source, int):
+            source = str(source)
+        
+        if isinstance(target, int):
+            target = str(target)
+
+        if not j.sal_zos.utils.is_valid_portforward(source, target):
+            raise ValueError("Invalid portforward {} to {}".format(source, target))
+
         self.name = name
         self.source = source
         self.target = target
 
     def __str__(self):
         return "Port <{}:{}:{}>".format(self.name, self.source, self.target)
+
 
     __repr__ = __str__
 
@@ -140,10 +151,10 @@ class Ports(Collection):
 
         :param name: Name for the port
         :type name: str
-        :param source: Source port (port on host)
-        :type source: int
-        :param target: Target port (port on vm)
-        :type target: int
+        :param source: (port or ip:port or interface:port on host)
+        :type source: str
+        :param target: (port or ip:port or interface:port on vm)
+        :type target: str
         """
         super().add(name)
         for nic in self._parent.nics:
@@ -151,6 +162,7 @@ class Ports(Collection):
                 break
         else:
             raise ValueError('Can not add ports when no default nic is added')
+        
         port = Port(name, source, target)
         self._items.append(port)
         return port
