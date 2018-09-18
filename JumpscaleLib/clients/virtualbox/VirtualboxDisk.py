@@ -39,7 +39,7 @@ class VirtualboxDisk(JSBASE):
     @property
     def data(self):
         if not self._data:
-            for item in self.client.vdisk_list():
+            for item in self.client.vdisks_list():
                 if item["location"] == self.path:
                     self._data = item
                     return self._data
