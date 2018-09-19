@@ -7,7 +7,6 @@ from termcolor import colored
 class ZDB:
 
     def __init__(self, node, name=None, guid=None, data=None):
-        self.name = name
         self.guid = guid 
         self.data = data
         self.node_sal = node
@@ -15,7 +14,6 @@ class ZDB:
     @property
     def _zerodb_sal(self):
         data = self.data.copy()
-        data['name'] = self.name
         return self.node_sal.primitives.from_dict('zerodb', data)
 
     def _deploy(self):
@@ -25,7 +23,7 @@ class ZDB:
         self.data['ztIdentity'] = zerodb_sal.zt_identity
 
     def install(self):
-        print(colored('Installing zerodb %s' % self.name, 'white'))
+        print(colored('Installing zerodb %s' % self.data['name'], 'white'))
 
         # generate admin password
         if not self.data['admin']:
@@ -38,14 +36,14 @@ class ZDB:
         """
         start zerodb server
         """
-        print(colored('Starting zerodb %s' % self.name, 'white'))
+        print(colored('Starting zerodb %s' % self.data['name'], 'white'))
         self._deploy()
 
     def stop(self):
         """
         stop zerodb server
         """
-        print(colored('Stopping zerodb %s' % self.name, 'white'))
+        print(colored('Stopping zerodb %s' % self.data['name'], 'white'))
         self._zerodb_sal.stop()
 
     def upgrade(self):

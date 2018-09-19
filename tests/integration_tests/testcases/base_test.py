@@ -199,3 +199,31 @@ class BaseTest(Utils):
         vnc = 'vncdotool -s {} type {} key enter'.format(vnc_ip_port, repr('ls'))
         response = subprocess.run(vnc, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         return response
+
+    def get_gateway_container(self,gw_name):
+        containers = self.node_sal.client.container.list()
+        gw_container = [ container for _ ,container in containers.items() if cont['container']['arguments']['hostname']== gw_name][0]
+        return gw_container
+
+    def set_vdisk_default_data(self, name=None):
+        disk_params = {
+                        'name': name or self.random_string(),
+                        'mountPoint': "",
+                        'filesystem': "",
+                        'mode': 'user',
+                        'public': False,
+                        'label': 'label',
+                      }
+        if (self.node_info['hdd'] != 0) and (self.node_info['ssd'] != 0):
+            disk_type = random.choice(['hdd', 'ssd'])
+            disk_size = random.randint(1, BaseTest.node_info[disk_type])
+        elif self.node_info['hdd'] != 0:
+            disk_type = 'hdd'
+            disk_size = random.randint(1, self.node_info[disk_type])
+        else:
+            disk_type = 'ssd'
+            disk_size = random.randint(1, self.node_info[disk_type])
+        disk_params['diskType'] = disk_type
+        disk_params['size'] = disk_size
+        return disk_params
+        
