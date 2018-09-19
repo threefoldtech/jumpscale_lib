@@ -12,7 +12,7 @@ class Minio:
     Minio gateway
     """
 
-    def __init__(self, name, node, login, password, zdbs, namespace, private_key, namespace_secret='', node_port=DEFAULT_PORT, block_size=1048576, meta_private_key='', nr_datashards=1, nr_parityshards=0):
+    def __init__(self, name, node, login, password, zdbs, namespace, private_key, namespace_secret='', block_size=1048576, meta_private_key='', nr_datashards=1, nr_parityshards=0):
         """
 
         :param name: instance name
@@ -32,7 +32,6 @@ class Minio:
         self.node = node
         self._container = None
         self.flist = 'https://hub.grid.tf/tf-official-apps/minio.flist'
-        self.node_port = node_port
         self.zdbs = zdbs
         self._nr_datashards = nr_datashards
         self._nr_parityshards = nr_parityshards
@@ -57,8 +56,6 @@ class Minio:
         if len(ports) <= 0:
             raise RuntimeError("can't install minio, no free port available on the node")
 
-        self.node_port = ports[0]
-
         envs = {
             'MINIO_ACCESS_KEY': self.login,
             'MINIO_SECRET_KEY': self.password,
@@ -68,7 +65,7 @@ class Minio:
         return {
             'name': self._container_name,
             'flist': self.flist,
-            'ports': {self.node_port: DEFAULT_PORT},
+            'ports': {ports[0]: DEFAULT_PORT},
             'nics': [{'type': 'default'}],
             'env': envs,
         }
@@ -122,7 +119,6 @@ class Minio:
         if is_running:
             raise RuntimeError('Failed to stop minio server: {}'.format(self.name))
 
-        self.container.node.client.nft.drop_port(self.node_port)
         self.container.stop()
 
     def start(self, timeout=15):
@@ -153,8 +149,6 @@ class Minio:
         if not is_running:
             raise RuntimeError('Failed to start minio server: {}'.format(self.name))
 
-        self.container.node.client.nft.open_port(self.node_port)
-
     def is_running(self):
         try:
             for _ in self.container.client.job.list(self.id):
@@ -178,6 +172,16 @@ class Minio:
         return templates.render(
             'minio.conf', namespace=self.namespace, namespace_secret=self.namespace_secret,
             zdbs=self.zdbs, private_key=self.private_key, block_size=self.block_size, nr_datashards=self._nr_datashards, nr_parityshards=self._nr_parityshards).strip()
+
+    @property
+    def node_port(self):
+        try:
+            container = self.node.containers.get(self._container_name)
+            for k, v in container.ports.items():
+                if v == DEFAULT_PORT:
+                    return int(k.split(':')[-1])
+        except LookupError:
+            return None
 
     def destroy(self):
         self.stop()
