@@ -5,7 +5,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-
 class ZeroStor():
     """zerostor server"""
 
@@ -18,22 +17,7 @@ class ZeroStor():
         self.meta_dir = meta_dir
         self.max_size_msg = max_size_msg
         self._ays = None
-
-    @classmethod
-    def from_ays(cls, service, password=None):
-        logger.debug("create ZeroStor from service (%s)", service)
-        from ..container.Container import Container
-
-        container = Container.from_ays(service.parent, password)
-
-        return cls(
-            name=service.name,
-            container=container,
-            bind=service.model.data.bind,
-            data_dir=service.model.data.dataDir,
-            meta_dir=service.model.data.metaDir,
-            max_size_msg=service.model.data.maxSizeMsg,
-        )
+        self._job_id = "zerostor.{}".format(self.name)
 
     def stop(self, timeout=30):
         if not self.container.is_running():
@@ -66,7 +50,7 @@ class ZeroStor():
             --max-msg-size {msgsize} \
             --async-write \
             '.format(bind=self.bind, datadir=self.data_dir, metadir=self.meta_dir, msgsize=self.max_size_msg)
-        self.container.client.system(cmd, id="zerostor.{}".format(self.name))
+        self.container.client.system(cmd, id=self._job_id)
         start = time.time()
         while start + 15 > time.time():
             if self.container.is_port_listening(int(self.bind.split(":")[1])):
@@ -76,13 +60,4 @@ class ZeroStor():
             raise RuntimeError('Failed to start zerostor server: {}'.format(self.name))
 
     def is_running(self):
-        try:
-            if self.port not in self.container.node.freeports(self.port, 1):
-                for job in self.container.client.job.list():
-                    if 'name' in job['cmd']['arguments'] and job['cmd']['arguments']['name'] == '/bin/zerostorserver':
-                        return (True, job)
-            return (False, None)
-        except Exception as err:
-            if str(err).find("invalid container id"):
-                return (False, None)
-            raise
+        return self.container.is_job_running(self._job_id)

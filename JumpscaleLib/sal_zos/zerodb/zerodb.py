@@ -122,7 +122,7 @@ class Zerodb:
         :return: data used for zerodb container
          :rtype: dict
         """
-        ports = self.node.freeports(self.node_port, 1)
+        ports = self.node.freeports(1)
         if len(ports) <= 0:
             raise RuntimeError("can't install 0-db, no free port available on the node")
 

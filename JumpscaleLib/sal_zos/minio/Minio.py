@@ -53,7 +53,7 @@ class Minio:
         :return: data used for zerodb container
          :rtype: dict
         """
-        ports = self.node.freeports(self.node_port, 1)
+        ports = self.node.freeports(1)
         if len(ports) <= 0:
             raise RuntimeError("can't install minio, no free port available on the node")
 
@@ -178,7 +178,7 @@ class Minio:
         return templates.render(
             'minio.conf', namespace=self.namespace, namespace_secret=self.namespace_secret,
             zdbs=self.zdbs, private_key=self.private_key, block_size=self.block_size, nr_datashards=self._nr_datashards, nr_parityshards=self._nr_parityshards).strip()
-    
+
     def destroy(self):
         self.stop()
         self.container.stop()

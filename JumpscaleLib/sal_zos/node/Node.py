@@ -243,40 +243,20 @@ class Node:
             self.client.system('syslogd -n -O /var/log/messages')
             self.client.system('klogd -n')
 
-    def freeports(self, baseport=2000, nrports=3):
+    def freeports(self, nrports=1):
         """
         Find free ports on node starting at baseport
 
-        Checks all portfowards + listening ports on host
-        to find a free port
+        ask to reserve an x amount of ports
+        The system detects the local listening ports, plus the ports used for other port forwards, and finally the reserved ports
+        The system tries to find the first free port in the valid ports range.
 
-        :param baseport: Port to start looking at
-        :type baseport: int
         :param nrports: Amount of free ports to find
         :type nrports: int
         :return: list if ports that are free
         :rtype: list(int)
         """
-        ports = self.client.info.port()
-        usedports = set()
-        for portInfo in ports:
-            if portInfo['network'] != "tcp":
-                continue
-            usedports.add(portInfo['port'])
-        # Add ports consumed by default forwards
-        # TODO: fix this by using core0 api (does not exist yet)
-        for container in self.containers.list():
-            for port in container.ports:
-                port = port.split(':')[-1]  # parse 'zt0:6000' like ports
-                usedports.add(int(port))
-
-        freeports = []
-        while True:
-            if baseport not in usedports:
-                freeports.append(baseport)
-                if len(freeports) >= nrports:
-                    return freeports
-            baseport += 1
+        return self.client.socat.reserve(number=nrports)
 
     def find_persistance(self, name='zos-cache'):
         zeroos_cache_sp = None
