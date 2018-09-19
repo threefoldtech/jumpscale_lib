@@ -23,6 +23,7 @@ from .RTInfoManager import RTInfoManager
 from .WebManager import WebManager
 from .ZerotierManager import ZerotierManager
 from .ZFSManager import ZFSManager
+from .SocatManager import SocatManager
 
 
 TEMPLATE = """
@@ -71,6 +72,11 @@ class Client(BaseClient, JSConfigClientBase):
         self._rtinfo = RTInfoManager(self)
         self._cgroup = CGroupManager(self)
         self._zfs = ZFSManager(self)
+        self._socat = SocatManager(self)
+
+    @property
+    def socat(self):
+        return self._socat
 
     @property
     def _redis(self):
