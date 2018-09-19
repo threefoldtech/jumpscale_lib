@@ -33,9 +33,7 @@ class Vdisktest(BaseTest):
     @unittest.skip("https://github.com/threefoldtech/jumpscale_lib/issues/144")
     def test001_create_disk_with_wrong_data(self):
         """ SAl-024 create vdisk and attach it to deployed vm
-
         **Test Scenario:**
-
         #. Create disk with worng filesystem, should fail.
         #. Create disk with large size, should fail.
                 
@@ -59,7 +57,6 @@ class Vdisktest(BaseTest):
     
     def test002_create_disk_with_exist_namespace_and_diff_size(self):
         """ SAl-025 create disk with exist namespace and different size
-
         **Test Scenario:**
         #. Create zdb with default values.
         #. Add namespace [ns] to zdb.
@@ -94,9 +91,7 @@ class Vdisktest(BaseTest):
     @unittest.skip('https://github.com/threefoldtech/jumpscale_lib/issues/102')
     def test003_attach_vdisk_to_vm(self, attach_by):
         """ SAL-026 create vdisk and attach it to vm.
-
         **Test Scenario:**
-
         #. Create disk [D1] with default data.
         #. Create vm [VM1] with default values, should succeed.
         #. Add zerotier network to VM1, should succeed.
@@ -104,7 +99,6 @@ class Vdisktest(BaseTest):
         #. deploy vm [VM1].
         #. Check that disk [D1] is attached to vm [VM1], should succeed.
         #. Remove the disk[D1] from the vm ,should succeed.
-
         """
         self.log("Create disk [D1] with default data")
         disk = Vdisk(node=self.node_sal)
