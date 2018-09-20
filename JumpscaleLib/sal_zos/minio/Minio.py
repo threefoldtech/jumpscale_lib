@@ -56,11 +56,19 @@ class Minio:
         if len(ports) <= 0:
             raise RuntimeError("can't install minio, no free port available on the node")
 
+        metadata_path = '/minio_metadata'
         envs = {
             'MINIO_ACCESS_KEY': self.login,
             'MINIO_SECRET_KEY': self.password,
             'MINIO_ZEROSTOR_META_PRIVKEY': self.meta_private_key,
+            'MINIO_ZEROSTOR_META_DIR': metadata_path,
         }
+
+        sp = self.node.storagepools.get('zos-cache')
+        try:
+            fs = sp.get(self.id)
+        except ValueError:
+            fs = sp.create(self.id)
 
         return {
             'name': self._container_name,
@@ -68,6 +76,7 @@ class Minio:
             'ports': {ports[0]: DEFAULT_PORT},
             'nics': [{'type': 'default'}],
             'env': envs,
+            'mounts': {fs.path: metadata_path},
         }
 
     @property
@@ -186,3 +195,9 @@ class Minio:
     def destroy(self):
         self.stop()
         self.container.stop()
+        sp = self.node.storagepools.get('zos-cache')
+        try:
+            fs = sp.get(self.id)
+            fs.delete()
+        except ValueError:
+            pass
