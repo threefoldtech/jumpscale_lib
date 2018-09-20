@@ -25,7 +25,7 @@ class BaseTest(Utils):
     def setUpClass(cls):
         self = cls()
         cls.node_sal = j.clients.zos.get(NODE_CLIENT, data={'host': config['main']['nodeip']})
-        cls.node_info = self.get_zos_info()
+        cls.node_info, cls.disks_info = self.get_zos_info()
         cls.vm_flist = "https://hub.grid.tf/tf-bootable/ubuntu:16.04.flist"
         cls.vm = VM
         cls.gw = GW
@@ -118,7 +118,8 @@ class BaseTest(Utils):
         info = self.node_sal.capacity.total_report()
         node_info = {'ssd': int(info.SRU), 'hdd': int(info.HRU), 'core': int(info.CRU),
                      'memory': int(info.MRU)}
-        return node_info
+        disks_info = info.disk
+        return node_info, disks_info
 
     def load_ssh_key(self):
 
@@ -223,7 +224,13 @@ class BaseTest(Utils):
         else:
             disk_type = 'ssd'
             disk_size = random.randint(1, self.node_info[disk_type])
-        disk_params['diskType'] = disk_type
+        #disk_params['diskType'] = disk_type
         disk_params['size'] = disk_size
+        disks_mount_paths = self.node_sal.zerodbs.partition_and_mount_disks()
+        disk_name = [disk["name"] for disk in self.disks_info if disk["type"]==disk_type.upper()][0]
+        disk_name = disk_name[disk_name.find("/dev/")+5: ]
+        path = [disk["mountpoint"] for disk in disks_mount_paths if disk["disk"] == disk_name]
+        disk_params["path"] = path[0]
+
         return disk_params
         
