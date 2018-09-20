@@ -1,6 +1,5 @@
 from jumpscale import j
-from zerorobot.service_collection import ServiceNotFoundError
-from zdb import ZDB
+from framework.base.zdb import ZDB
 import random
 
 
@@ -10,11 +9,11 @@ class Vdisk:
         self.data = data
         self.node_sal = node
         self.guid = guid
-        self.zdb = zdb or self.create_zdb()
-
+        self.zdb = zdb
     def install(self):
+        zdb = self.zdb or self.create_zdb()
         self.disk = self.node_sal.primitives.create_disk(name=self.data['name'],
-                                                         zdb=self.zdb,
+                                                         zdb=zdb,
                                                          mountpoint=self.data['mountPoint'] or None,
                                                          filesystem=self.data['filesystem'] or None,
                                                          size=int(self.data['size']),
@@ -31,9 +30,9 @@ class Vdisk:
                     'namespaces': [],
                     'ztIdentity': '',
                     'nics': [],
-                    'diskType': self.data["diskType"],
+                    #'diskType': self.data["diskType"],
                     'size': self.data["size"]
                     }
-        self.zdb = ZDB(self.node_sal, zdb_data)
-
+        self.zdb_obj = ZDB(node=self.node_sal, data=zdb_data)
+        self.zdb = self.zdb_obj._zerodb_sal
         return self.zdb
