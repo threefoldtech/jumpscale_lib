@@ -2,6 +2,13 @@ from io import BytesIO
 
 import etcd3
 import yaml
+from .. import templates
+
+
+logger = j.logger.get(__name__)
+
+CLIENT_PORT = 2379
+PEER_PORT = 2380
 
 
 class EtcdCluster():
@@ -30,26 +37,6 @@ class EtcdCluster():
         if self._client is None:
             raise RuntimeError("can't connect to etcd on %s" % self.mgmtdialstrings)
 
-    @classmethod
-    def from_ays(cls, service, password=None, logger=None):
-        logger = logger or default_logger
-        logger.debug("create storageEngine from service (%s)", service)
-
-        dialstrings = set()
-        for etcd_service in service.producers.get('etcd', []):
-            dialstrings.add(etcd_service.model.data.clientBind)
-
-        mgmtdialstrings = set()
-        for etcd_service in service.producers.get('etcd', []):
-            mgmtdialstrings.add(etcd_service.model.data.mgmtClientBind)
-
-        return cls(
-            name=service.name,
-            dialstrings=",".join(dialstrings),
-            mgmtdialstrings=",".join(mgmtdialstrings),
-            logger=logger
-        )
-
     # TODO: replace code duplication with decorator ?
 
     def put(self, key, value):
@@ -73,74 +60,109 @@ class EtcdCluster():
 class ETCD():
     """etced server"""
 
-    def __init__(self, name, container, serverBind, clientBind, peers, mgmtClientBind, data_dir='/mnt/data',
-                 password=None, logger=None):
-
+    def __init__(self, node, name, listen_peer_urls=None, listen_client_urls=None, initial_advertise_peer_urls=None, advertise_client_urls=None, data_dir='/mnt/data', client_port=CLIENT_PORT, peer_port=PEER_PORT):
+        self.node = node
         self.name = name
-        self.container = container
-        self.serverBind = serverBind
-        self.clientBind = clientBind
-        self.mgmtClientBind = mgmtClientBind
+        self._container = None
+        self.flist = 'https://hub.grid.tf/bola_nasr_1/etcd-3.3.4.flist'
+        self.listen_peer_urls = listen_peer_urls
+        self.listen_client_urls = listen_client_urls
+        self.initial_advertise_peer_urls = initial_advertise_peer_urls
+        self.advertise_client_urls = advertise_client_urls
         self.data_dir = data_dir
-        self.peers = ",".join(peers)
-        self._ays = None
-        self._password = None
+        self.client_port = client_port
+        self.peer_port = peer_port
+        self._id = 'etcd.{}'.format(self.name)
+        self._config_path = '/bin/etcd_{}.config'.format(self.name)
 
-    @classmethod
-    def from_ays(cls, service, password=None, logger=None):
-        logger = logger or default_logger
-        logger.debug("create storageEngine from service (%s)", service)
-        from ..container.Container import Container
-        container = Container.from_ays(service.parent, password, logger=service.logger)
+    @property
+    def _container_data(self):
+        """
+        :return: data used for etcd container
+         :rtype: dict
+        """
+        ports = self.node.freeports(2)
+        if len(ports) <= 0:
+            raise RuntimeError("can't install etcd, no free port available on the node")
 
-        return cls(
-            name=service.name,
-            container=container,
-            serverBind=service.model.data.serverBind,
-            clientBind=service.model.data.clientBind,
-            mgmtClientBind=service.model.data.mgmtClientBind,
-            data_dir=service.model.data.homeDir,
-            peers=service.model.data.peers,
-            password=password,
-            logger=logger
-        )
+        self.client_port = ports[0]
+        self.peer_port = ports[1]
+        ports = {
+            self.client_port: CLIENT_PORT,
+            self.peer_port: PEER_PORT
+        }
 
-    def start(self):
-        configpath = "/etc/etcd_{}.config".format(self.name)
+        return {
+            'name': self.name,
+            'flist': self.flist,
+            'ports': ports,
+            'nics': [{'type': 'default'}],
+        }
 
-        client_urls = ",".join(list({"http://{}".format(self.clientBind), "http://{}".format(self.mgmtClientBind)}))
+    @property
+    def container(self):
+        """
+        Get/create etcd container to run etcd services on
+        :return: etcd container
+        :rtype: container sal object
+        """
+        if self._container is None:
+            try:
+                self._container = self.node.containers.get(self.name)
+            except LookupError:
+                self._container = self.node.containers.create(**self._container_data)
+        return self._container
+    
+
+    def create_config(self):
+        client = 'http://{}:{}'.format(self.node.public_addr, self.client_port)
+        peer = 'http://{}:{}'.format(self.node.public_addr, self.peer_port)
+
+        peer_urls = ','.join(self.listen_peer_urls) if self.listen_peer_urls else peer
+        initial_peer_urls = ','.join(self.initial_advertise_peer_urls) if self.initial_advertise_peer_urls else peer
+        client_urls = ','.join(self.listen_client_urls) if self.listen_client_urls else client
+        advertise_client_urls = ','.join(self.advertise_client_urls) if self.advertise_client_urls else client
+
+
         config = {
             "name": self.name,
-            "initial-advertise-peer-urls": "http://{}".format(self.serverBind),
-            "listen-peer-urls": "http://{}".format(self.serverBind),
-            "listen-client-urls": client_urls,
-            "advertise-client-urls": client_urls,
-            "initial-cluster": self.peers,
-            "data-dir": self.data_dir,
-            "initial-cluster-state": "new"
+            "initial-advertise-peer-urls": initial_peer_urls,
+            "listen_peer_urls": peer_urls,
+            "listen_client_urls": client_urls,
+            "advertise_client_urls": advertise_client_urls,
+            "data_dir": self.data_dir,
         }
-        yamlconfig = yaml.safe_dump(config, default_flow_style=False)
-        configstream = BytesIO(yamlconfig.encode('utf8'))
-        configstream.seek(0)
-        self.container.client.filesystem.upload(configpath, configstream)
-        cmd = '/bin/etcd --config-file %s' % configpath
-        self.container.client.system(cmd, id="etcd.{}".format(self.name))
-        if not self.container.is_port_listening(int(self.serverBind.split(":")[1])):
+        templates.render('etcd.conf', **config).strip()
+        self.container.upload_content(self._config_path, templates.render('etcd.conf', **config).strip())
+
+    def deploy(self):
+        # call the container property to make sure it gets created and the ports get updated
+        self.container
+
+    def start(self):
+        if self.is_running():
+            return
+
+        logger.info('start etcd {}'.format(self.name))
+
+        self.create_config()
+        cmd = '/bin/etcd --config-file {}'.format(self._config_path)
+        self.container.client.system(cmd, id=self._id)
+        if not self.container.is_port_listening(PEER_PORT):
             raise RuntimeError('Failed to start etcd server: {}'.format(self.name))
 
     def stop(self):
         import time
 
-        if not self.container.is_running():
+        if not self.is_running():
             return
 
-        jobID = "etcd.{}".format(self.name)
-        self.container.client.job.kill(jobID)
+        self.container.client.job.kill(self._id)
         start = time.time()
         while start + 15 > time.time():
             time.sleep(1)
             try:
-                self.container.client.job.list(jobID)
+                self.container.client.job.list(self._id)
             except RuntimeError:
                 return
             continue
@@ -148,19 +170,28 @@ class ETCD():
         raise RuntimeError('failed to stop etcd.')
 
     def is_running(self):
-        jobID = "etcd.{}".format(self.name)
         try:
-            self.container.client.job.list(jobID)
-        except RuntimeError:
+            for _ in self.container.client.job.list(self._id):
+                return True
             return False
-        return True
+        except Exception as err:
+            if str(err).find("invalid container id"):
+                return False
+            raise
 
     def put(self, key, value):
+        client = 'http://{}:{}'.format(self.node.public_addr, self.client_port)
+        client_urls = ','.join(self.listen_client_urls) if self.listen_client_urls else client
+
         if value.startswith("-"):
             value = "-- %s" % value
         if key.startswith("-"):
             key = "-- %s" % key
         cmd = '/bin/etcdctl \
           --endpoints {etcd} \
-          put {key} "{value}"'.format(etcd=self.clientBind, key=key, value=value)
+          put {key} "{value}"'.format(etcd=client_urls, key=key, value=value)
         return self.container.client.system(cmd, env={"ETCDCTL_API": "3"}).get()
+
+    def destroy(self):
+        self.stop()
+        self.container.stop()
