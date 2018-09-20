@@ -9,7 +9,9 @@ import os
 
 def _post_install(libname, libpath):
     os.environ["JSRELOAD"] = "1"
-    from Jumpscale import j 
+    from Jumpscale import j
+    j.sal.process.execute(
+        "pip3 install 'git+https://github.com/spesmilo/electrum.git@3.2.2'")
 
 class install(_install):
 
