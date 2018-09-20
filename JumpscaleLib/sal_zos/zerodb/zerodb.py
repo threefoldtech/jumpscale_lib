@@ -324,7 +324,9 @@ class Zerodb:
         self.container.client.system(cmd, id=self._id)
         is_running = self.container.is_port_listening(DEFAULT_PORT, timeout)
 
+
         if not is_running:
+            j.shell()
             raise RuntimeError('Failed to start zerodb server: {}'.format(self.name))
 
     def stop(self, timeout=30):

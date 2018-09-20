@@ -19,8 +19,7 @@ class ZDBClient(JSConfigBase):
 
     dbtype = 'ZDB'
 
-    def __init__(self, instance, data=None, parent=None, interactive=False,
-                                 started=True):
+    def __init__(self, instance, data=None, parent=None, interactive=False, started=True):
         """ is connection to ZDB
 
             - secret is also the name of the directory where zdb data
