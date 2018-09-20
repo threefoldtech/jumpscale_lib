@@ -224,7 +224,7 @@ class BaseTest(Utils):
         else:
             disk_type = 'ssd'
             disk_size = random.randint(1, self.node_info[disk_type])
-        #disk_params['diskType'] = disk_type
+        disk_params['diskType'] = disk_type
         disk_params['size'] = disk_size
         disks_mount_paths = self.node_sal.zerodbs.partition_and_mount_disks()
         disk_name = [disk["name"] for disk in self.disks_info if disk["type"]==disk_type.upper()][0]

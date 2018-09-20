@@ -30,7 +30,7 @@ class Vdisk:
                     'namespaces': [],
                     'ztIdentity': '',
                     'nics': [],
-                    #'diskType': self.data["diskType"],
+                    'diskType': self.data["diskType"],
                     'size': self.data["size"]
                     }
         self.zdb_obj = ZDB(node=self.node_sal, data=zdb_data)
