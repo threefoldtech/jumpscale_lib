@@ -1,5 +1,5 @@
 import time
-from Jumpscale import j
+from jumpscale import j
 from .. import templates
 
 
@@ -12,7 +12,7 @@ class Minio:
     Minio gateway
     """
 
-    def __init__(self, name, node, login, password, zdbs, namespace, private_key, namespace_secret='', node_port=DEFAULT_PORT, block_size=1048576, restic_username='', restic_password='', meta_private_key=''):
+    def __init__(self, name, node, login, password, zdbs, namespace, private_key, namespace_secret='', block_size=1048576, meta_private_key='', nr_datashards=1, nr_parityshards=0):
         """
 
         :param name: instance name
@@ -24,22 +24,24 @@ class Minio:
         :param private_key: encryption private key
         :param namespace_secret: secret of the zerodb namespace
         :param node_port: the port the minio container will forward to. If this port is not free, the deploy will find the next free port
+        :param nr_datashards: number of datashards.
+        :param nr_parityshards: number of parityshards (if it's zero it will make the mode replication otherwise mode is distribution)
         """
         self.name = name
         self.id = 'minio.{}'.format(self.name)
         self.node = node
         self._container = None
-        self.flist = 'https://hub.grid.tf/tf-official-apps/minio.flist'
-        self.node_port = node_port
+        # self.flist = 'https://hub.grid.tf/tf-official-apps/minio.flist'
+        self.flist = 'https://hub.grid.tf/tf-autobuilder/threefoldtech-minio-zerostor.flist'  # TODO replace me when merging to master
         self.zdbs = zdbs
+        self._nr_datashards = nr_datashards
+        self._nr_parityshards = nr_parityshards
         self.namespace = namespace
         self.private_key = private_key
         self.namespace_secret = namespace_secret
         self.block_size = block_size
         self.login = login
         self.password = password
-        self.restic_username = restic_username
-        self.restic_password = restic_password
         self.meta_private_key = meta_private_key
 
         self._config_dir = '/bin'
@@ -51,26 +53,31 @@ class Minio:
         :return: data used for zerodb container
          :rtype: dict
         """
-        ports = self.node.freeports(self.node_port, 1)
+        ports = self.node.freeports(1)
         if len(ports) <= 0:
             raise RuntimeError("can't install minio, no free port available on the node")
 
-        self.node_port = ports[0]
-
+        metadata_path = '/minio_metadata'
         envs = {
-                'MINIO_ACCESS_KEY': self.login,
-                'MINIO_SECRET_KEY': self.password,
-                'AWS_ACCESS_KEY_ID': self.restic_username,
-                'AWS_SECRET_ACCESS_KEY': self.restic_password,
-                'MINIO_ZEROSTOR_META_PRIVKEY': self.meta_private_key,
+            'MINIO_ACCESS_KEY': self.login,
+            'MINIO_SECRET_KEY': self.password,
+            'MINIO_ZEROSTOR_META_PRIVKEY': self.meta_private_key,
+            'MINIO_ZEROSTOR_META_DIR': metadata_path,
         }
+
+        sp = self.node.storagepools.get('zos-cache')
+        try:
+            fs = sp.get(self.id)
+        except ValueError:
+            fs = sp.create(self.id)
 
         return {
             'name': self._container_name,
             'flist': self.flist,
-            'ports': {self.node_port: DEFAULT_PORT},
+            'ports': {ports[0]: DEFAULT_PORT},
             'nics': [{'type': 'default'}],
             'env': envs,
+            'mounts': {fs.path: metadata_path},
         }
 
     @property
@@ -122,7 +129,6 @@ class Minio:
         if is_running:
             raise RuntimeError('Failed to stop minio server: {}'.format(self.name))
 
-        self.container.node.client.nft.drop_port(self.node_port)
         self.container.stop()
 
     def start(self, timeout=15):
@@ -135,6 +141,8 @@ class Minio:
             return
 
         logger.info('start minio %s' % self.name)
+
+        self.create_config()
 
         cmd = '/bin/minio gateway zerostor --address 0.0.0.0:{port} --config-dir {dir}'.format(
             port=DEFAULT_PORT, dir=self._config_dir)
@@ -151,8 +159,6 @@ class Minio:
         if not is_running:
             raise RuntimeError('Failed to start minio server: {}'.format(self.name))
 
-        self.container.node.client.nft.open_port(self.node_port)
-
     def is_running(self):
         try:
             for _ in self.container.client.job.list(self.id):
@@ -163,13 +169,36 @@ class Minio:
                 return False
             raise
 
+    @property
+    def mode(self):
+        return "replication" if self._nr_parityshards <= 0 else "distribution"
+
     def create_config(self):
         logger.info('Creating minio config for %s' % self.name)
-        config = templates.render(
-            'minio.conf', namespace=self.namespace, namespace_secret=self.namespace_secret,
-            zdbs=self.zdbs, private_key=self.private_key, block_size=self.block_size, nr_shards=len(self.zdbs)).strip()
+        config = self._config_as_text()
         self.container.upload_content(j.sal.fs.joinPaths(self._config_dir, self._config_name), config)
+
+    def _config_as_text(self):
+        return templates.render(
+            'minio.conf', namespace=self.namespace, namespace_secret=self.namespace_secret,
+            zdbs=self.zdbs, private_key=self.private_key, block_size=self.block_size, nr_datashards=self._nr_datashards, nr_parityshards=self._nr_parityshards).strip()
+
+    @property
+    def node_port(self):
+        try:
+            container = self.node.containers.get(self._container_name)
+            for k, v in container.ports.items():
+                if v == DEFAULT_PORT:
+                    return int(k.split(':')[-1])
+        except LookupError:
+            return None
 
     def destroy(self):
         self.stop()
         self.container.stop()
+        sp = self.node.storagepools.get('zos-cache')
+        try:
+            fs = sp.get(self.id)
+            fs.delete()
+        except ValueError:
+            pass
