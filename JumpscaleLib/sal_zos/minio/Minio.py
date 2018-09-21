@@ -31,7 +31,8 @@ class Minio:
         self.id = 'minio.{}'.format(self.name)
         self.node = node
         self._container = None
-        self.flist = 'https://hub.grid.tf/tf-official-apps/minio.flist'
+        # self.flist = 'https://hub.grid.tf/tf-official-apps/minio.flist'
+        self.flist = 'https://hub.grid.tf/tf-autobuilder/threefoldtech-minio-zerostor.flist'  # TODO replace me when merging to master
         self.zdbs = zdbs
         self._nr_datashards = nr_datashards
         self._nr_parityshards = nr_parityshards
