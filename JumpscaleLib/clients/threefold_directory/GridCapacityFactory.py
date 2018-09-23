@@ -98,3 +98,4 @@ class GridCapacityFactory(JSConfigFactory):
 
         return(resource_units)
 
+
