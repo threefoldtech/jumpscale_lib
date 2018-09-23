@@ -203,8 +203,28 @@ class BaseTest(Utils):
 
     def get_gateway_container(self,gw_name):
         containers = self.node_sal.client.container.list()
-        gw_container = [ container for _ ,container in containers.items() if cont['container']['arguments']['hostname']== gw_name][0]
+        gw_container = [ container for _ ,container in containers.items() if container['container']['arguments']['hostname'] == gw_name][0]
         return gw_container
+
+    def get_disk__mount_path(self, disk_type):
+        disks_mount_paths = self.node_sal.zerodbs.partition_and_mount_disks()
+        disk_name = [disk["name"] for disk in self.disks_info if disk["type"]==disk_type.upper()][0]
+        disk_name = disk_name[disk_name.find("/dev/")+5: ]
+        path = [disk["mountpoint"] for disk in disks_mount_paths if disk["disk"] == disk_name]
+        return path[0]
+
+    def get_most_free_disk_type_size(self):
+        if (self.node_info['hdd'] != 0) and (self.node_info['ssd'] != 0):
+            disk_type = random.choice(['hdd', 'ssd'])
+            disk_size = random.randint(1, self.node_info[disk_type])
+        elif self.node_info['hdd'] != 0:
+            disk_type = 'hdd'
+            disk_size = random.randint(1, self.node_info[disk_type])
+        else:
+            disk_type = 'ssd'
+            disk_size = random.randint(1, self.node_info[disk_type])
+
+        return disk_type, disk_size
 
     def set_vdisk_default_data(self, name=None):
         disk_params = {
@@ -215,22 +235,30 @@ class BaseTest(Utils):
                         'public': False,
                         'label': 'label',
                       }
-        if (self.node_info['hdd'] != 0) and (self.node_info['ssd'] != 0):
-            disk_type = random.choice(['hdd', 'ssd'])
-            disk_size = random.randint(1, BaseTest.node_info[disk_type])
-        elif self.node_info['hdd'] != 0:
-            disk_type = 'hdd'
-            disk_size = random.randint(1, self.node_info[disk_type])
-        else:
-            disk_type = 'ssd'
-            disk_size = random.randint(1, self.node_info[disk_type])
-        #disk_params['diskType'] = disk_type
-        disk_params['size'] = disk_size
-        disks_mount_paths = self.node_sal.zerodbs.partition_and_mount_disks()
-        disk_name = [disk["name"] for disk in self.disks_info if disk["type"]==disk_type.upper()][0]
-        disk_name = disk_name[disk_name.find("/dev/")+5: ]
-        path = [disk["mountpoint"] for disk in disks_mount_paths if disk["disk"] == disk_name]
-        disk_params["path"] = path[0]
 
+        disk_type, disk_size = self.get_most_free_disk_type_size()
+        disk_params['diskType'] = disk_type
+        disk_params['size'] = disk_size
+        disk_params["path"] = self.get_disk_mount_path(disk_type)
         return disk_params
+
+    def set_zdb_default_data(self, name=None, size='', mode="user"):
+
+        zdb_params = {'name': name or self.random_string(),
+                      'nodePort':  random.randint(600, 1000),
+                      'mode': mode,
+                      'sync': False,
+                      'admin': '',
+                      'namespaces': [],
+                      'ztIdentity': '',
+                      'nics': [],
+                      'size': size
+                      }
+        disk_type, disk_size = self.get_most_free_disk_type_size()
+        zdb_params['diskType'] = disk_type
+        zdb_params["path"] = self.get_disk_mount_path(disk_type)                
+        return zdb_params
+
+
+
         
