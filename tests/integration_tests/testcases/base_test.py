@@ -240,6 +240,7 @@ class BaseTest(Utils):
         disk_params['diskType'] = disk_type
         disk_params['size'] = disk_size
         disk_params["path"] = self.get_disk_mount_path(disk_type)
+
         return disk_params
 
     def set_zdb_default_data(self, name=None, size='', mode="user"):
