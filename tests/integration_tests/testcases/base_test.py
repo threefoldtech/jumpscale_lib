@@ -206,7 +206,7 @@ class BaseTest(Utils):
         gw_container = [ container for _ ,container in containers.items() if container['container']['arguments']['hostname'] == gw_name][0]
         return gw_container
 
-    def get_disk__mount_path(self, disk_type):
+    def get_disk_mount_path(self, disk_type):
         disks_mount_paths = self.node_sal.zerodbs.partition_and_mount_disks()
         disk_name = [disk["name"] for disk in self.disks_info if disk["type"]==disk_type.upper()][0]
         disk_name = disk_name[disk_name.find("/dev/")+5: ]
