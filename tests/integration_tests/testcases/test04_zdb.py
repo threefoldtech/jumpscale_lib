@@ -162,24 +162,17 @@ class ZDBTestCases(BaseTest):
         self.assertIn('Namespace {} already exists'.format(ns_name), e.exception.args[0])
 
         self.log("Add namespace without size, should fail.")
-        # should fail 
         ns_name1 = self.random_string()
         with self.assertRaises(ValueError) as e:
             zdb.namespace_create(name=ns_name1)
         self.assertIn('size error', e.exception.args[0])
 
         self.log("Add namespace large size, should fail.")
-        #should fail
         ns_name2 = self.random_string()
         with self.assertRaises(ValueError) as e:
             zdb.namespace_create(name=ns_name2, size=1000000000)
         self.assertIn('size error', e.exception.args[0])
-        zdb3_object = zdb3._zerodb_sal
         
-        with self.assertRaises(ValueError) as e:
-            zdb3_object.deploy()
-        self.assertIn('there is zdb with same name {} '.format(zdb_name), e.exception.args[0])
-
 
 class ZDBActions(BaseTest):
 
