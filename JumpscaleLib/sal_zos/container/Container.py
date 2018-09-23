@@ -332,6 +332,11 @@ class Container():
         resp = self.client.subscribe(job.id)
         resp.stream(callback)
 
+    def get_forwarded_port(self, port):
+        for k, v in self.ports.items(): 
+             if v == port: 
+                 return int(k.split(':')[-1])
+
     def __str__(self):
         return "Container <{}>".format(self.name)
 

@@ -4,6 +4,7 @@ import etcd3
 import yaml
 from .. import templates
 
+from jumpscale import j
 
 logger = j.logger.get(__name__)
 
@@ -60,7 +61,7 @@ class EtcdCluster():
 class ETCD():
     """etced server"""
 
-    def __init__(self, node, name, listen_peer_urls=None, listen_client_urls=None, initial_advertise_peer_urls=None, advertise_client_urls=None, data_dir='/mnt/data', client_port=CLIENT_PORT, peer_port=PEER_PORT):
+    def __init__(self, node, name, listen_peer_urls=None, listen_client_urls=None, initial_advertise_peer_urls=None, advertise_client_urls=None, data_dir='/mnt/data'):
         self.node = node
         self.name = name
         self._container = None
@@ -70,12 +71,38 @@ class ETCD():
         self.initial_advertise_peer_urls = initial_advertise_peer_urls
         self.advertise_client_urls = advertise_client_urls
         self.data_dir = data_dir
-        self.client_port = client_port
-        self.peer_port = peer_port
         self._id = 'etcd.{}'.format(self.name)
         self._config_path = '/bin/etcd_{}.config'.format(self.name)
+        self._container_name = 'etcd_{}'.format(self.name)
+        self._mount_point = '/mnt/etcds/{}'.format(self.name)
 
     @property
+    def client_port(self):
+        self.container.get_forwarded_port(CLIENT_PORT)
+
+    @property
+    def peer_port(self):
+        self.container.get_forwarded_port(PEER_PORT)
+
+    def _create_filesystem(self):
+        if self.node.client.filesystem.exists(self._mount_point):
+            node_mountpoints = self.node.client.disk.mounts()
+            for device in node_mountpoints:
+                for mp in node_mountpoints[device]:
+                    if mp['mountpoint'] == self._mount_point:
+                        return
+    
+        sp = self.node.find_persistance()
+        for fs in sp.list():
+            if fs.name == self._container_name:
+                break
+        else:
+            fs = sp.create(self._container_name)
+    
+        self.node.client.filesystem.mkdir(self._mount_point)
+        subvol = 'subvol={}'.format(fs.subvolume)
+        self.node.client.disk.mount(sp.devicename, self._mount_point, [subvol])
+    
     def _container_data(self):
         """
         :return: data used for etcd container
@@ -85,18 +112,18 @@ class ETCD():
         if len(ports) <= 0:
             raise RuntimeError("can't install etcd, no free port available on the node")
 
-        self.client_port = ports[0]
-        self.peer_port = ports[1]
         ports = {
-            self.client_port: CLIENT_PORT,
-            self.peer_port: PEER_PORT
+            ports[0]: CLIENT_PORT,
+            ports[1]: PEER_PORT,
         }
+        self._create_filesystem()
 
         return {
-            'name': self.name,
+            'name': self._container_name,
             'flist': self.flist,
             'ports': ports,
             'nics': [{'type': 'default'}],
+            'mounts': {self._mount_point: self.data_dir}
         }
 
     @property
@@ -110,7 +137,7 @@ class ETCD():
             try:
                 self._container = self.node.containers.get(self.name)
             except LookupError:
-                self._container = self.node.containers.create(**self._container_data)
+                self._container = self.node.containers.create(**self._container_data())
         return self._container
     
 
@@ -148,7 +175,7 @@ class ETCD():
         self.create_config()
         cmd = '/bin/etcd --config-file {}'.format(self._config_path)
         self.container.client.system(cmd, id=self._id)
-        if not self.container.is_port_listening(PEER_PORT):
+        if not j.tools.timer.execute_until(self.is_running, 30, 0.5):
             raise RuntimeError('Failed to start etcd server: {}'.format(self.name))
 
     def stop(self):
@@ -171,26 +198,24 @@ class ETCD():
 
     def is_running(self):
         try:
-            for _ in self.container.client.job.list(self._id):
-                return True
+            self.container.client.job.list(self._id)
+        except:
             return False
-        except Exception as err:
-            if str(err).find("invalid container id"):
+        for port in [PEER_PORT, CLIENT_PORT]:
+            if not self.container.is_port_listening(port):
                 return False
-            raise
+        return True
 
     def put(self, key, value):
-        client = 'http://{}:{}'.format(self.node.public_addr, self.client_port)
-        client_urls = ','.join(self.listen_client_urls) if self.listen_client_urls else client
+        client = j.clients.etcd.get(self.name, data={'host': self.node.public_addr, 'port': self.client_port})
+        # client = 'http://{}:{}'.format(self.node.public_addr, self.client_port)
+        # client_urls = ','.join(self.listen_client_urls) if self.listen_client_urls else client
 
         if value.startswith("-"):
             value = "-- %s" % value
         if key.startswith("-"):
             key = "-- %s" % key
-        cmd = '/bin/etcdctl \
-          --endpoints {etcd} \
-          put {key} "{value}"'.format(etcd=client_urls, key=key, value=value)
-        return self.container.client.system(cmd, env={"ETCDCTL_API": "3"}).get()
+        client.put(key, value)
 
     def destroy(self):
         self.stop()
