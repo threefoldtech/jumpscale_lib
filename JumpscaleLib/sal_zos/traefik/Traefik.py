@@ -39,7 +39,7 @@ class Traefik:
         return {
             'name': self._container_name,
             'flist': self.flist,
-            'ports': {self.node_port: DEFAULT_PORT},
+            'ports': ports,
             'nics': [{'type': 'default'}],
         }
 
