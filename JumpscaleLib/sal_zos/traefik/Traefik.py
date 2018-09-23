@@ -20,7 +20,8 @@ class Traefik:
         self.flist = 'https://hub.gig.tech/delandtj/traefik.flist'
         self.etcd_endpoint =etcd_endpoint
         self.etcd_watch = etcd_watch
-
+        self.node_port = None
+        
         self._config_dir = '/bin'
         self._config_name = 'traefik.toml'
 
