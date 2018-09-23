@@ -6,7 +6,7 @@ from termcolor import colored
 
 class ZDB:
 
-    def __init__(self, node, name=None, guid=None, data=None):
+    def __init__(self, node, guid=None, data=None):
         self.guid = guid 
         self.data = data
         self.node_sal = node
