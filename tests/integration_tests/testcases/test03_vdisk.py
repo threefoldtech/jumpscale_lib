@@ -91,6 +91,7 @@ class Vdisktest(BaseTest):
         disk.install()
 
     @parameterized.expand(["deploy", "update"])
+    @unittest.skip('https://github.com/threefoldtech/jumpscale_lib/issues/102')
     def test003_attach_vdisk_to_vm(self, attach_by):
         """ SAL-026 create vdisk and attach it to vm.
 
@@ -102,6 +103,7 @@ class Vdisktest(BaseTest):
         #. Attach disk [D1] to vm [VM1].
         #. deploy vm [VM1].
         #. Check that disk [D1] is attached to vm [VM1], should succeed.
+        #. Remove the disk[D1] from the vm ,should succeed.
 
         """
         self.log("Create disk [D1] with default data")
@@ -125,8 +127,6 @@ class Vdisktest(BaseTest):
             self.log("deploy vm [VM1].")
             vm.install(created_vm)
         else:
-            self.skipTest('https://github.com/threefoldtech/jumpscale_lib/issues/102')
-
             self.log("deploy vm [VM1].")
             vm.install(created_vm)
 
@@ -136,3 +136,8 @@ class Vdisktest(BaseTest):
 
         self.log("Check that disk [D1] is attached to vm [VM1], should succeed.")
         self.assertEqual(created_vm.info['params']['media'][0]['url'], disk.disk.url)
+
+        self.log("Remove the disk[D1] from the vm ,should succeed.")
+        created_vm.disks.remove(disk.disk)
+        created_vm.update_disks()
+        self.assertFalse(created_vm.info['params']['media'])
