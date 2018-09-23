@@ -11,15 +11,14 @@ class Traefik:
     Traefik a modern HTTP reverse proxy
     """
 
-    def __init__(self, name, node, etcd_end_pint, node_port=DEFAULT_PORT, etcd_watch=True):
+    def __init__(self, name, node, etcd_endpoint, etcd_watch=True):
         
         self.name = name
         self.id = 'traefik.{}'.format(self.name)
         self.node = node
         self._container = None
         self.flist = 'https://hub.gig.tech/delandtj/traefik.flist'
-        self.node_port = node_port
-        self.etcd_end_pint =etcd_end_pint
+        self.etcd_endpoint =etcd_endpoint
         self.etcd_watch = etcd_watch
 
         self._config_dir = '/bin'
@@ -31,7 +30,7 @@ class Traefik:
         :return: data used for traefik container
          :rtype: dict
         """
-        ports = self.node.freeports(self.node_port, 1)
+        ports = self.node.freeports(1)
         if len(ports) <= 0:
             raise RuntimeError("can't install traefik, no free port available on the node")
 
@@ -74,7 +73,7 @@ class Traefik:
     def _config_as_text(self):
 
         return templates.render(
-            'traefik.conf', etcd_ip =self.etcd_end_pint, etcd_Watch = self.etcd_watch).strip()
+            'traefik.conf', etcd_ip =self.etcd_endpoint, etcd_Watch = self.etcd_watch).strip()
 
     def is_running(self):
         try:
@@ -103,17 +102,11 @@ class Traefik:
 
         # wait for traefik to start
         self.container.client.system(cmd, id=self.id)
-        start = time.time()
-        end = start + timeout
-        is_running = self.is_running()
-        while not is_running and time.time() < end:
-            time.sleep(1)
-            is_running = self.is_running()
+        if j.tools.timer.execute_until(self.is_running, timeout, 0.5):
+            return True
 
         if not is_running:
             raise RuntimeError('Failed to start traefik server: {}'.format(self.name))
-
-        self.container.node.client.nft.open_port(self.node_port)
 
     def stop(self, timeout=30):
         """
@@ -132,17 +125,12 @@ class Traefik:
         self.container.client.job.kill(self.id)
 
         # wait for traefik to stop
-        start = time.time()
-        end = start + timeout
-        is_running = self.is_running()
-        while is_running and time.time() < end:
-            time.sleep(1)
-            is_running = self.is_running()
+        if j.tools.timer.execute_until(self.is_running, timeout, 0.5):
+            return True
 
         if is_running:
             raise RuntimeError('Failed to stop traefik server: {}'.format(self.name))
 
-        self.container.node.client.nft.drop_port(self.node_port)
         self.container.stop()
 
     def destroy(self):
