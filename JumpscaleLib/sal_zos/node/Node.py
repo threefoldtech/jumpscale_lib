@@ -387,6 +387,8 @@ class Node:
         return str(self)
 
     def __eq__(self, other):
+        if other==None:
+            return False
         a = "{}:{}".format(self.addr, self.port)
         b = "{}:{}".format(other.addr, other.port)
         return a == b

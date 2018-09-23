@@ -43,6 +43,11 @@ class GridCapacityFactory(JSConfigFactory):
             return [item for item in self.client.ListCapacity()[0]]
         return self.cache.get("_capacity", method=do, expire=60)
 
+    @property
+    def _farmers(self):
+        def do():
+            return [item for item in self.client.ListFarmers()[0]]
+        return self.cache.get("_farmers", method=do, expire=60)
 
     @property
     def capacity(self):
@@ -50,6 +55,15 @@ class GridCapacityFactory(JSConfigFactory):
         is cached for 60 sec
         """
         return [item.as_dict() for item in self._capacity]
+
+
+
+    @property
+    def farmers(self):
+        """
+        is cached for 60 sec
+        """
+        return [item.as_dict() for item in self._farmers]
 
     def configure(self, instance, base_uri="https://capacity.threefoldtoken.com", interactive=False):
         """
