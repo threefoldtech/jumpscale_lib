@@ -23,10 +23,7 @@ class ZDBTestCases(BaseTest):
         zdbs = self.node_sal.zerodbs.list()
         for zdb in zdbs:
             self.node_sal.primitives.drop_zerodb(zdb.name)
-            
-    def tearDown(self):
-        pass
-
+  
     def test001_create_zdb(self):
         """ SAL-027 Install zdb.
         **Test Scenario:**
