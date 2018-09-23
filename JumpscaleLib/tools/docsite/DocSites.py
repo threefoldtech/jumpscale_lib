@@ -24,12 +24,10 @@ class DocSites(JSBASE):
         self.__jslocation__ = "j.tools.docsites"
         JSBASE.__init__(self)
         self.__imports__ = "toml"
-        self._macroPathsDone = []
+        
         self._initOK = False
-        self._macroCodepath = j.sal.fs.joinPaths(
-            j.dirs.VARDIR, "markdowndocs_internal", "macros.py")
-        j.sal.fs.createDir(j.sal.fs.joinPaths(
-            j.dirs.VARDIR, "markdowndocs_internal"))
+        self._macroCodepath = j.sal.fs.joinPaths(j.dirs.VARDIR, "markdowndocs_internal")
+        j.sal.fs.createDir(self._macroCodepath)
 
         self.docsites = {}  # location in the outpath per site
         self.outpath = j.sal.fs.joinPaths(j.dirs.VARDIR, "docsite")
@@ -38,7 +36,10 @@ class DocSites(JSBASE):
 
         self._loaded = []  # don't double load a dir
         self._configs = []  # all found config files
+
+        self._macros = {}
         self._macros_loaded = []
+        self._macros_modules = {}
 
         self._pointer_cache = {}  # so we don't have to full lookup all the time
 
@@ -71,30 +72,24 @@ class DocSites(JSBASE):
         self.logger.info("load macros")
         path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
 
-        if path not in self._macroPathsDone:
+        if path not in self._macros_modules:
 
             if not j.sal.fs.exists(path=path):
                 raise j.exceptions.Input(
                     "Cannot find path:'%s' for macro's, does it exist?" % path)
 
-            if j.sal.fs.exists(path=self._macroCodepath):
-                code = j.sal.fs.readFile(self._macroCodepath)
-            else:
-                code = ""
-
             for path0 in j.sal.fs.listFilesInDir(path, recursive=True, filter="*.py", followSymlinks=True):
-                newdata = j.sal.fs.fileGetContents(path0)
-                md5 = j.data.hash.md5_string(newdata)
+                code = j.sal.fs.fileGetContents(path0)
+                md5 = j.data.hash.md5_string(code)
                 if md5 not in self._macros_loaded:
-                    code += newdata
+                    code = code.replace("from Jumpscale import j", "")
+                    code = "from Jumpscale import j\n\n" + code
+                    name = j.sal.fs.getBaseName(path0)[:-3] #find name, remove .py
+                    code_path = self._macroCodepath+"%s.py"%name
+                    j.sal.fs.writeFile(code_path, code)
+                    self._macros_modules[code_path] = loadmodule(name, code_path)
+                    self._macros[name] = eval("self._macros_modules[code_path].%s"%name)
                     self._macros_loaded.append(md5)
-
-            code = code.replace("from Jumpscale import j", "")
-            code = "from Jumpscale import j\n\n" + code
-
-            j.sal.fs.writeFile(self._macroCodepath, code)
-            self.macros = loadmodule("macros", self._macroCodepath)
-            self._macroPathsDone.append(path)
 
     def load(self, path="", name=""):
         self.macros_load()

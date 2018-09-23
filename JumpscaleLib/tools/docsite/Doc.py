@@ -5,7 +5,7 @@ import copy
 
 JSBASE = j.application.JSBaseClass
 from .Link import Link
-
+from urllib.parse import urlparse,parse_qs,parse_qsl
 
 class Doc(JSBASE):
     """
@@ -171,6 +171,16 @@ class Doc(JSBASE):
             if header.level == level:
                 return header
 
+    def dynamic_process(self,url):
+        self.kwargs = {}
+        if "?" in url:
+            # query=url.split("?",1)[1]
+            query=urlparse(url).query
+            kwargs=parse_qsl(query)
+            for key,val in kwargs:
+                self.kwargs[key]=val
+        return self.markdown
+
     @property
     def markdown(self):
         """
@@ -187,7 +197,7 @@ class Doc(JSBASE):
             res = msg
 
         if "{{" in res:
-            #TODO:*1 rendering does not seem to be perfect ok
+            #TODO:*1 rendering does not seem to be ok
             res = j.tools.jinja2.text_render(text=res, **self.data)
         return res
 
@@ -261,34 +271,48 @@ class Doc(JSBASE):
                 res.append(link)
         return res
 
+    def _args_get(self,methodcode):
+        methodcode = methodcode.split("(", 1)[1]
+        methodcode = methodcode.rstrip(", )")  # remove end )
+        args = [ item.strip().strip("\"").strip("'").strip() for item in methodcode.split(",") if item.find("=")==-1]
+        return args
+
+    def _kwargs_get(self, methodcode):
+        if "(" in methodcode:
+            methodcode = methodcode.split("(", 1)[1]
+            methodcode = methodcode.rstrip(", )")  # remove end )
+        kwargs_ = [ item.strip() for item in methodcode.split(",") if item.find("=")!=-1]
+        if kwargs_ != []:
+            j.shell()
+            return kwargs
+        else:
+            return {}
+
     def _macros_process(self):
         """
-        eval the macro
+        eval the macros
         """
 
         for part in self.parts_get(cat="macro"):
-            line = part.method
-            if line.strip()=="":
+            if part.method.strip()=="":
                 return self.docsite.error_raise("empty macro cannot be executed", doc=self)
-            block = part.data
-            methodcode = line.rstrip(", )")  # remove end )
-            methodcode = methodcode.replace("(", "(self,")
-            if not methodcode.strip() == line.strip():
-                # means there are parameters
-                methodcode += ",content=block)"
-            else:
-                methodcode += "(content=block)"
-            methodcode = methodcode.replace(",,", ",")
 
-            if methodcode.strip()=="":
-                raise RuntimeError("method code cannot be empty")
+            macro_name = part.method.split("(",1)[0].strip()
 
-            cmd = "j.tools.docsites.macros." + methodcode
+            if not macro_name in j.tools.docsites._macros:
+                e = "COULD NOT FIND MACRO"
+                block = "```python\nERROR IN MACRO*** TODO: *1 ***\nmacro:\n%s\nERROR:\n%s\n```\n" % (macro_name, e)
+                self.logger.error(block)
+                self.docsite.error_raise(block, doc=self)
+
+            method = j.tools.docsites._macros[macro_name]
+            args = self._args_get(part.method)
+            kwargs = self._kwargs_get(part.method)
+
             # self.logger.debug(cmd)
             # macro = eval(cmd)
             try:
-                macro = eval(cmd) #is the result of the macro which is returned
-                part.result = macro
+                part.result = method(self,*args,**kwargs,content=part.data)
             except Exception as e:                
                 block = "```python\nERROR IN MACRO*** TODO: *1 ***\ncmd:\n%s\nERROR:\n%s\n```\n" % (cmd, e)
                 self.logger.error(block)
