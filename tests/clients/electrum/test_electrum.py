@@ -60,7 +60,7 @@ def _start_daemon_and_get_client(wallet_name):
         'rpc_user': RPC_USER,
         'rpc_pass_': RPC_PASS,
         'seed_': SEED,
-        'password_': "pass",
+        'password_': "",
         "passphrase_": "",
         "electrum_path": electrum_dir,
         "testnet": 1

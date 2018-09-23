@@ -44,6 +44,9 @@ class ElectrumClient(JSConfigBase):
 
     @property
     def wallet(self):
+        # access atomicswap to make sure the wallet is loaded
+        # need to figure out a better wayt to do this using a call to the library
+        self.atomicswap
         if self._wallet is None:
             config_data = {}
             for key, value in self.config.data.items():

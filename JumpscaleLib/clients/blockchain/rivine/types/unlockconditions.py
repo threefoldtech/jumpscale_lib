@@ -197,7 +197,7 @@ class UnlockCondtionFactory:
             if 'type' in condition_dict:
                 if condition_dict['type'] == 1:
                     return UnlockHashCondition(unlockhash=UnlockHash.from_string(condition_dict['data']['unlockhash']))
-                elif condition_dict['type'] == 1:
+                elif condition_dict['type'] == 2:
                     return AtomicSwapCondition.from_dict(condition_dict['data'])
                 elif condition_dict['type'] == 3:
                     return LockTimeCondition.from_dict(condition_dict['data'])
