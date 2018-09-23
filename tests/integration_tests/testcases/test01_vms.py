@@ -94,7 +94,6 @@ class VMTestCases(BaseTest):
             release = result[result.find(':') + 1 :]
         else:
             release = result[result.find(':') + 2 : result.find('@') - 1]
-        
         self.assertEqual(release, version_release)
 
     def test003_create_vm_with_type_default(self):
@@ -103,7 +102,7 @@ class VMTestCases(BaseTest):
         **Test Scenario:**
  
         #. Create vm [VM1] with type default nics, should succeed.
-        #. Add a port forword to port 22.
+        #. Add a port forward to port 22.
         #. Check that vm can reach internet, should succeed.
 
         """
@@ -119,7 +118,7 @@ class VMTestCases(BaseTest):
         created_vm = vm._vm_sal
         self.assertTrue(created_vm)
 
-        self.log("Add a port forword to port 22.")
+        self.log("Add a port forward to port 22.")
         port_name = self.random_string()  
         host_port_ssh = random.randint(7000, 8000)       
         created_vm.ports.add(name=port_name, source=host_port_ssh, target=22)
@@ -162,7 +161,7 @@ class VMTestCases(BaseTest):
         #. Attach disk[D1] to vm1, should succeed.
         #. Check that disk [D1] added successfully to vm1.
         #. Try to attach disk[D1] again to vm1, should failed.
-        #. Remove the disk[D1] from the disk ,should succeed.
+        #. Remove the disk[D1] from the vm ,should succeed.
         #. Check that disk removed successfully.
 
         """
@@ -199,7 +198,7 @@ class VMTestCases(BaseTest):
         created_vm.update_disks()
 
         self.log("Check that disk [D1] added successfully to vm1.")
-        self.assertTrue(created_vm.info['params']['media'])
+        self.assertEqual(created_vm.info['params']['media'][0]['url'], disk_url)
 
         self.log("Try to attach disk[D1] again to vm1, should failed.")
         disk_name2 = self.random_string()
@@ -209,7 +208,7 @@ class VMTestCases(BaseTest):
             created_vm.update_disks()
         self.assertIn('The disk you tried is already attached to the vm', e.exception.args[0])
 
-        self.log('Remove the disk[D1] from the disk ,should succeed.')
+        self.log('Remove the disk[D1] from the vm ,should succeed.')
         created_vm.disks.remove(disk_name1)
         created_vm.disks.remove(disk_name2)
         created_vm.update_disks()
@@ -242,7 +241,7 @@ class VMTestCases(BaseTest):
         created_vm = vm._vm_sal
         self.assertTrue(created_vm)
 
-        self.log("Add 2 port forword for ssh and server.")
+        self.log("Add 2 port forward for ssh and server.")
         port_name1 = self.random_string()
         host_port_ssh = random.randint(1000, 2000)        
         created_vm.ports.add(name=port_name1, source=host_port_ssh, target=22)
@@ -326,9 +325,9 @@ class VMTestCases(BaseTest):
         **Test Scenario:**
  
         #. Create vm [vm1] with default values, should succeed.
-        #. Add a port forword to port 22, should fail.
+        #. Add a port forward to port 22, should fail.
         #. Add type default to [vm1].
-        #. Add a port forword to port 22 again, should succeed.
+        #. Add a port forward to port 22 again, should succeed.
         #. Check that you can access [vm1], should succeed.
 
         """
@@ -338,7 +337,7 @@ class VMTestCases(BaseTest):
         created_vm = vm._vm_sal
         self.assertTrue(created_vm)
 
-        self.log("Add a port forword to port 22, should fail.")
+        self.log("Add a port forward to port 22, should fail.")
         port_name = self.random_string()
         host_port = random.randint(3000, 4000)
 
@@ -350,7 +349,7 @@ class VMTestCases(BaseTest):
         network_name = self.random_string()
         created_vm.nics.add(type_='default', name=network_name)
 
-        self.log("Add a port forword to port 22.")
+        self.log("Add a port forward to port 22.")
         created_vm.ports.add(port_name, source=host_port, target=22)
     
         vm.install(created_vm)
@@ -426,7 +425,7 @@ class VMTestCases(BaseTest):
         **Test Scenario:**
  
         #. Create vm [VM1] with type default nics, should succeed.
-        #. Add port forword to port 22.
+        #. Add port forward to port 22.
         #. Create vm [VM2] with type default nics, should succeed.
         #. Create vm [VM3] without type default nics, should succeed.
         #. Try to ping VM2 from VM1, should succeed.
@@ -446,7 +445,7 @@ class VMTestCases(BaseTest):
         # change memory to 2 GB for vm, as I have 3 vm on node has 8 GB.
         created_vm1.memory = 2048
 
-        self.log("Add port forword to port 22.")
+        self.log("Add port forward to port 22.")
         port_name = self.random_string()
         host_port_ssh = random.randint(1000, 2000)        
         created_vm1.ports.add(name=port_name, source=host_port_ssh, target=22)
@@ -493,8 +492,8 @@ class VMTestCases(BaseTest):
         #. Add zerotier network to VM1, should succeed.
         #. Deploy the VM1 and check you can access it using ssh.should
         #. Add type default to VM1 and update nics, should succeed.
-        #. Add port forword to port 22.
-        #. Update the network and try to ssh using port forword, should succeed.
+        #. Add port forward to port 22.
+        #. Update the network and try to ssh using port forward, should succeed.
 
         """
         self.log("Create vm [VM1] with default values, should succeed.")
@@ -519,12 +518,12 @@ class VMTestCases(BaseTest):
         network_name = self.random_string()
         created_vm.nics.add(name=network_name, type_='default')
 
-        self.log("Add port forword to port 22.")
+        self.log("Add port forward to port 22.")
         port_name = self.random_string()
         host_port_ssh = random.randint(8000, 9000)        
         created_vm.ports.add(name=port_name, source=host_port_ssh, target=22)
         
-        self.log("Update the network and try to ssh using port forword, should succeed.")
+        self.log("Update the network and try to ssh using port forward, should succeed.")
         created_vm.update_nics()
         result2 = self.ssh_vm_execute_command(vm_ip=self.node_ip, port=host_port_ssh, cmd='pwd')
         self.assertEqual(result2, '/root') 
