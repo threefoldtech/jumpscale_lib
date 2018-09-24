@@ -359,7 +359,8 @@ class VMTestCases(BaseTest):
         result = self.ssh_vm_execute_command(vm_ip=self.node_ip, port=host_port, cmd='pwd')
         self.assertEqual(result, '/root') 
 
-    def test009_change_vm_params(self):
+    @parameterized.expand(["name", "vcpus", "memory", "flist"])
+    def test009_change_vm_params(self, param):
         """ SAL-021 change vm parameters.
 
         **Test Scenario:**
@@ -379,45 +380,33 @@ class VMTestCases(BaseTest):
         self.assertTrue(created_vm)
         vm.install(created_vm)
 
-        name = self.random_string()
-        vcpus = random.randint(1, self.cpu_info)
-        memory = random.randint(1, self.node_info['memory']) * 1024
-        flist = 'https://hub.grid.tf/tf-bootable/ubuntu:16.04.flist'
+        if param == "name":
+            new_param_val = self.random_string()
+            flag = param
+        elif param == "vcpus":
+            new_param_val = random.randint(1, self.cpu_info)
+            flag = "cpu"
+        elif param == "memory":
+            new_param_val = random.randint(1, self.node_info['memory']) * 1024
+            flag = param
+        else:
+            new_param_val = 'https://hub.grid.tf/tf-bootable/ubuntu:16.04.flist'
+            flag = param
 
-        self.log("Try to change vm parameters while it is running, should fail.")
+        self.log("Try to change vm {} while it is running, should fail.".format(param))
         with self.assertRaises(RuntimeError) as e:
-            created_vm.name = name
-        self.assertIn('Can not change name of running vm', e.exception.args[0])
-
-        with self.assertRaises(RuntimeError) as e:
-            created_vm.vcpus = vcpus
-        self.assertIn('Can not change cpu of running vm', e.exception.args[0])
-
-        with self.assertRaises(RuntimeError) as e:
-            created_vm.memory = memory
-        self.assertIn('Can not change memory of running vm', e.exception.args[0])
-
-        with self.assertRaises(RuntimeError) as e:
-            created_vm.flist = flist
-        self.assertIn('Can not change flist of running vm', e.exception.args[0])
-
-        self.log("Force shutdown the vm.")
-        created_vm.destroy()
+            setattr(created_vm, param, new_param_val)
+        self.assertIn('Can not change {} of running vm'.format(flag), e.exception.args[0])
 
         self.log("Change vm parameters, should succeed.")
-        created_vm.name = name
-        created_vm.vcpus = vcpus
-        created_vm.memory = memory
-        created_vm.flist = flist
+        created_vm.destroy()
+        setattr(created_vm, param, new_param_val)
 
         self.log("Start the vm again.")
         created_vm.start()
 
         self.log("Check that vm parameters are changed.")
-        self.assertEqual(created_vm.info['params']['name'], name)
-        self.assertEqual(created_vm.info['params']['cpu'], vcpus)
-        self.assertEqual(created_vm.info['params']['memory'], memory)
-        self.assertEqual(created_vm.info['params']['flist'], flist)
+        self.assertEqual(created_vm.info['params'][flag], new_param_val)
 
     def test010_ping_vms(self):
         """ SAL-022 check that vms with type default nics can reach each other
@@ -442,7 +431,8 @@ class VMTestCases(BaseTest):
         self.update_default_data(vm1.data, nics)
         created_vm1 = vm1._vm_sal
         self.assertTrue(created_vm1)
-        # change memory to 2 GB for vm, as I have 3 vm on node has 8 GB.
+
+        self.log("change memory to 2 GB for vm, to save memory.")
         created_vm1.memory = 2048
 
         self.log("Add port forward to port 22.")
@@ -460,6 +450,8 @@ class VMTestCases(BaseTest):
         vm2.data = self.update_default_data(vm2.data, nics)
         created_vm2 = vm2._vm_sal
         self.assertTrue(created_vm2)
+
+        self.log("change memory to 2 GB for vm, to save memory.")
         created_vm2.memory = 2048
         vm2.install(created_vm2)
 
@@ -468,6 +460,8 @@ class VMTestCases(BaseTest):
         vm3.data = self.set_vm_default_values(os_type="ubuntu")
         created_vm3 = vm3._vm_sal
         self.assertTrue(created_vm3)
+
+        self.log("change memory to 2 GB for vm, to save memory.")
         created_vm3.memory = 2048
         vm3.install(created_vm3)
 
