@@ -78,11 +78,11 @@ class ETCD():
 
     @property
     def client_port(self):
-        self.container.get_forwarded_port(CLIENT_PORT)
+        return self.container.get_forwarded_port(CLIENT_PORT)
 
     @property
     def peer_port(self):
-        self.container.get_forwarded_port(PEER_PORT)
+        return self.container.get_forwarded_port(PEER_PORT)
 
     def _create_filesystem(self):
         if self.node.client.filesystem.exists(self._mount_point):
@@ -113,8 +113,8 @@ class ETCD():
             raise RuntimeError("can't install etcd, no free port available on the node")
 
         ports = {
-            ports[0]: CLIENT_PORT,
-            ports[1]: PEER_PORT,
+            str(ports[0]): CLIENT_PORT,
+            str(ports[1]): PEER_PORT,
         }
         self._create_filesystem()
 
@@ -135,7 +135,7 @@ class ETCD():
         """
         if self._container is None:
             try:
-                self._container = self.node.containers.get(self.name)
+                self._container = self.node.containers.get(self._container_name)
             except LookupError:
                 self._container = self.node.containers.create(**self._container_data())
         return self._container
@@ -153,7 +153,7 @@ class ETCD():
 
         config = {
             "name": self.name,
-            "initial-advertise-peer-urls": initial_peer_urls,
+            "initial_peer_urls": initial_peer_urls,
             "listen_peer_urls": peer_urls,
             "listen_client_urls": client_urls,
             "advertise_client_urls": advertise_client_urls,
