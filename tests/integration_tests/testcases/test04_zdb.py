@@ -63,7 +63,7 @@ class ZDBTestCases(BaseTest):
         created_zdb2 = zdb2._zerodb_sal
 
         with self.assertRaises(ValueError) as e:
-             created_zdb2.deploy()
+            created_zdb2.deploy()
 
             self.assertIn('there is zdb with same name {}'.format(zdb_name), e.exception.args[0])
 
@@ -118,7 +118,6 @@ class ZDBTestCases(BaseTest):
         zdb = self.zdb(node=self.node_sal, name=zdb_name)
         zdb.data = self.set_zdb_default_data(name=zdb_name)
         zdb.install()
-        import ipdb; ipdb.set_trace()
 
         self.log("Add namespace [ns1] to zdb, should succeed.")
         ns_name = self.random_string()
@@ -228,7 +227,7 @@ class ZDBActions(BaseTest):
         self.log("Set key[k1] with different value, should succeed.")
         value_2 = self.random_string()
         result = self.zdb_client.set(key, value_2)
-
+        
         self.log("Check that v1 updated with new value.")
         result_value = self.zdb_client.get(key)
         self.assertEqual(result_value, value_2)
