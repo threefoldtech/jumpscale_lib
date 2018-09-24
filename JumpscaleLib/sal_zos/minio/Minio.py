@@ -1,7 +1,9 @@
+import signal
 import time
-from jumpscale import j
-from .. import templates
 
+from jumpscale import j
+
+from .. import templates
 
 logger = j.logger.get(__name__)
 DEFAULT_PORT = 9000
@@ -192,6 +194,16 @@ class Minio:
                     return int(k.split(':')[-1])
         except LookupError:
             return None
+
+    def reload(self):
+        """
+        tell minio process to reload its configuration by reading the config file again
+        """
+        if not self.is_running():
+            logger.error("cannot reload when minio is not running")
+            return
+
+        self.container.client.job.kill(self.id, signal.SIGHUP)
 
     def destroy(self):
         self.stop()
