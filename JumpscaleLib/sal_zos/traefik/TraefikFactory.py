@@ -1,4 +1,4 @@
-from .Traefik import Traefik, DEFAULT_PORT
+from .Traefik import Traefik
 from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
@@ -10,10 +10,10 @@ class TraefikFactory(JSBASE):
         JSBASE.__init__(self)
 
     @staticmethod
-    def get(name, node, etcd_end_pint, node_port=DEFAULT_PORT, etcd_watch=True):
+    def get(name, node, etcd_endpoint, etcd_watch=True):
         """
         Get sal for traefik
         Returns:
             the sal layer 
         """
-        return Traefik(name, node, node_port, etcd_end_pint, etcd_watch)
+        return Traefik(name, node, etcd_endpoint, etcd_watch)

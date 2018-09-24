@@ -4,36 +4,36 @@ from .. import templates
 
 
 logger = j.logger.get(__name__)
-DEFAULT_PORT = 9700
+DEFAULT_PORT = 9500
 
-class Traefik:
+class Coredns:
     """
-    Traefik a modern HTTP reverse proxy
+    CoreDNS is a DNS server. It is written in Go
     """
 
-    def __init__(self, name, node, etcd_endpoint, etcd_watch=True):
+    def __init__(self, name, node, etcd_endpoint, domain, recursive_resolvers):
         
         self.name = name
-        self.id = 'traefik.{}'.format(self.name)
+        self.id = 'coredns.{}'.format(self.name)
         self.node = node
         self._container = None
-        self.flist = 'https://hub.gig.tech/delandtj/traefik.flist'
-        self.etcd_endpoint =etcd_endpoint
-        self.etcd_watch = etcd_watch
-        self.node_port = None
-        
-        self._config_dir = '/bin'
-        self._config_name = 'traefik.toml'
+        self.flist = 'https://hub.grid.tf/bola_nasr_1/coredns.flist'
+        self.etcd_endpoint = etcd_endpoint
+        self.domain = domain
+        self.recursive_resolvers = recursive_resolvers
+
+        self._config_dir = '/usr/bin'
+        self._config_name = 'coredns.conf'
 
     @property
     def _container_data(self):
         """
-        :return: data used for traefik container
+        :return: data used for coredns container
          :rtype: dict
         """
         ports = self.node.freeports(1)
         if len(ports) <= 0:
-            raise RuntimeError("can't install traefik, no free port available on the node")
+            raise RuntimeError("can't install coredns, no free port available on the node")
 
         self.node_port = ports[0]
 
@@ -47,16 +47,16 @@ class Traefik:
     @property
     def _container_name(self):
         """
-        :return: name used for traefik container
+        :return: name used for coredns container
         :rtype: string
         """
-        return 'traefik_{}'.format(self.name)
+        return 'coredns_{}'.format(self.name)
 
     @property
     def container(self):
         """
-        Get/create traefik container to run traefik services on
-        :return: traefik container
+        Get/create coredns container to run coredns services on
+        :return: coredns container
         :rtype: container sal object
         """
         if self._container is None:
@@ -67,14 +67,14 @@ class Traefik:
         return self._container
 
     def create_config(self):
-        logger.info('Creating traefik config for %s' % self.name)
+        logger.info('Creating coredns config for %s' % self.name)
         config = self._config_as_text()
         self.container.upload_content(j.sal.fs.joinPaths(self._config_dir, self._config_name), config)
 
     def _config_as_text(self):
 
         return templates.render(
-            'traefik.conf', etcd_ip =self.etcd_endpoint, etcd_Watch = self.etcd_watch).strip()
+            'coredns.conf', etcd_ip =self.etcd_endpoint, domain=self.domain, recursive_resolvers=self.recursive_resolvers).strip()
 
     def is_running(self):
         try:
@@ -88,31 +88,31 @@ class Traefik:
 
     def start(self, timeout=15):
         """
-        Start traefik
+        Start coredns
         :param timeout: time in seconds to wait for the traefik to start
         """
         is_running = self.is_running()
         if is_running:
             return
 
-        logger.info('start traefik %s' % self.name)
+        logger.info('start coredns %s' % self.name)
 
         self.create_config()
 
-        cmd = '/bin/traefik ./traefik  -c {dir}'.format(dir=self._config_dir)
+        cmd = '/bin/coredns ./coredns  -conf {dir}'.format(dir=self._config_dir)
 
-        # wait for traefik to start
+        # wait for coredns to start
         self.container.client.system(cmd, id=self.id)
         if j.tools.timer.execute_until(self.is_running, timeout, 0.5):
             return True
 
         if not is_running:
-            raise RuntimeError('Failed to start traefik server: {}'.format(self.name))
+            raise RuntimeError('Failed to start coredns server: {}'.format(self.name))
 
     def stop(self, timeout=30):
         """
-        Stop the traefik
-        :param timeout: time in seconds to wait for the traefik gateway to stop
+        Stop the coredns
+        :param timeout: time in seconds to wait for the coredns gateway to stop
         """
         if not self.container.is_running():
             return
@@ -121,16 +121,16 @@ class Traefik:
         if not is_running:
             return
 
-        logger.info('stop traefik %s' % self.name)
+        logger.info('stop coredns %s' % self.name)
 
         self.container.client.job.kill(self.id)
 
-        # wait for traefik to stop
+        # wait for coredns to stop
         if j.tools.timer.execute_until(self.is_running, timeout, 0.5):
             return True
 
         if is_running:
-            raise RuntimeError('Failed to stop traefik server: {}'.format(self.name))
+            raise RuntimeError('Failed to stop coredns server: {}'.format(self.name))
 
         self.container.stop()
 
