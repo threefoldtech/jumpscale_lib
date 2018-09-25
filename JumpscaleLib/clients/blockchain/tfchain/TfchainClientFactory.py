@@ -32,14 +32,14 @@ class TfchainClientFactory(JSConfigBaseFactory):
         @param txn_json: Json string representing a transaction
         """
         return TransactionFactory.from_json(txn_json)
- 
+
     def create_wallet (self, walletname, testnet= False, seed = ''):
         """
-        Creates a named wallet 
+        Creates a named wallet
 
         @param seed : restores a wallet from a seed
         """
-        data = {'testnet':testnet, 'seed':seed}
+        data = {'testnet':testnet, 'seed_':seed}
         return self.get(walletname, data=data).wallet
 
     def open_wallet(self, walletname):
