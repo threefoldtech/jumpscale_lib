@@ -14,7 +14,22 @@ class Minio:
     Minio gateway
     """
 
-    def __init__(self, name, node, login, password, zdbs, namespace, private_key, namespace_secret='', block_size=1048576, meta_private_key='', nr_datashards=1, nr_parityshards=0):
+    def __init__(self,
+                 name,
+                 node,
+                 login,
+                 password,
+                 zdbs,
+                 namespace,
+                 private_key,
+                 namespace_secret='',
+                 block_size=1048576,
+                 meta_private_key='',
+                 nr_datashards=1,
+                 nr_parityshards=0,
+                 tlog_namespace=None,
+                 tlog_address=None,
+                 tlog_password=None):
         """
 
         :param name: instance name
@@ -28,6 +43,9 @@ class Minio:
         :param node_port: the port the minio container will forward to. If this port is not free, the deploy will find the next free port
         :param nr_datashards: number of datashards.
         :param nr_parityshards: number of parityshards (if it's zero it will make the mode replication otherwise mode is distribution)
+        :param tlog_namespace: name of the zerodb namespace used as tlog
+        :param tlog_address: ip:port of the zerodb namespace used as tlog
+        :param tlog_password: password of the zerodb namespace used as tlog
         """
         self.name = name
         self.id = 'minio.{}'.format(self.name)
@@ -45,6 +63,13 @@ class Minio:
         self.login = login
         self.password = password
         self.meta_private_key = meta_private_key
+        if tlog_namespace and tlog_address:
+            self.tlog = {
+                'namespace': tlog_namespace,
+                'address': tlog_address,
+                'password': tlog_password}
+        else:
+            self.tlog = None
 
         self._config_dir = '/bin'
         self._config_name = 'zerostor.yaml'
@@ -183,7 +208,7 @@ class Minio:
     def _config_as_text(self):
         return templates.render(
             'minio.conf', namespace=self.namespace, namespace_secret=self.namespace_secret,
-            zdbs=self.zdbs, private_key=self.private_key, block_size=self.block_size, nr_datashards=self._nr_datashards, nr_parityshards=self._nr_parityshards).strip()
+            zdbs=self.zdbs, private_key=self.private_key, block_size=self.block_size, nr_datashards=self._nr_datashards, nr_parityshards=self._nr_parityshards, tlog=self.tlog).strip()
 
     @property
     def node_port(self):
