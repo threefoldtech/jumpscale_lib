@@ -63,15 +63,11 @@ class EtcdCluster():
 class ETCD():
     """etced server"""
 
-    def __init__(self, node, name, listen_peer_urls=None, listen_client_urls=None, initial_advertise_peer_urls=None, advertise_client_urls=None, data_dir='/mnt/data', zt_identity=None, nics=None, token=None, cluster=None):
+    def __init__(self, node, name, data_dir='/mnt/data', zt_identity=None, nics=None, token=None, cluster=None):
         self.node = node
         self.name = name
         self._container = None
         self.flist = 'https://hub.grid.tf/bola_nasr_1/etcd-3.3.4.flist'
-        self.listen_peer_urls = listen_peer_urls
-        self.listen_client_urls = listen_client_urls
-        self.initial_advertise_peer_urls = initial_advertise_peer_urls
-        self.advertise_client_urls = advertise_client_urls
         self.data_dir = data_dir
         self.zt_identity = zt_identity
         self._id = 'etcd.{}'.format(self.name)
@@ -147,24 +143,15 @@ class ETCD():
     
 
     def create_config(self):
-        client = 'http://{}:{}'.format(self.container.public_addr, CLIENT_PORT)
-        peer = 'http://{}:{}'.format(self.container.public_addr, PEER_PORT)
-
-        peer_urls = ','.join(self.listen_peer_urls) if self.listen_peer_urls else peer
-        initial_peer_urls = ','.join(self.initial_advertise_peer_urls) if self.initial_advertise_peer_urls else peer
-        client_urls = ','.join(self.listen_client_urls) if self.listen_client_urls else client
-        advertise_client_urls = ','.join(self.advertise_client_urls) if self.advertise_client_urls else client
-
-        cluster = self.cluster if self.cluster else [{'name': self.name, 'address': peer}]
+        cluster = self.cluster if self.cluster else [{'name': self.name, 'address': self.peer_url}]
         members  = ['='.join([member['name'],member['address']]) for member in cluster]
-
 
         config = {
             "name": self.name,
-            "initial_peer_urls": initial_peer_urls,
-            "listen_peer_urls": peer_urls,
-            "listen_client_urls": client_urls,
-            "advertise_client_urls": advertise_client_urls,
+            "initial_peer_urls": self.peer_url,
+            "listen_peer_urls": self.peer_url,
+            "listen_client_urls": self.client_url,
+            "advertise_client_urls": self.client_url,
             "data_dir": self.data_dir,
             "token": self.token,
             "cluster": ",".join(members),
