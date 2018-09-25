@@ -43,6 +43,7 @@ class RivineClient(JSConfigBase):
     @property
     def wallet(self):
         if self._wallet is None:
+            client = j.clients.rivine.get(self.instance, create=False)
             if self._config.data['multisig'] is True:
                 # due to a bug in config manager we cannot store cosigners as list of lists in the toml config file
                 # that is why we store it as list of a comma separated list of items, here we have to load it into list of lists
@@ -52,7 +53,7 @@ class RivineClient(JSConfigBase):
                                                         bc_networks=self.config.data['bc_addresses'],
                                                         bc_network_password=self.config.data['password_'],
                                                         minerfee=int(self.config.data['minerfee']),
-                                                        client=self.instance)
+                                                        client=client)
             else:
                 # Load a wallet from a given seed. If no seed is given,
                 # generate a new one
@@ -76,5 +77,5 @@ class RivineClient(JSConfigBase):
                                             bc_network_password=self.config.data['password_'],
                                             nr_keys_per_seed=int(self.config.data['nr_keys_per_seed']),
                                             minerfee=int(self.config.data['minerfee']),
-                                            client=self.instance)
+                                            client=client)
         return self._wallet
