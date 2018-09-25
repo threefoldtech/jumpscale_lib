@@ -8,6 +8,13 @@ class FlistManager:
         self._id = container_id
 
     def create(self, src, dst, storage):
+        """
+        Create an flist from src
+        
+        :param src: Absolute path of the directory with the files that will be uploaded to storage
+        :param dst: Filst name (Ex: /tmp/myflist.flist)
+        :param storage: Address of zdb were files will be uploaded
+        """
         args = {
             'container': self._id,
             'flist': dst,
