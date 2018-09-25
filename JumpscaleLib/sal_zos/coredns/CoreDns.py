@@ -17,9 +17,10 @@ class Coredns:
         self.id = 'coredns.{}'.format(self.name)
         self.node = node
         self._container = None
-        self.flist = 'https://hub.grid.tf/bola_nasr_1/coredns.flist'
+        self.flist = 'https://hub.grid.tf/tf-official-apps/coredns-1.2.2.flist'
         self.etcd_endpoint = etcd_endpoint
         self.domain = domain
+        self.node_port = None
         self.recursive_resolvers = recursive_resolvers
 
         self._config_dir = '/usr/bin'
@@ -36,7 +37,9 @@ class Coredns:
             raise RuntimeError("can't install coredns, no free port available on the node")
 
         self.node_port = ports[0]
-
+        ports = {
+            str(ports[0]): self.node_port,
+        }
         return {
             'name': self._container_name,
             'flist': self.flist,
@@ -89,7 +92,7 @@ class Coredns:
     def start(self, timeout=15):
         """
         Start coredns
-        :param timeout: time in seconds to wait for the traefik to start
+        :param timeout: time in seconds to wait for the coredns to start
         """
         is_running = self.is_running()
         if is_running:
@@ -99,7 +102,7 @@ class Coredns:
 
         self.create_config()
 
-        cmd = '/bin/coredns ./coredns  -conf {dir}'.format(dir=self._config_dir)
+        cmd = '/usr/bin/coredns ./coredns  -conf {dir}/{config}'.format(dir=self._config_dir,config=self._config_name)
 
         # wait for coredns to start
         self.container.client.system(cmd, id=self.id)

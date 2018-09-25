@@ -17,12 +17,12 @@ class Traefik:
         self.id = 'traefik.{}'.format(self.name)
         self.node = node
         self._container = None
-        self.flist = 'https://hub.gig.tech/delandtj/traefik.flist'
+        self.flist = 'https://hub.grid.tf/tf-official-apps/traefik-1.7.0-rc5.flist'
         self.etcd_endpoint =etcd_endpoint
         self.etcd_watch = etcd_watch
         self.node_port = None
         
-        self._config_dir = '/bin'
+        self._config_dir = '/usr/bin'
         self._config_name = 'traefik.toml'
 
     @property
@@ -36,6 +36,9 @@ class Traefik:
             raise RuntimeError("can't install traefik, no free port available on the node")
 
         self.node_port = ports[0]
+        ports = {
+            str(ports[0]): self.node_port,
+        }
 
         return {
             'name': self._container_name,
@@ -99,8 +102,8 @@ class Traefik:
 
         self.create_config()
 
-        cmd = '/bin/traefik ./traefik  -c {dir}'.format(dir=self._config_dir)
-
+        cmd = '/usr/bin/traefik ./traefik  -c {dir}/{config}'.format(dir=self._config_dir,config=self._config_name)
+       
         # wait for traefik to start
         self.container.client.system(cmd, id=self.id)
         if j.tools.timer.execute_until(self.is_running, timeout, 0.5):
