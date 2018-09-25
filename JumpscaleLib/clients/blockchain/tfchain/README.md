@@ -11,54 +11,14 @@ dependencies, see [the rivine module README](../rivine/README.md).
 
 ## Usage
 
-Operation requires a wallet, which is essentially a seed. Using this seed, (and only
-this seed), the wallet can be fully recovered at a later date, including by someone else.
-The seed must never be shared with anyone.
-
-In case the user does not yet have a seed, one can be generated as follows:
-
+Start by creating a wallet ( for testnet in this case)
 ```python
-j.clients.tfchain.generate_seed()
+wallet = j.clients.tfchain.create_wallet('default', testnet = True)
 ```
-
-This will produce a 24 word mnemonic. A mnemonic is a human readable representation
-of the seed, which is just a bunch of bytes. Some shorter mnemonics coudl be used,
-however we always generate 32 byte seeds, which results in 24 word mnemonics when encoded.
-
-Note that this step is optional. It is completely possible to create a tfchain wallet
-without specifying a seed. In this case, the seed will be generated and saved as soon
-as the wallet of the TfChain client is accessed for the first time.
-
-We assume that JumpScale is being used to create the client, e.g.:
-
+Or in case you already created a wallet, you can open it :
 ```python
-cl = j.clients.tfchain.get('myclient', data=data, interactive=False)
-```
-
-data is a `dict` with config keys/values. The acceptible keys are:
-
- - `testnet (bool)`: Indicate that we should use testnet, defaults to False.
- - `multisig (bool)`: Defines if this is a multisig wallet or not, defaults to false
- - `seed_ (string)`: The seed to load as a mnemonic. If this is the empty string (default), a new one is generated
- - `nr_keys_per_seed (int)`: The amount of keys (addresses) to generate from the seed initially
- - `cosigners (list(str))`: A list of addresses which own the multisig wallet
- - `required_sig (int)`: The minimum amount of signatures required to spend an output from the multisig wallet
- 
-Note that the usage of either `seed_` and `nr_keys_per_seed`, or `cosigners` and `required_sig`
-depends on the value of `multisig`. If `multisig` is false, the default, then only
-the first 2 parameters will be used. Likewise if `multisig` is true, then only the
-last 2 parameters are used.
-
-In the following example, a testnet wallet is created, without a seed, and the default
-amount of addresses is loaded:
-
-```python
-data = {}
-data['testnet'] = True
-cl = j.clients.tfchain.get('testnet_wallet', data=data, interactive=False)
-wallet = cl.wallet
-```
-
+ wallet = j.clients.tfchain.open_wallet('default')
+ ```
 Now that we have our wallet, we can get the addresses we already generated
 
 ```python
@@ -175,3 +135,23 @@ The light wallet client exposes the APIs via the following hook:
 ```python
 wallet.atomicswap.[TAB]
 ```
+### recovering a wallet 
+
+A wallet is essentially a seed. Using this seed, (and only
+this seed), the wallet can be fully recovered at a later date, including by someone else.
+The seed must never be shared with anyone.
+```python
+seed = wallet.seed
+newwallet =  j.clients.tfchain.create_wallet('default', seed=seed)
+```
+
+Instead of reusing the seed of an existing wallet, you can also generate a seed yourself and create wallets from that one.
+
+```python
+seed = j.clients.tfchain.generate_seed()
+```
+
+This will produce a 24 word mnemonic. A mnemonic is a human readable representation
+of the seed, which is just a bunch of bytes. Some shorter mnemonics could be used,
+however we always generate 32 byte seeds, which results in a 24 word mnemonics when encoded.
+
