@@ -147,14 +147,14 @@ class ETCD():
         members  = ['='.join([member['name'],member['address']]) for member in cluster]
 
         config = {
-            "name": self.name,
-            "initial_peer_urls": self.peer_url,
-            "listen_peer_urls": self.peer_url,
-            "listen_client_urls": self.client_url,
-            "advertise_client_urls": self.client_url,
-            "data_dir": self.data_dir,
-            "token": self.token,
-            "cluster": ",".join(members),
+            'name': self.name,
+            'initial_peer_urls': self.peer_url,
+            'listen_peer_urls': self.peer_url,
+            'listen_client_urls': self.client_url,
+            'advertise_client_urls': self.client_url,
+            'data_dir': self.data_dir,
+            'token': self.token,
+            'cluster': ','.join(members),
         }
         templates.render('etcd.conf', **config).strip()
         self.container.upload_content(self._config_path, templates.render('etcd.conf', **config).strip())
@@ -224,6 +224,10 @@ class ETCD():
         if key.startswith("-"):
             key = "-- %s" % key
         client.api.put(key, value)
+
+    def get(self, key):
+        client = j.clients.etcd.get(self.name, data={'host': self.container.public_addr, 'port': CLIENT_PORT})
+        return client.api.get(key)[0].decode('utf-8') 
 
     def destroy(self):
         if not self._container_exists():
