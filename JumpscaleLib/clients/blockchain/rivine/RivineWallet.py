@@ -66,6 +66,13 @@ class RivineWallet:
 
 
     @property
+    def seed(self):
+        """
+        Retrieves the current seed of the wallet
+        """
+        return self._client.config.data['seed_']
+
+    @property
     def addresses(self):
         """
         Wallet addresses to recieve and send funds
