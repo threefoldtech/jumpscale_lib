@@ -39,7 +39,7 @@ class TfchainClientFactory(JSConfigBaseFactory):
 
         @param seed : restores a wallet from a seed
         """
-        data = {'testnet':testnet, 'seed':seed}
+        data = {'testnet':testnet, 'seed_':seed}
         return self.get(walletname, data=data).wallet
 
     def open_wallet(self, walletname):
