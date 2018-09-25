@@ -529,7 +529,7 @@ class DefaultNetwork(Network):
         else:
             nic = None
         if nic:
-            cidr = self._parent.node.get_ip_from_nic(nic['addrs'])
+            cidr = j.sal_zos.utils.get_ip_from_nic(nic['addrs'])
             data['config'] = {'cidr': str(cidr), 'gateway': route['gw']}
         if not forcontainer:
             data['public'] = self.public

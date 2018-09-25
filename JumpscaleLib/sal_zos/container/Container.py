@@ -4,6 +4,8 @@ from io import BytesIO
 import signal
 import netaddr
 
+from jumpscale import j
+
 logging.basicConfig(level=logging.INFO)
 default_logger = logging.getLogger(__name__)
 
@@ -65,6 +67,7 @@ class Container():
         self.env = env or {}
         self._client = None
         self.logger = logger or default_logger
+        self.support_network = "172.29.0.0/16"
 
         for nic in self.nics:
             nic.pop('token', None)
@@ -336,6 +339,15 @@ class Container():
         for k, v in self.ports.items(): 
              if v == port: 
                  return int(k.split(':')[-1])
+
+    @property
+    def public_addr(self):
+        nics = self.client.info.nic()
+        for nic in nics:
+            if nic['name'].startswith('zt'):
+                ipAdress = j.sal_zos.utils.get_ip_from_nic(nic['addrs'])
+                if netaddr.IPAddress(ipAdress) not in netaddr.IPNetwork(self.support_network):
+                    return ipAdress
 
     def __str__(self):
         return "Container <{}>".format(self.name)

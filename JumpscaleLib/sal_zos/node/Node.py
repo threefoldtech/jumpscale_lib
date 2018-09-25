@@ -98,7 +98,7 @@ class Node:
             nic_data = self.client.info.nic()
             for nic in nic_data:
                 if nic['name'] == 'backplane':
-                    self._storage_addr = self.get_ip_from_nic(nic['addrs'])
+                    self._storage_addr = j.sal_zos.utils.get_ip_from_nic(nic['addrs'])
                     return self._storage_addr
             self._storage_addr = self.public_addr
         return self._storage_addr
@@ -113,7 +113,7 @@ class Node:
         nics = self.client.info.nic()
         for nic in nics:
             if nic['name'].startswith('zt'):
-                ipAdress = self.get_ip_from_nic(nic['addrs'])
+                ipAdress = j.sal_zos.utils.get_ip_from_nic(nic['addrs'])
                 if netaddr.IPAddress(ipAdress) not in netaddr.IPNetwork(self.support_network):
                     return ipAdress
         _, ip = self.get_nic_hwaddr_and_ip(nics)
@@ -124,7 +124,7 @@ class Node:
         nics = self.client.info.nic()
         for nic in nics:
             if nic['name'].startswith('zt'):
-                ipAdress = self.get_ip_from_nic(nic['addrs'])
+                ipAdress = j.sal_zos.utils.get_ip_from_nic(nic['addrs'])
                 if netaddr.IPAddress(ipAdress) in netaddr.IPNetwork(self.support_network):
                     return ipAdress
         raise LookupError('their is no support zerotier interface (support_address)')
@@ -152,14 +152,8 @@ class Node:
             name = self.get_gateway_nic()
         for nic in nics:
             if nic['name'] == name:
-                return nic['hardwareaddr'], self.get_ip_from_nic(nic['addrs'])
+                return nic['hardwareaddr'], j.sal_zos.utils.get_ip_from_nic(nic['addrs'])
         return '', ''
-
-    def get_ip_from_nic(self, addrs):
-        for ip in addrs:
-            network = netaddr.IPNetwork(ip['addr'])
-            if network.version == 4:
-                return network.ip.format()
 
     def get_nic_by_ip(self, addr):
         try:

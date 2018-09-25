@@ -1,3 +1,5 @@
+import netaddr
+
 from jumpscale import j
 from JumpscaleLib.sal_zos.abstracts import ZTNic
 
@@ -29,3 +31,9 @@ class UtilsFactory(JSBASE):
             formatted_ports[int(src)] = int(dst)
 
         return formatted_ports
+
+    def get_ip_from_nic(self, addrs):
+        for ip in addrs:
+            network = netaddr.IPNetwork(ip['addr'])
+            if network.version == 4:
+                return network.ip.format()

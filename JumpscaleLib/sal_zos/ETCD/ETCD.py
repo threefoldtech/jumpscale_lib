@@ -2,9 +2,11 @@ from io import BytesIO
 
 import etcd3
 import yaml
-from .. import templates
 
 from jumpscale import j
+
+from .. import templates
+from ..abstracts import Nics
 
 logger = j.logger.get(__name__)
 
@@ -61,7 +63,7 @@ class EtcdCluster():
 class ETCD():
     """etced server"""
 
-    def __init__(self, node, name, listen_peer_urls=None, listen_client_urls=None, initial_advertise_peer_urls=None, advertise_client_urls=None, data_dir='/mnt/data'):
+    def __init__(self, node, name, listen_peer_urls=None, listen_client_urls=None, initial_advertise_peer_urls=None, advertise_client_urls=None, data_dir='/mnt/data', zt_identity=None, nics=None, token=None, cluster=None):
         self.node = node
         self.name = name
         self._container = None
@@ -71,11 +73,25 @@ class ETCD():
         self.initial_advertise_peer_urls = initial_advertise_peer_urls
         self.advertise_client_urls = advertise_client_urls
         self.data_dir = data_dir
+        self.zt_identity = zt_identity
         self._id = 'etcd.{}'.format(self.name)
         self._config_path = '/bin/etcd_{}.config'.format(self.name)
         self._container_name = 'etcd_{}'.format(self.name)
         self._mount_point = '/mnt/etcds/{}'.format(self.name)
+        self.token = token
+        self.cluster = cluster
+        self.nics = Nics(self)
+        if nics:
+            for nic in nics:
+                nicobj = self.nics.add(nic['name'], nic['type'], nic['id'], nic.get('hwaddr'))
+                if nicobj.type == 'zerotier':
+                    nicobj.client_name = nic.get('ztClient')
+        if 'nat0' not in self.nics:
+            self.nics.add('nat0', 'default')
 
+    @property
+    def address(self):
+            return 'http://{}:{}'.format(self.container.public_addr, PEER_PORT)
     @property
     def client_port(self):
         return self.container.get_forwarded_port(CLIENT_PORT)
@@ -83,25 +99,6 @@ class ETCD():
     @property
     def peer_port(self):
         return self.container.get_forwarded_port(PEER_PORT)
-
-    def _create_filesystem(self):
-        if self.node.client.filesystem.exists(self._mount_point):
-            node_mountpoints = self.node.client.disk.mounts()
-            for device in node_mountpoints:
-                for mp in node_mountpoints[device]:
-                    if mp['mountpoint'] == self._mount_point:
-                        return
-    
-        sp = self.node.find_persistance()
-        for fs in sp.list():
-            if fs.name == self._container_name:
-                break
-        else:
-            fs = sp.create(self._container_name)
-    
-        self.node.client.filesystem.mkdir(self._mount_point)
-        subvol = 'subvol={}'.format(fs.subvolume)
-        self.node.client.disk.mount(sp.devicename, self._mount_point, [subvol])
     
     def _container_data(self):
         """
@@ -116,14 +113,25 @@ class ETCD():
             str(ports[0]): CLIENT_PORT,
             str(ports[1]): PEER_PORT,
         }
-        self._create_filesystem()
+
+        sp = self.node.find_persistance()
+        try:
+            fs = sp.get(self._container_name)
+        except ValueError:
+            fs = sp.create(self._container_name)
+    
+        if not self.zt_identity:
+            self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
+        zt_public = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
+        j.sal_zos.utils.authorize_zerotiers(zt_public, self.nics)
 
         return {
             'name': self._container_name,
             'flist': self.flist,
             'ports': ports,
-            'nics': [{'type': 'default'}],
-            'mounts': {self._mount_point: self.data_dir}
+            'nics': [nic.to_dict(forcontainer=True) for nic in self.nics],
+            'mounts': {fs.path: self.data_dir},
+            'identity': self.zt_identity,
         }
 
     @property
@@ -142,13 +150,16 @@ class ETCD():
     
 
     def create_config(self):
-        client = 'http://{}:{}'.format(self.node.public_addr, self.client_port)
-        peer = 'http://{}:{}'.format(self.node.public_addr, self.peer_port)
+        client = 'http://{}:{}'.format(self.container.public_addr, CLIENT_PORT)
+        peer = 'http://{}:{}'.format(self.container.public_addr, PEER_PORT)
 
         peer_urls = ','.join(self.listen_peer_urls) if self.listen_peer_urls else peer
         initial_peer_urls = ','.join(self.initial_advertise_peer_urls) if self.initial_advertise_peer_urls else peer
         client_urls = ','.join(self.listen_client_urls) if self.listen_client_urls else client
         advertise_client_urls = ','.join(self.advertise_client_urls) if self.advertise_client_urls else client
+
+        cluster = self.cluster if self.cluster else [{'name': self.name, 'address': peer}]
+        members  = ['='.join([member['name'],member['address']]) for member in cluster]
 
 
         config = {
@@ -158,6 +169,8 @@ class ETCD():
             "listen_client_urls": client_urls,
             "advertise_client_urls": advertise_client_urls,
             "data_dir": self.data_dir,
+            "token": self.token,
+            "cluster": ",".join(members),
         }
         templates.render('etcd.conf', **config).strip()
         self.container.upload_content(self._config_path, templates.render('etcd.conf', **config).strip())
@@ -165,6 +178,17 @@ class ETCD():
     def deploy(self):
         # call the container property to make sure it gets created and the ports get updated
         self.container
+        for nic in self.nics:
+            if nic.type == 'zerotier':
+                zt_address = self.zt_identity.split(':')[0]
+                try:
+                    network = nic.client.network_get(nic.networkid)
+                    member = network.member_get(address=zt_address)
+                    member.timeout = None
+                    member.get_private_ip(60)
+                except (RuntimeError, ValueError) as e:
+                    logger.warning('Failed to retreive zt ip: %s', str(e))
+
 
     def start(self):
         if self.is_running():
@@ -197,6 +221,8 @@ class ETCD():
         raise RuntimeError('failed to stop etcd.')
 
     def is_running(self):
+        if not self._container_exists():
+            return False
         try:
             self.container.client.job.list(self._id)
         except:
@@ -207,16 +233,24 @@ class ETCD():
         return True
 
     def put(self, key, value):
-        client = j.clients.etcd.get(self.name, data={'host': self.node.public_addr, 'port': self.client_port})
-        # client = 'http://{}:{}'.format(self.node.public_addr, self.client_port)
-        # client_urls = ','.join(self.listen_client_urls) if self.listen_client_urls else client
+        client = j.clients.etcd.get(self.name, data={'host': self.container.public_addr, 'port': CLIENT_PORT})
 
         if value.startswith("-"):
             value = "-- %s" % value
         if key.startswith("-"):
             key = "-- %s" % key
-        client.put(key, value)
+        client.api.put(key, value)
 
     def destroy(self):
+        if not self._container_exists():
+            return
+
         self.stop()
         self.container.stop()
+
+    def _container_exists(self):
+        try:
+            self.node.containers.get(self._container_name)
+            return True
+        except LookupError:
+            return False
