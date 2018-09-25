@@ -90,16 +90,13 @@ class ETCD():
             self.nics.add('nat0', 'default')
 
     @property
-    def address(self):
-            return 'http://{}:{}'.format(self.container.public_addr, PEER_PORT)
-    @property
-    def client_port(self):
-        return self.container.get_forwarded_port(CLIENT_PORT)
+    def client_url(self):
+            return 'http://{}:{}'.format(self.container.public_addr, CLIENT_PORT)
 
     @property
-    def peer_port(self):
-        return self.container.get_forwarded_port(PEER_PORT)
-    
+    def peer_url(self):
+            return 'http://{}:{}'.format(self.container.public_addr, PEER_PORT)
+
     def _container_data(self):
         """
         :return: data used for etcd container
