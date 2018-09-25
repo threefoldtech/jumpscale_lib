@@ -28,8 +28,7 @@ class Minio:
                  nr_datashards=1,
                  nr_parityshards=0,
                  tlog_namespace=None,
-                 tlog_address=None,
-                 tlog_password=None):
+                 tlog_address=None):
         """
 
         :param name: instance name
@@ -67,7 +66,7 @@ class Minio:
             self.tlog = {
                 'namespace': tlog_namespace,
                 'address': tlog_address,
-                'password': tlog_password}
+                'password': namespace_secret}
         else:
             self.tlog = None
 

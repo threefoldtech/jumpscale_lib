@@ -20,4 +20,5 @@ class MinioFactory(JSBASE):
         """
         return Minio(name, node, login, password, zdbs, namespace, private_key,
                      namespace_secret, block_size,
-                     meta_private_key, nr_datashards, nr_parityshards)
+                     meta_private_key, nr_datashards, nr_parityshards,
+                     tlog_namespace=None, tlog_address=None)

@@ -51,7 +51,7 @@ datastor: # required
 def test_tlog_config():
     m = Minio('aminio', None, 'admin', 'admin', ['localhost:9999'], 'anamespace', 'myprivatekeystring',
               namespace_secret='nssecret', nr_datashards=6, nr_parityshards=4,
-              tlog_namespace='tlogns', tlog_address='ip:port', tlog_password='tlogpasswd')
+              tlog_namespace='tlogns', tlog_address='ip:port')
     conf = m._config_as_text()
     expected = """\
 namespace: anamespace
@@ -73,5 +73,5 @@ datastor: # required
     minio:
         namespace: tlogns
         address: ip:port
-        password: tlogpasswd"""
+        password: nssecret"""
     assert m.mode == "distribution"
