@@ -25,11 +25,6 @@ class ZDB:
     def install(self):
         print(colored('Installing zerodb %s' % self.data['name'], 'white'))
 
-        # generate admin password
-        if not self.data['admin']:
-            self.data['admin'] = j.data.idgenerator.generateXCharID(25)
-            # if not self.data['path']:
-            #     raise RuntimeError('Failed to find a suitable disk for the zerodb')
         self._deploy()
 
     def start(self):
@@ -37,7 +32,7 @@ class ZDB:
         start zerodb server
         """
         print(colored('Starting zerodb %s' % self.data['name'], 'white'))
-        self._deploy()
+        self._zerodb_sal.deploy()
 
     def stop(self):
         """
