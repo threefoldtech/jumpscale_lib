@@ -72,7 +72,7 @@ class RivineWallet:
         """
         Retrieves the current seed of the wallet
         """
-        return self._client.config.data['seed_']
+        return j.data.encryption.mnemonic.to_mnemonic(self._seed)
 
     @property
     def addresses(self):
