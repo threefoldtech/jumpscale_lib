@@ -193,6 +193,30 @@ def get_unconfirmed_transactions(rivine_explorer_addresses, format_inputs=False)
     return result
 
 
+def get_current_minter_definition(rivine_explorer_addresses, explorer_password):
+    """
+    Retrieve the current minter definition from the chain
+    """
+    msg = 'Failed to retrieve current mint condition'
+    response = None
+    mint_condition = None
+    for rivine_explorer_address in rivine_explorer_addresses:
+        url = '{}/explorer/mintcondition'.format(rivine_explorer_address.strip('/'))
+        headers = {'user-agent': 'Rivine-Agent'}
+        auth = HTTPBasicAuth('', explorer_password)
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+        except request.exceptions.ConnectionError as ex:
+            logger.warn(msg)
+            continue
+        if response.status_code != 200:
+            logger.warn('{} {}'.format(msg, response.text))
+        else:
+            mint_condition = response.json()['mintcondition']
+            break
+    return mint_condition
+
+
 
 def commit_transaction(rivine_explorer_addresses, rivine_explorer_api_password, transaction):
     """

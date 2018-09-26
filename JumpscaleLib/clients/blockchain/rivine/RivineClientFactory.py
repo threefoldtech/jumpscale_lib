@@ -6,6 +6,8 @@ from Jumpscale import j
 
 from JumpscaleLib.clients.blockchain.rivine.RivineClient import RivineClient
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory
+from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory,\
+        DEFAULT_MINERFEE, TransactionV128
 
 JSConfigBaseFactory = j.tools.configmanager.JSBaseClassConfigs
 
@@ -35,3 +37,12 @@ class RivineClientFactory(JSConfigBaseFactory):
         @param txn_json: Json string representing a transaction
         """
         return TransactionFactory.from_json(txn_json)
+
+
+    def create_minterdefinition_transaction(self):
+        """
+        Create a new minter definition transaction
+        """
+        tx = TransactionV128()
+        tx.add_minerfee(DEFAULT_MINERFEE)
+        return tx
