@@ -37,6 +37,7 @@ class BaseTest(Utils):
         cls.zt_client = j.clients.zerotier.get(instance=ZT_CLIENT_INSTANCE, data={'token_': cls.zt_token})
         cls.zt_network = cls.zt_client.network_create(public=False, name=self.zt_network_name, auto_assign=True, subnet='10.147.17.0/24')
         cls.host_ip = self.host_join_zt()
+        cls.vms = []
 
     @classmethod
     def tearDownClass(cls):

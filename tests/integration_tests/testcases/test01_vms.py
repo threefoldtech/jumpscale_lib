@@ -18,8 +18,11 @@ class VMTestCases(BaseTest):
     
     def tearDown(self):
         vms = self.node_sal.client.kvm.list()
-        for vm in vms:
-            self.node_sal.client.kvm.destroy(vm['uuid'])
+        for uuid in self.vms:
+            for vm in vms:
+                if uuid == vm['uuid']:
+                    self.node_sal.client.kvm.destroy(uuid)
+        self.vms.clear()
 
     @parameterized.expand(["zero-os", "ubuntu"])
     def test001_create_vm(self, os_type):
@@ -44,6 +47,7 @@ class VMTestCases(BaseTest):
         self.log(" Add zerotier network to VM1, should succeed.")
         self.add_zerotier_network_to_vm(created_vm)
         vm.install(created_vm)
+        self.vms.append(created_vm.uuid)
 
         self.log("Check that vm added to zerotier network and can access it using it, should succeed.")
         ztIdentity = vm.data["ztIdentity"]
@@ -79,6 +83,7 @@ class VMTestCases(BaseTest):
         self.log(" Add zerotier network to VM1, should succeed.")
         self.add_zerotier_network_to_vm(created_vm)
         vm.install(created_vm)
+        self.vms.append(created_vm.uuid)
         
         self.log("Check that vm2 added to zerotier network and can access it using it, should succeed.")
         ztIdentity = vm.data["ztIdentity"]
@@ -121,6 +126,7 @@ class VMTestCases(BaseTest):
         created_vm.ports.add(name=port_name, source=23, target=22)
         
         vm.install(created_vm)
+        self.vms.append(created_vm.uuid)
         
         self.log("Check that vm can reach internet, should succeed.")
         result = self.ssh_vm_execute_command(vm_ip=self.node_ip, port=23, cmd='ping -w5 8.8.8.8')
@@ -173,6 +179,7 @@ class VMTestCases(BaseTest):
         self.log(" Add zerotier network to VM1, should succeed.")
         self.add_zerotier_network_to_vm(created_vm)
         vm.install(created_vm)
+        self.vms.append(created_vm.uuid)
 
         self.log("Check that vm added to zerotier network and can access it using it, should succeed.")
         ztIdentity = vm.data["ztIdentity"]
@@ -246,6 +253,7 @@ class VMTestCases(BaseTest):
         guest_port = random.randint(5000, 6000)
         created_vm.ports.add(name=port_name2, source=host_port, target=guest_port)
         vm.install(created_vm)
+        self.vms.append(created_vm.uuid)
         
         self.log("create server on the vm at port {}.".format(guest_port))
         cmd = 'python3 -m http.server {} &> /tmp/server.log &'.format(guest_port)
@@ -289,6 +297,7 @@ class VMTestCases(BaseTest):
         created_vm1 = vm1._vm_sal
         self.assertTrue(created_vm1)   
         vm1.install(created_vm1)
+        self.vms.append(created_vm1.uuid)
 
         self.log("Add Zerotier network to [VM1], should fail as vm is running.")
         try:
@@ -305,6 +314,7 @@ class VMTestCases(BaseTest):
         self.log("Add Zerotier network to [VM2] before deploy it , should succeed.")
         self.add_zerotier_network_to_vm(created_vm2)
         vm2.install(created_vm2)
+        self.vms.append(created_vm2.uuid)
 
         self.log("Check that vm [VM2] join zerotier successfully after deploy it.")
         ztIdentity = vm2.data["ztIdentity"]
@@ -346,6 +356,7 @@ class VMTestCases(BaseTest):
         created_vm.ports.add(port_name, source=host_port, target=22)
     
         vm.install(created_vm)
+        self.vms.append(created_vm.uuid)
 
         self.log("Check that you can access [vm1], should succeed.")
         result = self.ssh_vm_execute_command(vm_ip=self.node_ip, port=host_port, cmd='pwd')
@@ -363,8 +374,11 @@ class VMActionsBase(BaseTest):
                         
     def tearDown(self):
         vms = self.node_sal.client.kvm.list()
-        for vm in vms:
-            self.node_sal.client.kvm.destroy(vm['uuid'])
+        for uuid in self.vms:
+            for vm in vms:
+                if uuid == vm['uuid']:
+                    self.node_sal.client.kvm.destroy(uuid)
+        self.vms.clear()
 
     def create_booted_vm(self, os_type):
         self.log("Create a vm[vm1]  on node, should succeed.")
@@ -376,6 +390,7 @@ class VMActionsBase(BaseTest):
         self.log(" Add zerotier network to VM1, should succeed.")
         self.add_zerotier_network_to_vm(self.created_vm)
         self.vm.install(self.created_vm)
+        self.vms.append(self.created_vm.uuid)
 
         self.log("Check that vm added to zerotier network and can access it using it, should succeed.")
         ztIdentity = self.vm.data["ztIdentity"]
@@ -402,6 +417,7 @@ class VMActionsBase(BaseTest):
         self.created_vm = self.vm._vm_sal
         self.assertTrue(self.created_vm)
         self.vm.install(self.created_vm)
+        self.vms.append(self.created_vm.uuid)
 
         vnc_port = self.created_vm.info.get('vnc') - 5900
 
