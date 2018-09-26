@@ -44,7 +44,6 @@ class Minio:
         :param nr_parityshards: number of parityshards (if it's zero it will make the mode replication otherwise mode is distribution)
         :param tlog_namespace: name of the zerodb namespace used as tlog
         :param tlog_address: ip:port of the zerodb namespace used as tlog
-        :param tlog_password: password of the zerodb namespace used as tlog
         """
         self.name = name
         self.id = 'minio.{}'.format(self.name)

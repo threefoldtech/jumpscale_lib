@@ -71,6 +71,7 @@ datastor: # required
       data_shards: 6
       parity_shards: 4
     minio:
+      tlog:
         namespace: tlogns
         address: ip:port
         password: nssecret"""
