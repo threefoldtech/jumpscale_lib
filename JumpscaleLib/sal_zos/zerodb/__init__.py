@@ -130,7 +130,7 @@ class Zerodbs(DynamicCollection):
                                    self.node.storagepools.list()))
         storagepools.sort(key=lambda sp: sp.size - sp.total_quota(), reverse=True)
         if not storagepools:
-            return '', ''
+            return ''
 
         storagepool = storagepools[0]
         # QUESTION: why this? *3 it's not, it's **3 which is "to the power"
