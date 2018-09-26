@@ -17,11 +17,9 @@ class VMTestCases(BaseTest):
         super().setUp()
     
     def tearDown(self):
-        vms = self.node_sal.client.kvm.list()
+        self.log("destroy created vms.")
         for uuid in self.vms:
-            for vm in vms:
-                if uuid == vm['uuid']:
-                    self.node_sal.client.kvm.destroy(uuid)
+            self.node_sal.client.kvm.destroy(uuid)
         self.vms.clear()
 
     @parameterized.expand(["zero-os", "ubuntu"])
