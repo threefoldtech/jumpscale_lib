@@ -143,14 +143,14 @@ class Traefik:
     
     def key_value_storage(self,url_backend ,url_frontend):
         logger.info('updating your traefik config')
-        file_conf = self.container.client.filesystem.open('{dir}/{config}', 'r').format(dir=self._config_dir,config=self._config_name)
+        file_conf = self.container.client.filesystem.open('{dir}/{config}'.format(dir=self._config_dir,config=self._config_name), 'r')
         data = self.container.client.filesystem.read(file_conf)
         routes_name = url_frontend.split('.')
         
         data_parse = j.data.serializer.toml.loads(data)
         data_parse['backends'].update({'backend%s' % len(str(data)) :{'servers':{'server1':{'url':'%s:80' % url_backend , 'weight':'10'}}}})
         data_parse['frontends'].update({'frontend%s' % len(str(data)) :{'routes':{'%s' % routes_name[0]:{'rule':'Host:%s' % url_frontend }}}})
-        self.container.client.filesystem.remove('{dir}/{config}').format(dir=self._config_dir,config=self._config_name)
+        self.container.client.filesystem.remove('{dir}/{config}'.format(dir=self._config_dir,config=self._config_name))
         
         data_dumps = j.data.serializer.toml.dumps(data_parse)
         self.container.upload_content(j.sal.fs.joinPaths(self._config_dir, self._config_name), data_dumps)
