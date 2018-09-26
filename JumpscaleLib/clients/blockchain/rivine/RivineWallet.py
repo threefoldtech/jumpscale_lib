@@ -25,6 +25,8 @@ from JumpscaleLib.clients.blockchain.rivine import utils
 from JumpscaleLib.clients.blockchain.rivine.atomicswap.atomicswap import AtomicSwapManager
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory, DEFAULT_TRANSACTION_VERSION
 from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
+from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import UnlockCondtionFactory,\
+        MULTISIG_CONDITION_TYPE, MultiSignatureFulfillment, SingleSignatureFulfillment
 
 from .const import MINER_PAYOUT_MATURITY_WINDOW, WALLET_ADDRESS_TYPE, ADDRESS_TYPE_SIZE, HASTINGS_TFT_VALUE, UNLOCKHASH_TYPE
 
@@ -48,7 +50,7 @@ class RivineWallet:
         @param bc_network_password: Password to send to the explorer node when posting requests.
         @param nr_keys_per_seed: Number of keys generated from the seed.
         @param minerfee: Amount of hastings that should be minerfee (default to 0.1 TFT)
-        @param client: Rivine client instance
+        @param client: Client instance
         """
         self._client = client
         self._seed = j.data.encryption.mnemonic.to_entropy(seed)
@@ -457,6 +459,13 @@ class RivineWallet:
         return utils.commit_transaction(self._bc_networks, self._bc_network_password, transaction)
 
 
+    def _get_current_minter_definition(self):
+        """
+        Get the current minter definition
+        """
+        return utils.get_current_minter_definition(self._bc_networks, self._bc_network_password)
+
+
     def sign_transaction(self, transaction, multisig=False, commit=False):
         """
         Signs a transaction and optionally push it to the blockchain
@@ -488,6 +497,41 @@ class RivineWallet:
             self._commit_transaction(transaction=transaction)
 
         return transaction
+
+
+    def sign_minterdefinition_transaction(self, transaction, commit=False):
+        """
+        Signs a minter definition transaction and optionally push it to the chain
+        @param transaction: A transactionV128 object to sign
+        @param commit: if True, the transaction will be pushed after signing
+        """
+        muc = UnlockCondtionFactory.from_dict(self._get_current_minter_definition())
+        if muc.type == MULTISIG_CONDITION_TYPE:
+            if transaction.mint_fulfillment is None:
+                transaction._mint_fulfillment = MultiSignatureFulfillment()
+            ulhs = list(set(self.addresses).intersection(muc._unlockhashes))
+            for ulh in ulhs:
+                key = self._keys[ulh]
+                ctx = {
+                    'secret_key': key.secret_key,
+                    'input_idx': 0,
+                    'transaction': transaction
+                }
+                transaction.mint_fulfillment.sign(ctx)
+        else:
+            if transaction.mint_fulfillment is None:
+                transaction._mint_fulfillment = SingleSignatureFulfillment()
+            if not muc._unlockhash in self._keys:
+                return
+            key = self._keys[muc._unlockhash]
+            ctx = {
+                'secret_key': key.secret_key,
+                'input_idx': 0,
+                'transaction': transaction
+            }
+            transaction.mint_fulfillment.sign(ctx)
+        if commit:
+            self._commit_transaction(transaction=transaction)
 
 
 class SpendableKey:

@@ -7,12 +7,16 @@ from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import Single
 from JumpscaleLib.clients.blockchain.rivine.encoding import binary
 from JumpscaleLib.clients.blockchain.rivine.utils import hash
 from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
+from JumpscaleLib.clients.blockchain.rivine.secrets import token_bytes
 
 import base64
 import json
 
 DEFAULT_TRANSACTION_VERSION = 1
+MINTERDEFINITION_TRANSACTION_VERSION = 128
+COINCREATION_TRANSACTION_VERSION = 129
 HASHTYPE_COINOUTPUT_ID = 'coinoutputid'
+DEFAULT_MINERFEE = 100000000
 
 class TransactionFactory:
     """
@@ -54,6 +58,19 @@ class TransactionFactory:
                             txn._coins_outputs.append(co)
                     if 'minerfees' in txn_data:
                         for minerfee in txn_data['minerfees'] :
+                            txn.add_minerfee(int(minerfee))
+            if txn_dict['version'] == MINTERDEFINITION_TRANSACTION_VERSION:
+                txn = TransactionV128()
+                if 'data' in txn_dict:
+                    txn_data = txn_dict['data']
+                    if 'nonce' in txn_data:
+                        txn._nonce = base64.b64decode(txn_data['nonce'])
+                    if 'mintcondition' in txn_data:
+                        txn._mint_condition = UnlockCondtionFactory.from_dict(txn_data['mintcondition'])
+                    if 'mintfulfillment' in txn_data:
+                        txn._mint_fulfillment = FulfillmentFactory.from_dict(txn_data['mintfulfillment'])
+                    if 'minerfees' in txn_data:
+                        for minerfee in txn_data['minerfees']:
                             txn.add_minerfee(int(minerfee))
         return txn
 
@@ -266,6 +283,141 @@ class TransactionV1:
 
         # now we need to return the hash value of the binary array
         # return bytes(buffer)
+        return hash(data=buffer)
+
+
+class TransactionV128:
+    """
+    Minter definition transaction class. This transaction type
+    allows the current coin creators to redefine who has the ability to create coins.
+    """
+    def __init__(self, current_mint_condition=None, new_mint_condition=None, data=None):
+        self._mint_fulfillment = None
+        self._mint_condition = new_mint_condition
+        self._minerfees = []
+        self._data = bytearray()
+        self._version = bytearray([128])
+        self._id = None
+        self._nonce = token_bytes(nbytes=8)
+        self._specifier = bytearray(b'minter defin tx')
+        self._specifier.append(0)
+        if data is not None:
+            self._data.extend(data)
+
+
+    @property
+    def id(self):
+        """
+        Get transaction id
+        """
+        return self._id
+    @id.setter
+    def id(self, txn_id):
+        """
+        Set transaction id
+        """
+        self._id = txn_id
+
+
+    @property
+    def mint_condition(self):
+        """
+        Retrieve the new mint condition which will be set
+        """
+        return self._mint_condition
+
+
+    @property
+    def mint_fulfillment(self):
+        """
+        Retrieve the current mint fulfillment
+        """
+        return self._mint_fulfillment
+
+
+    @property
+    def json(self):
+        """
+        Returns a json representation of the transaction
+        """
+        result = {
+                'version': binary.decode(self._version, type_=int),
+                'data': {
+                    'nonce': base64.b64encode(self._nonce).decode('utf-8'),
+                    'mintfulfillment': self._mint_fulfillment.json if self._mint_fulfillment else '{}',
+                    'mintcondition': self._mint_condition.json if self._mint_condition else '{}',
+                    'minerfees': [str(fee) for fee in self._minerfees]
+                }
+        }
+        if self._data:
+            result['data']['arbitrarydata'] = base64.b64encode(self._data).decode('utf-8')
+        return result
+
+    def add_data(self, data):
+        """
+        Add data to the transaction
+        """
+        self._data.extend(data)
+
+
+    def set_singlesig_mint_condition(self, minter_address, locktime=None):
+        """
+        Set the mint condition to a singlesig condition.
+         @param minter_address: The address of the singlesig condition to set as new mint condition
+        """
+        unlockhash = UnlockHash.from_str(minter_address)
+        condition = UnlockHashCondition(unlockhash=unlockhash)
+        if locktime is not None:
+            condition = LockTimeCondition(condition=condition, locktime=locktime)
+        self._mint_condition = condition
+
+
+    def set_multisig_mint_condition(self, unlockhashes, min_nr_sig, locktime=None):
+        """
+        Set the mint condition to a multisig condition
+         @param unlockhashes: The unlockhashes which can sign the multisig condition
+        @param min_nr_sig: The minimum amount of signatures in order to fulfill the condition
+        @param locktime: An optional time until which the condition cannot be fulfilled
+        """
+        condition = MultiSignatureCondition(unlockhashes=unlockhashes, min_nr_sig=min_nr_sig)
+        if locktime is not None:
+            condition = LockTimeCondition(condition=condition, locktime=locktime)
+        self._mint_condition = condition
+
+
+    def add_minerfee(self, minerfee):
+        """
+        Adds a minerfee to the transaction
+        """
+        self._minerfees.append(minerfee)
+
+
+    def get_input_signature_hash(self, input_index, extra_objects=None):
+        """
+        Builds a signature hash for an input
+        """
+        if extra_objects is None:
+            extra_objects = []
+        buffer = bytearray()
+        # encode transaction version
+        buffer.extend(self._version)
+        # encode the specifier
+        buffer.extend(self._specifier)
+        # encode nonce
+        buffer.extend(self._nonce)
+         # extra objects if any
+        for extra_object in extra_objects:
+            buffer.extend(binary.encode(extra_object))
+         # encode new mintcondition
+        buffer.extend(binary.encode(self._mint_condition))
+        # minerfee length
+        buffer.extend(binary.encode(len(self._minerfees)))
+        # actual minerfees
+        for miner_fee in self._minerfees:
+            buffer.extend(binary.encode(miner_fee, type_='currency'))
+        # arb data
+        buffer.extend(binary.encode(self._data, type_='slice'))
+
         return hash(data=buffer)
 
 

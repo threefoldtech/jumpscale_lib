@@ -28,7 +28,7 @@ class RivineMultiSignatureWallet:
         @param bc_networks: List blockchain networks to use.
         @param bc_network_password: Password to send to the explorer node when posting requests.
         @param minerfee: Amount of hastings that should be minerfee (default to 0.1 TFT)
-        @param client: Rivine client instance
+        @param client: Client instance
         """
         self._cosigners = cosigners
         self._required_sig = required_sig
