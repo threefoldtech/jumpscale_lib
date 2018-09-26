@@ -391,7 +391,6 @@ class VMActionsBase(BaseTest):
         **Test Scenario:**
  
         #. Create vm [VM1] with default values, should succeed.
-        #. Try to connect to vnc port of vm1, should fail.
         #. Enable vnc port of [vm1] and connect to it , should succeed.
         #. Disable vnc port of [vm1] , should succeed.
         #. Try to connect to vnc port again , should fail.
@@ -404,11 +403,6 @@ class VMActionsBase(BaseTest):
         self.vm.install(self.created_vm)
 
         vnc_port = self.created_vm.info.get('vnc') - 5900
-
-        self.log("Try to connect to vnc port of vm1, should fail.")
-        response1 = self.check_vnc_connection('{}:{}'.format(self.node_ip, vnc_port))
-        self.assertTrue(response1.returncode)
-        self.assertIn('timeout caused connection failure', response1.stderr.strip())
 
         self.log("Enable vnc port of [vm1] and connect to it , should succeed.")
         self.vm.enable_vnc()

@@ -66,7 +66,7 @@ class BaseTest(Utils):
 
         vm_parms = {'flist':"",
                     'cpu': cpu ,
-                    'memory':  random.randint(1, self.node_info['memory']) * 1024,
+                    'memory':  random.randint(1,3) * 1024,
                     'name': self.random_string(),
                     'nics': [],
                     'configs': [{'path': '/root/.ssh/authorized_keys',
