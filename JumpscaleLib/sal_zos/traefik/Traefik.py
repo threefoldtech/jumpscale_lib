@@ -148,13 +148,10 @@ class Traefik:
         routes_name = url_frontend.split('.')
         
         data_parse = j.data.serializer.toml.loads(data)
-        data_parse['backends'].update({'backend%s' % len(str(data)) :{'servers.server1':{'url':'%s:80' % url_backend , 'weight':'10'}}})
-        data_parse['frontends'].update({'frontend%s' % len(str(data)) :{'routes.%s' % routes_name[0]:{'rule':'Host:%s' % url_frontend }}})
+        data_parse['backends'].update({'backend%s' % len(str(data)) :{'servers':{'server1':{'url':'%s:80' % url_backend , 'weight':'10'}}}})
+        data_parse['frontends'].update({'frontend%s' % len(str(data)) :{'routes':{'%s' % routes_name[0]:{'rule':'Host:%s' % url_frontend }}}})
         self.container.client.filesystem.remove('{dir}/{config}').format(dir=self._config_dir,config=self._config_name)
         
         data_dumps = j.data.serializer.toml.dumps(data_parse)
-        # bad solving .. i will find to best one  
-        data_dumps = data_dumps.replace('."', '.')
-        data_dumps = data_dumps.replace('"]', ']')
         self.container.upload_content(j.sal.fs.joinPaths(self._config_dir, self._config_name), data_dumps)
         logger.info('update your traefik config')
