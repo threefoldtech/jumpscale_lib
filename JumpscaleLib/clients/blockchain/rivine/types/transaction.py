@@ -72,6 +72,25 @@ class TransactionFactory:
                     if 'minerfees' in txn_data:
                         for minerfee in txn_data['minerfees']:
                             txn.add_minerfee(int(minerfee))
+                    if 'arbitrarydata' in txn_data:
+                        txn._data = base64.b64decode(txn_data['arbitrarydata'])
+            if txn_dict['version'] == COINCREATION_TRANSACTION_VERSION:
+                txn = TransactionV129()
+                if 'data' in txn_dict:
+                    txn_data = txn_dict['data']
+                    if 'nonce' in txn_data:
+                        txn._nonce = base64.b64decode(txn_data['nonce'])
+                    if 'mintfulfillment' in txn_data:
+                        txn._mint_fulfillment = FulfillmentFactory.from_dict(txn_data['mintfulfillment'])
+                    if 'coinoutputs' in txn_data:
+                        for co_info in txn_data['coinoutputs']:
+                            co = CoinOutput.from_dict(co_info)
+                            txn._coin_outputs.append(co)
+                    if 'minerfees' in txn_data:
+                        for minerfee in txn_data['minerfees']:
+                            txn.add_minerfee(int(minerfee))
+                    if 'arbitrarydata' in txn_data:
+                        txn._data = base64.b64decode(txn_data['arbitrarydata'])
         return txn
 
 
@@ -291,9 +310,9 @@ class TransactionV128:
     Minter definition transaction class. This transaction type
     allows the current coin creators to redefine who has the ability to create coins.
     """
-    def __init__(self, current_mint_condition=None, new_mint_condition=None, data=None):
+    def __init__(self):
         self._mint_fulfillment = None
-        self._mint_condition = new_mint_condition
+        self._mint_condition = None
         self._minerfees = []
         self._data = bytearray()
         self._version = bytearray([128])
@@ -301,9 +320,6 @@ class TransactionV128:
         self._nonce = token_bytes(nbytes=8)
         self._specifier = bytearray(b'minter defin tx')
         self._specifier.append(0)
-        if data is not None:
-            self._data.extend(data)
-
 
     @property
     def id(self):
@@ -421,6 +437,142 @@ class TransactionV128:
         return hash(data=buffer)
 
 
+class TransactionV129:
+    """
+    Coin creation transaction class. This transaction type allows the current
+    coin creators to create new coins and spend them.
+    """
+    def __init__(self):
+        self._mint_fulfillment = None
+        self._nonce = token_bytes(nbytes=8)
+        self._version = bytearray([129])
+        self._id = None
+        self._minerfees = []
+        self._data = bytearray()
+        self._coin_outputs = []
+        self._specifier = bytearray(b'coin mint tx')
+        self._specifier.extend([0,0,0,0])
+
+    @property
+    def id(self):
+        """
+        Get the transaction id
+        """
+        return self._id
+
+    @id.setter
+    def id(self, tx_id):
+        """
+        Set the transaction id
+        """
+        self._id = tx_id
+
+    @property
+    def coin_outputs(self):
+        """
+        Retrieves the coin outputs
+        """
+        return self._coin_outputs
+
+    @property
+    def mint_fulfillment(self):
+        """
+        Retrieve the current mint fulfillment
+        """
+        return self._mint_fulfillment
+
+    @property
+    def json(self):
+        """
+        Returns a json version of the TransactionV129 object
+        """
+        result = {
+            'version': binary.decode(self._version, type_=int),
+            'data': {
+                'nonce': base64.b64encode(self._nonce).decode('utf-8'),
+                'mintfulfillment': self._mint_fulfillment.json if self._mint_fulfillment else '{}',
+                'coinoutputs': [output.json for output in self._coin_outputs],
+                'minerfees': [str(fee) for fee in self._minerfees]
+            }
+        }
+        if self._data:
+            result['data']['arbitrarydata'] = base64.b64encode(self._data).decode('utf-8')
+        return result
+
+    def add_data(self, data):
+        """
+        Add data to the transaction
+        """
+        self._data.extend(data)
+
+    def add_coin_output(self, value, recipient, locktime=None):
+        """
+        Add a new coin output to the transaction
+
+        @param value: Amount of coins
+        @param recipient: The recipient address
+        @param locktime: If provided then a locktimecondition will be created for this output
+        """
+        unlockhash = UnlockHash.from_string(recipient)
+        condition = UnlockHashCondition(unlockhash=unlockhash)
+        if locktime is not None:
+            condition = LockTimeCondition(condition=condition, locktime=locktime)
+        self._coin_outputs.append(CoinOutput(value=value, condition=condition))
+
+    def add_multisig_output(self, value, unlockhashes, min_nr_sig, locktime=None):
+        """
+        Add a new MultiSignature output to the transaction
+
+        @param value: Value of the output in hastings
+        @param unlockhashes: List of all unlockhashes which are authorised to spend this input
+        @param min_nr_sig: The amount of signatures required to spend this output
+        @param locktime: If provided then a locktimecondition will be created for this output
+        """
+        condition = MultiSignatureCondition(unlockhashes=unlockhashes, min_nr_sig=min_nr_sig)
+        if locktime is not None:
+            condition = LockTimeCondition(condition=condition, locktime=locktime)
+        coin_output = CoinOutput(value=value, condition=condition)
+        self._coin_outputs.append(coin_output)
+
+    def add_minerfee(self, minerfee):
+        """
+        Adds a miner fee to the transaction
+        """
+        self._minerfees.append(minerfee)
+
+    def get_input_signature_hash(self, input_index, extra_objects=None):
+        """
+        Builds a signature hash for an input
+
+        @param input_index: ignored
+        """
+        if extra_objects is None:
+            extra_objects = []
+
+        buffer = bytearray()
+        # encode the transaction version
+        buffer.extend(self._version)
+        # specifier
+        buffer.extend(self._specifier)
+        # nonce
+        buffer.extend(self._nonce)
+
+        # arbitrary objects if any
+        for extra_object in extra_objects:
+            buffer.extend(binary.encode(extra_object))
+
+        # new coin outputs
+        buffer.extend(binary.encode(self._coin_outputs, type_='slice'))
+
+        # miner fees
+        buffer.extend(binary.encode(len(self._minerfees)))
+        for miner_fee in self._minerfees:
+            buffer.extend(binary.encode(miner_fee, type_='currency'))
+
+        # finally custom data
+        buffer.extend(binary.encode(self._data, type_='slice'))
+
+        return hash(data=buffer)
 
 class CoinInput:
     """

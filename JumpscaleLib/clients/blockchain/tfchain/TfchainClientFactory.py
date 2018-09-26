@@ -7,7 +7,7 @@ from Jumpscale import j
 from JumpscaleLib.clients.blockchain.tfchain.TfchainClient import TfchainClient
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory,\
-        DEFAULT_MINERFEE, TransactionV128
+        DEFAULT_MINERFEE, TransactionV128, TransactionV129
 
 JSConfigBaseFactory = j.tools.configmanager.JSBaseClassConfigs
 
@@ -59,5 +59,13 @@ class TfchainClientFactory(JSConfigBaseFactory):
         Create a new minter definition transaction
         """
         tx = TransactionV128()
+        tx.add_minerfee(DEFAULT_MINERFEE)
+        return tx
+
+    def create_coincreation_transaction(self):
+        """
+        Create a new coin creation transaction
+        """
+        tx = TransactionV129()
         tx.add_minerfee(DEFAULT_MINERFEE)
         return tx

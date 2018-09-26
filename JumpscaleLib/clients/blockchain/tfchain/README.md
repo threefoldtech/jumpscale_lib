@@ -155,3 +155,89 @@ This will produce a 24 word mnemonic. A mnemonic is a human readable representat
 of the seed, which is just a bunch of bytes. Some shorter mnemonics could be used,
 however we always generate 32 byte seeds, which results in a 24 word mnemonics when encoded.
 
+## Creating coins
+
+Coin creation is handled by a "coin creation transaction" (transaction version 129).
+
+To get started, we first need to obtain such a transaction. A new one can be created,
+after which we can add the coin outputs, or an existing one can be loaded from json.
+To create a new (empty) coin creation transaction, the `create_coincreation_transaction()`
+method on the tfchain client factory can be used:
+
+```python
+tx = j.clients.tfchain.create_coincreation_transaction()
+```
+
+Alternatively, to load one from json, the `create_transaction_from_json()` method
+can be used:
+
+```python
+tx = j.clients.tfchain.create_transaction_from_json(_transaction json_)
+```
+
+Now that we have a transaction, we can add outputs. This functions just like regular
+transactions: we can create either a single signature output, or a multisig output.
+Both outputs can be timelocked as well. To send coins to a single sig address, the
+`add_coin_output` method of the transaction can be used, with the amount to send
+(expressed in base units), followed by the string representation of the destination address
+as parameters, for instance:
+
+```python
+tx.add_coin_output(1000000000,
+	'013a787bf6248c518aee3a040a14b0dd3a029bc8e9b19a1823faf5bcdde397f4201ad01aace4c9')
+```
+
+In the above snippet, a new output is added in which 1 TFT is send to the specified address.
+Should this be required, the `locktime` parameter can be added, with a given block height
+or unix timestamp untill which the output will be timelocked.
+
+Likewise, a multisig output can be added by using the `add_multisig_output` method.
+As with singe sig outputs, the first parameter is the amount to send, followed by the
+addresses which can spend said multisig output, and then the mininimum amount of
+signatures required to spend (similar to adding a multisig output to a regular
+transaction). If required, the `locktime` parameter can once again be specified to
+time lock the output.
+
+It is important to note that outputs can only be added before any signature is added,
+as with regular transaction.
+
+Arbitrary data can be set on the transaction. This can be done with the `add_data` method.
+Note that the maximum length of the arbitrary data can be at most 83 bytes, if there
+is more data then the transaction will be rejected.
+
+Likewise additional minerfees can be specified with the `add_minerfee` method. Since
+we are creating coins, we are also creating the minerfee, so there is no need to add
+any input for this.
+
+Signing this transaction can be done using a tfchain wallet. Using the wallet's
+`sign_mint_transaction` method will greedily add a signature for any applicable key
+loaded in said wallet, based on the current mint condition. Once your signature
+is added, the transaction json can be distributed to the other coin creators, or if enough
+signatures are added, the transaction can be published to the chain. If you want to
+try and commit the transaction after signing it, the `commit` parameter can be set to
+`True` when calling the signing method.
+
+Example of signing a transaction:
+
+```python
+cl.wallet.sign_mint_transaction(tx, commit=True)
+```
+
+## minter definition transaction
+
+By using transaction version 128, a new minter condition can be specified. The minter
+condition defines who can create coins. Redefining the minter definition is largerly
+the same as creating new coins, so only the differences are covered here:
+
+Creating a new minter definition transaction is done with the `create_minterdefinition_transaction`
+method of the tfchain client factory.
+
+There are no coin outputs, only a single condition, which becomes the new minter definition.
+This means that, in order to create coins, this condition will need to be fulfilled after
+this transaction has been published and accepted on the chain. The new mint condition
+can be either a single sig or multisig condition (in practice this should always be a
+multisig). The condition can be added by using the `set_singlesig_mint_condition`
+and `set_multisig_mint_condition` methods of the transaction.
+
+These are the only differences. The transaction can be signed exactly the same like
+a regular coin creation transaction.
