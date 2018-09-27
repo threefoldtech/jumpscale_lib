@@ -98,7 +98,12 @@ class ZDBCLIENT:
         cmd = 'NSLIST'
         if case == "lower":
             cmd = cmd.lower()
-        return self.send_receive(cmd)
+
+        result = []
+        namespaces = self.send_receive(cmd)
+        for namespace in namespaces:
+            result.append(namespace.decode('utf-8')) 
+        return result
 
     def nsset(self, namespace, property, value, case):
         if property not in ['maxsize', 'password', 'public']:
