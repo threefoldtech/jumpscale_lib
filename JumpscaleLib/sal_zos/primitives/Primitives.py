@@ -86,7 +86,7 @@ class Primitives:
         """
         self.node.hypervisor.get(name).destroy()
 
-    def create_zerodb(self, name, path=None, mode='user', sync=False, admin='':
+    def create_zerodb(self, name, path=None, mode='user', sync=False, admin=''):
         """
         Create zerodb object
 

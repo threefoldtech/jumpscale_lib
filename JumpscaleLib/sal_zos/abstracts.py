@@ -258,8 +258,23 @@ class DynamicCollection:
 
 
 class Service:
+    """
+    Abstract implementation of services that need to be managed on containers.
+    This class assumes the following attributes exist on the inheriting class:
+    _container: holds the container sal. Should be initialized with None
+    _container_name: the name the will be used to create the container
+    _id: the id of the job
+    _type: the type of the service ex: minio
+    _port: a list of ports to check if the container is listening to. It is used to verify that the process is running
+    _name: the name of the service
+    """
 
     def _container_exists(self):
+        """
+        Check if the container exists on the node
+        :return: True if it exists, False if not
+        :rtype: boolean
+        """
         try:
             self.node.containers.get(self._container_name)
             return True
@@ -267,25 +282,34 @@ class Service:
             return False
 
     def destroy(self):
-        if not self._container_exists():
-            return
-
+        """
+        Stop the service process and stop the container
+        """
         self.stop()
 
     def is_running(self, timeout=15):
+        """
+        Check if the service is running and listening to the expected ports
+        :return: True if running, False if not
+        :rtype: boolean
+
+        """
         if not self._container_exists():
             return False
         try:
             self.container.client.job.list(self._id)
         except:
             return False
-        
+
         for port in self._port:
             if not self.container.is_port_listening(port, timeout):
                 return False
         return True
 
     def stop(self, timeout=30):
+        """
+        Stop the service process and stop the container
+        """
         import time
 
         if not self.is_running():
