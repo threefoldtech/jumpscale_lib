@@ -4,7 +4,7 @@ from .. import templates
 
 
 logger = j.logger.get(__name__)
-DEFAULT_PORT = 9500
+DEFAULT_PORT = 53
 
 class Coredns:
     """
@@ -38,7 +38,7 @@ class Coredns:
 
         self.node_port = ports[0]
         ports = {
-            str(ports[0]): self.node_port,
+            str(ports[0]): DEFAULT_PORT,
         }
         return {
             'name': self._container_name,

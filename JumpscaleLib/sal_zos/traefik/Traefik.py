@@ -4,7 +4,8 @@ from .. import templates
 
 
 logger = j.logger.get(__name__)
-DEFAULT_PORT = 9700
+DEFAULT_PORT_HTTP = 80
+DEFAULT_PORT_HTTPS = 443
 
 class Traefik:
     """
@@ -31,13 +32,14 @@ class Traefik:
         :return: data used for traefik container
          :rtype: dict
         """
-        ports = self.node.freeports(1)
+        ports = self.node.freeports(2)
         if len(ports) <= 0:
             raise RuntimeError("can't install traefik, no free port available on the node")
 
         self.node_port = ports[0]
         ports = {
-            str(ports[0]): self.node_port,
+            str(ports[0]): DEFAULT_PORT_HTTP, 
+            str(ports[1]): DEFAULT_PORT_HTTPS, #HTTPS
         }
 
         return {
@@ -68,6 +70,9 @@ class Traefik:
             except LookupError:
                 self._container = self.node.containers.create(**self._container_data)
         return self._container
+
+    def container_port(self, port):
+        return self._container.get_forwarded_port(port)
 
     def create_config(self):
         logger.info('Creating traefik config for %s' % self.name)
