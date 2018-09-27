@@ -371,11 +371,8 @@ class VMActionsBase(BaseTest):
         super().setUp()
                         
     def tearDown(self):
-        vms = self.node_sal.client.kvm.list()
         for uuid in self.vms:
-            for vm in vms:
-                if uuid == vm['uuid']:
-                    self.node_sal.client.kvm.destroy(uuid)
+            self.node_sal.client.kvm.destroy(uuid)
         self.vms.clear()
 
     def create_booted_vm(self, os_type):
