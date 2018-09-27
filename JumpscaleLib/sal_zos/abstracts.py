@@ -335,6 +335,7 @@ class Service:
             raise RuntimeError('Failed to stop {} server: {}'.format(self._type, self.name))
 
         self.container.stop()
+        self._container = None
 
     @property
     def container(self):
