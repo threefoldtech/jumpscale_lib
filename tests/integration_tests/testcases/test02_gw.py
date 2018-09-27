@@ -14,8 +14,8 @@ class GWTestCases(BaseTest):
 
     def setUp(self):
         super().setUp()
-        self.gateway_data = self.set_gw_default_values()
-        self.gateway = self.gw(node=self.node_sal, data=self.gateway_data)
+        self.gateway = self.gw(node=self.node_sal)
+        self.gateway.data = self.set_gw_default_values()
         self.vm_data = self.set_vm_default_values(os_type="ubuntu")
         self.vm_obj= self.vm(node=self.node_sal, data=self.vm_data)
 
@@ -83,11 +83,10 @@ class GWTestCases(BaseTest):
         #. Add network [N2] with same type and same name as [N1] to [GW1],should fail .
         #. Add network [N3] with different type and same name as [N1] to [GW1],should fail .
         """
-
         created_gateway = self.gateway._gateway_sal
 
         self.log(" Add network [N1] to [GW1], should succeed.")
-        network_name = self.random_string()
+        network_name = 'n'+self.random_string()
         network = created_gateway.networks.add(name=network_name, type_="default")
         network.public = True
         self.gateway.install(created_gateway)
@@ -96,12 +95,12 @@ class GWTestCases(BaseTest):
         
         with self.assertRaises(ValueError) as e:
             created_gateway.networks.add(name=network_name, type_="default")
-        self.assertIn(" Element with name %s already exists"%network_name, e.exception.args[0])
+        self.assertIn("Element with name %s already exists"%network_name, e.exception.args[0])
 
         self.log("Add network [N2] with different type and same name as [N1] to [GW1],should fail .")
         with self.assertRaises(ValueError) as e:
             created_gateway.networks.add(name=network_name, type_="zerotier", networkid=self.zt_network.id)
-        self.assertIn(" Element with name %s already exists"%network_name, e.exception.args[0])
+        self.assertIn("Element with name %s already exists"%network_name, e.exception.args[0])
 
     def test004_remove_network(self):
         """SAL-GW-014
@@ -117,7 +116,7 @@ class GWTestCases(BaseTest):
 
         created_gateway = self.gateway._gateway_sal
         self.log("Add network [N1] to [GW1], should succeed.")
-        network_name = self.random_string()
+        network_name = 'n'+self.random_string()
         created_network = created_gateway.networks.add(name=network_name, type_="default")        
         created_network.public = True
     
@@ -126,10 +125,12 @@ class GWTestCases(BaseTest):
         
         self.log("remove N1, should succeed.")
         created_gateway.networks.remove(created_network)
-        created_gateway.deploy()
 
         self.log("Check that network has been removed.")
         self.assertFalse(created_gateway.networks.list())
+        with self.assertRaises(RuntimeError) as e:
+            self.gateway.install(created_gateway)
+        self.assertIn("Need exactly one public network", e.exception.args[0])
 
     def test005_deploy_getways_with_public_network(self):
         """SAL-GW-015
@@ -245,12 +246,11 @@ class GWActions(BaseTest):
 
     def setUp(self):
         super().setUp()
-
         self.log(" Create gateway with default and zerotier network, should succeeed.")
-        self.gateway_data = self.set_gw_default_values()
-        self.gateway = self.gw(node=self.node_sal, data=self.gateway_data)
+        self.gateway = self.gw(node=self.node_sal)
+        self.gateway.data = self.set_gw_default_values()
         self.created_gateway = self.gateway._gateway_sal
-        self.public_network_name = self.random_string()
+        self.public_network_name = 'n'+self.random_string()
         self.public_network = self.created_gateway.networks.add(name=self.public_network_name, type_="default")        
         self.public_network.public = True
         self.private_network = self.created_gateway.networks.add_zerotier(self.zt_network)
@@ -272,6 +272,7 @@ class GWActions(BaseTest):
             self.node_sal.client.kvm.destroy(uuid)
         self.vms.clear()
 
+    @unittest.skip("https://github.com/threefoldtech/jumpscale_lib/issues/132")
     def test008_create_gateway_portforwards(self):
         """SAL-GW-018
         * Test case for create gateway portforward.
@@ -296,6 +297,7 @@ class GWActions(BaseTest):
 
         self.log("#. Deploy the gateway[gw], should succeed.")
         self.gateway.install(self.created_gateway)
+        self.vm_obj.install(self.created_vm)
 
         self.log("Get the content of authorized_key file from the vm using the server created and portforward.")
         response = requests.get('http://{}:{}/.ssh/authorized_keys'.format(self.node_ip, public_port))
@@ -317,6 +319,7 @@ class GWActions(BaseTest):
         #. Try to set another portforward [pf3] with different name and different ports , should succeed.
         #. Deploy the gateway and check that both[pf1] and [pf2] exist.
         """
+
         self.log("Set a portforward to gw from from public network to vm server port, should succeed.")
         pf1_name = self.random_string()
         source_port1 = random.randint(3000, 4000)
@@ -338,9 +341,9 @@ class GWActions(BaseTest):
 
         self.log("Deploy the gateway and check that both[pf1] and [pf2] exist.")
         self.gateway.install(self.created_gateway)
-        gw_container = self.get_gateway_container(self.gateway_data["name"])
+        gw_container = self.get_gateway_container(self.gateway.data["name"])
         gw_ports = list(gw_container['container']['arguments']['port'].values())
-        self.assertIn(source_port2, gw_ports)
+        self.assertIn(source_port3, gw_ports)
         self.assertIn(source_port1, gw_ports)
         
     @unittest.skip("https://github.com/threefoldtech/jumpscale_lib/issues/132")
@@ -377,3 +380,4 @@ class GWActions(BaseTest):
         gw_container = self.get_gateway_container(self.gateway_data["name"])
         gw_ports = list(gw_container['container']['arguments']['port'].values())
         self.assertNotIn(source_port, gw_ports)
+

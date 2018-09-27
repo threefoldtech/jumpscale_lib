@@ -5,10 +5,10 @@ from termcolor import colored
 
 class GW:
 
-    def __init__(self, node, guid=None, data=None):
+    def __init__(self, node, data=None):
         self.data = data
         self.node_sal = node
-        self.guid= guid
+        
 
     def validate(self):
         if not self.data['hostname']:
@@ -18,7 +18,7 @@ class GW:
     def _gateway_sal(self):
         data = self.data.copy()
         gw = self.node_sal.primitives.from_dict('gateway', data)
-        gw.name = self.guid
+        gw.name = self.data["name"]
         return gw
 
     def install(self, gateway_sal=None):
