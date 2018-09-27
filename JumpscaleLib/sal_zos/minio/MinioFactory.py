@@ -12,7 +12,8 @@ class MinioFactory(JSBASE):
     @staticmethod
     def get(name, node, login, password, zdbs, namespace, private_key,
             namespace_secret='', block_size=1048576,
-            meta_private_key='', nr_datashards=1, nr_parityshards=0):
+            meta_private_key='', nr_datashards=1, nr_parityshards=0,
+            tlog_namespace=None, tlog_address=None):
         """
         Get sal for minio
         Returns:
@@ -20,4 +21,5 @@ class MinioFactory(JSBASE):
         """
         return Minio(name, node, login, password, zdbs, namespace, private_key,
                      namespace_secret, block_size,
-                     meta_private_key, nr_datashards, nr_parityshards)
+                     meta_private_key, nr_datashards, nr_parityshards,
+                     tlog_namespace, tlog_address)
