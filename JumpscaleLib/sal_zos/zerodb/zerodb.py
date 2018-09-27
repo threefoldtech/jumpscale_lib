@@ -33,10 +33,9 @@ class Zerodb(Service):
         :param node_port: the port the zerodb container will forward to. If this port is not free, the deploy will find the next free port.
         :type: int
         """
-        self.name = name
-        self.node = node
+        super().__init__(name, node, 'zerodb', [DEFAULT_PORT])
+
         self.zt_identity = None
-        self._container = None
         self.flist = 'https://hub.grid.tf/tf-autobuilder/threefoldtech-0-db-release-development.flist'
 
         self._mode = mode
@@ -56,10 +55,6 @@ class Zerodb(Service):
         self.nics = Nics(self)
         self.nics.add('nat0', 'default')
         self.__redis = None
-        self._id = 'zerodb.{}'.format(self.name)
-        self._type = 'zerodb'
-        self._container_name = self.name
-        self._ports = [DEFAULT_PORT]
 
     @property
     def node_port(self):
@@ -137,7 +132,7 @@ class Zerodb(Service):
         j.sal_zos.utils.authorize_zerotiers(zt_public, self.nics)
 
         return {
-            'name': self.name,
+            'name': self._container_name,
             'flist': self.flist,
             'identity': self.zt_identity,
             'mounts': {self.path: '/zerodb'},
@@ -250,8 +245,7 @@ class Zerodb(Service):
         :param timeout: time in seconds to wait for the zerodb server to start
         :type timeout: int
         """
-        is_running, _ = self.is_running()
-        if is_running:
+        if self.is_running():
             return
 
         logger.info('start zerodb %s' % self.name)

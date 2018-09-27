@@ -265,9 +265,18 @@ class Service:
     _container_name: the name the will be used to create the container
     _id: the id of the job
     _type: the type of the service ex: minio
-    _port: a list of ports to check if the container is listening to. It is used to verify that the process is running
-    _name: the name of the service
+    _ports: a list of ports to check if the container is listening to. It is used to verify that the process is running
+    name: the name of the service
     """
+    
+    def __init__(self, name, node, service_type, ports):
+        self.name = name
+        self.node = node
+        self._type = service_type
+        self._id = '{}.{}'.format(self._type, self.name)
+        self._container = None
+        self._container_name = '{}_{}'.format(self._type, self.name)
+        self._ports = ports
 
     def _container_exists(self):
         """
@@ -301,7 +310,7 @@ class Service:
         except:
             return False
 
-        for port in self._port:
+        for port in self._ports:
             if not self.container.is_port_listening(port, timeout):
                 return False
         return True

@@ -64,18 +64,12 @@ class ETCD(Service):
     """etced server"""
 
     def __init__(self, node, name, data_dir='/mnt/data', zt_identity=None, nics=None, token=None, cluster=None):
-        self.node = node
-        self.name = name
-        self._container = None
+        super().__init__(name, node, 'etcd', [CLIENT_PORT, PEER_PORT])
         self.flist = 'https://hub.grid.tf/bola_nasr_1/etcd-3.3.4.flist'
         self.data_dir = data_dir
         self.zt_identity = zt_identity
-        self._id = 'etcd.{}'.format(self.name)
-        self._type = 'etcd'
         self._config_path = '/bin/etcd_{}.config'.format(self.name)
-        self._container_name = 'etcd_{}'.format(self.name)
         self._mount_point = '/mnt/etcds/{}'.format(self.name)
-        self._ports = [CLIENT_PORT, PEER_PORT]
         self.token = token
         self.cluster = cluster
         self.nics = Nics(self)
@@ -95,6 +89,7 @@ class ETCD(Service):
     def peer_url(self):
             return 'http://{}:{}'.format(self.container.mgmt_addr, PEER_PORT)
 
+    @property
     def _container_data(self):
         """
         :return: data used for etcd container
@@ -174,4 +169,7 @@ class ETCD(Service):
 
     def get(self, key):
         client = j.clients.etcd.get(self.name, data={'host': self.container.mgmt_addr, 'port': CLIENT_PORT})
-        return client.api.get(key)[0].decode('utf-8')
+        result = client.api.get(key)[0]
+        if not result:
+            raise ValueError('Key {} does not exist in etcd {}'.format(key, self.name))
+        return result.decode('utf-8')

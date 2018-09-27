@@ -40,7 +40,7 @@ class Zerodbs(DynamicCollection):
                 zdbs.append(zdb)
         return zdbs
 
-    def create(self, name, path=None, mode='user', sync=False, admin='', node_port=9900):
+    def create(self, name, path=None, mode='user', sync=False, admin=''):
         """
         Create zerodb object
 
@@ -60,7 +60,7 @@ class Zerodbs(DynamicCollection):
         :return: Zerodb object
         :rtype: Zerodb object
         """
-        return Zerodb(self.node, name, path, mode, sync, admin, node_port)
+        return Zerodb(self.node, name, path, mode, sync, admin)
 
     def partition_and_mount_disks(self):
         mounts = []

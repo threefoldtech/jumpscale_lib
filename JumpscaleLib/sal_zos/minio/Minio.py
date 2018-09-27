@@ -27,10 +27,8 @@ class Minio(Service):
         :param nr_datashards: number of datashards.
         :param nr_parityshards: number of parityshards (if it's zero it will make the mode replication otherwise mode is distribution)
         """
-        self.name = name
-        self._id = 'minio.{}'.format(self.name)
-        self.node = node
-        self._container = None
+        super().__init__(name, node, 'minio', [DEFAULT_PORT])
+
         # self.flist = 'https://hub.grid.tf/tf-official-apps/minio.flist'
         self.flist = 'https://hub.grid.tf/tf-autobuilder/threefoldtech-minio-zerostor.flist'  # TODO replace me when merging to master
         self.zdbs = zdbs
@@ -46,9 +44,6 @@ class Minio(Service):
 
         self._config_dir = '/bin'
         self._config_name = 'zerostor.yaml'
-        self._type = 'minio'
-        self._container_name = 'minio_{}'.format(self.name)
-        self.ports = [DEFAULT_PORT]
 
     @property
     def _container_data(self):
