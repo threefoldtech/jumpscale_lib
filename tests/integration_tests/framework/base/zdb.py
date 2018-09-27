@@ -10,41 +10,33 @@ class ZDB:
         self.guid = guid 
         self.data = data
         self.node_sal = node
+        self.zerodb_sal = None
 
     @property
     def _zerodb_sal(self):
         data = self.data.copy()
         return self.node_sal.primitives.from_dict('zerodb', data)
 
-    def _deploy(self):
-        zerodb_sal = self._zerodb_sal
-        zerodb_sal.deploy()
-        self.data['nodePort'] = zerodb_sal.node_port
-        self.data['ztIdentity'] = zerodb_sal.zt_identity
-
     def install(self):
-        print(colored('Installing zerodb %s' % self.data['name'], 'white'))
-
-        # generate admin password
-        if not self.data['admin']:
-            self.data['admin'] = j.data.idgenerator.generateXCharID(25)
-            # if not self.data['path']:
-            #     raise RuntimeError('Failed to find a suitable disk for the zerodb')
+        self.zerodb_sal = self._zerodb_sal
         self._deploy()
+        self.data['nodePort'] = self.zerodb_sal.node_port
+        self.data['ztIdentity'] = self.zerodb_sal.zt_identity
+
+    def _deploy(self):
+        self.zerodb_sal.deploy()
 
     def start(self):
         """
         start zerodb server
         """
-        print(colored('Starting zerodb %s' % self.data['name'], 'white'))
-        self._deploy()
+        self.zerodb_sal.start()
 
     def stop(self):
         """
         stop zerodb server
         """
-        print(colored('Stopping zerodb %s' % self.data['name'], 'white'))
-        self._zerodb_sal.stop()
+        self.zerodb_sal.stop()
 
     def upgrade(self):
         """
@@ -57,14 +49,14 @@ class ZDB:
         """
         Return disk information
         """
-        return self._zerodb_sal.info
+        return self.zerodb_sal.info
 
     def namespace_list(self):
         """
         List namespace
         :return: list of namespaces ex: ['namespace1', 'namespace2']
         """
-        return self.data['namespaces']
+        return self.zerodb_sal.namespaces.list()
 
     def namespace_info(self, name):
         """
@@ -72,9 +64,7 @@ class ZDB:
         :param name: namespace name
         :return: dict
         """
-        if not self._namespace_exists_update_delete(name):
-            raise LookupError('Namespace {} doesn\'t exist'.format(name))
-        return self._zerodb_sal.namespaces[name].info().to_dict()
+        return self.zerodb_sal.namespaces[name].info().to_dict()
 
     def namespace_url(self, name):
         """
@@ -82,9 +72,7 @@ class ZDB:
         :param name: namespace name
         :return: dict
         """
-        if not self._namespace_exists_update_delete(name):
-            raise LookupError('Namespace {} doesn\'t exist'.format(name))
-        return self._zerodb_sal.namespaces[name].url
+        return self.zerodb_sal.namespaces[name].url
 
     def namespace_private_url(self, name):
         """
@@ -92,9 +80,7 @@ class ZDB:
         :param name: namespace name
         :return: dict
         """       
-        if not self._namespace_exists_update_delete(name):
-            raise LookupError('Namespace {} doesn\'t exist'.format(name))
-        return self._zerodb_sal.namespaces[name].private_url
+        return self.zerodb_sal.namespaces[name].private_url
 
     def namespace_create(self, name, size=None, password=None, public=True):
         """
@@ -104,13 +90,8 @@ class ZDB:
         :param password: namespace password
         :param public: namespace public status
         """
-        
-        if self._namespace_exists_update_delete(name):
-            raise ValueError('Namespace {} already exists'.format(name))
-        
-        print(colored("create namespace %s"%name, 'white'))
-        self.data['namespaces'].append({'name': name, 'size': size, 'password': password, 'public': public})
-        self._zerodb_sal.deploy()
+        self.zerodb_sal.namespaces.add(name=name, size=size, password=password, public=public)
+        self._deploy()
 
     def namespace_set(self, name, prop, value):
         """
@@ -119,40 +100,11 @@ class ZDB:
         :param prop: property name
         :param value: property value
         """
-
-        if not self._namespace_exists_update_delete(name, prop, value):
-            raise LookupError('Namespace {} doesn\'t exist'.format(name))
-        self._zerodb_sal.deploy()
+        self.zerodb_sal.namespaces[name].set_property(prop, value)
 
     def namespace_delete(self, name):
         """
         Delete a namespace
         """
-        if not self._namespace_exists_update_delete(name, delete=True):
-            print(colored("namespace already doesn't exist", 'red'))
-            return
-        print(colored("delete namespace %s"%name,'white'))
-        self._zerodb_sal.deploy()
-
-    def connection_info(self):
-        return {
-            'ip': self.node_sal.public_addr,
-            'port': self.data['nodePort']
-        }
-
-    def _namespace_exists_update_delete(self, name, prop=None, value=None, delete=False):
-        if prop and delete:
-            raise ValueError('Can\'t set property and delete at the same time')
-        if prop and prop not in ['size', 'password', 'public']:
-            raise ValueError('Property must be size, password, or public')
-
-        for namespace in self.data['namespaces']:
-            if namespace['name'] == name:
-                if prop:
-                    if prop not in ['size', 'password', 'public']:
-                        raise ValueError('Property must be size, password, or public')
-                    namespace[prop] = value
-                if delete:
-                    self.data['namespaces'].remove(namespace)
-                return True
-        return False
+        self.zerodb_sal.namespaces.remove(name)
+        self._deploy()

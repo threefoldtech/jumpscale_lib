@@ -38,6 +38,8 @@ class BaseTest(Utils):
         cls.zt_network = cls.zt_client.network_create(public=False, name=self.zt_network_name, auto_assign=True, subnet='10.147.17.0/24')
         cls.host_ip = self.host_join_zt()
         cls.vms = []
+        cls.zdb_cont_ids = []
+
 
     @classmethod
     def tearDownClass(cls):
