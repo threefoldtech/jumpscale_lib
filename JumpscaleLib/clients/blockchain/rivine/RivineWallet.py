@@ -499,10 +499,10 @@ class RivineWallet:
         return transaction
 
 
-    def sign_minterdefinition_transaction(self, transaction, commit=False):
+    def sign_mint_transaction(self, transaction, commit=False):
         """
-        Signs a minter definition transaction and optionally push it to the chain
-        @param transaction: A transactionV128 object to sign
+        Signs a minter definition or coin creation transaction and optionally push it to the chain
+        @param transaction: A transactionV128 or transactionV129 object to sign
         @param commit: if True, the transaction will be pushed after signing
         """
         muc = UnlockCondtionFactory.from_dict(self._get_current_minter_definition())
