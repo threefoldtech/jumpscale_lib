@@ -6,7 +6,7 @@ import yaml
 from jumpscale import j
 
 from .. import templates
-from ..abstracts import Nics
+from ..abstracts import Nics, Service
 
 logger = j.logger.get(__name__)
 
@@ -60,7 +60,7 @@ class EtcdCluster():
             self._connect()
             self.delete(key)
 
-class ETCD():
+class ETCD(Service):
     """etced server"""
 
     def __init__(self, node, name, data_dir='/mnt/data', zt_identity=None, nics=None, token=None, cluster=None):
@@ -71,9 +71,11 @@ class ETCD():
         self.data_dir = data_dir
         self.zt_identity = zt_identity
         self._id = 'etcd.{}'.format(self.name)
+        self._type = 'etcd'
         self._config_path = '/bin/etcd_{}.config'.format(self.name)
         self._container_name = 'etcd_{}'.format(self.name)
         self._mount_point = '/mnt/etcds/{}'.format(self.name)
+        self._ports = [CLIENT_PORT, PEER_PORT]
         self.token = token
         self.cluster = cluster
         self.nics = Nics(self)
@@ -87,26 +89,17 @@ class ETCD():
 
     @property
     def client_url(self):
-            return 'http://{}:{}'.format(self.container.public_addr, CLIENT_PORT)
+            return 'http://{}:{}'.format(self.container.mgmt_addr, CLIENT_PORT)
 
     @property
     def peer_url(self):
-            return 'http://{}:{}'.format(self.container.public_addr, PEER_PORT)
+            return 'http://{}:{}'.format(self.container.mgmt_addr, PEER_PORT)
 
     def _container_data(self):
         """
         :return: data used for etcd container
          :rtype: dict
         """
-        ports = self.node.freeports(2)
-        if len(ports) <= 0:
-            raise RuntimeError("can't install etcd, no free port available on the node")
-
-        ports = {
-            str(ports[0]): CLIENT_PORT,
-            str(ports[1]): PEER_PORT,
-        }
-
         sp = self.node.find_persistance()
         try:
             fs = sp.get(self._container_name)
@@ -121,26 +114,10 @@ class ETCD():
         return {
             'name': self._container_name,
             'flist': self.flist,
-            'ports': ports,
             'nics': [nic.to_dict(forcontainer=True) for nic in self.nics],
             'mounts': {fs.path: self.data_dir},
             'identity': self.zt_identity,
         }
-
-    @property
-    def container(self):
-        """
-        Get/create etcd container to run etcd services on
-        :return: etcd container
-        :rtype: container sal object
-        """
-        if self._container is None:
-            try:
-                self._container = self.node.containers.get(self._container_name)
-            except LookupError:
-                self._container = self.node.containers.create(**self._container_data())
-        return self._container
-    
 
     def create_config(self):
         cluster = self.cluster if self.cluster else [{'name': self.name, 'address': self.peer_url}]
@@ -186,38 +163,8 @@ class ETCD():
         if not j.tools.timer.execute_until(self.is_running, 30, 0.5):
             raise RuntimeError('Failed to start etcd server: {}'.format(self.name))
 
-    def stop(self):
-        import time
-
-        if not self.is_running():
-            return
-
-        self.container.client.job.kill(self._id)
-        start = time.time()
-        while start + 15 > time.time():
-            time.sleep(1)
-            try:
-                self.container.client.job.list(self._id)
-            except RuntimeError:
-                return
-            continue
-
-        raise RuntimeError('failed to stop etcd.')
-
-    def is_running(self):
-        if not self._container_exists():
-            return False
-        try:
-            self.container.client.job.list(self._id)
-        except:
-            return False
-        for port in [PEER_PORT, CLIENT_PORT]:
-            if not self.container.is_port_listening(port):
-                return False
-        return True
-
     def put(self, key, value):
-        client = j.clients.etcd.get(self.name, data={'host': self.container.public_addr, 'port': CLIENT_PORT})
+        client = j.clients.etcd.get(self.name, data={'host': self.container.mgmt_addr, 'port': CLIENT_PORT})
 
         if value.startswith("-"):
             value = "-- %s" % value
@@ -226,19 +173,5 @@ class ETCD():
         client.api.put(key, value)
 
     def get(self, key):
-        client = j.clients.etcd.get(self.name, data={'host': self.container.public_addr, 'port': CLIENT_PORT})
-        return client.api.get(key)[0].decode('utf-8') 
-
-    def destroy(self):
-        if not self._container_exists():
-            return
-
-        self.stop()
-        self.container.stop()
-
-    def _container_exists(self):
-        try:
-            self.node.containers.get(self._container_name)
-            return True
-        except LookupError:
-            return False
+        client = j.clients.etcd.get(self.name, data={'host': self.container.mgmt_addr, 'port': CLIENT_PORT})
+        return client.api.get(key)[0].decode('utf-8')

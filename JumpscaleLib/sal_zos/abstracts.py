@@ -255,3 +255,64 @@ class DynamicCollection:
         return str(self.list())
 
     __repr__ = __str__
+
+
+class Service:
+
+    def _container_exists(self):
+        try:
+            self.node.containers.get(self._container_name)
+            return True
+        except LookupError:
+            return False
+
+    def destroy(self):
+        if not self._container_exists():
+            return
+
+        self.stop()
+
+    def is_running(self, timeout=15):
+        if not self._container_exists():
+            return False
+        try:
+            self.container.client.job.list(self._id)
+        except:
+            return False
+        
+        for port in self._port:
+            if not self.container.is_port_listening(port, timeout):
+                return False
+        return True
+
+    def stop(self, timeout=30):
+        import time
+
+        if not self.is_running():
+            return
+
+        self.container.client.job.kill(self._id)
+        start = time.time()
+        end = start + timeout
+
+        while self.is_running() and time.time() < end:
+            time.sleep(1)
+
+        if self.is_running():
+            raise RuntimeError('Failed to stop {} server: {}'.format(self._type, self.name))
+
+        self.container.stop()
+
+    @property
+    def container(self):
+        """
+        Get/create service container
+        :return: service container
+        :rtype: container sal object
+        """
+        if self._container is None:
+            try:
+                self._container = self.node.containers.get(self._container_name)
+            except LookupError:
+                self._container = self.node.containers.create(**self._container_data)
+        return self._container

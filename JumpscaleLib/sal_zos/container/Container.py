@@ -341,7 +341,7 @@ class Container():
                  return int(k.split(':')[-1])
 
     @property
-    def public_addr(self):
+    def mgmt_addr(self):
         nics = self.client.info.nic()
         for nic in nics:
             if nic['name'].startswith('zt'):
