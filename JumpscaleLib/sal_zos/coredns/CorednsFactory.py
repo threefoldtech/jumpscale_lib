@@ -10,10 +10,10 @@ class CorednsFactory(JSBASE):
         JSBASE.__init__(self)
 
     @staticmethod
-    def get(name, node, etcd_endpoint, domain, recursive_resolvers ="8.8.8.8:53 1.1.1.1:53"):
+    def get(name, node, etcd_endpoint, domain, recursive_resolvers ="8.8.8.8:53 1.1.1.1:53",zt_identity=None, nics=None):
         """
         Get sal for coredns
         Returns:
             the sal layer 
         """
-        return Coredns(name, node, etcd_endpoint, domain, recursive_resolvers)
+        return Coredns(name, node, etcd_endpoint, domain, recursive_resolvers,zt_identity, nics)

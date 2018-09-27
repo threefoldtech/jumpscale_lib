@@ -1,19 +1,19 @@
 import time
 from jumpscale import j
 from .. import templates
-
+from ..abstracts import Nics, Service
 
 logger = j.logger.get(__name__)
 DEFAULT_PORT_HTTP = 80
 DEFAULT_PORT_HTTPS = 443
 
-class Traefik:
+class Traefik(Service):
     """
     Traefik a modern HTTP reverse proxy
     """
 
-    def __init__(self, name, node, etcd_endpoint, etcd_watch=True):
-        
+    def __init__(self, name, node, etcd_endpoint, etcd_watch=True,zt_identity=None, nics=None):
+        super().__init__(name, node, 'traefik', [DEFAULT_PORT_HTTP, DEFAULT_PORT_HTTPS])
         self.name = name
         self.id = 'traefik.{}'.format(self.name)
         self.node = node
@@ -25,6 +25,15 @@ class Traefik:
         
         self._config_dir = '/usr/bin'
         self._config_name = 'traefik.toml'
+        self.zt_identity = zt_identity
+        self.nics = Nics(self)
+        if nics:
+            for nic in nics:
+                nicobj = self.nics.add(nic['name'], nic['type'], nic['id'], nic.get('hwaddr'))
+                if nicobj.type == 'zerotier':
+                    nicobj.client_name = nic.get('ztClient')
+        if 'nat0' not in self.nics:
+            self.nics.add('nat0', 'default')
 
     @property
     def _container_data(self):
@@ -32,44 +41,37 @@ class Traefik:
         :return: data used for traefik container
          :rtype: dict
         """
-        ports = self.node.freeports(2)
-        if len(ports) <= 0:
-            raise RuntimeError("can't install traefik, no free port available on the node")
-
-        self.node_port = ports[0]
+        self.node_port = DEFAULT_PORT_HTTP
         ports = {
-            str(ports[0]): DEFAULT_PORT_HTTP, 
-            str(ports[1]): DEFAULT_PORT_HTTPS, #HTTPS
+            str(DEFAULT_PORT_HTTP): DEFAULT_PORT_HTTP, 
+            str(DEFAULT_PORT_HTTPS): DEFAULT_PORT_HTTPS, #HTTPS
         }
+        if not self.zt_identity:
+            self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
+        zt_public = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
+        j.sal_zos.utils.authorize_zerotiers(zt_public, self.nics)
 
         return {
-            'name': self._container_name,
+            'name':  self._container_name,
             'flist': self.flist,
             'ports': ports,
-            'nics': [{'type': 'default'}],
+            'nics': [nic.to_dict(forcontainer=True) for nic in self.nics],
+            'identity': self.zt_identity,
         }
 
-    @property
-    def _container_name(self):
-        """
-        :return: name used for traefik container
-        :rtype: string
-        """
-        return 'traefik_{}'.format(self.name)
-
-    @property
-    def container(self):
-        """
-        Get/create traefik container to run traefik services on
-        :return: traefik container
-        :rtype: container sal object
-        """
-        if self._container is None:
-            try:
-                self._container = self.node.containers.get(self._container_name)
-            except LookupError:
-                self._container = self.node.containers.create(**self._container_data)
-        return self._container
+    def deploy(self):
+        # call the container property to make sure it gets created and the ports get updated
+        self.container
+        for nic in self.nics:
+            if nic.type == 'zerotier':
+                zt_address = self.zt_identity.split(':')[0]
+                try:
+                    network = nic.client.network_get(nic.networkid)
+                    member = network.member_get(address=zt_address)
+                    member.timeout = None
+                    member.get_private_ip(60)
+                except (RuntimeError, ValueError) as e:
+                    logger.warning('Failed to retreive zt ip: %s', str(e))
 
     def container_port(self, port):
         return self._container.get_forwarded_port(port)
@@ -107,7 +109,7 @@ class Traefik:
 
         self.create_config()
 
-        cmd = '/usr/bin/traefik ./traefik  -c {dir}/{config}'.format(dir=self._config_dir,config=self._config_name)
+        cmd = '/usr/bin/traefik -c {dir}/{config}'.format(dir=self._config_dir,config=self._config_name)
        
         # wait for traefik to start
         self.container.client.system(cmd, id=self.id)
@@ -153,7 +155,7 @@ class Traefik:
         routes_name = url_frontend.split('.')
         
         data_parse = j.data.serializer.toml.loads(data)
-        data_parse['backends'].update({'backend%s' % len(str(data)) :{'servers':{'server1':{'url':'%s:80' % url_backend , 'weight':'10'}}}})
+        data_parse['backends'].update({'backend%s' % len(str(data)) :{'servers':{'server1':{'url':'%s' % url_backend , 'weight':'10'}}}})
         data_parse['frontends'].update({'frontend%s' % len(str(data)) :{'routes':{'%s' % routes_name[0]:{'rule':'Host:%s' % url_frontend }}}})
         self.container.client.filesystem.remove('{dir}/{config}'.format(dir=self._config_dir,config=self._config_name))
         
