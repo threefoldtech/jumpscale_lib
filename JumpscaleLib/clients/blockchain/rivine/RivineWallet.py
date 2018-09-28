@@ -459,7 +459,7 @@ class RivineWallet:
         return utils.commit_transaction(self._bc_networks, self._bc_network_password, transaction)
 
 
-    def _get_current_minter_definition(self):
+    def get_current_minter_definition(self):
         """
         Get the current minter definition
         """
@@ -520,7 +520,7 @@ class RivineWallet:
         @param transaction: A transactionV128 or transactionV129 object to sign
         @param commit: if True, the transaction will be pushed after signing
         """
-        muc = UnlockCondtionFactory.from_dict(self._get_current_minter_definition())
+        muc = UnlockCondtionFactory.from_dict(self.get_current_minter_definition())
         if muc.type == MULTISIG_CONDITION_TYPE:
             if transaction.mint_fulfillment is None:
                 transaction._mint_fulfillment = MultiSignatureFulfillment()
