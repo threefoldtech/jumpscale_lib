@@ -158,6 +158,8 @@ however we always generate 32 byte seeds, which results in a 24 word mnemonics w
 ## Creating coins
 
 Coin creation is handled by a "coin creation transaction" (transaction version 129).
+In order to create coins, the `mint condition` needs to be fulfilled. The current
+mint condition can be viewed using the `get_current_mint_condition` method on a wallet.
 
 ### Quick start
 
