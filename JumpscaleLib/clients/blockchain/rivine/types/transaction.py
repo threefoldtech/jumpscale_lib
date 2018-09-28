@@ -117,6 +117,9 @@ class TransactionV1:
         self._version = bytearray([1])
         self._id = None
 
+    @property
+    def version(self):
+        return 1
 
     @property
     def id(self):
@@ -322,6 +325,10 @@ class TransactionV128:
         self._specifier.append(0)
 
     @property
+    def version(self):
+        return 128
+
+    @property
     def id(self):
         """
         Get transaction id
@@ -381,7 +388,7 @@ class TransactionV128:
         Set the mint condition to a singlesig condition.
          @param minter_address: The address of the singlesig condition to set as new mint condition
         """
-        unlockhash = UnlockHash.from_str(minter_address)
+        unlockhash = UnlockHash.from_string(minter_address)
         condition = UnlockHashCondition(unlockhash=unlockhash)
         if locktime is not None:
             condition = LockTimeCondition(condition=condition, locktime=locktime)
@@ -400,6 +407,11 @@ class TransactionV128:
             condition = LockTimeCondition(condition=condition, locktime=locktime)
         self._mint_condition = condition
 
+    def set_condition(self, condition):
+        """
+        Set a new premade minter condition
+        """
+        self._mint_condition = condition
 
     def add_minerfee(self, minerfee):
         """
@@ -452,6 +464,10 @@ class TransactionV129:
         self._coin_outputs = []
         self._specifier = bytearray(b'coin mint tx')
         self._specifier.extend([0,0,0,0])
+
+    @property
+    def version(self):
+        return 129
 
     @property
     def id(self):
@@ -533,6 +549,12 @@ class TransactionV129:
             condition = LockTimeCondition(condition=condition, locktime=locktime)
         coin_output = CoinOutput(value=value, condition=condition)
         self._coin_outputs.append(coin_output)
+
+    def add_output(self, value, condition):
+        """
+        Add a new output from a premade condition
+        """
+        self._coin_outputs.append(CoinOutput(value=value, condition=condition))
 
     def add_minerfee(self, minerfee):
         """

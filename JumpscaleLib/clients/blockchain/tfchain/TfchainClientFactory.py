@@ -8,6 +8,9 @@ from JumpscaleLib.clients.blockchain.tfchain.TfchainClient import TfchainClient
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory,\
         DEFAULT_MINERFEE, TransactionV128, TransactionV129
+from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import UnlockHashCondition,\
+        LockTimeCondition, MultiSignatureCondition, UnlockCondtionFactory
+from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
 
 JSConfigBaseFactory = j.tools.configmanager.JSBaseClassConfigs
 
@@ -54,18 +57,54 @@ class TfchainClientFactory(JSConfigBaseFactory):
         return self.get(walletname).wallet
 
 
-    def create_minterdefinition_transaction(self):
+    def create_minterdefinition_transaction(self, condition=None, description=None):
         """
         Create a new minter definition transaction
+
+        @param condition: Set the minter definition to this premade condition
+        @param description: Add this description as arbitrary data to the transaction
         """
         tx = TransactionV128()
         tx.add_minerfee(DEFAULT_MINERFEE)
+        if condition is not None:
+           tx.set_condition(condition)
+        if description is not None:
+            tx.add_data(description.encode('utf-8'))
         return tx
 
-    def create_coincreation_transaction(self):
+    def create_coincreation_transaction(self, amount=None, condition=None, description=None):
         """
-        Create a new coin creation transaction
+        Create a new coin creation transaction. If both an amount and condition are
+        given, they will be used to create a first output in the transaction
+
+        @param amount: The amount of coins to create for the condition, if given
+        @param condition: A premade condition, used to create a first output
+        @param description: A description which is added to the transaction as arbitrary data
         """
         tx = TransactionV129()
         tx.add_minerfee(DEFAULT_MINERFEE)
+        if amount is not None and condition is not None:
+            tx.add_output(amount, condition)
+        if description is not None:
+            tx.add_data(description.encode('utf-8'))
         return tx
+
+    def create_singlesig_condition(self, address, locktime=None):
+        """
+        Create a new single signature condition
+        """
+        unlockhash = UnlockHash.from_string(address)
+        condition = UnlockHashCondition(unlockhash=unlockhash)
+        if locktime is not None:
+            condition = LockTimeCondition(condition=condition, locktime=locktime)
+        return condition
+
+    def create_multisig_condition(self, unlockhashes, min_nr_sig, locktime=None):
+        """
+        Create a new multisig condition
+        """
+        condition = MultiSignatureCondition(unlockhashes=unlockhashes, min_nr_sig=min_nr_sig)
+        if locktime is not None:
+            condition = LockTimeCondition(condition=condition, locktime=locktime)
+        return condition
+

@@ -465,8 +465,23 @@ class RivineWallet:
         """
         return utils.get_current_minter_definition(self._bc_networks, self._bc_network_password)
 
-
     def sign_transaction(self, transaction, multisig=False, commit=False):
+        """
+        Signs a transaction and optionally push it to the blockchain
+
+        @param transaction: Transaction object
+        @param multisig: If true, it indicates that the transaction contains multisig inputs.
+        Only required for v1 transaction
+        @param commit: If True, the transaction will be pushed to the chain after being signed
+        """
+        if transaction.version == 1:
+            self._sign(transaction, multisig=multisig, commit=commit)
+        elif transaction.version == 128 or transaction.version == 129:
+            self._sign_mint_transaction(transaction, commit=commit)
+        else:
+            raise RuntimeError("Can't sign unknown transaction version")
+
+    def _sign(self, transaction, multisig=False, commit=False):
         """
         Signs a transaction and optionally push it to the blockchain
 
@@ -499,7 +514,7 @@ class RivineWallet:
         return transaction
 
 
-    def sign_mint_transaction(self, transaction, commit=False):
+    def _sign_mint_transaction(self, transaction, commit=False):
         """
         Signs a minter definition or coin creation transaction and optionally push it to the chain
         @param transaction: A transactionV128 or transactionV129 object to sign

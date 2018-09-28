@@ -159,6 +159,56 @@ however we always generate 32 byte seeds, which results in a 24 word mnemonics w
 
 Coin creation is handled by a "coin creation transaction" (transaction version 129).
 
+### Quick start
+
+This section describes how to create a coin creation transaction as quickly as possible.
+From start to finish, we perform the following steps:
+
+- Create a condition, which will define how the output can be spent
+- Create a new transaction, using this condition and a value
+- Sign the transaction.
+
+After this is done, the transaction likely needs to be signed by other people.
+
+Our condition can be created by using the `create_singlesig_condition` or
+`create_multisig_condition` methods on the tfchain client factory. The required
+arguments are the unlockhash, and the list of unlockhashes + the minimum amount of
+signatures required respectively. Both conditions can optionally be timelocked
+by providing the `timelock` parameter.
+
+Now that we have a condition, a transaction can be created using the
+`create_coincreation_transaction` method. The previously created condition can be
+given as an optional parameter (named `condition`). If the `value` parameter is also
+set, an output will be created and added on the transaction. If wanted, a `description`
+string can be given, which is set in the arbitrary data field.
+
+Lastly, the transaction needs to be signed. If the wallet which does the signing does
+not have any key capable of signing, nothing happens. Signing is done with the
+wallet's `sign_transaction` method.
+
+If the transaction then needs to be signed by others, it can be shared in its json
+form. A json transaction can also be loaded.
+
+Full example:
+
+```python3
+# Create the condition, we just want to send to an address here:
+condition = j.clients.tfchain.create_singlesig_condition('01b4668a4b9a438f9143af8500f6566b6ca4cb3e3a3d98711deee3dee371765f58626809117a33')
+
+# Create the transaction, sending 1 TFT ( = 1000000000 units)
+# Also set an example description
+tx = j.clients.tfchain.create_coincreation_transaction(condition=condition, value=1000000000, description='optional description')
+
+# Try to add signatures
+# Assume cl is a previously loaded client, see above
+cl.wallet.sign_transaction(tx)
+
+# Print the transaction json, so it can be shared to other signers
+tx.json
+```
+
+### Full description
+
 To get started, we first need to obtain such a transaction. A new one can be created,
 after which we can add the coin outputs, or an existing one can be loaded from json.
 To create a new (empty) coin creation transaction, the `create_coincreation_transaction()`
@@ -210,7 +260,7 @@ we are creating coins, we are also creating the minerfee, so there is no need to
 any input for this.
 
 Signing this transaction can be done using a tfchain wallet. Using the wallet's
-`sign_mint_transaction` method will greedily add a signature for any applicable key
+`sign_transaction` method will greedily add a signature for any applicable key
 loaded in said wallet, based on the current mint condition. Once your signature
 is added, the transaction json can be distributed to the other coin creators, or if enough
 signatures are added, the transaction can be published to the chain. If you want to
@@ -220,7 +270,7 @@ try and commit the transaction after signing it, the `commit` parameter can be s
 Example of signing a transaction:
 
 ```python
-cl.wallet.sign_mint_transaction(tx, commit=True)
+cl.wallet.sign_transaction(tx, commit=True)
 ```
 
 ## minter definition transaction
