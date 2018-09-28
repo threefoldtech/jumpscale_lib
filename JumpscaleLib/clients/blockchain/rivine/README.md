@@ -29,7 +29,7 @@ pip3 install pyblake2
 
 ## Creating a wallet
 
-A wallet is a collection of addresses thatbut  addresses are not random, they are generated from a single seed so it can be fully restored using this seed as well.
+A wallet is a collection of addresses but  addresses are not random, they are generated from a single seed so it can be fully restored using this seed as well.
 
 A seed which is a random byte array translated to a sentence of [12, 15, 18, 21, 24] words, for more information see https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
 
@@ -101,7 +101,6 @@ You can also add a locktime to your transactions
 ```python
 import time
 recipient = '01e5bd83a85e263817e2040054064575066874ee45a7697facca7a2721d4792af374ea35f549a1'
-custom_data = b"hello from Dresden"
 # 15 minutes locktime
 locktime = time.time() + 900
 transaction = wallet.send_money(amount=2, recipient=recipient, data=data, locktime=locktime)
@@ -153,7 +152,7 @@ client_data['seed_'] = sam_seed
 sam_wallet = j.clients.rivine.get('sam_wallet', data=client_data).wallet
 
 ```
-### Sending tokens to multiple participants
+### Sending tokens  that require multiple participants to sign 
 
 The jumpscale client support sending money to multiple wallets, to do that you need to use the send_to_many method available in the wallet object:
 ```python
@@ -168,7 +167,7 @@ wallet.send_to_many(amount=2, recipients=recipients, required_nr_of_signatures=r
 ```
 The above commands will send 2 TF Tokens to a multi-signature wallet shared between the recipients, and if 3 out of the 4 participants sings the transaction then the 2 TF Tokens can be spent already.
 
-### Sending tokens to multiple participants with lock period
+### Sending tokens that require multiple participants to sign with lock period
 
 You also set a lock period e.g couple of hours or days, setting the token to be locked until the period is reached. To do that, you can simply use the same as the previous steps but add a locktime to the send_to_many call
 ```python
@@ -185,44 +184,13 @@ wallet.send_to_many(amount=2, recipients=recipients,
                     locktime=locktime)
 ```
 
-### Spending the tokens in multisig wallet
-To spend the token sent to multiple participants you will need to create a multisig wallet
-```python
-
-cosigners = [bob_wallet.addresses[0],
-              alice_wallet.addresses[0],
-              carlos_wallet.addresses[0],
-              sam_wallet.addresses[0]
-              ]
-
-required_sig = 3
-
-client_data = {'bc_addresses': ['https://explorer.testnet.threefoldtoken.com/'],
-               'password_': 'test123',
-               'minerfee': 100000000,
-               'multisig': True,
-               'cosigners': cosigners,
-               'required_sig': required_sig
-               }
-
-multisig_wallet = j.clients.rivine.get('shared_wallet', data=client_data).wallet
-```
-
-Once you have created the wallet, you can already check the current balance
-```python
-multisig_wallet.current_balance
-* Current chain height is: 80440
-Out[38]: {'locked': 2.0, 'unlocked': 0.0}
-```
-The above command should show you both the locked and unlocked balance in the wallet.
-
+### Spending tokens  that require multiple participants to sign
 To be able to spend the tokens, first they need to be unlocked (the lock-period has passed) and then you will need to have the required number of signatures. The steps can be explained with the following example:
 ```python
 #1. create a transaction that is not yet singed by any participants
+**TODO**
 amount = 1.9 # note that you need to take into consideration the .1 TFT default minerfee
 recipient = wallet.addresses[0]
-txn_json = multisig_wallet.create_transaction(amount=amount,
-                                             recipient=recipient)
 # txn_json is a json representation of the transaction we just created, this should be sent to participants to sing it.
 
 #2. Create a transaction object from the transaction json
