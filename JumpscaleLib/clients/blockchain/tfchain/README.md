@@ -203,9 +203,17 @@ tx = j.clients.tfchain.create_coincreation_transaction(condition=condition, valu
 # Assume cl is a previously loaded client, see above
 cl.wallet.sign_transaction(tx)
 
-# Print the transaction json, so it can be shared to other signers
-tx.json
+# Convert the transaction to json, so it can be shared to other signers
+jsontx = tx.json
+
+#Sign it through the a cosigner wallet 
+tx = j.clients.tfchain.create_transaction_from_json(jsontx)
+secondsignerwallet.sign_transaction(tx)
+
+# the last signer commits it to the network as well
+thirdsignerwallet.sign_transaction(tx, commit=True) 
 ```
+
 
 ### Full description
 
