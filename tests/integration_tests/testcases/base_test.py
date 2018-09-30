@@ -89,16 +89,16 @@ class BaseTest(Utils):
 
         return vm_parms
 
-    def add_zerotier_network_to_vm(self, vm, network=None, name=None):
+    def add_zerotier_network(self, obj, network=None, name=None):
         network = network or self.zt_network
-        vm.nics.add_zerotier(network=network, name=name)
+        obj.nics.add_zerotier(network=network, name=name)
 
     def update_default_data(self, old_data, new_data):
         for key in new_data:
             old_data[key] = new_data[key]
         return old_data
 
-    def get_machine_zerotier_ip(self, ztIdentity, timeout=None, zt_client=None, zt_network=None):
+    def get_zerotier_ip(self, ztIdentity, timeout=None, zt_client=None, zt_network=None):
         ztAddress = ztIdentity.split(':')[0]
         zt_client = zt_client or self.zt_client
         zt_network = zt_network or self.zt_network
