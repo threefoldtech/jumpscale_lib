@@ -2,16 +2,17 @@
 from jumpscale import j
 from pprint import pprint as print
 
-from .ZDBClient import ZDBClient
+from .ZdbConfig import ZdbConfig
 
 JSConfigBase = j.tools.configmanager.base_class_configs
 
 
-class ZDBFactory(JSConfigBase):
+class ZdbConfigFactory(JSConfigBase):
 
     def __init__(self):
-        self.__jslocation__ = "j.clients.zdb"
-        super(ZDBFactory, self).__init__(ZDBClient)
+        self.__jslocation__ = "j.clients.zdb_config"
+        JSConfigBase.__init__(self, ZdbConfig)
+        self._tree = None
 
     def configure(self, instance="main", secrets="", addr="localhost", port=None,
                   adminsecret="", mode="user"):
@@ -35,7 +36,7 @@ class ZDBFactory(JSConfigBase):
         data["mode"] = str(mode)
         data["adminsecret_"] = adminsecret
         data["secrets_"] = secrets  #is now multiple secrets or 1 default one, in future will be our own serializion lib (the schemas)
-        return self.get(instance=instance, data=data, create=True, interactive=False)
+        return self.get(instance=instance, data=data)
 
     def testdb_server_start_client_get(self,reset=False,mode="seq"):
         """
