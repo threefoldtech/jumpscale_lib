@@ -40,7 +40,7 @@ class BaseTest(Utils):
         cls.zt_network = cls.zt_client.network_create(public=False, name=self.zt_network_name, auto_assign=True, subnet='10.147.17.0/24')
         cls.host_ip = self.host_join_zt()
         cls.vms = []
-        cls.zdb_cont_ids = []
+        cls.zdbs = []
 
 
     @classmethod
@@ -63,15 +63,10 @@ class BaseTest(Utils):
         return str(uuid.uuid4()).replace('-', '')[:size]        
 
     def set_vm_default_values(self, os_type, os_version=None):
-        self.cpu_info = self.node_info['core']
-        if self.cpu_info == 0:
-            self.cpu_info = 1
-        else:
-            self.cpu_info = random.randint(1, self.cpu_info) 
 
         vm_parms = {'flist':"",
                     'memory':  random.randint(1,3) * 1024,
-                    'cpu': self.cpu_info,
+                    'cpu':  random.randint(1,3),
                     'name': self.random_string(),
                     'nics': [],
                     'configs': [{'path': '/root/.ssh/authorized_keys',

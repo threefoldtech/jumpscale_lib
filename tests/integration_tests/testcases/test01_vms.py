@@ -384,10 +384,10 @@ class VMTestCases(BaseTest):
             new_param_val = self.random_string()
             flag = param
         elif param == "vcpus":
-            new_param_val = random.randint(1, self.cpu_info)
+            new_param_val = random.randint(1, 3)
             flag = "cpu"
         elif param == "memory":
-            new_param_val = random.randint(1, self.node_info['memory']) * 1024
+            new_param_val = random.randint(1, 3) * 1024
             flag = param
         else:
             new_param_val = 'https://hub.grid.tf/tf-bootable/ubuntu:16.04.flist'
@@ -404,6 +404,7 @@ class VMTestCases(BaseTest):
 
         self.log("Start the vm again.")
         created_vm.start()
+        self.vms.append(created_vm.uuid)
 
         self.log("Check that vm parameters are changed.")
         self.assertEqual(created_vm.info['params'][flag], new_param_val)
@@ -432,14 +433,12 @@ class VMTestCases(BaseTest):
         created_vm1 = vm1._vm_sal
         self.assertTrue(created_vm1)
 
-        self.log("change memory to 2 GB for vm, to save memory.")
-        created_vm1.memory = 2048
-
         self.log("Add port forward to port 22.")
         port_name = self.random_string()
         host_port_ssh = random.randint(1000, 2000)        
         created_vm1.ports.add(name=port_name, source=host_port_ssh, target=22)
         vm1.install(created_vm1)
+        self.vms.append(created_vm1.uuid)
         
         self.log("Create vm [VM2] with type default nics, should succeed.")
         vm2 = self.vm(node=self.node_sal)
@@ -451,9 +450,8 @@ class VMTestCases(BaseTest):
         created_vm2 = vm2._vm_sal
         self.assertTrue(created_vm2)
 
-        self.log("change memory to 2 GB for vm, to save memory.")
-        created_vm2.memory = 2048
         vm2.install(created_vm2)
+        self.vms.append(created_vm2.uuid)
 
         self.log("Create vm [VM3] without type default nics, should succeed.")
         vm3 = self.vm(node=self.node_sal)
@@ -461,9 +459,8 @@ class VMTestCases(BaseTest):
         created_vm3 = vm3._vm_sal
         self.assertTrue(created_vm3)
 
-        self.log("change memory to 2 GB for vm, to save memory.")
-        created_vm3.memory = 2048
         vm3.install(created_vm3)
+        self.vms.append(created_vm3.uuid)
 
         self.log("Try to ping VM2 from VM1, should succeed.")
         cmd2 = 'ping -w5 "{}"'.format(created_vm2.info['default_ip'])
@@ -671,9 +668,7 @@ class VMActionsBase(BaseTest):
         self.create_booted_vm(os_type)
 
         self.log("Shutdown [vm1], should succeed.")
-        time.sleep(25)
         self.created_vm.shutdown()
-        
 
         self.log("Wait till vm1 shutdown")
         for _ in range(30):
@@ -683,9 +678,15 @@ class VMActionsBase(BaseTest):
                 time.sleep(5)
         else:
             self.assertFalse(self.created_vm.is_running(),'Take long time to shutdown')
+        
+        self.log("Check that [vm1] has been forced shutdown successfully.")
+        result1 = self.execute_command(ip=self.vm_zt_ip, cmd='pwd')
+        self.assertTrue(result1.returncode)
 
         self.log("Start [vm1], should succeed.")
         self.created_vm.start()
+        self.vms.pop()
+        self.vms.append(self.created_vm.uuid)
 
         self.log("Check that [vm1] is running again.")
         result2 = self.ssh_vm_execute_command(vm_ip=self.vm_zt_ip, cmd='pwd')
