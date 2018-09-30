@@ -10,7 +10,7 @@ JSConfigBase = j.tools.configmanager.base_class_configs
 class ZdbConfigFactory(JSConfigBase):
 
     def __init__(self):
-        self.__jslocation__ = "j.clients.zdb_config"
+        self.__jslocation__ = "j.clients.zdb"
         JSConfigBase.__init__(self, ZdbConfig)
         self._tree = None
 
