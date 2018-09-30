@@ -18,12 +18,12 @@ class ZDB:
         return self.node_sal.primitives.from_dict('zerodb', data)
 
     def install(self):
-        self.zerodb_sal = self._zerodb_sal
-        self._deploy()
+        self.zerodb_sal = self.zerodb_sal or self._zerodb_sal
+        self.deploy()
         self.data['nodePort'] = self.zerodb_sal.node_port
         self.data['ztIdentity'] = self.zerodb_sal.zt_identity
 
-    def _deploy(self):
+    def deploy(self):
         self.zerodb_sal.deploy()
 
     def start(self):
@@ -91,7 +91,7 @@ class ZDB:
         :param public: namespace public status
         """
         self.zerodb_sal.namespaces.add(name=name, size=size, password=password, public=public)
-        self._deploy()
+        self.deploy()
 
     def namespace_set(self, name, prop, value):
         """
@@ -107,4 +107,14 @@ class ZDB:
         Delete a namespace
         """
         self.zerodb_sal.namespaces.remove(name)
-        self._deploy()
+        self.deploy()
+
+    def remove_nics(self, name):
+        """
+        remove a network
+        """
+        self.zerodb_sal.nics.remove(name)
+        self.deploy()
+
+    def generate_zdb_obj(self):
+        self.zerodb_sal = self._zerodb_sal

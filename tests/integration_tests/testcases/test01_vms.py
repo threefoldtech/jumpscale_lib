@@ -43,13 +43,13 @@ class VMTestCases(BaseTest):
         self.assertTrue(created_vm)
        
         self.log(" Add zerotier network to VM1, should succeed.")
-        self.add_zerotier_network_to_vm(created_vm)
+        self.add_zerotier_network(created_vm)
         vm.install(created_vm)
         self.vms.append(created_vm.uuid)
 
         self.log("Check that vm added to zerotier network and can access it using it, should succeed.")
         ztIdentity = vm.data["ztIdentity"]
-        vm_zt_ip = self.get_machine_zerotier_ip(ztIdentity)
+        vm_zt_ip = self.get_zerotier_ip(ztIdentity)
         result = self.ssh_vm_execute_command(vm_ip=vm_zt_ip, cmd='pwd')
         self.assertEqual(result, '/root')
 
@@ -79,13 +79,13 @@ class VMTestCases(BaseTest):
         self.assertTrue(created_vm)
 
         self.log(" Add zerotier network to VM1, should succeed.")
-        self.add_zerotier_network_to_vm(created_vm)
+        self.add_zerotier_network(created_vm)
         vm.install(created_vm)
         self.vms.append(created_vm.uuid)
         
         self.log("Check that vm2 added to zerotier network and can access it using it, should succeed.")
         ztIdentity = vm.data["ztIdentity"]
-        vm_zt_ip = self.get_machine_zerotier_ip(ztIdentity)
+        vm_zt_ip = self.get_zerotier_ip(ztIdentity)
         result = self.ssh_vm_execute_command(vm_ip=vm_zt_ip, cmd=cmd)
 
         self.log("Check that vm1 and vm2 created with right {} versions.".format(os_type))
@@ -175,13 +175,13 @@ class VMTestCases(BaseTest):
         self.assertTrue(created_vm)
         
         self.log(" Add zerotier network to VM1, should succeed.")
-        self.add_zerotier_network_to_vm(created_vm)
+        self.add_zerotier_network(created_vm)
         vm.install(created_vm)
         self.vms.append(created_vm.uuid)
 
         self.log("Check that vm added to zerotier network and can access it using it, should succeed.")
         ztIdentity = vm.data["ztIdentity"]
-        vm_zt_ip = self.get_machine_zerotier_ip(ztIdentity)
+        vm_zt_ip = self.get_zerotier_ip(ztIdentity)
         result = self.ssh_vm_execute_command(vm_ip=vm_zt_ip, cmd='pwd')
         self.assertEqual(result, '/root')
 
@@ -299,7 +299,7 @@ class VMTestCases(BaseTest):
 
         self.log("Add Zerotier network to [VM1], should fail as vm is running.")
         with self.assertRaises(RuntimeError) as e:
-            self.add_zerotier_network_to_vm(created_vm1)
+            self.add_zerotier_network(created_vm1)
         self.assertIn('Zerotier can not be added when the VM is running', e.exception.args[0])
 
         self.log("Create vm [VM2] ,should succeed.")
@@ -309,13 +309,13 @@ class VMTestCases(BaseTest):
         self.assertTrue(created_vm2)
 
         self.log("Add Zerotier network to [VM2] before deploy it , should succeed.")
-        self.add_zerotier_network_to_vm(created_vm2)
+        self.add_zerotier_network(created_vm2)
         vm2.install(created_vm2)
         self.vms.append(created_vm2.uuid)
 
         self.log("Check that vm [VM2] join zerotier successfully after deploy it.")
         ztIdentity = vm2.data["ztIdentity"]
-        vm_zt_ip = self.get_machine_zerotier_ip(ztIdentity)
+        vm_zt_ip = self.get_zerotier_ip(ztIdentity)
         result = self.ssh_vm_execute_command(vm_ip=vm_zt_ip, cmd='pwd')
         self.assertEqual(result, '/root')
 
@@ -494,14 +494,14 @@ class VMTestCases(BaseTest):
         self.assertTrue(created_vm)
        
         self.log("Add zerotier network to VM1, should succeed.")
-        self.add_zerotier_network_to_vm(created_vm)
+        self.add_zerotier_network(created_vm)
 
         self.log("Deploy the vm1.")
         vm.install(created_vm)
 
         self.log("Check that vm added to zerotier network and can access it using it, should succeed.")
         ztIdentity = vm.data["ztIdentity"]
-        vm_zt_ip = self.get_machine_zerotier_ip(ztIdentity)
+        vm_zt_ip = self.get_zerotier_ip(ztIdentity)
         result1 = self.ssh_vm_execute_command(vm_ip=vm_zt_ip, cmd='pwd')
         self.assertEqual(result1, '/root')
 
@@ -542,13 +542,13 @@ class VMActionsBase(BaseTest):
         self.assertTrue(self.created_vm)
         
         self.log(" Add zerotier network to VM1, should succeed.")
-        self.add_zerotier_network_to_vm(self.created_vm)
+        self.add_zerotier_network(self.created_vm)
         self.vm.install(self.created_vm)
         self.vms.append(self.created_vm.uuid)
 
         self.log("Check that vm added to zerotier network and can access it using it, should succeed.")
         ztIdentity = self.vm.data["ztIdentity"]
-        self.vm_zt_ip = self.get_machine_zerotier_ip(ztIdentity)
+        self.vm_zt_ip = self.get_zerotier_ip(ztIdentity)
         # make sure that the machine is booted
         result = self.ssh_vm_execute_command(vm_ip=self.vm_zt_ip, cmd='pwd')
         self.assertEqual(result, '/root')
@@ -666,12 +666,13 @@ class VMActionsBase(BaseTest):
 
         self.log("Create a vm[vm1], should succeed.")
         self.create_booted_vm(os_type)
-
+        time.sleep(15)
+        
         self.log("Shutdown [vm1], should succeed.")
         self.created_vm.shutdown()
 
         self.log("Wait till vm1 shutdown")
-        for _ in range(30):
+        for _ in range(40):
             if not self.created_vm.is_running():
                 break
             else:
