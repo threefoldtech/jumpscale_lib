@@ -21,9 +21,9 @@ class Vdisktest(BaseTest):
     
     def tearDown(self):
         self.log('tear down vms')
-        vms = self.node_sal.client.kvm.list()
-        for vm in vms:
-            self.node_sal.client.kvm.destroy(vm['uuid'])
+        for uuid in self.vms:
+            self.node_sal.client.kvm.destroy(uuid)
+        self.vms.clear()
 
         self.log('tear down zdbs')
         zdbs = self.node_sal.zerodbs.list()
@@ -69,7 +69,7 @@ class Vdisktest(BaseTest):
         """
         self.log("Create zdb with default values.")
         zdb_name = self.random_string()
-        zdb = self.zdb(node=self.node_sal, name=zdb_name)
+        zdb = self.zdb(node=self.node_sal)
         zdb.data = self.set_zdb_default_data(name=zdb_name)
         zdb.install()
 
@@ -115,6 +115,7 @@ class Vdisktest(BaseTest):
         vm = self.vm(node=self.node_sal)
         vm.data = self.set_vm_default_values(os_type="ubuntu")
         created_vm = vm._vm_sal
+        self.vms.append(created_vm.uuid)
         self.assertTrue(created_vm)
         
         self.log(" Add zerotier network to VM1, should succeed.")
