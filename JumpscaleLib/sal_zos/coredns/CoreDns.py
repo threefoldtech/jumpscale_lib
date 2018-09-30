@@ -81,7 +81,7 @@ class Coredns(Service):
     def _config_as_text(self):
 
         return templates.render(
-            'coredns.conf', etcd_ip =self.etcd_endpoint, domain=self.domain, recursive_resolvers=self.recursive_resolvers).strip()
+            'coredns.conf', etcd_ip =self.etcd_endpoint).strip()
 
     def is_running(self):
         try:
