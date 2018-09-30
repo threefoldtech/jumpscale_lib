@@ -20,9 +20,12 @@ class ZDBTestCases(BaseTest):
     
     def tearDown(self):
         self.log('tear down zdbs')
-        for cont_id in self.zdb_cont_ids:
-            self.node_sal.client.container.terminate(cont_id)
-        self.zdb_cont_ids.clear()
+        for zdb in self.zdbs:
+            namespaces = zdb.namespace_list()
+            for namespace in namespaces:
+                zdb.namespace_delete(namespace.name)
+            self.node_sal.client.container.terminate(zdb.container.id)
+        self.zdbs.clear()
 
     def test001_create_zdb(self):
         """ SAL-027 Install zdb.
@@ -36,7 +39,7 @@ class ZDBTestCases(BaseTest):
         zdb = self.zdb(node=self.node_sal)
         zdb.data = self.set_zdb_default_data(name=zdb_name)
         zdb.install()
-        self.zdb_cont_ids.append(zdb.zerodb_sal.container.id)
+        self.zdb_cont_ids.append(zdb.zerodb_sal)
 
         self.log("Check that ZDB container created successfully with right data.")
         containers = self.node_sal.client.container.list()
@@ -62,7 +65,7 @@ class ZDBTestCases(BaseTest):
         zdb = self.zdb(node=self.node_sal)
         zdb.data = self.set_zdb_default_data(name=zdb_name)
         zdb.install()
-        self.zdb_cont_ids.append(zdb.zerodb_sal.container.id)
+        self.zdb_cont_ids.append(zdb.zerodb_sal)
 
         self.log("Create ZDB [zdb2] with same name and same port ,should fail.")
         zdb2 = self.zdb(node=self.node_sal, data=zdb.data)
@@ -96,7 +99,7 @@ class ZDBTestCases(BaseTest):
         zdb = self.zdb(node=self.node_sal)
         zdb.data = self.set_zdb_default_data(name=zdb_name)
         zdb.install()
-        self.zdb_cont_ids.append(zdb.zerodb_sal.container.id)
+        self.zdb_cont_ids.append(zdb.zerodb_sal)
     
         self.log("Check that zdb is running.")
         self.assertTrue(zdb.zerodb_sal.is_running()[0])
@@ -132,7 +135,7 @@ class ZDBTestCases(BaseTest):
         zdb = self.zdb(node=self.node_sal)
         zdb.data = self.set_zdb_default_data(name=zdb_name)
         zdb.install()
-        self.zdb_cont_ids.append(zdb.zerodb_sal.container.id)
+        self.zdb_cont_ids.append(zdb.zerodb_sal)
         zdb_client = ZDBCLIENT(self.node_ip, zdb.zerodb_sal.node_port)
 
         self.log("Add namespace [ns1] to zdb, should succeed.")
@@ -170,7 +173,7 @@ class ZDBTestCases(BaseTest):
         zdb = self.zdb(node=self.node_sal)
         zdb.data = self.set_zdb_default_data(name=zdb_name)
         zdb.install()
-        self.zdb_cont_ids.append(zdb.zerodb_sal.container.id)
+        self.zdb_cont_ids.append(zdb.zerodb_sal)
 
         self.log("Add namespace [ns1] to zdb, should succeed.")
         ns_name = self.random_string()
@@ -210,18 +213,17 @@ class ZDBActions(BaseTest):
         self.zdb_data = self.set_zdb_default_data()
         self.zdb = self.zdb(node=self.node_sal, data=self.zdb_data)
         self.zdb.install()
-        self.zdb_cont_ids.append(self.zdb.zerodb_sal.container.id)
+        self.zdb_cont_ids.append(self.zdb.zerodb_sal)
         self.zdb_client = ZDBCLIENT(self.node_ip, self.zdb.zerodb_sal.node_port) 
            
     def tearDown(self):
         self.log('tear down zdbs')
-        namespaces = self.zdb.namespace_list()
-        for namespace in namespaces:
-            self.zdb.namespace_delete(namespace.name)
-
-        for cont_id in self.zdb_cont_ids:
-            self.node_sal.client.container.terminate(cont_id)
-        self.zdb_cont_ids.clear()
+        for zdb in self.zdbs:
+            namespaces = zdb.namespace_list()
+            for namespace in namespaces:
+                zdb.namespace_delete(namespace.name)
+            self.node_sal.client.container.terminate(zdb.container.id)
+        self.zdbs.clear()
 
     @parameterized.expand(["upper", "lower"])
     def test001_ping_zdb(self, case):
