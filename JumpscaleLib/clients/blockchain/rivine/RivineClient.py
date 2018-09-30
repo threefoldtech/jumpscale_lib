@@ -11,7 +11,7 @@ from JumpscaleLib.clients.blockchain.rivine.RivineMultiSigWallet import RivineMu
 TEMPLATE = """
 bc_addresses = []
 seed_ = ""
-nr_keys_per_seed = 50
+nr_keys_per_seed = 1
 minerfee = 100000000
 password_ = ""
 multisig = false

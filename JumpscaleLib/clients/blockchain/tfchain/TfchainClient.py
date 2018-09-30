@@ -13,7 +13,7 @@ seed_ = ""
 multisig = false
 cosigners = []
 required_sig = 0
-nr_keys_per_seed = 50
+nr_keys_per_seed = 1
 """
 
 JSConfigBase = j.tools.configmanager.JSBaseClassConfig

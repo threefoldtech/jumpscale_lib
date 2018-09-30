@@ -28,7 +28,8 @@ from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
 from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import UnlockCondtionFactory,\
         MULTISIG_CONDITION_TYPE, MultiSignatureFulfillment, SingleSignatureFulfillment
 
-from .const import MINER_PAYOUT_MATURITY_WINDOW, WALLET_ADDRESS_TYPE, ADDRESS_TYPE_SIZE, HASTINGS_TFT_VALUE, UNLOCKHASH_TYPE
+from .const import MINER_PAYOUT_MATURITY_WINDOW, WALLET_ADDRESS_TYPE, ADDRESS_TYPE_SIZE, HASTINGS_TFT_VALUE, UNLOCKHASH_TYPE,\
+        NR_OF_EXTRA_ADDRESSES_TO_CHECK
 
 from .errors import RESTAPIError, BackendError,\
 InsufficientWalletFundsError, NonExistingOutputError,\
@@ -91,7 +92,7 @@ class RivineWallet:
         return sum(int(value.get('value', 0)) for value in self._unspent_coins_outputs.values()) / HASTINGS_TFT_VALUE
 
 
-    def generate_address(self):
+    def generate_address(self, persist=True):
         """
         Generates a new wallet address
         """
@@ -99,17 +100,26 @@ class RivineWallet:
         address = str(key.unlockhash)
         self._keys[address] = key
         self._nr_keys_per_seed += 1
+        if persist is True:
+            self._save_nr_of_keys()
+        return address
+
+
+    def _save_nr_of_keys(self):
+        """
+        Saves the current number of keys in the client configurations
+        """
         if self._client is not None:
             # we need to update the config with the new nr_of_keys_per_seed for this wallet
             data = dict(self._client.config.data)
             data['nr_keys_per_seed'] = self._nr_keys_per_seed
-            cl = j.clients.rivine.get(instance=self._client.instance,
-                                       data=data,
-                                       create=True,
-                                       interactive=False)
+            client_factory = getattr(j.clients, self._client.__jslocation__.split('.')[-1])
+            cl = client_factory.get(instance=self._client.instance,
+                                    data=data,
+                                    create=True,
+                                    interactive=False)
             cl.config.save()
 
-        return address
 
 
     def _generate_spendable_key(self, index):
@@ -156,12 +166,26 @@ class RivineWallet:
         current_chain_height = self._get_current_chain_height()
         unconfirmed_txs = self._get_unconfirmed_transactions(format_inputs=True)
         logger.info('Current chain height is: {}'.format(current_chain_height))
-        for address in self.addresses:
+        # when checking the balance we will check for 10 more addresses
+        current_nr_of_addresses = len(self.addresses)
+        unused_addresses = []
+        nr_of_addresses_to_check = current_nr_of_addresses + NR_OF_EXTRA_ADDRESSES_TO_CHECK
+        for address_idx in range(nr_of_addresses_to_check):
+            new_address = False
+            if address_idx < current_nr_of_addresses:
+                address = self.addresses[address_idx]
+            else:
+                address = self.generate_address(persist=False)
+                new_address = True
             try:
                 address_info = self._check_address(address=address, log_errors=False)
             except RESTAPIError:
-                pass
+                # add to unused addresses list
+                unused_addresses.append(address)
             else:
+                if new_address is True:
+                    self._save_nr_of_keys()
+
                 if address_info.get('hashtype', None) != UNLOCKHASH_TYPE:
                     raise BackendError('Address is not recognized as an unblock hash')
                 self._addresses_info[address] = address_info
@@ -172,6 +196,9 @@ class RivineWallet:
                                                   address=address,
                                                   transactions=transactions,
                                                   unconfirmed_txs=unconfirmed_txs)
+        # clean up unused addresses
+        for address in unused_addresses:
+            del self._keys[address]
         # remove spent inputs after collection all the inputs
         for address, address_info in self._addresses_info.items():
             self._remove_spent_inputs(transactions = address_info.get('transactions', {}))
