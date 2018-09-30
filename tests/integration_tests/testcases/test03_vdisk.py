@@ -79,7 +79,7 @@ class Vdisktest(BaseTest):
         zdb.namespace_create(name=ns_name, size=ns_size)
 
         self.log("Create disk using exist namespace [ns] with different size, should fail.")
-        disk = Vdisk(node=self.node_sal, zdb=zdb._zerodb_sal)
+        disk = Vdisk(node=self.node_sal, zdb=zdb.zerodb_sal)
         disk.data = self.set_vdisk_default_data(name=ns_name)
 
         with self.assertRaises(ValueError) as e:

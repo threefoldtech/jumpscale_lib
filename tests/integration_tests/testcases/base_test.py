@@ -26,6 +26,8 @@ class BaseTest(Utils):
         self = cls()
         cls.node_sal = j.clients.zos.get(NODE_CLIENT, data={'host': config['main']['nodeip']})
         cls.node_info, cls.disks_info = self.get_zos_info()
+        cls.disks_mount_paths = cls.node_sal.zerodbs.partition_and_mount_disks()
+
         cls.vm_flist = "https://hub.grid.tf/tf-bootable/ubuntu:16.04.flist"
         cls.vm = VM
         cls.gw = GW
@@ -210,11 +212,10 @@ class BaseTest(Utils):
         return gw_container
 
     def get_disk_mount_path(self, disk_type):
-        disks_mount_paths = self.node_sal.zerodbs.partition_and_mount_disks()
         disk_RO = 0 if disk_type == "ssd" else 1
         disks_info = self.node_sal.client.disk.list()
         disk_name = [disk["name"] for disk in disks_info if int(disk["ro"])==disk_RO][0]
-        path = [disk["mountpoint"] for disk in disks_mount_paths if disk["disk"] == disk_name]
+        path = [disk["mountpoint"] for disk in self.disks_mount_paths if disk["disk"] == disk_name]
         return path[0]
 
     def get_disks_type(self):
@@ -231,13 +232,13 @@ class BaseTest(Utils):
         disks_info = self.get_disks_type()
         if (disks_info['hdd'] != 0) and (disks_info['ssd'] != 0):
             disk_type = random.choice(['hdd', 'ssd'])
-            disk_size = random.randint(1, disks_info[disk_type])
+            disk_size = random.randint(1, self.node_info[disk_type])
         elif disks_info['hdd'] != 0:
             disk_type = 'hdd'
-            disk_size = random.randint(1, disks_info[disk_type])
+            disk_size = random.randint(1, self.node_info[disk_type])
         else:
             disk_type = 'ssd'
-            disk_size = random.randint(1, disks_info[disk_type])
+            disk_size = random.randint(1, self.node_info[disk_type])
 
         return disk_type, disk_size
 
