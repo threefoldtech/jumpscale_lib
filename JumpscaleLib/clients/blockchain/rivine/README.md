@@ -44,7 +44,7 @@ From a seed you can create new wallet
         wallet = RivineWallet(seed=seed,
                                     bc_networks=['https://explorer.testnet.threefoldtoken.com/'],
                                     bc_network_password='test123',
-                                    nr_keys_per_seed=5,
+                                    nr_keys_per_seed=1,
                                     minerfee=100000000)
         # where seed is the seed you have or generated
         # bc_networks: is list of the url to the blockchain network explorer nodes to try to connect to.
@@ -58,7 +58,7 @@ Or alternatively you can configure the wallet instance using the following code:
     client_data = {'bc_addresses': ['https://explorer.testnet.threefoldtoken.com/'],
 'password_': 'test123',
  'minerfee': 10,
- 'nr_keys_per_seed': 5,
+ 'nr_keys_per_seed': 1,
  'seed_': seed}
 
     rivine_client = j.clients.rivine.get('mytestwallet', data=client_data)
@@ -132,7 +132,7 @@ Beside the main wallet we created before in this document, we will create 4 more
 client_data = {'bc_addresses': ['https://explorer.testnet.threefoldtoken.com/'],
                'password_': 'test123',
                'minerfee': 100000000,
-               'nr_keys_per_seed': 15
+               'nr_keys_per_seed': 1
                }
 bob_seed = 'easily comic language galaxy chalk near member project mind noodle height rice box famous before cancel traffic festival laugh exist trend ensure claw fish'
 alice_seed = 'green industry hockey scrap below film stage fashion volcano quantum pilot sea fan reunion critic rack cover toy never warrior typical episode seed divide'

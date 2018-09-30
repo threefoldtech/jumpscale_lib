@@ -13,3 +13,4 @@ ATOMICSWAP_SECRET_SIZE = 32
 # this is the value if the locktime is less than it, it means that the locktime should be interpreted as the chain height lock instead of the timestamp
 TIMELOCK_CONDITION_HEIGHT_LIMIT = 5000000
 UNLOCKHASH_TYPE = 'unlockhash'
+NR_OF_EXTRA_ADDRESSES_TO_CHECK = 10
