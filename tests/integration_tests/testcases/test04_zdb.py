@@ -200,6 +200,7 @@ class ZDBTestCases(BaseTest):
         self.assertIn('size error', e.exception.args[0])
     
     @parameterized.expand(["before", "after"])
+    @unittest.skip('need issue')
     def test006_add_remove_zerotier_nics(self, deploy):
         """ SAL-030 add and remove zerotier network to zdb.
 
