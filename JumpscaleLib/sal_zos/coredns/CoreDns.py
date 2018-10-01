@@ -1,4 +1,5 @@
 import time
+import json
 from jumpscale import j
 from .. import templates
 from ..abstracts import Nics, Service
@@ -11,7 +12,7 @@ class Coredns(Service):
     CoreDNS is a DNS server. It is written in Go
     """
 
-    def __init__(self, name, node, etcd_endpoint, domain, recursive_resolvers,zt_identity=None, nics=None):
+    def __init__(self, name, node, etcd_endpoint, recursive_resolvers, zt_identity=None, nics=None):
         super().__init__(name, node, 'coredns', [DEFAULT_PORT])
         self.name = name
         self.id = 'coredns.{}'.format(self.name)
@@ -19,7 +20,6 @@ class Coredns(Service):
         self._container = None
         self.flist = 'https://hub.grid.tf/tf-official-apps/coredns-1.2.2.flist'
         self.etcd_endpoint = etcd_endpoint
-        self.domain = domain
         self.node_port = None
         self.recursive_resolvers = "8.8.8.8:53 1.1.1.1:53"
 
@@ -144,6 +144,3 @@ class Coredns(Service):
     def destroy(self):
         self.stop()
         self.container.stop()
-
-    
-    
