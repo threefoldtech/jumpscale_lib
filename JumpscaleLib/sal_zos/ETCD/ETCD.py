@@ -173,3 +173,7 @@ class ETCD(Service):
         if not result:
             raise ValueError('Key {} does not exist in etcd {}'.format(key, self.name))
         return result.decode('utf-8')
+
+    def delete(self, key):
+        client = j.clients.etcd.get(self.name, data={'host': self.container.mgmt_addr, 'port': CLIENT_PORT})
+        return client.api.delete(key)
