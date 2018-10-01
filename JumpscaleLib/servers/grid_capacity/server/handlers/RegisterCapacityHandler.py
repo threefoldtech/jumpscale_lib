@@ -51,4 +51,7 @@ def RegisterCapacityHandler():
             capacity.location = farmer.location
         capacity.save()
 
-    return capacity.to_json(use_db_field=False), 201, {'Content-type': 'application/json'}
+    response = JSON.loads(capacity.to_json(use_db_field=False))
+    response['updated'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+
+    return JSON.dumps(response), 201, {'Content-type': 'application/json'}

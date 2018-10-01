@@ -35,6 +35,12 @@
 		"total_resources": {
 			"$ref": "ResourceUnits_schema.json"
 		},
+		"updated": {
+			"type": [
+				"string",
+				"null"
+			]
+		},
 		"uptime": {
 			"type": [
 				"integer",
