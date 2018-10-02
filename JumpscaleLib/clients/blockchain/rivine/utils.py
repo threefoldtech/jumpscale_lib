@@ -355,7 +355,9 @@ def collect_transaction_outputs(current_height, address, transactions, unconfirm
     """
     result = {
         'locked': {},
-        'unlocked': {}
+        'unlocked': {},
+        'multisig_unlocked': {},
+        'multisig_locked': {}
     }
     if unconfirmed_txs is None:
         unconfirmed_txs = []
@@ -375,6 +377,22 @@ def collect_transaction_outputs(current_height, address, transactions, unconfirm
                         result['locked'][txn_info['coinoutputids'][index]] = utxo
                     else:
                         result['unlocked'][txn_info['coinoutputids'][index]] = utxo
+        if not address.startswith('03'):
+            # Next part collects multisig outputs, lets ignore that if we don't
+            # have a multisig address
+            continue
+        unlockhashes = txn_info.get('coinoutputunlockhashes', [])
+        if unlockhashes:
+            for idx, uh in enumerate(unlockhashes):
+                if uh == address:
+                    output = txn_info['rawtransaction']['data']['coinoutputs'][idx]
+                    condition_ulh = get_unlockhash_from_output(output=output,
+                                                                address=address,
+                                                                current_height=current_height)
+                    if condition_ulh['unlocked']:
+                        result['multisig_unlocked'][txn_info['coinoutputids'][idx]] = output
+                    if condition_ulh['locked']:
+                        result['multisig_locked'][txn_info['coinoutputids'][idx]] = output
     return result
 
 
