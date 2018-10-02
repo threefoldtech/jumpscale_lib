@@ -448,9 +448,8 @@ Type=simple
             self.configs.add(name, path, content)
         for idx, parameter in enumerate(info['params']['cmdline'].split(' ')):
             name = 'kernelarg{}'.format(idx)
-            splits = parameter.split('=')
-            value = splits[1] if len(splits) > 1 else ''
-            self.kernel_args.add(name, splits[0], value)
+            key, _, value = parameter.partition('=')
+            self.kernel_args.add(name, key, value)
 
     def to_dict(self):
         data = {
