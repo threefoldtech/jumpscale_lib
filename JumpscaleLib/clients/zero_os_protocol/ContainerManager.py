@@ -217,6 +217,7 @@ class ContainerManager():
                        Example:
                         `port={8080: 80, 7000:7000}`
                        Source Format: NUMBER, IP:NUMBER, IP/MAST:NUMBER, or DEV:NUMBER
+                       Check https://github.com/threefoldtech/0-core/blob/development/docs/networking/portforwards.md for full syntax
         :param hostname: Specific hostname you want to give to the container.
                          if None it will automatically be set to core-x,
                          x beeing the ID of the container

@@ -175,7 +175,8 @@ class KvmManager():
                        Example:
                         `port={8080: 80, 7000:7000}`
                        Source Format:  NUMBER, IP:NUMBER, IP/MAST:NUMBER, or DEV:NUMBER
-                     Only supported if default network is used
+                    Only supported if default network is used
+                    Check https://github.com/threefoldtech/0-core/blob/development/docs/networking/portforwards.md for full syntax
         :param nics: Configure the attached nics to the container
                      each nic object is a dict of the format
                      {
