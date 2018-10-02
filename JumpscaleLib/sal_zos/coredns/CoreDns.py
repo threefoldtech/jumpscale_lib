@@ -44,7 +44,7 @@ class Coredns(Service):
         """
         self.node_port = DEFAULT_PORT
         ports = {
-            str(DEFAULT_PORT): DEFAULT_PORT,
+            str("{}|udp".format(DEFAULT_PORT)): DEFAULT_PORT,
         }
         if not self.zt_identity:
             self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
