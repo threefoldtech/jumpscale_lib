@@ -223,6 +223,37 @@ class Configs(Collection):
         self._items.append(config)
         return config
 
+class KernelArg:
+    def __init__(self, name, key, value=''):
+        self.name = name
+        self.key = key
+        self.value = value
+
+    def parameter(self):
+        return '='.join([self.key, self.value]) if self.value else self.key
+
+    def __str__(self):
+        return "Kernel Argument <{}:{}>".format(self.name, self.parameter())
+
+    __repr__ = __str__
+
+
+class KernelArgs(Collection):
+    def add(self, name, key, value=''):
+        """
+        Add kernel cmdline arguments
+
+        :param name: Name for the kernel argument
+        :type name: str
+        :param key: left side of the kernel argument 
+        :type key: str
+        :param value: right side of the kernel argument
+        :type value: str
+        """
+        super().add(name)
+        kernel_arg = KernelArg(name, key, value)
+        self._items.append(kernel_arg)
+        return kernel_arg
 
 class VMNics(Nics):
     def add(self, name, type_, networkid=None, hwaddr=None):
@@ -271,6 +302,7 @@ class ZOS_VM:
         self.ports = Ports(self)
         self.mounts = Mounts(self)
         self.configs = Configs(self)
+        self.kernel_args = KernelArgs(self)
         self.zt_identity = None
         self.tags = []
 
@@ -380,8 +412,9 @@ Type=simple
             if not nics:
                 nics.append({'type': 'default'})
             j.sal_zos.utils.authorize_zerotiers(publiczt, self.nics)
+        cmdline = ' '.join([arg.parameter() for arg in self.kernel_args])
         self.node.client.kvm.create(self.name, media, self.flist, self.vcpus,
-                                    self.memory, nics, ports, mounts, self.tags, config)
+                                    self.memory, nics, ports, mounts, self.tags, config, cmdline=cmdline)
 
     def load_from_reality(self):
         info = self.info
@@ -393,6 +426,7 @@ Type=simple
         self.ports = Ports(self)
         self.mounts = Mounts(self)
         self.configs = Configs(self)
+        self.kernel_args = KernelArgs(self)
         self.tags = info['params']['tags']
         self._vcpus = info['params']['cpu']
         self._memory = info['params']['memory']
@@ -412,6 +446,11 @@ Type=simple
         for idx, (path, content) in enumerate(info['params']['config'].items()):
             name = 'config{}'.format(idx)
             self.configs.add(name, path, content)
+        for idx, parameter in enumerate(info['params']['cmdline'].split(' ')):
+            name = 'kernelarg{}'.format(idx)
+            splits = parameter.split('=')
+            value = splits[1] if len(splits) > 1 else ''
+            self.kernel_args.add(name, splits[0], value)
 
     def to_dict(self):
         data = {
@@ -425,7 +464,8 @@ Type=simple
             'disks': [],
             'ports': [],
             'configs': [],
-            'mounts': []
+            'mounts': [],
+            'kernelArgs': [],
         }
         for nic in self.nics:
             data['nics'].append(nic.to_dict())
@@ -449,9 +489,15 @@ Type=simple
             })
         for port in self.ports:
             data['ports'].append({
-                'name': port['name'],
-                'source': port['source'],
-                'target': port['target'],
+                'name': port.name,
+                'source': port.source,
+                'target': port.target,
+            })
+        for arg in self.kernel_args:
+            data['kernelArgs'].append({
+                'name': arg.name,
+                'key': arg.key,
+                'value': arg.value,
             })
         return data
 
@@ -470,6 +516,7 @@ Type=simple
             self.disks = Disks(self)
             self.nics = VMNics(self)
             self.configs = Configs(self)
+            self.kernel_args = KernelArgs(self)
             for disk in data['disks']:
                 self.disks.add(
                     disk['name'], disk['url'], disk.get('mountPoint'), disk.get('filesystem'), disk.get('label'))
@@ -483,6 +530,8 @@ Type=simple
                 self.ports.add(port['name'], port['source'], port['target'])
             for mount in data['mounts']:
                 self.mounts.add(mount['name'], mount['sourcePath'], mount['targetPath'])
+            for arg in data['kernelArgs']:
+                self.kernel_args.add(arg['name'], arg['key'], arg.get('value', ''))
         finally:
             self.loading = False
 
@@ -591,7 +640,7 @@ Type=simple
         return str(self)
 
 
-class ZeroOSVM(ZOS_VM):
+class IpxeVM(ZOS_VM):
     def __init__(self, node, name, flist=None, vcpus=2, memory=2048, ipxe_url=IPXEURL):
         super().__init__(node, name, flist, vcpus, memory)
         self.ipxe_url = ipxe_url
