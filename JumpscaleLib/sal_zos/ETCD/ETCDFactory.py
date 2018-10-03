@@ -2,7 +2,7 @@ from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
-from .ETCD import ETCD, PEER_PORT, CLIENT_PORT
+from .ETCD import ETCD
 
 class ETCDFactory(JSBASE):
 

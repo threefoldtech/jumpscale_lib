@@ -65,11 +65,10 @@ class ETCD(Service):
 
     def __init__(self, node, name, data_dir='/mnt/data', zt_identity=None, nics=None, token=None, cluster=None):
         super().__init__(name, node, 'etcd', [CLIENT_PORT, PEER_PORT])
-        self.flist = 'https://hub.grid.tf/bola_nasr_1/etcd-3.3.4.flist'
+        self.flist = 'https://hub.grid.tf/tf-official-apps/etcd-3.3.4.flist'
         self.data_dir = data_dir
         self.zt_identity = zt_identity
         self._config_path = '/bin/etcd_{}.config'.format(self.name)
-        self._mount_point = '/mnt/etcds/{}'.format(self.name)
         self.token = token
         self.cluster = cluster
         self.nics = Nics(self)
