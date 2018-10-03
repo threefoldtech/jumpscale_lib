@@ -149,9 +149,9 @@ class Vdisktest(BaseTest):
             self.log("Attach disk [D1] to vm [VM1].")
             vm.add_disk(disk.disk)
             vm.update_disks()
-        
+
         self.vms.append(vm.info()['uuid'])
-        self.zdbs.append(zdb.zerodb_sal)
+        self.zdbs.append(zdb)
 
         self.log("Check that disk [D1] is attached to vm [VM1], should succeed.")
         disk_url = disk.get_url()
