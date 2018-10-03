@@ -8,7 +8,7 @@ class GW:
     def __init__(self, node, data=None):
         self.data = data
         self.node_sal = node
-        
+        self.gw_sal = None
 
     def validate(self):
         if not self.data['hostname']:
@@ -21,40 +21,15 @@ class GW:
         gw.name = self.data["name"]
         return gw
 
-    def install(self, gateway_sal=None):
+    def install(self):
         print(colored('Install gateway {}'.format(self.data["name"]), 'white'))
-        gateway_sal = gateway_sal or self._gateway_sal
+        gateway_sal = self.gw_sal or self._gateway_sal
         gateway_sal.deploy()
         self.data['ztIdentity'] = gateway_sal.zt_identity
 
     def destroy(self, gateway_name=None):
         gateway_name = gateway_name or self.data["name"] 
         self.node_sal.primitives.drop_gateway(gateway_name)
-
-    def add_portforward(self, forward):
-        print(colored('Add portforward {}'.format(forward['name']), 'white'))
-        for network in self.data['networks']:
-            if network['name'] == forward['srcnetwork']:
-                break
-        else:
-            raise LookupError('Network with name {} doesn\'t exist'.format(forward['srcnetwork']))
-
-        for fw in self.data['portforwards']:
-            name, combination = self._compare_objects(fw, forward, 'srcnetwork', 'srcport')
-            if name:
-                raise ValueError('A forward with the same name exists')
-            if combination:
-                if set(fw['protocols']).intersection(set(forward['protocols'])):
-                    raise ValueError('Forward conflicts with existing forward')
-        self.data['portforwards'].append(forward)
-
-        try:
-            self._gateway_sal.configure_fw()
-        except:
-            print(colored('Failed to add portforward, restoring gateway to previous state','red'))
-            self.data['portforwards'].remove(forward)
-            self._gateway_sal.configure_fw()
-            raise
 
     def _compare_objects(self, obj1, obj2, *keys):
         """
@@ -70,24 +45,6 @@ class GW:
             if obj1[key] != obj2[key]:
                 return name, False
         return name, True
-
-    def remove_portforward(self, name):
-        print(colored('Remove portforward {}'.format(name), 'white'))
-
-        for fw in self.data['portforwards']:
-            if fw['name'] == name:
-                self.data['portforwards'].remove(fw)
-                break
-        else:
-            return
-
-        try:
-            self._gateway_sal.configure_fw()
-        except:
-            print(colored('Failed to remove portforward, restoring gateway to previous state', 'red'))
-            self.data['portforwards'].append(fw)
-            self._gateway_sal.configure_fw()
-            raise
 
     def add_http_proxy(self, proxy):
         print(colored('Add http proxy {}'.format(proxy['name']),'white'))
@@ -172,41 +129,6 @@ class GW:
             self._gateway_sal.configure_cloudinit()
             raise
 
-    def add_network(self, network):
-        print('Add network {}'.format(network['name']), 'white')
-
-        for existing_network in self.data['networks']:
-            name, combination = self._compare_objects(existing_network, network, 'type', 'id')
-            if name:
-                raise ValueError('Network with name {} already exists'.format(name))
-            if combination:
-                raise ValueError('network with same type/id combination already exists')
-        self.data['networks'].append(network)
-
-        try:
-            self._gateway_sal.deploy()
-        except:
-            print(colored('Failed to add network, restoring gateway to previous state','red'))
-            self.data['networks'].remove(network)
-            self._gateway_sal.deploy()
-            raise
-
-    def remove_network(self, name):
-        print(colored('Remove network {}'.format(name), 'white'))
-
-        for network in self.data['networks']:
-            if network['name'] == name:
-                self.data['networks'].remove(network)
-                break
-        else:
-            return
-        try:
-            self._gateway_sal.deploy()
-        except:
-            print(colored('Failed to remove network, restoring gateway to previous state','red'))
-            self.data['networks'].append(network)
-            self._gateway_sal.deploy()
-            raise
             
     def info(self):
         data = self._gateway_sal.to_dict(live=True)
@@ -228,3 +150,24 @@ class GW:
     def start(self):
         print(colored('Start gateway {}'.format(self.data["name"]), 'white'))
         self.install()
+
+    def generate_gw_sal(self):
+        self.gw_sal = self._gateway_sal
+
+    def add_network(self, name, type_, networkid=None):
+        return self.gw_sal.networks.add(name=name, type_=type_, networkid=networkid)
+
+    def add_zerotier(self, network, name=None):
+        return self.gw_sal.networks.add_zerotier(network=network, name=None)
+
+    def remove_network(self, item):
+        self.gw_sal.networks.remove(item=item)
+
+    def list_network(self):
+        return self.gw_sal.networks.list()    
+
+    def add_port_forward(self, name, source, target, protocols=None):
+        self.gw_sal.portforwards.add(name=name, source=source, target=target, protocols=protocols)
+
+    def remove_port_forward(self, item):
+        self.gw_sal.portforwards.remove(item=item)

@@ -17,18 +17,15 @@ class GWTestCases(BaseTest):
         self.gateway = self.gw(node=self.node_sal)
         self.gateway.data = self.set_gw_default_values()
         self.vm_data = self.set_vm_default_values(os_type="ubuntu")
-        self.vm_obj= self.vm(node=self.node_sal, data=self.vm_data)
+        self.vm = self.vm(node=self.node_sal, data=self.vm_data)
 
     def tearDown(self):
         self.log("destroy created gateway")
         self.gateway.destroy()
 
         self.log("destroy created vms.")
-        vms = self.node_sal.client.kvm.list()
         for uuid in self.vms:
-            for vm in vms:
-                if uuid == vm['uuid']:
-                    self.node_sal.client.kvm.destroy(uuid)
+            self.node_sal.client.kvm.destroy(uuid)
         self.vms.clear()
 
 
@@ -57,21 +54,21 @@ class GWTestCases(BaseTest):
         #. Deploy [GW1], should succeed.
         """
         self.log("Create gateways[GW1], should succeed.")
-        created_gateway = self.gateway._gateway_sal
+        self.gateway.generate_gw_sal()
 
         self.log("Attach default network to [GW1] and don't set network public to True .")
-        network = created_gateway.networks.add(name="public", type_="default")
+        network = self.gateway.add_network(name="public", type_="default")
 
         self.log("Deploy [GW1], should fail ,need at least one public network.")
         with self.assertRaises(RuntimeError) as e:
-            self.gateway.install(created_gateway)
+            self.gateway.install()
         self.assertIn("Need exactly one public network", e.exception.args[0])
 
         self.log("Set network public to True.")
         network.public = True
 
         self.log("Deploy [GW1], should succeed.")
-        self.gateway.install(created_gateway)
+        self.gateway.install()
 
     def test003_add_network_name_exist(self):
         """SAL-GW-013
@@ -83,23 +80,23 @@ class GWTestCases(BaseTest):
         #. Add network [N2] with same type and same name as [N1] to [GW1],should fail .
         #. Add network [N3] with different type and same name as [N1] to [GW1],should fail .
         """
-        created_gateway = self.gateway._gateway_sal
+        self.gateway.generate_gw_sal()
 
         self.log(" Add network [N1] to [GW1], should succeed.")
         network_name = 'n'+self.random_string()
-        network = created_gateway.networks.add(name=network_name, type_="default")
+        network = self.gateway.add_network(name=network_name, type_="default")
         network.public = True
-        self.gateway.install(created_gateway)
+        self.gateway.install()
 
         self.log("Add network [N2] with same type and same name as [N1] to [GW1],should fail .")
         
         with self.assertRaises(ValueError) as e:
-            created_gateway.networks.add(name=network_name, type_="default")
+            self.gateway.add_network(name=network_name, type_="default")
         self.assertIn("Element with name %s already exists"%network_name, e.exception.args[0])
 
         self.log("Add network [N2] with different type and same name as [N1] to [GW1],should fail .")
         with self.assertRaises(ValueError) as e:
-            created_gateway.networks.add(name=network_name, type_="zerotier", networkid=self.zt_network.id)
+            self.gateway.add_network(name=network_name, type_="zerotier", networkid=self.zt_network.id)
         self.assertIn("Element with name %s already exists"%network_name, e.exception.args[0])
 
     def test004_remove_network(self):
@@ -114,22 +111,22 @@ class GWTestCases(BaseTest):
         #. Check that network has been removed.
         """
 
-        created_gateway = self.gateway._gateway_sal
+        self.gateway.generate_gw_sal()
         self.log("Add network [N1] to [GW1], should succeed.")
         network_name = 'n'+self.random_string()
-        created_network = created_gateway.networks.add(name=network_name, type_="default")        
+        created_network = self.gateway.add_network(name=network_name, type_="default")        
         created_network.public = True
     
         self.log("Deploy [GW1], should succeed.")
-        self.gateway.install(created_gateway)
+        self.gateway.install()
         
         self.log("remove N1, should succeed.")
-        created_gateway.networks.remove(created_network)
+        self.gateway.remove_network(created_network)
 
         self.log("Check that network has been removed.")
-        self.assertFalse(created_gateway.networks.list())
+        self.assertFalse(self.gateway.list_network())
         with self.assertRaises(RuntimeError) as e:
-            self.gateway.install(created_gateway)
+            self.gateway.install()
         self.assertIn("Need exactly one public network", e.exception.args[0])
 
     def test005_deploy_getways_with_public_network(self):
@@ -144,22 +141,22 @@ class GWTestCases(BaseTest):
         """
         self.log("Create gateways[GW1],[GW2], should succeed.")
         gw2_data = self.set_gw_default_values()
-        gateway2 = self.gw(node=self.node_sal, data=gw2_data)
-        gw1 = self.gateway._gateway_sal
-        gw2 = gateway2._gateway_sal
+        self.gateway2 = self.gw(node=self.node_sal, data=gw2_data)
+        self.gateway.generate_gw_sal()
+        self.gateway2.generate_gw_sal()
 
         self.log("Attach default network to [GW1] and [GW2] ,then set network public to True.")
-        network1 = gw1.networks.add(name="public", type_="default")
+        network1 = self.gateway.add_network(name="public", type_="default")
         network1.public = True
-        network2 = gw2.networks.add(name="public", type_="default")
+        network2 = self.gateway2.add_network(name="public", type_="default")
         network2.public = True
 
         self.log(" Deploy [GW1], should succeed")
-        self.gateway.install(gw1)
+        self.gateway.install()
 
-        self.log("Deploy [GW2], should fail as we can create only one gateway with type defaulgt public network.")
+        self.log("Deploy [GW2], should fail as we can create only one gateway with type default public network.")
         with self.assertRaises(RuntimeError) as e:
-            gateway2.install(gw2)
+            self.gateway2.install()
         self.assertIn("port already in use", e.exception.args[0])
 
     @unittest.skip("https://github.com/threefoldtech/jumpscale_lib/issues/132")
@@ -173,25 +170,25 @@ class GWTestCases(BaseTest):
         #. Adding a new vm t to gateway private network , should succeed.
         #. Check that the vm has been join the zerotier network.
         """
-        created_gateway = self.gateway._gateway_sal
+        self.gateway.generate_gw_sal()
         self.log("Create gateway with public default network, should succeed.")
         network_name = self.random_string()
-        created_network = created_gateway.networks.add(name=network_name, type_="default")        
+        created_network = self.gateway.add_networks(name=network_name, type_="default")        
         created_network.public = True
+
         self.log("Add zerotier network as private network, should succeed.")
-        
-        zt_network = created_gateway.networks.add_zerotier(self.zt_network)
+        zt_network = self.gateway.add_zerotier(self.zt_network)
 
         self.log("Adding a new vm t to gateway private network , should succeed.")
-        self.vm_obj.install()
-        self.vms.append(self.vm_obj._vm_sal.uuid)
-        zt_network.hosts.add(self.vm_obj._vm_sal)
-        self.gateway.deploy()
-        self.vm_obj.install()
+        self.vm.install()
+        self.vms.append(self.vm.info()['uuid'])
+        zt_network.hosts.add(self.vm.vm_sal)
+        self.gateway.install()
+        self.vm.install()
 
         self.log("Check that the vm has been join the zerotier network.")
-        ztIdentity = self.vm_obj.data["ztIdentity"]
-        vm_zt_ip = self.get_machine_zerotier_ip(ztIdentity)
+        ztIdentity = self.vm.data["ztIdentity"]
+        vm_zt_ip = self.get_zerotier_ip(ztIdentity)
         result = self.ssh_vm_execute_command(vm_ip=vm_zt_ip, cmd='pwd')
         self.assertNotEqual(len(result), 0)
 
@@ -214,26 +211,26 @@ class GWTestCases(BaseTest):
         zt_node_ip = self.zos_node_join_zt(zt_network.id)
 
         self.log("[*] Create gateway with public passthrough public network, should succeed.")
-        created_gateway = self.gateway._gateway_sal
+        self.gateway.generate_gw_sal()
         public_network_name = self.random_string()
-        public_net = created_gateway.networks.add(name=public_network_name, type_="passthrough", networkid='eth1')        
+        public_net = self.gateway.add_network(name=public_network_name, type_="passthrough", networkid='eth1')        
         public_net.ip.cidr = "%s/24"%zt_node_ip
         public_net.ip.gateway = zt_node_ip.replace(zt_node_ip.rsplit(".")[3], '1')
 
         self.log("Add zerotier network as private network, should succeed.")
-        zt_network = created_gateway.networks.add_zerotier(self.zt_network)
-        created_gateway.deploy()
+        zt_network = self.gateway.add_zerotier(self.zt_network)
+        self.gateway.install()
 
         self.log("Adding a new vm t to gateway private network , should succeed.")
-        self.vm_obj.install()
-        self.vms.append(self.vm_obj._vm_sal.uuid)
-        zt_network.hosts.add(self.vm_obj._vm_sal)
-        self.vm_obj.install()
-        created_gateway.deploy()
+        self.vm.install()
+        self.vms.append(self.vm.info()['uuid'])
+        zt_network.hosts.add(self.vm.vm_sal)
+        self.vm.install()
+        self.gateway.install()
 
         self.log("Check that the vm has been join the zerotier network.")
-        ztIdentity = self.vm_obj.data["ztIdentity"]
-        vm_zt_ip = self.get_machine_zerotier_ip(ztIdentity)
+        ztIdentity = self.vm.data["ztIdentity"]
+        vm_zt_ip = self.get_zerotier_ip(ztIdentity)
         result = self.ssh_vm_execute_command(vm_ip=vm_zt_ip, cmd='pwd')
         self.assertNotEqual(len(result), 0)
 
@@ -249,21 +246,21 @@ class GWActions(BaseTest):
         self.log(" Create gateway with default and zerotier network, should succeeed.")
         self.gateway = self.gw(node=self.node_sal)
         self.gateway.data = self.set_gw_default_values()
-        self.created_gateway = self.gateway._gateway_sal
+        self.gateway.generate_gw_sal()
         self.public_network_name = 'n'+self.random_string()
-        self.public_network = self.created_gateway.networks.add(name=self.public_network_name, type_="default")        
+        self.public_network = self.gateway.add_network(name=self.public_network_name, type_="default")        
         self.public_network.public = True
-        self.private_network = self.created_gateway.networks.add_zerotier(self.zt_network)
+        self.private_network = self.gateway.add_zerotier(self.zt_network)
 
         self.log("Create vm[vm1] with same zerotier network, should succceed.")
         self.vm_data = self.set_vm_default_values(os_type="ubuntu")
-        self.vm_obj = self.vm(node=self.node_sal, data=self.vm_data)
-        self.created_vm = self.vm_obj._vm_sal
-        self.add_zerotier_network_to_vm(self.created_vm)
-        self.vm_obj.install(self.created_vm)
-        self.ztIdentity = self.vm_obj.data["ztIdentity"]
-        self.vm_zt_ip = self.get_machine_zerotier_ip(self.ztIdentity)
-        self.vms.append(self.created_vm.uuid)
+        self.vm = self.vm(node=self.node_sal, data=self.vm_data)
+        self.vm.generate_vm_sal()
+        self.vm.add_zerotier_nics(self.zt_network)
+        self.vm.install()
+        self.ztIdentity = self.vm.data["ztIdentity"]
+        self.vm_zt_ip = self.get_zerotier_ip(self.ztIdentity)
+        self.vms.append(self.vm.info()['uuid'])
 
     def tearDown(self):
         self.gateway.destroy()
@@ -292,12 +289,12 @@ class GWActions(BaseTest):
         time.sleep(10)
 
         self.log("Set a portforward to gw from from public network to vm server port, should succeed.")
-        public_port = random.randint(3000, 4000)
-        self.created_gateway.portforwards.add('httpforward', (self.public_network_name, public_port),(self.vm_zt_ip, server_port))
+        public_port = random.randint(4000, 5000)
+        self.gateway.add_port_forward('httpforward', (self.public_network_name, public_port), (self.vm_zt_ip, server_port))
 
         self.log("#. Deploy the gateway[gw], should succeed.")
-        self.gateway.install(self.created_gateway)
-        self.vm_obj.install(self.created_vm)
+        self.gateway.install()
+        self.vm.install()
 
         self.log("Get the content of authorized_key file from the vm using the server created and portforward.")
         response = requests.get('http://{}:{}/.ssh/authorized_keys'.format(self.node_ip, public_port))
@@ -322,25 +319,25 @@ class GWActions(BaseTest):
 
         self.log("Set a portforward to gw from from public network to vm server port, should succeed.")
         pf1_name = self.random_string()
-        source_port1 = random.randint(3000, 4000)
-        destionation_port1 = random.randint(3000, 4000)
-        self.created_gateway.portforwards.add(pf1_name, (self.public_network_name, source_port1), (self.vm_zt_ip, destionation_port1))
+        source_port1 = random.randint(1000, 2000)
+        destination_port1 = random.randint(2000, 3000)
+        self.gateway.add_port_forward(pf1_name, (self.public_network_name, source_port1), (self.vm_zt_ip, destination_port1))
     
         self.log("Try to set another portforward [pf2] with same name as pf1 and different ports , should fail.")
         source_port2 = random.randint(3000, 4000)
-        destionation_port2 = random.randint(3000, 4000)        
+        destination_port2 = random.randint(4000, 5000)        
         with self.assertRaises(ValueError) as e:
-            self.created_gateway.portforwards.add(pf1_name, (self.public_network_name, source_port2), (self.vm_zt_ip, destionation_port2))
+            self.gateway.add_port_forward(pf1_name, (self.public_network_name, source_port2), (self.vm_zt_ip, destination_port2))
         self.assertIn("name %s already exists"%(pf1_name), e.exception.args[0])
 
         self.log("try to set another portforward [pf3] with different name and different ports , should succeed.")
-        source_port3 = random.randint(3000, 4000)
-        destionation_port3 = random.randint(3000, 4000)        
+        source_port3 = random.randint(5000, 6000)
+        destination_port3 = random.randint(6000, 7000)        
         pf3_name = self.random_string()
-        self.created_gateway.portforwards.add(pf3_name, (self.public_network_name, source_port3), (self.vm_zt_ip, destionation_port3))
+        self.gateway.add_port_forward(pf3_name, (self.public_network_name, source_port3), (self.vm_zt_ip, destination_port3))
 
         self.log("Deploy the gateway and check that both[pf1] and [pf2] exist.")
-        self.gateway.install(self.created_gateway)
+        self.gateway.install()
         gw_container = self.get_gateway_container(self.gateway.data["name"])
         gw_ports = list(gw_container['container']['arguments']['port'].values())
         self.assertIn(source_port3, gw_ports)
@@ -363,18 +360,18 @@ class GWActions(BaseTest):
         self.log("Set a portforward to gw from from public network to vm server port, should succeed.")
         pf_name = self.random_string()
         source_port = random.randint(3000, 4000)
-        destionation_port = random.randint(3000, 4000)
-        self.created_gateway.portforwards.add(pf_name, (self.public_network_name, source_port), (self.vm_zt_ip, destionation_port))
+        destination_port = random.randint(3000, 4000)
+        self.gateway.add_port_forward(pf_name, (self.public_network_name, source_port), (self.vm_zt_ip, destination_port))
 
         self.log("Deploy the gateway and check that both[pf1] and [pf2] exist.")
-        self.gateway.install(self.created_gateway)
+        self.gateway.install()
         gw_container = self.get_gateway_container(self.gateway_data["name"])
         gw_ports = list(gw_container['container']['arguments']['port'].values())
         self.assertIn(source_port, gw_ports)
 
         self.log(" Remove [pf1] from the gateway, ")
-        self.created_gateway.portforwards.remove(pf_name)
-        self.created_gateway.deploy()
+        self.gateway.remove_port_forward(pf_name)
+        self.gateway.install()
 
         self.log("Check that [pf1] has been deleted successfully.")
         gw_container = self.get_gateway_container(self.gateway_data["name"])
