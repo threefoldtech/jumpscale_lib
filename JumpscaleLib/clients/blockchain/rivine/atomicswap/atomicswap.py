@@ -65,11 +65,8 @@ class AtomicSwapManager:
         # to send the remainder back to the original user
         if remainder > 0:
             # we have leftover fund, so we create new transaction, and pick on user key that is not used
-            for address in self._wallet._keys.keys():
-                if address in used_addresses.values():
-                    continue
-                transaction.add_coin_output(value=remainder, recipient=address)
-                break
+            address = self._wallet.generate_address()
+            transaction.add_coin_output(value=remainder, recipient=address)
 
         # add minerfee to the transaction
         transaction.add_minerfee(minerfee)
