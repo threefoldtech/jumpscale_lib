@@ -63,7 +63,7 @@ class EtcdCluster():
 class ETCD(Service):
     """etced server"""
 
-    def __init__(self, node, name, data_dir='/mnt/data', zt_identity=None, nics=None, token=None, cluster=None):
+    def __init__(self, node, name, password, data_dir='/mnt/data', zt_identity=None, nics=None, token=None, cluster=None):
         super().__init__(name, node, 'etcd', [CLIENT_PORT, PEER_PORT])
         self.flist = 'https://hub.grid.tf/tf-official-apps/etcd-3.3.4.flist'
         self.data_dir = data_dir
@@ -71,14 +71,19 @@ class ETCD(Service):
         self._config_path = '/bin/etcd_{}.config'.format(self.name)
         self.token = token
         self.cluster = cluster
+        self.password = password
         self.nics = Nics(self)
-        if nics:
-            for nic in nics:
-                nicobj = self.nics.add(nic['name'], nic['type'], nic['id'], nic.get('hwaddr'))
-                if nicobj.type == 'zerotier':
-                    nicobj.client_name = nic.get('ztClient')
-        if 'nat0' not in self.nics:
-            self.nics.add('nat0', 'default')
+        self.add_nics(nics)
+
+    def connection_info(self):
+        return {
+            'ip': self.container.mgmt_addr,
+            'client_port': CLIENT_PORT,
+            'peer_port': PEER_PORT,
+            'peer_url': self.peer_url,
+            'client_url': self.client_url,
+            'password': self.password
+        }
 
     @property
     def client_url(self):
@@ -100,10 +105,7 @@ class ETCD(Service):
         except ValueError:
             fs = sp.create(self._container_name)
     
-        if not self.zt_identity:
-            self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
-        zt_public = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
-        j.sal_zos.utils.authorize_zerotiers(zt_public, self.nics)
+        self.authorize_zt_nics()
 
         return {
             'name': self._container_name,
@@ -111,9 +113,13 @@ class ETCD(Service):
             'nics': [nic.to_dict(forcontainer=True) for nic in self.nics],
             'mounts': {fs.path: self.data_dir},
             'identity': self.zt_identity,
+            'env': {'ETCDCTL_API':'3'},
         }
 
     def create_config(self):
+        self.container.upload_content(self._config_path, self._config_as_text())
+
+    def _config_as_text(self):
         cluster = self.cluster if self.cluster else [{'name': self.name, 'address': self.peer_url}]
         members  = ['='.join([member['name'],member['address']]) for member in cluster]
 
@@ -127,8 +133,7 @@ class ETCD(Service):
             'token': self.token,
             'cluster': ','.join(members),
         }
-        templates.render('etcd.conf', **config).strip()
-        self.container.upload_content(self._config_path, templates.render('etcd.conf', **config).strip())
+        return templates.render('etcd.conf', **config).strip()
 
     def deploy(self):
         # call the container property to make sure it gets created and the ports get updated
@@ -156,3 +161,9 @@ class ETCD(Service):
         self.container.client.system(cmd, id=self._id)
         if not j.tools.timer.execute_until(self.is_running, 30, 0.5):
             raise RuntimeError('Failed to start etcd server: {}'.format(self.name))
+        self._create_root_user()
+
+    def _create_root_user(self):
+        cluster = self.cluster if self.cluster else [{'name': self.name, 'address': self.peer_url}]
+        addresses  = [member['address'] for member in cluster]
+        self.container.system('/bin/etcdctl --endpoints={} user add root:{}'.format(','.join(addresses), self.password))

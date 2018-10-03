@@ -67,7 +67,6 @@ class Container():
         self.env = env or {}
         self._client = None
         self.logger = logger or default_logger
-        self.support_network = "172.29.0.0/16"
 
         for nic in self.nics:
             nic.pop('token', None)
@@ -343,11 +342,10 @@ class Container():
     @property
     def mgmt_addr(self):
         nics = self.client.info.nic()
-        for nic in nics:
-            if nic['name'].startswith('zt'):
-                ipAdress = j.sal_zos.utils.get_ip_from_nic(nic['addrs'])
-                if netaddr.IPAddress(ipAdress) not in netaddr.IPNetwork(self.support_network):
-                    return ipAdress
+        ip = self.node.get_zt_ip(nics)
+        if ip:
+            return ip
+        raise LookupError('their is no support zerotier interface (support_address)')
 
     def __str__(self):
         return "Container <{}>".format(self.name)

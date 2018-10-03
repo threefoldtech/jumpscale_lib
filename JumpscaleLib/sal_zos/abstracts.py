@@ -319,19 +319,11 @@ class Service:
         """
         Stop the service process and stop the container
         """
-        import time
-
         if not self.is_running():
             return
 
         self.container.client.job.kill(self._id)
-        start = time.time()
-        end = start + timeout
-
-        while self.is_running() and time.time() < end:
-            time.sleep(1)
-
-        if self.is_running():
+        if not  j.tools.timer.execute_until(lambda : not self.is_running, timeout, 0.5):
             raise RuntimeError('Failed to stop {} server: {}'.format(self._type, self.name))
 
         self.container.stop()
@@ -350,3 +342,18 @@ class Service:
             except LookupError:
                 self._container = self.node.containers.create(**self._container_data)
         return self._container
+    
+    def add_nics(self, nics):
+        if nics:
+            for nic in nics:
+                nicobj = self.nics.add(nic['name'], nic['type'], nic['id'], nic.get('hwaddr'))
+                if nicobj.type == 'zerotier':
+                    nicobj.client_name = nic.get('ztClient')
+        if 'nat0' not in self.nics:
+            self.nics.add('nat0', 'default')
+    
+    def authorize_zt_nics(self):
+        if not self.zt_identity:
+            self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
+        zt_public = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
+        j.sal_zos.utils.authorize_zerotiers(zt_public, self.nics)

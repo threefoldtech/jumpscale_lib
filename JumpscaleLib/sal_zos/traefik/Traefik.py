@@ -27,13 +27,7 @@ class Traefik(Service):
         self._config_name = 'traefik.toml'
         self.zt_identity = zt_identity
         self.nics = Nics(self)
-        if nics:
-            for nic in nics:
-                nicobj = self.nics.add(nic['name'], nic['type'], nic['id'], nic.get('hwaddr'))
-                if nicobj.type == 'zerotier':
-                    nicobj.client_name = nic.get('ztClient')
-        if 'nat0' not in self.nics:
-            self.nics.add('nat0', 'default')
+        self.add_nics(nics)
 
     @property
     def _container_data(self):
@@ -46,10 +40,7 @@ class Traefik(Service):
             str(DEFAULT_PORT_HTTP): DEFAULT_PORT_HTTP, 
             str(DEFAULT_PORT_HTTPS): DEFAULT_PORT_HTTPS, #HTTPS
         }
-        if not self.zt_identity:
-            self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
-        zt_public = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
-        j.sal_zos.utils.authorize_zerotiers(zt_public, self.nics)
+        self.authorize_zt_nics()
 
         return {
             'name':  self._container_name,

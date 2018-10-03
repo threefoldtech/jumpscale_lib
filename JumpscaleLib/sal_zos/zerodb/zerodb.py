@@ -126,10 +126,7 @@ class Zerodb(Service):
         if len(ports) <= 0:
             raise RuntimeError("can't install 0-db, no free port available on the node")
 
-        if not self.zt_identity:
-            self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
-        zt_public = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
-        j.sal_zos.utils.authorize_zerotiers(zt_public, self.nics)
+        self.authorize_zt_nics()
 
         return {
             'name': self._container_name,
@@ -182,12 +179,7 @@ class Zerodb(Service):
         for namespace in data.get('namespaces', []):
             self.namespaces.add(
                 namespace['name'], namespace.get('size'), namespace.get('password'), namespace.get('public', True))
-        for nic in data.get('nics', []):
-            nicobj = self.nics.add(nic['name'], nic['type'], nic['id'], nic.get('hwaddr'))
-            if nicobj.type == 'zerotier':
-                nicobj.client_name = nic.get('ztClient')
-        if 'nat0' not in self.nics:
-            self.nics.add('nat0', 'default')
+        self.add_nics(data.get('nics', []))
 
     def to_dict(self):
         """
