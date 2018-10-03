@@ -89,7 +89,7 @@ class VM:
     def is_running(self):
         return self.vm_sal.is_running()
 
-    def add_disk(self, name_or_disk, url=None):
+    def add_disk(self, name_or_disk, url=None, mountpoint=None, filesystem=None, label=None):
         self.vm_sal.disks.add(name_or_disk=name_or_disk, url=url)
     
     def remove_disk(self, name):
