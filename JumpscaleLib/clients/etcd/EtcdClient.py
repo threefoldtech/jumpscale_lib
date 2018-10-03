@@ -32,7 +32,17 @@ class EtcdClient(JSConfigClient):
     @property
     def api(self):
         if self._api is None:
-            self._api = etcd3.client(**self.config.data)
+            data = self.config.data
+            kwargs = {
+                'host': data['host'],
+                'port': data['port'],
+            }
+            if data['user'] and data['password']:
+                kwargs.update({
+                    'user': data['user'],
+                    'passwrod': data['password']
+                })
+            self._api = etcd3.client(**kwargs)
             print("client created")
         return self._api
 

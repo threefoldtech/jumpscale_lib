@@ -156,16 +156,3 @@ class ETCD(Service):
         self.container.client.system(cmd, id=self._id)
         if not j.tools.timer.execute_until(self.is_running, 30, 0.5):
             raise RuntimeError('Failed to start etcd server: {}'.format(self.name))
-
-    @property
-    def _client(self):
-        return j.clients.etcd.get(self.name, data={'host': self.container.mgmt_addr, 'port': CLIENT_PORT})
-
-    def put(self, key, value):
-        self._client.put(key, value)
-
-    def get(self, key):
-        return self._client.get(key)
-
-    def delete(self, key):
-        return self._client.delete(key)
