@@ -238,11 +238,11 @@ class BaseTest(Utils):
     def set_vdisk_default_data(self, name=None):
         disk_params = {
                         'name': name or self.random_string(),
-                        'mountPoint': "",
-                        'filesystem': "",
+                        'mountPoint': "/mnt/hamada",
+                        'filesystem': "ext4",
                         'mode': 'user',
                         'public': False,
-                        'label': 'label',
+                        'label': 'sba7o',
                       }
 
         disk_type, disk_size = self.get_most_free_disk_type_size()
