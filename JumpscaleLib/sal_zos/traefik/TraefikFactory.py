@@ -9,8 +9,7 @@ class TraefikFactory(JSBASE):
         self.__jslocation__ = "j.sal_zos.traefik"
         JSBASE.__init__(self)
 
-    @staticmethod
-    def get(name, node, etcd_endpoint, etcd_watch=True,zt_identity=None, nics=None):
+    def get(self, name, node, etcd_endpoint, etcd_watch=True,zt_identity=None, nics=None):
         """
         Get sal for traefik
         Returns:

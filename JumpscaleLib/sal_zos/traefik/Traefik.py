@@ -74,67 +74,30 @@ class Traefik(Service):
 
     def _config_as_text(self):
         etcd_url=self.etcd_endpoint.split('http://')
+        ip = etcd_url[1].split(':')
+        #for SSL Certifcate 
+        client = j.clients.etcd.get(self.name, data={'host': ip[0], 'port': 2379})
+        client.put("/traefik/acme/account", "")
         return templates.render(
             'traefik.conf', etcd_ip =etcd_url[1]).strip()
 
-    def is_running(self):
-        try:
-            for _ in self.container.client.job.list(self.id):
-                return True
-            return False
-        except Exception as err:
-            if str(err).find("invalid container id"):
-                return False
-            raise
-
-    def start(self, timeout=15):
+    def start(self, timeout=30):
         """
         Start traefik
         :param timeout: time in seconds to wait for the traefik to start
         """
-        is_running = self.is_running()
-        if is_running:
+        if self.is_running():
             return
 
         logger.info('start traefik %s' % self.name)
 
         self.create_config()
 
+        cmd = '/usr/bin/traefik storeconfig -c {dir}/{config}'.format(dir=self._config_dir,config=self._config_name)
+        self.container.client.system(cmd, id=self.id)
         cmd = '/usr/bin/traefik -c {dir}/{config}'.format(dir=self._config_dir,config=self._config_name)
        
         # wait for traefik to start
         self.container.client.system(cmd, id=self.id)
-        if j.tools.timer.execute_until(self.is_running, timeout, 0.5):
-            return True
-
-        if not is_running:
-            raise RuntimeError('Failed to start traefik server: {}'.format(self.name))
-
-    def stop(self, timeout=30):
-        """
-        Stop the traefik
-        :param timeout: time in seconds to wait for the traefik gateway to stop
-        """
-        if not self.container.is_running():
-            return
-
-        is_running = self.is_running()
-        if not is_running:
-            return
-
-        logger.info('stop traefik %s' % self.name)
-
-        self.container.client.job.kill(self.id)
-
-        # wait for traefik to stop
-        if j.tools.timer.execute_until(self.is_running, timeout, 0.5):
-            return True
-
-        if is_running:
-            raise RuntimeError('Failed to stop traefik server: {}'.format(self.name))
-
-        self.container.stop()
-
-    def destroy(self):
-        self.stop()
-        self.container.stop()
+        if not j.tools.timer.execute_until(self.is_running, timeout, 0.5):
+            raise RuntimeError('Failed to start Traefik server: {}'.format(self.name))
