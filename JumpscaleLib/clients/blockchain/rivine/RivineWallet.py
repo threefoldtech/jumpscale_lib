@@ -687,7 +687,7 @@ class WalletBalance:
             string += '\nUnlocked multisig outputs:\n'
         for output_id, output in self._unlocked_multisig_outputs.items():
             string += '\n\tOutput id: {}\n'.format(output_id)
-            string += '\tUnlockhashes:\n'
+            string += '\tSignature addresses:\n'
             for uh in output['condition']['data']['unlockhashes']:
                 string += '\t\t{}\n'.format(uh)
             string += '\tMinimum amount of signatures: {}\n'.format(output['condition']['data']['minimumsignaturecount'])
@@ -697,7 +697,7 @@ class WalletBalance:
             string += '\nLocked multisig outputs:\n'
         for output_id, output in self._locked_multisig_outputs.items():
             string += '\n\tOutput id: {}\n'.format(output_id)
-            string += '\tUnlockhashes:\n'
+            string += '\tSignature addresses:\n'
             for uh in output[0]['condition']['data']['unlockhashes']:
                 string += '\t\t{}\n'.format(uh)
             string += '\tMinimum amount of signatures: {}\n'.format(output[0]['condition']['data']['minimumsignaturecount'])
