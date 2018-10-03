@@ -1,3 +1,12 @@
+# prepare the machine for jumpscale installation 
+apt-get install -y python3.5 python3.5-dev
+sudo rm -f /usr/bin/python
+sudo rm -f /usr/bin/python3
+sudo ln -s /usr/bin/python3.5 /usr/bin/python
+sudo ln -s /usr/bin/python3.5 /usr/bin/python3
+
+
+## install jumpscale 
 ./.travis_ci/prepare.sh
 
 # create ssh key for jumpscale config manager
