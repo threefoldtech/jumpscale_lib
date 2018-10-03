@@ -116,5 +116,8 @@ class ZDB:
         self.zerodb_sal.nics.remove(name)
         self.deploy()
 
-    def generate_zdb_obj(self):
+    def generate_zdb_sal(self):
         self.zerodb_sal = self._zerodb_sal
+
+    def add_zerotier_nics(self, network, name=None):
+        self.zerodb_sal.nics.add_zerotier(name=name, network=network)
