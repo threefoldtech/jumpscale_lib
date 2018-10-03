@@ -16,6 +16,7 @@ from functools import partial
 import requests
 import base64
 import time
+from datetime import datetime
 from .encoding import binary
 from .types.signatures import Ed25519PublicKey, SPECIFIER_SIZE
 from .types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY, UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE
@@ -56,6 +57,10 @@ class RivineWallet:
         self._client = client
         self._seed = j.data.encryption.mnemonic.to_entropy(seed)
         self._unspent_coins_outputs = {}
+        self._locked_coin_outputs = {}
+        self._multisig_wallets = set()
+        self._unspent_multisig_outputs = {}
+        self._locked_multisig_outputs = {}
         self._keys = {}
         self._bc_networks = bc_networks
         self._minerfee = minerfee
@@ -89,8 +94,16 @@ class RivineWallet:
         Retrieves current wallet balance
         """
         self._check_balance()
-        return sum(int(value.get('value', 0)) for value in self._unspent_coins_outputs.values()) / HASTINGS_TFT_VALUE
-
+        wb = WalletBalance()
+        for id, output in self._unspent_coins_outputs.items():
+            wb.add_unlocked_output(id, output)
+        for id, output in self._locked_coin_outputs.items():
+            wb.add_locked_output(id, output)
+        for id, output in self._unspent_multisig_outputs.items():
+            wb.add_unlocked_multisig_output(id, output)
+        for id, output in self._locked_multisig_outputs.items():
+            wb.add_locked_multisig_output(id, output)
+        return wb
 
     def generate_address(self, persist=True):
         """
@@ -185,9 +198,18 @@ class RivineWallet:
             else:
                 if new_address is True:
                     self._save_nr_of_keys()
-
+                # It could be that we found an address which is only part of a multisig
+                # output. In that case some properties we depend on below won't be
+                # available, but there will also not be an error. So collect the
+                # multisig addresses first to query them later
+                if address_info.get('multisigaddresses', []) is not None:
+                    for ms_address in address_info.get('multisigaddresses', []):
+                        self._multisig_wallets.add(ms_address)
+                if address_info.get('transactions', {}) is None:
+                    # address was only part of a multisig output, ignore the rest
+                    continue
                 if address_info.get('hashtype', None) != UNLOCKHASH_TYPE:
-                    raise BackendError('Address is not recognized as an unblock hash')
+                    raise BackendError('Address is not recognized as an unlock hash')
                 self._addresses_info[address] = address_info
                 self._collect_miner_fees(address=address, blocks=address_info.get('blocks',{}),
                                         height=current_chain_height)
@@ -196,6 +218,22 @@ class RivineWallet:
                                                   address=address,
                                                   transactions=transactions,
                                                   unconfirmed_txs=unconfirmed_txs)
+        # Add multisig addresses
+        for address in self._multisig_wallets:
+            try:
+                address_info = self._check_address(address=address, log_errors=False)
+            except RESTAPIError:
+                pass
+            else:
+                if address_info.get('hashtype', None) != UNLOCKHASH_TYPE:
+                    raise BackendError('Address is not recognized as an unlock hash')
+                self._addresses_info[address] = address_info
+                # Multisigs can't have minerfees currently
+                transactions = address_info.get('transactions', {})
+                self._collect_transaction_outputs(current_height=current_chain_height,
+                                                    address=address,
+                                                    transactions=transactions,
+                                                    unconfirmed_txs=unconfirmed_txs)
         # clean up unused addresses
         for address in unused_addresses:
             del self._keys[address]
@@ -224,8 +262,11 @@ class RivineWallet:
         @param transactions: Details about the transactions
         @param unconfirmed_txs: List of unconfirmed transactions
         """
-        unlocked_txn_outputs = utils.collect_transaction_outputs(current_height, address, transactions, unconfirmed_txs)['unlocked']
-        self._unspent_coins_outputs.update(unlocked_txn_outputs)
+        txn_outputs = utils.collect_transaction_outputs(current_height, address, transactions, unconfirmed_txs)
+        self._unspent_coins_outputs.update(txn_outputs['unlocked'])
+        self._locked_coin_outputs.update(txn_outputs['locked'])
+        self._unspent_multisig_outputs.update(txn_outputs['multisig_unlocked'])
+        self._locked_multisig_outputs.update(txn_outputs['multisig_locked'])
 
 
     def _remove_spent_inputs(self, transactions):
@@ -235,6 +276,7 @@ class RivineWallet:
         @param transactions: Details about the transactions
         """
         utils.remove_spent_inputs(self._unspent_coins_outputs, transactions)
+        utils.remove_spent_inputs(self._unspent_multisig_outputs, transactions)
 
 
     def _get_unconfirmed_transactions(self, format_inputs=False):
@@ -319,7 +361,7 @@ class RivineWallet:
         """
         if minerfee is None:
             minerfee = self._minerfee
-        wallet_fund = int(self.current_balance * HASTINGS_TFT_VALUE)
+        wallet_fund = int(self.current_balance.unlocked_balance * HASTINGS_TFT_VALUE)
         required_funds = amount + minerfee
         if required_funds > wallet_fund:
             raise InsufficientWalletFundsError('No sufficient funds to make the transaction')
@@ -620,3 +662,100 @@ class SpendableKey:
             hash = utils.hash(encoded_pub_key, encoding_type='slice')
             self._unlockhash = UnlockHash(unlock_type=UNLOCK_TYPE_PUBKEY, hash=hash)
         return self._unlockhash
+
+class WalletBalance:
+    """
+    WalletBalance holds the locked and unlocked outputs in a wallet.
+    """
+    def __init__(self):
+        self._unlocked_outputs = {}
+        self._locked_outputs = {}
+        self._unlocked_multisig_outputs = {}
+        self._locked_multisig_outputs = {}
+
+    def __str__(self):
+        unlocked_value = sum(int(value.get('value', 0)) for value in self._unlocked_outputs.values()) / HASTINGS_TFT_VALUE
+        string = 'Unlocked:\n\n\t{}\n'.format(unlocked_value)
+
+        if len(self._locked_outputs) > 0:
+            string += '\nLocked:\n'
+        for output in self._locked_outputs.values():
+            string += '\n\t{} locked until {}\n'.format(int(output[0]['value']) / HASTINGS_TFT_VALUE,
+                                                      self._locktime_to_string(output[1]))
+
+        if len(self._unlocked_multisig_outputs) > 0:
+            string += '\nUnlocked multisig outputs:\n'
+        for output_id, output in self._unlocked_multisig_outputs.items():
+            string += '\n\tOutput id: {}\n'.format(output_id)
+            string += '\tUnlockhashes:\n'
+            for uh in output['condition']['data']['unlockhashes']:
+                string += '\t\t{}\n'.format(uh)
+            string += '\tMinimum amount of signatures: {}\n'.format(output['condition']['data']['minimumsignaturecount'])
+            string += '\tValue: {}\n'.format(int(output['value']) / HASTINGS_TFT_VALUE)
+
+        if len(self._locked_multisig_outputs) > 0:
+            string += '\nLocked multisig outputs:\n'
+        for output_id, output in self._locked_multisig_outputs.items():
+            string += '\n\tOutput id: {}\n'.format(output_id)
+            string += '\tUnlockhashes:\n'
+            for uh in output[0]['condition']['data']['unlockhashes']:
+                string += '\t\t{}\n'.format(uh)
+            string += '\tMinimum amount of signatures: {}\n'.format(output[0]['condition']['data']['minimumsignaturecount'])
+            string += '\tValue: {} locked until {}\n'.format(int(output[0]['value']) / HASTINGS_TFT_VALUE,
+                                                             self._locktime_to_string(output[1]))
+
+        return string
+
+    def __repr__(self):
+        """
+        Override so we have nice output in js shell if the object is not assigned
+        without having to call the print method.
+        """
+        return str(self)
+
+    @property
+    def unlocked_balance(self):
+        return sum(int(value.get('value', 0)) for value in self._unspent_coins_outputs.values()) / HASTINGS_TFT_VALUE
+
+    @property
+    def unlocked_outputs(self):
+        return self._unlocked_outputs
+
+    @property
+    def locked_outputs(self):
+        """
+        Returns the currently locked outputs
+
+        @returns dict, keys are the parent ids of the outputs, values are a tuple of the
+        raw output. First tuple element is the raw output, second element is the
+        locktime.
+        """
+        return self._locked_outputs
+
+    def add_unlocked_output(self, output_id, raw_output):
+        self._unlocked_outputs[output_id] = raw_output
+
+    def add_unlocked_multisig_output(self, output_id, raw_output):
+        self._unlocked_multisig_outputs[output_id] = raw_output
+
+    def add_locked_output(self, output_id, raw_output):
+        # Get the locktime
+        locktime = raw_output['condition']['data']['locktime']
+        # strip lock condition
+        raw_output['condition'] = raw_output['condition']['data']['condition']
+        self._locked_outputs[output_id] = (raw_output, locktime)
+
+    def add_locked_multisig_output(self, output_id, raw_output):
+        # Get the locktime
+        locktime = raw_output['condition']['data']['locktime']
+        # strip lock condition
+        raw_output['condition'] = raw_output['condition']['data']['condition']
+        self._locked_multisig_outputs[output_id] = (raw_output, locktime)
+
+    def _locktime_to_string(self, locktime):
+        # make sure we are working with an integer
+        locktime = int(locktime)
+        if locktime < 500000000:
+            return "block " + locktime
+        ts = datetime.fromtimestamp(locktime)
+        return ts.strftime("%Y-%m-%d %H:%M:%S")
