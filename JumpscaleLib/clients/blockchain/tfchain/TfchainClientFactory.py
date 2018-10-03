@@ -12,14 +12,10 @@ from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import Unlock
         LockTimeCondition, MultiSignatureCondition, UnlockCondtionFactory
 from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
 
+from JumpscaleLib.clients.blockchain.rivine.errors import WalletAlreadyExistsException
+
 JSConfigBaseFactory = j.tools.configmanager.JSBaseClassConfigs
 
-class WalletAlreadyExistsException(Exception):
-    """
-    Error since the walletname is already used.
-    """
-    def __init__( self, walletname):
-        super().__init__('Wallet already exists, remove with j.clients.tfchain.delete(walletname)')
 
 class TfchainClientFactory(JSConfigBaseFactory):
     """

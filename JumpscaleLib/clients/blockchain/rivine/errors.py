@@ -47,3 +47,10 @@ class AtomicSwapError(Exception):
     """
     AtomicSwapError error
     """
+
+class WalletAlreadyExistsException(Exception):
+    """
+    Error since the walletname is already used.
+    """
+    def __init__( self, walletname):
+        super().__init__('Wallet already exists, remove with j.clients.tfchain.delete(walletname)')
