@@ -245,7 +245,7 @@ class KernelArgs(Collection):
 
         :param name: Name for the kernel argument
         :type name: str
-        :param key: left side of the kernel argument 
+        :param key: left side of the kernel argument
         :type key: str
         :param value: right side of the kernel argument
         :type value: str
