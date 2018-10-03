@@ -43,3 +43,18 @@ class JobManager():
         }
         self._kill_chk.check(args)
         return self._client.json('job.kill', args)
+
+    def unschedule(self, id):
+        """
+        If you started a job with `recurring_period` set, unschedule will prevent it from restarting 
+        once it dies. It does not kill the running job, just mark it to not restart again once it exits.
+
+        Usually u will follow a call to unschedule to a call to kill to stop the process completely.
+
+        :param id: job id
+        """
+        args = {
+            'id': id,
+        }
+        self._job_chk.check(args)
+        return self._client.json('job.unschedule', args)
