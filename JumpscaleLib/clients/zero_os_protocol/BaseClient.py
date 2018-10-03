@@ -78,7 +78,7 @@ class BaseClient():
         """
         return self._ip
 
-    def raw(self, command, arguments, queue=None, max_time=None, stream=False, tags=None, id=None):
+    def raw(self, command, arguments, queue=None, max_time=None, stream=False, tags=None, id=None, recurring_period=None):
         """
         Implements the low level command call, this needs to build the command structure
         and push it on the correct queue.
@@ -136,7 +136,7 @@ class BaseClient():
         """
         return self.json('core.ping', {})
 
-    def system(self, command, dir='', stdin='', env=None, queue=None, max_time=None, stream=False, tags=None, id=None):
+    def system(self, command, dir='', stdin='', env=None, queue=None, max_time=None, stream=False, tags=None, id=None, recurring_period=None):
         """
         Execute a command
 
@@ -161,11 +161,11 @@ class BaseClient():
 
         self._system_chk.check(args)
         response = self.raw(command='core.system', arguments=args,
-                            queue=queue, max_time=max_time, stream=stream, tags=tags, id=id)
+                            queue=queue, max_time=max_time, stream=stream, tags=tags, id=id, recurring_period=recurring_period)
 
         return response
 
-    def bash(self, script, stdin='', queue=None, max_time=None, stream=False, tags=None, id=None):
+    def bash(self, script, stdin='', queue=None, max_time=None, stream=False, tags=None, id=None, recurring_period=None):
         """
         Execute a bash script, or run a process inside a bash shell.
 
@@ -180,7 +180,7 @@ class BaseClient():
         }
         self._bash_chk.check(args)
         response = self.raw(command='bash', arguments=args,
-                            queue=queue, max_time=max_time, stream=stream, tags=tags, id=id)
+                            queue=queue, max_time=max_time, stream=stream, tags=tags, id=id, recurring_period=recurring_period)
 
         return response
 

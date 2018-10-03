@@ -31,7 +31,7 @@ class ContainerClient(BaseClient):
             'stream': bool,
             'tags': typchk.Or([str], typchk.IsNone()),
             'id': typchk.Or(str, typchk.IsNone()),
-
+            'recurring_period': typchk.Or(int, typchk.IsNone()),
         }
     })
 
@@ -61,7 +61,7 @@ class ContainerClient(BaseClient):
     def flist(self):
         return self._flist
 
-    def raw(self, command, arguments, queue=None, max_time=None, stream=False, tags=None, id=None):
+    def raw(self, command, arguments, queue=None, max_time=None, stream=False, tags=None, id=None, recurring_period=None):
         """
         Implements the low level command call, this needs to build the command structure
         and push it on the correct queue.
@@ -75,6 +75,7 @@ class ContainerClient(BaseClient):
             client can stream output
         :param tags: job tags
         :param id: job id. Generated if not supplied
+        :param recurring_period: If set, the command execution is rescheduled to execute repeatedly, waiting for recurring_period seconds between each execution.
         :return: Response object
         """
         args = {
@@ -87,6 +88,7 @@ class ContainerClient(BaseClient):
                 'stream': stream,
                 'tags': tags,
                 'id': id,
+                'recurring_period': recurring_period,
             },
         }
 
