@@ -49,7 +49,7 @@ class ZDBTestCases(BaseTest):
         
         self.log("Check that ZDB created using zdb client.")
         zdb_client = ZDBCLIENT(self.node_ip, zdb.zerodb_sal.node_port)
-        result = zdb_client.ping("lower")
+        result = zdb_client.ping()
         self.assertEqual(result, "PONG")
 
     @unittest.skip("https://github.com/threefoldtech/jumpscale_lib/issues/143")
@@ -104,7 +104,7 @@ class ZDBTestCases(BaseTest):
         self.log("Check that zdb is running.")
         self.assertTrue(zdb.zerodb_sal.is_running()[0])
         zdb_client = ZDBCLIENT(self.node_ip, zdb.zerodb_sal.node_port)
-        result = zdb_client.ping("lower")
+        result = zdb_client.ping()
         self.assertEqual(result, "PONG")
 
         self.log("Stop zdb and check that zdb is stopped.")
@@ -112,12 +112,12 @@ class ZDBTestCases(BaseTest):
 
         self.assertFalse(zdb.zerodb_sal.is_running()[0])
         with self.assertRaises(Exception):
-            result = zdb_client.ping("lower")
+            result = zdb_client.ping()
         
         self.log("Start it again and check that it becomes running again")
         zdb.start()
         self.assertTrue(zdb.zerodb_sal.is_running()[0])
-        result = zdb_client.ping("lower")
+        result = zdb_client.ping()
         self.assertEqual(result, "PONG")
         
     def test004_add_remove_namespace_to_zdb(self):
@@ -147,13 +147,13 @@ class ZDBTestCases(BaseTest):
         self.log("Check that namespace added successfully.")
         self.assertEqual(zdb.zerodb_sal.to_dict()['namespaces'][0]['name'], ns_name) 
         self.assertEqual(zdb.zerodb_sal.to_dict()['namespaces'][0]['size'], ns_size)
-        result = zdb_client.nslist("lower")
+        result = zdb_client.nslist()
         self.assertIn(ns_name, result)
 
         self.log("Remove namespace [ns1], should succeed.")
         zdb.namespace_delete(ns_name)
         self.assertFalse(zdb.zerodb_sal.to_dict()['namespaces'])
-        result = zdb_client.nslist("lower")
+        result = zdb_client.nslist()
         self.assertNotIn(ns_name, result)
 
     @unittest.skip('https://github.com/threefoldtech/jumpscale_lib/issues/144')
@@ -200,9 +200,9 @@ class ZDBTestCases(BaseTest):
         self.assertIn('size error', e.exception.args[0])
     
     @parameterized.expand(["before", "after"])
-    @unittest.skip('need issue')
+    @unittest.skip('https://github.com/threefoldtech/jumpscale_lib/issues/169')
     def test006_add_remove_zerotier_nics(self, deploy):
-        """ SAL-030 add and remove zerotier network to zdb.
+        """ SAL-38 add and remove zerotier network to zdb.
 
         **Test Scenario:**
         #. Create ZDB [zdb1] with default value, should succeed.
@@ -217,12 +217,12 @@ class ZDBTestCases(BaseTest):
         zdb.data = self.set_zdb_default_data(name=zdb_name)
 
         if deploy == 'before':
-            zdb.generate_zdb_obj()
+            zdb.generate_zdb_sal()
         else:
             zdb.install()
 
         self.log("Add zerotier network to zdb's nics, should succeed.")
-        self.add_zerotier_network(zdb.zerodb_sal)
+        zdb.add_zerotier_nics(self.zt_network_name)
 
         if deploy == 'before':
             zdb.install()
@@ -231,14 +231,14 @@ class ZDBTestCases(BaseTest):
 
         self.log("Try to access zdb using zerotier ip, should succeed.")
         zdb_client = ZDBCLIENT(zdb_zt_ip, 9900)
-        result = zdb_client.ping("lower")
+        result = zdb_client.ping()
         self.assertEqual(result, 'PONG')
 
         self.log("Remove zerotier network, should succeed.")
         zdb.remove_nics(self.zt_network_name)
         
         with self.assertRaises(Exception):
-            result = zdb_client.ping("lower")
+            result = zdb_client.ping()
 
 class ZDBActions(BaseTest):
 
@@ -431,3 +431,29 @@ class ZDBActions(BaseTest):
         self.log("Select the namespace with right password, should succeed.")
         result = self.zdb_client.select(namespace=ns_name, password=password, case=case)
         self.assertEqual(result, 'OK')
+
+    @parameterized.expand(["upper", "lower"])
+    @unittest.skip('https://github.com/0-complexity/G8_testing/issues/429')
+    def test007_keycur_scan_keys(self, case):
+        """ SAL-040 Set keys and scan zdb keys.
+
+        **Test Scenario:**
+        #. Set five keys with random value. 
+        #. Get first key cursor.
+        #. Scan zdb starting with that key, should find five keys.
+        """
+        self.log("Set five keys with random value.")
+        keys = []
+        values = []
+        for idx in range(5):
+            keys.append(self.random_string())
+            values.append(self.random_string())
+            result = self.zdb_client.set(keys[idx], values[idx], case)
+            self.assertEqual(result, keys[idx])
+
+        self.log("Get first key curisor.")
+        key_cursor = self.zdb_client.key_cursor(keys[0], case)
+
+        self.log("Scan zdb starting with that key, should find five keys.")
+        # scan_result = self.zdb_client.scan(key_cursor, case)
+        # self.assertEqual(len(scan_result[1]), 5)
