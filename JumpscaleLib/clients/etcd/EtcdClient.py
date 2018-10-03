@@ -32,16 +32,22 @@ class EtcdClient(JSConfigClient):
     @property
     def api(self):
         if self._api is None:
-            data = self.config.data
-            kwargs = {
-                'host': data['host'],
-                'port': data['port'],
-            }
-            if data['user'] and data['password']:
-                kwargs.update({
-                    'user': data['user'],
-                    'passwrod': data['password']
-                })
-            self._api = etcd3.client(**kwargs)
+            self._api = etcd3.client(**self.config.data)
             print("client created")
         return self._api
+
+    def put(self, key, value):
+        if value.startswith("-"):
+            value = "-- %s" % value
+        if key.startswith("-"):
+            key = "-- %s" % key
+        self.api.put(key, value)
+
+    def get(self, key):
+        result = self.api.get(key)[0]
+        if not result:
+            raise ValueError('Key {} does not exist in etcd'.format(key))
+        return result.decode('utf-8')
+
+    def delete(self, key):
+        return self.api.delete(key)

@@ -157,22 +157,15 @@ class ETCD(Service):
         if not j.tools.timer.execute_until(self.is_running, 30, 0.5):
             raise RuntimeError('Failed to start etcd server: {}'.format(self.name))
 
-    def put(self, key, value):
-        client = j.clients.etcd.get(self.name, data={'host': self.container.mgmt_addr, 'port': CLIENT_PORT})
+    @property
+    def _client(self):
+        return j.clients.etcd.get(self.name, data={'host': self.container.mgmt_addr, 'port': CLIENT_PORT})
 
-        if value.startswith("-"):
-            value = "-- %s" % value
-        if key.startswith("-"):
-            key = "-- %s" % key
-        client.api.put(key, value)
+    def put(self, key, value):
+        self._client.put(key, value)
 
     def get(self, key):
-        client = j.clients.etcd.get(self.name, data={'host': self.container.mgmt_addr, 'port': CLIENT_PORT})
-        result = client.api.get(key)[0]
-        if not result:
-            raise ValueError('Key {} does not exist in etcd {}'.format(key, self.name))
-        return result.decode('utf-8')
+        return self._client.get(key)
 
     def delete(self, key):
-        client = j.clients.etcd.get(self.name, data={'host': self.container.mgmt_addr, 'port': CLIENT_PORT})
-        return client.api.delete(key)
+        return self._client.delete(key)
