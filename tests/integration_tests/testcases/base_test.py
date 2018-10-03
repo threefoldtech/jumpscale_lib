@@ -89,10 +89,6 @@ class BaseTest(Utils):
 
         return vm_parms
 
-    def add_zerotier_network(self, obj, network=None, name=None):
-        network = network or self.zt_network
-        obj.nics.add_zerotier(network=network, name=name)
-
     def update_default_data(self, old_data, new_data):
         for key in new_data:
             old_data[key] = new_data[key]
