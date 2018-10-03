@@ -8,6 +8,7 @@ class VM:
     def __init__(self, node, data={}):
         self.data = data
         self.node_sal = node
+        self.vm_sal = None
 
     @property
     def _vm_sal(self):
@@ -21,75 +22,96 @@ class VM:
         self.data['ztIdentity'] = self.node_sal.generate_zerotier_identity()
         return self.data['ztIdentity']
 
-    def install(self, vm_sal=None):
+    def install(self):
         print(colored('Installing vm %s' % self.data["name"], 'white'))
-        vm_sal = vm_sal or self._vm_sal
-        vm_sal.deploy()
-        self.data['uuid'] = vm_sal.uuid
-        self.data['ztIdentity'] = vm_sal.zt_identity
+        self.vm_sal = self.vm_sal or self._vm_sal
+        self.vm_sal.deploy()
+        self.data['uuid'] = self.vm_sal.uuid
+        self.data['ztIdentity'] = self.vm_sal.zt_identity
 
     def zt_identity(self):
         return self.data['ztIdentity']
 
     def uninstall(self):
         print(colored('Uninstalling vm %s' % self.data["name"], 'white'))
-        self._vm_sal.destroy()
+        self.vm_sal.destroy()
 
     def shutdown(self, force=False):
         print(colored('Shuting down vm %s' % self.data["name"], 'white'))
         if force is False:
-            self._vm_sal.shutdown()
+            self.vm_sal.shutdown()
         else:
-            self._vm_sal.destroy()
+            self.vm_sal.destroy()
 
     def pause(self):
         print(colored('Pausing vm %s' % self.data["name"], 'white'))
-        self._vm_sal.pause()
+        self.vm_sal.pause()
 
     def start(self):
         print(colored('Starting vm {}'.format(self.data["name"]), 'white'))
-        self._vm_sal.start()
+        self.vm_sal.start()
 
     def resume(self):
         print(colored('Resuming vm %s' % self.data["name"],'white')) 
-        self._vm_sal.resume()
+        self.vm_sal.resume()
      
     def reboot(self):
         print(colored('Rebooting vm %s' % self.data["name"], 'white'))
-        self._vm_sal.reboot()
+        self.vm_sal.reboot()
 
     def reset(self):
         print(colored('Resetting vm %s' % self.data["name"],'white'))
-        self._vm_sal.reset()
+        self.vm_sal.reset()
+
+    def info(self, timeout=None, data=None):
+        return self.vm_sal.info
 
     def enable_vnc(self):
         print(colored('Enable vnc for vm %s' % self.data["name"], 'white'))
-        self._vm_sal.enable_vnc()
-
-    def info(self, timeout=None, data=None):
-        data = data or self.data
-        info = self._vm_sal.info or {}
-        nics = copy.deepcopy(data['nics'])
-        for nic in nics:
-            if nic['type'] == 'zerotier' and nic.get('ztClient') and data.get('ztIdentity'):
-                ztAddress = data['ztIdentity'].split(':')[0]
-                zclient = j.clients.zerotier.get(nic['ztClient'])
-                try:
-                    network = zclient.network_get(nic['id'])
-                    member = network.member_get(address=ztAddress)
-                    member.timeout = None
-                    nic['ip'] = member.get_private_ip(timeout)
-                except (RuntimeError, ValueError) as e:
-                    print(colored('Failed to retreive zt ip: %s', str(e),'red'))
-
-        return {
-            'vnc': info.get('vnc'),
-            'status': info.get('state', 'halted'),
-            'disks': data['disks'],
-            'nics': nics,
-            'ztIdentity': data['ztIdentity'],
-        }
+        self.vm_sal.enable_vnc()
 
     def disable_vnc(self):
         print(colored('Disable vnc for vm %s' % self.data["name"], 'white'))
-        self._vm_sal.disable_vnc()
+        self.vm_sal.disable_vnc()
+
+    def generate_vm_sal(self):
+        self.vm_sal = self._vm_sal
+    
+    def add_port(self, name, source, target):
+        self.vm_sal.ports.add(name=name, source=source, target=target)
+
+    def del_port(self, name):
+        self.vm_sal.ports.add(name=name)
+    
+    def list_port(self):
+        return self.vm_sal.ports.list()
+    
+    def is_running(self):
+        return self.vm_sal.is_running()
+
+    def add_disk(self, name_or_disk, url=None):
+        self.vm_sal.disks.add(name_or_disk=name_or_disk, url=url)
+    
+    def remove_disk(self, name):
+        self.vm_sal.disks.remove(name)
+    
+    def list_disk(self, name):
+        return self.vm_sal.disks.list()
+
+    def update_disks(self):
+        self.vm_sal.update_disks()
+
+    def add_nics(self, type_, name, networkid=None):
+        self.vm_sal.nics.add(type_=type_, name=name, networkid=networkid)
+
+    def add_zerotier_nics(self, network, name=None):
+        self.vm_sal.nics.add_zerotier(name=name, network=network)
+
+    def remove_nics(self, item):
+        self.vm_sal.nics.remove(item=item)
+
+    def list_nics(self):
+        return self.vm_sal.nics.list()
+
+    def change_params(self, param, value):
+        setattr(self.vm_sal, param, value)

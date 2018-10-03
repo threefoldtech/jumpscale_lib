@@ -39,13 +39,12 @@ class VMTestCases(BaseTest):
         self.log("Create vm [VM1] with default values, should succeed.")
         vm = self.vm(node=self.node_sal)
         vm.data = self.set_vm_default_values(os_type=os_type)
-        created_vm = vm._vm_sal
-        self.assertTrue(created_vm)
-       
+        vm.generate_vm_sal()
+        
         self.log(" Add zerotier network to VM1, should succeed.")
-        self.add_zerotier_network(created_vm)
-        vm.install(created_vm)
-        self.vms.append(created_vm.uuid)
+        vm.add_zerotier_nics(network=self.zt_network)
+        vm.install()
+        self.vms.append(vm.info()['uuid'])
 
         self.log("Check that vm added to zerotier network and can access it using it, should succeed.")
         ztIdentity = vm.data["ztIdentity"]
@@ -75,13 +74,12 @@ class VMTestCases(BaseTest):
         self.log(" Create a vm [vm1] with {} version of {}, should succeed.".format(version_release, os_type))
         vm = self.vm(node=self.node_sal)
         vm.data = self.set_vm_default_values(os_type=os_type, os_version=version_release)
-        created_vm = vm._vm_sal
-        self.assertTrue(created_vm)
+        vm.generate_vm_sal()
 
         self.log(" Add zerotier network to VM1, should succeed.")
-        self.add_zerotier_network(created_vm)
-        vm.install(created_vm)
-        self.vms.append(created_vm.uuid)
+        vm.add_zerotier_nics(network=self.zt_network)
+        vm.install()
+        self.vms.append(vm.info()['uuid'])
         
         self.log("Check that vm2 added to zerotier network and can access it using it, should succeed.")
         ztIdentity = vm.data["ztIdentity"]
@@ -114,17 +112,15 @@ class VMTestCases(BaseTest):
         network_name = self.random_string()
         nics = {'nics': [{'name': network_name, 'type': 'default'}]}  
         vm.data = self.update_default_data(vm.data, nics)
-
-        created_vm = vm._vm_sal
-        self.assertTrue(created_vm)
+        vm.generate_vm_sal()
 
         self.log("Add a port forward to port 22.")
         port_name = self.random_string()  
         host_port_ssh = random.randint(7000, 8000)       
-        created_vm.ports.add(name=port_name, source=host_port_ssh, target=22)
+        vm.add_port(name=port_name, source=host_port_ssh, target=22)
         
-        vm.install(created_vm)
-        self.vms.append(created_vm.uuid)
+        vm.install()
+        self.vms.append(vm.info()['uuid'])
         
         self.log("Check that vm can reach internet, should succeed.")
         result = self.ssh_vm_execute_command(vm_ip=self.node_ip, port=host_port_ssh, cmd='ping -w5 8.8.8.8')
@@ -145,11 +141,11 @@ class VMTestCases(BaseTest):
         vm = self.vm(node=self.node_sal)
         vm.data = self.set_vm_default_values(os_type=os_type)
         vm.install()
-        self.assertTrue(vm._vm_sal.is_running())
+        self.assertTrue(vm.is_running())
 
         self.log("Destroy vm [VM1], should succeed.")
         vm.uninstall()
-        self.assertFalse(vm._vm_sal.is_running())
+        self.assertFalse(vm.is_running())
 
     @parameterized.expand(["zero-os", "ubuntu"])
     def test005_add_and_delete_disk_from_vm(self, os_type):
@@ -171,13 +167,12 @@ class VMTestCases(BaseTest):
         self.log("Create vm [VM1] with default values, should succeed.")
         vm = self.vm(node=self.node_sal)
         vm.data = self.set_vm_default_values(os_type=os_type)
-        created_vm = vm._vm_sal
-        self.assertTrue(created_vm)
+        vm.generate_vm_sal()
         
         self.log(" Add zerotier network to VM1, should succeed.")
-        self.add_zerotier_network(created_vm)
-        vm.install(created_vm)
-        self.vms.append(created_vm.uuid)
+        vm.add_zerotier_nics(network=self.zt_network)
+        vm.install()
+        self.vms.append(vm.info()['uuid'])
 
         self.log("Check that vm added to zerotier network and can access it using it, should succeed.")
         ztIdentity = vm.data["ztIdentity"]
@@ -186,7 +181,7 @@ class VMTestCases(BaseTest):
         self.assertEqual(result, '/root')
 
         self.log("Check that vm don't attach any disk.")
-        self.assertFalse(created_vm.info['params']['media'])
+        self.assertFalse(vm.info()['params']['media'])
 
         self.log("Get disk name and url(path).")
         host_disk = self.node_sal.client.disk.list()[0]['name']
@@ -194,27 +189,27 @@ class VMTestCases(BaseTest):
 
         self.log("Attach disk[D1] to vm1, should succeed.")
         disk_name1 = self.random_string()
-        created_vm.disks.add(name_or_disk=disk_name1, url=disk_url)
-        created_vm.update_disks()
+        vm.add_disk(disk_name1, disk_url)
+        vm.update_disks()
 
         self.log("Check that disk [D1] added successfully to vm1.")
-        self.assertEqual(created_vm.info['params']['media'][0]['url'], disk_url)
+        self.assertEqual(vm.info()['params']['media'][0]['url'], disk_url)
 
         self.log("Try to attach disk[D1] again to vm1, should failed.")
         disk_name2 = self.random_string()
-        created_vm.disks.add(name_or_disk=disk_name2, url=disk_url)
+        vm.add_disk(disk_name2, disk_url)
         
         with self.assertRaises(RuntimeError) as e:
-            created_vm.update_disks()
+            vm.update_disks()
         self.assertIn('The disk you tried is already attached to the vm', e.exception.args[0])
 
         self.log('Remove the disk[D1] from the vm ,should succeed.')
-        created_vm.disks.remove(disk_name1)
-        created_vm.disks.remove(disk_name2)
-        created_vm.update_disks()
+        vm.remove_disk(disk_name1)
+        vm.remove_disk(disk_name2)
+        vm.update_disks()
 
         self.log('Check that disk removed successfully.')
-        self.assertFalse(created_vm.info['params']['media'])
+        self.assertFalse(vm.info()['params']['media'])
 
     @unittest.skip('https://github.com/threefoldtech/jumpscale_lib/issues/93')
     def test006_add_remove_port_to_vm(self):
@@ -238,20 +233,19 @@ class VMTestCases(BaseTest):
         network_name = self.random_string()
         nics = {'nics': [{'name': network_name, 'type': 'default'}]}  
         vm.data = self.update_default_data(vm.data, nics)
-        created_vm = vm._vm_sal
-        self.assertTrue(created_vm)
+        vm.generate_vm_sal()
 
         self.log("Add 2 port forward for ssh and server.")
         port_name1 = self.random_string()
         host_port_ssh = random.randint(1000, 2000)        
-        created_vm.ports.add(name=port_name1, source=host_port_ssh, target=22)
+        vm.add_port(name=port_name1, source=host_port_ssh, target=22)
         
         port_name2 = self.random_string()   
         host_port = random.randint(3000, 4000)
         guest_port = random.randint(5000, 6000)
-        created_vm.ports.add(name=port_name2, source=host_port, target=guest_port)
-        vm.install(created_vm)
-        self.vms.append(created_vm.uuid)
+        vm.add_port(name=port_name2, source=host_port, target=guest_port)
+        vm.install()
+        self.vms.append(vm.info()['uuid'])
         
         self.log("create server on the vm at port {}.".format(guest_port))
         cmd = 'python3 -m http.server {} &> /tmp/server.log &'.format(guest_port)
@@ -267,7 +261,7 @@ class VMTestCases(BaseTest):
         self.assertEqual(content1, self.ssh_key)
       
         self.log("Drop port [p1]")
-        created_vm.ports.remove(port_name2)
+        vm.remove_port(port_name2)
         vm.install()
 
         self.log("Check that you can't access the server anymore, should succeed")
@@ -291,27 +285,24 @@ class VMTestCases(BaseTest):
 
         self.log("create vm [VM1] and deploy it , should succeed.")
         vm1 = self.vm(node=self.node_sal)
-        vm1.data = self.set_vm_default_values(os_type=os_type)
-        created_vm1 = vm1._vm_sal
-        self.assertTrue(created_vm1)   
-        vm1.install(created_vm1)
-        self.vms.append(created_vm1.uuid)
+        vm1.data = self.set_vm_default_values(os_type=os_type)   
+        vm1.install()
+        self.vms.append(vm1.info()['uuid'])
 
         self.log("Add Zerotier network to [VM1], should fail as vm is running.")
         with self.assertRaises(RuntimeError) as e:
-            self.add_zerotier_network(created_vm1)
+            vm1.add_zerotier_nics(network=self.zt_network)
         self.assertIn('Zerotier can not be added when the VM is running', e.exception.args[0])
 
         self.log("Create vm [VM2] ,should succeed.")
         vm2 = self.vm(node=self.node_sal)
         vm2.data = self.set_vm_default_values(os_type=os_type)
-        created_vm2 = vm2._vm_sal
-        self.assertTrue(created_vm2)
+        vm2.generate_vm_sal()
 
         self.log("Add Zerotier network to [VM2] before deploy it , should succeed.")
-        self.add_zerotier_network(created_vm2)
-        vm2.install(created_vm2)
-        self.vms.append(created_vm2.uuid)
+        vm2.add_zerotier_nics(network=self.zt_network)
+        vm2.install()
+        self.vms.append(vm2.info()['uuid'])
 
         self.log("Check that vm [VM2] join zerotier successfully after deploy it.")
         ztIdentity = vm2.data["ztIdentity"]
@@ -334,26 +325,25 @@ class VMTestCases(BaseTest):
         self.log("Create vm [VM1] with default values, should succeed.")
         vm = self.vm(node=self.node_sal)
         vm.data = self.set_vm_default_values(os_type="ubuntu")
-        created_vm = vm._vm_sal
-        self.assertTrue(created_vm)
+        vm.generate_vm_sal()
 
         self.log("Add a port forward to port 22, should fail.")
         port_name = self.random_string()
         host_port = random.randint(3000, 4000)
 
         with self.assertRaises(ValueError) as e:
-            created_vm.ports.add(port_name, source=host_port, target=22)
+            vm.add_port(port_name, source=host_port, target=22)
         self.assertIn('Can not add ports when no default nic is added', e.exception.args[0])
 
         self.log("Add type default to [vm1].")
         network_name = self.random_string()
-        created_vm.nics.add(type_='default', name=network_name)
+        vm.add_nics(type_='default', name=network_name)
 
         self.log("Add a port forward to port 22.")
-        created_vm.ports.add(port_name, source=host_port, target=22)
+        vm.add_port(port_name, source=host_port, target=22)
     
-        vm.install(created_vm)
-        self.vms.append(created_vm.uuid)
+        vm.install()
+        self.vms.append(vm.info()['uuid'])
 
         self.log("Check that you can access [vm1], should succeed.")
         result = self.ssh_vm_execute_command(vm_ip=self.node_ip, port=host_port, cmd='pwd')
@@ -376,9 +366,7 @@ class VMTestCases(BaseTest):
         self.log("Create vm [VM1] with default values, should succeed.")
         vm = self.vm(node=self.node_sal)
         vm.data = self.set_vm_default_values(os_type="ubuntu")
-        created_vm = vm._vm_sal
-        self.assertTrue(created_vm)
-        vm.install(created_vm)
+        vm.install()
 
         if param == "name":
             new_param_val = self.random_string()
@@ -395,19 +383,19 @@ class VMTestCases(BaseTest):
 
         self.log("Try to change vm {} while it is running, should fail.".format(param))
         with self.assertRaises(RuntimeError) as e:
-            setattr(created_vm, param, new_param_val)
+            vm.change_params(param, new_param_val)
         self.assertIn('Can not change {} of running vm'.format(flag), e.exception.args[0])
 
         self.log("Change vm parameters, should succeed.")
-        created_vm.destroy()
-        setattr(created_vm, param, new_param_val)
+        vm.uninstall()
+        vm.change_params(param, new_param_val)
 
         self.log("Start the vm again.")
-        created_vm.start()
-        self.vms.append(created_vm.uuid)
+        vm.start()
+        self.vms.append(vm.info()['uuid'])
 
         self.log("Check that vm parameters are changed.")
-        self.assertEqual(created_vm.info['params'][flag], new_param_val)
+        self.assertEqual(vm.info()['params'][flag], new_param_val)
 
     def test010_ping_vms(self):
         """ SAL-022 check that vms with type default nics can reach each other
@@ -430,15 +418,14 @@ class VMTestCases(BaseTest):
         network_name = self.random_string()
         nics = {'nics': [{'name': network_name, 'type': 'default'}]}  
         self.update_default_data(vm1.data, nics)
-        created_vm1 = vm1._vm_sal
-        self.assertTrue(created_vm1)
+        vm1.generate_vm_sal()
 
         self.log("Add port forward to port 22.")
         port_name = self.random_string()
         host_port_ssh = random.randint(1000, 2000)        
-        created_vm1.ports.add(name=port_name, source=host_port_ssh, target=22)
-        vm1.install(created_vm1)
-        self.vms.append(created_vm1.uuid)
+        vm1.add_port(name=port_name, source=host_port_ssh, target=22)
+        vm1.install()
+        self.vms.append(vm1.info()['uuid'])
         
         self.log("Create vm [VM2] with type default nics, should succeed.")
         vm2 = self.vm(node=self.node_sal)
@@ -447,28 +434,24 @@ class VMTestCases(BaseTest):
         self.log("Update default data by adding type default nics.")
         nics = {'nics': [{'name': network_name, 'type': 'default'}]}  
         vm2.data = self.update_default_data(vm2.data, nics)
-        created_vm2 = vm2._vm_sal
-        self.assertTrue(created_vm2)
+        vm2.generate_vm_sal()
 
-        vm2.install(created_vm2)
-        self.vms.append(created_vm2.uuid)
+        vm2.install()
+        self.vms.append(vm2.info()['uuid'])
 
         self.log("Create vm [VM3] without type default nics, should succeed.")
         vm3 = self.vm(node=self.node_sal)
         vm3.data = self.set_vm_default_values(os_type="ubuntu")
-        created_vm3 = vm3._vm_sal
-        self.assertTrue(created_vm3)
-
-        vm3.install(created_vm3)
-        self.vms.append(created_vm3.uuid)
+        vm3.install()
+        self.vms.append(vm3.info()['uuid'])
 
         self.log("Try to ping VM2 from VM1, should succeed.")
-        cmd2 = 'ping -w5 "{}"'.format(created_vm2.info['default_ip'])
+        cmd2 = 'ping -w5 "{}"'.format(vm2.info()['default_ip'])
         result2 = self.ssh_vm_execute_command(vm_ip=self.node_ip, port=host_port_ssh, cmd=cmd2)
         self.assertIn('0% packet loss', result2)
         
         self.log("Try to ping VM3 from VM1, should fail.")
-        cmd3 = 'ping -w5 "{}"'.format(created_vm3.info['default_ip'])
+        cmd3 = 'ping -w5 "{}"'.format(vm3.info()['default_ip'])
         response = self.execute_command(ip=self.node_ip, port=host_port_ssh, cmd=cmd3)
         self.assertTrue(response.returncode)       
         self.assertIn('100% packet loss', response.stdout)
@@ -490,14 +473,14 @@ class VMTestCases(BaseTest):
         self.log("Create vm [VM1] with default values, should succeed.")
         vm = self.vm(node=self.node_sal)
         vm.data = self.set_vm_default_values(os_type="ubuntu")
-        created_vm = vm._vm_sal
-        self.assertTrue(created_vm)
+        vm.generate_vm_sal()
        
         self.log("Add zerotier network to VM1, should succeed.")
-        self.add_zerotier_network(created_vm)
+        vm.add_zerotier_nics(network=self.zt_network)
 
         self.log("Deploy the vm1.")
-        vm.install(created_vm)
+        vm.install()
+        self.vms.append(vm.info()['uuid'])
 
         self.log("Check that vm added to zerotier network and can access it using it, should succeed.")
         ztIdentity = vm.data["ztIdentity"]
@@ -507,15 +490,15 @@ class VMTestCases(BaseTest):
 
         self.log("Add type default to vm1 and update nics, should succeed.")
         network_name = self.random_string()
-        created_vm.nics.add(name=network_name, type_='default')
+        vm.add_nics(name=network_name, type_='default')
 
         self.log("Add port forward to port 22.")
         port_name = self.random_string()
         host_port_ssh = random.randint(8000, 9000)        
-        created_vm.ports.add(name=port_name, source=host_port_ssh, target=22)
+        vm.add_port(name=port_name, source=host_port_ssh, target=22)
         
         self.log("Update the network and try to ssh using port forward, should succeed.")
-        created_vm.update_nics()
+        vm.update_nics()
         result2 = self.ssh_vm_execute_command(vm_ip=self.node_ip, port=host_port_ssh, cmd='pwd')
         self.assertEqual(result2, '/root') 
 
@@ -538,13 +521,12 @@ class VMActionsBase(BaseTest):
         self.log("Create a vm[vm1]  on node, should succeed.")
         self.vm = self.vm(node=self.node_sal)
         self.vm.data = self.set_vm_default_values(os_type=os_type)
-        self.created_vm = self.vm._vm_sal
-        self.assertTrue(self.created_vm)
+        self.vm.generate_vm_sal()
         
         self.log(" Add zerotier network to VM1, should succeed.")
-        self.add_zerotier_network(self.created_vm)
-        self.vm.install(self.created_vm)
-        self.vms.append(self.created_vm.uuid)
+        self.vm.add_zerotier_nics(network=self.zt_network)
+        self.vm.install()
+        self.vms.append(self.vm.info()['uuid'])
 
         self.log("Check that vm added to zerotier network and can access it using it, should succeed.")
         ztIdentity = self.vm.data["ztIdentity"]
@@ -567,25 +549,23 @@ class VMActionsBase(BaseTest):
         self.log("Create a vm[vm1]  on node, should succeed.")
         self.vm = self.vm(node=self.node_sal)
         self.vm.data = self.set_vm_default_values(os_type=os_type)
-        self.created_vm = self.vm._vm_sal
-        self.assertTrue(self.created_vm)
-        self.vm.install(self.created_vm)
-        self.vms.append(self.created_vm.uuid)
+        self.vm.install()
+        self.vms.append(self.vm.info()['uuid'])
 
-        vnc_port = self.created_vm.info.get('vnc') - 5900
+        vnc_port = self.vm.info().get('vnc') - 5900
 
         self.log("Enable vnc port of [vm1] and connect to it , should succeed.")
-        self.created_vm.enable_vnc()
-        response2 = self.check_vnc_connection('{}:{}'.format(self.node_ip, vnc_port))
-        self.assertFalse(response2.returncode)
+        self.vm.enable_vnc()
+        response1 = self.check_vnc_connection('{}:{}'.format(self.node_ip, vnc_port))
+        self.assertFalse(response1.returncode)
 
         self.log("Disable vnc port of [vm1] , should succeed.")
-        self.created_vm.disable_vnc()   
+        self.vm.disable_vnc()   
 
         self.log("Try to connect to vnc port again , should fail.")
-        response3 = self.check_vnc_connection('{}:{}'.format(self.node_ip, vnc_port))
-        self.assertTrue(response3.returncode)
-        self.assertIn('timeout caused connection failure', response3.stderr.strip())
+        response2 = self.check_vnc_connection('{}:{}'.format(self.node_ip, vnc_port))
+        self.assertTrue(response2.returncode)
+        self.assertIn('timeout caused connection failure', response2.stderr.strip())
 
     @parameterized.expand(["zero-os", "ubuntu"])
     def test002_pause_and_resume_vm(self, os_type):
@@ -606,18 +586,18 @@ class VMActionsBase(BaseTest):
         self.create_booted_vm(os_type)
 
         self.log("Pause [vm1], should succeed.")
-        self.created_vm.pause()
+        self.vm.pause()
 
         self.log("Check that [vm1] has been paused successfully.")
-        self.assertEqual(self.created_vm.info['state'], 'paused')
+        self.assertEqual(self.vm.info()['state'], 'paused')
         result1 = self.execute_command(ip=self.vm_zt_ip, cmd='pwd')
         self.assertTrue(result1.returncode)
 
         self.log("Resume [vm1], should succeed.")
-        self.created_vm.resume()
+        self.vm.resume()
 
         self.log("Check that [vm1] is runninng and can access it again.")
-        self.assertEqual(self.created_vm.info['state'], 'running')
+        self.assertEqual(self.vm.info()['state'], 'running')
         result2 = self.ssh_vm_execute_command(vm_ip=self.vm_zt_ip, cmd='pwd')
         self.assertEqual(result2, '/root')
 
@@ -638,9 +618,9 @@ class VMActionsBase(BaseTest):
 
         self.log("{} the VM".format(operation))
         if operation == "reset":
-            self.created_vm.reset()
+            self.vm.reset()
         else:
-            self.created_vm.reboot()
+            self.vm.reboot()
 
         self.log("Check that [vm] has been rebooted successfully.")
         reboot_response = self.ssh_vm_execute_command(vm_ip=self.vm_zt_ip, cmd='uptime')
@@ -669,25 +649,25 @@ class VMActionsBase(BaseTest):
         time.sleep(15)
         
         self.log("Shutdown [vm1], should succeed.")
-        self.created_vm.shutdown()
+        self.vm.shutdown()
 
         self.log("Wait till vm1 shutdown")
         for _ in range(40):
-            if not self.created_vm.is_running():
+            if not self.vm.is_running():
                 break
             else:
                 time.sleep(5)
         else:
-            self.assertFalse(self.created_vm.is_running(),'Take long time to shutdown')
+            self.assertFalse(self.vm.is_running(),'Take long time to shutdown')
         
         self.log("Check that [vm1] has been forced shutdown successfully.")
         result1 = self.execute_command(ip=self.vm_zt_ip, cmd='pwd')
         self.assertTrue(result1.returncode)
 
         self.log("Start [vm1], should succeed.")
-        self.created_vm.start()
+        self.vm.start()
         self.vms.pop()
-        self.vms.append(self.created_vm.uuid)
+        self.vms.append(self.vm.info()['uuid'])
 
         self.log("Check that [vm1] is running again.")
         result2 = self.ssh_vm_execute_command(vm_ip=self.vm_zt_ip, cmd='pwd')
