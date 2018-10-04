@@ -321,7 +321,7 @@ class Service:
         """
         if self.is_running():
             self.container.client.job.kill(self._id)
-            if not  j.tools.timer.execute_until(lambda : not self.is_running(), timeout, 0.5):
+            if not j.tools.timer.execute_until(lambda : not self.is_running(), timeout, 0.5):
                 raise RuntimeError('Failed to stop {} server: {}'.format(self._type, self.name))
 
         self.container.stop()
