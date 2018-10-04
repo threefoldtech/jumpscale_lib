@@ -75,7 +75,7 @@ class Traefik(Service):
     def _config_as_text(self):
         #for SSL Certifcate 
         client = j.clients.etcd.get(self.name, data={'host': self.etcd_endpoint['ip'], 'port': self.etcd_endpoint['client_port'], 
-                                                     'password_': self.etcd_endpoint['password'], 'user': "root"})
+                                                     'password': self.etcd_endpoint['password'], 'user': "root"})
         client.put("traefik/acme/account", "")
         return templates.render(
             'traefik.conf', etcd_ip = '{}:{}'.format(self.etcd_endpoint['ip'], self.etcd_endpoint['client_port']), user = "root", passwd = self.etcd_endpoint['password']).strip()
