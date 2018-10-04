@@ -166,4 +166,4 @@ class ETCD(Service):
     def _create_root_user(self):
         cluster = self.cluster if self.cluster else [{'name': self.name, 'address': self.peer_url}]
         addresses  = [member['address'] for member in cluster]
-        self.container.system('/bin/etcdctl --endpoints={} user add root:{}'.format(','.join(addresses), self.password))
+        self.container.client.system('/bin/etcdctl --endpoints={} user add root:{}'.format(','.join(addresses), self.password))
