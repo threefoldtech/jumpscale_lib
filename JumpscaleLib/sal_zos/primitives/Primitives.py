@@ -1,9 +1,9 @@
 from jumpscale import j
-from ..vm.ZOS_VM import ZOS_VM, ZeroOSVM, ZDBDisk
+from ..vm.ZOS_VM import ZOS_VM, IpxeVM, ZDBDisk
 
 
 BASEFLIST = 'https://hub.grid.tf/tf-bootable/{}.flist'
-ZEROOSFLIST = 'https://hub.grid.tf/tf-bootable/zero-os-bootable.flist'
+ZEROOSFLIST = 'https://hub.grid.tf/tf-autobuilder/zero-os-development.flist'
 
 class Primitives:
     def __init__(self, node):
@@ -23,19 +23,14 @@ class Primitives:
         templatename, _, version = type_.partition(':')
         kwargs = {'name': name, 'node': self.node}
         if templatename == 'zero-os':
-            version = version or 'master'
-            ipxeurl = 'https://bootstrap.grid.tf/ipxe/{}/0/development'.format(version)
-            klass = ZeroOSVM
             kwargs['flist'] = ZEROOSFLIST
-            kwargs['ipxe_url'] = ipxeurl
         elif templatename == 'ubuntu':
             version = version or 'lts'
             flistname = '{}:{}'.format(templatename, version)
             kwargs['flist'] = BASEFLIST.format(flistname)
-            klass = ZOS_VM
         else:
             raise RuntimeError('Invalid VM type {}'.format(type_))
-        return klass(**kwargs)
+        return ZOS_VM(**kwargs)
 
     def create_disk(self, name, zdb, mountpoint=None, filesystem='ext4', size=10, label=None):
         """
@@ -148,7 +143,7 @@ class Primitives:
             return gw
         elif type_ == 'vm':
             if data.get('ipxeUrl'):
-                vm = ZeroOSVM(self.node, data['name'])
+                vm = IpxeVM(self.node, data['name'])
             else:
                 vm = ZOS_VM(self.node, data['name'])
             vm.from_dict(data)

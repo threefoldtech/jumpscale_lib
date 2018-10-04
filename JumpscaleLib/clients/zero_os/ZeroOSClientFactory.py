@@ -1,4 +1,5 @@
 import time
+from urllib.parse import urlparse
 
 from jumpscale import j
 
@@ -48,6 +49,13 @@ class ZeroOSClientFactory():
 
     def new(self, instance, data={}):
         return j.clients.zos_protocol.new(instance=instance, data=data)
+
+    def get_by_id(self, node_id):
+        directory = j.clients.threefold_directory.get()
+        node, resp = directory.api.GetCapacity(node_id)
+        resp.raise_for_status()
+        u = urlparse(node.robot_address)
+        return self.get(node_id, data={'host': u.hostname})
 
     def zero_node_ovh_install(self, OVHHostName, OVHClient, zerotierNetworkID, zerotierClient):
         """
