@@ -154,7 +154,7 @@ sam_wallet = j.clients.rivine.get('sam_wallet', data=client_data).wallet
 ```
 ### Sending tokens  that require multiple participants to sign 
 
-The jumpscale client support sending money to multiple wallets, to do that you need to use the send_to_many method available in the wallet object:
+The jumpscale client support sending tokens  that requires multiple addresses to sign to be able to be spent.  Use the send_to_multisig method available in the wallet object:
 ```python
 recipients = [bob_wallet.addresses[0],
               alice_wallet.addresses[0],
@@ -163,13 +163,13 @@ recipients = [bob_wallet.addresses[0],
               ]
 required_nr_of_signatures = 3
 
-wallet.send_to_many(amount=2, recipients=recipients, required_nr_of_signatures=required_nr_of_signatures)
+wallet.send_to_multisig(amount=2, recipients=recipients, required_nr_of_signatures=required_nr_of_signatures)
 ```
 The above commands will send 2 TF Tokens to a multi-signature wallet shared between the recipients, and if 3 out of the 4 participants sings the transaction then the 2 TF Tokens can be spent already.
 
 ### Sending tokens that require multiple participants to sign with lock period
 
-You also set a lock period e.g couple of hours or days, setting the token to be locked until the period is reached. To do that, you can simply use the same as the previous steps but add a locktime to the send_to_many call
+You also set a lock period e.g couple of hours or days, setting the token to be locked until the period is reached. To do that, you can simply use the same as the previous steps but add a locktime to the send_to_multisig call
 ```python
 recipients = [bob_wallet.addresses[0],
               alice_wallet.addresses[0],
@@ -179,7 +179,7 @@ recipients = [bob_wallet.addresses[0],
 required_nr_of_signatures = 3
 locktime = int(time.time() + 15 * 60) # 15 minutes locktime
 
-wallet.send_to_many(amount=2, recipients=recipients,
+wallet.send_to_multisig(amount=2, recipients=recipients,
                     required_nr_of_signatures=required_nr_of_signatures,
                     locktime=locktime)
 ```
