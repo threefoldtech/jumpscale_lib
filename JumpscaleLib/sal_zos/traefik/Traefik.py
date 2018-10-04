@@ -50,19 +50,11 @@ class Traefik(Service):
             'identity': self.zt_identity,
         }
 
-    def deploy(self):
+    def deploy(self, timeout=120):
         # call the container property to make sure it gets created and the ports get updated
         self.container
-        for nic in self.nics:
-            if nic.type == 'zerotier':
-                zt_address = self.zt_identity.split(':')[0]
-                try:
-                    network = nic.client.network_get(nic.networkid)
-                    member = network.member_get(address=zt_address)
-                    member.timeout = None
-                    member.get_private_ip(60)
-                except (RuntimeError, ValueError) as e:
-                    logger.warning('Failed to retreive zt ip: %s', str(e))
+        if not j.tools.timer.execute_until(lambda : self.container.mgmt_addr, timeout, 1):
+            raise RuntimeError('Failed to get zt ip for etcd {}'.format(self.name))
 
     def container_port(self, port):
         return self._container.get_forwarded_port(port)
@@ -75,7 +67,7 @@ class Traefik(Service):
     def _config_as_text(self):
         #for SSL Certifcate 
         client = j.clients.etcd.get(self.name, data={'host': self.etcd_endpoint['ip'], 'port': self.etcd_endpoint['client_port'], 
-                                                     'password': self.etcd_endpoint['password'], 'user': "root"})
+                                                     'password_': self.etcd_endpoint['password'], 'user': "root"})
         client.put("traefik/acme/account", "")
         return templates.render(
             'traefik.conf', etcd_ip = '{}:{}'.format(self.etcd_endpoint['ip'], self.etcd_endpoint['client_port']), user = "root", passwd = self.etcd_endpoint['password']).strip()
