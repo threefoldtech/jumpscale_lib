@@ -161,9 +161,19 @@ class ETCD(Service):
         self.container.client.system(cmd, id=self._id)
         if not j.tools.timer.execute_until(self.is_running, 30, 0.5):
             raise RuntimeError('Failed to start etcd server: {}'.format(self.name))
-        self._create_root_user()
+        self._enable_auth()
 
-    def _create_root_user(self):
-        cluster = self.cluster if self.cluster else [{'name': self.name, 'address': self.peer_url}]
-        addresses  = [member['address'] for member in cluster]
-        self.container.client.system('/bin/etcdctl --endpoints={} user add root:{}'.format(','.join(addresses), self.password))
+    def _enable_auth(self):
+        commands = [
+            '/bin/etcdctl --endpoints={} user add root:{}'.format(self.client_url, self.password),
+            '/bin/etcdctl --endpoints={} auth enable'.format(self.client_url),
+        ]
+
+        for command in commands:
+            result = self.container.client.system(command).get()
+            if result.state == 'ERROR':
+                if result.stderr == 'Error: etcdserver: user name not found\n':
+                    # this command has been executed before
+                    continue
+                else:
+                    raise RuntimeError(result.stderr)

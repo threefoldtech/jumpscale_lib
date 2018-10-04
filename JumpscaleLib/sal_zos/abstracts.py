@@ -319,12 +319,10 @@ class Service:
         """
         Stop the service process and stop the container
         """
-        if not self.is_running():
-            return
-
-        self.container.client.job.kill(self._id)
-        if not  j.tools.timer.execute_until(lambda : not self.is_running(), timeout, 0.5):
-            raise RuntimeError('Failed to stop {} server: {}'.format(self._type, self.name))
+        if self.is_running():
+            self.container.client.job.kill(self._id)
+            if not  j.tools.timer.execute_until(lambda : not self.is_running(), timeout, 0.5):
+                raise RuntimeError('Failed to stop {} server: {}'.format(self._type, self.name))
 
         self.container.stop()
         self._container = None
