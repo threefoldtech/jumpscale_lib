@@ -18,7 +18,7 @@ class Traefik(Service):
         self.id = 'traefik.{}'.format(self.name)
         self.node = node
         self._container = None
-        self.flist = 'https://hub.grid.tf/tf-official-apps/traefik-1.7.0-rc5.flist'
+        self.flist = 'https://hub.grid.tf/tf-official-apps/traefik-v1.7.0-rc5.flist'
         self.etcd_endpoint =etcd_endpoint
         self.etcd_watch = etcd_watch
         self.node_port = None
@@ -73,13 +73,12 @@ class Traefik(Service):
         self.container.upload_content(j.sal.fs.joinPaths(self._config_dir, self._config_name), config)
 
     def _config_as_text(self):
-        etcd_url=self.etcd_endpoint.split('http://')
-        ip = etcd_url[1].split(':')
         #for SSL Certifcate 
-        client = j.clients.etcd.get(self.name, data={'host': ip[0], 'port': 2379})
-        client.put("/traefik/acme/account", "")
+        client = j.clients.etcd.get(self.name, data={'host': self.etcd_endpoint['ip'], 'port': self.etcd_endpoint['client_port'], 
+                                                     'password': self.etcd_endpoint['password'], 'user': "root"})
+        client.put("traefik/acme/account", "")
         return templates.render(
-            'traefik.conf', etcd_ip =etcd_url[1]).strip()
+            'traefik.conf', etcd_ip = '{}:{}'.format(self.etcd_endpoint['ip'], self.etcd_endpoint['client_port']), user = "root", passwd = self.etcd_endpoint['password']).strip()
 
     def start(self, timeout=30):
         """

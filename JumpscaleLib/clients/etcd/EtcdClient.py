@@ -18,7 +18,7 @@ host = "127.0.0.1"
 port = 2379
 #timeout = null
 user = ""
-password = ""
+password_ = ""
 """
 
 
@@ -40,7 +40,7 @@ class EtcdClient(JSConfigClient):
             if data['user'] and data['password']:
                 kwargs.update({
                     'user': data['user'],
-                    'passwrod': data['password']
+                    'password_': data['password']
                 })
             self._api = etcd3.client(**kwargs)
             print("client created")
