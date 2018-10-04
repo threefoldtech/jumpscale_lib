@@ -5,7 +5,6 @@ Rivine Client
 from Jumpscale import j
 
 from JumpscaleLib.clients.blockchain.rivine.RivineWallet import RivineWallet
-from JumpscaleLib.clients.blockchain.rivine.RivineMultiSigWallet import RivineMultiSignatureWallet
 
 
 TEMPLATE = """

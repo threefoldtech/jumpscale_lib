@@ -9,9 +9,6 @@ from JumpscaleLib.clients.blockchain.rivine.RivineWallet import RivineWallet
 TEMPLATE = """
 testnet = false
 seed_ = ""
-multisig = false
-cosigners = []
-required_sig = 0
 nr_keys_per_seed = 1
 """
 
@@ -57,38 +54,29 @@ class TfchainClient(JSConfigBase):
             consts = self._tfchain_consts['standard']
             if self._config.data['testnet'] is True:
                 consts = self._tfchain_consts['testnet']
-            if self._config.data['multisig'] is True:
-                cosigners = [item.split(',') for item in self.config.data['cosigners']]
-                self._wallet = RivineMultiSignatureWallet(cosigners=cosigners,
-                        required_sig=self.config.data['required_sig'],
-                        bc_networks = consts['explorers'],
-                        bc_network_password = consts['password'],
-                        minerfee = consts['minerfee'],
-                        client=client)
-            else:
-                # Load a wallet from a given seed. If no seed is given,
-                # generate a new one
-                seed = self.config.data['seed_']
-                if seed == "":
-                    seed = self.generate_seed()
-                    # Save the seed in the config
-                    data = dict(self.config.data)
-                    data['seed_'] = seed
-                    cl = j.clients.tfchain.get(instance=self.instance,
-                            data=data,
-                            create=True,
-                            interactive=False)
-                    cl.config.save()
-                    # make sure to set the seed in the current object.
-                    # if not, we'd have a random non persistent seed until
-                    # the first reload
-                    self.config.data['seed_'] = seed
-                self._wallet = RivineWallet(seed=seed,
-                        bc_networks = consts['explorers'],
-                        bc_network_password = consts['password'],
-                        nr_keys_per_seed = self.config.data['nr_keys_per_seed'],
-                        minerfee = consts['minerfee'],
-                        client=client)
+            # Load a wallet from a given seed. If no seed is given,
+            # generate a new one
+            seed = self.config.data['seed_']
+            if seed == "":
+                seed = self.generate_seed()
+                # Save the seed in the config
+                data = dict(self.config.data)
+                data['seed_'] = seed
+                cl = j.clients.tfchain.get(instance=self.instance,
+                        data=data,
+                        create=True,
+                        interactive=False)
+                cl.config.save()
+                # make sure to set the seed in the current object.
+                # if not, we'd have a random non persistent seed until
+                # the first reload
+                self.config.data['seed_'] = seed
+            self._wallet = RivineWallet(seed=seed,
+                    bc_networks = consts['explorers'],
+                    bc_network_password = consts['password'],
+                    nr_keys_per_seed = self.config.data['nr_keys_per_seed'],
+                    minerfee = consts['minerfee'],
+                    client=client)
         return self._wallet
 
     def generate_seed(self):
