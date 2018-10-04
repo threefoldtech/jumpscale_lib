@@ -37,10 +37,10 @@ class EtcdClient(JSConfigClient):
                 'host': data['host'],
                 'port': data['port'],
             }
-            if data['user'] and data['password']:
+            if data['user'] and data['password_']:
                 kwargs.update({
                     'user': data['user'],
-                    'password_': data['password']
+                    'password': data['password_']
                 })
             self._api = etcd3.client(**kwargs)
             print("client created")
