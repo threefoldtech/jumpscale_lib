@@ -14,6 +14,13 @@ from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
 
 JSConfigBaseFactory = j.tools.configmanager.JSBaseClassConfigs
 
+class WalletAlreadyExistsException(Exception):
+    """
+    Error since the walletname is already used.
+    """
+    def __init__( self, walletname):
+        super().__init__('Wallet already exists, remove with j.clients.tfchain.delete(walletname)')
+
 class TfchainClientFactory(JSConfigBaseFactory):
     """
     Factory class to get a tfchain client object
@@ -44,6 +51,8 @@ class TfchainClientFactory(JSConfigBaseFactory):
 
         @param seed : restores a wallet from a seed
         """
+        if self.exists(walletname):
+            raise WalletAlreadyExistsException(walletname)
         data = {'testnet':testnet, 'seed_':seed}
         return self.get(walletname, data=data).wallet
 
@@ -52,7 +61,7 @@ class TfchainClientFactory(JSConfigBaseFactory):
         Opens a named wallet
         Returns None if the  wallet is not found
         """
-        if walletname not in self.list():
+        if not self.exists(walletname):
             return None
         return self.get(walletname).wallet
 
