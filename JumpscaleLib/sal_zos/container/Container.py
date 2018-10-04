@@ -341,11 +341,8 @@ class Container():
 
     @property
     def mgmt_addr(self):
-        nics = self.client.info.nic()
-        ip = self.node.get_zt_ip(nics)
-        if ip:
-            return ip
-        raise LookupError('their is no support zerotier interface (support_address)')
+        return j.sal_zos.utils.get_zt_ip(self.client.info.nic())
+
 
     def __str__(self):
         return "Container <{}>".format(self.name)

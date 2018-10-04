@@ -37,3 +37,11 @@ class UtilsFactory(JSBASE):
             network = netaddr.IPNetwork(ip['addr'])
             if network.version == 4:
                 return network.ip.format()
+
+    def get_zt_ip(self, nics, network=''):
+        for nic in nics:
+            if nic['name'].startswith('zt'):
+                ipAdress = self.get_ip_from_nic(nic['addrs'])
+                if network and netaddr.IPAddress(ipAdress) not in netaddr.IPNetwork(network):
+                    continue
+                return ipAdress

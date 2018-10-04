@@ -111,7 +111,7 @@ class Node:
     @property
     def public_addr(self):
         nics = self.client.info.nic()
-        ip = self.get_zt_ip(nics)
+        ip = j.sal_zos.utils.get_zt_ip(nics)
         if ip:
             return ip
         _, ip = self.get_nic_hwaddr_and_ip(nics)
@@ -120,7 +120,7 @@ class Node:
     @property
     def support_address(self):
         nics = self.client.info.nic()
-        ip = self.get_zt_ip(nics)
+        ip = j.sal_zos.utils.get_zt_ip(nics, self.support_network)
         if ip:
             return ip
         raise LookupError('their is no support zerotier interface (support_address)')
@@ -128,17 +128,6 @@ class Node:
     @property
     def management_address(self):
         return self.public_addr
-
-    def get_zt_ip(self, nics):
-        """
-        Helper function to get the zerotier ip.
-        Used by both the container and the node
-        """
-        for nic in nics:
-            if nic['name'].startswith('zt'):
-                ipAdress = j.sal_zos.utils.get_ip_from_nic(nic['addrs'])
-                if netaddr.IPAddress(ipAdress) in netaddr.IPNetwork(self.support_network):
-                    return ipAdress
 
     def generate_zerotier_identity(self):
         return self.client.system('zerotier-idtool generate').get().stdout.strip()
