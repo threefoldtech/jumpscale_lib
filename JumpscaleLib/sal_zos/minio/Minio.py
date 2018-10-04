@@ -4,12 +4,13 @@ import time
 from jumpscale import j
 
 from .. import templates
+from ..abstracts import Service
 
 logger = j.logger.get(__name__)
 DEFAULT_PORT = 9000
 
 
-class Minio:
+class Minio(Service):
     """
     Minio gateway
     """
@@ -45,10 +46,8 @@ class Minio:
         :param tlog_namespace: name of the zerodb namespace used as tlog
         :param tlog_address: ip:port of the zerodb namespace used as tlog
         """
-        self.name = name
-        self.id = 'minio.{}'.format(self.name)
-        self.node = node
-        self._container = None
+        super().__init__(name, node, 'minio', [DEFAULT_PORT])
+
         # self.flist = 'https://hub.grid.tf/tf-official-apps/minio.flist'
         self.flist = 'https://hub.grid.tf/tf-autobuilder/threefoldtech-minio-zerostor.flist'  # TODO replace me when merging to master
         self.zdbs = zdbs
@@ -92,9 +91,9 @@ class Minio:
 
         sp = self.node.storagepools.get('zos-cache')
         try:
-            fs = sp.get(self.id)
+            fs = sp.get(self._id)
         except ValueError:
-            fs = sp.create(self.id)
+            fs = sp.create(self._id)
 
         return {
             'name': self._container_name,
@@ -105,64 +104,12 @@ class Minio:
             'mounts': {fs.path: metadata_path},
         }
 
-    @property
-    def _container_name(self):
-        """
-        :return: name used for zerodb container
-        :rtype: string
-        """
-        return 'minio_{}'.format(self.name)
-
-    @property
-    def container(self):
-        """
-        Get/create minio container to run minio services on
-        :return: minio container
-        :rtype: container sal object
-        """
-        if self._container is None:
-            try:
-                self._container = self.node.containers.get(self._container_name)
-            except LookupError:
-                self._container = self.node.containers.create(**self._container_data)
-        return self._container
-
-    def stop(self, timeout=30):
-        """
-        Stop the minio gateway
-        :param timeout: time in seconds to wait for the minio gateway to stop
-        """
-        if not self.container.is_running():
-            return
-
-        is_running = self.is_running()
-        if not is_running:
-            return
-
-        logger.info('stop minio %s' % self.name)
-
-        self.container.client.job.kill(self.id)
-
-        # wait for minio to stop
-        start = time.time()
-        end = start + timeout
-        is_running = self.is_running()
-        while is_running and time.time() < end:
-            time.sleep(1)
-            is_running = self.is_running()
-
-        if is_running:
-            raise RuntimeError('Failed to stop minio server: {}'.format(self.name))
-
-        self.container.stop()
-
     def start(self, timeout=15):
         """
         Start minio gatway
         :param timeout: time in seconds to wait for the minio gateway to start
         """
-        is_running = self.is_running()
-        if is_running:
+        if self.is_running():
             return
 
         logger.info('start minio %s' % self.name)
@@ -173,26 +120,9 @@ class Minio:
             port=DEFAULT_PORT, dir=self._config_dir)
 
         # wait for minio to start
-        self.container.client.system(cmd, id=self.id)
-        start = time.time()
-        end = start + timeout
-        is_running = self.is_running()
-        while not is_running and time.time() < end:
-            time.sleep(1)
-            is_running = self.is_running()
-
-        if not is_running:
+        self.container.client.system(cmd, id=self._id)
+        if not j.tools.timer.execute_until(self.is_running, 30, 0.5):
             raise RuntimeError('Failed to start minio server: {}'.format(self.name))
-
-    def is_running(self):
-        try:
-            for _ in self.container.client.job.list(self.id):
-                return True
-            return False
-        except Exception as err:
-            if str(err).find("invalid container id"):
-                return False
-            raise
 
     @property
     def mode(self):
@@ -210,13 +140,7 @@ class Minio:
 
     @property
     def node_port(self):
-        try:
-            container = self.node.containers.get(self._container_name)
-            for k, v in container.ports.items():
-                if v == DEFAULT_PORT:
-                    return int(k.split(':')[-1])
-        except LookupError:
-            return None
+        return self.container.get_forwarded_port(DEFAULT_PORT)
 
     def reload(self):
         """
@@ -229,11 +153,11 @@ class Minio:
         self.container.client.job.kill(self.id, signal.SIGHUP)
 
     def destroy(self):
-        self.stop()
-        self.container.stop()
+        super().destroy()
+
         sp = self.node.storagepools.get('zos-cache')
         try:
-            fs = sp.get(self.id)
+            fs = sp.get(self._id)
             fs.delete()
         except ValueError:
             pass

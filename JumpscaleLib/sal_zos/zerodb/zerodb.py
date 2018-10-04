@@ -3,7 +3,7 @@ import time
 
 from jumpscale import j
 
-from ..abstracts import Nics
+from ..abstracts import Nics, Service
 from ..disks.Disks import Disk
 from .namespace import Namespaces
 
@@ -11,8 +11,8 @@ logger = j.logger.get(__name__)
 DEFAULT_PORT = 9900
 
 
-class Zerodb:
-    def __init__(self, node, name, path=None, mode='user', sync=False, admin='', node_port=DEFAULT_PORT):
+class Zerodb(Service):
+    def __init__(self, node, name, path=None, mode='user', sync=False, admin=''):
         """
         Create zerodb object
 
@@ -33,23 +33,20 @@ class Zerodb:
         :param node_port: the port the zerodb container will forward to. If this port is not free, the deploy will find the next free port.
         :type: int
         """
-        self.name = name
-        self.node = node
+        super().__init__(name, node, 'zerodb', [DEFAULT_PORT])
+
         self.zt_identity = None
-        self._container = None
         self.flist = 'https://hub.grid.tf/tf-autobuilder/threefoldtech-0-db-release-development.flist'
 
         self._mode = mode
         self._sync = sync
         self._admin = admin
-        self._node_port = node_port
         self._path = None
 
         # call setters to enforce validation
         self.mode = mode
         self.admin = admin
         self.sync = sync
-        self.node_port = node_port
 
         if path:
             self.path = path
@@ -58,7 +55,10 @@ class Zerodb:
         self.nics = Nics(self)
         self.nics.add('nat0', 'default')
         self.__redis = None
-        self._id = 'zerodb.{}'.format(self.name)
+
+    @property
+    def node_port(self):
+        return self.container.get_forwarded_port(DEFAULT_PORT)
 
     @property
     def _redis(self):
@@ -126,35 +126,16 @@ class Zerodb:
         if len(ports) <= 0:
             raise RuntimeError("can't install 0-db, no free port available on the node")
 
-        self.node_port = ports[0]
-        if not self.zt_identity:
-            self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
-        zt_public = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
-        j.sal_zos.utils.authorize_zerotiers(zt_public, self.nics)
-        ports = {self.node_port: DEFAULT_PORT}
+        self.authorize_zt_nics()
 
         return {
-            'name': self.name,
+            'name': self._container_name,
             'flist': self.flist,
             'identity': self.zt_identity,
             'mounts': {self.path: '/zerodb'},
-            'ports': ports,
+            'ports': {str(ports[0]): DEFAULT_PORT},
             'nics': [nic.to_dict(forcontainer=True) for nic in self.nics]
         }
-
-    @property
-    def container(self):
-        """
-        Get/create zerodb container to run zerodb services on
-        :return: zerodb container
-        :rtype: container sal object
-        """
-        if self._container is None:
-            try:
-                self._container = self.node.containers.get(self.name)
-            except LookupError:
-                self._container = self.node.containers.create(**self._container_data)
-        return self._container
 
     def load_from_reality(self, container=None):
         """
@@ -166,10 +147,7 @@ class Zerodb:
         """
         if not container:
             container = self.node.containers.get(self.name)
-        for k, v in container.ports.items():
-            if v == DEFAULT_PORT:
-                self.node_port = int(k.split(':')[-1])
-                break
+
         for k, v in container.mounts.items():
             if v == '/zerodb':
                 self.path = k
@@ -198,16 +176,10 @@ class Zerodb:
         self.zt_identity = data.get('ztIdentity')
         self.sync = data.get('sync', False)
         self.path = data['path']
-        self.node_port = data.get('nodePort', DEFAULT_PORT)
         for namespace in data.get('namespaces', []):
             self.namespaces.add(
                 namespace['name'], namespace.get('size'), namespace.get('password'), namespace.get('public', True))
-        for nic in data.get('nics', []):
-            nicobj = self.nics.add(nic['name'], nic['type'], nic['id'], nic.get('hwaddr'))
-            if nicobj.type == 'zerotier':
-                nicobj.client_name = nic.get('ztClient')
-        if 'nat0' not in self.nics:
-            self.nics.add('nat0', 'default')
+        self.add_nics(data.get('nics', []))
 
     def to_dict(self):
         """
@@ -227,7 +199,6 @@ class Zerodb:
         return {
             'mode': self.mode,
             'sync': self.sync,
-            'nodePort': self.node_port,
             'admin': self.admin,
             'ztIdentity': self.zt_identity,
             'path': self.path,
@@ -249,17 +220,6 @@ class Zerodb:
         Deploy zerodb by creating a container and running zerodb in the container, creating the namespaces in self.namespaces and
         removing namespaces that are not in self.namespaces.
         """
-        if not self.container.is_running():
-            self.container.start()
-
-        for i in range(5):
-            try:
-                self.container.client.ping()
-                break
-            except RuntimeError as err:
-                if str(err).find('failed to dispatch command to container'):
-                    time.sleep(1)
-
         self.start()
 
         live_namespaces = self._live_namespaces()
@@ -271,30 +231,13 @@ class Zerodb:
             if namespace not in self.namespaces and namespace != 'default':
                 self._redis.execute_command('NSDEL', namespace)
 
-    def is_running(self):
-        """
-        Check if zerodb process is running
-        :return: True if running, False if halted. And the the job arguments.
-        :rtype: a type. of the status and arguments list ex: (True, ['--mode', 'seq'])
-        """
-        try:
-            for job in self.container.client.job.list(self._id):
-                runstatus = self.container.is_port_listening(DEFAULT_PORT, None)
-                return runstatus, job['cmd']['arguments']['args']
-            return False, []
-        except Exception as err:
-            if str(err).find("invalid container id"):
-                return False, []
-            raise
-
     def start(self, timeout=15):
         """
         Start zero db server
         :param timeout: time in seconds to wait for the zerodb server to start
         :type timeout: int
         """
-        is_running, _ = self.is_running()
-        if is_running:
+        if self.is_running():
             return
 
         logger.info('start zerodb %s' % self.name)
@@ -312,41 +255,8 @@ class Zerodb:
 
         # wait for zerodb to start
         self.container.client.system(cmd, id=self._id)
-        is_running = self.container.is_port_listening(DEFAULT_PORT, timeout)
-
-        if not is_running:
+        if not j.tools.timer.execute_until(self.is_running, 30, 0.5):
             raise RuntimeError('Failed to start zerodb server: {}'.format(self.name))
-
-    def stop(self, timeout=30):
-        """
-        Stop the zerodb server
-        :param timeout: time in seconds to wait for the zerodb server to stop
-        :type timeout: int
-        """
-        if not self.container.is_running():
-            return
-
-        is_running, _ = self.is_running()
-        if not is_running:
-            self.container.stop()
-            return
-
-        logger.info('stop zerodb %s' % self.name)
-
-        self.container.client.job.kill(self._id)
-
-        # wait for zerodb to stop
-        start = time.time()
-        end = start + timeout
-        is_running, _ = self.is_running()
-        while is_running and time.time() < end:
-            time.sleep(1)
-            is_running, _ = self.is_running()
-
-        if is_running:
-            raise RuntimeError('Failed to stop zerodb server: {}'.format(self.name))
-
-        self.container.stop()
 
     def _live_namespaces(self):
         """
@@ -397,16 +307,6 @@ class Zerodb:
         if value not in ['user', 'seq', 'direct']:
             raise ValueError('mode must be user, seq or direct')
         self._mode = value
-
-    @property
-    def node_port(self):
-        return self._node_port
-
-    @node_port.setter
-    def node_port(self, value):
-        if type(value) != int:
-            raise ValueError('node port must be type int')
-        self._node_port = value
 
     def __str__(self):
         return "Zerodb {}".format(self.name)

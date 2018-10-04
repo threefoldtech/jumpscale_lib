@@ -1,6 +1,7 @@
 from jumpscale import j
 from JumpscaleLib.clients.zerotier.ZerotierClient import ZerotierClient, ZeroTierNetwork
 from ..abstracts import Collection, Nic, ZTNic
+from ..utils import get_ip_from_nic
 from ..vm.ZOS_VM import ZOS_VM
 import netaddr
 
@@ -529,7 +530,7 @@ class DefaultNetwork(Network):
         else:
             nic = None
         if nic:
-            cidr = self._parent.node.get_ip_from_nic(nic['addrs'])
+            cidr = get_ip_from_nic(nic['addrs'])
             data['config'] = {'cidr': str(cidr), 'gateway': route['gw']}
         if not forcontainer:
             data['public'] = self.public

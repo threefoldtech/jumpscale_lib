@@ -4,6 +4,9 @@ from io import BytesIO
 import signal
 import netaddr
 
+from jumpscale import j
+from ..utils import get_zt_ip
+
 logging.basicConfig(level=logging.INFO)
 default_logger = logging.getLogger(__name__)
 
@@ -331,6 +334,16 @@ class Container():
                 raise RuntimeError(erroMessage)
         resp = self.client.subscribe(job.id)
         resp.stream(callback)
+
+    def get_forwarded_port(self, port):
+        for k, v in self.ports.items(): 
+             if v == port: 
+                 return int(k.split(':')[-1])
+
+    @property
+    def mgmt_addr(self):
+        return get_zt_ip(self.client.info.nic())
+
 
     def __str__(self):
         return "Container <{}>".format(self.name)

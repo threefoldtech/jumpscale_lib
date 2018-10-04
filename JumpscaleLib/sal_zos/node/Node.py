@@ -19,9 +19,12 @@ from ..gateway import Gateways
 from ..zerodb import Zerodbs
 from ..primitives.Primitives import Primitives
 from ..hypervisor.Hypervisor import Hypervisor
+from ..utils import get_ip_from_nic, get_zt_ip
 
 Mount = namedtuple('Mount', ['device', 'mountpoint', 'fstype', 'options'])
 logger = j.logger.get(__name__)
+
+SUPPORT_NETWORK = "172.29.0.0/16"
 
 
 class Node:
@@ -44,7 +47,6 @@ class Node:
         self.healthcheck = HealthCheck(self)
         self.capacity = Capacity(self)
         self.client = client
-        self.support_network = "172.29.0.0/16"
 
     def ping(self):
         return self.client.ping()
@@ -98,7 +100,7 @@ class Node:
             nic_data = self.client.info.nic()
             for nic in nic_data:
                 if nic['name'] == 'backplane':
-                    self._storage_addr = self.get_ip_from_nic(nic['addrs'])
+                    self._storage_addr = get_ip_from_nic(nic['addrs'])
                     return self._storage_addr
             self._storage_addr = self.public_addr
         return self._storage_addr
@@ -111,22 +113,18 @@ class Node:
     @property
     def public_addr(self):
         nics = self.client.info.nic()
-        for nic in nics:
-            if nic['name'].startswith('zt'):
-                ipAdress = self.get_ip_from_nic(nic['addrs'])
-                if netaddr.IPAddress(ipAdress) not in netaddr.IPNetwork(self.support_network):
-                    return ipAdress
+        ip = get_zt_ip(nics, False, SUPPORT_NETWORK)
+        if ip:
+            return ip
         _, ip = self.get_nic_hwaddr_and_ip(nics)
         return ip
 
     @property
     def support_address(self):
         nics = self.client.info.nic()
-        for nic in nics:
-            if nic['name'].startswith('zt'):
-                ipAdress = self.get_ip_from_nic(nic['addrs'])
-                if netaddr.IPAddress(ipAdress) in netaddr.IPNetwork(self.support_network):
-                    return ipAdress
+        ip = get_zt_ip(nics, True, SUPPORT_NETWORK)
+        if ip:
+            return ip
         raise LookupError('their is no support zerotier interface (support_address)')
 
     @property
@@ -152,14 +150,8 @@ class Node:
             name = self.get_gateway_nic()
         for nic in nics:
             if nic['name'] == name:
-                return nic['hardwareaddr'], self.get_ip_from_nic(nic['addrs'])
+                return nic['hardwareaddr'], get_ip_from_nic(nic['addrs'])
         return '', ''
-
-    def get_ip_from_nic(self, addrs):
-        for ip in addrs:
-            network = netaddr.IPNetwork(ip['addr'])
-            if network.version == 4:
-                return network.ip.format()
 
     def get_nic_by_ip(self, addr):
         try:

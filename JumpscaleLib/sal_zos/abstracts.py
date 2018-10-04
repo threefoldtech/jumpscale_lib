@@ -1,4 +1,8 @@
 from jumpscale import j
+from JumpscaleLib.sal_zos.utils import authorize_zerotiers
+
+
+logger = j.logger.get(__name__)
 
 
 class Mountable():
@@ -255,3 +259,103 @@ class DynamicCollection:
         return str(self.list())
 
     __repr__ = __str__
+
+
+class Service:
+    """
+    Abstract implementation of services that need to be managed on containers.
+    This class assumes the following attributes exist on the inheriting class:
+    _container: holds the container sal. Should be initialized with None
+    _container_name: the name the will be used to create the container
+    _id: the id of the job
+    _type: the type of the service ex: minio
+    _ports: a list of ports to check if the container is listening to. It is used to verify that the process is running
+    name: the name of the service
+    """
+    
+    def __init__(self, name, node, service_type, ports):
+        self.name = name
+        self.node = node
+        self._type = service_type
+        self._id = '{}.{}'.format(self._type, self.name)
+        self._container = None
+        self._container_name = '{}_{}'.format(self._type, self.name)
+        self._ports = ports
+
+    def _container_exists(self):
+        """
+        Check if the container exists on the node
+        :return: True if it exists, False if not
+        :rtype: boolean
+        """
+        try:
+            self.node.containers.get(self._container_name)
+            return True
+        except LookupError:
+            return False
+
+    def destroy(self):
+        """
+        Stop the service process and stop the container
+        """
+        self.stop()
+
+    def is_running(self, timeout=15):
+        """
+        Check if the service is running and listening to the expected ports
+        :return: True if running, False if not
+        :rtype: boolean
+
+        """
+        if not self._container_exists():
+            return False
+        try:
+            self.container.client.job.list(self._id)
+        except:
+            return False
+
+        for port in self._ports:
+            if not self.container.is_port_listening(port, timeout):
+                return False
+        return True
+
+    def stop(self, timeout=30):
+        """
+        Stop the service process and stop the container
+        """
+        if self.is_running():
+            self.container.client.job.kill(self._id)
+            if not j.tools.timer.execute_until(lambda : not self.is_running(), timeout, 0.5):
+                logger.warning('Failed to gracefully stop {} server: {}'.format(self._type, self.name))
+
+        self.container.stop()
+        self._container = None
+
+    @property
+    def container(self):
+        """
+        Get/create service container
+        :return: service container
+        :rtype: container sal object
+        """
+        if self._container is None:
+            try:
+                self._container = self.node.containers.get(self._container_name)
+            except LookupError:
+                self._container = self.node.containers.create(**self._container_data)
+        return self._container
+    
+    def add_nics(self, nics):
+        if nics:
+            for nic in nics:
+                nicobj = self.nics.add(nic['name'], nic['type'], nic['id'], nic.get('hwaddr'))
+                if nicobj.type == 'zerotier':
+                    nicobj.client_name = nic.get('ztClient')
+        if 'nat0' not in self.nics:
+            self.nics.add('nat0', 'default')
+    
+    def authorize_zt_nics(self):
+        if not self.zt_identity:
+            self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
+        zt_public = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
+        authorize_zerotiers(zt_public, self.nics)
