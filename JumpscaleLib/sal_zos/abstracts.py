@@ -1,4 +1,8 @@
 from jumpscale import j
+from JumpscaleLib.sal_zos.utils import authorize_zerotiers
+
+
+logger = j.logger.get(__name__)
 
 
 class Mountable():
@@ -322,7 +326,7 @@ class Service:
         if self.is_running():
             self.container.client.job.kill(self._id)
             if not j.tools.timer.execute_until(lambda : not self.is_running(), timeout, 0.5):
-                raise RuntimeError('Failed to stop {} server: {}'.format(self._type, self.name))
+                logger.warning('Failed to gracefully stop {} server: {}'.format(self._type, self.name))
 
         self.container.stop()
         self._container = None
@@ -354,4 +358,4 @@ class Service:
         if not self.zt_identity:
             self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
         zt_public = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
-        j.sal_zos.utils.authorize_zerotiers(zt_public, self.nics)
+        authorize_zerotiers(zt_public, self.nics)

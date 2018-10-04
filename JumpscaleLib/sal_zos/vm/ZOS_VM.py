@@ -1,5 +1,6 @@
 from jumpscale import j
 from ..abstracts import Collection, Nics
+from ..utils import authorize_zerotiers
 import requests
 
 IPXEURL = 'https://bootstrap.grid.tf/ipxe/master/0'
@@ -413,7 +414,7 @@ Type=simple
             config['/var/lib/zerotier-one/identity.public'] = publiczt
             if not nics:
                 nics.append({'type': 'default'})
-            j.sal_zos.utils.authorize_zerotiers(publiczt, self.nics)
+            authorize_zerotiers(publiczt, self.nics)
         cmdline = ' '.join([arg.parameter() for arg in self.kernel_args])
         self.node.client.kvm.create(self.name, media, self.flist, self.vcpus,
                                     self.memory, nics, ports, mounts, self.tags, config, cmdline=cmdline,

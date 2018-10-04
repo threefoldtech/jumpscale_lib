@@ -5,6 +5,7 @@ import signal
 import netaddr
 
 from jumpscale import j
+from ..utils import get_zt_ip
 
 logging.basicConfig(level=logging.INFO)
 default_logger = logging.getLogger(__name__)
@@ -341,7 +342,7 @@ class Container():
 
     @property
     def mgmt_addr(self):
-        return j.sal_zos.utils.get_zt_ip(self.client.info.nic())
+        return get_zt_ip(self.client.info.nic())
 
 
     def __str__(self):

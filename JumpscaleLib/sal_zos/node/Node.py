@@ -19,6 +19,7 @@ from ..gateway import Gateways
 from ..zerodb import Zerodbs
 from ..primitives.Primitives import Primitives
 from ..hypervisor.Hypervisor import Hypervisor
+from ..utils import get_ip_from_nic, get_zt_ip
 
 Mount = namedtuple('Mount', ['device', 'mountpoint', 'fstype', 'options'])
 logger = j.logger.get(__name__)
@@ -99,7 +100,7 @@ class Node:
             nic_data = self.client.info.nic()
             for nic in nic_data:
                 if nic['name'] == 'backplane':
-                    self._storage_addr = j.sal_zos.utils.get_ip_from_nic(nic['addrs'])
+                    self._storage_addr = get_ip_from_nic(nic['addrs'])
                     return self._storage_addr
             self._storage_addr = self.public_addr
         return self._storage_addr
@@ -112,7 +113,7 @@ class Node:
     @property
     def public_addr(self):
         nics = self.client.info.nic()
-        ip = j.sal_zos.utils.get_zt_ip(nics, False, SUPPORT_NETWORK)
+        ip = get_zt_ip(nics, False, SUPPORT_NETWORK)
         if ip:
             return ip
         _, ip = self.get_nic_hwaddr_and_ip(nics)
@@ -121,7 +122,7 @@ class Node:
     @property
     def support_address(self):
         nics = self.client.info.nic()
-        ip = j.sal_zos.utils.get_zt_ip(nics, True, SUPPORT_NETWORK)
+        ip = get_zt_ip(nics, True, SUPPORT_NETWORK)
         if ip:
             return ip
         raise LookupError('their is no support zerotier interface (support_address)')
@@ -149,7 +150,7 @@ class Node:
             name = self.get_gateway_nic()
         for nic in nics:
             if nic['name'] == name:
-                return nic['hardwareaddr'], j.sal_zos.utils.get_ip_from_nic(nic['addrs'])
+                return nic['hardwareaddr'], get_ip_from_nic(nic['addrs'])
         return '', ''
 
     def get_nic_by_ip(self, addr):
