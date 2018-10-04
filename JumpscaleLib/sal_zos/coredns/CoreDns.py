@@ -18,7 +18,7 @@ class Coredns(Service):
         self.id = 'coredns.{}'.format(self.name)
         self.node = node
         self._container = None
-        self.flist = 'https://hub.grid.tf/tf-official-apps/coredns-1.2.2.flist'
+        self.flist = 'https://hub.grid.tf/tf-official-apps/coredns.flist'
         self.etcd_endpoint = etcd_endpoint
         
         self._config_dir = '/usr/bin'
@@ -60,7 +60,7 @@ class Coredns(Service):
     def _config_as_text(self):
 
         return templates.render(
-            'coredns.conf', etcd_ip =self.etcd_endpoint).strip()
+            'coredns.conf', etcd_ip =self.etcd_endpoint['client_url']).strip()
 
     def start(self, timeout=15):
         """
@@ -73,9 +73,8 @@ class Coredns(Service):
         logger.info('start coredns %s' % self.name)
 
         self.create_config()
-
-        cmd = '/usr/bin/coredns -conf {dir}/{config}'.format(dir=self._config_dir,config=self._config_name)
-
+        cmd = 'ETCD_USERNAME=root ETCD_PASSWORD={password} /usr/bin/coredns -conf {dir}/{config}'.format(dir=self._config_dir,
+                                                                            config=self._config_name,password=self.etcd_endpoint['password'])
         # wait for coredns to start
         self.container.client.system(cmd, id=self.id)
         if not j.tools.timer.execute_until(self.is_running, timeout, 0.5):
