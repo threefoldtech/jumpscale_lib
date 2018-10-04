@@ -417,7 +417,7 @@ Type=simple
         cmdline = ' '.join([arg.parameter() for arg in self.kernel_args])
         self.node.client.kvm.create(self.name, media, self.flist, self.vcpus,
                                     self.memory, nics, ports, mounts, self.tags, config, cmdline=cmdline,
-                                    shared_cahe=share_cache_enabled(self._flist))
+                                    share_cache=share_cache_enabled(self._flist))
 
     def load_from_reality(self):
         info = self.info
