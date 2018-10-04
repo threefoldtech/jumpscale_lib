@@ -23,6 +23,8 @@ from ..hypervisor.Hypervisor import Hypervisor
 Mount = namedtuple('Mount', ['device', 'mountpoint', 'fstype', 'options'])
 logger = j.logger.get(__name__)
 
+SUPPORT_NETWORK = "172.29.0.0/16"
+
 
 class Node:
     """Represent a Zero-OS Server"""
@@ -44,7 +46,6 @@ class Node:
         self.healthcheck = HealthCheck(self)
         self.capacity = Capacity(self)
         self.client = client
-        self.support_network = "172.29.0.0/16"
 
     def ping(self):
         return self.client.ping()
@@ -111,7 +112,7 @@ class Node:
     @property
     def public_addr(self):
         nics = self.client.info.nic()
-        ip = j.sal_zos.utils.get_zt_ip(nics)
+        ip = j.sal_zos.utils.get_zt_ip(nics, False, SUPPORT_NETWORK)
         if ip:
             return ip
         _, ip = self.get_nic_hwaddr_and_ip(nics)
@@ -120,7 +121,7 @@ class Node:
     @property
     def support_address(self):
         nics = self.client.info.nic()
-        ip = j.sal_zos.utils.get_zt_ip(nics, self.support_network)
+        ip = j.sal_zos.utils.get_zt_ip(nics, True, SUPPORT_NETWORK)
         if ip:
             return ip
         raise LookupError('their is no support zerotier interface (support_address)')
