@@ -54,7 +54,7 @@ txn.json
 The transaction will automatically be signed and send to the public explores, which
 will then try to put it in the network.
 
-Funds can also be send to a multisig wallet. To do so, the `send_to_many` function
+Funds can also be send to a multisig wallet. To do so, the `send_to_multisig` function
 should be used. It is also possible to add optional data or a locking period here.
 
 ```python
@@ -62,7 +62,7 @@ recipients = ['01b255ffb4a3b08822ce5d4e1118159ab781b7c1bb6b5913aba63625b943cff6d
 	'01fe9e3c3001ada8ed39248ec376133032067adf36f5fd2eac27363432a3b55945bcba2694f00b']
 required_nr_of_signatures = 2
 amount = 5
-wallet.send_to_many(amount, recipients, required_nr_of_signatures)
+wallet.send_to_multisig(amount, recipients, required_nr_of_signatures)
 ```
 
 ### Using a multisig wallet

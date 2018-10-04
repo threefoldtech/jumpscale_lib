@@ -324,7 +324,7 @@ class RivineWallet:
         return transaction
 
 
-    def send_to_many(self, amount, recipients, required_nr_of_signatures, data=None, locktime=None):
+    def send_to_multisig(self, amount, recipients, required_nr_of_signatures, data=None, locktime=None):
         """
         Sends funds to multiple recipients
         Also specificies how many recipients need to sign before the funds can be spent
