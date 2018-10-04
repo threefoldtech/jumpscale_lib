@@ -180,15 +180,14 @@ class RivineWallet:
         unconfirmed_txs = self._get_unconfirmed_transactions(format_inputs=True)
         logger.info('Current chain height is: {}'.format(current_chain_height))
         # when checking the balance we will check for 10 more addresses
-        current_nr_of_addresses = len(self.addresses)
         unused_addresses = []
-        nr_of_addresses_to_check = current_nr_of_addresses + NR_OF_EXTRA_ADDRESSES_TO_CHECK
+        nr_of_addresses_to_check = self._nr_keys_per_seed + NR_OF_EXTRA_ADDRESSES_TO_CHECK
         for address_idx in range(nr_of_addresses_to_check):
             new_address = False
-            if address_idx < current_nr_of_addresses:
+            if address_idx < self._nr_keys_per_seed:
                 address = self.addresses[address_idx]
             else:
-                address = self.generate_address(persist=False)
+                address = str(self._generate_spendable_key(index=address_idx).unlockhash)
                 new_address = True
             try:
                 address_info = self._check_address(address=address, log_errors=False)
@@ -197,7 +196,9 @@ class RivineWallet:
                 unused_addresses.append(address)
             else:
                 if new_address is True:
+                    self._nr_keys_per_seed = address_idx + 1
                     self._save_nr_of_keys()
+
                 # It could be that we found an address which is only part of a multisig
                 # output. In that case some properties we depend on below won't be
                 # available, but there will also not be an error. So collect the
