@@ -223,6 +223,7 @@ class Configs(Collection):
         self._items.append(config)
         return config
 
+
 class KernelArg:
     def __init__(self, name, key, value=''):
         self.name = name
@@ -254,6 +255,7 @@ class KernelArgs(Collection):
         kernel_arg = KernelArg(name, key, value)
         self._items.append(kernel_arg)
         return kernel_arg
+
 
 class VMNics(Nics):
     def add(self, name, type_, networkid=None, hwaddr=None):
@@ -414,7 +416,8 @@ Type=simple
             j.sal_zos.utils.authorize_zerotiers(publiczt, self.nics)
         cmdline = ' '.join([arg.parameter() for arg in self.kernel_args])
         self.node.client.kvm.create(self.name, media, self.flist, self.vcpus,
-                                    self.memory, nics, ports, mounts, self.tags, config, cmdline=cmdline)
+                                    self.memory, nics, ports, mounts, self.tags, config, cmdline=cmdline,
+                                    shared_cahe=share_cache_enabled(self._flist))
 
     def load_from_reality(self):
         info = self.info
@@ -660,3 +663,9 @@ class IpxeVM(ZOS_VM):
     def from_dict(self, data):
         super().from_dict(data)
         self.ipxe_url = data.get('ipxeUrl')
+
+
+def share_cache_enabled(flist):
+    if flist == 'https://hub.grid.tf/tf-autobuilder/zero-os-development.flist':
+        return True
+    return False
