@@ -56,7 +56,7 @@ class UtilsFactory(JSBASE):
         for nic in nics:
             if nic['name'].startswith('zt'):
                 ipAdress = self.get_ip_from_nic(nic['addrs'])
-                ip = netaddr.IPAddress(ipAdress)
+                ip = netaddr.IPAddress(ipAdress) if ipAdress else ''
                 ip_network = netaddr.IPNetwork(network_range) if network_range else ''
                 if network and network_range and ip not in ip_network:
                     # required network range is not satisfied
