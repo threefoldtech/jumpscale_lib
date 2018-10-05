@@ -150,7 +150,7 @@ class Minio(Service):
             logger.error("cannot reload when minio is not running")
             return
 
-        self.container.client.job.kill(self.id, signal.SIGHUP)
+        self.container.client.job.kill(self._id, signal.SIGHUP)
 
     def destroy(self):
         super().destroy()
