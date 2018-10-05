@@ -176,7 +176,6 @@ class RivineWallet:
 
         @TOCHECK: this needs to be synchronized with locks or other primitive
         """
-        import pdb; pdb.set_trace()
         current_chain_height = self._get_current_chain_height()
         unconfirmed_txs = self._get_unconfirmed_transactions(format_inputs=True)
         logger.info('Current chain height is: {}'.format(current_chain_height))
