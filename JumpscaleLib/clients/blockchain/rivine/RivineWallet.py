@@ -176,11 +176,11 @@ class RivineWallet:
 
         @TOCHECK: this needs to be synchronized with locks or other primitive
         """
+        import pdb; pdb.set_trace()
         current_chain_height = self._get_current_chain_height()
         unconfirmed_txs = self._get_unconfirmed_transactions(format_inputs=True)
         logger.info('Current chain height is: {}'.format(current_chain_height))
         # when checking the balance we will check for 10 more addresses
-        unused_addresses = []
         nr_of_addresses_to_check = self._nr_keys_per_seed + NR_OF_EXTRA_ADDRESSES_TO_CHECK
         for address_idx in range(nr_of_addresses_to_check):
             new_address = False
@@ -192,8 +192,7 @@ class RivineWallet:
             try:
                 address_info = self._check_address(address=address, log_errors=False)
             except RESTAPIError:
-                # add to unused addresses list
-                unused_addresses.append(address)
+                pass
             else:
                 if new_address is True:
                     self._nr_keys_per_seed = address_idx + 1
@@ -235,9 +234,7 @@ class RivineWallet:
                                                     address=address,
                                                     transactions=transactions,
                                                     unconfirmed_txs=unconfirmed_txs)
-        # clean up unused addresses
-        for address in unused_addresses:
-            del self._keys[address]
+
         # remove spent inputs after collection all the inputs
         for address, address_info in self._addresses_info.items():
             self._remove_spent_inputs(transactions = address_info.get('transactions', {}))
