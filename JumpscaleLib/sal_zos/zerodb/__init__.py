@@ -34,8 +34,8 @@ class Zerodbs(DynamicCollection):
         """
         zdbs = []
         for container in self.node.containers.list():
-            if container.name.startswith('zdb_'):
-                zdb = Zerodb(self.node, container.name)
+            if container.name.startswith('zerodb_'):
+                zdb = Zerodb(self.node, container.name.lstrip('zerodb_'))
                 zdb.load_from_reality(container)
                 zdbs.append(zdb)
         return zdbs
@@ -151,7 +151,7 @@ class Zerodbs(DynamicCollection):
                     if mp['mountpoint'] == mount_point:
                         return
 
-        old_zdb = zdb_name.split('_')[-1] # this is for backward compatability
+        old_zdb = zdb_name.split('_')[-1]  # this is for backward compatability
         for storagepool in self.node.storagepools.list():
             for fs in storagepool.list():
                 if fs.name == 'zdb_{}'.format(zdb_name) or fs.name == 'zdb_{}'.format(old_zdb):

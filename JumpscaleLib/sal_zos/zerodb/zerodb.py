@@ -152,8 +152,11 @@ class Zerodb(Service):
             if v == '/zerodb':
                 self.path = k
 
-        running, args = self.is_running()
-        if running:
+        if self.is_running():
+            jobs = self._container.client.job.list(self._id)
+            if not jobs:
+                return
+            args = jobs[0]['cmd']['arguments']['args']
             for arg in args:
                 if arg == '--sync':
                     self.sync = True
