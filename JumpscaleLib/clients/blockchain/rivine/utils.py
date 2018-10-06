@@ -176,21 +176,20 @@ def get_unconfirmed_transactions(rivine_explorer_addresses, format_inputs=False)
         if response.status_code != 200:
             logger.warn('{} {}'.format(msg, response.text))
         else:
-            transactions = response.json()['transactions']
+            transactions = response.json().get('transactions', None)
             if transactions is None:
                 transactions = []
             if format_inputs:
                 for txn in transactions:
                     result.extend([coininput['parentid'] for coininput in txn['data']['coininputs']])
+            else:
+                result = transactions
+            return result
 
-            break
-
-    if result:
-        if response:
-            raise RESTAPIError('{} {}'.format(msg, response.text))
-        else:
-            raise RESTAPIError(msg)
-    return result
+    if response:
+        raise RESTAPIError('{} {}'.format(msg, response.text))
+    else:
+        raise RESTAPIError(msg)
 
 
 def get_current_minter_definition(rivine_explorer_addresses, explorer_password):
