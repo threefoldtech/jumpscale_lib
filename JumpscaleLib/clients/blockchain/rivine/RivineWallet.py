@@ -759,7 +759,7 @@ class WalletBalance:
 
     @property
     def unlocked_balance(self):
-        return sum(int(value.get('value', 0)) for value in self._unspent_coins_outputs.values()) / HASTINGS_TFT_VALUE
+        return sum(int(value.get('value', 0)) for value in self._unlocked_outputs.values()) / HASTINGS_TFT_VALUE
 
     @property
     def unlocked_outputs(self):
