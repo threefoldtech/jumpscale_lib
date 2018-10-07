@@ -53,4 +53,4 @@ class WalletAlreadyExistsException(Exception):
     Error since the walletname is already used.
     """
     def __init__( self, walletname):
-        super().__init__('Wallet already exists, remove with j.clients.tfchain.delete(walletname)')
+        super().__init__('Wallet "{0}" already exists, remove with j.clients.tfchain.delete("{0}")'.format( walletname))
