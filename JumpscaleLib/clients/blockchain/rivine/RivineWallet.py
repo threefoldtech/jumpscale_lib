@@ -777,9 +777,15 @@ class WalletBalance:
         return self._locked_outputs
 
     def add_unlocked_output(self, output_id, raw_output):
+        # It coudl be that this is a timelock condition which has expired
+        if raw_output['condition']['type'] == 3:
+            raw_output['condition'] = raw_output['condition']['data']['condition']
         self._unlocked_outputs[output_id] = raw_output
 
     def add_unlocked_multisig_output(self, output_id, raw_output):
+        # It could be that this is a timelock condition which has expired
+        if raw_output['condition']['type'] == 3:
+            raw_output['condition'] = raw_output['condition']['data']['condition']
         self._unlocked_multisig_outputs[output_id] = raw_output
 
     def add_locked_output(self, output_id, raw_output):
