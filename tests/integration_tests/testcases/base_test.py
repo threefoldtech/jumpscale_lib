@@ -74,6 +74,7 @@ class BaseTest(Utils):
                                  'name': 'sshkey'}],
                     'ports': [],
                     'mounts':[],
+                    'kernelArgs':[],
                     'disks':[],
                     'tags':[]
                     }
@@ -223,31 +224,35 @@ class BaseTest(Utils):
         disks_info = self.get_disks_type()
         if (disks_info['hdd'] != 0) and (disks_info['ssd'] != 0):
             disk_type = random.choice(['hdd', 'ssd'])
-            disk_size = random.randint(1, self.node_info[disk_type])
+            max_size = self.node_info[disk_type]
+            disk_size = random.randint(1, max_size)
         elif disks_info['hdd'] != 0:
             disk_type = 'hdd'
-            disk_size = random.randint(1, self.node_info[disk_type])
+            max_size = self.node_info[disk_type]
+            disk_size = random.randint(1, max_size)
         else:
             disk_type = 'ssd'
-            disk_size = random.randint(1, self.node_info[disk_type])
+            max_size = self.node_info[disk_type]
+            disk_size = random.randint(1, max_size)
 
-        return disk_type, disk_size
+        return disk_type, disk_size, max_size
 
 
 
     def set_vdisk_default_data(self, name=None):
         disk_params = {
                         'name': name or self.random_string(),
-                        'mountPoint': "/mnt/hamada",
-                        'filesystem': "ext4",
+                        'mountPoint': "",
+                        'filesystem': "",
                         'mode': 'user',
                         'public': False,
-                        'label': 'sba7o',
+                        'label': '',
                       }
 
-        disk_type, disk_size = self.get_most_free_disk_type_size()
+        disk_type, disk_size, max_size = self.get_most_free_disk_type_size()
         disk_params['diskType'] = disk_type
         disk_params['size'] = disk_size
+        disk_params['max_size'] = max_size
         disk_params["path"] = self.get_disk_mount_path(disk_type)
 
         return disk_params
@@ -264,7 +269,7 @@ class BaseTest(Utils):
                       'nics': [],
                       'size': size
                       }
-        disk_type, disk_size = self.get_most_free_disk_type_size()
+        disk_type, disk_size, max_size = self.get_most_free_disk_type_size()
         zdb_params['diskType'] = disk_type
         zdb_params["path"] = self.get_disk_mount_path(disk_type)                
         return zdb_params

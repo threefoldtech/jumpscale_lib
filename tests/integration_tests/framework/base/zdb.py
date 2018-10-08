@@ -121,3 +121,6 @@ class ZDB:
 
     def add_zerotier_nics(self, network, name=None):
         self.zerodb_sal.nics.add_zerotier(name=name, network=network)
+
+    def is_running(self):
+        return self.zerodb_sal.is_running()
