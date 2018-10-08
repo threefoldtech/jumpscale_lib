@@ -12,31 +12,47 @@ dependencies, see [the rivine module README](../rivine/README.md).
 ## Usage
 
 Start by creating a wallet ( for testnet in this case)
-```python
-wallet = j.clients.tfchain.create_wallet('default', testnet = True)
+```python3
+wallet1  = j.clients.tfchain.create_wallet('wallet1', testnet= True)
 ```
 Or in case you already created a wallet, you can open it :
-```python
- wallet = j.clients.tfchain.open_wallet('default')
+```python3
+ wallet1 = j.clients.tfchain.open_wallet('wallet1')
  ```
 Now that we have our wallet, we can get the addresses we already generated
 
-```python
-wallet.addresses
+```python3
+wallet1.addresses
+Out[10]: ['01ffffbd36a9d6c995a82c8e34d53cf9cbb13b2c55bed3fcc0020d9c0ff682cd8d45d2f41acbeb']
 ```
 
-And once we received some funds on one of these addresses, we can verify that:
+ Check the balance:
+
+```python3
+wallet1.current_balance
+Out[11]:
+Unlocked:
+
+	0.0
+
+```
+
+And once we received some funds on one of the addresses: 
 
 ```python
-wallet.current_balance
+wallet1.current_balance
+Out[17]:
+Unlocked:
+
+	1000.0
 ```
 
 ### Sending funds
 
 Sending funds to another wallet requires an address. Once the address has been
 acquired, we can send the amount of TFT we want. Optionally, we could lock this amount
-untill a certain block height or time, or we could add some extra data. Locking
-and adding data is ofcourse optional. By default the transaction will send any
+until a certain block height or time and  we can  add some extra data. Locking
+and adding data is off  course optional. By default the transaction will send any
 leftover funds from the inputs back to one of the input addresses. This behaviour
 can be overrided by setting the `reuse_addr` parameter to `False`, which will force
 generation of a new address to send the leftover funds to.
