@@ -7,6 +7,7 @@ from ..abstracts import Nics, Service
 logger = j.logger.get(__name__)
 DEFAULT_PORT = 53
 
+
 class Coredns(Service):
     """
     CoreDNS is a DNS server. It is written in Go
@@ -20,7 +21,7 @@ class Coredns(Service):
         self._container = None
         self.flist = 'https://hub.grid.tf/tf-official-apps/coredns.flist'
         self.etcd_endpoint = etcd_endpoint
-        
+
         self._config_dir = '/usr/bin'
         self._config_name = 'coredns.conf'
         self.zt_identity = zt_identity
@@ -48,31 +49,31 @@ class Coredns(Service):
 
     def deploy(self, timeout=120):
         """create coredns contianer and get ZT ip
-        
+
         Keyword Arguments:
             timeout {int} -- timeout of get ZeroTier IP (default: {120})
         """
 
         # call the container property to make sure it gets created and the ports get updated
         self.container
-        if not j.tools.timer.execute_until(lambda : self.container.mgmt_addr, timeout, 1):
+        if not j.tools.timer.execute_until(lambda: self.container.mgmt_addr, timeout, 1):
             raise RuntimeError('Failed to get zt ip for coredns {}'.format(self.name))
 
     def create_config(self):
         """
         create configuration of coredns and upload it in the container
         """
-        
+
         logger.info('Creating coredns config for %s' % self.name)
         config = self._config_as_text()
         self.container.upload_content(j.sal.fs.joinPaths(self._config_dir, self._config_name), config)
 
     def _config_as_text(self):
         """
-        render the coredns config template 
+        render the coredns config template
         """
         return templates.render(
-            'coredns.conf', etcd_ip =self.etcd_endpoint['client_url']).strip()
+            'coredns.conf', etcd_ip=self.etcd_endpoint['client_url']).strip()
 
     def start(self, timeout=15):
         """
@@ -85,9 +86,11 @@ class Coredns(Service):
         logger.info('start coredns %s' % self.name)
 
         self.create_config()
-        cmd = 'ETCD_USERNAME=root ETCD_PASSWORD={password} /usr/bin/coredns -conf {dir}/{config}'.format(dir=self._config_dir,
-                                                                            config=self._config_name,password=self.etcd_endpoint['password'])
+        cmd = '/usr/bin/coredns -conf {dir}/{config}'.format(dir=self._config_dir,
+                                                             config=self._config_name)
         # wait for coredns to start
-        self.container.client.system(cmd, id=self.id)
+        env = {'ETCD_USERNAME': 'root', 'ETCD_PASSWORD': self.etcd_endpoint['password']}
+        job = self.container.client.system(cmd, id=self.id, env=env)
         if not j.tools.timer.execute_until(self.is_running, timeout, 0.5):
-            raise RuntimeError('Failed to start CoreDns server: {}'.format(self.name))
+            result = job.get()
+            raise RuntimeError('Failed to start CoreDns server {}: {}'.format(self.name, result.stderr))
