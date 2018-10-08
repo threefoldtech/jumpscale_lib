@@ -51,20 +51,35 @@ class Traefik(Service):
         }
 
     def deploy(self, timeout=120):
+        """create traefik contianer and get ZT ip
+        
+        Keyword Arguments:
+            timeout {int} -- timeout of get ZeroTier IP (default: {120})
+        """
+
         # call the container property to make sure it gets created and the ports get updated
         self.container
         if not j.tools.timer.execute_until(lambda : self.container.mgmt_addr, timeout, 1):
-            raise RuntimeError('Failed to get zt ip for etcd {}'.format(self.name))
+            raise RuntimeError('Failed to get zt ip for traefik {}'.format(self.name))
 
     def container_port(self, port):
+        
         return self._container.get_forwarded_port(port)
 
     def create_config(self):
+        """
+        create configuration of traefik and upload it in the container
+        """
         logger.info('Creating traefik config for %s' % self.name)
         config = self._config_as_text()
         self.container.upload_content(j.sal.fs.joinPaths(self._config_dir, self._config_name), config)
 
     def _config_as_text(self):
+        """
+        render traefik config template using etcd ip, user, password
+        and add key of SSL certificate to etcd
+        """
+
         #for SSL Certifcate 
         client = j.clients.etcd.get(self.name, data={'host': self.etcd_endpoint['ip'], 'port': self.etcd_endpoint['client_port'], 
                                                      'password_': self.etcd_endpoint['password'], 'user': "root"})
@@ -75,6 +90,7 @@ class Traefik(Service):
     def start(self, timeout=30):
         """
         Start traefik
+        store config in etcd
         :param timeout: time in seconds to wait for the traefik to start
         """
         if self.is_running():

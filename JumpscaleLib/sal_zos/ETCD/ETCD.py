@@ -87,10 +87,17 @@ class ETCD(Service):
 
     @property
     def client_url(self):
+        """
+        return client url 
+        """
+
             return 'http://{}:{}'.format(self.container.mgmt_addr, CLIENT_PORT)
 
     @property
     def peer_url(self):
+         """
+        return peer url 
+        """
             return 'http://{}:{}'.format(self.container.mgmt_addr, PEER_PORT)
 
     @property
@@ -117,9 +124,17 @@ class ETCD(Service):
         }
 
     def create_config(self):
+        """
+        create configuration of Etcd and upload it in container
+        """
+
         self.container.upload_content(self._config_path, self._config_as_text())
 
     def _config_as_text(self):
+        """
+        render etcd config template
+        """
+
         cluster = self.cluster if self.cluster else [{'name': self.name, 'address': self.peer_url}]
         members  = ['='.join([member['name'],member['address']]) for member in cluster]
 
@@ -156,6 +171,10 @@ class ETCD(Service):
         self._enable_auth()
 
     def _enable_auth(self):
+        """
+        enable authentication of etcd user 
+        """
+
         commands = [
             '/bin/etcdctl --endpoints={} user add root:{}'.format(self.client_url, self.password),
             '/bin/etcdctl --endpoints={} auth enable'.format(self.client_url),

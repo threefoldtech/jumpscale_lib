@@ -47,18 +47,30 @@ class Coredns(Service):
         }
 
     def deploy(self, timeout=120):
+        """create coredns contianer and get ZT ip
+        
+        Keyword Arguments:
+            timeout {int} -- timeout of get ZeroTier IP (default: {120})
+        """
+
         # call the container property to make sure it gets created and the ports get updated
         self.container
         if not j.tools.timer.execute_until(lambda : self.container.mgmt_addr, timeout, 1):
-            raise RuntimeError('Failed to get zt ip for etcd {}'.format(self.name))
+            raise RuntimeError('Failed to get zt ip for coredns {}'.format(self.name))
 
     def create_config(self):
+        """
+        create configuration of coredns and upload it in the container
+        """
+        
         logger.info('Creating coredns config for %s' % self.name)
         config = self._config_as_text()
         self.container.upload_content(j.sal.fs.joinPaths(self._config_dir, self._config_name), config)
 
     def _config_as_text(self):
-
+        """
+        render the coredns config template 
+        """
         return templates.render(
             'coredns.conf', etcd_ip =self.etcd_endpoint['client_url']).strip()
 
