@@ -91,14 +91,14 @@ class ETCD(Service):
         return client url 
         """
 
-            return 'http://{}:{}'.format(self.container.mgmt_addr, CLIENT_PORT)
+        return 'http://{}:{}'.format(self.container.mgmt_addr, CLIENT_PORT)
 
     @property
     def peer_url(self):
-         """
+        """
         return peer url 
         """
-            return 'http://{}:{}'.format(self.container.mgmt_addr, PEER_PORT)
+        return 'http://{}:{}'.format(self.container.mgmt_addr, PEER_PORT)
 
     @property
     def _container_data(self):
