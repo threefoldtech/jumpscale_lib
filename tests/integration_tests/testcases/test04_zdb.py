@@ -40,10 +40,10 @@ class ZDBTestCases(BaseTest):
         zdb.data = self.set_zdb_default_data(name=zdb_name)
         zdb.install()
         self.zdbs.append(zdb)
-
+ 
         self.log("Check that ZDB container created successfully with right data.")
         containers = self.node_sal.client.container.list()
-        zdb_container = [container for _ , container in containers.items() if container['container']['arguments']['name'] == zdb_name]
+        zdb_container = [container for _ , container in containers.items() if container['container']['arguments']['name'] == ('zerodb_' + zdb_name)]
         self.assertTrue(zdb_container)
         self.assertIn(str(zdb.data["nodePort"]), zdb_container[0]["container"]["arguments"]["port"])
         
@@ -83,7 +83,6 @@ class ZDBTestCases(BaseTest):
             zdb2.install()
         self.assertIn('there is zdb with same name {}'.format(zdb_name), e.exception.args[0])
     
-    @unittest.skip('https://github.com/threefoldtech/jumpscale_lib/issues/159')
     def test003_start_stop_zdb(self):
         """ SAL-029 start and stop zdb
 
@@ -102,7 +101,7 @@ class ZDBTestCases(BaseTest):
         self.zdbs.append(zdb)
     
         self.log("Check that zdb is running.")
-        self.assertTrue(zdb.zerodb_sal.is_running()[0])
+        self.assertTrue(zdb.is_running())
         zdb_client = ZDBCLIENT(self.node_ip, zdb.zerodb_sal.node_port)
         result = zdb_client.ping()
         self.assertEqual(result, "PONG")
@@ -110,13 +109,13 @@ class ZDBTestCases(BaseTest):
         self.log("Stop zdb and check that zdb is stopped.")
         zdb.stop()
 
-        self.assertFalse(zdb.zerodb_sal.is_running()[0])
+        self.assertFalse(zdb.is_running())
         with self.assertRaises(Exception):
             result = zdb_client.ping()
         
         self.log("Start it again and check that it becomes running again")
         zdb.start()
-        self.assertTrue(zdb.zerodb_sal.is_running()[0])
+        self.assertTrue(zdb.is_running())
         result = zdb_client.ping()
         self.assertEqual(result, "PONG")
         
@@ -455,5 +454,5 @@ class ZDBActions(BaseTest):
         key_cursor = self.zdb_client.key_cursor(keys[0], case)
 
         self.log("Scan zdb starting with that key, should find five keys.")
-        # scan_result = self.zdb_client.scan(key_cursor, case)
-        # self.assertEqual(len(scan_result[1]), 5)
+        scan_result = self.zdb_client.scan(key_cursor, case)
+        self.assertEqual(len(scan_result[1]), 5)
