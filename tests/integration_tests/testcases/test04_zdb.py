@@ -434,7 +434,7 @@ class ZDBActions(BaseTest):
     @parameterized.expand(["upper", "lower"])
     @unittest.skip('https://github.com/0-complexity/G8_testing/issues/429')
     def test007_keycur_scan_keys(self, case):
-        """ SAL-040 Set keys and scan zdb keys.
+        """ SAL-039 Set keys and scan zdb keys.
 
         **Test Scenario:**
         #. Set five keys with random value. 
