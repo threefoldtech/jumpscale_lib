@@ -72,7 +72,7 @@ Locked:
 	20.0 locked until 2018-10-30 13:00:00
 ```
 
-Funds can also be send to a multisig wallet. To do so, the `send_to_multisig` function
+Funds can also be sent to a multisig wallet. To do so, the `send_to_multisig` function
 should be used. It is also possible to add optional data or a locking period here.
 
 
@@ -83,7 +83,7 @@ wallet3 = j.clients.tfchain.create_wallet('wallet3', testnet=True)
 addresses = [wallet2.addresses[0], wallet3.addresses[0]]
 # both addresses will need to sign
 required_sigs = 2
-# First send 10 tft, which can be spend immediatly
+# First send 10 tft, which can be spent immediately
 amount = 10
 wallet1.send_to_multisig(amount, addresses, required_sigs)
 # Now send 5 more tft which are timelocked until the 30th of october, 1PM GMT
