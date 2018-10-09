@@ -88,7 +88,7 @@ class Traefik(Service):
         return templates.render(
             'traefik.conf', etcd_ip='{}:{}'.format(self.etcd_endpoint['ip'], self.etcd_endpoint['client_port']), user="root", passwd=self.etcd_endpoint['password']).strip()
 
-    def start(self, timeout=30):
+    def start(self, timeout=120):
         """
         Start traefik
         store config in etcd

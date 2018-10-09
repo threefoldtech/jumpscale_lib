@@ -75,7 +75,7 @@ class Coredns(Service):
         return templates.render(
             'coredns.conf', etcd_ip=self.etcd_endpoint['client_url']).strip()
 
-    def start(self, timeout=15):
+    def start(self, timeout=120):
         """
         Start coredns
         :param timeout: time in seconds to wait for the coredns to start
