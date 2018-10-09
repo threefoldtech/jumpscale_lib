@@ -113,6 +113,15 @@ class FarmerRegistration:
         farmer.save()
 
     @staticmethod
+    def usage(farmers):
+        usage = {}
+
+        for farmer in farmers:
+            usage[farmer.id] = Capacity.objects(farmer=farmer.id).count()
+
+        return usage
+
+    @staticmethod
     def list(name=None, organization=None, **kwargs):
         query = {}
         if name:

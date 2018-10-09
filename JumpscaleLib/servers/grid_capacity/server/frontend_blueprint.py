@@ -18,6 +18,7 @@ def send_js(path):
 def capacity():
     countries = NodeRegistration.all_countries()
     farmers = FarmerRegistration.list().order_by('name')
+    fusage = FarmerRegistration.usage(farmers)
 
     nodes = []
     form = {
@@ -42,7 +43,7 @@ def capacity():
 
         nodes = NodeRegistration.search(**form, order='-updated')
 
-    return render_template('capacity.html', nodes=nodes, form=form, countries=countries, farmers=farmers)
+    return render_template('capacity.html', nodes=nodes, form=form, countries=countries, farmers=farmers, fusage=fusage)
 
 
 @frontend_bp.route('/farmers', methods=['GET'])

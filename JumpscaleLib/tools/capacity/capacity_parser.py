@@ -61,8 +61,6 @@ class Report():
             latitude=data.get('latitude', 0)
         )
 
-        print(location)
-
         return location
 
     @property
