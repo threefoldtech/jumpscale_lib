@@ -13,7 +13,7 @@ def ListCapacityHandler():
     hru = request.values.get('hru')
     sru = request.values.get('sru')
     farmer = request.values.get('farmer')
-    nodes = NodeRegistration.search(country, mru, cru, hru, sru, farmer)
+    nodes = NodeRegistration.search(country, mru, cru, hru, sru, farmer, fulldump=True)
     output = []
     for node in nodes.all():
         if node.farmer.location and node.farmer.location.latitude and node.farmer.location.longitude:

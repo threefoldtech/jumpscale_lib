@@ -1,3 +1,4 @@
+import datetime
 from flask_mongoengine import MongoEngine, Pagination
 from mongoengine import (DateTimeField, Document, EmbeddedDocument,
                          EmbeddedDocumentField, FloatField, IntField,
@@ -42,7 +43,7 @@ class NodeRegistration:
         return capacity[0]
 
     @staticmethod
-    def search(country=None, mru=None, cru=None, hru=None, sru=None, farmer=None, ** kwargs):
+    def search(country=None, mru=None, cru=None, hru=None, sru=None, farmer=None, fulldump=False, ** kwargs):
         """
         search based on country and minimum resource unit available
 
@@ -72,6 +73,9 @@ class NodeRegistration:
             query['total_resources__hru__gte'] = hru
         if sru:
             query['total_resources__sru__gte'] = sru
+
+        if not fulldump:
+            query['updated__gte'] = datetime.datetime.now() - datetime.timedelta(days=7)
 
         nodes = Capacity.objects(**query)
         if kwargs.get('order'):
