@@ -12,8 +12,8 @@ client = j.clients.etcd.get('test', data={'host':'10.102.242.128','password_': "
 client.put("/hosts/org/cloudrobot", '{"host":"185.69.166.232","ttl":60}')
 
 ```
-NOTE: if domain name is bola.test.com
-        key is `/hosts/com/test/bola`
+NOTE: if domain name is example.test.com
+        key is `/hosts/com/test/example`
 
 ## traefik config
 add your backend
