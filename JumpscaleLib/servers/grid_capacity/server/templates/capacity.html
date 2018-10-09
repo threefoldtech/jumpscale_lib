@@ -188,7 +188,14 @@
                     <td>{{ node.used_resources.mru }}</td>
                     <td>{{ node.used_resources.hru }}</td>
                     <td>{{ node.used_resources.sru }}</td>
-                    </tr>
+                  </tr>
+                  <tr>
+                    <td>Available</td>
+                    <td>{{ (node.total_resources.cru - node.used_resources.cru)|round(2) }}</td>
+                    <td>{{ (node.total_resources.mru - node.used_resources.mru)|round(2) }}</td>
+                    <td>{{ (node.total_resources.hru - node.used_resources.hru)|round(2) }}</td>
+                    <td>{{ (node.total_resources.sru - node.used_resources.sru)|round(2) }}</td>
+                  </tr>
                 </tbody>
              </table>
            </div>
