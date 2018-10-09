@@ -44,8 +44,11 @@ def RegisterCapacityHandler():
             capacity.location = farmer.location
         inputs['farmer'] = farmer
         capacity.update(**inputs)
+
     except NodeNotFoundError:
         inputs['farmer'] = iyo_organization
+        inputs['created'] = datetime.now()
+
         capacity = Capacity(**inputs)
         if farmer.location:
             capacity.location = farmer.location

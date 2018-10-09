@@ -187,6 +187,7 @@ class Capacity(db.Document):
     parameters = ListField(StringField(), default=list)
     uptime = IntField()
     updated = DateTimeField(required=True)
+    created = DateTimeField()
 
 
 class FarmerNotFoundError(KeyError):
