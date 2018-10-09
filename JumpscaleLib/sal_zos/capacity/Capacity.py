@@ -42,6 +42,17 @@ class Capacity:
 
         return params
 
+    def directory(self):
+        if 'staging' in self._node.kernel_args:
+            # return a staging directory object
+            data = {'base_uri': 'https://staging.capacity.threefoldtoken.com'}
+            return j.clients.threefold_directory.get('staging', data=data, interactive=False)
+
+        # return production directory
+        return j.clients.threefold_directory.get(interactive=False)
+
+
+
     def register(self):
         farmer_id = self._node.kernel_args.get('farmer_id')
         if not farmer_id:
@@ -73,12 +84,7 @@ class Capacity:
         elif not data['robot_address']:
             raise RuntimeError('Can not register a node without robot_address')
 
-        if 'staging' in self._node.kernel_args:
-            client = j.clients.threefold_directory.get('staging',
-                                                       data={'base_uri': 'https://staging.capacity.threefoldtoken.com'},
-                                                       interactive=False)
-        else:
-            client = j.clients.threefold_directory.get(interactive=False)
+        client = self.directory()
 
         _, resp = client.api.RegisterCapacity(data)
         resp.raise_for_status()
@@ -98,7 +104,8 @@ class Capacity:
             sru=report.SRU,
         )
 
-        client = j.clients.threefold_directory.get(interactive=False)
+        client = self.directory()
+
         resp = client.api.UpdateActualUsedCapacity(data=data, node_id=self._node.name)
         resp.raise_for_status()
 
@@ -117,6 +124,7 @@ class Capacity:
             sru=report.SRU,
         )
 
-        client = j.clients.threefold_directory.get(interactive=False)
+        client = self.directory()
+
         resp = client.api.UpdateReservedCapacity(data=data, node_id=self._node.name)
         resp.raise_for_status()
