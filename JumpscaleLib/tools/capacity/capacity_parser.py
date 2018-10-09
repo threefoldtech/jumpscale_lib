@@ -83,29 +83,20 @@ class Report():
         """
         return the number of core units
         """
-        unit = 0
-        for cpu in self.processor:
-            if cpu['thread_nr']:
-                unit += int(cpu['thread_nr'])
-            elif cpu['core_nr']:
-                unit += int(cpu['core_nr'])
-            else:
-                # when no thread_nr or core_nr is available we assume it's a single core/thread processor
-                unit += 1
-        return unit
+        return self._total_cpus
 
     @property
     def location(self):
-        resp = requests.get('http://geoip.nekudo.com/api/en/full')
+        resp = requests.get('https://geoip-db.com/json')
         location = None
         if resp.status_code == 200:
             data = resp.json()
             location = dict(
                 continent=data.get('continent', {}).get('names', {}).get('en', 'Unknown'),
-                country=data.get('country', {}).get('names', {}).get('en', 'Unknown'),
-                city=data.get('city', {}).get('names', {}).get('en', 'Unknown'),
-                longitude=data.get('location', {}).get('longitude', 0),
-                latitude=data.get('location', {}).get('latitude', 0)
+                country=data.get('country_name', 'Unknown'),
+                city=data.get('city', 'Unknown'),
+                longitude=data.get('longitude', 0),
+                latitude=data.get('latitude', 0)
             )
         return location
 
