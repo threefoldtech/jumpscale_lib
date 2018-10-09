@@ -15,7 +15,7 @@ class Capacity:
         cl = self._node.client
         n = self._node
 
-        return j.tools.capacity.parser.get_report(cl.info.cpu(), cl.info.mem(), n.disks.list(), indent=indent)
+        return j.tools.capacity.parser.get_report(cl.info.cpu(), cl.info.mem(), n.disks.list())
 
     def reality_report(self):
         """
@@ -60,12 +60,7 @@ class Capacity:
         data = dict(
             node_id=self._node.name,
             location=report.location,
-            total_resources=dict(
-                cru=report.CRU,
-                mru=report.MRU,
-                hru=report.HRU,
-                sru=report.SRU
-            ),
+            total_resources=report.total(),
             robot_address=robot_address,
             os_version=os_version,
             parameters=parameters,

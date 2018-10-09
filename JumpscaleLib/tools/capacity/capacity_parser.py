@@ -1,5 +1,6 @@
 import json
 from enum import Enum
+from .continents import continent_from_country
 
 import requests
 
@@ -8,7 +9,7 @@ from JumpscaleLib.sal_zos.disks.Disks import StorageType
 from .units import GB, GiB
 
 class CapacityParser:
-    def get_report(self, cpu_info, mem_info, disk_info, indent=None):
+    def get_report(self, cpu_info, mem_info, disk_info):
         """
         Takes in hardware info and parses it into a report
 
@@ -18,7 +19,7 @@ class CapacityParser:
 
         @return Report of the capacity
         """
-        return Report(cpu_info, mem_info, disk_info, indent=indent)
+        return Report(cpu_info, mem_info, disk_info)
 
 
 class Report():
@@ -26,7 +27,7 @@ class Report():
     Report takes in hardware information and parses it into a report.
     """
 
-    def __init__(self, cpu_info, mem_info, disk_info, indent=None):
+    def __init__(self, cpu_info, mem_info, disk_info):
         """
         @param total_mem: total system memory in bytes
         @param hw_info: hardware information
@@ -35,9 +36,6 @@ class Report():
         self._total_mem = mem_info['total']
         self._total_cpus = len(cpu_info)
         self._disks = disk_info
-
-        # json indent for pretty printing
-        self.indent = indent
 
     @property
     def CRU(self):
@@ -50,15 +48,21 @@ class Report():
     def location(self):
         resp = requests.get('https://geoip-db.com/json')
         location = None
+        data = {}
+
         if resp.status_code == 200:
             data = resp.json()
-            location = dict(
-                continent=data.get('continent', {}).get('names', {}).get('en', 'Unknown'),
-                country=data.get('country_name', 'Unknown'),
-                city=data.get('city', 'Unknown'),
-                longitude=data.get('longitude', 0),
-                latitude=data.get('latitude', 0)
-            )
+
+        location = dict(
+            country=data.get('country_name', 'Unknown'),
+            continent=continent_from_country.get(data.get('country_code', 'A1')),
+            city=data.get('city', 'Unknown'),
+            longitude=data.get('longitude', 0),
+            latitude=data.get('latitude', 0)
+        )
+
+        print(location)
+
         return location
 
     @property
@@ -95,12 +99,16 @@ class Report():
 
         return round(unit, 2)
 
+    def total(self):
+        return {
+            'cru': self.CRU,
+            'mru': self.MRU,
+            'hru': self.HRU,
+            'sru': self.SRU
+        }
+
     def __repr__(self):
-        return json.dumps({
-            "processors": self._total_cpus,
-            "memory": self._total_mem,
-            "disks": self._disks,
-        }, indent=self.indent)
+        return json.dumps(self.total())
 
     def __str__(self):
-        return repr(self)
+        return self.__repr__()
