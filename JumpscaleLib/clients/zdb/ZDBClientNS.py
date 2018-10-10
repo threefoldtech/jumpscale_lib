@@ -4,6 +4,7 @@ import os
 import struct
 import copy
 import redis
+from .ZDBClientNSMeta import ZDBClientNSMeta
 
 JSBASE = j.application.JSBaseClass
 
@@ -39,6 +40,9 @@ class ZDBClientNS(JSBASE):
         self.nsname = nsname.lower().strip()
         self.mode = self.zdbclient.mode
 
+        self.key = "%s_%s_%s"%(zdbclient.config.data['addr'],zdbclient.config.data['port'],self.nsname)
+        self.key = self.key.lower()
+
         if self.adminsecret is not "":
             self.redis.execute_command("AUTH", self.adminsecret)
 
@@ -47,6 +51,14 @@ class ZDBClientNS(JSBASE):
             self.redis.execute_command("SELECT", self.nsname)
         else:
             self.redis.execute_command("SELECT", self.nsname, self.secret)
+
+        self._meta = None
+
+    @property
+    def meta(self):
+        if self._meta is None:
+            self._meta = ZDBClientNSMeta(self)
+        return self._meta
 
     def test(self):
         return self.test_seq()
