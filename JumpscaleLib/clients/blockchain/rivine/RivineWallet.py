@@ -24,7 +24,8 @@ from .types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY, UNLOCKHASH_SIZE, U
 from Jumpscale import j
 from JumpscaleLib.clients.blockchain.rivine import utils
 from JumpscaleLib.clients.blockchain.rivine.atomicswap.atomicswap import AtomicSwapManager
-from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory, DEFAULT_TRANSACTION_VERSION
+from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory,\
+        DEFAULT_TRANSACTION_VERSION, CoinOutput, DEFAULT_MINERFEE
 from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
 from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import UnlockCondtionFactory,\
         MULTISIG_CONDITION_TYPE, MultiSignatureFulfillment, SingleSignatureFulfillment
@@ -180,24 +181,23 @@ class RivineWallet:
         unconfirmed_txs = self._get_unconfirmed_transactions(format_inputs=True)
         logger.info('Current chain height is: {}'.format(current_chain_height))
         # when checking the balance we will check for 10 more addresses
-        current_nr_of_addresses = len(self.addresses)
-        unused_addresses = []
-        nr_of_addresses_to_check = current_nr_of_addresses + NR_OF_EXTRA_ADDRESSES_TO_CHECK
+        nr_of_addresses_to_check = self._nr_keys_per_seed + NR_OF_EXTRA_ADDRESSES_TO_CHECK
         for address_idx in range(nr_of_addresses_to_check):
             new_address = False
-            if address_idx < current_nr_of_addresses:
+            if address_idx < self._nr_keys_per_seed:
                 address = self.addresses[address_idx]
             else:
-                address = self.generate_address(persist=False)
+                address = str(self._generate_spendable_key(index=address_idx).unlockhash)
                 new_address = True
             try:
                 address_info = self._check_address(address=address, log_errors=False)
             except RESTAPIError:
-                # add to unused addresses list
-                unused_addresses.append(address)
+                pass
             else:
                 if new_address is True:
+                    self._nr_keys_per_seed = address_idx + 1
                     self._save_nr_of_keys()
+
                 # It could be that we found an address which is only part of a multisig
                 # output. In that case some properties we depend on below won't be
                 # available, but there will also not be an error. So collect the
@@ -234,9 +234,7 @@ class RivineWallet:
                                                     address=address,
                                                     transactions=transactions,
                                                     unconfirmed_txs=unconfirmed_txs)
-        # clean up unused addresses
-        for address in unused_addresses:
-            del self._keys[address]
+
         # remove spent inputs after collection all the inputs
         for address, address_info in self._addresses_info.items():
             self._remove_spent_inputs(transactions = address_info.get('transactions', {}))
@@ -350,6 +348,52 @@ class RivineWallet:
         self._commit_transaction(transaction=transaction)
         return transaction
 
+    def create_multisig_spending_transaction(self, *inputids, recipient=None, amount=None,
+                                             refund_condition=None, locktime=None):
+        """
+        Create a new transactions which spends the multisig. If
+        insufficient value is available in the given inputs, more inputs will need
+        to be added on the transaction object manually.
+
+        @param inputids: a number of multisig parentids which are not timelocked and part of the wallet
+        @param recipient: the address of the receiver
+        @param amoiunt: the amount of coins to send to the receiver
+        @param refund_condition: the condition used in the refund. If enough inputs are given
+            and this is not provided, the first input's condition will be used automatically
+            if the input is more then required
+        @param locktime: An optional locktime until which the output is locked
+        """
+        # Check if there are multisig inputs available. if not, try to get the balance,
+        # might be that this function has not been called yet.
+        if not self._unspent_multisig_outputs:
+            _ = self.current_balance
+        # Convert amount from one coin to the base unit
+        if amount is not None:
+            amount = amount * HASTINGS_TFT_VALUE
+        transaction = TransactionFactory.create_transaction(version=DEFAULT_TRANSACTION_VERSION)
+        if recipient is not None and amount is not None:
+            transaction.add_coin_output(amount, recipient, locktime)
+        # Track the total amount of input funds
+        total_input = 0
+        for inputid in inputids:
+            # We want to create a transactions which spends the given multisig
+            # outputs, so we only need to loop over the unlocked multisigs
+            if not inputid in self._unspent_multisig_outputs:
+                raise RuntimeError("Trying to spend multisig output which does not exist or is not unlocked yet")
+            output = CoinOutput.from_dict(self._unspent_multisig_outputs[inputid])
+            total_input += output._value
+            transaction.add_multisig_input(inputid)
+            # If no refund_condition is given take the condition from the first input we spend
+            # just in case it would be needed
+            if refund_condition is None:
+                refund_condition = output._condition
+        refund = 0
+        if amount is not None and total_input > amount + DEFAULT_MINERFEE:
+            refund = total_input - (amount + DEFAULT_MINERFEE)
+        if refund > 0 and refund_condition is not None:
+            transaction._coins_outputs.append(CoinOutput(value=refund, condition=refund_condition))
+        transaction.add_minerfee(DEFAULT_MINERFEE)
+        return transaction
 
     def _get_inputs(self, amount, minerfee=None):
         """
@@ -508,7 +552,7 @@ class RivineWallet:
 
         @param transaction: Transaction object to be signed
         """
-        logger.info("Signing Trasnaction")
+        logger.info("Signing Transaction")
         for index, input in enumerate(transaction.coins_inputs):
             #@TODO improve the parsing of outputs its duplicated now in too many places
             ulh = self._get_unlockhash_from_output(output=self._unspent_coins_outputs[input.parent_id], address=input.parent_id)
@@ -715,7 +759,7 @@ class WalletBalance:
 
     @property
     def unlocked_balance(self):
-        return sum(int(value.get('value', 0)) for value in self._unspent_coins_outputs.values()) / HASTINGS_TFT_VALUE
+        return sum(int(value.get('value', 0)) for value in self._unlocked_outputs.values()) / HASTINGS_TFT_VALUE
 
     @property
     def unlocked_outputs(self):
@@ -733,9 +777,15 @@ class WalletBalance:
         return self._locked_outputs
 
     def add_unlocked_output(self, output_id, raw_output):
+        # It coudl be that this is a timelock condition which has expired
+        if raw_output['condition']['type'] == 3:
+            raw_output['condition'] = raw_output['condition']['data']['condition']
         self._unlocked_outputs[output_id] = raw_output
 
     def add_unlocked_multisig_output(self, output_id, raw_output):
+        # It could be that this is a timelock condition which has expired
+        if raw_output['condition']['type'] == 3:
+            raw_output['condition'] = raw_output['condition']['data']['condition']
         self._unlocked_multisig_outputs[output_id] = raw_output
 
     def add_locked_output(self, output_id, raw_output):

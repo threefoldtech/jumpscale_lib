@@ -12,62 +12,193 @@ dependencies, see [the rivine module README](../rivine/README.md).
 ## Usage
 
 Start by creating a wallet ( for testnet in this case)
-```python
-wallet = j.clients.tfchain.create_wallet('default', testnet = True)
+```python3
+wallet1  = j.clients.tfchain.create_wallet('wallet1', testnet= True)
 ```
 Or in case you already created a wallet, you can open it :
-```python
- wallet = j.clients.tfchain.open_wallet('default')
+```python3
+ wallet1 = j.clients.tfchain.open_wallet('wallet1')
  ```
 Now that we have our wallet, we can get the addresses we already generated
 
-```python
-wallet.addresses
+```python3
+wallet1.addresses
+Out[10]: ['01ffffbd36a9d6c995a82c8e34d53cf9cbb13b2c55bed3fcc0020d9c0ff682cd8d45d2f41acbeb']
 ```
 
-And once we received some funds on one of these addresses, we can verify that:
+ Check the balance:
+
+```python3
+wallet1.current_balance
+Out[11]:
+Unlocked:
+
+	0.0
+
+```
+
+And once we received some funds on one of the addresses: 
 
 ```python
-wallet.current_balance
+wallet1.current_balance
+Out[17]:
+Unlocked:
+
+	1000.0
 ```
 
 ### Sending funds
 
-Sending funds to another wallet requires an address. Once the address has been
-acquired, we can send the amount of TFT we want. Optionally, we could lock this amount
-untill a certain block height or time, or we could add some extra data. Locking
-and adding data is ofcourse optional. By default the transaction will send any
-leftover funds from the inputs back to one of the input addresses. This behaviour
-can be overrided by setting the `reuse_addr` parameter to `False`, which will force
-generation of a new address to send the leftover funds to.
-
 ```python
-address = '01fe9e3c3001ada8ed39248ec376133032067adf36f5fd2eac27363432a3b55945bcba2694f00b'
-amount = 10 # Send 10 TFT
-optional_data = b"a small optional message"
-locktime = 120000 # lock until block 120.000
-txn = wallet.send_money(amount, address, data=optional_data, locktime=locktime)
-# In case you are interested, the transaction can be seen in its raw json form:
-txn.json
+# First create a new wallet and get the address we will send funds to
+wallet2 = j.clients.tfchain.create_wallet('wallet2', testnet=True)
+address = wallet2.addresses[0] # Take the first address from the list of addresses
+# Send 20 tft which can be spend immediatly. The transaction is commited automatically
+amount = 20
+wallet1.send_money(amount, address)
+# Now send 20 tft which are timelocked until the 30th of october, 1 PM GMT
+locktime = 1540904400 # unix timestamp
+wallet1.send_money(amount, address, locktime=locktime)
+
+# After the transactions have been confirmed, the wallet2 balance will show:
+wallet2.current_balance
+Out[9]: 
+Unlocked:
+
+	20.0
+
+Locked:
+
+	20.0 locked until 2018-10-30 13:00:00
 ```
 
-The transaction will automatically be signed and send to the public explores, which
-will then try to put it in the network.
-
-Funds can also be send to a multisig wallet. To do so, the `send_to_multisig` function
+Funds can also be sent to a multisig wallet. To do so, the `send_to_multisig` function
 should be used. It is also possible to add optional data or a locking period here.
 
+
 ```python
-recipients = ['01b255ffb4a3b08822ce5d4e1118159ab781b7c1bb6b5913aba63625b943cff6de8bd740c38ea1',
-	'01fe9e3c3001ada8ed39248ec376133032067adf36f5fd2eac27363432a3b55945bcba2694f00b']
-required_nr_of_signatures = 2
-amount = 5
-wallet.send_to_multisig(amount, recipients, required_nr_of_signatures)
+# Create another wallet
+wallet3 = j.clients.tfchain.create_wallet('wallet3', testnet=True)
+# now create the list of addresses which can spend the funds
+addresses = [wallet2.addresses[0], wallet3.addresses[0]]
+# both addresses will need to sign
+required_sigs = 2
+# First send 10 tft, which can be spent immediately
+amount = 10
+wallet1.send_to_multisig(amount, addresses, required_sigs)
+# Now send 5 more tft which are timelocked until the 30th of october, 1PM GMT
+locktime = 1540904400
+wallet1.send_to_multisig(amount, addresses, required_sigs, locktime=locktime)
+
+# After the transactions have been confirmed, wallet2 and wallet3 will report the
+# multisig outputs as part of their balance
+wallet2.current_balance
+Out[19]:
+Unlocked:
+
+	20.0
+
+Locked:
+
+	20.0 locked until 2018-10-30 13:00:00
+
+Unlocked multisig outputs:
+
+	Output id: 3706001cfd4b24b9521a38eaba4a2b5a495129e6df41c1a58c9717156f1e284c
+	Signature addresses:
+		017d1a4078e38dd38d15360364d5c884f8ef98b63d19cd7a0c791e7c9beaf9efd7e835f293f921
+		019fca6d823c69c49da1ca2e962b98ed5ac221fd5a85aa550e00b8a80db91ee9cc7afa967f4a43
+	Minimum amount of signatures: 2
+	Value: 5.0
+
+Locked multisig outputs:
+
+	Output id: d5290bae4c86dc85d42dfa030cfcb2c8d17c88a3a4d43b4fb4e88da3c7e4895f
+	Signature addresses:
+		017d1a4078e38dd38d15360364d5c884f8ef98b63d19cd7a0c791e7c9beaf9efd7e835f293f921
+		019fca6d823c69c49da1ca2e962b98ed5ac221fd5a85aa550e00b8a80db91ee9cc7afa967f4a43
+	Minimum amount of signatures: 2
+	Value: 5.0 locked until 2018-10-30 13:00:00
 ```
 
 ### Using a multisig wallet
-**TODO**
 
+```python
+# check the available inputs
+wallet2.check_balance
+Out[31]
+Unlocked:
+
+	20.0
+
+Locked:
+
+	20.0 locked until 2018-10-30 13:00:00
+
+Unlocked multisig outputs:
+
+	Output id: 3706001cfd4b24b9521a38eaba4a2b5a495129e6df41c1a58c9717156f1e284c
+	Signature addresses:
+		017d1a4078e38dd38d15360364d5c884f8ef98b63d19cd7a0c791e7c9beaf9efd7e835f293f921
+		019fca6d823c69c49da1ca2e962b98ed5ac221fd5a85aa550e00b8a80db91ee9cc7afa967f4a43
+	Minimum amount of signatures: 2
+	Value: 5.0
+
+Locked multisig outputs:
+
+	Output id: d5290bae4c86dc85d42dfa030cfcb2c8d17c88a3a4d43b4fb4e88da3c7e4895f
+	Signature addresses:
+		017d1a4078e38dd38d15360364d5c884f8ef98b63d19cd7a0c791e7c9beaf9efd7e835f293f921
+		019fca6d823c69c49da1ca2e962b98ed5ac221fd5a85aa550e00b8a80db91ee9cc7afa967f4a43
+	Minimum amount of signatures: 2
+	Value: 5.0 locked until 2018-10-30 13:00:00
+
+# send funds to our original wallet, 1 tft 
+address = wallet1.addresses[0]
+amount = 1
+# select the inputids we want to spend, multiple can be given
+tx = wallet2.create_multisig_spending_transaction('3706001cfd4b24b9521a38eaba4a2b5a495129e6df41c1a58c9717156f1e284c',
+						  recipient=address, amount=amount)
+wallet2.sign_transaction(tx, multisig=True)
+# Print the tx json so it can be passed to the other signer
+tx.json
+Out[36]:
+{'version': 1,
+ 'data': {'coininputs': [{'parentid': '3706001cfd4b24b9521a38eaba4a2b5a495129e6df41c1a58c9717156f1e284c',
+    'fulfillment': {'type': 3,
+     'data': {'pairs': [{'publickey': 'ed25519:894d0138e5eef44dcea71ff5990ec3941cb1f9c10fda6935474b2054db8d45a3',
+        'signature': '90ebde0eef55f18c8c7d6c48181a8f4dc727464a68fac425763acb77cefca401bb9eed93d5c21c9020c94e1d4a721814bcd33783caaf4a6b5fae1c4d427b9b0b'}]}}}],
+  'coinoutputs': [{'value': '1000000000',
+    'condition': {'type': 1,
+     'data': {'unlockhash': '01eacabf383ece86d601f755a283f853c74d09c7a1e48d73af541e6267181c25a6a8fe98157a0e'}}},
+   {'value': '3900000000',
+    'condition': {'type': 4,
+     'data': {'unlockhashes': ['017d1a4078e38dd38d15360364d5c884f8ef98b63d19cd7a0c791e7c9beaf9efd7e835f293f921',
+       '019fca6d823c69c49da1ca2e962b98ed5ac221fd5a85aa550e00b8a80db91ee9cc7afa967f4a43'],
+      'minimumsignaturecount': 2}}}],
+  'minerfees': ['100000000']}}
+
+# Other person loads the transaction so his wallet can sign
+tx = j.clients.tfchain.create_transaction_from_json(...) # copy transaction json
+# Sign and commit transaction
+wallet3.sign_transaction(tx, multisig=True, commit=True)
+
+# after the transaction is confirmed, the output is added to the balance of the wallet.
+# likewise, timelocked tokens can be send like this
+wallet2.current_balance
+Out[45]: omitted for brevity
+
+# lock until 30th october 1 PM GMT
+locktime = 1540904400
+tx = wallet2.create_multisig_spending_transaction('6c68623bdb50e3127606f845f7fa23f3849ff9752c8ec35517a8ccd677493368',
+						  amount=amount, recipient=recipient, locktime=locktime)
+wallet2.sign_transaction(tx, multisig=True)
+# get transaction json and load it so the other person can sign
+Out[48]: omitted for brevity
+
+# sign and commit transaction
+wallet3.sign_transaction(tx, multisig=True, commit=True)
+```
 
 ## How to use AtomicSwap
 The light wallet client supports the different atomicswap operations. It allows the user to:

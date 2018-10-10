@@ -12,7 +12,10 @@ from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import Unlock
         LockTimeCondition, MultiSignatureCondition, UnlockCondtionFactory
 from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
 
+from JumpscaleLib.clients.blockchain.rivine.errors import WalletAlreadyExistsException
+
 JSConfigBaseFactory = j.tools.configmanager.JSBaseClassConfigs
+
 
 class TfchainClientFactory(JSConfigBaseFactory):
     """
@@ -44,6 +47,8 @@ class TfchainClientFactory(JSConfigBaseFactory):
 
         @param seed : restores a wallet from a seed
         """
+        if self.exists(walletname):
+            raise WalletAlreadyExistsException(walletname)
         data = {'testnet':testnet, 'seed_':seed}
         return self.get(walletname, data=data).wallet
 
@@ -52,7 +57,7 @@ class TfchainClientFactory(JSConfigBaseFactory):
         Opens a named wallet
         Returns None if the  wallet is not found
         """
-        if walletname not in self.list():
+        if not self.exists(walletname):
             return None
         return self.get(walletname).wallet
 
