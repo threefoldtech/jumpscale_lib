@@ -147,12 +147,14 @@ class Disk(Mountable):
         the filesystems attribute of the class with the detail of
         all the filesystem present on the disk
         """
+        disk_devices_names = [self.devicename]
+        disk_devices_names.extend([part.devicename for part in self.partitions])
+
         self._filesystems = []
         for fs in (self.client.btrfs.list() or []):
             for device in fs['devices']:
-                if device['path'] == "/dev/{}".format(self.name):
+                if device['path'] in disk_devices_names:
                     self._filesystems.append(fs)
-                    break
 
     def mktable(self, table_type='gpt', overwrite=False):
         """
