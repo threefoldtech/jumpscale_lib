@@ -35,6 +35,8 @@ class ZDBClientNS(JSBASE):
                                          port=zdbclient.config.data['port'],
                                          fromcache=False)
 
+        self.type = "ZDB"
+
         self.redis = self._patch_redis_client(self.redis)
 
         self.nsname = nsname.lower().strip()
@@ -79,6 +81,7 @@ class ZDBClientNS(JSBASE):
         # 0-db does return a key after in set
         if 'SET' in redis.response_callbacks:
             del redis.response_callbacks['SET']
+            del redis.response_callbacks['DEL']
         return redis
 
     def _key_get(self, key, set=True, iterate=False):
@@ -131,6 +134,18 @@ class ZDBClientNS(JSBASE):
             key = struct.unpack("<I", res)[0]
 
         return key
+
+    def delete(self, key):
+        key1 = self._key_get(key)
+        res = self.redis.execute_command("DEL", key1)
+        # if not res:  # data already present, 0-db did nothing.
+        #     return res
+        # # print(res)
+        # if self.mode == "seq":
+        #     key = struct.unpack("<I", res)[0]
+        #
+        # return key
+
 
     def get(self, key):
         """[summary]

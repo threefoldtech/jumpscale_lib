@@ -81,6 +81,11 @@ class ZDBClient(JSConfigBase):
                 raise RuntimeError("could not check namespace:%s, error:%s" % (name, e))
             return False
 
+
+    def namespaces_list(self):
+        res = self.namespace_system.redis.execute_command("NSLIST")
+        return [i.decode() for i in res]
+
     def namespace_get(self,name):
         if not name in self.namespaces:
             self.namespaces[name] = ZDBClientNS(self,name)
@@ -118,3 +123,9 @@ class ZDBClient(JSConfigBase):
             cl.redis.execute_command("NSSET", name, "maxsize", maxsize)
 
         return self.namespace_get(name)
+
+    def namespace_delete(self, name):
+        if self.namespace_exists(name):
+            cl = self.namespace_system
+            cl.redis.execute_command("NSDEL", name)
+            self.namespaces.pop(name)

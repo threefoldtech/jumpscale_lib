@@ -77,7 +77,7 @@ class ZDBClientNSMeta(JSBASE):
 
         return id
 
-    def schemas_get(self):
+    def schemas_load(self):
         ids = [i for i in self._data["schemas"].keys()]
         ids.sort()
         res = {}
@@ -94,16 +94,27 @@ class ZDBClientNSMeta(JSBASE):
             self.schemas[id]=schema
         return res2
 
-
-
     def config_get(self,name):
         return self._data["config"].get(name,None)
 
     def config_set(self,name,val):
-        self._data["config"][name]=val
+        if name not in self._data["config"] or self._data["config"][name]!=val:
+            self._data["config"][name]=val
+            self.save()
 
     def config_exists(self,name):
         return self.config_get(name)is not None
+
+    # @property
+    # def models(self):
+    #     return self.config_get("models")
+    #
+    # def model_add(self,name):
+    #     if name not in self.models:
+    #         models = self.config_get("models")
+    #         models.append(name)
+    #         self.config_get("models",models)
+    #         self.save()
 
     def save(self):
         data = j.data.serializers.msgpack.dumps(self._data)
@@ -118,6 +129,11 @@ class ZDBClientNSMeta(JSBASE):
             self.db.set(j.data.serializers.msgpack.dumps(self._data))
         else:
             self._data = j.data.serializers.msgpack.loads(data)
+            if not "config" in self._data:
+                raise RuntimeError("corrupt config record o in %s"%self)
+            if not "schemas" in self._data:
+                raise RuntimeError("corrupt config record o in %s"%self)
+
 
 
     def __repr__(self):
