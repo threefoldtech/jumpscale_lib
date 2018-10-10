@@ -3,6 +3,7 @@ import uuid
 from Jumpscale import j
 
 from .ZDBClient import ZDBClient
+from .ZDBClientNS import ZDBClientNS
 
 JSConfigBase = j.tools.configmanager.JSBaseClassConfigs
 
@@ -12,6 +13,8 @@ class ZDBFactory(JSConfigBase):
     def __init__(self):
         self.__jslocation__ = "j.clients.zdb"
         super(ZDBFactory, self).__init__(ZDBClient)
+        self._ZDBClientClass = ZDBClient
+        self._ZDBClientNSClass = ZDBClientNS
 
     def configure(self, instance="main", secrets="", addr="localhost", port=None,
                   adminsecret="", mode="user"):
