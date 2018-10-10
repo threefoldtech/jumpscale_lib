@@ -1,5 +1,5 @@
 from Jumpscale import j
-from pprint import pprint 
+from pprint import pprint
 import os
 import struct
 import copy
@@ -42,7 +42,7 @@ class ZDBClientNS(JSBASE):
         self.nsname = nsname.lower().strip()
         self.mode = self.zdbclient.mode
 
-        self.key = "%s_%s_%s"%(zdbclient.config.data['addr'],zdbclient.config.data['port'],self.nsname)
+        self.key = "%s_%s_%s" % (zdbclient.config.data['addr'], zdbclient.config.data['port'], self.nsname)
         self.key = self.key.lower()
 
         if self.adminsecret is not "":
@@ -54,13 +54,7 @@ class ZDBClientNS(JSBASE):
         else:
             self.redis.execute_command("SELECT", self.nsname, self.secret)
 
-        self._meta = None
-
-    @property
-    def meta(self):
-        if self._meta is None:
-            self._meta = ZDBClientNSMeta(self)
-        return self._meta
+        self.meta = ZDBClientNSMeta(self)
 
     def test(self):
         return self.test_seq()
@@ -146,7 +140,6 @@ class ZDBClientNS(JSBASE):
         #
         # return key
 
-
     def get(self, key):
         """[summary]
 
@@ -218,8 +211,7 @@ class ZDBClientNS(JSBASE):
                 res[key] = str(val).strip()
         return res
 
-    def list(self, key_start=None, direction="forward", nrrecords=100000,
-             result=None):
+    def list(self, key_start=None, direction="forward", nrrecords=100000, result=None):
         if result is None:
             result = []
 
@@ -291,13 +283,13 @@ class ZDBClientNS(JSBASE):
                 j.shell()
                 raise e
 
-            (next,res) = resp
+            (next, res) = resp
 
-            if len(res)>0:
+            if len(res) > 0:
                 for item in res:
-                    #there can be more than 1
+                    # there can be more than 1
 
-                    keyb,size,epoch = item
+                    keyb, size, epoch = item
 
                     if self.mode == "seq":
                         key_new = struct.unpack("<I", keyb)[0]
@@ -337,13 +329,12 @@ class ZDBClientNS(JSBASE):
         assert self.set(b"rss", key=id) == 0  # changed the data
 
         nr = self.nsinfo["entries"]
-        assert nr == 2 #nr of real data inside
+        assert nr == 2  # nr of real data inside
 
         # test the list function
         assert self.list() == [0, 1]
         assert self.list(1) == [1]
-        assert self.list(0) == [0,1]
-
+        assert self.list(0) == [0, 1]
 
         result = {}
 
@@ -360,6 +351,7 @@ class ZDBClientNS(JSBASE):
         assert self.exists(id2)
 
         print("write 10000 entries")
+
         def dumpdata(self):
 
             inputs = {}
@@ -377,10 +369,9 @@ class ZDBClientNS(JSBASE):
 
         dumpdata(self)  # is in default namespace
 
-
         pprint("count:%s" % self.count)
 
-        nsname="newnamespace"
+        nsname = "newnamespace"
         ns = self.zdbclient.namespace_new(nsname, secret="1234", maxsize=1000)
         assert ns.nsinfo["data_limits_bytes"] == 1000
         assert ns.nsinfo["data_size_bytes"] == 0
