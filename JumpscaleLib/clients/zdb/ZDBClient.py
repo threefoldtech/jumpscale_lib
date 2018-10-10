@@ -41,7 +41,7 @@ class ZDBClient(JSConfigBase):
                               ui=None, interactive=interactive)
         self.init()
 
-    def init(self): # if you find this isn't working, see issue #116.
+    def init(self):  # if you find this isn't working, see issue #116.
 
         # if not started:
         #     return
@@ -49,29 +49,28 @@ class ZDBClient(JSConfigBase):
         self.mode = self.config.data["mode"]
         self.namespaces = {}
 
-        #default namespace should always exist
-            
+        # default namespace should always exist
+
     @property
-    def adminsecret(self):        
+    def adminsecret(self):
         if self.config.data["adminsecret_"].strip() is not "":
             return self.config.data["adminsecret_"].strip()
         return ""
 
-
     @property
     def secrets(self):
-        res={}
+        res = {}
         if "," in self.config.data["secrets_"]:
             items = self.config.data["secrets_"].split(",")
             for item in items:
-                if item.strip()=="":
+                if item.strip() == "":
                     continue
-                nsname,secret = item.split(":")
-                res[nsname.lower().strip()]=secret.strip()
+                nsname, secret = item.split(":")
+                res[nsname.lower().strip()] = secret.strip()
         else:
-            res["default"]=self.config.data["secrets_"].strip()
+            res["default"] = self.config.data["secrets_"].strip()
         return res
-                
+
     def namespace_exists(self, name):
         try:
             self.namespace_system.redis.execute_command("NSINFO", name)
@@ -81,14 +80,13 @@ class ZDBClient(JSConfigBase):
                 raise RuntimeError("could not check namespace:%s, error:%s" % (name, e))
             return False
 
-
     def namespaces_list(self):
         res = self.namespace_system.redis.execute_command("NSLIST")
         return [i.decode() for i in res]
 
-    def namespace_get(self,name):
+    def namespace_get(self, name):
         if not name in self.namespaces:
-            self.namespaces[name] = ZDBClientNS(self,name)
+            self.namespaces[name] = ZDBClientNS(self, name)
         return self.namespaces[name]
 
     def ping(self):
@@ -96,13 +94,13 @@ class ZDBClient(JSConfigBase):
         go to default namespace & ping
         :return:
         """
-        d=self.namespace_get("default")
+        d = self.namespace_get("default")
         return d.redis.ping()
 
     @property
     def namespace_system(self):
         return self.namespace_get("default")
-        
+
     def namespace_new(self, name, secret="", maxsize=0, die=False):
         if self.namespace_exists(name):
             if die:
@@ -111,7 +109,7 @@ class ZDBClient(JSConfigBase):
 
         if secret is "" and "default" in self.secrets.keys():
             secret = self.secrets["default"]
-        
+
         cl = self.namespace_system
         cl.redis.execute_command("NSNEW", name)
         if secret is not "":
