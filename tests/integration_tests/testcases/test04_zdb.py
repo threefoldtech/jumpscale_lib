@@ -430,29 +430,3 @@ class ZDBActions(BaseTest):
         self.log("Select the namespace with right password, should succeed.")
         result = self.zdb_client.select(namespace=ns_name, password=password, case=case)
         self.assertEqual(result, 'OK')
-
-    @parameterized.expand(["upper", "lower"])
-    @unittest.skip('https://github.com/0-complexity/G8_testing/issues/429')
-    def test007_keycur_scan_keys(self, case):
-        """ SAL-039 Set keys and scan zdb keys.
-
-        **Test Scenario:**
-        #. Set five keys with random value. 
-        #. Get first key cursor.
-        #. Scan zdb starting with that key, should find five keys.
-        """
-        self.log("Set five keys with random value.")
-        keys = []
-        values = []
-        for idx in range(5):
-            keys.append(self.random_string())
-            values.append(self.random_string())
-            result = self.zdb_client.set(keys[idx], values[idx], case)
-            self.assertEqual(result, keys[idx])
-
-        self.log("Get first key curisor.")
-        key_cursor = self.zdb_client.key_cursor(keys[0], case)
-
-        self.log("Scan zdb starting with that key, should find five keys.")
-        scan_result = self.zdb_client.scan(key_cursor, case)
-        self.assertEqual(len(scan_result[1]), 5)
