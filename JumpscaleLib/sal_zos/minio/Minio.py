@@ -29,7 +29,9 @@ class Minio(Service):
                  nr_datashards=1,
                  nr_parityshards=0,
                  tlog_namespace=None,
-                 tlog_address=None):
+                 tlog_address=None,
+                 master_namespace=None,
+                 master_address=None):
         """
 
         :param name: instance name
@@ -45,6 +47,8 @@ class Minio(Service):
         :param nr_parityshards: number of parityshards (if it's zero it will make the mode replication otherwise mode is distribution)
         :param tlog_namespace: name of the zerodb namespace used as tlog
         :param tlog_address: ip:port of the zerodb namespace used as tlog
+        :param master_namespace: name of the zerodb namespace used as master
+        :param master_address: ip:port of the zerodb namespace used as master
         """
         super().__init__(name, node, 'minio', [DEFAULT_PORT])
 
@@ -60,13 +64,18 @@ class Minio(Service):
         self.login = login
         self.password = password
         self.meta_private_key = meta_private_key
+        self.tlog = None
+        self.master = None
         if tlog_namespace and tlog_address:
             self.tlog = {
                 'namespace': tlog_namespace,
                 'address': tlog_address,
                 'password': namespace_secret}
-        else:
-            self.tlog = None
+        if master_namespace and master_address:
+            self.master = {
+                'namespace': master_namespace,
+                'address': master_address,
+                'password': namespace_secret}
 
         self._config_dir = '/bin'
         self._config_name = 'zerostor.yaml'
@@ -136,7 +145,8 @@ class Minio(Service):
     def _config_as_text(self):
         return templates.render(
             'minio.conf', namespace=self.namespace, namespace_secret=self.namespace_secret,
-            zdbs=self.zdbs, private_key=self.private_key, block_size=self.block_size, nr_datashards=self._nr_datashards, nr_parityshards=self._nr_parityshards, tlog=self.tlog).strip()
+            zdbs=self.zdbs, private_key=self.private_key, block_size=self.block_size, nr_datashards=self._nr_datashards,
+            nr_parityshards=self._nr_parityshards, tlog=self.tlog, master=self.master).strip()
 
     @property
     def node_port(self):
