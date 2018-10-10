@@ -64,20 +64,18 @@ class Minio(Service):
         self.login = login
         self.password = password
         self.meta_private_key = meta_private_key
+        self.tlog = None
+        self.master = None
         if tlog_namespace and tlog_address:
             self.tlog = {
                 'namespace': tlog_namespace,
                 'address': tlog_address,
                 'password': namespace_secret}
-        else:
-            self.tlog = None
         if master_namespace and master_address:
             self.master = {
                 'namespace': master_namespace,
                 'address': master_address,
                 'password': namespace_secret}
-        else:
-            self.master = None
 
         self._config_dir = '/bin'
         self._config_name = 'zerostor.yaml'

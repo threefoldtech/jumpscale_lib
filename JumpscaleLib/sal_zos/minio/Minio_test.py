@@ -45,6 +45,7 @@ datastor: # required
     distribution:
       data_shards: 6
       parity_shards: 4"""
+    assert expected == conf
     assert m.mode == "distribution"
 
 
@@ -70,9 +71,72 @@ datastor: # required
     distribution:
       data_shards: 6
       parity_shards: 4
-    minio:
-      tlog:
-        namespace: tlogns
-        address: ip:port
-        password: nssecret"""
-    assert m.mode == "distribution"
+minio:
+  tlog:
+    address: ip:port
+    namespace: tlogns
+    password: nssecret"""
+    assert expected == conf
+
+def test_master_config():
+    m = Minio('aminio', None, 'admin', 'admin', ['localhost:9999'], 'anamespace', 'myprivatekeystring',
+              namespace_secret='nssecret', nr_datashards=6, nr_parityshards=4,
+              master_namespace='masterns', master_address='ip:port')
+    conf = m._config_as_text()
+    expected = """\
+namespace: anamespace
+password: nssecret
+datastor: # required
+  shards: # required
+    - localhost:9999
+  pipeline:
+    block_size: 1048576
+    compression: # optional, snappy by default
+      type: snappy # snappy is the default, other options: lz4, gzip
+      mode: default # default is the default, other options: best_speed, best_compression
+    encryption: # optional, disabled by default
+      type: aes # aes is the default and only standard option
+      private_key: myprivatekeystring
+    distribution:
+      data_shards: 6
+      parity_shards: 4
+minio:
+  master:
+    address: ip:port
+    namespace: masterns
+    password: nssecret"""
+    assert expected == conf
+
+def test_master_and_tlog_config():
+    m = Minio('aminio', None, 'admin', 'admin', ['localhost:9999'], 'anamespace', 'myprivatekeystring',
+              namespace_secret='nssecret', nr_datashards=6, nr_parityshards=4,
+              master_namespace='masterns', master_address='ip:port',
+              tlog_namespace='tlogns', tlog_address='ip:port')
+    conf = m._config_as_text()
+    expected = """\
+namespace: anamespace
+password: nssecret
+datastor: # required
+  shards: # required
+    - localhost:9999
+  pipeline:
+    block_size: 1048576
+    compression: # optional, snappy by default
+      type: snappy # snappy is the default, other options: lz4, gzip
+      mode: default # default is the default, other options: best_speed, best_compression
+    encryption: # optional, disabled by default
+      type: aes # aes is the default and only standard option
+      private_key: myprivatekeystring
+    distribution:
+      data_shards: 6
+      parity_shards: 4
+minio:
+  tlog:
+    address: ip:port
+    namespace: tlogns
+    password: nssecret
+  master:
+    address: ip:port
+    namespace: masterns
+    password: nssecret"""
+    assert expected == conf
