@@ -522,11 +522,8 @@ class RivineWallet:
         # to send the remainder back to the original user
         if remainder > 0:
             # we have leftover fund, so we create new transaction, and pick on user key that is not used
-            for address in self._keys.keys():
-                if address in used_addresses.values():
-                    continue
-                transaction.add_coin_output(value=remainder, recipient=address)
-                break
+            if self.addresses:
+                transaction.add_coin_output(value=remainder, recipient=self.addresses[0])
 
         # add minerfee to the transaction
         transaction.add_minerfee(minerfee)
