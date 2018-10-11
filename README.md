@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/threefoldtech/jumpscale_lib.svg?branch=development)](https://travis-ci.org/threefoldtech/jumpscale_lib)
 
-# lib
+# JumpScale Lib
 
 `lib` is a component of `JumpScale` (see [here](https://github.com/threefoldtech/jumpscale_core)). It extends `JumpScale` functionalities by adding additional automation tools. It is the home for non core `Jumpscale` clients(e.g., Kubernetes, postgresql, rivine), tools(e.g., raml), system abstraction layers(e.g., ubuntu, docker) and different data format interactions(e.g., capnp).
 
