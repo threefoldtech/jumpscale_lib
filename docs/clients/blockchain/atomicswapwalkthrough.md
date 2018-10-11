@@ -8,7 +8,7 @@ The original decred atomic swap project is [Decred atomic swaps](https://github.
 ### To install the required tools you can execute the following in your js shell
 ```
 j.tools.prefab.local.blockchain.electrum.install(reset=True)
-j.tools.prefab.local.blockchain.atomicswap.install(reset=True, tag=None, branch='json')
+j.tools.prefab.local.blockchain.atomicswap.install(reset=True)
 ```
 
 ## Example
