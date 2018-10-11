@@ -16,11 +16,7 @@ class Containers():
     def list(self):
         containers = []
         for container in self.node.client.container.list().values():
-            try:
-                containers.append(Container.from_containerinfo(container, self.node))
-            except ValueError:
-                # skip containers withouth tags
-                pass
+            containers.append(Container.from_containerinfo(container, self.node))
         return containers
 
     def get(self, name):
@@ -77,9 +73,6 @@ class Container():
         logger.debug("create container from info")
 
         arguments = containerinfo['container']['arguments']
-        if not arguments['tags']:
-            # we don't deal with tagless containers
-            raise ValueError("Could not load containerinfo withouth tags")
         return cls(arguments['name'],
                    node,
                    arguments['root'],
