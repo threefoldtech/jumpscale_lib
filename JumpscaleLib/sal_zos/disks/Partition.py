@@ -16,7 +16,6 @@ class Partition(Mountable):
         self.mountpoint = None
         self.uuid = None
         self.fs_uuid = None
-        self._filesystem = {}
 
         self._load(part_info)
         Mountable.__init__(self)
@@ -27,8 +26,9 @@ class Partition(Mountable):
 
     @property
     def filesystem(self):
-        self._populate_filesystem()
-        return self._filesystem
+        for fs in (self.client.btrfs.list() or []):
+            if fs['uuid'] == self.fs_uuid:
+                return fs
 
     @property
     def devicename(self):
@@ -41,17 +41,6 @@ class Partition(Mountable):
         self.mountpoint = part_info['mountpoint']
         self.uuid = part_info['partuuid']
         self.fs_uuid = part_info['uuid']
-
-    def _populate_filesystem(self):
-        """
-        look into all the btrfs filesystem and populate
-        the filesystems attribute of the class with the detail of
-        all the filesystem present on the disk
-        """
-        self._filesystems = {}
-        for fs in (self.client.btrfs.list() or []):
-            if fs['uuid'] == self.fs_uuid:
-                self._filesystem = fs
 
     def __str__(self):
         return "Partition <{}>".format(self.name)

@@ -115,10 +115,11 @@ class StoragePool(Mountable):
         diskpath = os.path.basename(self.device)
         for disk in self.node.disks.list():
             for part in disk.partitions:
-                if part.name == diskpath:
+                if part.fs_uuid == self.uuid:
                     partition = part
                     break
-            if partition: break
+            if partition:
+                break
 
         if partition:
             disk = partition.disk
@@ -177,7 +178,7 @@ class StoragePool(Mountable):
                 info = disk
                 break
             for part in disk.get('children', []) or []:
-                if self.device == "/dev/%s" % part['kname']:
+                if self.uuid == part['uuid']:
                     info = part
                     break
             if info:
@@ -202,7 +203,7 @@ class StoragePool(Mountable):
             }
 
             return device, pool_status
-        return {}, ''
+        raise RuntimeError('Failed to find device {}'.format(self.device))
 
     def list(self):
         subvolumes = []

@@ -100,9 +100,7 @@ class Zerodbs(DynamicCollection):
 
             if not sp.mountpoint:
                 sp.mount()
-            if sp.exists(name):
-                sp.get(name)
-            else:
+            if not sp.exists(sp.name):
                 logger.info("create filesystem on %s" % disk.devicename)
                 sp.create(name)
 
