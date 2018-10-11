@@ -368,18 +368,16 @@ class VMTestCases(BaseTest):
         vm.data = self.set_vm_default_values(os_type="ubuntu")
         vm.install()
 
+        flag = param
         if param == "name":
             new_param_val = self.random_string()
-            flag = param
         elif param == "vcpus":
             new_param_val = random.randint(1, 3)
             flag = "cpu"
         elif param == "memory":
             new_param_val = random.randint(1, 3) * 1024
-            flag = param
         else:
             new_param_val = 'https://hub.grid.tf/tf-bootable/ubuntu:16.04.flist'
-            flag = param
 
         self.log("Try to change vm {} while it is running, should fail.".format(param))
         with self.assertRaises(RuntimeError) as e:
@@ -601,7 +599,7 @@ class VMActionsBase(BaseTest):
         result2 = self.ssh_vm_execute_command(vm_ip=self.vm_zt_ip, cmd='pwd')
         self.assertEqual(result2, '/root')
 
-    @parameterized.expand([["zero-os", "ubuntu"], ["reset", "reboot"]])
+    @parameterized.expand([["zero-os", "reset"], ["zero-os", "reboot"], ["ubuntu", "reset"], ["ubuntu", "reboot"]])
     @unittest.skip('https://github.com/threefoldtech/0-core/issues/35')
     def test003_reset_and_reboot_vm(self, os_type, operation):
         """ SAL-009 reset and reboot the vm.

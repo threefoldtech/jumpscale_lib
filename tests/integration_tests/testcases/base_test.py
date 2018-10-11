@@ -65,8 +65,8 @@ class BaseTest(Utils):
     def set_vm_default_values(self, os_type, os_version=None):
 
         vm_parms = {'flist':"",
-                    'memory':  random.randint(1,3) * 1024,
-                    'cpu':  random.randint(1,3),
+                    'memory':  random.randint(1, 3) * 1024,
+                    'cpu':  random.randint(1, len(self.node_sal.client.info.cpu())),
                     'name': self.random_string(),
                     'nics': [],
                     'configs': [{'path': '/root/.ssh/authorized_keys',

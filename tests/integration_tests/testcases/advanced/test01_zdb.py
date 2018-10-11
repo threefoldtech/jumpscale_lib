@@ -29,8 +29,8 @@ class Vdisktest(BaseTest):
         self.disk = Vdisk(node=self.node_sal, zdb=self.zdb.zerodb_sal)
         self.disk.data = self.set_vdisk_default_data()
         self.mount_path = '/mnt/{}'.format(self.random_string())
-        self.disk.data['mountPoint'] = self.mount_path
-        self.disk.data['filesystem'] = 'ext4'
+        new_data = {'mountPoint': self.mount_path, 'filesystem': 'ext4'}
+        self.update_default_data(self.disk.data, new_data)
         self.disk.install()
 
         self.log("Create vm [VM1] with default values, should succeed.")
@@ -94,7 +94,7 @@ class Vdisktest(BaseTest):
         result_dict[i] = (result1, result2)
 
     def test001_read_and_write_file_from_vdisk(self):
-        """ SAL-039 create vdisk and attach it to vm.
+        """ SAL-039 read and write several file at same time.
 
         **Test Scenario:**
 
@@ -106,11 +106,11 @@ class Vdisktest(BaseTest):
         #. Add port to create server on it.
         #. Create server[S1], should succeed.
         #. Do this steps five times using multiprocessing:
-            #. Download specific file with size 10M to vm[VM1].
-            #. Get file md5 of the downloaded file.
-            #. Download this file from [VM1] to the test machine through the server[S1].
-            #. Get file md5 of the downloaded file.
-        #. Download the same to the test machine.
+        #. Download specific file with size 10M to vm[VM1].
+        #. Get file md5 of the downloaded file.
+        #. Download this file from [VM1] to the test machine through the server[S1].
+        #. Get file md5 of the downloaded file.
+        #. Then download the same to the test machine.
         #. Check md5 of the those three files, should be the same.
 
         """
@@ -139,9 +139,9 @@ class Vdisktest(BaseTest):
         jobs = []
         
         for i in range(5):
-            p = multiprocessing.Process(target=self.read_write_file, args=(self.mount_path, guest_port, vm_zt_ip, i, result_dict))
-            jobs.append(p)
-            p.start()
+            process = multiprocessing.Process(target=self.read_write_file, args=(self.mount_path, guest_port, vm_zt_ip, i, result_dict))
+            jobs.append(process)
+            process.start()
 
         self.log("wait till all processes finish")
         for proc in jobs:
@@ -169,8 +169,8 @@ class Vdisktest(BaseTest):
             self.assertEqual(result_dict[i][1], result)
 
     @parameterized.expand(['namespace', 'zdb'])    
-    def test002_delete_namespace_or_zdb_of_vdisk(self, delete):
-        """ SAL-040 create vdisk and attach it to vm.
+    def test002_delete_namespace_or_stop_zdb_of_vdisk(self, delete):
+        """ SAL-040 delete namespace or stop zdb of vdisk.
 
         **Test Scenario:**
 
@@ -179,7 +179,7 @@ class Vdisktest(BaseTest):
         #. Add zerotier network to VM1, should succeed.
         #. Attach disk [D1] to vm [VM1].
         #. Try to write on disk mounting point, should succeed.
-        #. Delete (namespace/zdb) and try to write again, should fail.
+        #. (Delete namespace /stop zdb) and try to write again, should fail.
         """
         self.log("deploy vm [VM1].")
         self.vm.install()
@@ -197,7 +197,7 @@ class Vdisktest(BaseTest):
         result = self.ssh_vm_execute_command(vm_ip=vm_zt_ip, cmd=cmd)
         self.assertEqual(result, content)
 
-        self.log("Delete (namespace/zdb) and try to write again, should fail.")
+        self.log("(Delete namespace /stop zdb) and try to write again, should fail.")
         if delete == 'zdb':
             self.zdb.stop()
         else:
