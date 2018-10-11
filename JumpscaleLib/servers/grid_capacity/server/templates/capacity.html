@@ -54,8 +54,8 @@
           </div>
           <div class="row">
             <div class="form-group col-6">
-                <label for="formCountry">filter by country :</label>
-                <select class="form-control" id="formCountry"  name="country">
+                <label for="formCountry">Filter by country :</label>
+                <select class="form-control" id="formCountry" name="country">
                   <option></option>
                   {% for country in countries %}
                   {% if form.country == country %}
@@ -67,10 +67,10 @@
                 </select>
             </div>
             <div class="form-group col-6">
-                <label for="formFarmer">filter by farmer :</label>
-                <select class="form-control" id="formFarmer"  name="farmer">
+                <label for="formFarmer">Filter by farmer :</label>
+                <select class="form-control" id="formFarmer" name="farmer">
                   <option></option>
-                  {% for farmer in farmers %}
+                  {% for farmer in farmers if fusage[farmer.id] > 0 %}
                   {% if form.farmer == farmer.iyo_organization %}
                   <option value="{{farmer.iyo_organization}}" selected>{{farmer.name}}</option>
                   {% else %}
@@ -188,7 +188,16 @@
                     <td>{{ node.used_resources.mru }}</td>
                     <td>{{ node.used_resources.hru }}</td>
                     <td>{{ node.used_resources.sru }}</td>
-                    </tr>
+                  </tr>
+		  {% if node.used_resources.cru %}
+                  <tr>
+                    <td>Available</td>
+                    <td>{{ (node.total_resources.cru - node.used_resources.cru)|round(2) }}</td>
+                    <td>{{ (node.total_resources.mru - node.used_resources.mru)|round(2) }}</td>
+                    <td>{{ (node.total_resources.hru - node.used_resources.hru)|round(2) }}</td>
+                    <td>{{ (node.total_resources.sru - node.used_resources.sru)|round(2) }}</td>
+                  </tr>
+		  {% endif %}
                 </tbody>
              </table>
            </div>
