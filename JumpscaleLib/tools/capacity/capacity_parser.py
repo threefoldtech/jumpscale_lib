@@ -1,12 +1,16 @@
 import json
 from enum import Enum
-from .continents import continent_from_country
 
 import requests
 
+from jumpscale import j
 from JumpscaleLib.sal_zos.disks.Disks import StorageType
 
+from .continents import continent_from_country
 from .units import GB, GiB
+
+logger = j.logger.get(__name__)
+
 
 class CapacityParser:
     def get_report(self, cpu_info, mem_info, disk_info):
@@ -46,19 +50,22 @@ class Report():
 
     @property
     def location(self):
-        resp = requests.get('https://geoip-db.com/json')
         location = None
         data = {}
 
-        if resp.status_code == 200:
-            data = resp.json()
+        try:
+            resp = requests.get('https://geoip-db.com/json')
+            if resp.status_code == 200:
+                data = resp.json()
+        except Exception as err:
+            logger.error("error fetch location: %s" % err)
 
         location = dict(
-            country=data.get('country_name', 'Unknown'),
-            continent=continent_from_country.get(data.get('country_code', 'A1')),
-            city=data.get('city', 'Unknown'),
-            longitude=data.get('longitude', 0),
-            latitude=data.get('latitude', 0)
+            country=data.get('country_name') or 'Unknown',
+            continent=continent_from_country.get(data.get('country_code') or 'A1'),
+            city=data.get('city') or 'Unknown',
+            longitude=data.get('longitude') or 0,
+            latitude=data.get('latitude') or 0,
         )
 
         return location

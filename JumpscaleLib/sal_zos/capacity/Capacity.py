@@ -1,5 +1,10 @@
 import io
+
+import requests
+
 from jumpscale import j
+
+logger = j.logger.get(__name__)
 
 
 class Capacity:
@@ -51,8 +56,6 @@ class Capacity:
         # return production directory
         return j.clients.threefold_directory.get(interactive=False)
 
-
-
     def register(self):
         farmer_id = self._node.kernel_args.get('farmer_id')
         if not farmer_id:
@@ -86,8 +89,10 @@ class Capacity:
 
         client = self.directory()
 
-        _, resp = client.api.RegisterCapacity(data)
-        resp.raise_for_status()
+        try:
+            _, resp = client.api.RegisterCapacity(data)
+        except requests.exceptions.HTTPError as err:
+            logger.error("error pusing total capacity to the directory: %s" % err.response.content)
 
     def update_reality(self):
         farmer_id = self._node.kernel_args.get('farmer_id')
