@@ -281,7 +281,7 @@ class Node:
         # create the storage pool if we don't have one yet
         if zeroos_cache_sp is None:
             disk = self._eligible_zeroos_cache_disk(disks)
-            zeroos_cache_sp = self.storagepools.create(name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
+            zeroos_cache_sp = self.storagepools.create(name, devices=disk.devicename, metadata_profile='single', data_profile='single', overwrite=True)
         zeroos_cache_sp.mount()
         try:
             zeroos_cache_sp.get('logs')
