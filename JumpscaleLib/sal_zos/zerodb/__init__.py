@@ -64,7 +64,6 @@ class Zerodbs(DynamicCollection):
 
     def partition_and_mount_disks(self):
         mounts = []
-        node_mountpoints = self.node.client.disk.mounts()
 
         for disk in self.node.disks.list():
             if disk.type not in [StorageType.HDD, StorageType.SSD, StorageType.NVME, StorageType.ARCHIVE]:
@@ -81,52 +80,39 @@ class Zerodbs(DynamicCollection):
 
             logger.info("processing disk %s" % disk.devicename)
 
+            name = j.data.idgenerator.generateGUID()
             if not disk.partitions:
                 logger.info("create storage pool on %s" % disk.devicename)
-                sp = self.node.storagepools.create(disk.name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
-                devicename = sp.devices[0]
+                sp = self.node.storagepools.create(name, device=disk.devicename, metadata_profile='single', data_profile='single', overwrite=True)
             else:
                 if len(disk.partitions) > 1:
                     raise RuntimeError('Found more than 1 partition for disk %s' % disk.name)
 
                 partition = disk.partitions[0]
-                devicename = partition.devicename
-                sps = self.node.storagepools.list(devicename)
+                sps = self.node.storagepools.list(partition.fs_uuid)
                 if len(sps) > 1:
-                    raise RuntimeError('Found more than 1 storagepool for device %s' % devicename)
+                    raise RuntimeError('Found more than 1 storagepool for fs_uuid %s' % partition.fs_uuid)
                 elif not sps:
                     logger.info("create storage pool on %s" % disk.devicename)
-                    sp = self.node.storagepools.create(disk.name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
+                    sp = self.node.storagepools.create(name, device=disk.devicename, metadata_profile='single', data_profile='single', overwrite=True)
                 else:
                     sp = sps[0]
 
             if not sp.mountpoint:
                 sp.mount()
-            if sp.exists(disk.name):
-                fs = sp.get(disk.name)
+            if sp.exists(name):
+                sp.get(name)
             else:
                 logger.info("create filesystem on %s" % disk.devicename)
-                fs = sp.create(disk.name)
+                sp.create(name)
 
-            mount_point = '/mnt/zdbs/{}'.format(disk.name)
-            self.node.client.filesystem.mkdir(mount_point)
-
-            device_mountpoints = node_mountpoints.get(devicename, [])
-            for device_mountpoint in device_mountpoints:
-                if device_mountpoint['mountpoint'] == mount_point:
-                    break
-            else:
-                logger.info("mount filesystem on %s" % mount_point)
-                subvol = 'subvol={}'.format(fs.subvolume)
-                self.node.client.disk.mount(sp.devicename, mount_point, [subvol])
-
-            mounts.append({'disk': disk.name, 'mountpoint': mount_point})
+            mounts.append({'disk': disk.name, 'mountpoint': sp.mountpoint})
 
         return mounts
 
     def create_and_mount_subvolume(self, zdb_name, size, disktypes):
         # filter storagepools that have the correct disk type and whose (total size - reserved subvolume quota) >= size
-        storagepools = list(filter(lambda sp: self.node.disks.get_device(sp.devices[0]).disk.type.value in disktypes and (sp.size - sp.total_quota() / (1024 ** 3)) >= size,
+        storagepools = list(filter(lambda sp: self.node.disks.get_device(sp.device).disk.type.value in disktypes and (sp.size - sp.total_quota() / (1024 ** 3)) >= size,
                                    self.node.storagepools.list()))
         storagepools.sort(key=lambda sp: sp.size - sp.total_quota(), reverse=True)
         if not storagepools:
