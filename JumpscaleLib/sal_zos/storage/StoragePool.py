@@ -174,15 +174,12 @@ class StoragePool(Mountable):
         info = None
         for disk in disks:
             disk_name = "/dev/%s" % disk['kname']
-            if self.device == disk_name and disk['mountpoint']:
-                info = disk
-                break
             for part in disk.get('children', []) or []:
                 if self.uuid == part['uuid']:
                     info = part
                     break
-            if info:
-                break
+            if not info:
+                continue
 
             status = 'healthy'
             if info['subsystems'] != 'block:virtio:pci':
@@ -197,7 +194,7 @@ class StoragePool(Mountable):
                     pool_status = 'degraded'
 
             device = {
-                'device': device,
+                'device': self.device,
                 'partUUID': info['partuuid'] or '' if info else '',
                 'status': status,
             }
