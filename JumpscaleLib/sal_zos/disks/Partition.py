@@ -51,7 +51,7 @@ class Partition(Mountable):
         self._filesystems = {}
         for fs in (self.client.btrfs.list() or []):
             if fs['uuid'] == self.fs_uuid:
-                self.filesystem = fs
+                self._filesystem = fs
 
     def __str__(self):
         return "Partition <{}>".format(self.name)
