@@ -7,7 +7,7 @@ class Capacity:
     def __init__(self, node):
         self._node = node
 
-    def total_report(self, indent=None):
+    def total_report(self):
         """
         create a report of the total hardware capacity for
         processor, memory, motherboard and disks
