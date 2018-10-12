@@ -44,6 +44,8 @@ class ZDBAdminClient(ZDBClientBase):
             self.logger.debug("namespace exists")
             if die:
                 raise RuntimeError("namespace already exists:%s" % name)
+            ns=ZDBClient(addr=self.addr,port=self.port,mode=self.mode,secret=secret,nsname=name)
+            return ns
 
         self.redis.execute_command("NSNEW", name)
         if secret is not "":
@@ -66,6 +68,8 @@ class ZDBAdminClient(ZDBClientBase):
         ns.meta
 
         assert ns.ping()
+
+        return ns
 
 
     def namespace_delete(self, name):

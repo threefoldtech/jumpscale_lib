@@ -121,7 +121,8 @@ class ZDBServer(JSBASE):
         self.mode = "seq"
         self.adminsecret = "123456"
         if reset:
-            self.destroy()
+            cla=self.client_admin_get()
+            cla.reset()
         self.start()
         return self
 
