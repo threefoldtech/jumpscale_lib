@@ -11,7 +11,7 @@ class ZDBServer(JSBASE):
         self.configure()
         self.logger_enable()
 
-    def configure(self,name="main",addr="localhost",port=9900,datadir="",mode="seq",adminsecret="123456"):
+    def configure(self,name="main",addr="localhost",port=9901,datadir="",mode="seq",adminsecret="1234"):
         self.name=name
         self.addr=addr
         self.port=port
@@ -96,7 +96,8 @@ class ZDBServer(JSBASE):
 
         if nsname not in ["default"]:
             cla.namespace_new(nsname,secret=secret)
-
+        else:
+            secret = self.adminsecret
 
         cl =  j.clients.zdb.client_get(nsname=nsname,
                                        addr=self.addr,
@@ -112,8 +113,17 @@ class ZDBServer(JSBASE):
     def start_test_instance(self,reset=False):
         """
         start a test instance with self.adminsecret 123456
+        will use port 9900
+        and name = test
+
+        production is using other ports and other secret
+
         :return:
         """
+        self.name = "test"
+        self.port = 9900
+        self.mode = "seq"
+        self.adminsecret = "123456"
         if reset:
             self.destroy()
         self.start()
@@ -132,14 +142,11 @@ class ZDBServer(JSBASE):
         """
         if build:
             self.build()
-        self.configure(name="test", adminsecret="1234", mode="direct")
+        self.start_test_instance()
         self.destroy()
         self.stop()
         self.start()
-        cl=self.client_get()
+        cl=self.client_get(nsname="test")
 
         print("TEST OK")
 
-
-
-            
