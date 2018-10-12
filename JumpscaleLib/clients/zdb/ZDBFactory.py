@@ -38,8 +38,7 @@ class ZDBFactory(JSBASE):
 
         """
 
-        db = j.servers.zdb.configure(instance="test", adminsecret="123456", reset=reset, mode=mode)
-        db.start()
+        db = j.servers.zdb.start_test_instance(reset=reset,mode=mode)
 
         #if secrets only 1 secret then will be used for all namespaces
         cl = db.client_admin_get()

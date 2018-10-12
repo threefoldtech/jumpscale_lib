@@ -1,84 +1,145 @@
 from Jumpscale import j
 
-TEMPLATE = """
-addr = "127.0.0.1"
-port = 9900
-path = ""
-mode = ""
-verbose = true
-adminsecret_ = ""
-"""
-
-JSConfigBase = j.tools.configmanager.JSBaseClassConfig
+JSBASE = j.application.JSBaseClass
 
 
-class ZDBServer(JSConfigBase):
+class ZDBServer(JSBASE):
 
-    def __init__(self, instance, data={}, parent=None, interactive=False):
+    def __init__(self):
+        self.__jslocation__ = "j.servers.zdb"
+        JSBASE.__init__(self)
+        self.configure()
+        self.logger_enable()
+
+    def configure(self,name="main",addr="localhost",port=9900,datadir="",mode="seq",adminsecret="123456"):
+        self.name=name
+        self.addr=addr
+        self.port=port
+        if datadir=="":
+            self.datadir = j.sal.fs.joinPaths(j.dirs.DATADIR, 'zdb', name)
+        else:
+            self.datadir = datadir
+        self.mode=mode
+        self.adminsecret=adminsecret
+
+    def start(self,reset=False):
         """
+        start zdb in tmux using this directory (use prefab)
+        will only start when the server is not life yet
+
+        :param self.name:
+        :param self.addr:
+        :param self.port:
+        :param self.datadir:
+        :param self.mode:
+        :param self.adminsecret:
+        :return:
         """
-        JSConfigBase.__init__(self, instance=instance, data=data,
-                              parent=parent, template=TEMPLATE, ui=None, interactive=interactive)
 
-        j.sal.fs.createDir(self.config.data["path"])
+        j.sal.fs.createDir(self.datadir)
 
-        self._initdir()
+        if j.sal.nettools.tcpPortConnectionTest(self.addr,self.port):
+            r=j.clients.redis.get(ipaddr=self.addr, port=self.port)
+            r.ping()
+            return()
 
-    def client_admin_get(self, nsname="default"):
+        if reset:
+            self.destroy()
+
+
+        if j.core.platformtype.myplatform.isMac and self.addr=="localhost":
+            self.addr="127.0.0.1"
+
+        j.tools.prefab.local.zero_os.zos_db.start(instance=self.name,
+                                                  host=self.addr,
+                                                  port=self.port,
+                                                  index=self.datadir,
+                                                  data=self.datadir,
+                                                  verbose=True,
+                                                  mode=self.mode,
+                                                  adminsecret=self.adminsecret)
+
+        self.logger.info("waiting for zdb server to start on (%s:%s)" % (self.addr, self.port))
+
+        res = j.sal.nettools.waitConnectionTest(self.addr, self.port)
+        if res is False:
+            raise RuntimeError("could not start zdb:'%s' (%s:%s)" % (self.name, self.addr, self.port))
+
+
+    def stop(self):
+        j.tools.prefab.local.zero_os.zos_db.stop(self.name)
+
+    def destroy(self):
+        self.stop()
+        j.sal.fs.removeDirTree(self.datadir)
+        ipath = j.dirs.VARDIR + "/zdb/index/%s.db" % self.name
+        j.sal.fs.remove(ipath)
+
+
+    def client_admin_get(self):
         """
 
         """
+        cl =  j.clients.zdb.client_admin_get(addr=self.addr,
+                                       port=self.port,
+                                       secret=self.adminsecret,
+                                       mode = self.mode)
+        return cl
 
-        cl =  j.clients.zdb.client_admin_get(addr=self.config.data['addr'],
-                                       port=self.config.data['port'],
-                                       secret=self.config.data['adminsecret_'],
-                                       mode = self.config.data['mode'])
+    def client_get(self, nsname="default", secret="1234"):
+        """
+        get client to zdb
+
+        """
+
+        cla = self.client_admin_get()
+
+        if nsname not in ["default"]:
+            cla.namespace_new(nsname,secret=secret)
+
+
+        cl =  j.clients.zdb.client_get(nsname=nsname,
+                                       addr=self.addr,
+                                       port=self.port,
+                                       secret=secret,
+                                       mode=self.mode)
+
+        assert cl.ping()
 
         return cl
 
 
-    def _initdir(self):
-        root_path = self.config.data['path']
-        if root_path == "":
-            root_path = j.sal.fs.joinPaths(j.dirs.DATADIR, 'zdb', self.instance)
-        # make sure directories exists
-        j.sal.fs.createDir(root_path)
-        self.root_path = root_path
-
-    def start(self):
+    def start_test_instance(self,reset=False):
         """
-        start zdb in tmux using this directory (use prefab)
-        will only start when the server is not life yet
+        start a test instance with self.adminsecret 123456
+        :return:
         """
+        if reset:
+            self.destroy()
+        self.start()
+        return self
 
-        mode = self.config.data['mode']
 
-        d=self.config.data
-        if j.sal.nettools.tcpPortConnectionTest(d["addr"],d["port"]):
-            r=j.clients.redis.get(ipaddr=d["addr"], port=d["port"])
-            r.ping()
-            return()
+    def build(self):
+        """
+        js_shell 'j.servers.zdb.build()'
+        """
+        j.tools.prefab.local.zero_os.zos_db.build(install=True,reset=True)
 
-        j.tools.prefab.local.zero_os.zos_db.start(instance=self.instance,
-                                                  host=self.config.data['addr'],
-                                                  port=self.config.data['port'],
-                                                  index=self.root_path,
-                                                  data=self.root_path,
-                                                  verbose=self.config.data['verbose'],
-                                                  mode=mode,
-                                                  adminsecret=self.config.data['adminsecret_'])
-        self.logger.info("waiting for zdb server to start on (%s:%s)" % (self.config.data['addr'], self.config.data['port']))
-        # time.sleep(0.5)
-        res = j.sal.nettools.waitConnectionTest(self.config.data['addr'], self.config.data['port'])
-        if res is False:
-            raise RuntimeError("could not start zdb:'%s' (%s:%s)" % (self.instance, self.config.data['addr'], self.config.data['port']))
-
-    def stop(self):
-        j.tools.prefab.local.zero_os.zos_db.stop(self.instance)
-
-    def destroy(self):
+    def test(self,build=False):
+        """
+        js_shell 'j.servers.zdb.test(build=True)'
+        """
+        if build:
+            self.build()
+        self.configure(name="test", adminsecret="1234", mode="direct")
+        self.destroy()
         self.stop()
-        j.sal.fs.removeDirTree(self.root_path)
-        ipath = j.dirs.VARDIR + "/zdb/index/%s.db" % self.instance
-        j.sal.fs.remove(ipath)
-        self._initdir()
+        self.start()
+        cl=self.client_get()
+
+        print("TEST OK")
+
+
+
+            

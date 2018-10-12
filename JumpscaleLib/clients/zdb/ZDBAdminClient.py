@@ -41,7 +41,6 @@ class ZDBAdminClient(ZDBClientBase):
         if self.namespace_exists(name):
             if die:
                 raise RuntimeError("namespace already exists:%s" % name)
-            return self.namespace_get(name)
 
         self.redis.execute_command("NSNEW", name)
         if secret is not "":
