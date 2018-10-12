@@ -95,6 +95,14 @@ class StoragePool(Mountable):
         return self.node.client
 
     @property
+    def type(self):
+        disk_name = self.device[len('/dev/'):]
+        disk = self.node.disks.get(disk_name[:-1])
+        if not disk:
+            raise RuntimeError("could not find disk used by the storage pool %s" % self.name)
+        return disk.type
+
+    @property
     def devicename(self):
         return 'UUID={}'.format(self.uuid)
 
@@ -111,7 +119,7 @@ class StoragePool(Mountable):
         while self.mountpoint:
             self.umount()
         partition = None
-    
+
         diskpath = os.path.basename(self.device)
         for disk in self.node.disks.list():
             for part in disk.partitions:
@@ -338,6 +346,9 @@ class FileSystem():
         self.client.filesystem.mkdir(self.snapshotspath)
         self.client.btrfs.subvol_snapshot(self.path, snapshot.path)
         return snapshot
+
+    def __repr__(self):
+        return "FileSystem <{}: {!r}>".format(self.name, self.pool)
 
 
 class Snapshot():
