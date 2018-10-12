@@ -1,6 +1,7 @@
 from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
+import socket
 
 
 class ZDBServer(JSBASE):
@@ -11,18 +12,18 @@ class ZDBServer(JSBASE):
         self.configure()
         self.logger_enable()
 
-    def configure(self,name="main",addr="localhost",port=9901,datadir="",mode="seq",adminsecret="1234"):
-        self.name=name
-        self.addr=addr
-        self.port=port
-        if datadir=="":
+    def configure(self, name="main", addr="127.0.0.1", port=9900, datadir="", mode="seq", adminsecret="123456"):
+        self.name = name
+        self.addr = addr
+        self.port = port
+        if datadir == "":
             self.datadir = j.sal.fs.joinPaths(j.dirs.DATADIR, 'zdb', name)
         else:
             self.datadir = datadir
-        self.mode=mode
-        self.adminsecret=adminsecret
+        self.mode = mode
+        self.adminsecret = adminsecret
 
-    def start(self,reset=False):
+    def start(self, mode, reset=False):
         """
         start zdb in tmux using this directory (use prefab)
         will only start when the server is not life yet
@@ -38,17 +39,16 @@ class ZDBServer(JSBASE):
 
         j.sal.fs.createDir(self.datadir)
 
-        if j.sal.nettools.tcpPortConnectionTest(self.addr,self.port):
-            r=j.clients.redis.get(ipaddr=self.addr, port=self.port)
+        if j.sal.nettools.tcpPortConnectionTest(self.addr, self.port):
+            r = j.clients.redis.get(ipaddr=self.addr, port=self.port)
             r.ping()
             return()
 
         if reset:
             self.destroy()
 
-
-        if j.core.platformtype.myplatform.isMac and self.addr=="localhost":
-            self.addr="127.0.0.1"
+        # zdb doesn't understand hostname
+        self.addr == socket.gethostbyname(self.addr)
 
         j.tools.prefab.local.zero_os.zos_db.start(instance=self.name,
                                                   host=self.addr,
@@ -65,7 +65,6 @@ class ZDBServer(JSBASE):
         if res is False:
             raise RuntimeError("could not start zdb:'%s' (%s:%s)" % (self.name, self.addr, self.port))
 
-
     def stop(self):
         j.tools.prefab.local.zero_os.zos_db.stop(self.name)
 
@@ -75,15 +74,14 @@ class ZDBServer(JSBASE):
         ipath = j.dirs.VARDIR + "/zdb/index/%s.db" % self.name
         j.sal.fs.remove(ipath)
 
-
     def client_admin_get(self):
         """
 
         """
-        cl =  j.clients.zdb.client_admin_get(addr=self.addr,
-                                       port=self.port,
-                                       secret=self.adminsecret,
-                                       mode = self.mode)
+        cl = j.clients.zdb.client_admin_get(addr=self.addr,
+                                            port=self.port,
+                                            secret=self.adminsecret,
+                                            mode=self.mode)
         return cl
 
     def client_get(self, nsname="default", secret="1234"):
@@ -95,18 +93,17 @@ class ZDBServer(JSBASE):
         cla = self.client_admin_get()
 
         if nsname not in ["default"]:
-            cla.namespace_new(nsname,secret=secret)
+            cla.namespace_new(nsname, secret=secret)
         else:
             secret = self.adminsecret
 
-        cl =  j.clients.zdb.client_get(nsname=nsname,addr=self.addr,port=self.port,secret=secret,mode=self.mode)
+        cl = j.clients.zdb.client_get(nsname=nsname, addr=self.addr, port=self.port, secret=secret, mode=self.mode)
 
         assert cl.ping()
 
         return cl
 
-
-    def start_test_instance(self,reset=False):
+    def start_test_instance(self, reset=False):
         """
         start a test instance with self.adminsecret 123456
         will use port 9900
@@ -121,19 +118,18 @@ class ZDBServer(JSBASE):
         self.mode = "seq"
         self.adminsecret = "123456"
         if reset:
-            cla=self.client_admin_get()
+            cla = self.client_admin_get()
             cla.reset()
-        self.start()
+        self.start(mode='seq')
         return self
-
 
     def build(self):
         """
         js_shell 'j.servers.zdb.build()'
         """
-        j.tools.prefab.local.zero_os.zos_db.build(install=True,reset=True)
+        j.tools.prefab.local.zero_os.zos_db.build(install=True, reset=True)
 
-    def test(self,build=False):
+    def test(self, build=False):
         """
         js_shell 'j.servers.zdb.test(build=True)'
         """
@@ -142,8 +138,7 @@ class ZDBServer(JSBASE):
         self.start_test_instance()
         self.destroy()
         self.stop()
-        self.start()
-        cl=self.client_get(nsname="test")
+        self.start(mode='seq')
+        cl = self.client_get(nsname="test")
 
         print("TEST OK")
-

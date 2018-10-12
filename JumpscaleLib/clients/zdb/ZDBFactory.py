@@ -1,14 +1,21 @@
+import os
 import uuid
+from pprint import pprint
 
 from Jumpscale import j
 
-from .ZDBClient import ZDBClient
-from .ZDBClient import ZDBClient
-from pprint import pprint
-import os
 from .ZDBAdminClient import ZDBAdminClient
-from .ZDBClient import ZDBClient
+from .clients_impl import ZDBClientDirectMode, ZDBClientSeqMode, ZDBClientUserMode
+
 JSBASE = j.application.JSBaseClass
+
+
+_client_map = {
+    'seq': ZDBClientSeqMode,
+    'sequential': ZDBClientSeqMode,
+    'user': ZDBClientUserMode,
+    'direct': ZDBClientDirectMode,
+}
 
 
 class ZDBFactory(JSBASE):
@@ -28,7 +35,10 @@ class ZDBFactory(JSBASE):
         :param secret:
         :return:
         """
-        return ZDBClient(addr=addr, port=port, secret=secret, nsname=nsname, mode=mode)
+        if mode not in _client_map:
+            return ValueError("mode %s not supported" % mode)
+        klass = _client_map[mode]
+        return klass(addr=addr, port=port, secret=secret, nsname=nsname)
 
     def testdb_server_start_client_get(self, reset=False, mode="seq"):
         """
@@ -38,10 +48,10 @@ class ZDBFactory(JSBASE):
 
         """
 
-        db = j.servers.zdb.start(reset=reset, mode=mode)
+        j.servers.zdb.start(reset=reset, mode=mode)
 
         # if secrets only 1 secret then will be used for all namespaces
-        cl = db.client_admin_get()
+        cl = self.client_admin_get()
         return cl
 
     def _test_admin(self):
@@ -67,7 +77,7 @@ class ZDBFactory(JSBASE):
         #     return str(uuid.uuid4()).replace('-', '')[:length]
 
         if start:
-            cl = j.clients.zdb.testdb_server_start_client_get(reset=True, mode="seq")
+            j.clients.zdb.testdb_server_start_client_get(reset=True, mode="seq")
 
         self._test_admin()
 
@@ -93,26 +103,26 @@ class ZDBFactory(JSBASE):
 
         assert cl1.meta.config_get("testa") == 1
 
-        SCHEMA = """
+        SCHEMA = j.core.text.strip("""
         @url = jumpscale.schema.test.a
         category*= ""
         data = ""
-        """
+        """)
         s = j.data.schema.get(SCHEMA)
 
         id = cl1.meta.schema_set(s)
 
         cl1._meta = None
 
-        data_compare = {'md5': 'cd95678ef4fb17a7315970455f2ade93',
+        data_compare = {'md5': '4ab4a8b1c8073b4698461a1eafbad161',
                         'url': 'jumpscale.schema.test.a',
-                        'schema': '@url = jumpscale.schema.test.a\ncategory*= ""\ndata = ""        \n\n'}
+                        'schema': '@url = jumpscale.schema.test.a\ncategory*= ""\ndata = ""\n\n'}
 
         id, data = cl1.meta.schema_data_get(id=id)
         assert id == 1
         assert data == data_compare
 
-        id, data = cl1.meta.schema_data_get(md5='cd95678ef4fb17a7315970455f2ade93')
+        id, data = cl1.meta.schema_data_get(md5='4ab4a8b1c8073b4698461a1eafbad161')
         assert id == 1
         assert data == data_compare
 
@@ -154,15 +164,12 @@ class ZDBFactory(JSBASE):
         assert cl.list(0) == [0, 1, 2]
 
         result = {}
-
-        def test(id, data, result):
+        for id, data in cl.iterate():
             if id == 0:
-                return result
+                return
             pprint("%s:%s" % (id, data))
             result[id] = data
-            return result
 
-        result = cl.iterate(test, result={})
         assert {1: b'rss', 2: b'b'} == result
 
         assert cl.list(key_start=id2, nrrecords=1) == [id2]
