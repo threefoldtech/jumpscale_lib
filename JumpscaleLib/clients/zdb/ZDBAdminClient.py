@@ -62,6 +62,9 @@ class ZDBAdminClient(ZDBClientBase):
         ns=ZDBClient(addr=self.addr,port=self.port,mode=self.mode,secret=self.secret,nsname="system")
         ns.meta
 
+        ns=ZDBClient(addr=self.addr,port=self.port,mode=self.mode,secret=secret,nsname=name)
+        ns.meta
+
         assert ns.ping()
 
 
