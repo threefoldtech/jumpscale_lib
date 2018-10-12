@@ -24,7 +24,7 @@ class ZDBFactory(JSBASE):
         self.__jslocation__ = "j.clients.zdb"
         JSBASE.__init__(self)
 
-    def client_admin_get(self, addr="localhost", port=9900, secret="123456", mode="seq"):
+    def client_admin_get(self, addr="localhost", port=9900, secret="123456", mode='seq'):
         return ZDBAdminClient(addr=addr, port=port, secret=secret, mode=mode)
 
     def client_get(self, nsname="test", addr="localhost", port=9900, secret="1234", mode="seq"):

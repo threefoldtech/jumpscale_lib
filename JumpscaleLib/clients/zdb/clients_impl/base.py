@@ -22,8 +22,10 @@ class Base(ZDBClientBase):
     def _key_decode(self, key):
         return key
 
-    def set(self, data):
-        return self.redis.execute_command("SET", '', data)
+    def set(self, data, key=None):
+        if key is None:
+            key = ''
+        return self.redis.execute_command("SET", key, data)
 
     def get(self, key):
         return self.redis.execute_command("GET", key)

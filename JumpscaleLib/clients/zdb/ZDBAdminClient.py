@@ -1,7 +1,6 @@
 
 from Jumpscale import j
 
-from .ZDBClient import ZDBClient
 from .ZDBClientBase import ZDBClientBase
 
 

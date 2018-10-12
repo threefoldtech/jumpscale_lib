@@ -1,6 +1,5 @@
 
 from Jumpscale import j
-from .ZDBMeta import ZDBMeta
 
 JSBASE = j.application.JSBaseClass
 
@@ -39,8 +38,6 @@ class ZDBClientBase(JSBASE):
             else:
                 self.logger.debug("select namespace:%s with a secret" % (self.nsname))
                 self.redis.execute_command("SELECT", self.nsname, self.secret)
-
-            self.meta = ZDBMeta(self)
 
     def ping(self):
         """
