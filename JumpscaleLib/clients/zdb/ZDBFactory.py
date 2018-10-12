@@ -58,9 +58,9 @@ class ZDBFactory(JSBASE):
         assert c.namespaces_list() ==  ['default',"system"]
 
 
-    def test(self,reset=True):
+    def test(self,start=True):
         """
-        js_shell 'j.clients.zdb.test(reset=False)'
+        js_shell 'j.clients.zdb.test(start=True)'
 
         """
 
@@ -70,7 +70,7 @@ class ZDBFactory(JSBASE):
         #     return str(uuid.uuid4()).replace('-', '')[:length]
 
 
-        if reset:
+        if start:
             cl = j.clients.zdb.testdb_server_start_client_get(reset=True,mode="seq")
 
         self._test_admin()
