@@ -99,11 +99,7 @@ class ZDBServer(JSBASE):
         else:
             secret = self.adminsecret
 
-        cl =  j.clients.zdb.client_get(nsname=nsname,
-                                       addr=self.addr,
-                                       port=self.port,
-                                       secret=secret,
-                                       mode=self.mode)
+        cl =  j.clients.zdb.client_get(nsname=nsname,addr=self.addr,port=self.port,secret=secret,mode=self.mode)
 
         assert cl.ping()
 

@@ -17,6 +17,7 @@ class ZDBAdminClient(ZDBClientBase):
         """
         ZDBClientBase.__init__(self,addr=addr,port=port,mode=mode,secret=secret)
         self._system = None
+        self.logger_enable()
 
     def namespace_exists(self, name):
         try:
@@ -38,21 +39,30 @@ class ZDBAdminClient(ZDBClientBase):
         return self._system
 
     def namespace_new(self, name, secret="", maxsize=0, die=False):
+        self.logger.debug("namespace_new:%s"%name)
         if self.namespace_exists(name):
+            self.logger.debug("namespace exists")
             if die:
                 raise RuntimeError("namespace already exists:%s" % name)
 
         self.redis.execute_command("NSNEW", name)
         if secret is not "":
+            self.logger.debug("set secret")
             self.redis.execute_command("NSSET", name, "password", secret)
             self.redis.execute_command("NSSET", name, "public", "no")
-        self.logger.debug("namespace:%s NEW" % name)
 
         if maxsize is not 0:
+            self.logger.debug("set maxsize")
             self.redis.execute_command("NSSET", name, "maxsize", maxsize)
+
+        self.logger.debug("connect client")
+        if not self.namespace_exists("system"):
+            self.namespace_new("system",self.secret) #create new one with adminsecret
 
         ns=ZDBClient(addr=self.addr,port=self.port,mode=self.mode,secret=self.secret,nsname="system")
         ns.meta
+
+        assert ns.ping()
 
 
     def namespace_delete(self, name):
