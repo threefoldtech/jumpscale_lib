@@ -31,7 +31,7 @@ class ContainerClient(BaseClient):
             'stream': bool,
             'tags': typchk.Or([str], typchk.IsNone()),
             'id': typchk.Or(str, typchk.IsNone()),
-
+            'recurring_period': typchk.Or(int, typchk.IsNone()),
         }
     })
 
@@ -61,7 +61,7 @@ class ContainerClient(BaseClient):
     def flist(self):
         return self._flist
 
-    def raw(self, command, arguments, queue=None, max_time=None, stream=False, tags=None, id=None):
+    def raw(self, command, arguments, queue=None, max_time=None, stream=False, tags=None, id=None, recurring_period=None):
         """
         Implements the low level command call, this needs to build the command structure
         and push it on the correct queue.
@@ -75,6 +75,7 @@ class ContainerClient(BaseClient):
             client can stream output
         :param tags: job tags
         :param id: job id. Generated if not supplied
+        :param recurring_period: If set, the command execution is rescheduled to execute repeatedly, waiting for recurring_period seconds between each execution.
         :return: Response object
         """
         args = {
@@ -87,6 +88,7 @@ class ContainerClient(BaseClient):
                 'stream': stream,
                 'tags': tags,
                 'id': id,
+                'recurring_period': recurring_period,
             },
         }
 
@@ -139,6 +141,10 @@ class ContainerManager():
             str,
             typchk.IsNone()
         ),
+        'config': typchk.Or(
+            typchk.IsNone(),
+            typchk.Map(str, str)
+        ),
         'storage': typchk.Or(str, typchk.IsNone()),
         'name': typchk.Or(str, typchk.IsNone()),
         'identity': typchk.Or(str, typchk.IsNone()),
@@ -147,6 +153,11 @@ class ContainerManager():
             typchk.IsNone(),
             [typchk.Length((str,), 2, 2)],  # array of (str, str) tuples i.e [(subsyste, name), ...]
         )
+    })
+
+    _layer_chk = typchk.Checker({
+        'container': int,
+        'flist': str,
     })
 
     _client_chk = typchk.Checker(
@@ -177,7 +188,7 @@ class ContainerManager():
     def create(
         self, root_url, mount=None, host_network=False, nics=DefaultNetworking, port=None,
         hostname=None, privileged=False, storage=None, name=None, tags=None, identity=None, env=None,
-        cgroups=None,
+        cgroups=None, config=None
     ):
         """
         Creater a new container with the given root flist, mount points and
@@ -213,6 +224,7 @@ class ContainerManager():
                        Example:
                         `port={8080: 80, 7000:7000}`
                        Source Format: NUMBER, IP:NUMBER, IP/MAST:NUMBER, or DEV:NUMBER
+                       Check https://github.com/threefoldtech/0-core/blob/development/docs/networking/portforwards.md for full syntax
         :param hostname: Specific hostname you want to give to the container.
                          if None it will automatically be set to core-x,
                          x beeing the ID of the container
@@ -224,12 +236,18 @@ class ContainerManager():
         :param env: a dict with the environment variables needed to be set for the container
         :param cgroups: custom list of cgroups to apply to this container on creation. formated as [(subsystem, name), ...]
                         please refer to the cgroup api for more detailes.
+        :param config: a map with the config file path as a key and content as a value. This only works when creating a VM from an flist. The
+                config files are written to the machine before booting.
+                Example:
+                config = {'/root/.ssh/authorized_keys': '<PUBLIC KEYS>'}
         """
 
         if nics == self.DefaultNetworking:
             nics = [{'type': 'default'}]
         elif nics is None:
             nics = []
+
+        config = config or {}
 
         args = {
             'root': root_url,
@@ -244,6 +262,7 @@ class ContainerManager():
             'identity': identity,
             'env': env,
             'cgroups': cgroups,
+            'config': config,
         }
 
         # validate input
@@ -252,6 +271,22 @@ class ContainerManager():
         response = self._client.raw('corex.create', args, tags=tags)
 
         return JSONResponse(response)
+
+    def layer(self, container, flist):
+        """
+        Layer one (and only one) flist on top of the root flist of the given container
+        The layering is done in runtime, no pause or restart of the container is needed
+
+        The layer can be called multiple times, each call will only replace the last layer
+        with the passed flist 
+        """
+        args = {
+            'container': container,
+            'flist': flist,
+        }
+
+        self._layer_chk.check(args)
+        return self._client.json('corex.flist-layer', args)
 
     def list(self):
         """

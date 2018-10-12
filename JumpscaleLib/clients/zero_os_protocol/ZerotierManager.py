@@ -41,7 +41,8 @@ class ZerotierManager():
         result = response.get()
 
         if result.state != 'SUCCESS':
-            raise RuntimeError('failed to leave zerotier network: %s', result.stderr)
+            j.shell()
+            raise RuntimeError('failed to leave zerotier network:%s\nsterr:\n%s', (network,result.stderr))
 
     def list(self):
         """

@@ -34,26 +34,14 @@ class Response():
             v = await r.brpoplpush(self._queue, self._queue, min(maxwait, 10))
             if v is not None:
                 return json.loads(v.decode())
-            self.logger.debug(
-                '%s still waiting (%ss)', self._id, int(
-                    time.time() - start))
+            self.logger.debug('%s still waiting (%ss)', self._id, int(time.time() - start))
             maxwait -= 10
         raise TimeoutError()
 
 
 class Pubsub():
 
-    def __init__(
-            self,
-            loop,
-            host,
-            port=6379,
-            password="",
-            db=0,
-            ctx=None,
-            timeout=None,
-            testConnectionAttempts=3,
-            callback=None):
+    def __init__(self, loop, host, port=6379, password="", db=0, ctx=None, timeout=None, testConnectionAttempts=3, callback=None):
 
         socket_timeout = (timeout + 5) if timeout else 15
 
@@ -130,10 +118,7 @@ class Pubsub():
         await self._redis.rpush('core:default', json.dumps(payload))
         if await self._redis.brpoplpush(flag, flag, 10) is None:
             raise TimeoutError('failed to queue job {}'.format(id))
-        self.logger.debug(
-            '%s >> g8core.%s(%s)', id, command, ', '.join(
-                ("%s=%s" %
-                 (k, v) for k, v in arguments.items())))
+        self.logger.debug('%s >> g8core.%s(%s)', id, command, ', '.join(("%s=%s" % (k, v) for k, v in arguments.items())))
 
         return Response(self, id)
 

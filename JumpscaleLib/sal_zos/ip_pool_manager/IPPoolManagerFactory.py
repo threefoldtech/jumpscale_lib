@@ -4,7 +4,6 @@ JSBASE = j.application.JSBaseClass
 
 from .IPPoolManager import IPPoolsManager
 
-
 class IPPoolManagerFactory(JSBASE):
 
     def __init__(self):
@@ -16,6 +15,6 @@ class IPPoolManagerFactory(JSBASE):
         Get sal for ippoolmanager
 
         Returns:
-            the sal layer
+            the sal layer 
         """
         return IPPoolsManager(pools)

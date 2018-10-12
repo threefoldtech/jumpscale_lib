@@ -136,16 +136,14 @@ class Network():
                                                        "links": interfaces,
                                                        "lacp": True,
                                                        "mode": "balance-tcp"})
-            # TODO: this need to be turned into 0-os primitives
             self.node.client.ip.addr.add('backplane', str(addresses['storageaddr']))
             for interface in interfaces:
-                self.node.client.system('ip link set dev {} mtu 2000'.format(interface)).get()
+                self.node.client.ip.link.mtu(interface, 2000)
                 self.node.client.ip.link.up(interface)
             self.node.client.ip.link.up('backplane')
 
         if 'vxbackend' not in nicmap:
             container.client.json('ovs.vlan-ensure', {'master': 'backplane', 'vlan': vlan_tag, 'name': 'vxbackend'})
-            # TODO: this need to be turned into 0-os primitives
             self.node.client.ip.addr.add('vxbackend', str(addresses['vxaddr']))
-            self.node.client.system('ip link set dev vxbackend mtu 2000').get()
+            self.node.client.ip.link.mtu('vxbackend', 2000)
             self.node.client.ip.link.up('vxbackend')

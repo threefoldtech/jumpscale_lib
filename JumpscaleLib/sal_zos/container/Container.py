@@ -4,6 +4,9 @@ from io import BytesIO
 import signal
 import netaddr
 
+from Jumpscale import j
+from ..utils import get_zt_ip
+
 logging.basicConfig(level=logging.INFO)
 default_logger = logging.getLogger(__name__)
 
@@ -99,7 +102,7 @@ class Container():
     def info(self):
         self.logger.debug("get container info")
         for containerid, container in self.node.client.container.list().items():
-            if self.name in (container['container']['arguments']['tags'] or []):
+            if self.name == container['container']['arguments']['name']:
                 containerid = int(containerid)
                 if self._client and self._client.container != containerid:
                     self._client = None
@@ -324,6 +327,16 @@ class Container():
                 raise RuntimeError(erroMessage)
         resp = self.client.subscribe(job.id)
         resp.stream(callback)
+
+    def get_forwarded_port(self, port):
+        for k, v in self.ports.items():
+             if v == port:
+                 return int(k.split(':')[-1])
+
+    @property
+    def mgmt_addr(self):
+        return get_zt_ip(self.client.info.nic())
+
 
     def __str__(self):
         return "Container <{}>".format(self.name)

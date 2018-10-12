@@ -19,9 +19,12 @@ from ..gateway import Gateways
 from ..zerodb import Zerodbs
 from ..primitives.Primitives import Primitives
 from ..hypervisor.Hypervisor import Hypervisor
+from ..utils import get_ip_from_nic, get_zt_ip
 
 Mount = namedtuple('Mount', ['device', 'mountpoint', 'fstype', 'options'])
 logger = j.logger.get(__name__)
+
+SUPPORT_NETWORK = "172.29.0.0/16"
 
 
 class Node:
@@ -29,7 +32,7 @@ class Node:
 
     def __init__(self, client):
         # g8os client to talk to the node
-        self._storageAddr = None
+        self._storage_addr = None
         self._name = None
         self.addr = client.config.data['host']
         self.port = client.config.data['port']
@@ -92,41 +95,63 @@ class Node:
         self.client.job.kill(proc.id, 9)
 
     @property
-    def storageAddr(self):
-        if not self._storageAddr:
+    def storage_addr(self):
+        if not self._storage_addr:
             nic_data = self.client.info.nic()
             for nic in nic_data:
                 if nic['name'] == 'backplane':
-                    self._storageAddr = self.get_ip_from_nic(nic['addrs'])
-                    return self._storageAddr
-            self._storageAddr = self.addr
-        return self._storageAddr
+                    self._storage_addr = get_ip_from_nic(nic['addrs'])
+                    return self._storage_addr
+            self._storage_addr = self.public_addr
+        return self._storage_addr
+
+    @property
+    def storageAddr(self):
+        logger.warning("storageAddr is deprecated, use storage_addr instead")
+        return self.storage_addr
 
     @property
     def public_addr(self):
         nics = self.client.info.nic()
-        for nic in nics:
-            if nic['name'].startswith('zt'):
-                return self.get_ip_from_nic(nic['addrs'])
+        ip = get_zt_ip(nics, False, SUPPORT_NETWORK)
+        if ip:
+            return ip
         _, ip = self.get_nic_hwaddr_and_ip(nics)
         return ip
+
+    @property
+    def support_address(self):
+        nics = self.client.info.nic()
+        ip = get_zt_ip(nics, True, SUPPORT_NETWORK)
+        if ip:
+            return ip
+        raise LookupError('their is no support zerotier interface (support_address)')
+
+    @property
+    def management_address(self):
+        return self.public_addr
 
     def generate_zerotier_identity(self):
         return self.client.system('zerotier-idtool generate').get().stdout.strip()
 
-    def get_nic_hwaddr_and_ip(self, nics, name=None):
+    def get_gateway_route(self):
+        for route in self.client.ip.route.list():
+            if route['gw'] and not route['dst']:
+                return route
+        raise LookupError('Could not find route with default gw')
+
+    def get_gateway_nic(self):
+        return self.get_gateway_route()['dev']
+
+    def get_nic_hwaddr_and_ip(self, nics=None, name=None):
+        if nics is None:
+            nics = self.client.info.nic()
         if not name:
-            name = self.client.bash("ip route | grep default | awk '{print $5}'", max_time=60).get().stdout.strip()
+            name = self.get_gateway_nic()
         for nic in nics:
             if nic['name'] == name:
-                return nic['hardwareaddr'], self.get_ip_from_nic(nic['addrs'])
+                return nic['hardwareaddr'], get_ip_from_nic(nic['addrs'])
         return '', ''
-
-    def get_ip_from_nic(self, addrs):
-        for ip in addrs:
-            network = netaddr.IPNetwork(ip['addr'])
-            if network.version == 4:
-                return network.ip.format()
 
     def get_nic_by_ip(self, addr):
         try:
@@ -210,40 +235,20 @@ class Node:
             self.client.system('syslogd -n -O /var/log/messages')
             self.client.system('klogd -n')
 
-    def freeports(self, baseport=2000, nrports=3):
+    def freeports(self, nrports=1):
         """
         Find free ports on node starting at baseport
 
-        Checks all portfowards + listening ports on host
-        to find a free port
+        ask to reserve an x amount of ports
+        The system detects the local listening ports, plus the ports used for other port forwards, and finally the reserved ports
+        The system tries to find the first free port in the valid ports range.
 
-        :param baseport: Port to start looking at
-        :type baseport: int
         :param nrports: Amount of free ports to find
         :type nrports: int
         :return: list if ports that are free
         :rtype: list(int)
         """
-        ports = self.client.info.port()
-        usedports = set()
-        for portInfo in ports:
-            if portInfo['network'] != "tcp":
-                continue
-            usedports.add(portInfo['port'])
-        # Add ports consumed by default forwards
-        # TODO: fix this by using core0 api (does not exist yet)
-        for container in self.containers.list():
-            for port in container.ports:
-                port = port.split(':')[-1]  # parse 'zt0:6000' like ports
-                usedports.add(int(port))
-
-        freeports = []
-        while True:
-            if baseport not in usedports:
-                freeports.append(baseport)
-                if len(freeports) >= nrports:
-                    return freeports
-            baseport += 1
+        return self.client.socat.reserve(number=nrports)
 
     def find_persistance(self, name='zos-cache'):
         zeroos_cache_sp = None
@@ -387,8 +392,6 @@ class Node:
         return str(self)
 
     def __eq__(self, other):
-        if other==None:
-            return False
         a = "{}:{}".format(self.addr, self.port)
         b = "{}:{}".format(other.addr, other.port)
         return a == b

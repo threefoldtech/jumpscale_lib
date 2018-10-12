@@ -14,6 +14,6 @@ class HypervisorFactory(JSBASE):
         """
         Get sal for Hypervisor
         Returns:
-            the sal layer
+            the sal layer 
         """
         return Hypervisor(node)

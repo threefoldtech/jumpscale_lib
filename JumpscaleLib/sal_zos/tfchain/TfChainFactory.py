@@ -14,6 +14,6 @@ class TfChainFactory(JSBASE):
         """
         Get sal for tfchain
         Returns:
-            the sal layer
+            the sal layer 
         """
         return TfChain()

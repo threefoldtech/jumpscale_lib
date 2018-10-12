@@ -6,7 +6,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-
 class StorageEngine():
     """storageEngine server"""
 
@@ -138,7 +137,7 @@ class StorageEngine():
 
     def is_running(self):
         try:
-            if self.port not in self.container.node.freeports(self.port, 1):
+            if self.port not in self.container.node.freeports(1):
                 for job in self.container.client.job.list():
                     if 'name' in job['cmd']['arguments'] and job['cmd']['arguments']['name'] == '/bin/ardb-server':
                         return (True, job)

@@ -11,13 +11,15 @@ class MinioFactory(JSBASE):
 
     @staticmethod
     def get(name, node, login, password, zdbs, namespace, private_key,
-            namespace_secret='', node_port=DEFAULT_PORT, block_size=1048576,
-            restic_username='', restic_password='', meta_private_key=''):
+            namespace_secret='', block_size=1048576,
+            meta_private_key='', nr_datashards=1, nr_parityshards=0,
+            tlog_namespace=None, tlog_address=None, master_namespace=None, master_address=None):
         """
         Get sal for minio
         Returns:
-            the sal layer 
+            the sal layer
         """
         return Minio(name, node, login, password, zdbs, namespace, private_key,
-                     namespace_secret, node_port, block_size, restic_username,
-                     restic_password, meta_private_key)
+                     namespace_secret, block_size,
+                     meta_private_key, nr_datashards, nr_parityshards,
+                     tlog_namespace, tlog_address, master_namespace, master_address)
