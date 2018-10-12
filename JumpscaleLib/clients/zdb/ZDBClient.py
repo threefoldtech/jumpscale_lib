@@ -1,129 +1,255 @@
-
 from Jumpscale import j
-import os
 import struct
-from .ZDBClientNS import ZDBClientNS
+import redis
 
-TEMPLATE = """
-addr = "localhost"
-port = "9900"
-adminsecret_ = ""
-secrets_ = ""
-mode = "direct"
-"""
+from .ZDBClientBase import ZDBClientBase
 
-JSConfigBase = j.tools.configmanager.JSBaseClassConfig
+class ZDBClient(ZDBClientBase):
 
-
-class ZDBClient(JSConfigBase):
-
-    dbtype = 'ZDB'
-
-    def __init__(self, instance, data=None, parent=None, interactive=False, started=True):
+    def __init__(self, nsname, addr="localhost",port=9900,mode="seq",secret="123456"):
         """ is connection to ZDB
 
-            - secret is also the name of the directory where zdb data
-              is for this namespace/secret
-
-            config params:
-                secrets {str} -- format: $ns:$secret,... or $secret
-                        then will be same for all namespaces
-                port {[int} -- (default: 9900)
-                mode -- user,seq(uential) see
-                        https://github.com/rivine/0-db/blob/master/README.md
-                adminsecret does not have to be set, but
-                        when you want to create namespaces it is a must
+        port {[int} -- (default: 9900)
+        mode -- user,seq(uential) see
+                    https://github.com/rivine/0-db/blob/master/README.md
         """
-        if data is None:
-            data = {}
-        JSConfigBase.__init__(self, instance=instance, data=data,
-                              parent=parent, template=TEMPLATE,
-                              ui=None, interactive=interactive)
-        self.init()
+        ZDBClientBase.__init__(self,addr=addr,port=port,mode=mode,nsname=nsname ,secret=secret)
 
-    def init(self):  # if you find this isn't working, see issue #116.
 
-        # if not started:
-        #     return
+    def test(self):
+        return self.test_seq()
 
-        self.mode = self.config.data["mode"]
-        self.namespaces = {}
+    def _key_get(self, key, set=True, iterate=False):
 
-        # default namespace should always exist
+        if self.mode == "seq":
+            if key is None:
+                key = ""
+            else:
+                key = struct.pack("<I", key)
+        elif self.mode == "direct":
+            if set:
+                if key not in ["", None]:
+                    raise j.exceptions.Input("key need to be None or "
+                                             "empty string")
+                if key is None:
+                    key = ""
+            else:
+                if key in ["", None]:
+                    raise j.exceptions.Input("key cannot be None or "
+                                             "empty string")
+        elif self.mode == "user":
+            if not iterate and key in ["", None]:
+                raise j.exceptions.Input("key cannot be None or empty string")
+        return key
+
+    def set(self, data, key=None):
+        """[summary]
+
+        Arguments:
+            data {str or binary} -- the payload can be e.g. capnp binary
+
+        Keyword Arguments:
+            key {int} -- when used in sequential mode
+                        can be None or int
+                        when None it means its a new object,
+                        so will be appended
+
+            key {[type]} -- string, only usable for user mode
+
+
+        """
+        key1 = self._key_get(key)
+        # print("key:%s"%key1)
+        # print(data[:100])
+        res = self.redis.execute_command("SET", key1, data)
+        if not res:  # data already present, 0-db did nothing.
+            return res
+        # print(res)
+        if self.mode == "seq":
+            key = struct.unpack("<I", res)[0]
+
+        return key
+
+    def delete(self, key):
+        key1 = self._key_get(key)
+        res = self.redis.execute_command("DEL", key1)
+        # if not res:  # data already present, 0-db did nothing.
+        #     return res
+        # # print(res)
+        # if self.mode == "seq":
+        #     key = struct.unpack("<I", res)[0]
+        #
+        # return key
+
+    def get(self, key):
+        """[summary]
+
+        Keyword Arguments:
+            key {int} -- when used in sequential mode
+                        can be None or int
+                        when None it means its a new object,
+                        so will be appended
+
+            key {[type]} -- string, only usable for user mode
+
+            key {[6 byte binary]} -- is binary position is for direct mode
+
+        """
+        key = self._key_get(key, set=False)
+        return self.redis.execute_command("GET", key)
+
+    def exists(self, key):
+        """[summary]
+
+        Arguments:
+            key {[type]} - - [description] is id or key
+        """
+        key = self._key_get(key, set=False)
+
+        return self.redis.execute_command("EXISTS", key) == 1
+
+        # if self.mode=="seq":
+        #     id = struct.pack("<I", key)
+        #     return self.redis.execute_command("GET", id) is not None
+        # elif self.id_enable:
+        #     if not j.data.types.int.check(key):
+        #         raise j.exceptions.Input("key needs to be int")
+        #     pos = self._indexfile.get(key)
+        #     if pos == b'':
+        #         return False
+        #     return self.redis.execute_command("EXISTS", pos)
+        # else:
+        #     return self.redis.execute_command("EXISTS", pos)
 
     @property
-    def adminsecret(self):
-        if self.config.data["adminsecret_"].strip() is not "":
-            return self.config.data["adminsecret_"].strip()
-        return ""
+    def dbtype(self):  # BCDBModel is expecting ZDBClient to look like ZDBClient
+        return self.zdbclient.dbtype
 
     @property
-    def secrets(self):
+    def nsinfo(self):
         res = {}
-        if "," in self.config.data["secrets_"]:
-            items = self.config.data["secrets_"].split(",")
-            for item in items:
-                if item.strip() == "":
+        cmd = self.redis.execute_command("NSINFO", self.nsname)
+        for item in cmd.decode().split("\n"):
+            item = item.strip()
+            if item == "":
+                continue
+            if item[0] == "#":
+                continue
+            if ":" in item:
+                key, val = item.split(":")
+                try:
+                    val = int(val)
+                    res[key] = val
                     continue
-                nsname, secret = item.split(":")
-                res[nsname.lower().strip()] = secret.strip()
-        else:
-            res["default"] = self.config.data["secrets_"].strip()
+                except BaseException:
+                    pass
+                try:
+                    val = float(val)
+                    res[key] = val
+                    continue
+                except BaseException:
+                    pass
+                res[key] = str(val).strip()
         return res
 
-    def namespace_exists(self, name):
-        try:
-            self.namespace_system.redis.execute_command("NSINFO", name)
-            return True
-        except Exception as e:
-            if not "Namespace not found" in str(e):
-                raise RuntimeError("could not check namespace:%s, error:%s" % (name, e))
-            return False
+    def list(self, key_start=None, direction="forward", nrrecords=100000, result=None):
+        if result is None:
+            result = []
 
-    def namespaces_list(self):
-        res = self.namespace_system.redis.execute_command("NSLIST")
-        return [i.decode() for i in res]
+        def do(arg, result):
+            result.append(arg)
+            return result
 
-    def namespace_get(self, name):
-        if not name in self.namespaces:
-            self.namespaces[name] = ZDBClientNS(self, name)
-        return self.namespaces[name]
+        self.iterate(do, key_start=key_start, direction=direction,
+                     nrrecords=nrrecords, _keyonly=True, result=result)
+        return result
 
-    def ping(self):
+    def iterate(self, method, key_start=None, direction="forward",nrrecords=100000, _keyonly=False, result=None):
+        """walk over the data and apply method as follows
+
+        ONLY works for when id_enable is True
+
+        call for each item:
+            '''
+            for each:
+                result = method(id,data,result)
+            '''
+        result is the result of the previous call to the method
+
+        Arguments:
+            method {python method} -- will be called for each item
+                                      found in the file
+
+        Keyword Arguments:
+            key_start is the start key, if not given will be
+                      start of database when direction = forward, else end
+
         """
-        go to default namespace & ping
-        :return:
-        """
-        d = self.namespace_get("default")
-        return d.redis.ping()
+
+        if result is None:
+            result = []
+
+        nr = 0
+
+        if key_start is not None:
+            next = self.redis.execute_command("KEYCUR", self._key_get(key_start))
+            if _keyonly:
+                result = method(key_start, result)
+            else:
+                data = self.redis.execute_command("GET", self._key_get(key_start))
+                result = method(key_start, data, result)
+            nr += 1
+        else:
+            next = None
+
+        if direction == "forward":
+            CMD = "SCANX"
+        else:
+            CMD = "RSCAN"
+
+        while nr < nrrecords:
+            try:
+                if next in [None, ""]:
+                    resp = self.redis.execute_command(CMD)
+                else:
+                    resp = self.redis.execute_command(CMD, next)
+
+                # format of the response
+                # see https://github.com/threefoldtech/0-db/tree/development#scan
+
+            except redis.ResponseError as e:
+                if e.args[0] == 'No more data':
+                    return result
+                j.shell()
+                raise e
+
+            (next, res) = resp
+
+            if len(res) > 0:
+                for item in res:
+                    # there can be more than 1
+
+                    keyb, size, epoch = item
+
+                    if self.mode == "seq":
+                        key_new = struct.unpack("<I", keyb)[0]
+                    else:
+                        key_new = keyb
+
+                    if _keyonly:
+                        result = method(key_new, result)
+                    else:
+                        data = self.redis.execute_command("GET", keyb)
+                        result = method(key_new, data, result)
+                    nr += 1
+            else:
+                j.shell()
+                w
+
+        return result
 
     @property
-    def namespace_system(self):
-        return self.namespace_get("default")
+    def count(self):
+        i = self.nsinfo
+        return i["entries"]
 
-    def namespace_new(self, name, secret="", maxsize=0, die=False):
-        if self.namespace_exists(name):
-            if die:
-                raise RuntimeError("namespace already exists:%s" % name)
-            return self.namespace_get(name)
-
-        if secret is "" and "default" in self.secrets.keys():
-            secret = self.secrets["default"]
-
-        cl = self.namespace_system
-        cl.redis.execute_command("NSNEW", name)
-        if secret is not "":
-            cl.redis.execute_command("NSSET", name, "password", secret)
-            cl.redis.execute_command("NSSET", name, "public", "no")
-        self.logger.debug("namespace:%s NEW" % name)
-
-        if maxsize is not 0:
-            cl.redis.execute_command("NSSET", name, "maxsize", maxsize)
-
-        return self.namespace_get(name)
-
-    def namespace_delete(self, name):
-        if self.namespace_exists(name):
-            cl = self.namespace_system
-            cl.redis.execute_command("NSDEL", name)
-            self.namespaces.pop(name)

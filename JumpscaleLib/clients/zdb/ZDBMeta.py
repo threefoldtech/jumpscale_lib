@@ -3,7 +3,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class ZDBClientNSMeta(JSBASE):
+class ZDBMeta(JSBASE):
 
     def __init__(self, db):
         JSBASE.__init__(self)
@@ -80,7 +80,7 @@ class ZDBClientNSMeta(JSBASE):
             schema = self._data["schemas"][i]['schema']
             schema = j.data.schema.get(schema)
             res2.append(schema)
-            self.schemas[id] = schema
+            self.schemas[i] = schema
         return res2
 
     def config_get(self, name):
