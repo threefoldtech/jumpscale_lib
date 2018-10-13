@@ -117,10 +117,12 @@ class ZDBServer(JSBASE):
         self.port = 9900
         self.mode = "seq"
         self.adminsecret = "123456"
+        self.start(mode='seq')
         if reset:
             cla = self.client_admin_get()
             cla.reset()
-        self.start(mode='seq')
+            j.clients.redis.cache_clear() #make sure all redis connections gone
+
         return self
 
     def build(self):

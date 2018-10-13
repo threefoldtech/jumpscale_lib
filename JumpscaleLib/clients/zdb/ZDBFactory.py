@@ -166,13 +166,13 @@ class ZDBFactory(JSBASE):
         result = {}
         for id, data in cl.iterate():
             if id == 0:
-                return
+                continue
             pprint("%s:%s" % (id, data))
             result[id] = data
 
         assert {1: b'rss', 2: b'b'} == result
 
-        assert cl.list(key_start=id2, nrrecords=1) == [id2]
+        assert cl.list(key_start=id2)[0] == id2
 
         assert cl.exists(id2)
 
@@ -235,3 +235,5 @@ class ZDBFactory(JSBASE):
             id = cl.set(b"a")
 
         j.tools.timer.stop(nritems)
+
+        print ("TEST SEQ OK")

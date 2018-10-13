@@ -83,6 +83,14 @@ class ZDBMeta(JSBASE):
             self.schemas[i] = schema
         return res2
 
+    def models_load(self,bcdb):
+        res=[]
+        for schema in self.schemas_load():
+            model = bcdb.model_add_from_schema(schema=schema, zdbclient=self.db, reload=False, dest=None, overwrite=True)
+            bcdb.models[model.url]=model
+            res.append(model)
+        return res
+
     def config_get(self, name):
         return self._data["config"].get(name, None)
 

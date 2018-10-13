@@ -39,6 +39,7 @@ class ZDBClientBase(JSBASE):
                 self.logger.debug("select namespace:%s with a secret" % (self.nsname))
                 self.redis.execute_command("SELECT", self.nsname, self.secret)
 
+
     def ping(self):
         """
         go to default namespace & ping
