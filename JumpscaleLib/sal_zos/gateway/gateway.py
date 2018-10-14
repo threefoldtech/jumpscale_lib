@@ -10,6 +10,7 @@ from .firewall import Firewall
 from .http import HTTPServer
 from .network import Networks
 
+PUBLIC_THREEFOLD_NETWORK = "9bee8941b5717835"
 
 class DestBind:
     def __init__(self, ipaddress, port):
@@ -390,6 +391,7 @@ class Gateway:
         """
         Create the gateway container
         """
+        public_threefold_nic = False
         nics = []
         if not self.zt_identity:
             self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
@@ -403,6 +405,8 @@ class Gateway:
                     cidr = network.ip.subnet or '172.20.0.0/16'
                     ztnetwork = network.client.network_create(False, cidr, name=network.name)
                     network.networkid = ztnetwork.id
+                if network.networkid == PUBLIC_THREEFOLD_NETWORK:
+                    public_threefold_nic=True
                 if network.client:
                     ztnetwork = network.client.network_get(network.networkid)
                     privateip = None
@@ -410,6 +414,8 @@ class Gateway:
                         privateip = str(network.ip.cidr)
                     ztnetwork.member_add(ztpublic, self.name, private_ip=privateip)
             nics.append(network.to_dict(forcontainer=True))
+        if not public_threefold_nic:
+            nics.append({'name':'threefold', 'type':'zerotier', 'id': PUBLIC_THREEFOLD_NETWORK})
             # zerotierbridge = nic.pop('zerotierbridge', None)
             # if zerotierbridge:
             #    contnics.append(

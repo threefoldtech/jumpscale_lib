@@ -3,7 +3,7 @@ from JumpscaleLib.sal_zos.utils import authorize_zerotiers
 
 
 logger = j.logger.get(__name__)
-
+PUBLIC_THREEFOLD_NETWORK = "9bee8941b5717835"
 
 class Mountable():
     """
@@ -346,11 +346,16 @@ class Service:
         return self._container
     
     def add_nics(self, nics):
+        public_threefold_nic = False
         if nics:
             for nic in nics:
                 nicobj = self.nics.add(nic['name'], nic['type'], nic['id'], nic.get('hwaddr'))
                 if nicobj.type == 'zerotier':
                     nicobj.client_name = nic.get('ztClient')
+                if nic['id'] == PUBLIC_THREEFOLD_NETWORK:
+                    public_threefold_nic=True
+        if not public_threefold_nic:
+            self.nics.add("threefold", "zerotier", PUBLIC_THREEFOLD_NETWORK)
         if 'nat0' not in self.nics:
             self.nics.add('nat0', 'default')
     
