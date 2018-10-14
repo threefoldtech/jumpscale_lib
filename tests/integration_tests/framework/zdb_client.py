@@ -10,8 +10,8 @@ class ZDBCLIENT:
     def _connect_to_zdb_server(self):
         self.zdb_client = redis.StrictRedis(host=self.zdb_server_ip, port=self.zdb_server_port, db=0)
 
-    def execute_command(self, cmd):
-        return self.zdb_client.execute_command(cmd)
+    def execute_command(self, cmd, arg=None):
+        return self.zdb_client.execute_command(cmd, arg)
 
     def send_receive(self, cmd):
         response = self.zdb_client.execute_command(cmd)
@@ -149,15 +149,13 @@ class ZDBCLIENT:
         return self.send_receive(cmd)
 
     def scan(self, key='', case='lower'):
-        cmd = 'SCAN'
+        cmd = 'SCAN '
         if case == "lower":
             cmd = cmd.lower()
-        cmd = '{} {}'.format(cmd, key)
-        return self.send_receive(cmd)
+        return self.execute_command(cmd, key)
 
     def rscan(self, key='', case='lower'):
         cmd = 'RSCAN'
         if case == "lower":
             cmd = cmd.lower()
-        cmd = '{} {}'.format(cmd, key)
-        return self.send_receive(cmd)
+        return self.execute_command(cmd, key)

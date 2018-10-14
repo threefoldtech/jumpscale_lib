@@ -94,7 +94,7 @@ class Vdisktest(BaseTest):
         result_dict[i] = (result1, result2)
 
     def test001_read_and_write_file_from_vdisk(self):
-        """ SAL-039 read and write several file at same time.
+        """ SAL-040 read and write several file at same time.
 
         **Test Scenario:**
 
@@ -170,7 +170,7 @@ class Vdisktest(BaseTest):
 
     @parameterized.expand(['namespace', 'zdb'])    
     def test002_delete_namespace_or_stop_zdb_of_vdisk(self, delete):
-        """ SAL-040 delete namespace or stop zdb of vdisk.
+        """ SAL-041 delete namespace or stop zdb of vdisk.
 
         **Test Scenario:**
 
@@ -179,7 +179,7 @@ class Vdisktest(BaseTest):
         #. Add zerotier network to VM1, should succeed.
         #. Attach disk [D1] to vm [VM1].
         #. Try to write on disk mounting point, should succeed.
-        #. (Delete namespace /stop zdb) and try to write again, should fail.
+        #. (Delete namespace/stop zdb) and try to write again, should fail.
         """
         self.log("deploy vm [VM1].")
         self.vm.install()
@@ -197,7 +197,7 @@ class Vdisktest(BaseTest):
         result = self.ssh_vm_execute_command(vm_ip=vm_zt_ip, cmd=cmd)
         self.assertEqual(result, content)
 
-        self.log("(Delete namespace /stop zdb) and try to write again, should fail.")
+        self.log("(Delete namespace/stop zdb) and try to write again, should fail.")
         if delete == 'zdb':
             self.zdb.stop()
         else:

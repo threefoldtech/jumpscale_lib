@@ -116,7 +116,7 @@ class BaseTest(Utils):
         info = self.node_sal.capacity.total_report()
         node_info = {'ssd': int(info.SRU), 'hdd': int(info.HRU), 'core': int(info.CRU),
                      'memory': int(info.MRU)}
-        disks_info = info.disk
+        disks_info = {'ssd': int(info.SRU), 'hdd': int(info.HRU)}
         return node_info, disks_info
 
     def load_ssh_key(self):
@@ -273,7 +273,3 @@ class BaseTest(Utils):
         zdb_params['diskType'] = disk_type
         zdb_params["path"] = self.get_disk_mount_path(disk_type)                
         return zdb_params
-
-
-
-        
