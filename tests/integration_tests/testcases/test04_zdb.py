@@ -442,11 +442,10 @@ class ZDBActions(BaseTest):
         #. Check key name and it's value length, should be as created.
         """
         self.log("Set five keys with random value.")
-        keys = []
-        values = []
+        keys = [self.random_string() for _ in range(5)]
+        values = [self.random_string() for _ in range(5)]
+        
         for idx in range(5):
-            keys.append(self.random_string())
-            values.append(self.random_string())
             result = self.zdb_client.set(keys[idx], values[idx], case)
             self.assertEqual(result, keys[idx])
 
