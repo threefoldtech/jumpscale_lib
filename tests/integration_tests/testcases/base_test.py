@@ -40,7 +40,7 @@ class BaseTest(Utils):
         cls.zt_network = cls.zt_client.network_create(public=False, name=self.zt_network_name, auto_assign=True, subnet='10.147.17.0/24')
         cls.host_ip = self.host_join_zt()
         cls.vms = []
-        cls.zdb_cont_ids = []
+        cls.zdbs = []
 
 
     @classmethod
@@ -63,15 +63,10 @@ class BaseTest(Utils):
         return str(uuid.uuid4()).replace('-', '')[:size]        
 
     def set_vm_default_values(self, os_type, os_version=None):
-        cpu_info = self.node_info['core']
-        if cpu_info == 0:
-            cpu = 1
-        else:
-            cpu = random.randint(1, cpu_info) 
 
         vm_parms = {'flist':"",
-                    'cpu': cpu ,
-                    'memory':  random.randint(1,3) * 1024,
+                    'memory':  random.randint(1, 3) * 1024,
+                    'cpu':  random.randint(1, len(self.node_sal.client.info.cpu())),
                     'name': self.random_string(),
                     'nics': [],
                     'configs': [{'path': '/root/.ssh/authorized_keys',
@@ -79,6 +74,7 @@ class BaseTest(Utils):
                                  'name': 'sshkey'}],
                     'ports': [],
                     'mounts':[],
+                    'kernelArgs':[],
                     'disks':[],
                     'tags':[]
                     }
@@ -94,36 +90,33 @@ class BaseTest(Utils):
 
         return vm_parms
 
-    def add_zerotier_network_to_vm(self, vm, network=None, name=None):
-        network = network or self.zt_network
-        vm.nics.add_zerotier(network=network, name=name)
-
     def update_default_data(self, old_data, new_data):
         for key in new_data:
             old_data[key] = new_data[key]
         return old_data
 
-    def get_machine_zerotier_ip(self, ztIdentity, timeout=None, zt_client=None, zt_network=None):
+    def get_zerotier_ip(self, ztIdentity, timeout=None, zt_client=None, zt_network=None):
         ztAddress = ztIdentity.split(':')[0]
         zt_client = zt_client or self.zt_client
         zt_network = zt_network or self.zt_network
-        for _ in range(300):
+        for _ in range(30):
             try:
                 member = zt_network.member_get(address=ztAddress)
                 member.timeout = None
                 member_ip = member.get_private_ip(timeout)
                 return member_ip
             except (RuntimeError, ValueError) as e:
-                time.sleep(1)
+                time.sleep(10)
         else:
             raise RuntimeError("Failed to retreive zt ip: Cannot get private ip address for zerotier member")
+
 
 
     def get_zos_info(self):
         info = self.node_sal.capacity.total_report()
         node_info = {'ssd': int(info.SRU), 'hdd': int(info.HRU), 'core': int(info.CRU),
                      'memory': int(info.MRU)}
-        disks_info = info.disk
+        disks_info = {'ssd': int(info.SRU), 'hdd': int(info.HRU)}
         return node_info, disks_info
 
     def load_ssh_key(self):
@@ -173,11 +166,10 @@ class BaseTest(Utils):
         for _ in range(10):            
             resposne = self.execute_command(ip=vm_ip, cmd=cmd, port=port)
             if resposne.returncode:
-                time.sleep(30)
+                time.sleep(25)
             else:
                 return resposne.stdout.strip()
         else:
-            print(colored(' [-] Execute command error : {}'.format(resposne.stderr.strip()), 'red'))
             raise RuntimeError(colored(' [-] {}'.format(resposne.stderr.strip()), 'red'))
 
     def set_gw_default_values(self, status="halted", name=None):
@@ -232,15 +224,18 @@ class BaseTest(Utils):
         disks_info = self.get_disks_type()
         if (disks_info['hdd'] != 0) and (disks_info['ssd'] != 0):
             disk_type = random.choice(['hdd', 'ssd'])
-            disk_size = random.randint(1, self.node_info[disk_type])
+            max_size = self.node_info[disk_type]
+            disk_size = random.randint(1, max_size)
         elif disks_info['hdd'] != 0:
             disk_type = 'hdd'
-            disk_size = random.randint(1, self.node_info[disk_type])
+            max_size = self.node_info[disk_type]
+            disk_size = random.randint(1, max_size)
         else:
             disk_type = 'ssd'
-            disk_size = random.randint(1, self.node_info[disk_type])
+            max_size = self.node_info[disk_type]
+            disk_size = random.randint(1, max_size)
 
-        return disk_type, disk_size
+        return disk_type, disk_size, max_size
 
 
 
@@ -251,12 +246,13 @@ class BaseTest(Utils):
                         'filesystem': "",
                         'mode': 'user',
                         'public': False,
-                        'label': 'label',
+                        'label': '',
                       }
 
-        disk_type, disk_size = self.get_most_free_disk_type_size()
+        disk_type, disk_size, max_size = self.get_most_free_disk_type_size()
         disk_params['diskType'] = disk_type
         disk_params['size'] = disk_size
+        disk_params['max_size'] = max_size
         disk_params["path"] = self.get_disk_mount_path(disk_type)
 
         return disk_params
@@ -273,11 +269,7 @@ class BaseTest(Utils):
                       'nics': [],
                       'size': size
                       }
-        disk_type, disk_size = self.get_most_free_disk_type_size()
+        disk_type, disk_size, max_size = self.get_most_free_disk_type_size()
         zdb_params['diskType'] = disk_type
         zdb_params["path"] = self.get_disk_mount_path(disk_type)                
         return zdb_params
-
-
-
-        

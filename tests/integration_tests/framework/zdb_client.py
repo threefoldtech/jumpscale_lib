@@ -10,8 +10,8 @@ class ZDBCLIENT:
     def _connect_to_zdb_server(self):
         self.zdb_client = redis.StrictRedis(host=self.zdb_server_ip, port=self.zdb_server_port, db=0)
 
-    def execute_command(self, cmd):
-        return self.zdb_client.execute_command(cmd)
+    def execute_command(self, cmd, arg=None):
+        return self.zdb_client.execute_command(cmd, arg)
 
     def send_receive(self, cmd):
         response = self.zdb_client.execute_command(cmd)
@@ -20,81 +20,88 @@ class ZDBCLIENT:
         except:
             return response
 
-    def ping(self, case):
+    def ping(self, case='lower'):
         cmd = 'PING'
         if case == "lower":
             cmd = cmd.lower()
         return self.send_receive(cmd)
 
-    def set(self, key, value, case):
+    def set(self, key, value, case='lower'):
         cmd = 'SET'
         if case == "lower":
             cmd = cmd.lower()
         cmd = '{} {} {}'.format(cmd, key, value)
         return self.send_receive(cmd)
 
-    def get(self, key, case):
+    def get(self, key, case='lower'):
         cmd = 'GET'
         if case == "lower":
             cmd = cmd.lower()
         cmd = '{} {}'.format(cmd, key)
         return self.send_receive(cmd)
 
-    def delete(self, key, case):
+    def delete(self, key, case='lower'):
         cmd = 'DEL'
         if case == "lower":
             cmd = cmd.lower()
         cmd = '{} {}'.format(cmd, key)
         return self.send_receive(cmd)
+    
+    def key_cursor(self, key, case='lower'):
+        cmd = 'KEYCUR'
+        if case == "lower":
+            cmd = cmd.lower()
+        cmd = '{} {}'.format(cmd, key)
+        return self.send_receive(cmd)
 
-    def stop(self, case):
+    def stop(self, case='lower'):
         cmd = 'STOP'
         if case == "lower":
             cmd = cmd.lower()
         return self.send_receive(cmd)
 
-    def exists(self, key, case):
+    def exists(self, key, case='lower'):
         cmd = 'EXISTS'
         if case == "lower":
             cmd = cmd.lower()
         cmd = '{} {}'.format(cmd, key)
         return self.send_receive(cmd)
 
-    def check(self, key, case):
+    def check(self, key, case='lower'):
         cmd = 'CHECK'
         if case == "lower":
             cmd = cmd.lower()
         cmd = '{} {}'.format(cmd, key)
         return self.send_receive(cmd)
 
-    def info(self, case):
+    def info(self, case='lower'):
         cmd = 'INFO'
         if case == "lower":
             cmd = cmd.lower()
         return self.send_receive(cmd)
 
-    def nsnew(self, namespace, case):
+    def nsnew(self, namespace, case='lower'):
         cmd = 'NSNEW'
         if case == "lower":
             cmd = cmd.lower()
         cmd = '{} {}'.format(cmd, namespace)
         return self.send_receive(cmd)
 
-    def nsdel(self, namespace, case):
+    def nsdel(self, namespace, case='lower'):
         cmd = 'NSDEL'
         if case == "lower":
             cmd = cmd.lower()
         cmd = '{} {}'.format(cmd, namespace)
         return self.send_receive(cmd)
 
-    def nsinfo(self, namespace, case):
+    def nsinfo(self, namespace, case='lower'):
         cmd = 'NSINFO'
         if case == "lower":
             cmd = cmd.lower()
         cmd = '{} {}'.format(cmd, namespace)
         return self.send_receive(cmd)
 
-    def nslist(self, case):
+    def nslist(self, case='lower'):
         cmd = 'NSLIST'
         if case == "lower":
             cmd = cmd.lower()
@@ -105,7 +112,7 @@ class ZDBCLIENT:
             result.append(namespace.decode('utf-8')) 
         return result
 
-    def nsset(self, namespace, property, value, case):
+    def nsset(self, namespace, property, value, case='lower'):
         if property not in ['maxsize', 'password', 'public']:
             return " [-] property should be in ['maxsize', 'password', 'public'] "
 
@@ -115,42 +122,40 @@ class ZDBCLIENT:
         cmd = '{} {} {} {}'.format(cmd, namespace, property, value)
         return self.send_receive(cmd)
 
-    def select(self, namespace, case, password=''):
+    def select(self, namespace, password='', case='lower'):
         cmd = 'SELECT'
         if case == "lower":
             cmd = cmd.lower()
         cmd = '{} {} {}'.format(cmd, namespace, password)
         return self.send_receive(cmd)
 
-    def dbsize(self, case):
+    def dbsize(self, case='lower'):
         cmd = 'DBSIZE'
         if case == "lower":
             cmd = cmd.lower()
         return self.send_receive(cmd)
 
-    def time(self, case):
+    def time(self, case='lower'):
         cmd = 'TIME'
         if case == "lower":
             cmd = cmd.lower()
         return self.send_receive(cmd)
 
-    def auth(self, password, case):
+    def auth(self, password, case='lower'):
         cmd = 'AUTH'
         if case == "lower":
             cmd = cmd.lower()
         cmd = '{} {}'.format(cmd, password)
         return self.send_receive(cmd)
 
-    def scan(self, case, key=''):
-        cmd = 'SCAN'
+    def scan(self, key='', case='lower'):
+        cmd = 'SCAN '
         if case == "lower":
             cmd = cmd.lower()
-        cmd = '{} {}'.format(cmd, key)
-        return self.send_receive(cmd)
+        return self.execute_command(cmd, key)
 
-    def rscan(self, case, key=''):
+    def rscan(self, key='', case='lower'):
         cmd = 'RSCAN'
         if case == "lower":
             cmd = cmd.lower()
-        cmd = '{} {}'.format(cmd, key)
-        return self.send_receive(cmd)
+        return self.execute_command(cmd, key)
