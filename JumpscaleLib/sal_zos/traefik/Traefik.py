@@ -101,7 +101,7 @@ class Traefik(Service):
         self.create_config()
 
         cmd = '/usr/bin/traefik storeconfig -c {dir}/{config}'.format(dir=self._config_dir, config=self._config_name)
-        job = self.container.client.system(cmd, id=self._id)
+        job = self.container.client.system(cmd)
         cmd = '/usr/bin/traefik -c {dir}/{config}'.format(dir=self._config_dir, config=self._config_name)
 
         # wait for traefik to start
