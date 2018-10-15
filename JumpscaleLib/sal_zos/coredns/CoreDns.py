@@ -16,7 +16,6 @@ class Coredns(Service):
     def __init__(self, name, node, etcd_endpoint, zt_identity=None, nics=None):
         super().__init__(name, node, 'coredns', [DEFAULT_PORT])
         self.name = name
-        self.id = 'coredns.{}'.format(self.name)
         self.node = node
         self._container = None
         self.flist = 'https://hub.grid.tf/tf-official-apps/coredns.flist'
@@ -90,7 +89,7 @@ class Coredns(Service):
                                                              config=self._config_name)
         # wait for coredns to start
         env = {'ETCD_USERNAME': 'root', 'ETCD_PASSWORD': self.etcd_endpoint['password']}
-        job = self.container.client.system(cmd, id=self.id, env=env)
+        job = self.container.client.system(cmd, id=self._id, env=env)
         if not j.tools.timer.execute_until(self.is_running, timeout, 0.5):
             result = job.get()
             raise RuntimeError('Failed to start CoreDns server {}: {}'.format(self.name, result.stderr))
