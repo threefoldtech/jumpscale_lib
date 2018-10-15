@@ -88,6 +88,9 @@ class Zerodbs(DynamicCollection):
             sp = self.node.storagepools.create(name, device=device, metadata_profile='single', data_profile='single', overwrite=True)
             storagepools.append(sp)
 
+        # make sure we don't use storage pool reserved for something else
+        storagepools = filter(reserved_storagepool, storagepools)
+
         # at this point we have a storage pool on each eligible disk
         for sp in storagepools:
             if not sp.mountpoint:
@@ -122,6 +125,16 @@ class Zerodbs(DynamicCollection):
         storagepool = storagepools[0]
         fs = storagepool.create('zdb_{}'.format(zdb_name), size * GiB)
         return fs.path
+
+
+def reserved_storagepool(storagepool):
+    """
+    function used to filter out storage pool that should not be used for zdb installation
+    """
+    from ..node.Node import ZOS_CACHE
+    if storagepool.name == ZOS_CACHE:
+        return False
+    return True
 
 
 def _zdb_friendly(disk):

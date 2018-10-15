@@ -26,6 +26,8 @@ logger = j.logger.get(__name__)
 
 SUPPORT_NETWORK = "172.29.0.0/16"
 
+ZOS_CACHE = 'zos-cache'
+
 
 class Node:
     """Represent a Zero-OS Server"""
@@ -250,7 +252,9 @@ class Node:
         """
         return self.client.socat.reserve(number=nrports)
 
-    def find_persistance(self, name='zos-cache'):
+    def find_persistance(self, name=None):
+        if not name:
+            name = ZOS_CACHE
         zeroos_cache_sp = None
         for sp in self.storagepools.list():
             if sp.name == name:
