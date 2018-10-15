@@ -134,16 +134,11 @@ class Network():
                 container.client.json('ovs.bond-add', {"bridge": "backplane",
                                                        "port": "bond0",
                                                        "links": interfaces,
-                                                       "lacp": True,
-                                                       "mode": "balance-tcp"})
-            self.node.client.ip.addr.add('backplane', str(addresses['storageaddr']))
+                                                       "lacp": False,
+                                                       "mode": "balance-slb"})
+                                                       
             for interface in interfaces:
                 self.node.client.ip.link.mtu(interface, 2000)
                 self.node.client.ip.link.up(interface)
             self.node.client.ip.link.up('backplane')
-
-        if 'vxbackend' not in nicmap:
-            container.client.json('ovs.vlan-ensure', {'master': 'backplane', 'vlan': vlan_tag, 'name': 'vxbackend'})
-            self.node.client.ip.addr.add('vxbackend', str(addresses['vxaddr']))
-            self.node.client.ip.link.mtu('vxbackend', 2000)
-            self.node.client.ip.link.up('vxbackend')
+            self.node.client.ip.addr.add('backplane', str(addresses['storageaddr']))
