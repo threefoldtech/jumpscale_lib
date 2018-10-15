@@ -9,7 +9,7 @@ from .namespace import Namespaces
 
 logger = j.logger.get(__name__)
 DEFAULT_PORT = 9900
-
+PUBLIC_THREEFOLD_NETWORK = "9bee8941b5717835"
 
 class Zerodb(Service):
     def __init__(self, node, name, path=None, mode='user', sync=False, admin=''):
@@ -54,6 +54,7 @@ class Zerodb(Service):
         self.namespaces = Namespaces(self)
         self.nics = Nics(self)
         self.nics.add('nat0', 'default')
+        self.nics.add('threefold', 'zerotier', PUBLIC_THREEFOLD_NETWORK)
         self.__redis = None
 
     @property
