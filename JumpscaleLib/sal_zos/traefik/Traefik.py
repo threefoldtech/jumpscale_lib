@@ -16,7 +16,6 @@ class Traefik(Service):
     def __init__(self, name, node, etcd_endpoint, etcd_watch=True, zt_identity=None, nics=None):
         super().__init__(name, node, 'traefik', [DEFAULT_PORT_HTTP, DEFAULT_PORT_HTTPS])
         self.name = name
-        self.id = 'traefik.{}'.format(self.name)
         self.node = node
         self._container = None
         self.flist = 'https://hub.grid.tf/tf-official-apps/traefik-v1.7.0-rc5.flist'
@@ -102,11 +101,11 @@ class Traefik(Service):
         self.create_config()
 
         cmd = '/usr/bin/traefik storeconfig -c {dir}/{config}'.format(dir=self._config_dir, config=self._config_name)
-        job = self.container.client.system(cmd, id=self.id)
+        job = self.container.client.system(cmd, id=self._id)
         cmd = '/usr/bin/traefik -c {dir}/{config}'.format(dir=self._config_dir, config=self._config_name)
 
         # wait for traefik to start
-        self.container.client.system(cmd, id=self.id)
+        self.container.client.system(cmd, id=self._id)
         if not j.tools.timer.execute_until(self.is_running, timeout, 0.5):
             result = job.get()
             raise RuntimeError('Failed to start Traefik server {}: {}'.format(self.name, result.stderr))
