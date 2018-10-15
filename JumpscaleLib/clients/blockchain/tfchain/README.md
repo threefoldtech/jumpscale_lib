@@ -56,6 +56,19 @@ address = wallet2.addresses[0] # Take the first address from the list of address
 # Send 20 tft which can be spend immediatly. The transaction is commited automatically
 amount = 20
 wallet1.send_money(amount, address)
+# It probably takes some time before the transaction is added in a block.
+# In the meantime, it can already be seen in the balance of wallet2 as "unconfirmed":
+wallet2.current_balance
+Out[5]:
+Unlocked:
+
+	0.0
+
+Unconfirmed Balance:
+
+	20.0
+
+
 # Now send 20 tft which are timelocked until the 30th of october, 1 PM GMT
 locktime = 1540904400 # unix timestamp
 wallet1.send_money(amount, address, locktime=locktime)

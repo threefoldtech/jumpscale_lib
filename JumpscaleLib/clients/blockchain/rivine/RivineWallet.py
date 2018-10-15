@@ -59,6 +59,10 @@ class RivineWallet:
         self._seed = j.data.encryption.mnemonic.to_entropy(seed)
         self._unspent_coins_outputs = {}
         self._locked_coin_outputs = {}
+        self._unconfirmed_unspent_coin_outputs = {}
+        self._unconfirmed_locked_coin_outputs = {}
+        self._unconfirmed_unspent_multisig_outputs = {}
+        self._unconfirmed_locked_multisig_outputs = {}
         self._multisig_wallets = set()
         self._unspent_multisig_outputs = {}
         self._locked_multisig_outputs = {}
@@ -104,6 +108,14 @@ class RivineWallet:
             wb.add_unlocked_multisig_output(id, output)
         for id, output in self._locked_multisig_outputs.items():
             wb.add_locked_multisig_output(id, output)
+        for id, output in self._unconfirmed_unspent_coin_outputs.items():
+            wb.add_unconfirmed_unlocked_output(id, output)
+        for id, output in self._unconfirmed_locked_coin_outputs.items():
+            wb.add_unconfirmed_locked_output(id, output)
+        for id, output in self._unconfirmed_unspent_multisig_outputs.items():
+            wb.add_unconfirmed_unlocked_multisig_output(id, output)
+        for id, output in self._unconfirmed_locked_multisig_outputs.items():
+            wb.add_unconfirmed_locked_multisig_output(id, output)
         return wb
 
     def generate_address(self, persist=True):
@@ -177,8 +189,9 @@ class RivineWallet:
 
         @TOCHECK: this needs to be synchronized with locks or other primitive
         """
+        # Start by clearing any (possibly outdated info)
+        self._addressis_info = {}
         current_chain_height = self._get_current_chain_height()
-        unconfirmed_txs = self._get_unconfirmed_transactions(format_inputs=True)
         logger.info('Current chain height is: {}'.format(current_chain_height))
         # when checking the balance we will check for 10 more addresses
         nr_of_addresses_to_check = self._nr_keys_per_seed + NR_OF_EXTRA_ADDRESSES_TO_CHECK
@@ -216,8 +229,7 @@ class RivineWallet:
                 transactions = address_info.get('transactions', {})
                 self._collect_transaction_outputs(current_height=current_chain_height,
                                                   address=address,
-                                                  transactions=transactions,
-                                                  unconfirmed_txs=unconfirmed_txs)
+                                                  transactions=transactions)
         # Add multisig addresses
         for address in self._multisig_wallets:
             try:
@@ -232,8 +244,7 @@ class RivineWallet:
                 transactions = address_info.get('transactions', {})
                 self._collect_transaction_outputs(current_height=current_chain_height,
                                                     address=address,
-                                                    transactions=transactions,
-                                                    unconfirmed_txs=unconfirmed_txs)
+                                                    transactions=transactions)
 
         # remove spent inputs after collection all the inputs
         for address, address_info in self._addresses_info.items():
@@ -251,7 +262,7 @@ class RivineWallet:
         self._unspent_coins_outputs.update(utils.collect_miner_fees(address, blocks, height))
 
 
-    def _collect_transaction_outputs(self, current_height, address, transactions, unconfirmed_txs=None):
+    def _collect_transaction_outputs(self, current_height, address, transactions):
         """
         Collects transactions outputs
 
@@ -260,11 +271,29 @@ class RivineWallet:
         @param transactions: Details about the transactions
         @param unconfirmed_txs: List of unconfirmed transactions
         """
-        txn_outputs = utils.collect_transaction_outputs(current_height, address, transactions, unconfirmed_txs)
+        # split transactions into confirmed adn unconfirmed
+        confirmed_tx = []
+        unconfirmed_txs = []
+        for tx in transactions:
+            unconfirmed = tx.get('unconfirmed', False)
+            if unconfirmed:
+                unconfirmed_txs.append(tx)
+            else:
+                confirmed_tx.append(tx)
+        # remove unconfirmed outputs from prior iteration
+        self._unconfirmed_unspent_coin_outputs = {}
+        self._unconfirmed_locked_coin_outputs = {}
+        self._unconfirmed_unspent_multisig_outputs = {}
+        self._unconfirmed_locked_multisig_outputs = {}
+        txn_outputs = utils.collect_transaction_outputs(current_height, address, confirmed_tx, unconfirmed_txs)
         self._unspent_coins_outputs.update(txn_outputs['unlocked'])
         self._locked_coin_outputs.update(txn_outputs['locked'])
         self._unspent_multisig_outputs.update(txn_outputs['multisig_unlocked'])
         self._locked_multisig_outputs.update(txn_outputs['multisig_locked'])
+        self._unconfirmed_unspent_coin_outputs.update(txn_outputs['unconfirmed_unlocked'])
+        self._unconfirmed_locked_coin_outputs.update(txn_outputs['unconfirmed_locked'])
+        self._unconfirmed_unspent_multisig_outputs.update(txn_outputs['unconfirmed_multisig_unlocked'])
+        self._unconfirmed_locked_multisig_outputs.update(txn_outputs['unconfirmed_multisig_locked'])
 
 
     def _remove_spent_inputs(self, transactions):
@@ -713,14 +742,28 @@ class WalletBalance:
         self._locked_outputs = {}
         self._unlocked_multisig_outputs = {}
         self._locked_multisig_outputs = {}
+        self._unconfirmed_unlocked_outputs = {}
+        self._unconfirmed_locked_outputs = {}
+        self._unconfirmed_unlocked_multisig_outputs = {}
+        self._unconfirmed_locked_multisig_outputs = {}
 
     def __str__(self):
         unlocked_value = sum(int(value.get('value', 0)) for value in self._unlocked_outputs.values()) / HASTINGS_TFT_VALUE
         string = 'Unlocked:\n\n\t{}\n'.format(unlocked_value)
 
+        if len(self._unconfirmed_unlocked_outputs) > 0:
+            unlocked_unconfirmed_value = sum(int(value.get('value', 0)) for value in self._unconfirmed_unlocked_outputs.values()) / HASTINGS_TFT_VALUE
+            string += '\n\nUnconfirmed balance:\n\n\t{}\n'.format(unlocked_unconfirmed_value)
+
         if len(self._locked_outputs) > 0:
             string += '\nLocked:\n'
         for output in self._locked_outputs.values():
+            string += '\n\t{} locked until {}\n'.format(int(output[0]['value']) / HASTINGS_TFT_VALUE,
+                                                      self._locktime_to_string(output[1]))
+
+        if len(self._unconfirmed_locked_outputs) > 0:
+            string += '\nLocked (Unconfirmed):\n'
+        for output in self._unconfirmed_locked_outputs.values():
             string += '\n\t{} locked until {}\n'.format(int(output[0]['value']) / HASTINGS_TFT_VALUE,
                                                       self._locktime_to_string(output[1]))
 
@@ -734,8 +777,29 @@ class WalletBalance:
             string += '\tMinimum amount of signatures: {}\n'.format(output['condition']['data']['minimumsignaturecount'])
             string += '\tValue: {}\n'.format(int(output['value']) / HASTINGS_TFT_VALUE)
 
+        if len(self._unconfirmed_unlocked_multisig_outputs) > 0:
+            string += '\nUnlocked multisig outputs (unconfirmed):\n'
+        for output_id, output in self._unconfirmed_unlocked_multisig_outputs.items():
+            string += '\n\tOutput id: {}\n'.format(output_id)
+            string += '\tSignature addresses:\n'
+            for uh in output['condition']['data']['unlockhashes']:
+                string += '\t\t{}\n'.format(uh)
+            string += '\tMinimum amount of signatures: {}\n'.format(output['condition']['data']['minimumsignaturecount'])
+            string += '\tValue: {}\n'.format(int(output['value']) / HASTINGS_TFT_VALUE)
+
         if len(self._locked_multisig_outputs) > 0:
             string += '\nLocked multisig outputs:\n'
+        for output_id, output in self._locked_multisig_outputs.items():
+            string += '\n\tOutput id: {}\n'.format(output_id)
+            string += '\tSignature addresses:\n'
+            for uh in output[0]['condition']['data']['unlockhashes']:
+                string += '\t\t{}\n'.format(uh)
+            string += '\tMinimum amount of signatures: {}\n'.format(output[0]['condition']['data']['minimumsignaturecount'])
+            string += '\tValue: {} locked until {}\n'.format(int(output[0]['value']) / HASTINGS_TFT_VALUE,
+                                                             self._locktime_to_string(output[1]))
+
+        if len(self._unconfirmed_locked_multisig_outputs) > 0:
+            string += '\nLocked multisig outputs (unconfirmed):\n'
         for output_id, output in self._locked_multisig_outputs.items():
             string += '\n\tOutput id: {}\n'.format(output_id)
             string += '\tSignature addresses:\n'
@@ -798,6 +862,32 @@ class WalletBalance:
         # strip lock condition
         raw_output['condition'] = raw_output['condition']['data']['condition']
         self._locked_multisig_outputs[output_id] = (raw_output, locktime)
+
+    def add_unconfirmed_unlocked_output(self, output_id, raw_output):
+        # It coudl be that this is a timelock condition which has expired
+        if raw_output['condition']['type'] == 3:
+            raw_output['condition'] = raw_output['condition']['data']['condition']
+        self._unconfirmed_unlocked_outputs[output_id] = raw_output
+
+    def add_unconfirmed_unlocked_multisig_output(self, output_id, raw_output):
+        # It could be that this is a timelock condition which has expired
+        if raw_output['condition']['type'] == 3:
+            raw_output['condition'] = raw_output['condition']['data']['condition']
+        self._unconfirmed_unlocked_multisig_outputs[output_id] = raw_output
+
+    def add_unconfirmed_locked_output(self, output_id, raw_output):
+        # Get the locktime
+        locktime = raw_output['condition']['data']['locktime']
+        # strip lock condition
+        raw_output['condition'] = raw_output['condition']['data']['condition']
+        self._unconfirmed_locked_outputs[output_id] = (raw_output, locktime)
+
+    def add_unconfirmed_locked_multisig_output(self, output_id, raw_output):
+        # Get the locktime
+        locktime = raw_output['condition']['data']['locktime']
+        # strip lock condition
+        raw_output['condition'] = raw_output['condition']['data']['condition']
+        self._unconfirmed_locked_multisig_outputs[output_id] = (raw_output, locktime)
 
     def _locktime_to_string(self, locktime):
         # make sure we are working with an integer
