@@ -54,7 +54,15 @@ class Zerodb(Service):
         self.namespaces = Namespaces(self)
         self.nics = Nics(self)
         self.nics.add('nat0', 'default')
-        self.nics.add('threefold', 'zerotier', PUBLIC_THREEFOLD_NETWORK)
+        public_threefold_nic = False
+        for nic in self.nics:
+            nic_dict = nic.to_dict()
+            if nic_dict['id'] == PUBLIC_THREEFOLD_NETWORK :
+                public_threefold_nic = True
+                break
+        if not public_threefold_nic:
+            self.nics.add('threefold', 'zerotier', PUBLIC_THREEFOLD_NETWORK)
+         
         self.__redis = None
 
     @property
