@@ -136,7 +136,7 @@ class Network():
                                                        "links": interfaces,
                                                        "lacp": False,
                                                        "mode": "balance-slb"})
-                                                       
+
             for interface in interfaces:
                 self.node.client.ip.link.mtu(interface, 2000)
                 self.node.client.ip.link.up(interface)
