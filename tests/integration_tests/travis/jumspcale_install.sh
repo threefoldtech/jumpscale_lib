@@ -1,4 +1,4 @@
-if [ ${1} = "True" ]; then
+if [ ${1} = "False" ]; then
     echo "Jumpscale already installed in this machine."
     exit
 fi
