@@ -5,12 +5,16 @@ from subprocess import Popen, PIPE
 import random
 import uuid
 import time
-import shlex
+import shlex,csv
 from jumpscale import j
 from termcolor import colored
+from multiprocessing import Process, Manager
 
 SETUP_ENV_SCRIPT= "tests/integration_tests/travis/setup_env.sh"
 SETUP_ENV_SCRIPT_NAME = "setup_env.sh"
+manage = Manager()
+JS_RESULTS_que = manage.Queue()   
+
 class Utils(object):
     def __init__(self, options):
         self.options = options
@@ -50,6 +54,12 @@ class Utils(object):
         cmd = templ.format(port, ip, cmd)
         return self.stream_run_cmd(cmd)
 
+    def run_cmd_on_remote_machine_without_stream(self, cmd, ip, port):
+        templ = 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p {} root@{} {}'
+        cmd = templ.format(port, ip, cmd)
+        return self.run_cmd(cmd)
+
+
     def create_disk(self, zos_client):
         zdb_name = str(uuid.uuid4())[0:8]
         zdb = zos_client.primitives.create_zerodb(name=zdb_name, path='/mnt/zdbs/sda',
@@ -74,6 +84,15 @@ class Utils(object):
     def random_string(self, size=10):
         return str(uuid.uuid4()).replace('-', '')[:size]     
 
+    def export_data_to_csv_file(self, data_que):
+        with open(minio_results_file, 'w') as csvfile:
+            fieldnames = ['interface', 'username', 'password']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            while not data_que.empty():
+                writer.writerow(data_que.get())
+
+
     def create_ubuntu_vm(self, zos_client, ubuntu_port):
         print('* Creating ubuntu vm to fire the testsuite from')
         keypath = '/root/.ssh/id_rsa.pub'
@@ -93,6 +112,11 @@ class Utils(object):
         vm_ubuntu.deploy()
         return vm_ubuntu
 
+    def install_js(self,branch,node_ip, zt_token,zos_ip,ubuntu_port,JS_FLAG):
+        cmd = 'bash {script} {branch} {jsflag} {nodeip} {zt_token}'.format(script=SETUP_ENV_SCRIPT_NAME, jsflag=JS_FLAG, branch="sal_testcases", nodeip=node_ip, zt_token=zt_token)
+        results = self.run_cmd_on_remote_machine(cmd, zos_ip, ubuntu_port)
+        JS_RESULTS_que.put(results)
+
 def main(options):
     utils = Utils(options)
     zos_client = j.clients.zos.get('zos-kds-farm', data={'host': '{}'.format(options.zos_ip)})
@@ -100,22 +124,37 @@ def main(options):
     # Setup the env to run testcases on it 
     ubuntu_port = int(options.ubuntu_port)
     JS_FLAG = options.js_flag
-    if JS_FLAG == "False":
+    if JS_FLAG == "True":
         vm = utils.create_ubuntu_vm(zos_client, ubuntu_port)
-
     # Send the script to setup the envirnment and run testcases 
     utils.send_script_to_remote_machine(SETUP_ENV_SCRIPT, options.zos_ip, ubuntu_port)
-
     # get available node to run testcaases against it 
     print('* get available node to run test cases on it ')
     zos_available_node = utils.get_farm_available_node_to_execute_testcases()
     node_ip = zos_available_node["robot_address"][7:-5] 
     print('* The available node ip {} '.format(node_ip))
     
-    # Access the ubuntu vm and start ur testsuite    
-    cmd = 'bash {script} {branch} {nodeip} {zt_token}'.format(script=SETUP_ENV_SCRIPT_NAME, branch="sal_testcases", nodeip=node_ip, zt_token=options.zt_token)
-    utils.run_cmd_on_remote_machine(cmd, options.zos_ip, ubuntu_port)
-
+    # Access the ubuntu vm and start ur testsuite 
+    pro = Process(target=utils.install_js, args=(options.branch, node_ip, options.zt_token,options.zos_ip,ubuntu_port, JS_FLAG))
+    print(' ########## XTREMX ### ########### ')
+    pro.start()
+    for _ in range(30):
+        print(' ########## XTREMX ############## LOOP ')
+        print("wait until js installation. ")
+        time.sleep(90)
+        try:
+            cmd = "which js_shell"
+            out=utils.run_cmd_on_remote_machine_without_stream(cmd, options.zos_ip, ubuntu_port)
+            if out:
+                break
+        except RuntimeError as e :
+            print(e)
+    else:
+        print(JS_RESULTS_que.get())
+        raise Exception("Can't install jumpscale it takes forever")
+    pro.join()
+    # Install jumpscale 
+    
     # Delete created vm 
     # if JS_FLAG == "False":
     #     print("Delete created ubuntu machine . ")

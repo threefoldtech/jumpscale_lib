@@ -4,8 +4,8 @@ curl -s https://install.zerotier.com/ | sudo bash
 mkdir sal_tests; cd sal_tests
 git clone https://github.com/threefoldtech/jumpscale_lib.git  -b ${1}
 cd jumpscale_lib
+echo "#######${1}#####################${2}##################"
 if [ ${2} = "True" ]; then
-    echo "################################################"
     sudo bash tests/integration_tests/travis/jumspcale_install.sh 
 fi
 cd tests/integration_tests/

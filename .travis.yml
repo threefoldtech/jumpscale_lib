@@ -19,8 +19,7 @@ matrix:
         - sudo pip3 install -r tests/integration_tests/requirements.txt
 
       before_script:
-        - sudo python3 tests/integration_tests/travis/farm_setup.py --js_flag ${js_flag} --zos_ip ${ZOS_IP} --branch ${JSBRANCH} --zt_token ${zerotier_token} --ubuntu_port ${ubuntu_port}
-        - sudo ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${ubuntu_port} root@${ZOS_IP} "cd sal_tests/jumpscale_lib; sudo bash tests/integration_tests/travis/jumspcale_install.sh ${js_flag}"
+        - travis_wait 40 sudo python3 tests/integration_tests/travis/farm_setup.py --js_flag ${js_flag} --zos_ip ${ZOS_IP} --branch ${JSBRANCH} --zt_token ${zerotier_token} --ubuntu_port ${ubuntu_port}
 
       script:
         - sudo ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${ubuntu_port} root@${ZOS_IP} "cd sal_tests/jumpscale_lib/tests/integration_tests; nosetests -v -s ${tests_path} --tc-file config.ini"
