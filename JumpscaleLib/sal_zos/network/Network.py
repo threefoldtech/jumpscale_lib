@@ -1,6 +1,8 @@
 import netaddr
 from jumpscale import j
 import time
+import re
+
 
 OVS_FLIST = 'https://hub.grid.tf/tf-official-apps/ovs.flist'
 
@@ -100,6 +102,19 @@ class Network():
             if not driverdevs:
                 break
             time.sleep(1)
+
+    def restart_bond(self, ovs_container_name='ovs', bond='bond0'):
+        '''
+        Some time the bond gets stuck, it helps restarting the bond links (down then up)
+        '''
+        container = self.node.containers.get(ovs_container_name)
+        result = container.client.system('ovs-appctl bond/show %s' % bond).get()
+        if result.state != 'SUCCESS':
+            raise Exception(result.stderr)
+
+        for link in re.findall('^slave ([^:]+):', result.stdout, re.M):
+            container.client.ip.link.down(link)
+            container.client.ip.link.up(link)
 
     def configure(self, cidr, vlan_tag, ovs_container_name,  bonded=False):
         container = self._ensure_ovs_container(ovs_container_name)
