@@ -129,7 +129,7 @@ class Minio(Service):
             port=DEFAULT_PORT, dir=self._config_dir)
 
         # wait for minio to start
-        job = self.container.client.system(cmd, id=self._id)
+        job = self.container.client.system(cmd, id=self._id, recurring_period=10)
         if not j.tools.timer.execute_until(self.is_running, 30, 0.5):
             result = job.get()
             raise RuntimeError('Failed to start minio server {}: {}'.format(self.name, result.stderr))

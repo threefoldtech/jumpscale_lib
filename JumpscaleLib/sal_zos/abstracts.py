@@ -4,6 +4,7 @@ from JumpscaleLib.sal_zos.utils import authorize_zerotiers
 
 logger = j.logger.get(__name__)
 
+
 class Mountable():
     """
     Abstract implementation for devices that are mountable.
@@ -271,7 +272,7 @@ class Service:
     _ports: a list of ports to check if the container is listening to. It is used to verify that the process is running
     name: the name of the service
     """
-    
+
     def __init__(self, name, node, service_type, ports):
         self.name = name
         self.node = node
@@ -323,8 +324,9 @@ class Service:
         Stop the service process and stop the container
         """
         if self.is_running():
+            self.container.client.job.unschedule(self._id)
             self.container.client.job.kill(self._id)
-            if not j.tools.timer.execute_until(lambda : not self.is_running(), timeout, 0.5):
+            if not j.tools.timer.execute_until(lambda: not self.is_running(), timeout, 0.5):
                 logger.warning('Failed to gracefully stop {} server: {}'.format(self._type, self.name))
 
         self.container.stop()
@@ -343,7 +345,7 @@ class Service:
             except LookupError:
                 self._container = self.node.containers.create(**self._container_data)
         return self._container
-    
+
     def add_nics(self, nics):
         if nics:
             for nic in nics:
@@ -352,7 +354,7 @@ class Service:
                     nicobj.client_name = nic.get('ztClient')
         if 'nat0' not in self.nics:
             self.nics.add('nat0', 'default')
-    
+
     def authorize_zt_nics(self):
         if not self.zt_identity:
             self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
