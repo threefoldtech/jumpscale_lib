@@ -415,7 +415,8 @@ class Gateway:
                     ztnetwork.member_add(ztpublic, self.name, private_ip=privateip)
             nics.append(network.to_dict(forcontainer=True))
         if not public_threefold_nic:
-            nics.append({'name':'threefold', 'type':'zerotier', 'id': PUBLIC_THREEFOLD_NETWORK})
+            network=self.networks.add(name='threefold',type_='zerotier',networkid= PUBLIC_THREEFOLD_NETWORK)
+            nics.append(network.to_dict(forcontainer=True))
             # zerotierbridge = nic.pop('zerotierbridge', None)
             # if zerotierbridge:
             #    contnics.append(
