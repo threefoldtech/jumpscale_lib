@@ -116,13 +116,23 @@ class Network():
             container.client.ip.link.down(link)
             container.client.ip.link.up(link)
 
+    def unconfigure(self):
+        nicmap = {nic['name']: nic for nic in self.node.client.info.nic()}
+        if 'backplane' not in nicmap:
+            return
+        
+        try:
+            container = self.node.containers.get(name)
+        except LookupError:
+            return
+        
+        container.client.json('ovs.bridge-del', {"bridge": "backplane"})
+
     def configure(self, cidr, vlan_tag, ovs_container_name, bonded=False, mtu=9000):
         container = self._ensure_ovs_container(ovs_container_name)
         if not container.is_running():
             container.start()
 
-        nicmap = {nic['name']: nic for nic in self.node.client.info.nic()}
-        # freenics = ([1000, ['eth0']], [100, ['eth1']])
         freenics = self.node.network.get_free_nics()
         if not freenics:
             raise j.exceptions.RuntimeError("Could not find available nic")
@@ -141,11 +151,13 @@ class Network():
             else:
                 raise j.exceptions.RuntimeError("Could not find two equal available nics")
 
-        if 'backplane' in nicmap:
-            #nothing to do
-            return
-
-        container.client.json('ovs.bridge-add', {"bridge": "backplane"})
+        try:
+            container.client.json('ovs.bridge-add', {"bridge": "backplane"})
+        except Exception as e:
+            if e.message.find('bridge named backplane already exists') == -1:
+                raise
+            return # bridge already exists in ovs subsystem (TODO: implement ovs.bridge-list)
+            
         if not bonded:
             self.node.client.ip.link.mtu(interfaces[0], mtu)
             container.client.json('ovs.port-add', {"bridge": "backplane", "port": interfaces[0], "vlan": 0})
