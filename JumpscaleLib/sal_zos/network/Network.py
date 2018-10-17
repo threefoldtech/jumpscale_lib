@@ -169,7 +169,9 @@ class Network():
                                                    "port": "bond0",
                                                    "links": interfaces,
                                                    "lacp": False,
-                                                   "mode": "balance-slb"})
+                                                   "mode": "balance-slb",
+                                                   "options": {'updelay': "2000"},
+                                                   })
 
         self.node.client.ip.link.up('backplane')
         self.node.client.ip.link.mtu('backplane', mtu)
