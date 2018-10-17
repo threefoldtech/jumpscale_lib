@@ -142,7 +142,7 @@ class Network():
                 raise j.exceptions.RuntimeError("Could not find two equal available nics")
 
         if 'backplane' in nicmap:
-            #nothing to do
+            # nothing to do
             return
 
         container.client.json('ovs.bridge-add', {"bridge": "backplane"})
@@ -154,11 +154,18 @@ class Network():
                 self.node.client.ip.link.mtu(interface, mtu)
                 self.node.client.ip.link.up(interface)
             container.client.json('ovs.bond-add', {"bridge": "backplane",
-                                                    "port": "bond0",
-                                                    "links": interfaces,
-                                                    "lacp": False,
-                                                    "mode": "balance-slb"})
+                                                   "port": "bond0",
+                                                   "links": interfaces,
+                                                   "lacp": False,
+                                                   "mode": "balance-slb"})
 
         self.node.client.ip.link.up('backplane')
         self.node.client.ip.link.mtu('backplane', mtu)
         self.node.client.ip.addr.add('backplane', str(addresses['storageaddr']))
+
+        # hack. We don't figure out why, but ovs is not happy if we don't
+        # turn it off and on again...
+        interface = interfaces[0]
+        self.node.client.ip.link.down(interface)
+        time.sleep(2)
+        self.node.client.ip.link.up(interface)
