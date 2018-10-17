@@ -4,7 +4,7 @@ import time
 import re
 
 
-OVS_FLIST = 'https://hub.grid.tf/tf-official-apps/ovs.flist'
+OVS_FLIST = 'https://hub.grid.tf/tf-autobuilder/threefoldtech-openvswitch-plugin-master.flist'
 
 
 def combine(ip1, ip2, mask):
