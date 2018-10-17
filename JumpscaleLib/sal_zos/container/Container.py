@@ -36,7 +36,7 @@ class Containers():
 
     def create(self, name, flist, hostname=None, mounts=None, nics=None,
                host_network=False, ports=None, storage=None, init_processes=None, privileged=False, env=None, identity=None):
-        
+
         container = Container(name=name, node=self.node, flist=flist, hostname=hostname, mounts=mounts, nics=nics,
                               host_network=host_network, ports=ports, storage=storage, init_processes=init_processes,
                               privileged=privileged, env=env, identity=identity)
@@ -323,6 +323,8 @@ class Container():
             nics = []
             for nic in self._nics:
                 nic.pop('state', None)
+                nics.append(nic)
+
             return nics
 
     def waitOnJob(self, job):
