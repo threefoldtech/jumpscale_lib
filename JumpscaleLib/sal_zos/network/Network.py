@@ -116,7 +116,7 @@ class Network():
             container.client.ip.link.down(link)
             container.client.ip.link.up(link)
 
-    def configure(self, cidr, vlan_tag, ovs_container_name,  bonded=False):
+    def configure(self, cidr, vlan_tag, ovs_container_name, bonded=False, mtu=9000):
         container = self._ensure_ovs_container(ovs_container_name)
         if not container.is_running():
             container.start()
@@ -141,19 +141,24 @@ class Network():
             else:
                 raise j.exceptions.RuntimeError("Could not find two equal available nics")
 
-        if 'backplane' not in nicmap:
-            container.client.json('ovs.bridge-add', {"bridge": "backplane"})
-            if not bonded:
-                container.client.json('ovs.port-add', {"bridge": "backplane", "port": interfaces[0], "vlan": 0})
-            else:
-                container.client.json('ovs.bond-add', {"bridge": "backplane",
-                                                       "port": "bond0",
-                                                       "links": interfaces,
-                                                       "lacp": False,
-                                                       "mode": "balance-slb"})
+        if 'backplane' in nicmap:
+            #nothing to do
+            return
 
+        container.client.json('ovs.bridge-add', {"bridge": "backplane"})
+        if not bonded:
+            self.node.client.ip.link.mtu(interfaces[0], mtu)
+            container.client.json('ovs.port-add', {"bridge": "backplane", "port": interfaces[0], "vlan": 0})
+        else:
             for interface in interfaces:
-                self.node.client.ip.link.mtu(interface, 2000)
+                self.node.client.ip.link.mtu(interface, mtu)
                 self.node.client.ip.link.up(interface)
-            self.node.client.ip.link.up('backplane')
-            self.node.client.ip.addr.add('backplane', str(addresses['storageaddr']))
+            container.client.json('ovs.bond-add', {"bridge": "backplane",
+                                                    "port": "bond0",
+                                                    "links": interfaces,
+                                                    "lacp": False,
+                                                    "mode": "balance-slb"})
+
+        self.node.client.ip.link.up('backplane')
+        self.node.client.ip.link.mtu('backplane', mtu)
+        self.node.client.ip.addr.add('backplane', str(addresses['storageaddr']))
