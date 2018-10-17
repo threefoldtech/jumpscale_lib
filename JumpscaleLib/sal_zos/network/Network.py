@@ -154,7 +154,7 @@ class Network():
         try:
             container.client.json('ovs.bridge-add', {"bridge": "backplane"})
         except Exception as e:
-            if e.message.find('bridge named backplane already exists') == -1:
+            if e.args[0].find('bridge named backplane already exists') == -1:
                 raise
             return  # bridge already exists in ovs subsystem (TODO: implement ovs.bridge-list)
 
