@@ -170,7 +170,7 @@ class Network():
                                                    "links": interfaces,
                                                    "lacp": False,
                                                    "mode": "balance-slb",
-                                                   "options": {'updelay': "2000"},
+                                                   "options": {'other_config:updelay': "2000"},
                                                    })
 
         self.node.client.ip.link.up('backplane')
