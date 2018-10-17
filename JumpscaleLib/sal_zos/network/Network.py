@@ -120,15 +120,15 @@ class Network():
         nicmap = {nic['name']: nic for nic in self.node.client.info.nic()}
         if 'backplane' not in nicmap:
             return
-        
+
         try:
             container = self.node.containers.get(ovs_container_name)
         except LookupError:
             return
-        
+
         container.client.json('ovs.bridge-del', {"bridge": "backplane"})
 
-    def configure(self, cidr, vlan_tag, ovs_container_name, bonded=False, mtu=9000):
+    def configure(self, cidr, vlan_tag, ovs_container_name='ovs', bonded=False, mtu=9000):
         container = self._ensure_ovs_container(ovs_container_name)
         if not container.is_running():
             container.start()
@@ -156,8 +156,8 @@ class Network():
         except Exception as e:
             if e.message.find('bridge named backplane already exists') == -1:
                 raise
-            return # bridge already exists in ovs subsystem (TODO: implement ovs.bridge-list)
-            
+            return  # bridge already exists in ovs subsystem (TODO: implement ovs.bridge-list)
+
         if not bonded:
             self.node.client.ip.link.mtu(interfaces[0], mtu)
             container.client.json('ovs.port-add', {"bridge": "backplane", "port": interfaces[0], "vlan": 0})
