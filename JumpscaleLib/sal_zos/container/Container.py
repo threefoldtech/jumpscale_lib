@@ -318,7 +318,10 @@ class Container():
             return list(filter(lambda nic: nic['state'] == 'configured',
                                self.info['container']['arguments']['nics']))
         else:
-            return self._nics
+            nics = []
+            for nic in self._nics:
+                nic.pop('state', None)
+            return nics
 
     def waitOnJob(self, job):
         MAX_LOG = 15
