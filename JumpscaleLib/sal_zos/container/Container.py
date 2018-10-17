@@ -36,8 +36,10 @@ class Containers():
 
     def create(self, name, flist, hostname=None, mounts=None, nics=None,
                host_network=False, ports=None, storage=None, init_processes=None, privileged=False, env=None, identity=None):
-        container = Container(name, self.node, flist, hostname, mounts, nics,
-                              host_network, ports, storage, init_processes, privileged, env=env, identity=identity)
+        
+        container = Container(name=name, node=self.node, flist=flist, hostname=hostname, mounts=mounts, nics=nics,
+                              host_network=host_network, ports=ports, storage=storage, init_processes=init_processes,
+                              privileged=privileged, env=env, identity=identity)
         container.start()
         return container
 

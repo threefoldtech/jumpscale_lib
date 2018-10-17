@@ -116,13 +116,13 @@ class Network():
             container.client.ip.link.down(link)
             container.client.ip.link.up(link)
 
-    def unconfigure(self):
+    def unconfigure(self, ovs_container_name='ovs'):
         nicmap = {nic['name']: nic for nic in self.node.client.info.nic()}
         if 'backplane' not in nicmap:
             return
         
         try:
-            container = self.node.containers.get(name)
+            container = self.node.containers.get(ovs_container_name)
         except LookupError:
             return
         
