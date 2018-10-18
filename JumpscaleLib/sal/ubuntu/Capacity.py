@@ -74,7 +74,7 @@ class Capacity:
         """
         interface, _ = j.sal.nettools.getDefaultIPConfig()
         mac = j.sal.nettools.getMacAddress(interface)
-        node_id = mac.replace(':', '')
+        node_id = mac[0].replace(':', '')
         if not node_id:
             raise RuntimeError("can't detect node ID")
 
