@@ -138,21 +138,22 @@ def main(options):
     pro = Process(target=utils.install_js, args=(options.branch, node_ip, options.zt_token,options.zos_ip,ubuntu_port, JS_FLAG))
     print(' ########## XTREMX ### ########### ')
     pro.start()
-    for _ in range(30):
-        print(' ########## XTREMX ############## LOOP ')
-        print("wait until js installation. ")
-        time.sleep(90)
-        try:
-            cmd = "which js_shell"
-            out=utils.run_cmd_on_remote_machine_without_stream(cmd, options.zos_ip, ubuntu_port)
-            if out:
-                break
-        except RuntimeError as e :
-            print(e)
-    else:
-        print(JS_RESULTS_que.get())
-        raise Exception("Can't install jumpscale it takes forever")
     pro.join()
+    # for _ in range(30):
+    #     print(' ########## XTREMX ############## LOOP ')
+    #     print("wait until js installation. ")
+    #     time.sleep(90)
+    #     try:
+    #         cmd = "which js_shell"
+    #         out=utils.run_cmd_on_remote_machine_without_stream(cmd, options.zos_ip, ubuntu_port)
+    #         if out:
+    #             pro.join()
+    #             break
+    #     except RuntimeError as e :
+    #         print(e)
+    # else:
+    #     print(JS_RESULTS_que.get())
+    #     raise Exception("Can't install jumpscale it takes forever")
     # Install jumpscale 
     
     # Delete created vm 
