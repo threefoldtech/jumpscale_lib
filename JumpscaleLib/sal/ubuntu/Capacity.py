@@ -6,7 +6,7 @@ from jumpscale import j
 from JumpscaleLib.sal_zos.disks.Disks import StorageType
 
 class FakeZOSDisk:
-    def __init__(self, name, type, size):
+    def __init__(self, name, size, type):
         self.name = name
         self.type = type
         self.size = size
