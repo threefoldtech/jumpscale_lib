@@ -116,7 +116,7 @@ class Network():
             container.client.ip.link.down(link)
             container.client.ip.link.up(link)
 
-    def unconfigure(self, ovs_container_name='ovs'):
+    def _unconfigure_ovs(self, ovs_container_name='ovs'):
         nicmap = {nic['name']: nic for nic in self.node.client.info.nic()}
         if 'backplane' not in nicmap:
             return
@@ -127,18 +127,34 @@ class Network():
             return
 
         container.client.json('ovs.bridge-del', {"bridge": "backplane"})
+        container.stop()
 
-    def configure(self, cidr, vlan_tag, ovs_container_name='ovs', bonded=False, mtu=9000):
-        container = self._ensure_ovs_container(ovs_container_name)
-        if not container.is_running():
-            container.start()
+    def _unconfigure_native(self):
+        cl = self.node.client
 
+        if 'bond0' in cl.ip.bond.list():
+            cl.ip.bond.delete('bond0')
+
+    def unconfigure(self, ovs_container_name='ovs', mode='ovs'):
+        if not mode or mode == 'ovs':
+            return self._unconfigure_ovs(ovs_container_name)
+        elif mode == 'native':
+            return self._unconfigure_native()
+        else:
+            raise ValueError('unknown mode %s' % mode)
+
+    def configure(self, cidr, vlan_tag, ovs_container_name='ovs', bonded=False, mtu=9000, mode='ovs'):
+        if mode == 'ovs' or not mode:
+            return self._configure_ovs(cidr=cidr, vlan_tag=vlan_tag, ovs_container_name='ovs', bonded=bonded, mtu=mtu)
+        elif mode == 'native':
+            return self._configure_native(cidr=cidr, bonded=bonded, mtu=mtu)
+        else:
+            raise ValueError('unknown mode %s' % mode)
+
+    def _get_free_interfaces(self, bonded=False):
         freenics = self.node.network.get_free_nics()
         if not freenics:
             raise j.exceptions.RuntimeError("Could not find available nic")
-
-        network = netaddr.IPNetwork(cidr)
-        addresses = self.get_addresses(network)
 
         interfaces = None
         if not bonded:
@@ -150,6 +166,40 @@ class Network():
                     break
             else:
                 raise j.exceptions.RuntimeError("Could not find two equal available nics")
+
+        return interfaces
+
+    def _configure_native(self, cidr, bonded=False, mtu=9000):
+        network = netaddr.IPNetwork(cidr)
+        addresses = self.get_addresses(network)
+
+        interfaces = self._get_free_interfaces(bonded=bonded)
+
+        cl = self.node.client
+
+        if not bonded:
+            cl.ip.link.mtu(interfaces[0], mtu)
+            cl.ip.link.up(interfaces[0])
+            cl.ip.addr.add(interfaces[0], str(addresses['storageaddr']))
+            return
+
+        # bonded
+        for interface in interfaces:
+            cl.ip.link.mtu(interface, mtu)
+            cl.ip.link.up(interface)
+
+        cl.ip.bond.add('bond0', interfaces, mtu=mtu)
+        cl.ip.addr.add('bond0', str(addresses['storageaddr']))
+
+    def _configure_ovs(self, cidr, vlan_tag, ovs_container_name='ovs', bonded=False, mtu=9000):
+        container = self._ensure_ovs_container(ovs_container_name)
+        if not container.is_running():
+            container.start()
+
+        network = netaddr.IPNetwork(cidr)
+        addresses = self.get_addresses(network)
+
+        interfaces = self._get_free_interfaces(bonded=bonded)
 
         try:
             container.client.json('ovs.bridge-add', {"bridge": "backplane"})
