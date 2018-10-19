@@ -135,8 +135,7 @@ class ETCD(Service):
         render etcd config template
         """
 
-        cluster = self.cluster if self.cluster else [{'name': self.name, 'address': self.peer_url}]
-        members  = ['='.join([member['name'],member['address']]) for member in cluster]
+        cluster = self.cluster if self.cluster else '{}={}'.format(self.name, self.peer_url)
 
         config = {
             'name': self.name,
@@ -146,7 +145,7 @@ class ETCD(Service):
             'advertise_client_urls': self.client_url,
             'data_dir': self.data_dir,
             'token': self.token,
-            'cluster': ','.join(members),
+            'cluster': cluster,
         }
         return templates.render('etcd.conf', **config).strip()
 
@@ -183,7 +182,7 @@ class ETCD(Service):
         for command in commands:
             result = self.container.client.system(command).get()
             if result.state == 'ERROR':
-                if result.stderr == 'Error: etcdserver: user name not found\n':
+                if 'already exists' in result.stderr:
                     # this command has been executed before
                     continue
                 else:
