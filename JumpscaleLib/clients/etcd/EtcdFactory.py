@@ -1,37 +1,13 @@
-""" A Jumpscale-configurable wrapper around the python3 etcd client library
-
-    configuration file options will be in {[myconfig].path}/j.clients.etcd
-
-    unit tests are in core9 tests/jumpscale_tests/test11_keyvalue_stores.py
-"""
-
-import uuid
+from Jumpscale import j
 from .EtcdClient import EtcdClient
 
-class EtcFactory:
 
-    __jslocation__ = "j.clients.etcd"
-    __jsbase__ = 'j.tools.configmanager._base_class_configs'
+JSConfigFactory = j.tools.configmanager.JSBaseClassConfigs
 
-    @property
-    def _child_class(self):
-        return EtcdClient
 
-    def configure(self, instance="main", addr="localhost",
-                                         port=2379,
-                  ):
-        """ :param instance:
-            :param addr:
-            :param port:
-            :return:
-        """
 
-        if port is None:
-            raise InputError("port cannot be None")
+class EtcdFactory(JSConfigFactory):
 
-        data = {}
-        data["addr"] = addr
-        data["port"] = str(port)
-
-        return self.get(instance=instance, data=data, create=True,
-                        interactive=False)
+    def __init__(self):
+        self.__jslocation__ = "j.clients.etcd"
+        JSConfigFactory.__init__(self, EtcdClient)

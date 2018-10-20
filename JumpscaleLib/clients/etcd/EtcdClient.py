@@ -1,81 +1,63 @@
-""" A Jumpscale wrapper around the python3 etcd client
+import socket
 
-    info on etcd client API here:
-    https://python-etcd.readthedocs.io/en/latest/
+import gevent.socket
+
+import etcd3
+from Jumpscale import j
+
+JSConfigClient = j.tools.configmanager.JSBaseClassConfig
+
+
+if socket.socket is gevent.socket.socket:
+    # this is needed when running from within 0-robot
+    import grpc.experimental.gevent
+    grpc.experimental.gevent.init_gevent()
+
+_template = """
+host = "127.0.0.1"
+port = 2379
+#timeout = null
+user = ""
+password_ = ""
 """
 
-import etcd
-from .EtcdClientNS import EtcdClientNS
-TEMPLATE = """
-addr = "localhost"
-port = "2379"
-secrets_ = ""
-"""
 
-class EtcdClient:
+class EtcdClient(JSConfigClient):
 
-    __jsbase__ = 'j.tools.configmanager._base_class_config'
-    _template = TEMPLATE
-    dbtype = 'ETCD'
-
-    def __init__(self, instance, data={}, parent=None, interactive=False,
-                                 started=True):
-        self._etcd = None
-        print ("EtcdClient", instance)
-        self.namespaces = {}
+    def __init__(self, instance="main", data=None, parent=None, template=None, ui=None, interactive=True):
+        data = data or {}
+        super().__init__(instance=instance, data=data, parent=parent, template=_template, ui=ui, interactive=interactive)
+        self._api = None
 
     @property
-    def secrets(self):
-        res={}
-        if "," in self.config.data["secrets_"]:
-            items = self.config.data["secrets_"].split(",")
-            for item in items:
-                if item.strip()=="":
-                    continue
-                nsname,secret = item.split(":")
-                res[nsname.lower().strip()]=secret.strip()
-        else:
-            res["default"]=self.config.data["secrets_"].strip()
-        return res
+    def api(self):
+        if self._api is None:
+            data = self.config.data
+            kwargs = {
+                'host': data['host'],
+                'port': data['port'],
+            }
+            if data['user'] and data['password_']:
+                kwargs.update({
+                    'user': data['user'],
+                    'password': data['password_']
+                })
+            self._api = etcd3.client(**kwargs)
+            print("client created")
+        return self._api
 
-    def namespace_exists(self, name):
-        return name in self.namespaces
+    def put(self, key, value):
+        if value.startswith("-"):
+            value = "-- %s" % value
+        if key.startswith("-"):
+            key = "-- %s" % key
+        self.api.put(key, value)
 
-    def namespace_del(self, name):
-        ns = self.namespaces[name]
-        try:
-            ns.delete_all()
-        except KeyError:
-            pass
-        self.namespaces.pop(name)
-        del ns
+    def get(self, key):
+        result = self.api.get(key)[0]
+        if not result:
+            raise ValueError('Key {} does not exist in etcd'.format(key))
+        return result.decode('utf-8')
 
-    def namespace_get(self, name, *args, **kwargs):
-        if not name in self.namespaces:
-            self.namespaces[name] = EtcdClientNS(self, name)
-        return self.namespaces[name]
-
-    @property
-    def namespace_system(self):
-        return self.namespace_get("default")
-
-    def namespace_new(self, name, secret="", maxsize=0, die=False):
-        if self.namespace_exists(name):
-            if die:
-                raise RuntimeError("namespace already exists:%s" % name)
-            return self.namespace_get(name)
-
-        #if secret is "" and "default" in self.secrets.keys():
-        #    secret = self.secrets["default"]
-
-        return self.namespace_get(name)
-
-    def __str__(self):
-        return "etcd:%-14s %-25s:%-4s" % (
-            self.instance, self.config.data["addr"],
-            self.config.data["port"]
-            )
-
-    __repr__ = __str__
-
-
+    def delete(self, key):
+        return self.api.delete(key)
