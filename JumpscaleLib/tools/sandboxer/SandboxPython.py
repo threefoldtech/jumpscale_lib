@@ -83,7 +83,7 @@ class SandboxPython(JSBASE):
 
         #copy more files from bin directory
         tocopy = j.sal.fs.listFilesInDir("%s/bin" % path, filter="js_*", followSymlinks=True)
-        tocopy += j.sal.fs.listFilesInDir("%s/bin" % path, filter="rq*", followSymlinks=True)
+        # tocopy += j.sal.fs.listFilesInDir("%s/bin" % path, filter="rq*", followSymlinks=True)
         for item in tocopy:
             name = j.sal.fs.getBaseName(item)
             j.sal.fs.copyFile(item,"%s/bin/%s" % (dest, name))

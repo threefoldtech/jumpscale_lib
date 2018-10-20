@@ -58,7 +58,6 @@ class JSWebServers(JSConfigBase):
         # gunicorn
         gevent
         """
-        # rq-dashboard,rq-scheduler,rq,flask-classy,
         p = j.tools.prefab.local
         p.runtimes.pip.install(pips)
 

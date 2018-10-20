@@ -103,8 +103,11 @@ class ZDBServer(JSBASE):
 
         return cl
 
-    def start_test_instance(self, reset=False):
+    def start_test_instance(self, reset=False,namespaces=[],namespaces_secret = "1234"):
         """
+
+        js_shell 'j.servers.zdb.start_test_instance(reset=True)'
+
         start a test instance with self.adminsecret 123456
         will use port 9900
         and name = test
@@ -122,6 +125,9 @@ class ZDBServer(JSBASE):
             cla = self.client_admin_get()
             cla.reset()
             j.clients.redis.cache_clear() #make sure all redis connections gone
+
+        for ns in namespaces:
+            self.client_get(nsname=ns,secret=namespaces_secret)
 
         return self
 

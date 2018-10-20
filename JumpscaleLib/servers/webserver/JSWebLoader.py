@@ -1,13 +1,11 @@
 from flask import Flask
 from flask_login import LoginManager
-# from flask_sqlalchemy import SQLAlchemy
 from flask_sockets import Sockets
 from importlib import import_module
 from logging import basicConfig, DEBUG, getLogger, StreamHandler
 from Jumpscale import j
 import sys
-from werkzeug.debug import DebuggedApplication
-import rq_dashboard
+
 
 JSBASE = j.application.JSBaseClass
 
@@ -70,32 +68,11 @@ class JSWebLoader(JSBASE):
         self.logger = getLogger()
         self.logger.addHandler(StreamHandler())
 
-    # def app_load(self, app, selenium=False):
-    #     # app = Flask(__name__, static_folder='base/static')
-    #     app.config.from_object(DebugConfig)
-
-    #     app.config.from_object(rq_dashboard.default_settings)
-    #     app.register_blueprint(rq_dashboard.blueprint, url_prefix="/rq")
-
-
-    #     # if selenium:
-    #     #     app.config['LOGIN_DISABLED'] = True
-    #     # register_extensions(app)
-    #     self.register_blueprints(app)
-    #     # configure_database(app)
-    #     # configure_logs(app)
-
-
-    #     return app
-
     def load(self, selenium=False, debug=True, websocket_support=True):
         staticpath = j.clients.git.getContentPathFromURLorPath(
             "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/static")
         app = Flask(__name__, static_folder=staticpath)  # '/base/static'
         app.config.from_object(DebugConfig)
-
-        app.config.from_object(rq_dashboard.default_settings)
-        app.register_blueprint(rq_dashboard.blueprint, url_prefix="/rq")
 
         # Load iyo settings, TODO: change this dirty hack & re-enable this section
         # sys.path.append("%s/dm_base" % self.path)
