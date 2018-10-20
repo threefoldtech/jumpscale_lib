@@ -6,7 +6,7 @@ JSBASE = j.application.JSBaseClass
 
 class ZDBClientBase(JSBASE):
 
-    def __init__(self, addr="localhost", port=9900, mode="seq", secret="", nsname="default"):
+    def __init__(self, addr="localhost", port=9900, mode="seq", secret="", nsname="test"):
         """ is connection to ZDB
 
         port {[int} -- (default: 9900)
@@ -19,8 +19,7 @@ class ZDBClientBase(JSBASE):
         self.mode = mode
         self.secret = secret
         self.type = "ZDB"
-
-        self.redis = _patch_redis_client(j.clients.redis.get(ipaddr=addr, port=port, fromcache=False))
+        self.redis = _patch_redis_client(j.clients.redis.get(ipaddr=addr, port=port, fromcache=False, password=self.secret, ping=False))
 
         self.nsname = nsname.lower().strip()
 
@@ -34,10 +33,19 @@ class ZDBClientBase(JSBASE):
         if self.nsname != "default":
             if self.secret is "":
                 self.logger.debug("select namespace:%s with NO secret" % (self.nsname))
+                self.redis.execute_command("AUTH", self.secret)
                 self.redis.execute_command("SELECT", self.nsname)
             else:
-                self.logger.debug("select namespace:%s with a secret" % (self.nsname))
-                self.redis.execute_command("SELECT", self.nsname, self.secret)
+                namespaces = self.redis.execute_command('NSLIST')
+                namespaces = [ns.decode() for ns in namespaces]
+                if self.nsname in namespaces:
+                    self.logger.debug("select namespace:%s with a secret" % (self.nsname))
+                    self.redis.execute_command("SELECT", self.nsname, self.secret)
+                else:
+                    self.logger.debug("Create namespace:%s with a secret" % (self.nsname))
+                    self.redis.execute_command('NSNEW', self.nsname)
+                    self.redis.execute_command('NSSET', self.nsname, 'password', self.secret)
+                    self.redis.execute_command('NSSET', self.nsname, 'public', 'no')
 
 
     def ping(self):
@@ -46,7 +54,6 @@ class ZDBClientBase(JSBASE):
         :return:
         """
         return self.redis.ping()
-
 
 def _patch_redis_client(redis):
     # don't auto parse response for set, it's not 100% redis compatible

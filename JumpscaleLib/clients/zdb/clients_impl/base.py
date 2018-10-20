@@ -3,6 +3,7 @@ import struct
 import redis
 
 from ..ZDBClientBase import ZDBClientBase
+from ..ZDBMeta import ZDBMeta
 
 
 class Base(ZDBClientBase):
@@ -15,6 +16,7 @@ class Base(ZDBClientBase):
                     https://github.com/rivine/0-db/blob/master/README.md
         """
         ZDBClientBase.__init__(self, addr=addr, port=port, mode=mode, nsname=nsname, secret=secret)
+        self.meta = ZDBMeta(self)
 
     def _key_encode(self, key):
         return key

@@ -12,9 +12,6 @@ class ZDBClientSeqMode(Base):
     def __init__(self, nsname, addr="localhost", port=9900, secret="123456"):
         super().__init__(nsname=nsname, addr=addr, port=port, mode="seq", secret=secret)
 
-        if self.nsname != "default":
-            self.meta = ZDBMeta(self)
-
     def _key_encode(self, key):
         if key is None:
             key = ""
