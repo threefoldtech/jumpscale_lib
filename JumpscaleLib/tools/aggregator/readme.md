@@ -42,3 +42,4 @@
 - the info is complete: logs, errorconditions, reality info and statistics
 - this info gives a full view on what is going on in the grid to the central management system
 - its flexible enough to make it very easy for people to process the data in different ways and to different database backend systems
+

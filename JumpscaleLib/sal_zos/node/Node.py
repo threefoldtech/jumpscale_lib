@@ -26,6 +26,8 @@ logger = j.logger.get(__name__)
 
 SUPPORT_NETWORK = "172.29.0.0/16"
 
+ZOS_CACHE = 'zos-cache'
+
 
 class Node:
     """Represent a Zero-OS Server"""
@@ -250,7 +252,9 @@ class Node:
         """
         return self.client.socat.reserve(number=nrports)
 
-    def find_persistance(self, name='zos-cache'):
+    def find_persistance(self, name=None):
+        if not name:
+            name = ZOS_CACHE
         zeroos_cache_sp = None
         for sp in self.storagepools.list():
             if sp.name == name:
@@ -281,7 +285,7 @@ class Node:
         # create the storage pool if we don't have one yet
         if zeroos_cache_sp is None:
             disk = self._eligible_zeroos_cache_disk(disks)
-            zeroos_cache_sp = self.storagepools.create(name, devices=[disk.devicename], metadata_profile='single', data_profile='single', overwrite=True)
+            zeroos_cache_sp = self.storagepools.create(name, devices=disk.devicename, metadata_profile='single', data_profile='single', overwrite=True)
         zeroos_cache_sp.mount()
         try:
             zeroos_cache_sp.get('logs')

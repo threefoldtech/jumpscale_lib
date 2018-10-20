@@ -55,3 +55,4 @@ token = j.clients.openvcloud.getJWTTokenFromItsYouOnline('app-id', 'app-secret')
 Your app-id and app-secret can be retreived/generated on the itsyouonline settings page.
 
 With this token, you can now easily authentificate yourself: `cl.authentificate(token)`
+

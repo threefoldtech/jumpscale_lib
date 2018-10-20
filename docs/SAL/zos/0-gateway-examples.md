@@ -217,13 +217,13 @@ The gateway object has a builtin way to serialize its data to json or a python d
 
 ### Save gateway config in mygw.json
 ```python
-j.data.serializer.json.dump('mygw.json', gw.to_dict())
+j.data.serializers.json.dump('mygw.json', gw.to_dict())
 ```
 ### Load gateway config from mygw.json
 1111112
 ```python
 gw = node.primitives.create_gateway(name="mygw")
-gw.from_dict(j.data.serializer.json.load('mygw.json'))
+gw.from_dict(j.data.serializers.json.load('mygw.json'))
 1111113
 ```
 
@@ -233,3 +233,4 @@ date = "2018-05-20"
 tags = []
 title = "0 Gateway Examples"
 ```
+

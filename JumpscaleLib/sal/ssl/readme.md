@@ -43,3 +43,4 @@ use
 ``` j.sal.ssl.bundle(certificate='<path to certificate>', key='<path to key>', certification_chain=< certification chain>, passphrase='<passphrase value>' ```
 
 to Bundles a certificate with it's private key (if any) and it's chain of trust
+

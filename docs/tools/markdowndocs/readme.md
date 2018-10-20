@@ -34,3 +34,4 @@ depends = ["https://github.com/Jumpscale/jumpscale_core8/tree/8.1.2/docs",
     "https://github.com/Jumpscale/ays_jumpscale8/tree/8.2.0"]
 theme = "hugo-future-imperfect"
 ```
+

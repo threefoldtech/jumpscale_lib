@@ -37,3 +37,4 @@
 - per site do the production step
     - lookup template used, copy inside $outdir/$sitename
     - use hugo or ... to generate the site (depends on the generate.py which is put in the template dir)
+

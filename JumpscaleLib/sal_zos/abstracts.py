@@ -325,6 +325,8 @@ class Service:
         """
         if self.is_running():
             self.container.client.job.kill(self._id)
+            #ON DEVELOPMENT BRANCH TODO:
+            #self.container.client.job.unschedule(self._id)
             if not j.tools.timer.execute_until(lambda : not self.is_running(), timeout, 0.5):
                 logger.warning('Failed to gracefully stop {} server: {}'.format(self._type, self.name))
 

@@ -78,7 +78,7 @@ setup(
         'paramiko>=2.2.3',  # for parallel-ssh
         'path.py>=10.3.1',
         'peewee>=2.9.2',
-        'psycopg2>=2.6.2',
+        'psycopg2>=2.7.1',
         'pudb>=2017.1.2',
         'cryptography>=2.2.0',
         'pyOpenSSL>=17.0.0',
@@ -89,14 +89,14 @@ setup(
         'redis>=2.10.5',
         'requests>=2.13.0',
         'toml>=0.9.2',
-        'uvloop>=0.8.0',
+        # 'uvloop>=0.8.0',
         'watchdog>=0.8.3',
         'dnspython>=1.15.0',
         'etcd3>=0.7.0',
         'zerotier>=1.1.2',
         'packet-python>=1.37',
         'blosc>=1.5.1',
-        'pynacl>=1.1.2',
+        'pynacl>=1.2.1',
         'ipcalc>=1.99.0',
         'ed25519>=1.4',
         'python-jose>=1.3.2',
@@ -104,6 +104,6 @@ setup(
     cmdclass={
         'install': install,
         'develop': develop,
-        'developement': develop,
+        'development': develop,
     },
 )

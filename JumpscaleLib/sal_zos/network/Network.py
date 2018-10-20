@@ -1,8 +1,10 @@
 import netaddr
 from Jumpscale import j
 import time
+import re
 
-OVS_FLIST = 'https://hub.grid.tf/tf-official-apps/ovs.flist'
+
+OVS_FLIST = 'https://hub.grid.tf/tf-autobuilder/threefoldtech-openvswitch-plugin-master.flist'
 
 
 def combine(ip1, ip2, mask):
@@ -101,13 +103,55 @@ class Network():
                 break
             time.sleep(1)
 
-    def configure(self, cidr, vlan_tag, ovs_container_name,  bonded=False):
-        container = self._ensure_ovs_container(ovs_container_name)
-        if not container.is_running():
-            container.start()
+    def restart_bond(self, ovs_container_name='ovs', bond='bond0'):
+        '''
+        Some time the bond gets stuck, it helps restarting the bond links (down then up)
+        '''
+        container = self.node.containers.get(ovs_container_name)
+        result = container.client.system('ovs-appctl bond/show %s' % bond).get()
+        if result.state != 'SUCCESS':
+            raise Exception(result.stderr)
 
+        for link in re.findall('^slave ([^:]+):', result.stdout, re.M):
+            container.client.ip.link.down(link)
+            container.client.ip.link.up(link)
+
+    def _unconfigure_ovs(self, ovs_container_name='ovs'):
         nicmap = {nic['name']: nic for nic in self.node.client.info.nic()}
-        # freenics = ([1000, ['eth0']], [100, ['eth1']])
+        if 'backplane' not in nicmap:
+            return
+
+        try:
+            container = self.node.containers.get(ovs_container_name)
+        except LookupError:
+            return
+
+        container.client.json('ovs.bridge-del', {"bridge": "backplane"})
+        container.stop()
+
+    def _unconfigure_native(self):
+        cl = self.node.client
+
+        if 'backplane' in cl.ip.bond.list():
+            cl.ip.bond.delete('backplane')
+
+    def unconfigure(self, ovs_container_name='ovs', mode='ovs'):
+        if not mode or mode == 'ovs':
+            return self._unconfigure_ovs(ovs_container_name)
+        elif mode == 'native':
+            return self._unconfigure_native()
+        else:
+            raise ValueError('unknown mode %s' % mode)
+
+    def configure(self, cidr, vlan_tag, ovs_container_name='ovs', bonded=False, mtu=9000, mode='ovs'):
+        if mode == 'ovs' or not mode:
+            return self._configure_ovs(cidr=cidr, vlan_tag=vlan_tag, ovs_container_name='ovs', bonded=bonded, mtu=mtu)
+        elif mode == 'native':
+            return self._configure_native(cidr=cidr, bonded=bonded, mtu=mtu)
+        else:
+            raise ValueError('unknown mode %s' % mode)
+
+    def _get_free_interfaces(self, bonded=False):
         freenics = self.node.network.get_free_nics()
         if not freenics:
             raise j.exceptions.RuntimeError("Could not find available nic")
@@ -126,19 +170,71 @@ class Network():
             else:
                 raise j.exceptions.RuntimeError("Could not find two equal available nics")
 
-        if 'backplane' not in nicmap:
+        return interfaces
+
+    def _configure_native(self, cidr, bonded=False, mtu=9000):
+        network = netaddr.IPNetwork(cidr)
+        addresses = self.get_addresses(network)
+
+        interfaces = self._get_free_interfaces(bonded=bonded)
+
+        cl = self.node.client
+
+        if not bonded:
+            cl.ip.link.mtu(interfaces[0], mtu)
+            cl.ip.link.up(interfaces[0])
+            cl.ip.addr.add(interfaces[0], str(addresses['storageaddr']))
+            return
+
+        # bonded
+        for interface in interfaces:
+            cl.ip.link.mtu(interface, mtu)
+            cl.ip.link.up(interface)
+
+        cl.ip.bond.add('backplane', interfaces, mtu=mtu)
+        cl.ip.addr.add('backplane', str(addresses['storageaddr']))
+
+    def _configure_ovs(self, cidr, vlan_tag, ovs_container_name='ovs', bonded=False, mtu=9000):
+        container = self._ensure_ovs_container(ovs_container_name)
+        if not container.is_running():
+            container.start()
+
+        network = netaddr.IPNetwork(cidr)
+        addresses = self.get_addresses(network)
+
+        interfaces = self._get_free_interfaces(bonded=bonded)
+
+        try:
             container.client.json('ovs.bridge-add', {"bridge": "backplane"})
+        except Exception as e:
+            if e.message.find('bridge named backplane already exists') == -1:
+                raise
+            return  # bridge already exists in ovs subsystem (TODO: implement ovs.bridge-list)
+
             if not bonded:
+            self.node.client.ip.link.mtu(interfaces[0], mtu)
                 container.client.json('ovs.port-add', {"bridge": "backplane", "port": interfaces[0], "vlan": 0})
             else:
+            for interface in interfaces:
+                self.node.client.ip.link.mtu(interface, mtu)
+                self.node.client.ip.link.up(interface)
                 container.client.json('ovs.bond-add', {"bridge": "backplane",
                                                        "port": "bond0",
                                                        "links": interfaces,
-                                                       "lacp": True,
-                                                       "mode": "balance-tcp"})
+                                                   "lacp": False,
+                                                   "mode": "balance-slb",
+                                                   "options": {'other_config:updelay': "2000"},
+                                                   })
+
+        self.node.client.ip.link.up('backplane')
+        self.node.client.ip.link.mtu('backplane', mtu)
             self.node.client.ip.addr.add('backplane', str(addresses['storageaddr']))
-            for interface in interfaces:
-                self.node.client.ip.link.mtu(interface, 2000)
+
+        # hack. We don't figure out why, but ovs is not happy if we don't
+        # turn it off and on again...
+        interface = interfaces[0]
+        self.node.client.ip.link.down(interface)
+        time.sleep(2)
                 self.node.client.ip.link.up(interface)
             self.node.client.ip.link.up('backplane')
 

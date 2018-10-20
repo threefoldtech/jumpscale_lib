@@ -37,7 +37,7 @@ cl = j.clients.ays.getWithClientID(url=url, clientID=client_id, secret=secret)
 Or in case you saved the client ID and password in a YAML formated configuration file:
 ```python
 from Jumpscale import j
-config = j.data.serializer.yaml.load("config.yaml")
+config = j.data.serializers.yaml.load("config.yaml")
 client_id = config["iyo"]["client_id"]
 secret = config["iyo"]["secret"]
 url = config["openvcloud"]["url"]
@@ -329,3 +329,4 @@ date = "2018-05-20"
 tags = []
 title = "AYS Client"
 ```
+

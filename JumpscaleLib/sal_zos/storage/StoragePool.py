@@ -46,10 +46,10 @@ class StoragePools:
     def client(self):
         return self.node.client
 
-    def list(self, device=None):
+    def list(self, fs_uuid=None):
         """
         list storage pools in a node
-        :param device: a disk partition. If supplied the function only returns the storagepools that contain this device
+        :param fs_uuid: a filesystem uuid. If supplied the function only returns the storagepools that have this filesystem
         :return: list of StoragePool
         """
         storagepools = []
@@ -57,9 +57,9 @@ class StoragePools:
         for btrfs in btrfs_list:
             if btrfs['label'].startswith('sp_'):
                 name = btrfs['label'].split('_', 1)[1]
-                devicenames = [device['path'] for device in btrfs['devices']]
-                if (device and device in devicenames) or not device:
-                    storagepools.append(StoragePool(self.node, name, devicenames))
+                device = btrfs['devices'][0]['path']
+                if (fs_uuid and btrfs['uuid'] == fs_uuid) or not fs_uuid:
+                    storagepools.append(StoragePool(self.node, name, device))
         return storagepools
 
     def get(self, name):
@@ -68,35 +68,39 @@ class StoragePools:
                 return pool
         raise ValueError("Could not find StoragePool with name {}".format(name))
 
-    def create(self, name, devices, metadata_profile, data_profile, overwrite=False):
-        if not isinstance(devices, list):
-            raise ValueError("devices must be a list not %s" % type(devices))
+    def create(self, name, device, metadata_profile, data_profile, overwrite=False):
+        if not isinstance(device, str):
+            raise ValueError("device must be a string not %s" % type(device))
 
         label = 'sp_{}'.format(name)
         logger.debug("create storagepool %s", label)
 
-        device_names = []
-        for device in devices:
-            part = _prepare_device(self.node, device)
-            device_names.append(part.devicename)
+        part = _prepare_device(self.node, device)
 
-        self.client.btrfs.create(label, device_names, metadata_profile, data_profile, overwrite=overwrite)
-        pool = StoragePool(self.node, name, device_names)
+        self.client.btrfs.create(label, [part.devicename], metadata_profile, data_profile, overwrite=overwrite)
+        pool = StoragePool(self.node, name, part.devicename)
         return pool
 
 
 class StoragePool(Mountable):
 
-    def __init__(self, node, name, devices):
+    def __init__(self, node, name, device):
         self.node = node
-        self.devices = devices
+        self.device = device
         self.name = name
         self._mountpoint = None
-        self._ays = None
 
     @property
     def client(self):
         return self.node.client
+
+    @property
+    def type(self):
+        disk_name = self.device[len('/dev/'):]
+        disk = self.node.disks.get(disk_name[:-1])
+        if not disk:
+            raise RuntimeError("could not find disk used by the storage pool %s" % self.name)
+        return disk.type
 
     @property
     def devicename(self):
@@ -114,58 +118,32 @@ class StoragePool(Mountable):
         """
         while self.mountpoint:
             self.umount()
-        partitionmap = {}
+        partition = None
+
+        diskpath = os.path.basename(self.device)
         for disk in self.node.disks.list():
-            for partition in disk.partitions:
-                partitionmap[partition.name] = partition
-        for device in self.devices:
-            diskpath = os.path.basename(device)
-            partition = partitionmap.get(diskpath)
+            for part in disk.partitions:
+                if part.fs_uuid == self.uuid:
+                    partition = part
+                    break
             if partition:
-                disk = partition.disk
-                self.client.disk.rmpart(disk.name, 1)
-                if zero:
-                    self.client.bash('test -b /dev/{0} && dd if=/dev/zero bs=1M count=500 of=/dev/{0}'.format(diskpath)).get()
+                break
+
+        if partition:
+            disk = partition.disk
+            self.client.disk.rmpart(disk.name, 1)
+            if zero:
+                self.client.bash('test -b /dev/{0} && dd if=/dev/zero bs=1M count=500 of=/dev/{0}'.format(diskpath)).get()
         return
 
     @property
     def mountpoint(self):
         mounts = self.node.list_mounts()
-        for device in self.devices:
-            for mount in mounts:
-                if mount.device == device:
-                    options = mount.options.split(',')
-                    if 'subvol=/' in options:
-                        return mount.mountpoint
-
-    def is_device_used(self, device):
-        """
-        check if the device passed as argument is already part of this storagepool
-        @param device: str e.g: /dev/sda
-        """
-        for d in self.devices:
-            if d.startswith(device):
-                return True
-        return False
-
-    def device_add(self, *devices):
-        to_add = []
-        for device in devices:
-            if self.is_device_used(device):
-                continue
-            part = _prepare_device(self.node, device)
-            logger.debug("add device %s to %s", device, self)
-            to_add.append(part.devicename)
-
-        self.client.btrfs.device_add(self._get_mountpoint(), *to_add)
-        self.devices.extend(to_add)
-
-    def device_remove(self, *devices):
-        self.client.btrfs.device_remove(self._get_mountpoint(), *devices)
-        for device in devices:
-            if device in self.devices:
-                logger.debug("remove device %s to %s", device, self)
-                self.devices.remove(device)
+        for mount in mounts:
+            if mount.device == self.device:
+                options = mount.options.split(',')
+                if 'subvol=/' in options:
+                    return mount.mountpoint
 
     @property
     def fsinfo(self):
@@ -198,23 +176,18 @@ class StoragePool(Mountable):
         mountpoint = self._get_mountpoint()
         return self.client.btrfs.subvol_list(mountpoint) or []
 
-    def get_devices_and_status(self):
-        device_map = []
+    def get_device_and_status(self):
         disks = self.client.disk.list()
         pool_status = 'healthy'
-        for device in self.devices:
-            info = None
-            for disk in disks:
-                disk_name = "/dev/%s" % disk['kname']
-                if device == disk_name and disk['mountpoint']:
-                    info = disk
+        info = None
+        for disk in disks:
+            disk_name = "/dev/%s" % disk['kname']
+            for part in disk.get('children', []) or []:
+                if self.uuid == part['uuid']:
+                    info = part
                     break
-                for part in disk.get('children', []) or []:
-                    if device == "/dev/%s" % part['kname']:
-                        info = part
-                        break
-                if info:
-                    break
+            if not info:
+                continue
 
             status = 'healthy'
             if info['subsystems'] != 'block:virtio:pci':
@@ -228,13 +201,14 @@ class StoragePool(Mountable):
                     status = 'degraded'
                     pool_status = 'degraded'
 
-            device_map.append({
-                'device': device,
+            device = {
+                'device': self.device,
                 'partUUID': info['partuuid'] or '' if info else '',
                 'status': status,
-            })
+            }
 
-        return device_map, pool_status
+            return device, pool_status
+        raise RuntimeError('Failed to find device {}'.format(self.device))
 
     def list(self):
         subvolumes = []
@@ -302,13 +276,6 @@ class StoragePool(Mountable):
                 total += device['used']
         return total
 
-    @property
-    def ays(self):
-        if self._ays is None:
-            from zeroos.orchestrator.sal.atyourservice.StoragePool import StoragePoolAys
-            self._ays = StoragePoolAys(self)
-        return self._ays
-
     def __repr__(self):
         return "StoragePool <{}>".format(self.name)
 
@@ -322,7 +289,6 @@ class FileSystem():
         self.subvolume = "filesystems/{}".format(name)
         self.path = os.path.join(self.pool.mountpoint, self.subvolume)
         self.snapshotspath = os.path.join(self.pool.mountpoint, 'snapshots', self.name)
-        self._ays = None
 
     @property
     def client(self):
@@ -381,13 +347,6 @@ class FileSystem():
         self.client.btrfs.subvol_snapshot(self.path, snapshot.path)
         return snapshot
 
-    @property
-    def ays(self):
-        if self._ays is None:
-            from Jumpscale.sal.g8os.atyourservice.StoragePool import FileSystemAys
-            self._ays = FileSystemAys(self)
-        return self._ays
-
     def __repr__(self):
         return "FileSystem <{}: {!r}>".format(self.name, self.pool)
 
@@ -414,3 +373,4 @@ class Snapshot():
 
     def __repr__(self):
         return "Snapshot <{}: {!r}>".format(self.name, self.filesystem)
+

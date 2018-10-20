@@ -393,3 +393,4 @@ and `set_multisig_mint_condition` methods of the transaction.
 
 These are the only differences. The transaction can be signed exactly the same like
 a regular coin creation transaction.
+

@@ -81,7 +81,7 @@ class AuthError(Exception, JSBASE):
         JSBASE.__init__(self)
 
 
-class UserInfo(JSBASE):
+class UserInfo(object, JSBASE):
 
     def __init__(self, username, emailaddress, groups):
         JSBASE.__init__(self)

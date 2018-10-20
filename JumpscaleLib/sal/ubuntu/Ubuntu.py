@@ -55,10 +55,8 @@ class Ubuntu(JSBASE):
             # safe cast to the release to a number
             else:
                 release = float(osversion)
-                # disable as it stops debian 8 and debian 9 (etc.) working
-                #if release < 14:
-                #    raise j.exceptions.RuntimeError("Only ubuntu version "
-                #                                    "14+ supported")
+                if release < 14:
+                    raise j.exceptions.RuntimeError("Only ubuntu version 14+ supported")
                 self._checked = True
 
         return self._checked

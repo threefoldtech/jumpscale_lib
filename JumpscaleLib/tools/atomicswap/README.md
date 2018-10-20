@@ -147,3 +147,4 @@ once you have created the participant you can execute the following operations
     participant.redeem(contract=<contract>, contract_txn=<contract_transaction>,
                         secret=<secrete>)
   ```
+

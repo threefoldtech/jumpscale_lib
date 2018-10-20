@@ -6,6 +6,7 @@ import requests
 IPXEURL = 'https://bootstrap.grid.tf/ipxe/master/0'
 logger = j.logger.get(__name__)
 
+PUBLIC_THREEFOLD_NETWORK = "9bee8941b5717835"
 
 class Disk:
     def __init__(self, name, url, mountpoint=None, filesystem=None, label=None):
@@ -381,15 +382,20 @@ Type=simple
         config = {}
         fstab = []
         haszerotier = False
+        public_threefold_nic = False
         if not self.zt_identity:
             self.zt_identity = self.node.generate_zerotier_identity()
         publiczt = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
         for nic in self.nics:
             if nic.type == 'zerotier':
+                if nic.networkid == PUBLIC_THREEFOLD_NETWORK:
+                    public_threefold_nic =True
                 haszerotier = True
                 config['/etc/systemd/system/multi-user.target.wants/zt-{}.service'.format(nic.networkid)] = self._get_zt_unit(nic.networkid)
                 continue
             nics.append(nic.to_dict(True))
+        if not public_threefold_nic:
+            config['/etc/systemd/system/multi-user.target.wants/zt-{}.service'.format(PUBLIC_THREEFOLD_NETWORK)] = self._get_zt_unit(PUBLIC_THREEFOLD_NETWORK)
         for port in self.ports:
             self.node.client.nft.open_port(port.source)
             ports[port.source] = port.target
@@ -670,3 +676,4 @@ def share_cache_enabled(flist):
     if flist == 'https://hub.grid.tf/tf-autobuilder/zero-os-development.flist':
         return True
     return False
+
