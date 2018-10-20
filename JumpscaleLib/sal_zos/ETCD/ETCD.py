@@ -82,8 +82,13 @@ class ETCD(Service):
             'peer_port': PEER_PORT,
             'peer_url': self.peer_url,
             'client_url': self.client_url,
-            'password': self.password
+            'password': self.password,
+            'cluster_entry': self.cluster_entry,
         }
+
+    @property
+    def cluster_entry(self):
+        return '{}={}'.format(self.name, self.peer_url)
 
     @property
     def client_url(self):
@@ -135,8 +140,7 @@ class ETCD(Service):
         render etcd config template
         """
 
-        cluster = self.cluster if self.cluster else '{}={}'.format(self.name, self.peer_url)
-
+        cluster = self.cluster or self.cluster_entry
         config = {
             'name': self.name,
             'initial_peer_urls': self.peer_url,
@@ -161,15 +165,14 @@ class ETCD(Service):
             return
 
         logger.info('start etcd {}'.format(self.name))
-
+        self.deploy()
         self.create_config()
         cmd = '/bin/etcd --config-file {}'.format(self._config_path)
         self.container.client.system(cmd, id=self._id)
         if not j.tools.timer.execute_until(self.is_running, 30, 0.5):
             raise RuntimeError('Failed to start etcd server: {}'.format(self.name))
-        self._enable_auth()
 
-    def _enable_auth(self):
+    def enable_auth(self):
         """
         enable authentication of etcd user 
         """
@@ -182,7 +185,7 @@ class ETCD(Service):
         for command in commands:
             result = self.container.client.system(command).get()
             if result.state == 'ERROR':
-                if 'already exists' in result.stderr:
+                if 'already exists' in result.stderr or 'user name not found' in result.stderr:
                     # this command has been executed before
                     continue
                 else:
