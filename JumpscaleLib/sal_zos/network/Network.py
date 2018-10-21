@@ -132,8 +132,8 @@ class Network():
     def _unconfigure_native(self):
         cl = self.node.client
 
-        if 'bond0' in cl.ip.bond.list():
-            cl.ip.bond.delete('bond0')
+        if 'backplane' in cl.ip.bond.list():
+            cl.ip.bond.delete('backplane')
 
     def unconfigure(self, ovs_container_name='ovs', mode='ovs'):
         if not mode or mode == 'ovs':
@@ -188,8 +188,8 @@ class Network():
             cl.ip.link.mtu(interface, mtu)
             cl.ip.link.up(interface)
 
-        cl.ip.bond.add('bond0', interfaces, mtu=mtu)
-        cl.ip.addr.add('bond0', str(addresses['storageaddr']))
+        cl.ip.bond.add('backplane', interfaces, mtu=mtu)
+        cl.ip.addr.add('backplane', str(addresses['storageaddr']))
 
     def _configure_ovs(self, cidr, vlan_tag, ovs_container_name='ovs', bonded=False, mtu=9000):
         container = self._ensure_ovs_container(ovs_container_name)
@@ -204,7 +204,7 @@ class Network():
         try:
             container.client.json('ovs.bridge-add', {"bridge": "backplane"})
         except Exception as e:
-            if e.args[0].find('bridge named backplane already exists') == -1:
+            if e.message.find('bridge named backplane already exists') == -1:
                 raise
             return  # bridge already exists in ovs subsystem (TODO: implement ovs.bridge-list)
 

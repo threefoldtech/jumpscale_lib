@@ -82,9 +82,6 @@ class Container():
         logger.debug("create container from info")
 
         arguments = containerinfo['container']['arguments']
-        if not arguments['tags']:
-            # we don't deal with tagless containers
-            raise ValueError("Could not load containerinfo withouth tags")
         return cls(arguments['name'],
                    node,
                    arguments['root'],
@@ -111,7 +108,7 @@ class Container():
     def info(self):
         self.logger.debug("get container info")
         for containerid, container in self.node.client.container.list().items():
-            if self.name in (container['container']['arguments']['tags'] or []):
+            if self.name == container['container']['arguments']['name']:
                 containerid = int(containerid)
                 if self._client and self._client.container != containerid:
                     self._client = None

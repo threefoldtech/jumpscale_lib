@@ -79,11 +79,6 @@ class Traefik(Service):
         render traefik config template using etcd ip, user, password
         and add key of SSL certificate to etcd
         """
-
-        # for SSL Certifcate
-        client = j.clients.etcd.get(self.name, data={'host': self.etcd_endpoint['ip'], 'port': self.etcd_endpoint['client_port'],
-                                                     'password_': self.etcd_endpoint['password'], 'user': "root"})
-        client.put("traefik/acme/account", "")
         return templates.render(
             'traefik.conf', etcd_ip='{}:{}'.format(self.etcd_endpoint['ip'], self.etcd_endpoint['client_port']), user="root", passwd=self.etcd_endpoint['password']).strip()
 
@@ -101,11 +96,13 @@ class Traefik(Service):
         self.create_config()
 
         cmd = '/usr/bin/traefik storeconfig -c {dir}/{config}'.format(dir=self._config_dir, config=self._config_name)
-        job = self.container.client.system(cmd)
-        cmd = '/usr/bin/traefik -c {dir}/{config}'.format(dir=self._config_dir, config=self._config_name)
+        result = self.container.client.system(cmd).get()
+        if result.state != 'SUCCESS':
+            raise RuntimeError('fail to store traefik configuration in etcd: %s' % result.stderr)
 
         # wait for traefik to start
-        self.container.client.system(cmd, id=self._id)
+        cmd = '/usr/bin/traefik -c {dir}/{config}'.format(dir=self._config_dir, config=self._config_name)
+        job = self.container.client.system(cmd, id=self._id)
         if not j.tools.timer.execute_until(self.is_running, timeout, 0.5):
             result = job.get()
             raise RuntimeError('Failed to start Traefik server {}: {}'.format(self.name, result.stderr))
