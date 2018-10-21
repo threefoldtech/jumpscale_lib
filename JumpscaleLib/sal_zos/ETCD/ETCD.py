@@ -14,53 +14,6 @@ CLIENT_PORT = 2379
 PEER_PORT = 2380
 
 
-class EtcdCluster():
-    """etced server"""
-
-    def __init__(self, name, dialstrings, mgmtdialstrings, logger=None):
-
-        self.name = name
-        self.dialstrings = dialstrings
-        self.mgmtdialstrings = mgmtdialstrings
-        self._ays = None
-        self._client = None
-
-    def _connect(self):
-        dialstrings = self.mgmtdialstrings.split(",")
-        for dialstring in dialstrings:
-            host, port = dialstring.split(":")
-            try:
-                self._client = etcd3.client(host=host, port=port, timeout=5)
-                self._client.status()
-                return  # connection is valid
-            except (etcd3.exceptions.ConnectionFailedError, etcd3.exceptions.ConnectionTimeoutError) as err:
-                self._client = None
-                self.logger.error("Could not connect to etcd on %s:%s : %s" % (host, port, str(err)))
-
-        if self._client is None:
-            raise RuntimeError("can't connect to etcd on %s" % self.mgmtdialstrings)
-
-    # TODO: replace code duplication with decorator ?
-
-    def put(self, key, value):
-        if not self._client:
-            self._connect()
-        try:
-            self._client.put(key, value)
-        except (etcd3.exceptions.ConnectionFailedError, etcd3.exceptions.ConnectionTimeoutError):
-            self._connect()
-            self.put(key, value)
-
-    def delete(self, key):
-        if not self._client:
-            self._connect()
-        try:
-            self._client.delete(key)
-        except (etcd3.exceptions.ConnectionFailedError, etcd3.exceptions.ConnectionTimeoutError):
-            self._connect()
-            self.delete(key)
-
-
 class ETCD(Service):
     """etced server"""
 
