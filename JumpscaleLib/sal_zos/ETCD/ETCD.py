@@ -60,6 +60,7 @@ class EtcdCluster():
             self._connect()
             self.delete(key)
 
+
 class ETCD(Service):
     """etced server"""
 
@@ -88,7 +89,7 @@ class ETCD(Service):
     @property
     def client_url(self):
         """
-        return client url 
+        return client url
         """
 
         return 'http://{}:{}'.format(self.container.mgmt_addr, CLIENT_PORT)
@@ -96,7 +97,7 @@ class ETCD(Service):
     @property
     def peer_url(self):
         """
-        return peer url 
+        return peer url
         """
         return 'http://{}:{}'.format(self.container.mgmt_addr, PEER_PORT)
 
@@ -111,7 +112,7 @@ class ETCD(Service):
             fs = sp.get(self._container_name)
         except ValueError:
             fs = sp.create(self._container_name)
-    
+
         self.authorize_zt_nics()
 
         return {
@@ -120,7 +121,7 @@ class ETCD(Service):
             'nics': [nic.to_dict(forcontainer=True) for nic in self.nics],
             'mounts': {fs.path: self.data_dir},
             'identity': self.zt_identity,
-            'env': {'ETCDCTL_API':'3'},
+            'env': {'ETCDCTL_API': '3'},
         }
 
     def create_config(self):
@@ -136,7 +137,7 @@ class ETCD(Service):
         """
 
         cluster = self.cluster if self.cluster else [{'name': self.name, 'address': self.peer_url}]
-        members  = ['='.join([member['name'],member['address']]) for member in cluster]
+        members = ['='.join([member['name'], member['address']]) for member in cluster]
 
         config = {
             'name': self.name,
@@ -153,9 +154,8 @@ class ETCD(Service):
     def deploy(self, timeout=120):
         # call the container property to make sure it gets created and the ports get updated
         self.container
-        if not j.tools.timer.execute_until(lambda : self.container.mgmt_addr, timeout, 1):
+        if not j.tools.timer.execute_until(lambda: self.container.mgmt_addr, timeout, 1):
             raise RuntimeError('Failed to get zt ip for etcd {}'.format(self.name))
-
 
     def start(self):
         if self.is_running():
@@ -168,11 +168,13 @@ class ETCD(Service):
         self.container.client.system(cmd, id=self._id)
         if not j.tools.timer.execute_until(self.is_running, 30, 0.5):
             raise RuntimeError('Failed to start etcd server: {}'.format(self.name))
+
         self._enable_auth()
+        self._prepare_traefik()
 
     def _enable_auth(self):
         """
-        enable authentication of etcd user 
+        enable authentication of etcd user
         """
 
         commands = [
@@ -188,3 +190,8 @@ class ETCD(Service):
                     continue
                 else:
                     raise RuntimeError(result.stderr)
+
+    def _prepare_traefik(self):
+        result = self.container.client.system('/bin/etcdctl --endpoints={} --user=root:{} put "traefik/acme/account" "foo"'.format(self.client_url, self.password)).get()
+        if result.state != 'SUCCESS':
+            raise RuntimeError('fail to prepare traefik configuration: %s' % result.stderr)
