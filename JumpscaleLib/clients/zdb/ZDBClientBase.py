@@ -1,13 +1,14 @@
 
 from Jumpscale import j
 from .ZDBMeta import ZDBMeta
+import redis
 
 JSBASE = j.application.JSBaseClass
 
 
 class ZDBClientBase(JSBASE):
 
-    def __init__(self, addr="localhost", port=9900, mode="seq", secret="", nsname="test", admin=False):
+    def __init__(self, addr="localhost", port=9900, mode="seq", ns_secret="", nsname="test", admin=False, admin_secret=None):
         """ is connection to ZDB
 
         port {[int} -- (default: 9900)
@@ -21,9 +22,10 @@ class ZDBClientBase(JSBASE):
         self.addr = addr
         self.port = int(port)
         self.mode = mode
-        self.secret = secret
+        self.ns_secret = ns_secret
+        self.admin_secret = admin_secret
         self.type = "ZDB"
-        self.redis = _patch_redis_client(j.clients.redis.get(ipaddr=addr, port=port, fromcache=False, password=self.secret, ping=False))
+        self.redis = _patch_redis_client(j.clients.redis.get(ipaddr=addr, port=port, fromcache=False, password=self.admin_secret, ping=False))
 
         self.nsname = nsname.lower().strip()
 
@@ -34,19 +36,17 @@ class ZDBClientBase(JSBASE):
 
 
         if admin:
-            if secret != "":
+            if admin_secret:
                 self.logger.debug("AUTH %s" % (self.nsname))
-                self.logger.debug("AUTH %s (%s)"%(self.nsname,self.secret))
-                self.redis.execute_command("AUTH", self.secret)
+                self.redis.execute_command("AUTH", self.admin_secret)
         else:
             #DO NOT AUTOMATICALLY CREATE THE NAMESPACE !!!!!
-            if self.secret is "":
+            if self.ns_secret is "":
                 self.logger.debug("select namespace:%s with NO secret" % (self.nsname))
                 self.redis.execute_command("SELECT", self.nsname)
             else:
                 self.logger.debug("select namespace:%s with a secret" % (self.nsname))
-                self.logger.debug("select namespace:%s with a secret:'%s'" % (self.nsname,self.secret))
-                self.redis.execute_command("SELECT", self.nsname, self.secret)
+                self.redis.execute_command("SELECT", self.nsname, self.ns_secret)
 
         assert self.ping()
 

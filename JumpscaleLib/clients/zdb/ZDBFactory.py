@@ -27,7 +27,7 @@ class ZDBFactory(JSBASE):
     def client_admin_get(self, addr="localhost", port=9900, secret="123456", mode='seq'):
         return ZDBAdminClient(addr=addr, port=port, secret=secret, mode=mode)
 
-    def client_get(self, nsname="test", addr="localhost", port=9900, secret="1234", mode="seq"):
+    def client_get(self, nsname="test", addr="localhost", port=9900, ns_secret="1234", mode="seq", admin_secret=None):
         """
         :param nsname: namespace name
         :param addr:
@@ -38,7 +38,7 @@ class ZDBFactory(JSBASE):
         if mode not in _client_map:
             return ValueError("mode %s not supported" % mode)
         klass = _client_map[mode]
-        return klass(addr=addr, port=port, secret=secret, nsname=nsname)
+        return klass(addr=addr, port=port, secret=ns_secret, nsname=nsname, admin_secret=admin_secret)
 
     def testdb_server_start_client_admin_get(self, reset=False, mode="seq", secret="123456"):
         """
@@ -200,7 +200,7 @@ class ZDBFactory(JSBASE):
 
         c = self.client_admin_get()
         c.namespace_new(nsname, secret="1234", maxsize=1000)
-        ns = self.client_get(nsname, secret="1234")
+        ns = self.client_get(nsname, ns_secret="1234")
 
         assert ns.nsinfo["data_limits_bytes"] == 1000
         assert ns.nsinfo["data_size_bytes"] == 18

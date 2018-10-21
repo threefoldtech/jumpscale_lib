@@ -13,7 +13,7 @@ class ZDBAdminClient(ZDBClientBase):
         mode -- user,seq(uential) see
                     https://github.com/rivine/0-db/blob/master/README.md
         """
-        ZDBClientBase.__init__(self, addr=addr, port=port, mode=mode, secret=secret,admin=True)
+        ZDBClientBase.__init__(self, addr=addr, port=port, mode=mode, admin_secret=secret,admin=True)
         self._system = None
         self.logger_enable()
 
@@ -36,7 +36,7 @@ class ZDBAdminClient(ZDBClientBase):
             self.logger.debug("namespace exists")
             if die:
                 raise RuntimeError("namespace already exists:%s" % name)
-            return j.clients.zdb.client_get(addr=self.addr, port=self.port, mode=self.mode, secret=secret, nsname=name)
+            return j.clients.zdb.client_get(addr=self.addr, port=self.port, mode=self.mode, ns_secret=secret, nsname=name)
 
         self.redis.execute_command("NSNEW", name)
         if secret is not "":
@@ -50,7 +50,7 @@ class ZDBAdminClient(ZDBClientBase):
 
         self.logger.debug("connect client")
         
-        ns = j.clients.zdb.client_get(addr=self.addr, port=self.port, mode=self.mode, secret=secret, nsname=name)
+        ns = j.clients.zdb.client_get(addr=self.addr, port=self.port, mode=self.mode, ns_secret=secret, nsname=name)
         ns.meta
 
         assert ns.ping()

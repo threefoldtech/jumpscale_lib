@@ -10,8 +10,8 @@ from ..ZDBClientBase import ZDBClientBase
 
 class ZDBClientSeqMode(ZDBClientBase):
 
-    def __init__(self, nsname, addr="localhost", port=9900, secret="123456"):
-        super().__init__(nsname=nsname, addr=addr, port=port, mode="seq", secret=secret)
+    def __init__(self, nsname, addr="localhost", port=9900, secret="123456", admin_secret=None):
+        super().__init__(nsname=nsname, addr=addr, port=port, mode="seq", ns_secret=secret, admin_secret=admin_secret)
 
     def _key_encode(self, key):
         if key is None:
