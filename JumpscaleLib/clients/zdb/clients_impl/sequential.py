@@ -3,11 +3,12 @@ import struct
 import redis
 from Jumpscale import j
 
-from .base import Base
-from ..ZDBMeta import ZDBMeta
+from ..ZDBClientBase import ZDBClientBase
 
 
-class ZDBClientSeqMode(Base):
+
+
+class ZDBClientSeqMode(ZDBClientBase):
 
     def __init__(self, nsname, addr="localhost", port=9900, secret="123456"):
         super().__init__(nsname=nsname, addr=addr, port=port, mode="seq", secret=secret)

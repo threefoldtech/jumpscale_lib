@@ -23,7 +23,7 @@ class ZDBServer(JSBASE):
         self.mode = mode
         self.adminsecret = adminsecret
 
-    def start(self, mode, reset=False):
+    def start(self, reset=False):
         """
         start zdb in tmux using this directory (use prefab)
         will only start when the server is not life yet
@@ -35,11 +35,13 @@ class ZDBServer(JSBASE):
         :param self.mode:
         :param self.adminsecret:
         :return:
+
+        js_shell 'j.servers.zdb.start(reset=True)'
+
         """
 
-        j.sal.fs.createDir(self.datadir)
 
-        if j.sal.nettools.tcpPortConnectionTest(self.addr, self.port):
+        if not reset and j.sal.nettools.tcpPortConnectionTest(self.addr, self.port):
             r = j.clients.redis.get(ipaddr=self.addr, port=self.port)
             r.ping()
             return()
@@ -65,11 +67,15 @@ class ZDBServer(JSBASE):
         if res is False:
             raise RuntimeError("could not start zdb:'%s' (%s:%s)" % (self.name, self.addr, self.port))
 
+        self.client_admin_get() #should also do a test, so we know if we can't connect
+
     def stop(self):
+        self.logger.info("stop zdb")
         j.tools.prefab.local.zero_os.zos_db.stop(self.name)
 
     def destroy(self):
         self.stop()
+        self.logger.info("destroy zdb")
         j.sal.fs.removeDirTree(self.datadir)
         ipath = j.dirs.VARDIR + "/zdb/index/%s.db" % self.name
         j.sal.fs.remove(ipath)
@@ -89,14 +95,6 @@ class ZDBServer(JSBASE):
         get client to zdb
 
         """
-
-        cla = self.client_admin_get()
-
-        if nsname not in ["default"]:
-            cla.namespace_new(nsname, secret=secret)
-        else:
-            secret = self.adminsecret
-
         cl = j.clients.zdb.client_get(nsname=nsname, addr=self.addr, port=self.port, secret=secret, mode=self.mode)
 
         assert cl.ping()

@@ -85,9 +85,16 @@ return res
 <p><p>so <code>easy_install PyGithub</code> or <code>pip install PyGithub</code> should be enough.</p></p>
 <p><p>You can also clone it on <code>Github &lt;http://github.com/jacquev6/PyGithub&gt;</code>__.</p></p>
 <h3 class="title">They talk about PyGithub</h3>
-<p><pre><code class="lang-toml">!!!macro1(test=&quot;1&quot;)
-title = &quot;some title in my macro&quot;
-</code></pre></p>
+<p><textarea id="code1" name="code1">"
+res = {}
+for item in self.items:
+    if item.type == "data" and item.name == ttype:
+        res[item.guid] = item.ddict
+        key = "%s__%s" % (ttype, item.guid)
+        self._dataCache[key] = item
+return res
+
+</textarea>"</p>
 <p><ul>
 <li><a href="https://github.com/jacquev6/PyGithub/issues">link test</a></li>
 </ul></p>

@@ -13,14 +13,9 @@ class ZDBAdminClient(ZDBClientBase):
         mode -- user,seq(uential) see
                     https://github.com/rivine/0-db/blob/master/README.md
         """
-        ZDBClientBase.__init__(self, addr=addr, port=port, mode=mode, secret=secret)
+        ZDBClientBase.__init__(self, addr=addr, port=port, mode=mode, secret=secret,admin=True)
         self._system = None
         self.logger_enable()
-
-    @property
-    def meta(self):
-        cl = j.clients.zdb.client_get(self.nsname, secret=self.secret, mode=self.mode)
-        return cl.meta
 
     def namespace_exists(self, name):
         try:
@@ -34,12 +29,6 @@ class ZDBAdminClient(ZDBClientBase):
     def namespaces_list(self):
         res = self.redis.execute_command("NSLIST")
         return [i.decode() for i in res]
-
-    @property
-    def namespace_system(self):
-        if self._system is None:
-            self._system = j.clients.zdb.client_get("system", secret=self.secret, mode=self.mode)
-        return self._system
 
     def namespace_new(self, name, secret="", maxsize=0, die=False):
         self.logger.debug("namespace_new:%s" % name)
@@ -60,12 +49,6 @@ class ZDBAdminClient(ZDBClientBase):
             self.redis.execute_command("NSSET", name, "maxsize", maxsize)
 
         self.logger.debug("connect client")
-        if not self.namespace_exists("system"):
-            self.namespace_new("system", self.secret)  # create new one with adminsecret
-
-        ns = j.clients.zdb.client_get(addr=self.addr, port=self.port, mode=self.mode, secret=self.secret, nsname="system")
-        ns.meta
-
         ns = j.clients.zdb.client_get(addr=self.addr, port=self.port, mode=self.mode, secret=secret, nsname=name)
         ns.meta
 
@@ -87,5 +70,3 @@ class ZDBAdminClient(ZDBClientBase):
             if name not in ["default"] and name not in ignore:
                 self.namespace_delete(name)
 
-        if "system" not in ignore:
-            self.namespace_new("system", secret=self.secret)

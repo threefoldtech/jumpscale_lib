@@ -40,7 +40,7 @@ class ZDBFactory(JSBASE):
         klass = _client_map[mode]
         return klass(addr=addr, port=port, secret=secret, nsname=nsname)
 
-    def testdb_server_start_client_get(self, reset=False, mode="seq", secret="123456"):
+    def testdb_server_start_client_admin_get(self, reset=False, mode="seq", secret="123456"):
         """
         will start a ZDB server in tmux (will only start when not there yet or when reset asked for)
         erase all content
@@ -48,7 +48,10 @@ class ZDBFactory(JSBASE):
 
         """
 
-        j.servers.zdb.start(reset=reset, mode=mode)
+        j.servers.zdb.mode = mode
+        j.servers.zdb.name = "test"
+
+        j.servers.zdb.start(reset=reset)
 
         # if secrets only 1 secret then will be used for all namespaces
         cl = self.client_admin_get(secret=secret)
@@ -64,7 +67,7 @@ class ZDBFactory(JSBASE):
         c.reset()
 
         c.namespaces_list()
-        assert c.namespaces_list() == ['default', "system"]
+        assert c.namespaces_list() == ['default']
 
     def test(self, start=True):
         """
@@ -72,12 +75,8 @@ class ZDBFactory(JSBASE):
 
         """
 
-        # # create a random namespace
-        # def random_string(length=10):
-        #     return str(uuid.uuid4()).replace('-', '')[:length]
-
         if start:
-            j.clients.zdb.testdb_server_start_client_get(reset=True, mode="seq")
+            j.clients.zdb.testdb_server_start_client_admin_get(reset=True, mode="seq")
 
         self._test_admin()
 

@@ -1,7 +1,8 @@
-from .base import Base
+from ..ZDBClientBase import ZDBClientBase
 
 
-class ZDBClientUserMode(Base):
+
+class ZDBClientUserMode(ZDBClientBase):
 
     def __init__(self, nsname, addr="localhost", port=9900, secret="123456"):
         super().__init__(addr=addr, port=port, mode="user", nsname=nsname, secret=secret)
