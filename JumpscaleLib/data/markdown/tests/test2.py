@@ -21,13 +21,10 @@ def test():
     |1    |2               |3      |
     """
     r=j.core.text.strip(r)
-    assert str(t).strip()==r.strip()
 
-    # t2=self.document_get(r)
+    assert t.markdown.strip()==r.strip()
 
-    # table=t2.items[0]
-
-    # t3=self.document_get(example)
+    assert t.rows[2]==['1', '2', '3']
 
 if __name__ == '__main__':
     test()

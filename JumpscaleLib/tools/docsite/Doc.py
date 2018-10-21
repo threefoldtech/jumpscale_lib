@@ -153,9 +153,9 @@ class Doc(JSBASE):
 
     @property
     def markdown_obj(self):
-        if not self._md :
+        if not self._md:
             try:
-                self._md = j.data.markdown.document_get(self.markdown_source)        
+                self._md = j.data.markdown.document_get(self.markdown_source)
             except Exception as e:
                 msg = "Could not parse markdown of %s"%self
                 msg += str(e)
@@ -283,8 +283,11 @@ class Doc(JSBASE):
             methodcode = methodcode.rstrip(", )")  # remove end )
         kwargs_ = [ item.strip() for item in methodcode.split(",") if item.find("=")!=-1]
         if kwargs_ != []:
-            j.shell()
-            return kwargs
+            kw={}
+            for item in kwargs_:
+                pre,post=item.split("=",1)
+                kw[pre.strip()]=eval(post)
+            return kw
         else:
             return {}
 
@@ -309,12 +312,11 @@ class Doc(JSBASE):
             args = self._args_get(part.method)
             kwargs = self._kwargs_get(part.method)
 
-            # self.logger.debug(cmd)
-            # macro = eval(cmd)
+            # j.shell()
             try:
                 part.result = method(self,*args,**kwargs,content=part.data)
             except Exception as e:                
-                block = "```python\nERROR IN MACRO*** TODO: *1 ***\ncmd:\n%s\nERROR:\n%s\n```\n" % (cmd, e)
+                block = "```python\nERROR IN MACRO*** TODO: *1 ***\nmacro:\n%s\nERROR:\n%s\n```\n" % (macro_name, e)
                 self.logger.error(block)
                 self.docsite.error_raise(block, doc=self)    
                 part.result = block

@@ -11,7 +11,7 @@ class MarkdownDocument(JSBASE):
         if path != "":
             content = j.sal.fs.fileGetContents(path)
 
-        self._content = content
+        self._content = content.rstrip()+"\n"
 
         self.parts = []
         if self._content:
@@ -163,20 +163,28 @@ class MarkdownDocument(JSBASE):
                 table.row_add(cols)
                 continue
 
+            # if linestripped.find("python2")!=-1:
+            #     from pudb import set_trace; set_trace()
+
             # CODE
-            if state == "" and linestripped.startswith("```") or linestripped.startswith("'''"):
-                block = block_add(block)
-                state = "CODE"
-                lang = line.strip("'` ")
-                continue
+            if state == "":
+                if linestripped.startswith("```") or linestripped.startswith("'''"):
+                    block = block_add(block)
+                    state = "CODE"
+                    lang = line.strip("'` ")
+                    if linestripped.startswith("```"):
+                        end="```"
+                    else:
+                        end="'''"
+                    continue
 
             if state == "CODE":
-                if linestripped.startswith("```") or linestripped.startswith("'''"):
-                    # import pudb; pudb.set_trace()
+                if linestripped.startswith(end):
                     state = ""
                     self.codeblock_add(block,lang=lang)
                     block = ""
                     lang = ""
+                    end=""
                 else:
                     block += "%s\n" % line
                 continue
@@ -185,7 +193,6 @@ class MarkdownDocument(JSBASE):
                 block += "%s\n" % line
             block = block_add(block)
 
-        # from IPython import embed;embed(colors='Linux')
 
     def codeblock_add(self,block,lang=""):
         """
@@ -202,7 +209,7 @@ class MarkdownDocument(JSBASE):
                 self.data_add(yaml=block)
             else:
                 raise RuntimeError("could not add codeblock for %s"%block)            
-        elif c.startswith("!!!"):
+        elif c.startswith("!!!") and lang=="":
             #is macro
             method=block.strip().split("\n")[0][3:].strip() #remove !!!
             data="\n".join(block.strip().split("\n")[1:])+"\n"

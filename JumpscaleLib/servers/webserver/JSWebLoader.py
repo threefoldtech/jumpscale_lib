@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_login import LoginManager
+from flask import  url_for,redirect
 from flask_sockets import Sockets
 from importlib import import_module
 from logging import basicConfig, DEBUG, getLogger, StreamHandler
@@ -93,4 +94,11 @@ class JSWebLoader(JSBASE):
 
         self.app = app
         self.register_blueprints(sockets, self.paths)
+
+        def redirect_wiki(*args,**kwargs):
+            return redirect("wiki/")
+
+        self.app.add_url_rule("/", "index",redirect_wiki)
+
+
         print(app.url_map)

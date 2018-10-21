@@ -42,12 +42,14 @@ class MarkdownFactory(JSBASE):
         '''
         js_shell 'j.data.markdown.test()'
         '''
-        # from .tests.test1 import test
-        # test()
-        # from .tests.test2 import test
-        # test()        
-        # from .tests.test3 import test
-        # test()        
+        from .tests.test1 import test
+        test()
+        from .tests.test2 import test
+        test()
+        from .tests.test3 import test
+        test()
         from .tests.test4 import test
+        test()
+        from .tests.test5 import test
         test()
 

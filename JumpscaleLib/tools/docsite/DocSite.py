@@ -382,6 +382,7 @@ class DocSite(JSBASE):
 
         url = self._clean(url)
 
+
         if url == "":
             self._sidebars[url_original]=None
             return None
@@ -394,23 +395,22 @@ class DocSite(JSBASE):
             self._sidebars[url_original] = self._sidebar_process(self.docs[url].markdown,url_original=url_original)
             return self._sidebars[url_original]
 
-        # #did not find the usual location, lets see if we can find the doc allone
-        # url0=url.replace("_sidebar","").strip().strip(".").strip()
-        # if "." in url0: #means we can
-        #     name=url0.split(".")[-1]
-        #     doc=self.doc_get(name,die=False)
-        #     if doc:
-        #         #we found the doc, so can return the right sidebar
-        #         possiblepath = doc.path_dir_rel.replace("/",".").strip(".")+"._sidebar"
-        #         if not possiblepath == url:
-        #             return self.get(possiblepath)
+        #did not find the usual location, lets see if we can find the doc allone
+        url0=url.replace("_sidebar","").strip().strip(".").strip()
+        if "." in url0: #means we can
+            name=url0.split(".")[-1]
+            doc=self.doc_get(name,die=False)
+            if doc:
+                #we found the doc, so can return the right sidebar
+                possiblepath = doc.path_dir_rel.replace("/",".").strip(".")+"._sidebar"
+                if not possiblepath == url:
+                    return self.get(possiblepath)
 
         #lets look at parent
         print("need to find parent for sidebar")
 
         if url0=="":
             print("url0 is empty for sidebar")
-            # from IPython import embed;embed(colors='Linux')
             raise RuntimeError("cannot be empty")
 
         newurl = ".".join(url0.split(".")[:-1])+"._sidebar"
@@ -445,7 +445,7 @@ class DocSite(JSBASE):
 
         c=clean(c)
 
-        out= "* [Home](/)\n"
+        out= "* **[Wiki (home)](/)**\n"
 
         for line in c.split("\n"):
             if line.strip()=="":
@@ -460,6 +460,8 @@ class DocSite(JSBASE):
                 descr = line.split("[",1)[1].split("]")[0]
                 pre = line.split("[")[0]
                 pre = pre.replace("* ","").replace("- ","")
+                if url == "":
+                    url = descr
             else:
                 descr = line
                 pre = "<<"
@@ -467,28 +469,33 @@ class DocSite(JSBASE):
             if url:
                 doc = self.doc_get(url,die=False)
                 if doc is None:
-                    out+="%s* NOTFOUND:%s"%(pre,url)
+                    out+="    %s* NOTFOUND:%s"%(pre,url)
                 else:
-                    out+="%s* [%s](/%s)\n"%(pre,descr,doc.name_dot_lower.replace(".","/"))
+                    out+="    %s* [%s](/%s)\n"%(pre,descr,doc.name_dot_lower.replace(".","/"))
 
             else:
                 if not pre:
                     pre = "    "
                 if pre is not  "<<":
-                    out+="%s* %s\n"%(pre,descr)
+                    out+="    %s* %s\n"%(pre,descr)
                 else:
-                    out+="%s\n"%(descr)
+                    out+="    %s\n"%(descr)
 
 
         res = self.doc_get("_sidebar_parent",die=False)
         if res:
             out+=res.content
         else:
-            out+="----\n\n"
-            for key,val in j.tools.docsites.docsites.items():
-                if key.startswith("www"):
+            # out+="----\n\n"
+            out+="\n\n* **Wiki Sites.**\n"
+            keys = [item for item in j.tools.docsites.docsites.keys()]
+            keys.sort()
+            for key in keys:
+                if key.startswith("www") or key.startswith("simple") :
                     continue
-                out+="[%s](../%s/)\n"%(key,key)
+                if len(key)<4:
+                    continue
+                out+="    * [%s](../%s/)\n"%(key,key)
 
         return out
 
