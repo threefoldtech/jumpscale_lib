@@ -32,19 +32,20 @@ class ZDBClientBase(JSBASE):
         if not admin and self.nsname in ["default","system"]:
             raise RuntimeError("a non admin namespace cannot be default or system")
 
-        if secret != "":
-            self.logger.debug("AUTH %s" % (self.nsname))
-            self.logger.debug("AUTH %s (%s)"%(self.nsname,self.secret))
-            self.redis.execute_command("AUTH", self.secret)
 
-
-        if admin==False:
+        if admin:
+            if secret != "":
+                self.logger.debug("AUTH %s" % (self.nsname))
+                self.logger.debug("AUTH %s (%s)"%(self.nsname,self.secret))
+                self.redis.execute_command("AUTH", self.secret)
+        else:
             #DO NOT AUTOMATICALLY CREATE THE NAMESPACE !!!!!
             if self.secret is "":
                 self.logger.debug("select namespace:%s with NO secret" % (self.nsname))
                 self.redis.execute_command("SELECT", self.nsname)
             else:
                 self.logger.debug("select namespace:%s with a secret" % (self.nsname))
+                self.logger.debug("select namespace:%s with a secret:'%s'" % (self.nsname,self.secret))
                 self.redis.execute_command("SELECT", self.nsname, self.secret)
 
         assert self.ping()

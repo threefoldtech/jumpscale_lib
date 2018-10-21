@@ -49,6 +49,7 @@ class ZDBAdminClient(ZDBClientBase):
             self.redis.execute_command("NSSET", name, "maxsize", maxsize)
 
         self.logger.debug("connect client")
+        
         ns = j.clients.zdb.client_get(addr=self.addr, port=self.port, mode=self.mode, secret=secret, nsname=name)
         ns.meta
 

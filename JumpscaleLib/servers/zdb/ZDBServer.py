@@ -127,7 +127,6 @@ class ZDBServer(JSBASE):
         for ns in namespaces:
             self.client_get(nsname=ns,secret=namespaces_secret)
 
-        return self
 
     def build(self):
         """
