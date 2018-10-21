@@ -17,6 +17,11 @@ class ZDBAdminClient(ZDBClientBase):
         self._system = None
         self.logger_enable()
 
+    @property
+    def meta(self):
+        cl = j.clients.zdb.client_get(self.nsname, secret=self.secret, mode=self.mode)
+        return cl.meta
+
     def namespace_exists(self, name):
         try:
             self.redis.execute_command("NSINFO", name)
