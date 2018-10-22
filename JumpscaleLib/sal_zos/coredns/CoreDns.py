@@ -24,7 +24,7 @@ class Coredns(Service):
         self._config_dir = '/usr/bin'
         self._config_name = 'coredns.conf'
         self.zt_identity = zt_identity
-        self.backplane =backplane
+        self.backplane = backplane
         self.nics = Nics(self)
         self.add_nics(nics)
 
