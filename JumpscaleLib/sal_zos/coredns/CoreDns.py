@@ -13,7 +13,7 @@ class Coredns(Service):
     CoreDNS is a DNS server. It is written in Go
     """
 
-    def __init__(self, name, node, etcd_endpoint, zt_identity=None, nics=None):
+    def __init__(self, name, node, etcd_endpoint, zt_identity=None, nics=None, backplane='backplane'):
         super().__init__(name, node, 'coredns', [DEFAULT_PORT])
         self.name = name
         self.node = node
@@ -24,6 +24,7 @@ class Coredns(Service):
         self._config_dir = '/usr/bin'
         self._config_name = 'coredns.conf'
         self.zt_identity = zt_identity
+        self.backplane =backplane
         self.nics = Nics(self)
         self.add_nics(nics)
 
@@ -34,7 +35,7 @@ class Coredns(Service):
          :rtype: dict
         """
         ports = {
-            str("{}|udp".format(DEFAULT_PORT)): DEFAULT_PORT,
+            str("{}:{}|udp".format(self.backplane,DEFAULT_PORT)): DEFAULT_PORT,
         }
         self.authorize_zt_nics()
 
