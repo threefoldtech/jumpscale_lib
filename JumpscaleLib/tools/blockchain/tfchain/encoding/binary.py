@@ -91,14 +91,6 @@ class SliceBinaryEncoder:
         length = len(value)
         result = bytearray()
         result.extend(SliceBinaryEncoder.encode_length(length))
-        # if length < SLICE_LENGTH_1BYTES_UPPERLIMIT:
-        #     result.extend(IntegerBinaryEncoder.encode(length << 1))
-        # elif length < SLICE_LENGTH_2BYTES_UPPERLIMIT:
-        #     result.extend(IntegerBinaryEncoder.encode((1 | length << 2)))
-        # elif length < SLICE_LENGTH_3BYTES_UPPERLIMIT:
-        #     result.extend(IntegerBinaryEncoder.encode((3 | length << 3)))
-        # elif length < SLICE_LENGTH_4BYTES_UPPERLIMIT:
-        #     result.extend(IntegerBinaryEncoder.encode((7 | length << 3)))
 
         # encode the content of the slice
         for item in value:
@@ -120,9 +112,9 @@ class IntegerBinaryEncoder:
         # determine the size of the integer
         if value >= 0 and value < UINT_1BYTE_UPPERLIMIT:
             return value.to_bytes(1, byteorder='little')
-        elif vlaue >= UINT_1BYTE_UPPERLIMIT and value < UINT_2BYTE_UPPERLIMIT:
-            return vlaue.to_bytes(2, byteorder='little')
-        elif vlaue >= UINT_2BYTE_UPPERLIMIT and value < UINT_3BYTE_UPPERLIMIT:
+        elif value >= UINT_1BYTE_UPPERLIMIT and value < UINT_2BYTE_UPPERLIMIT:
+            return value.to_bytes(2, byteorder='little')
+        elif value >= UINT_2BYTE_UPPERLIMIT and value < UINT_3BYTE_UPPERLIMIT:
             return value.to_bytes(3, byteorder='little')
         elif value >= UINT_3BYTE_UPPERLIMIT and value < UINT_4BYTE_UPPERLIMIT:
             return value.to_bytes(4, byteorder='little')
