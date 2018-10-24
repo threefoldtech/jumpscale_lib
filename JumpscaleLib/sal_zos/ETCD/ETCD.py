@@ -124,7 +124,6 @@ class ETCD(Service):
         self.container.client.system(cmd, id=self._id)
         if not j.tools.timer.execute_until(self.is_running, 30, 0.5):
             raise RuntimeError('Failed to start etcd server: {}'.format(self.name))
-        self._prepare_traefik()
 
     def enable_auth(self):
         """
@@ -145,7 +144,7 @@ class ETCD(Service):
                 else:
                     raise RuntimeError(result.stderr)
 
-    def _prepare_traefik(self):
+    def prepare_traefik(self):
         result = self.container.client.system('/bin/etcdctl --endpoints={} --user=root:{} put "traefik/acme/account" "foo"'.format(self.client_url, self.password)).get()
         if result.state != 'SUCCESS':
             raise RuntimeError('fail to prepare traefik configuration: %s' % result.stderr)
