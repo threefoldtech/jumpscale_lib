@@ -7,24 +7,6 @@ from . import handlers
 api_api = Blueprint('api_api', __name__)
 
 
-@api_api.route('/api/farmers', methods=['GET'])
-def ListFarmers():
-    """
-    List Farmers
-    It is handler for GET /api/farmers
-    """
-    return handlers.ListFarmersHandler()
-
-
-@api_api.route('/api/farmers/<iyo_organization>', methods=['GET'])
-def GetFarmer(iyo_organization):
-    """
-    Get detail about a farmer
-    It is handler for GET /api/farmers/<iyo_organization>
-    """
-    return handlers.GetFarmerHandler(iyo_organization)
-
-
 @api_api.route('/api/nodes', methods=['GET'])
 def ListCapacity():
     """
@@ -86,3 +68,21 @@ def UpdateFarmer():
     It is handler for GET /api/farmer_update
     """
     return handlers.UpdateFarmerHandler()
+
+
+@api_api.route('/api/farmers', methods=['GET'])
+def ListFarmers():
+    """
+    List Farmers
+    It is handler for GET /api/farmers
+    """
+    return handlers.ListFarmersHandler()
+
+
+@api_api.route('/api/farmers/<iyo_organization>', methods=['GET'])
+def GetFarmer(iyo_organization):
+    """
+    Get detail about a farmer
+    It is handler for GET /api/farmers/<iyo_organization>
+    """
+    return handlers.GetFarmerHandler(iyo_organization)
