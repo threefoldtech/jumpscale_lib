@@ -91,7 +91,6 @@ class Container():
                    host_network=arguments['host_network'],
                    ports=arguments['port'],
                    storage=arguments['storage'],
-                   init_processes=arguments['init_processes'],
                    privileged=arguments['privileged'],
                    identity=arguments['identity'],
                    env=arguments['env'],
