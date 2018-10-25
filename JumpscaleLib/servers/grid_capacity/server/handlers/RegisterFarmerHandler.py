@@ -16,7 +16,7 @@ Farmer_schema_resolver = jsonschema.RefResolver('file://' + dir_path + '/schema/
 Farmer_schema_validator = Draft4Validator(Farmer_schema, resolver=Farmer_schema_resolver)
 
 
-@requires_auth(org_from_request=True)
+@requires_auth(org_from_request=True, email=True)
 def RegisterFarmerHandler():
     wallet_addresses = []
     address = request.args.get('walletAddress')
