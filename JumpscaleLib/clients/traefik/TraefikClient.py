@@ -20,13 +20,9 @@ class TraefikClient(JSConfigBase):
             self._etcd_client = j.clients.etcd.get(self._etcd_instance)
         return self._etcd_client
 
-    def proxy_get(self, frontends, backends):
-        """
-        :param frontends: list of `Frontend` objects that needs to be added
-        :param backends: list of `Backend` objects that will be connected to the frontend
-        :return: Proxy object
-        """
-        return Proxy(self.etcd_client, frontends, backends)
+    @property
+    def proxy(self):
+        return Proxy(self.etcd_client)
 
     def backend_get(self, name, servers=None, load_balance_method="wrr", cb_expression=""):
         """
@@ -78,38 +74,40 @@ class Proxy:
     The main class to use for adding/deleting reverse proxy forwarding into etcd
     """
 
-    def __init__(self, etcd_client, frontends=None, backends=None):
+    def __init__(self, etcd_client):
         """
         :param etcd_client: etcd client instance (j.clients.etcd.get())
+        """
+        self.etcd_client = etcd_client
+
+    def deploy(self, backends=None, frontends=None):
+        """
+        add proxy configurations in etcd
         :param frontends: list of `Frontend` objects that needs to be added
         :param backends: list of `Backend` objects that will be connected to the frontend
         """
-        self.etcd_client = etcd_client
-        self.frontends = frontends or []
-        self.backends = backends or []
-
-    def deploy(self):
-        """
-        add proxy configurations in etcd
-        """
         # register the backends and frontends for traefik use
-        self._deploy_backends()
-        self._deploy_frontends()
+        self._deploy_backends(backends)
+        self._deploy_frontends(frontends)
 
-    def delete(self):
+    def delete(self, backends=None, frontends=None):
         """
-        remove proxy configuration from etcd
+        remove backends or frontends from etcd
         """
-        for backend in self.backends:
+        backends = backends or []
+        frontends = frontends or []
+
+        for backend in backends:
             backend_key = "/traefik/backends/{}".format(backend.name)
             self.etcd_client.api.delete_prefix(backend_key)
 
-        for frontend in self.frontends:
+        for frontend in  frontends:
             frontend_key = "/traefik/frontends/{}".format(frontend.name)
             self.etcd_client.api.delete_prefix(frontend_key)
 
-    def _deploy_backends(self):
-        for backend in self.backends:
+    def _deploy_backends(self, backends=None):
+        backends = backends or []
+        for backend in backends:
             # Set the load balance method
             load_balance_key = "/traefik/backends/{}/loadBalancer/method".format(backend.name)
             self.etcd_client.put(load_balance_key, backend.load_balance_method)
@@ -128,8 +126,9 @@ class Proxy:
                 self.etcd_client.put(server_weight_key, str(server.weight))
         return
 
-    def _deploy_frontends(self):
-        for frontend in self.frontends:
+    def _deploy_frontends(self, frontends):
+        frontends = frontends or []
+        for frontend in frontends:
             frontend_key1 = "/traefik/frontends/{}/backend".format(frontend.name)
             frontend_value1 = frontend.backend_name
             self.etcd_client.put(frontend_key1, frontend_value1)
