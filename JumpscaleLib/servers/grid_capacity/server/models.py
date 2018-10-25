@@ -169,6 +169,7 @@ class Farmer(db.Document):
     name = StringField()
     wallet_addresses = ListField(StringField())
     location = EmbeddedDocumentField(Location)
+    email = StringField(default="")
 
 
 class Resources(EmbeddedDocument):
