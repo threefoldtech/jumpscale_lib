@@ -73,7 +73,7 @@ def get_auth_org(org_from_request=False):
     return config['organization']
 
 
-def requires_auth(org_from_request=False):
+def requires_auth(org_from_request=False, email=False):
     def decorator(handler):
         """
         Wraps route handler to be only accessible after authentication via Itsyou.Online
@@ -85,6 +85,10 @@ def requires_auth(org_from_request=False):
                 organization = get_auth_org(org_from_request=org_from_request)
                 config = current_app.config["iyo_config"]
                 scopes = []
+
+                if email:
+                    scopes.append("user:email")
+
                 scopes.append("user:memberof:{}".format(organization))
                 if config["scope"]:
                     scopes.append(config['scope'])
