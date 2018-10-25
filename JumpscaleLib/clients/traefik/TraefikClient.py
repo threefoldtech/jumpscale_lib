@@ -1,3 +1,78 @@
+from Jumpscale import j
+
+JSConfigBase = j.tools.configmanager.JSBaseClassConfig
+
+TEMPLATE = """
+etcd_instance = "main"
+"""
+
+
+class TraefikClient(JSConfigBase):
+    def __init__(self, instance, data={}, parent=None, interactive=None):
+        JSConfigBase.__init__(self, instance=instance,
+                              data=data, parent=parent, template=TEMPLATE, interactive=interactive)
+        self._etcd_client = None
+        self._etcd_instance = self.config.data['etcd_instance']
+
+    @property
+    def etcd_client(self):
+        if not self._etcd_client:
+            self._etcd_client = j.clients.etcd.get(self._etcd_instance)
+        return self._etcd_client
+
+    def proxy_get(self, frontends, backends):
+        """
+        :param frontends: list of `Frontend` objects that needs to be added
+        :param backends: list of `Backend` objects that will be connected to the frontend
+        :return: Proxy object
+        """
+        return Proxy(self.etcd_client, frontends, backends)
+
+    def backend_get(self, name, servers=None, load_balance_method="wrr", cb_expression=""):
+        """
+        :param name: the name of backend to be referred to
+        :param servers: list of backend servers objects `BackendServer`
+        :param load_balance_method: the load balancing method to be used by traefik.
+        it is either:
+         - "wrr": weight round robin [the default]
+         - "drr": dynamic round robin
+        :param cb_expression: str: the circuit breaker expression. It can be configured using:
+            Methods: LatencyAtQuantileMS, NetworkErrorRatio, ResponseCodeRatio
+            Operators: AND, OR, EQ, NEQ, LT, LE, GT, GE
+        For example:
+            'NetworkErrorRatio() > 0.5': watch error ratio over 10 second sliding window for a frontend.
+            'LatencyAtQuantileMS(50.0) > 50': watch latency at quantile in milliseconds.
+            'ResponseCodeRatio(500, 600, 0, 600) > 0.5': ratio of response codes in ranges [500-600) and [0-600).
+        :return: Backend Object
+        """
+        return Backend(name, servers, load_balance_method, cb_expression)
+
+    def frontend_get(self, name, backend_name="", rules=None):
+        """
+        :param name: the name of backend to be referred to
+        :param rules: the list of rules to be added for this frontend
+        :return: Frontend Object
+        """
+        return Frontend(name, backend_name, rules)
+
+    def backend_server_get(self, ip, port="80", scheme="http", weight="10"):
+        return BackendServer(ip, port, scheme, weight)
+
+    def frontend_rule_get(self, rule_value, rule_type="Host"):
+        """
+        :param rule_type:
+        is the type of rule to be applied for url, you can use any rule of the matchers and modifiers:
+            - matchers:
+                - Headers, HeadersRegexp, Host, HostRegexp, Method, Path, PathStrip, PathStripRegex
+                  PathPrefix, PathPrefixStrip, PathPrefixStripRegex, Query
+            - modifiers:
+                - AddPrefix, ReplacePath, ReplacePathRegex
+        for more info: https://docs.traefik.io/basics/#modifiers
+        :param rule_value: the value for this rule, it depends on the rule type
+        """
+        return FrontendRule(rule_value, rule_type)
+
+
 class Proxy:
     """
     The main class to use for adding/deleting reverse proxy forwarding into etcd
