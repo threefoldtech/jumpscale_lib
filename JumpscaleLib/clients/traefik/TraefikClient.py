@@ -1,5 +1,5 @@
 from Jumpscale import j
-
+from enum import Enum
 JSConfigBase = j.tools.configmanager.JSBaseClassConfig
 
 TEMPLATE = """
@@ -140,15 +140,21 @@ class Proxy:
         return
 
 
+class LoadBalanceMethod(Enum):
+
+    WRR = "wrr"
+    DRR = "drr"
+
+
 class Backend:
-    def __init__(self, name, servers=None, load_balance_method="wrr", cb_expression=""):
+    def __init__(self, name, servers=None, load_balance_method=LoadBalanceMethod.WRR, cb_expression=""):
         """
         :param name: the name of backend to be referred to
         :param servers: list of backend servers objects `BackendServer`
         :param load_balance_method: the load balancing method to be used by traefik.
         it is either:
-         - "wrr": weight round robin [the default]
-         - "drr": dynamic round robin
+         - LoadBalanceMethod.WRR: weight round robin [the default]
+         - LoadBalanceMethod.DRR: dynamic round robin
         :param cb_expression: str: the circuit breaker expression. It can be configured using:
             Methods: LatencyAtQuantileMS, NetworkErrorRatio, ResponseCodeRatio
             Operators: AND, OR, EQ, NEQ, LT, LE, GT, GE
