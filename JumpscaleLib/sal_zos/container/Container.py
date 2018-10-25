@@ -82,18 +82,19 @@ class Container():
         logger.debug("create container from info")
 
         arguments = containerinfo['container']['arguments']
-        return cls(arguments['name'],
-                   node,
-                   arguments['root'],
-                   arguments['hostname'],
-                   arguments['mount'],
-                   arguments['nics'],
-                   arguments['host_network'],
-                   arguments['port'],
-                   arguments['storage'],
-                   arguments['privileged'],
-                   arguments['identity'],
-                   arguments['env'],
+        return cls(name=arguments['name'],
+                   node=node,
+                   flist=arguments['root'],
+                   hostname=arguments['hostname'],
+                   mounts=arguments['mount'],
+                   nics=arguments['nics'],
+                   host_network=arguments['host_network'],
+                   ports=arguments['port'],
+                   storage=arguments['storage'],
+                   init_processes=arguments['init_processes'],
+                   privileged=arguments['privileged'],
+                   identity=arguments['identity'],
+                   env=arguments['env'],
                    logger=logger)
 
     @property
