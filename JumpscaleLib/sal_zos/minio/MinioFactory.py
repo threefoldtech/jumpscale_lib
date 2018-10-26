@@ -19,7 +19,7 @@ class MinioFactory(JSBASE):
         Returns:
             the sal layer
         """
-        return Minio(name, node, login, password, zdbs, namespace, private_key,
+        return Minio(name, node, login, password, zdbs, namespace, private_key, public_port,
                      namespace_secret, block_size,
                      meta_private_key, nr_datashards, nr_parityshards,
                      tlog_namespace, tlog_address, master_namespace, master_address)

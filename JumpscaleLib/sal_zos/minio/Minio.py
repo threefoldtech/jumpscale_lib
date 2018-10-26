@@ -23,6 +23,7 @@ class Minio(Service):
                  zdbs,
                  namespace,
                  private_key,
+                 public_port,
                  namespace_secret='',
                  block_size=1048576,
                  meta_private_key='',
@@ -41,6 +42,7 @@ class Minio(Service):
         :param zdbs: a list of zerodbs addresses ex: ['0.0.0.0:9100']
         :param namespace: name of the zerodb namespace
         :param private_key: encryption private key
+        :param public_port: public port on the node that if forwarded to the minio listening port in the container
         :param namespace_secret: secret of the zerodb namespace
         :param node_port: the port the minio container will forward to. If this port is not free, the deploy will find the next free port
         :param nr_datashards: number of datashards.
@@ -59,6 +61,7 @@ class Minio(Service):
         self._nr_parityshards = nr_parityshards
         self.namespace = namespace
         self.private_key = private_key
+        self.public_port = public_port
         self.namespace_secret = namespace_secret
         self.block_size = block_size
         self.login = login
@@ -86,10 +89,6 @@ class Minio(Service):
         :return: data used for zerodb container
          :rtype: dict
         """
-        ports = self.node.freeports(1)
-        if len(ports) <= 0:
-            raise RuntimeError("can't install minio, no free port available on the node")
-
         metadata_path = '/minio_metadata'
         envs = {
             'MINIO_ACCESS_KEY': self.login,
@@ -107,7 +106,7 @@ class Minio(Service):
         return {
             'name': self._container_name,
             'flist': self.flist,
-            'ports': {ports[0]: DEFAULT_PORT},
+            'ports': {self.public_port: DEFAULT_PORT},
             'nics': [{'type': 'default'}],
             'env': envs,
             'mounts': {fs.path: metadata_path},
