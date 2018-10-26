@@ -46,6 +46,7 @@ class ZDBClientBase(JSBASE):
             else:
                 self.logger.debug("select namespace:%s with a secret" % (self.nsname))
                 self.logger.debug("select namespace:%s with a secret:'%s'" % (self.nsname,self.secret))
+                from pudb import set_trace; set_trace()
                 self.redis.execute_command("SELECT", self.nsname, self.secret)
 
         assert self.ping()
