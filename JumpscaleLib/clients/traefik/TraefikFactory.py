@@ -1,5 +1,8 @@
 from Jumpscale import j
-from .TraefikClient import TraefikClient
+
+from .TraefikClient import (Backend, BackendServer, Frontend, FrontendRule,
+                            TraefikClient)
+
 JSConfigFactoryBase = j.tools.configmanager.JSBaseClassConfigs
 
 
@@ -8,7 +11,7 @@ class TraefikFactory(JSConfigFactoryBase):
         self.__jslocation__ = "j.clients.traefik"
         JSConfigFactoryBase.__init__(self, TraefikClient)
 
-    def config_get(self, instance_name, host, port="2379", user="root", password="root"):
+    def configure(self, instance_name, host, port="2379", user="root", password="root"):
         """
         gets an instance of traefik client with etcd configurations directly
         """
@@ -16,15 +19,23 @@ class TraefikFactory(JSConfigFactoryBase):
         return self.get(instance_name, data={"etcd_instance": instance_name})
 
     def test(self):
-        cl = self.config_get("test", host="10.102.64.236", user="root", password="v16ffehxnq")
-        frontendrule = cl.frontend_rule_get("www.test.com")
-        backendserver = cl.backend_server_get("0.0.0.0")
-        backends = [cl.backend_get("backend1", servers=[backendserver]),
-                    cl.backend_get("backend2", servers=[backendserver])]
+        cl = self.configure("test", host="10.102.64.236", user="root", password="v16ffehxnq")
 
-        frontends = [cl.frontend_get("frontend1", "backend1", rules=[frontendrule]),
-                     cl.frontend_get("frontend2", "backend2", rules=[frontendrule])]
+        # create a first backend
+        backend = cl.backend_create('backend1')
+        server = backend.server_add('192.168.1.5:8080')
+        server.weight = '20'
 
-        cl.proxy.deploy(frontends=frontends, backends=backends)
-        cl.proxy.delete(frontends=frontends, backends=backends)
-        j.shell()
+        # create a frontend
+        frontend = cl.frontend_create('frontend1')
+        # define the routing rule
+        frontend.rule_add("my.domain.com")
+        # link frontend1 to backend1
+        frontend.backend_name = backend.name
+
+        # create a proxy object. A proxy is a combinaison of frontends and backends
+        proxy = cl.proxy_create([frontend], [backend])
+        # write the configuration into etcd
+        proxy.deploy()
+        # delete all frontend and backend configuration of this proxy from etcd
+        proxy.delete()
