@@ -75,11 +75,11 @@ class SliceBinaryEncoder:
         if length < SLICE_LENGTH_1BYTES_UPPERLIMIT:
             return IntegerBinaryEncoder.encode(length << 1)
         elif length < SLICE_LENGTH_2BYTES_UPPERLIMIT:
-            return IntegerBinaryEncoder.encode((1 | length << 2))
+            return IntegerBinaryEncoder.encode(1 | length << 2)
         elif length < SLICE_LENGTH_3BYTES_UPPERLIMIT:
-            return IntegerBinaryEncoder.encode((3 | length << 3))
+            return IntegerBinaryEncoder.encode(3 | length << 3)
         elif length < SLICE_LENGTH_4BYTES_UPPERLIMIT:
-            return IntegerBinaryEncoder.encode((7 | length << 3))
+            return IntegerBinaryEncoder.encode(7 | length << 3)
 
     @staticmethod
     def encode(value):
