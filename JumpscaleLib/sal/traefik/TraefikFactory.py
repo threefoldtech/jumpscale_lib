@@ -8,7 +8,7 @@ JSConfigFactoryBase = j.tools.configmanager.JSBaseClassConfigs
 
 class TraefikFactory(JSConfigFactoryBase):
     def __init__(self):
-        self.__jslocation__ = "j.clients.traefik"
+        self.__jslocation__ = "j.sal.traefik"
         JSConfigFactoryBase.__init__(self, TraefikClient)
 
     def configure(self, instance_name, host, port="2379", user="root", password="root"):
