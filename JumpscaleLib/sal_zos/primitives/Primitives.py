@@ -5,6 +5,7 @@ from ..vm.ZOS_VM import ZOS_VM, IpxeVM, ZDBDisk
 BASEFLIST = 'https://hub.grid.tf/tf-bootable/{}.flist'
 ZEROOSFLIST = 'https://hub.grid.tf/tf-autobuilder/zero-os-development.flist'
 
+
 class Primitives:
     def __init__(self, node):
         self.node = node
@@ -81,7 +82,7 @@ class Primitives:
         """
         self.node.hypervisor.get(name).destroy()
 
-    def create_zerodb(self, name, path=None, mode='user', sync=False, admin=''):
+    def create_zerodb(self, name, node_port, path=None, mode='user', sync=False, admin=''):
         """
         Create zerodb object
 
@@ -89,6 +90,8 @@ class Primitives:
 
         :param name: Name of the zerodb
         :type name: str
+        :param node_port: public port on the node that is forwarded to the zerodb listening port in the container
+        :type node_port: int
         :param path: path zerodb stores data on
         :type path: str
         :param mode: zerodb running mode
@@ -101,7 +104,7 @@ class Primitives:
         :return: Zerodb object
         :rtype: Zerodb object
         """
-        return self.node.zerodbs.create(name, path=path, mode=mode, sync=sync, admin=admin)
+        return self.node.zerodbs.create(name=name, node_port=node_port, path=path, mode=mode, sync=sync, admin=admin)
 
     def drop_zerodb(self, name):
         """
@@ -149,7 +152,7 @@ class Primitives:
             vm.from_dict(data)
             return vm
         elif type_ == 'zerodb':
-            zdb = self.create_zerodb(data['name'])
+            zdb = self.create_zerodb(data['name'], node_port=None)
             zdb.from_dict(data)
             return zdb
         raise RuntimeError('Unkown type {}, supported types are gateway, vm and zerodb'.format(type_))
