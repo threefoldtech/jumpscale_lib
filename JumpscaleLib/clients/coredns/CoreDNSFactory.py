@@ -20,10 +20,10 @@ class CoreDNSFactory(JSConfigFactoryBase):
         #create etcd client
         cl = j.clients.coredns.configure(instance_name="main",host="10.144.72.95",password="njufdmrq3k")
         #create zones
-        cl.zone_create('test.example.com','10.144.13.199',types='A')
-        cl.zone_create('example.com','10.144.218.172',types='AAAA')
+        cl.zone_create('test.example.com','10.144.13.199',record_type='A')
+        cl.zone_create('example.com','10.144.218.172',record_type='AAAA')
         #add records in etcd
-        cl.add_records() 
+        cl.deploy() 
         #get records from etcd
         cl.zones_get()
         #remove records from etcd

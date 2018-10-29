@@ -1,11 +1,10 @@
 from Jumpscale import j
 import json
-from .encoding import *
+from .encoding import (encode_record,unregister_record,load)
 from enum import Enum
 JSConfigBase = j.tools.configmanager.JSBaseClassConfig
 
 TEMPLATE = """
-etcdpath = "/hosts"
 etcd_instance = "main"
 secrets_ = ""
 """
@@ -18,14 +17,14 @@ class RecordType(Enum):
 
 class ResourceRecord:
 
-    def __init__(self, domain, rrdata, types=RecordType.A,  ttl=300,
+    def __init__(self, domain, rrdata, record_type=RecordType.A,  ttl=300,
                              priority=None, port=None # SRV
                 ):
         """ DNS Resource Record.
 
             name    : Record Name.  Corresponds to first field in
                       DNS Bind Zone file entries.  REQUIRED.
-            types    : Record Type.  CNAME, A, AAAA, TXT, SRV.  REQUIRED
+            record_type    : Record Type.  CNAME, A, AAAA, TXT, SRV.  REQUIRED
             ttl     : time to live. default value 300 (optional)
             port    : SRV record port (optional)
             priority: SRV record priority (optional)
@@ -41,7 +40,7 @@ class ResourceRecord:
         if rrdata is None:
             rrdata = ''
 
-        self.type = types
+        self.type = record_type
         if self.type == 'CNAME':
             self.cname, rrdata = rrdata.split(' ')
         self.domain = domain
@@ -108,22 +107,18 @@ class CoreDNS(JSConfigBase):
         return res
 
     @property
-    def etcdpath(self):
-        return self.config.data["etcdpath"]
-
-    @property
     def etcd_client(self):
         if not self._etcd_client:
             self._etcd_client = j.clients.etcd.get(self._etcd_instance)
         return self._etcd_client
 
-    def zone_create(self, domain, rrdata, types=RecordType.A,  ttl=300,
+    def zone_create(self, domain, rrdata, record_type=RecordType.A,  ttl=300,
                              priority=None, port=None ):
          
-        zone =ResourceRecord(domain, rrdata, types, ttl, priority, port)
+        zone =ResourceRecord(domain, rrdata, record_type, ttl, priority, port)
         self.zones.append(zone)
 
-    def add_records(self):
+    def deploy(self):
         for zone in self.zones:
             key, value = encode_record(zone)
             self.etcd_client.put(key, value)
