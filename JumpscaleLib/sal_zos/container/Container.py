@@ -19,11 +19,7 @@ class Containers():
     def list(self):
         containers = []
         for container in self.node.client.container.list().values():
-            try:
-                containers.append(Container.from_containerinfo(container, self.node))
-            except ValueError:
-                # skip containers withouth tags
-                pass
+            containers.append(Container.from_containerinfo(container, self.node))
         return containers
 
     def get(self, name):
@@ -341,13 +337,12 @@ class Container():
 
     def get_forwarded_port(self, port):
         for k, v in self.ports.items():
-             if v == port:
-                 return int(k.split(':')[-1])
+            if v == port:
+                return int(k.split(':')[-1])
 
     @property
     def mgmt_addr(self):
         return get_zt_ip(self.client.info.nic())
-
 
     def __str__(self):
         return "Container <{}>".format(self.name)

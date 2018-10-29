@@ -11,8 +11,9 @@ logger = j.logger.get(__name__)
 DEFAULT_PORT = 9900
 PUBLIC_THREEFOLD_NETWORK = "9bee8941b5717835"
 
+
 class Zerodb(Service):
-    def __init__(self, node, name, path=None, mode='user', sync=False, admin=''):
+    def __init__(self, node, name, node_port, path=None, mode='user', sync=False, admin=''):
         """
         Create zerodb object
 
@@ -22,6 +23,8 @@ class Zerodb(Service):
         :type: node: node sal object
         :param name: Name of the zerodb
         :type name: str
+        :param node_port: public port on the node that is forwarded to the zerodb listening port in the container
+        :type node_port: int
         :param pat: path zerodb stores data on
         :type path: str
         :param mode: zerodb running mode (seq, user)
@@ -35,6 +38,7 @@ class Zerodb(Service):
         """
         super().__init__(name, node, 'zerodb', [DEFAULT_PORT])
 
+        self.node_port = node_port
         self.zt_identity = None
         self.flist = 'https://hub.grid.tf/tf-autobuilder/threefoldtech-0-db-release-development.flist'
 
@@ -57,17 +61,13 @@ class Zerodb(Service):
         public_threefold_nic = False
         for nic in self.nics:
             nic_dict = nic.to_dict()
-            if nic_dict['id'] == PUBLIC_THREEFOLD_NETWORK :
+            if nic_dict['id'] == PUBLIC_THREEFOLD_NETWORK:
                 public_threefold_nic = True
                 break
         if not public_threefold_nic:
             self.nics.add('threefold', 'zerotier', PUBLIC_THREEFOLD_NETWORK)
-         
-        self.__redis = None
 
-    @property
-    def node_port(self):
-        return self.container.get_forwarded_port(DEFAULT_PORT)
+        self.__redis = None
 
     @property
     def _redis(self):
@@ -129,12 +129,8 @@ class Zerodb(Service):
     def _container_data(self):
         """
         :return: data used for zerodb container
-         :rtype: dict
+        :rtype: dict
         """
-        ports = self.node.freeports(1)
-        if len(ports) <= 0:
-            raise RuntimeError("can't install 0-db, no free port available on the node")
-
         self.authorize_zt_nics()
 
         return {
@@ -142,7 +138,7 @@ class Zerodb(Service):
             'flist': self.flist,
             'identity': self.zt_identity,
             'mounts': {self.path: '/zerodb'},
-            'ports': {str(ports[0]): DEFAULT_PORT},
+            'ports': {str(self.node_port): DEFAULT_PORT},
             'nics': [nic.to_dict(forcontainer=True) for nic in self.nics]
         }
 
@@ -160,6 +156,8 @@ class Zerodb(Service):
         for k, v in container.mounts.items():
             if v == '/zerodb':
                 self.path = k
+
+        self.node_port = container.get_forwarded_port(DEFAULT_PORT)
 
         if self.is_running():
             jobs = self._container.client.job.list(self._id)
@@ -192,6 +190,7 @@ class Zerodb(Service):
             self.namespaces.add(
                 namespace['name'], namespace.get('size'), namespace.get('password'), namespace.get('public', True))
         self.add_nics(data.get('nics', []))
+        self.node_port = data.get('nodePort')
 
     def to_dict(self):
         """
@@ -216,6 +215,7 @@ class Zerodb(Service):
             'path': self.path,
             'nics': [nic.to_dict() for nic in self.nics],
             'namespaces': namespaces,
+            'node_port': self.node_port,
         }
 
     def to_json(self):
