@@ -101,7 +101,7 @@ class ZDBServer(JSBASE):
 
         return cl
 
-    def start_test_instance(self, reset=False,namespaces=[],namespaces_secret = "1234"):
+    def start_test_instance(self, reset=False, namespaces=[], namespaces_secret="1234"):
         """
 
         js_shell 'j.servers.zdb.start_test_instance(reset=True)'
@@ -118,14 +118,16 @@ class ZDBServer(JSBASE):
         self.port = 9900
         self.mode = "seq"
         self.adminsecret = "123456"
-        self.start(mode='seq')
+        self.start()
+
+        cla = self.client_admin_get()
         if reset:
-            cla = self.client_admin_get()
             cla.reset()
             j.clients.redis.cache_clear() #make sure all redis connections gone
 
         for ns in namespaces:
-            self.client_get(nsname=ns,secret=namespaces_secret)
+            if not cla.namespace_exists(ns):
+                cla.namespace_new(ns,secret=namespaces_secret)
 
 
     def build(self):

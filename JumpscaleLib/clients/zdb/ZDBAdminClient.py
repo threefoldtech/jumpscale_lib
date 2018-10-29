@@ -16,6 +16,10 @@ class ZDBAdminClient(ZDBClientBase):
         ZDBClientBase.__init__(self, addr=addr, port=port, mode=mode, secret=secret,admin=True)
         self._system = None
         self.logger_enable()
+        if self.secret:
+            #authentication should only happen in zdbadmin client
+            self.logger.debug("AUTH %s" % (self.nsname))
+            self.redis.execute_command("AUTH", self.secret)
 
     def namespace_exists(self, name):
         try:
@@ -36,6 +40,7 @@ class ZDBAdminClient(ZDBClientBase):
             self.logger.debug("namespace exists")
             if die:
                 raise RuntimeError("namespace already exists:%s" % name)
+            #now return std client
             return j.clients.zdb.client_get(addr=self.addr, port=self.port, mode=self.mode, secret=secret, nsname=name)
 
         self.redis.execute_command("NSNEW", name)
@@ -49,8 +54,9 @@ class ZDBAdminClient(ZDBClientBase):
             self.redis.execute_command("NSSET", name, "maxsize", maxsize)
 
         self.logger.debug("connect client")
-
+        
         ns = j.clients.zdb.client_get(addr=self.addr, port=self.port, mode=self.mode, secret=secret, nsname=name)
+
         ns.meta
 
         assert ns.ping()

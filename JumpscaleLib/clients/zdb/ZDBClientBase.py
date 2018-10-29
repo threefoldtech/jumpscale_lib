@@ -1,6 +1,7 @@
 
 from Jumpscale import j
 from .ZDBMeta import ZDBMeta
+import redis
 
 JSBASE = j.application.JSBaseClass
 
@@ -23,31 +24,35 @@ class ZDBClientBase(JSBASE):
         self.mode = mode
         self.secret = secret
         self.type = "ZDB"
-        self.redis = _patch_redis_client(j.clients.redis.get(ipaddr=addr, port=port, fromcache=False, password=self.secret, ping=False))
+
+
+        self.redis = _patch_redis_client(j.clients.redis.get(ipaddr=addr, port=port, fromcache=False,  ping=False))
 
         self.nsname = nsname.lower().strip()
 
         self.logger_enable()
 
-        if not admin and self.nsname in ["default","system"]:
-            raise RuntimeError("a non admin namespace cannot be default or system")
 
 
-        if admin:
-            if secret != "":
-                self.logger.debug("AUTH %s" % (self.nsname))
-                self.logger.debug("AUTH %s (%s)"%(self.nsname,self.secret))
-                self.redis.execute_command("AUTH", self.secret)
-        else:
+        if not admin:
+        #     #only passwd in admin mode !
+        #     self.redis = _patch_redis_client(j.clients.redis.get(ipaddr=addr, port=port, fromcache=False,
+        #                                                                 password=self.admin_secret,ping=False))
+        # else:
+
+
+            if self.nsname in ["default","system"]:
+                raise RuntimeError("a non admin namespace cannot be default or system")
+
             #DO NOT AUTOMATICALLY CREATE THE NAMESPACE !!!!!
+            #only go inside namespace if not in admin mode
             if self.secret is "":
                 self.logger.debug("select namespace:%s with NO secret" % (self.nsname))
                 self.redis.execute_command("SELECT", self.nsname)
             else:
                 self.logger.debug("select namespace:%s with a secret" % (self.nsname))
-                self.logger.debug("select namespace:%s with a secret:'%s'" % (self.nsname,self.secret))
-                from pudb import set_trace; set_trace()
                 self.redis.execute_command("SELECT", self.nsname, self.secret)
+
 
         assert self.ping()
 
@@ -74,6 +79,23 @@ class ZDBClientBase(JSBASE):
         if not key:
             raise ValueError("key must be provided")
         self.redis.execute_command("DEL", key)
+
+    def flush(self,meta_keep=True):
+        """
+        will remove all data from the database DANGEROUS !!!!
+        :return:
+        """
+        data = self.meta._data
+        self.redis.execute_command("FLUSH")
+        #recreate the metadata table
+        self.meta.reset()
+        if meta_keep:
+            #copy the old data back
+            self.meta._data=data
+            #now make sure its back in the db
+            self.meta.save()
+
+
 
     @property
     def nsinfo(self):

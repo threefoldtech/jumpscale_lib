@@ -57,17 +57,6 @@ class ZDBFactory(JSBASE):
         cl = self.client_admin_get(secret=secret)
         return cl
 
-    def _test_admin(self):
-        """
-        js_shell 'j.clients.zdb._test_admin()'
-
-        """
-
-        c = self.client_admin_get()
-        c.reset()
-
-        c.namespaces_list()
-        assert c.namespaces_list() == ['default']
 
     def test(self, start=True):
         """
@@ -83,9 +72,7 @@ class ZDBFactory(JSBASE):
         c = self.client_admin_get()
         c.namespace_new("test", secret="1234")
 
-        cl1 = self.client_get()
-
-        self._test_seq(cl1)
+        cl1 = self.client_get(nsname="test", addr="localhost", port=9900, secret="1234")
 
         print(cl1.meta)
 
@@ -137,7 +124,29 @@ class ZDBFactory(JSBASE):
 
         assert len(schema2.properties) == 2  # not very complete test
 
+        cl1.flush() #remove the data
+        assert cl1.get(1)==None
+        assert cl1.get(2)==None
+        assert len(schema2.properties) == 2 #schema's should be copied over
+        assert cl1.list()==[0]
+
+        cl1.flush(meta_keep=False)
+        self._test_seq(cl1)
+
         print("TEST OK")
+
+
+    def _test_admin(self):
+        """
+        js_shell 'j.clients.zdb._test_admin()'
+
+        """
+
+        c = self.client_admin_get()
+        c.reset()
+
+        c.namespaces_list()
+        assert c.namespaces_list() == ['default']
 
     def _test_seq(self, cl):
 
