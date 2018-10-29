@@ -134,6 +134,15 @@ class Minio(Service):
             result = job.get()
             raise RuntimeError('Failed to start minio server {}: {}'.format(self.name, result.stderr))
 
+    def stream(self, callback):
+        if not self.is_running:
+            raise Exception('minio is not running')
+            
+        self.container.client.subscribe(
+            self._id,
+            "%s.logs" % self._id
+        ).stream(callback)
+
     @property
     def mode(self):
         return "replication" if self._nr_parityshards <= 0 else "distribution"
