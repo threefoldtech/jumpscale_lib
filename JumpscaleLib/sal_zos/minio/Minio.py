@@ -23,7 +23,7 @@ class Minio(Service):
                  zdbs,
                  namespace,
                  private_key,
-                 public_port,
+                 node_port,
                  namespace_secret='',
                  block_size=1048576,
                  meta_private_key='',
@@ -42,9 +42,8 @@ class Minio(Service):
         :param zdbs: a list of zerodbs addresses ex: ['0.0.0.0:9100']
         :param namespace: name of the zerodb namespace
         :param private_key: encryption private key
-        :param public_port: public port on the node that if forwarded to the minio listening port in the container
+        :param node_port: public port on the node that if forwarded to the minio listening port in the container
         :param namespace_secret: secret of the zerodb namespace
-        :param node_port: the port the minio container will forward to. If this port is not free, the deploy will find the next free port
         :param nr_datashards: number of datashards.
         :param nr_parityshards: number of parityshards (if it's zero it will make the mode replication otherwise mode is distribution)
         :param tlog_namespace: name of the zerodb namespace used as tlog
@@ -61,7 +60,7 @@ class Minio(Service):
         self._nr_parityshards = nr_parityshards
         self.namespace = namespace
         self.private_key = private_key
-        self.public_port = public_port
+        self.node_port = node_port
         self.namespace_secret = namespace_secret
         self.block_size = block_size
         self.login = login
@@ -106,7 +105,7 @@ class Minio(Service):
         return {
             'name': self._container_name,
             'flist': self.flist,
-            'ports': {self.public_port: DEFAULT_PORT},
+            'ports': {self.node_port: DEFAULT_PORT},
             'nics': [{'type': 'default'}],
             'env': envs,
             'mounts': {fs.path: metadata_path},
@@ -147,10 +146,6 @@ class Minio(Service):
             'minio.conf', namespace=self.namespace, namespace_secret=self.namespace_secret,
             zdbs=self.zdbs, private_key=self.private_key, block_size=self.block_size, nr_datashards=self._nr_datashards,
             nr_parityshards=self._nr_parityshards, tlog=self.tlog, master=self.master).strip()
-
-    @property
-    def node_port(self):
-        return self.container.get_forwarded_port(DEFAULT_PORT)
 
     def reload(self):
         """
