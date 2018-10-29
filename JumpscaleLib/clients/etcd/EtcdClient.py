@@ -44,7 +44,6 @@ class EtcdClient(JSConfigClient):
                     'password': data['password_']
                 })
             self._api = etcd3.client(**kwargs)
-            print("client created")
         return self._api
 
     def put(self, key, value):
