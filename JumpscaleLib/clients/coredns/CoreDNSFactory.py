@@ -1,55 +1,30 @@
-""" A Jumpscale-configurable wrapper for CoreDNS
+from Jumpscale import j
 
-    unit tests are in core9 tests/jumpscale_tests/test12_etcd_coredns.py
-"""
+from .CoreDNS import CoreDNS
 
-class CoreDNSFactory:
+JSConfigFactoryBase = j.tools.configmanager.JSBaseClassConfigs
 
-    __jslocation__ = "j.clients.coredns"
-    __jsbase__ = 'j.tools.configmanager._base_class_configs'
+class CoreDNSFactory(JSConfigFactoryBase):
+    def __init__(self):
+        self.__jslocation__ = "j.clients.coredns"
+        JSConfigFactoryBase.__init__(self, CoreDNS)
 
-    @property
-    def _child_class(self):
-        return self._jsbase(('CoreDNS', '.CoreDNS'))
-
-    def configure(self, instance="main", etcpath="/skydns",
-                  ):
-        """ :param instance:
-            :param etcdpath:
-            :return:
+    def configure(self, instance_name, host, port="2379", user="root", password="root"):
         """
-
-        data = {}
-        data["etcdpath"] = etcdpath
-        #data["port"] = str(port)
-
-        return self.get(instance=instance, data=data, create=True,
-                        interactive=False)
+        gets an instance of coredns client with etcd configurations directly
+        """
+        j.clients.etcd.get(instance_name, data={"host": host, "port": port, "user": user, "password_": password})
+        return self.get(instance_name, data={"etcd_instance": instance_name})
 
     def test(self):
-        d = self._j.clients.coredns.get()
-        z = d.zone_get('local/skydns')
-        #print (z.get_records())
-        #print (z.get_records('x1','txt'))
-
-        #print (z.get_records('','txt'))
-        for x in z.get_records('x1','a'):
-            print (x)
-
-        z2 = d.zone_get('local/skydns/x1')
-        for x in z2.get_records('','a'):
-            print (x)
-        return
-
-        print (z.get_records('','srv'))
-        print (z.get_records('','aaaa'))
-        print (z.get_records(''))
-        z = d.zone_get('local/skydns/x5')
-        print (z.get_records('','srv'))
-
-        z = d.zone_get('local/skydns/x1')
-        print (z.get_records('','txt'))
-
-        z = d.zone_get('local/skydns/x3')
-        print (z.get_records(''))
-        print (z.get_records('', 'aaaa'))
+        #create etcd client
+        cl = j.clients.coredns.configure(instance_name="main",host="10.144.72.95",password="njufdmrq3k")
+        #create zones
+        cl.zone_create('test.example.com','10.144.13.199',types='A')
+        cl.zone_create('example.com','10.144.218.172',types='AAAA')
+        #add records in etcd
+        cl.add_records() 
+        #get records from etcd
+        cl.zones_get()
+        #remove records from etcd
+        cl.remove_record()
