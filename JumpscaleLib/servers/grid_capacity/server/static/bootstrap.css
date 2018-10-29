@@ -39,4 +39,8 @@ input .filter {
 #registered {
     white-space: pre-wrap;
     word-wrap: break-word;
+    font-weight: bold;
+    color: #FFFFFF;
+    padding: 1em;
+    background: #343a40;
 }
