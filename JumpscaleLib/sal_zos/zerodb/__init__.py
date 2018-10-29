@@ -21,7 +21,7 @@ class Zerodbs(DynamicCollection):
         :return: Zerodb object
         :rtype: Zerodb object
         """
-        zdb = Zerodb(self.node, name)
+        zdb = Zerodb(self.node, name, node_port=None)
         zdb.load_from_reality()
         return zdb
 
@@ -35,12 +35,12 @@ class Zerodbs(DynamicCollection):
         zdbs = []
         for container in self.node.containers.list():
             if container.name.startswith('zerodb_'):
-                zdb = Zerodb(self.node, container.name.lstrip('zerodb_'))
+                zdb = Zerodb(node=self.node, name=container.name.lstrip('zerodb_'), node_port=None)
                 zdb.load_from_reality(container)
                 zdbs.append(zdb)
         return zdbs
 
-    def create(self, name, path=None, mode='user', sync=False, admin=''):
+    def create(self, name, node_port, path=None, mode='user', sync=False, admin=''):
         """
         Create zerodb object
 
@@ -48,6 +48,8 @@ class Zerodbs(DynamicCollection):
 
         :param name: Name of the zerodb
         :type name: str
+        :param node_port: public port on the node that is forwarded to the zerodb listening port in the container
+        :type node_port: int
         :param path: path zerodb stores data on
         :type path: str
         :param mode: zerodb running mode
@@ -60,7 +62,7 @@ class Zerodbs(DynamicCollection):
         :return: Zerodb object
         :rtype: Zerodb object
         """
-        return Zerodb(self.node, name, path, mode, sync, admin)
+        return Zerodb(node=self.node, name=name, node_port=node_port, path=path, mode=mode, sync=sync, admin=admin)
 
     def prepare(self):
         """
