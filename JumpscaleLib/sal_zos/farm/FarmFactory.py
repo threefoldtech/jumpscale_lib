@@ -13,11 +13,11 @@ class FarmFactory(JSBASE):
     def get(self, farmer_iyo_org):
         """
         Get sal for farm
-        
+
         Arguments:
             farmer_iyo_org: the farmer iyo organisation
         
         Returns:
-            the sal layer 
+            the sal layer
         """
         return Farm(farmer_iyo_org)

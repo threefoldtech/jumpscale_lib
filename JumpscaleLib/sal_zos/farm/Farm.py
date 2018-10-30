@@ -6,7 +6,7 @@ class Farm:
 
     def __init__(self, farmer_iyo_org):
         self.farmer_iy_org = farmer_iyo_org
-    
+
     def list_nodes(self):
         capacity = j.clients.threefold_directory.get(interactive=False)
         resp = capacity.api.ListCapacity(query_params={'farmer': self.farmer_iy_org})[1]
