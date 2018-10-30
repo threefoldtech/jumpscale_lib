@@ -11,11 +11,15 @@ dependencies, see [the rivine module README](../rivine/README.md).
 
 ## Usage
 
-Start by creating a wallet ( for testnet in this case)
+Start by creating a wallet:
 ```python3
-wallet1  = j.clients.tfchain.create_wallet('wallet1', testnet= True)
+wallet1  = j.clients.tfchain.create_wallet('wallet1')
 ```
-Or in case you already created a wallet, you can open it :
+Should you want to create a testnet/devnet walk you have to define the network value:
+```python3
+wallet1  = j.clients.tfchain.create_wallet('wallet1', network=j.clients.tfchain.network.TESTNET)
+```
+In case you already created a wallet, you can open it:
 ```python3
  wallet1 = j.clients.tfchain.open_wallet('wallet1')
  ```
@@ -34,7 +38,6 @@ Out[11]:
 Unlocked:
 
 	0.0
-
 ```
 
 And once we received some funds on one of the addresses: 
@@ -51,7 +54,7 @@ Unlocked:
 
 ```python
 # First create a new wallet and get the address we will send funds to
-wallet2 = j.clients.tfchain.create_wallet('wallet2', testnet=True)
+wallet2 = j.clients.tfchain.create_wallet('wallet2', network=j.clients.tfchain.network.TESTNET)
 address = wallet2.addresses[0] # Take the first address from the list of addresses
 # Send 20 tft which can be spend immediatly. The transaction is commited automatically
 amount = 20
@@ -67,7 +70,6 @@ Unlocked:
 Unconfirmed Balance:
 
 	20.0
-
 
 # Now send 20 tft which are timelocked until the 30th of october, 1 PM GMT
 locktime = 1540904400 # unix timestamp
@@ -91,7 +93,7 @@ should be used. It is also possible to add optional data or a locking period her
 
 ```python
 # Create another wallet
-wallet3 = j.clients.tfchain.create_wallet('wallet3', testnet=True)
+wallet3 = j.clients.tfchain.create_wallet('wallet3', network=j.clients.tfchain.network.TESTNET)
 # now create the list of addresses which can spend the funds
 addresses = [wallet2.addresses[0], wallet3.addresses[0]]
 # both addresses will need to sign

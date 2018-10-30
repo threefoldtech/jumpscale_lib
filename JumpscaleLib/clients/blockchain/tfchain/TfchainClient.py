@@ -3,35 +3,34 @@ Tfchain Client
 """
 
 from Jumpscale import j
+from json import dumps
 
+from JumpscaleLib.clients.blockchain.tfchain.TfchainNetwork import TfchainNetwork
 from JumpscaleLib.clients.blockchain.rivine.RivineWallet import RivineWallet
 
 TEMPLATE = """
-testnet = false
+network = "{}"
 seed_ = ""
+explorers = {}
+password = ""
 nr_keys_per_seed = 1
-"""
+""".format(
+    TfchainNetwork.STANDARD.name.lower(),
+    dumps(TfchainNetwork.STANDARD.official_explorers()))
 
 JSConfigBase = j.tools.configmanager.JSBaseClassConfig
 
-class TfchainClient(JSConfigBase):
+class InvalidTfchainNetwork(Exception):
     """
-    Constants specific for the Tfchain network
+    InvalidTfchainNetwork error
     """
-    _tfchain_consts = {
-            'standard': {
-                'explorers': ['https://explorer.threefoldtoken.com',
-                    'https://explorer2.threefoldtoken.com',
-                    'https://explorer3.threefoldtoken.com',
-                    'https://explorer4.threefoldtoken.com'],
-                'password': '',
-                'minerfee': 100000000},
-            'testnet': {
-                'explorers': ['https://explorer.testnet.threefoldtoken.com',
-                    'https://explorer2.testnet.threefoldtoken.com'],
-                'password': '',
-                'minerfee': 100000000}}
 
+class NoExplorerNetworkAddresses(Exception):
+    """
+    NoExplorerNetworkAddresses error
+    """
+
+class TfchainClient(JSConfigBase):
     """
     Tfchain client object
     """
@@ -50,10 +49,16 @@ class TfchainClient(JSConfigBase):
     def wallet(self):
         if self._wallet is None:
             client = j.clients.tfchain.get(self.instance, create=False)
-            # Load the correct constants regarding testnet or standard net
-            consts = self._tfchain_consts['standard']
-            if self._config.data['testnet'] is True:
-                consts = self._tfchain_consts['testnet']
+            # Load the correct config params specific to the network
+            network = TfchainNetwork(self.config.data['network'])
+            if not isinstance(network, TfchainNetwork):
+                raise InvalidTfchainNetwork("invalid tfchain network specified")
+            minerfee = network.minimum_minerfee()
+            explorers = self.config.data['explorers']
+            if not explorers :
+                explorers = network.official_explorers()
+                if not explorers:
+                    raise NoExplorerNetworkAddresses("network {} has no official explorer networks and none were specified by user".format(network.name.lower()))
             # Load a wallet from a given seed. If no seed is given,
             # generate a new one
             seed = self.config.data['seed_']
@@ -72,10 +77,10 @@ class TfchainClient(JSConfigBase):
                 # the first reload
                 self.config.data['seed_'] = seed
             self._wallet = RivineWallet(seed=seed,
-                    bc_networks = consts['explorers'],
-                    bc_network_password = consts['password'],
+                    bc_networks = explorers,
+                    bc_network_password = self.config.data['password'],
                     nr_keys_per_seed = self.config.data['nr_keys_per_seed'],
-                    minerfee = consts['minerfee'],
+                    minerfee = minerfee,
                     client=client)
         return self._wallet
 
