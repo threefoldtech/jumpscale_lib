@@ -9,10 +9,10 @@ class CorednsFactory(JSBASE):
         self.__jslocation__ = "j.sal_zos.coredns"
         JSBASE.__init__(self)
 
-    def get(self, name, node, etcd_endpoint, zt_identity=None, nics=None, backplane='backplane'):
+    def get(self, name, node, etcd_endpoint, etcd_password, zt_identity=None, nics=None, backplane='backplane'):
         """
         Get sal for coredns
         Returns:
             the sal layer 
         """
-        return Coredns(name, node, etcd_endpoint, zt_identity, nics, backplane)
+        return Coredns(name, node, etcd_endpoint, etcd_password, zt_identity, nics, backplane)

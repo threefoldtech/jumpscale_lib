@@ -14,53 +14,6 @@ CLIENT_PORT = 2379
 PEER_PORT = 2380
 
 
-class EtcdCluster():
-    """etced server"""
-
-    def __init__(self, name, dialstrings, mgmtdialstrings, logger=None):
-
-        self.name = name
-        self.dialstrings = dialstrings
-        self.mgmtdialstrings = mgmtdialstrings
-        self._ays = None
-        self._client = None
-
-    def _connect(self):
-        dialstrings = self.mgmtdialstrings.split(",")
-        for dialstring in dialstrings:
-            host, port = dialstring.split(":")
-            try:
-                self._client = etcd3.client(host=host, port=port, timeout=5)
-                self._client.status()
-                return  # connection is valid
-            except (etcd3.exceptions.ConnectionFailedError, etcd3.exceptions.ConnectionTimeoutError) as err:
-                self._client = None
-                self.logger.error("Could not connect to etcd on %s:%s : %s" % (host, port, str(err)))
-
-        if self._client is None:
-            raise RuntimeError("can't connect to etcd on %s" % self.mgmtdialstrings)
-
-    # TODO: replace code duplication with decorator ?
-
-    def put(self, key, value):
-        if not self._client:
-            self._connect()
-        try:
-            self._client.put(key, value)
-        except (etcd3.exceptions.ConnectionFailedError, etcd3.exceptions.ConnectionTimeoutError):
-            self._connect()
-            self.put(key, value)
-
-    def delete(self, key):
-        if not self._client:
-            self._connect()
-        try:
-            self._client.delete(key)
-        except (etcd3.exceptions.ConnectionFailedError, etcd3.exceptions.ConnectionTimeoutError):
-            self._connect()
-            self.delete(key)
-
-
 class ETCD(Service):
     """etced server"""
 
@@ -83,8 +36,13 @@ class ETCD(Service):
             'peer_port': PEER_PORT,
             'peer_url': self.peer_url,
             'client_url': self.client_url,
-            'password': self.password
+            'password': self.password,
+            'cluster_entry': self.cluster_entry,
         }
+
+    @property
+    def cluster_entry(self):
+        return '{}={}'.format(self.name, self.peer_url)
 
     @property
     def client_url(self):
@@ -136,9 +94,7 @@ class ETCD(Service):
         render etcd config template
         """
 
-        cluster = self.cluster if self.cluster else [{'name': self.name, 'address': self.peer_url}]
-        members = ['='.join([member['name'], member['address']]) for member in cluster]
-
+        cluster = self.cluster or self.cluster_entry
         config = {
             'name': self.name,
             'initial_peer_urls': self.peer_url,
@@ -147,7 +103,7 @@ class ETCD(Service):
             'advertise_client_urls': self.client_url,
             'data_dir': self.data_dir,
             'token': self.token,
-            'cluster': ','.join(members),
+            'cluster': cluster,
         }
         return templates.render('etcd.conf', **config).strip()
 
@@ -162,17 +118,14 @@ class ETCD(Service):
             return
 
         logger.info('start etcd {}'.format(self.name))
-
+        self.deploy()
         self.create_config()
         cmd = '/bin/etcd --config-file {}'.format(self._config_path)
         self.container.client.system(cmd, id=self._id)
         if not j.tools.timer.execute_until(self.is_running, 30, 0.5):
             raise RuntimeError('Failed to start etcd server: {}'.format(self.name))
 
-        self._enable_auth()
-        self._prepare_traefik()
-
-    def _enable_auth(self):
+    def enable_auth(self):
         """
         enable authentication of etcd user
         """
@@ -185,13 +138,13 @@ class ETCD(Service):
         for command in commands:
             result = self.container.client.system(command).get()
             if result.state == 'ERROR':
-                if result.stderr == 'Error: etcdserver: user name not found\n':
+                if 'already exists' in result.stderr or 'user name not found' in result.stderr:
                     # this command has been executed before
                     continue
                 else:
                     raise RuntimeError(result.stderr)
 
-    def _prepare_traefik(self):
+    def prepare_traefik(self):
         result = self.container.client.system('/bin/etcdctl --endpoints={} --user=root:{} put "traefik/acme/account" "foo"'.format(self.client_url, self.password)).get()
         if result.state != 'SUCCESS':
             raise RuntimeError('fail to prepare traefik configuration: %s' % result.stderr)
