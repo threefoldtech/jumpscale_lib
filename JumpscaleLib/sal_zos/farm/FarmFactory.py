@@ -12,7 +12,7 @@ class FarmFactory(JSBASE):
 
     def get(self, farmer_iyo_org):
         """
-        Get sal for etcd management in ZOS
+        Get sal for farm
         
         Arguments:
             farmer_iyo_org: the farmer iyo organisation
