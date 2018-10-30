@@ -5,7 +5,7 @@ from subprocess import Popen, PIPE
 import random
 import uuid
 import time
-import shlex,csv
+import shlex
 from jumpscale import j
 from termcolor import colored
 from multiprocessing import Process, Manager
@@ -84,15 +84,6 @@ class Utils(object):
     def random_string(self, size=10):
         return str(uuid.uuid4()).replace('-', '')[:size]     
 
-    def export_data_to_csv_file(self, data_que):
-        with open(minio_results_file, 'w') as csvfile:
-            fieldnames = ['interface', 'username', 'password']
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
-            while not data_que.empty():
-                writer.writerow(data_que.get())
-
-
     def create_ubuntu_vm(self, zos_client, ubuntu_port):
         print('* Creating ubuntu vm to fire the testsuite from')
         keypath = '/root/.ssh/id_rsa.pub'
@@ -101,7 +92,6 @@ class Utils(object):
         with open(keypath, "r") as key:
             pub_key = key.read()
         pub_key.replace('\n', '')
-        #ubuntu_port = random.randint(100,600)
         vm_ubuntu_name = "ubuntu{}".format(self.random_string())
         vm_ubuntu = zos_client.primitives.create_virtual_machine(name=vm_ubuntu_name, type_='ubuntu:lts')
         vm_ubuntu.nics.add(name='default_nic', type_='default')
@@ -111,11 +101,6 @@ class Utils(object):
         vm_ubuntu.memory = 8192
         vm_ubuntu.deploy()
         return vm_ubuntu
-
-    def install_js(self,branch,node_ip, zt_token,zos_ip,ubuntu_port,JS_FLAG):
-        cmd = 'bash {script} {branch} {jsflag} {nodeip} {zt_token}'.format(script=SETUP_ENV_SCRIPT_NAME, jsflag=JS_FLAG, branch="sal_testcases", nodeip=node_ip, zt_token=zt_token)
-        results = self.run_cmd_on_remote_machine(cmd, zos_ip, ubuntu_port)
-        JS_RESULTS_que.put(results)
 
 def main(options):
     utils = Utils(options)
@@ -134,32 +119,9 @@ def main(options):
     node_ip = zos_available_node["robot_address"][7:-5] 
     print('* The available node ip {} '.format(node_ip))
     
-    # Access the ubuntu vm and start ur testsuite 
-    pro = Process(target=utils.install_js, args=(options.branch, node_ip, options.zt_token,options.zos_ip,ubuntu_port, JS_FLAG))
-    print(' ########## XTREMX ### ########### ')
-    pro.start()
-    pro.join()
-    # for _ in range(30):
-    #     print(' ########## XTREMX ############## LOOP ')
-    #     print("wait until js installation. ")
-    #     time.sleep(90)
-    #     try:
-    #         cmd = "which js_shell"
-    #         out=utils.run_cmd_on_remote_machine_without_stream(cmd, options.zos_ip, ubuntu_port)
-    #         if out:
-    #             pro.join()
-    #             break
-    #     except RuntimeError as e :
-    #         print(e)
-    # else:
-    #     print(JS_RESULTS_que.get())
-    #     raise Exception("Can't install jumpscale it takes forever")
-    # Install jumpscale 
-    
-    # Delete created vm 
-    # if JS_FLAG == "False":
-    #     print("Delete created ubuntu machine . ")
-    #     zos_client.client.kvm.destroy(vm.uuid)
+    # Access the ubuntu vm and install requirements  
+    cmd = 'bash {script} {branch} {nodeip} {zt_token}'.format(script=SETUP_ENV_SCRIPT_NAME, branch="sal_testcases", nodeip=node_ip, zt_token=options.zt_token)
+    utils.run_cmd_on_remote_machine(cmd, options.zos_ip, ubuntu_port)
 
         
 if __name__ == "__main__":
