@@ -115,3 +115,21 @@ class VM:
 
     def change_params(self, param, value):
         setattr(self.vm_sal, param, value)
+
+    def add_mount(self, name, source, target):
+        self.vm_sal.mounts.add(name=name, sourcepath=source, targetpath=target)
+    
+    def remove_mount(self, item):
+        self.vm_sal.mounts.remove(item=item)
+
+    def list_mount(self):
+        return self.vm_sal.mounts.list()
+
+    def add_config(self, name, path, content):
+        self.vm_sal.configs.add(name=name, path=path, content=content)
+    
+    def remove_config(self, item):
+        self.vm_sal.configs.remove(item=item)
+
+    def list_config(self):
+        return self.vm_sal.configs.list()
