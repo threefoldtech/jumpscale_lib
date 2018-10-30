@@ -1,33 +1,46 @@
 from jumpscale import j
 import json
 from .encoding import (encode_record,unregister_record,load)
-from enum import Enum
+from .ResourceRecord import ResourceRecord ,RecordType
 JSConfigBase = j.tools.configmanager.base_class_config
 
 TEMPLATE = """
 etcd_instance = "main"
 """
+class CoreDnsClient(JSConfigBase):
 
-class RecordType(Enum):
-    A = "A"
-    AAAA = "AAAA"
-    SRV = "SRV"
-    TXT = "TXT"
+    def __init__(self, instance, data={}, parent=None, interactive=False):
+        JSConfigBase.__init__(self, instance=instance,
+                              data=data, parent=parent, template=TEMPLATE, interactive=interactive)
+        self._etcd_client = None
+        print ("CoreDNS", instance)
+        self._zones = []
 
-class ResourceRecord:
 
-    def __init__(self, domain, rrdata, record_type=RecordType.A, ttl=300,
-                             priority=None, port=None # SRV
-                ):
-        """ DNS Resource Record.
+    @property
+    def etcd_client(self):
+        if not self._etcd_client:
+            self._etcd_client = j.clients.etcd.get(self.config.data['etcd_instance'])
+        return self._etcd_client
 
-            name    : Record Name.  Corresponds to first field in
+    @property
+    def zones(self):
+        """get all zones 
+        """
+        if not self._zones:
+            self._zones = load(self.etcd_client)
+        return self._zones
+
+    def zone_create(self, domain, rrdata, record_type=RecordType.A,  ttl=300, priority=None, port=None ):
+        """ create new zone .
+
+            domain    : Record Name.  Corresponds to first field in
                       DNS Bind Zone file entries.  REQUIRED.
+            rrdata  : Resource Record Data (REQUIRED)
             record_type    : Record Type.  CNAME, A, AAAA, TXT, SRV.  REQUIRED
             ttl     : time to live. default value 300 (optional)
-            port    : SRV record port (optional)
             priority: SRV record priority (optional)
-            rrdata  : Resource Record Data (REQUIRED)
+            port    : SRV record port (optional)
 
             TXT record example  : rrdata = 'this is a TXT record'
             A record example    : rrdata = '1.1.1.1'
@@ -35,85 +48,42 @@ class ResourceRecord:
             SRV record example  : rrdata = 'skydns-local.server'
             CNAME record example: rrdata = 'cn1.skydns.local skydns.local.'
         """
-
-        if rrdata is None:
-            rrdata = ''
-
-        self.type = record_type
-        if self.type == 'CNAME':
-            self.cname, rrdata = rrdata.split(' ')
-        self.domain = domain
-        self.port = port
-        self.priority = priority
-        self.ttl = ttl
-        self.weight = 100
-        self._rrdata = rrdata
-
-
-    @property
-    def rrdata(self):
-        """ reconstructs CoreDNS/etcd-style JSON data format
-        """
-        res = {'ttl': self.ttl}
-        rdatafield = 'host' # covers SRV, A, AAAA and CNAME
-        if self.type == RecordType.TXT:
-            rdatafield = 'text'
-        elif self.type == RecordType.SRV:
-            res['priority'] = self.priority
-            res['port'] = self.port
-        elif self.type == 'CNAME':
-            res['cname'] = self._rrdata 
-            res['host'] = self.cname  
-        res[rdatafield] = self._rrdata
-        return res
-
-    def __str__(self):
-        if self.type == 'TXT':
-            rrdata = '"%s"' % self._rrdata
-        else:
-            rrdata = self._rrdata
-        extra = 'IN\t%s' % self.type
-        if self.type == 'SRV':
-            extra += '\t%d %d %d' % (self.priority, self.weight, self.port)
-        return "%s\t%d\t%s\t%s" % \
-            (self.domain, self.ttl, extra, rrdata)
-
-    def __repr__(self):
-            return "'%s'" % str(self)
-
-class CoreDnsClient(JSConfigBase):
-
-    def __init__(self, instance, data={}, parent=None, interactive=False):
-        JSConfigBase.__init__(self, instance=instance,
-                              data=data, parent=parent, template=TEMPLATE, interactive=interactive)
-        self._etcd_client = None
-        self._etcd_instance = self.config.data['etcd_instance']
-        print ("CoreDNS", instance)
-        self.zones = []
-
-
-    @property
-    def etcd_client(self):
-        if not self._etcd_client:
-            self._etcd_client = j.clients.etcd.get(self._etcd_instance)
-        return self._etcd_client
-
-    def zone_create(self, domain, rrdata, record_type=RecordType.A,  ttl=300,
-                             priority=None, port=None ):
-         
-        zone =ResourceRecord(domain, rrdata, record_type, ttl, priority, port)
-        self.zones.append(zone)
+        zone = ResourceRecord(domain, rrdata, record_type, ttl, priority, port)
+        self._zones.append(zone)
+        return zone
 
     def deploy(self):
+        """
+        add coredns records in etcd
+        :param zones: list of `ResourceRecord` objects that needs to be added
+        """
         for zone in self.zones:
             key, value = encode_record(zone)
             self.etcd_client.put(key, value)
     
-    def remove(self):
-        for zone in self.zones:
+    def remove(self, zones):
+        """
+        remove coredns records from etcd
+        :param zones: list of `ResourceRecord` objects that needs to be removed
+        """
+        for zone in zones:
             key = unregister_record(zone)
             self.etcd_client.api.delete_prefix(key)
-    
-    def zones_get(self):
-        for domain,value in load(self.etcd_client):
-            print("{}= {}".format(domain,value))
+
+    def zone_exists(self, domain, record_type=RecordType.A ):
+        """
+        search of zone in zones list
+        
+        Arguments:
+            domain {string} 
+        
+        Keyword Arguments:
+            record_type {enum} (default: {RecordType.A})
+        
+        Returns:
+            true if exist
+        """
+        for zone in self.zones:
+            if zone.domain == domain and zone.type == record_type:
+                return True
+        return False

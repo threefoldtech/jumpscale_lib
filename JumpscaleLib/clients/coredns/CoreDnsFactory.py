@@ -21,11 +21,11 @@ class CoreDnsFactory(JSConfigFactory):
         #create etcd client
         cl = j.clients.coredns.configure(instance_name="main",host="10.144.72.95",password="njufdmrq3k")
         #create zones
-        cl.zone_create('test.example.com','10.144.13.199',record_type='A')
-        cl.zone_create('example.com','2003::8:1',record_type='AAAA')
+        zone1 = cl.zone_create('test.example.com','10.144.13.199',record_type='A')
+        zone2 = cl.zone_create('example.com','2003::8:1',record_type='AAAA')
         #add records in etcd
         cl.deploy() 
         #get records from etcd
-        cl.zones_get()
+        cl.zones
         #remove records from etcd
-        cl.remove() 
+        cl.remove([zone1,zone2])
