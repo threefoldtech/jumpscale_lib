@@ -26,8 +26,7 @@ class BaseTest(Utils):
         self = cls()
         cls.node_sal = j.clients.zos.get(NODE_CLIENT, data={'host': config['main']['nodeip']})
         cls.node_info, cls.disks_info = self.get_zos_info()
-        cls.disks_mount_paths = cls.node_sal.zerodbs.partition_and_mount_disks()
-
+        cls.disks_mount_paths = self.zdb_mounts()
         cls.vm_flist = "https://hub.grid.tf/tf-bootable/ubuntu:16.04.flist"
         cls.vm = VM
         cls.gw = GW
@@ -110,8 +109,6 @@ class BaseTest(Utils):
         else:
             raise RuntimeError("Failed to retreive zt ip: Cannot get private ip address for zerotier member")
 
-
-
     def get_zos_info(self):
         info = self.node_sal.capacity.total_report()
         node_info = {'ssd': int(info.SRU), 'hdd': int(info.HRU), 'core': int(info.CRU),
@@ -130,7 +127,6 @@ class BaseTest(Utils):
             subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             ssh = self.load_ssh_key()
         return ssh
-
 
     def execute_command(self, cmd, ip='', port=22):
         target = "ssh -o 'StrictHostKeyChecking no' -p {} root@{} '{}'".format(port, ip, cmd)
@@ -203,12 +199,30 @@ class BaseTest(Utils):
         gw_container = [ container for _ ,container in containers.items() if container['container']['arguments']['hostname'] == gw_name][0]
         return gw_container
 
+    def zdb_mounts(self):
+        disk_mount=[]
+        self.node_sal.zerodbs.prepare()
+        storage_pools = self.node_sal.storagepools.list()
+        for sp in storage_pools:
+            if sp.name == 'zos-cache':
+                continue
+            try:
+                file_system = sp.get('zdb')
+            except Exception:
+                continue
+            disk_name = sp.device[len('/dev/'):-1]
+            zdb_mount = file_system.path
+            disk_mount.append({'disk': disk_name, 'mountpoint': zdb_mount})
+        return disk_mount
+
     def get_disk_mount_path(self, disk_type):
-        disk_RO = 0 if disk_type == "ssd" else 1
-        disks_info = self.node_sal.client.disk.list()
-        disk_name = [disk["name"] for disk in disks_info if int(disk["ro"])==disk_RO][0]
-        path = [disk["mountpoint"] for disk in self.disks_mount_paths if disk["disk"] == disk_name]
-        return path[0]
+        disk_RO = '0' if disk_type == "ssd" else '1'
+        for disk in self.disks_mount_paths:
+            self.disk_name = disk['disk']
+            disk_info = self.node_sal.client.disk.getinfo(self.disk_name)
+            if disk_info['ro'] == disk_RO:
+                disk_path = disk['mountpoint']
+                return disk_path
 
     def get_disks_type(self):
         disks = self.node_sal.client.disk.list()
@@ -220,24 +234,19 @@ class BaseTest(Utils):
                 disks_type["hdd"]+=1
         return disks_type
 
-    def get_most_free_disk_type_size(self):
+    def select_disk_type(self):
         disks_info = self.get_disks_type()
-        if (disks_info['hdd'] != 0) and (disks_info['ssd'] != 0):
-            disk_type = random.choice(['hdd', 'ssd'])
-            max_size = self.node_info[disk_type]
-            disk_size = random.randint(1, max_size)
-        elif disks_info['hdd'] != 0:
+        if disks_info['hdd'] > disks_info['ssd']:
             disk_type = 'hdd'
-            max_size = self.node_info[disk_type]
-            disk_size = random.randint(1, max_size)
         else:
             disk_type = 'ssd'
-            max_size = self.node_info[disk_type]
-            disk_size = random.randint(1, max_size)
+            
+        return disk_type
 
-        return disk_type, disk_size, max_size
-
-
+    def get_disk_size(self):
+        size_bytes = self.node_sal.client.disk.getinfo(self.disk_name)['size']
+        size_gb = size_bytes / 1024**3
+        return size_gb
 
     def set_vdisk_default_data(self, name=None):
         disk_params = {
@@ -248,13 +257,11 @@ class BaseTest(Utils):
                         'public': False,
                         'label': '',
                       }
-
-        disk_type, disk_size, max_size = self.get_most_free_disk_type_size()
+        disk_type = self.select_disk_type()
+        disk_size = self.get_disk_size()
         disk_params['diskType'] = disk_type
-        disk_params['size'] = disk_size
-        disk_params['max_size'] = max_size
-        disk_params["path"] = self.get_disk_mount_path(disk_type)
-
+        disk_params['size'] = random.randint(1, disk_size)
+        
         return disk_params
 
     def set_zdb_default_data(self, name=None, size='', mode="user"):
@@ -269,7 +276,9 @@ class BaseTest(Utils):
                       'nics': [],
                       'size': size
                       }
-        disk_type, disk_size, max_size = self.get_most_free_disk_type_size()
+        disk_type = self.select_disk_type()
+        zdb_path = self.get_disk_mount_path(disk_type)
         zdb_params['diskType'] = disk_type
-        zdb_params["path"] = self.get_disk_mount_path(disk_type)                
+        zdb_params["path"] = zdb_path       
+
         return zdb_params

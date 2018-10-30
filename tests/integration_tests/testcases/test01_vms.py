@@ -500,6 +500,123 @@ class VMTestCases(BaseTest):
         result2 = self.ssh_vm_execute_command(vm_ip=self.node_ip, port=host_port_ssh, cmd='pwd')
         self.assertEqual(result2, '/root') 
 
+    @parameterized.expand(["zero-os", "ubuntu"])
+    @unittest.skip('https://github.com/threefoldtech/jumpscale_prefab/issues/31')
+    def test012_add_remove_mount_dir_to_vm(self, os_type):
+        """ SAL-042 add and remove mount to vm.
+
+        **Test Scenario:**
+ 
+        #. Create vm [VM1] with default values, should succeed.
+        #. Add zerotier network to VM1, should succeed.
+        #. Add mount directory to vm, should succeed.
+        #. Try to add another one with same name, should fail.
+        #. Check that directory is mounted in the right path, should be found.
+        #. Remove mount and check again, shouldn't be found.
+
+        """
+        if os_type == 'zero-os':
+            self.skipTest('https://github.com/threefoldtech/jumpscale_lib/issues/102')
+
+        self.log("Create vm [VM1] with default values, should succeed.")
+        vm = self.vm(node=self.node_sal)
+        vm.data = self.set_vm_default_values(os_type=os_type)
+        vm.generate_vm_sal()
+
+        self.log(" Add zerotier network to VM1, should succeed.")
+        vm.add_zerotier_nics(network=self.zt_network)
+
+        self.log("Add mount directory to vm, should succeed.")
+        mount_name = self.random_string()
+        source = '/var/cache'
+        target = '/root/{}'.format(self.random_string)
+        vm.add_mount(name=mount_name, source=source, target=target)
+
+        self.log("Try to add another one with same name, should fail.")
+        with self.assertRaises(ValueError) as e:
+            vm.add_mount(name=mount_name, source='', target='')
+        self.assertIn('Element with name {} already exists'.format(mount_name), e.exception.args[0])
+
+        self.log("Deploy vm")
+        vm.install()
+        self.vms.append(vm.info()['uuid'])
+        ztIdentity = vm.data["ztIdentity"]
+        vm_zt_ip = self.get_zerotier_ip(ztIdentity)
+
+        self.log("Check that directory is mounted in the right path, should be found.")
+        cmd = 'ls {}'.format(target)
+        result1 = self.ssh_vm_execute_command(vm_ip=vm_zt_ip, cmd=cmd)
+        self.assertIn('zerofs', result1)
+
+        self.log("Remove mount and check again, shouldn't be found.")
+        vm.remove_mount(mount_name)
+        mounts = vm.list_mount()
+        self.assertFalse(mounts)
+
+        response = self.execute_command(ip=vm_zt_ip, cmd=cmd)
+        self.assertTrue(response.returncode)
+        result2 = response.stderr.strip()
+        self.assertIn('No such file or directory', result2)
+
+    @parameterized.expand(["zero-os", "ubuntu"])
+    @unittest.skip('https://github.com/threefoldtech/jumpscale_lib/issues/188')
+    def test013_add_remove_config_to_vm(self, os_type):
+        """ SAL-043 add and remove config to vm.
+
+        **Test Scenario:**
+ 
+        #. Create vm [VM1] with default values, should succeed.
+        #. Add type default network and port forward to VM1, should succeed.
+        #. Add config to vm, should succeed.
+        #. Try to add another one with same name, should fail.
+        #. Check that is added in the right path, should be found.
+        #. Remove config and check again, shouldn't be found.
+
+        """
+        if os_type == 'zero-os':
+            self.skipTest('https://github.com/threefoldtech/jumpscale_lib/issues/102')
+
+        self.log("Create vm [VM1] with default values, should succeed.")
+        vm = self.vm(node=self.node_sal)
+        vm.data = self.set_vm_default_values(os_type="ubuntu")
+
+        self.log("Update default data by adding type default nics")
+        network_name = self.random_string()
+        nics = {'nics': [{'name': network_name, 'type': 'default'}]}  
+        vm.data = self.update_default_data(vm.data, nics)
+        vm.generate_vm_sal()
+
+        self.log("Add config to vm, should succeed.")
+        port_name = self.random_string()  
+        host_port_ssh = random.randint(7000, 8000)       
+        vm.add_port(name=port_name, source=host_port_ssh, target=22)
+
+        self.log("Add config to vm, should succeed.")
+        config_name = self.random_string()
+        path = '/root/{}'.format(self.random_string())
+        content = self.random_string()
+        vm.add_config(name=config_name, path=path, content=content)
+
+        self.log("Try to add another one with same name, should fail.")
+        with self.assertRaises(ValueError) as e:
+            vm.add_config(name=config_name, path='', content='')
+        self.assertIn('Element with name {} already exists'.format(config_name), e.exception.args[0])
+
+        vm.install()
+        self.vms.append(vm.info()['uuid'])
+
+        self.log("Check that is added in the right path, should be found.")
+        cmd = 'cat {}'.format(path)
+        result1 = self.ssh_vm_execute_command(vm_ip=self.node_ip, port=host_port_ssh, cmd=cmd)
+        self.assertEqual(result1, content)
+
+        self.log("Remove config and check again, shouldn't be found.")
+        vm.remove_config(config_name)
+        response = self.execute_command(ip=self.node_ip, port=host_port_ssh, cmd=cmd)
+        self.assertTrue(response.returncode)
+        result2 = response.stderr.strip()
+        self.assertIn('No such file or directory', result2)
+
 class VMActionsBase(BaseTest):
 
     @classmethod

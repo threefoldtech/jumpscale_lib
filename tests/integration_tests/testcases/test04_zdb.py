@@ -139,7 +139,7 @@ class ZDBTestCases(BaseTest):
 
         self.log("Add namespace [ns1] to zdb, should succeed.")
         ns_name = self.random_string()
-        disk_size = self.get_most_free_disk_type_size()[1]
+        disk_size = self.get_disk_size()
         ns_size = random.randint(1, disk_size)
         zdb.namespace_create(name=ns_name, size=ns_size)
 
@@ -176,7 +176,7 @@ class ZDBTestCases(BaseTest):
 
         self.log("Add namespace [ns1] to zdb, should succeed.")
         ns_name = self.random_string()
-        disk_size = self.get_most_free_disk_type_size()[1]
+        disk_size = self.get_disk_size()
         ns_size = random.randint(1, disk_size)
         zdb.namespace_create(name=ns_name, size=ns_size)
 
@@ -375,7 +375,7 @@ class ZDBActions(BaseTest):
         """
         self.log("Create namespace using sal.")
         ns_name = self.random_string()
-        disk_size = self.get_most_free_disk_type_size()[1]
+        disk_size = self.get_disk_size()
         ns_size = random.randint(1, disk_size)
         self.zdb.namespace_create(name=ns_name, size=ns_size)
 

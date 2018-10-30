@@ -9,8 +9,9 @@ import unittest
 import requests
 import random
 import subprocess
-class Vdisktest(BaseTest):
 
+class Vdisktest(BaseTest):
+    
     @classmethod
     def setUpClass(cls):
         self = cls()
@@ -179,7 +180,7 @@ class Vdisktest(BaseTest):
         #. Add zerotier network to VM1, should succeed.
         #. Attach disk [D1] to vm [VM1].
         #. Try to write on disk mounting point, should succeed.
-        #. (Delete namespace/stop zdb) and try to write again, should fail.
+        #. (Delete namespace/ stop zdb) and try to write again, should fail.
         """
         self.log("deploy vm [VM1].")
         self.vm.install()
@@ -197,7 +198,7 @@ class Vdisktest(BaseTest):
         result = self.ssh_vm_execute_command(vm_ip=vm_zt_ip, cmd=cmd)
         self.assertEqual(result, content)
 
-        self.log("(Delete namespace/stop zdb) and try to write again, should fail.")
+        self.log("(Delete namespace /stop zdb) and try to write again, should fail.")
         if delete == 'zdb':
             self.zdb.stop()
         else:
