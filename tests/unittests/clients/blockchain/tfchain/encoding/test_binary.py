@@ -3,7 +3,7 @@ Test module for binary encoding
 """
 
 import pytest
-from JumpscaleLib.tools.blockchain.tfchain.encoding import binary
+from JumpscaleLib.clients.blockchain.tfchain.encoding import binary
 
 def test_encode_int24():
     """
@@ -14,6 +14,13 @@ def test_encode_int24():
     result = binary.IntegerBinaryEncoder.encode(int_value)
     assert hex_str == result.hex()
 
+def test_encode_int_lower_bound_exception():
+    with pytest.raises(binary.IntegerOutOfRange):
+        binary.IntegerBinaryEncoder.encode(-1)
+
+def test_encode_int_upper_bound_exception():
+    with pytest.raises(binary.IntegerOutOfRange):
+        binary.IntegerBinaryEncoder.encode(1 << 32)
 
 def test_encode_slice():
     """
@@ -33,7 +40,6 @@ def test_encode_slice():
     for tc in test_cases:
         result = binary.SliceBinaryEncoder.encode(tc['value'])
         assert tc['expected_result'] == result
-
 
 def test_encode_slice_length():
     """
@@ -124,9 +130,16 @@ def test_encode_slice_length():
             'value': (1<<28)-1,
             'expected_result': 4
         },
-
+        {
+            'value': (1<<29)-1,
+            'expected_result': 4
+        },
     ]
 
     for tc in test_cases:
         result = len(binary.SliceBinaryEncoder.encode_length(tc['value']))
         assert tc['expected_result'] == result
+
+def test_encode_slice_length_exception():
+    with pytest.raises(binary.SliceLengthOutOfRange):
+        binary.SliceBinaryEncoder.encode_length(1<<29)

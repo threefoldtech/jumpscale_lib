@@ -34,7 +34,7 @@ class BinaryEncoder:
             nbytes, rem = divmod(value.bit_length(), 8)
             if rem:
                 nbytes += 1
-            result.extend(encode(nbytes))
+            result.extend(BinaryEncoder.encode(nbytes))
             result.extend(value.to_bytes(nbytes, byteorder='big'))
         elif type_ == 'hex':
             result.extend(bytearray.fromhex(value))
@@ -49,13 +49,18 @@ class BinaryEncoder:
                 result = bytearray([1]) if value else bytearray([0])
             elif value_type in (list, set, tuple, frozenset):
                 for item in value:
-                    result.extend(encode(item))
+                    result.extend(BinaryEncoder.encode(item))
             else:
                 if hasattr(value, 'binary'):
                     result.extend(value.binary)
         else:
             raise ValueError('Cannot binary encode value with unknown type')
         return result
+
+class SliceLengthOutOfRange(Exception):
+    """
+    SliceLengthOutOfRange error
+    """
 
 class SliceBinaryEncoder:
     """
@@ -70,12 +75,13 @@ class SliceBinaryEncoder:
         """
         if length < SLICE_LENGTH_1BYTES_UPPERLIMIT:
             return IntegerBinaryEncoder.encode(length << 1)
-        elif length < SLICE_LENGTH_2BYTES_UPPERLIMIT:
+        if length < SLICE_LENGTH_2BYTES_UPPERLIMIT:
             return IntegerBinaryEncoder.encode(1 | length << 2)
-        elif length < SLICE_LENGTH_3BYTES_UPPERLIMIT:
+        if length < SLICE_LENGTH_3BYTES_UPPERLIMIT:
             return IntegerBinaryEncoder.encode(3 | length << 3)
-        elif length < SLICE_LENGTH_4BYTES_UPPERLIMIT:
+        if length < SLICE_LENGTH_4BYTES_UPPERLIMIT:
             return IntegerBinaryEncoder.encode(7 | length << 3)
+        raise SliceLengthOutOfRange("slice length {} is out of range".format(length))
 
     @staticmethod
     def encode(value):
@@ -93,6 +99,11 @@ class SliceBinaryEncoder:
             result.extend(BinaryEncoder.encode(item))
         return result
 
+class IntegerOutOfRange(Exception):
+    """
+    IntegerOutOfRange error
+    """
+
 class IntegerBinaryEncoder:
     """
     Support binary encoding for integers
@@ -105,13 +116,14 @@ class IntegerBinaryEncoder:
         @param value: Value to be encoded
         """
         # determine the size of the integer
-        if value >= 0 and value < UINT_1BYTE_UPPERLIMIT:
+        if value < 0:
+            raise IntegerOutOfRange("integer {} is out of lower range".format(value))
+        if value <= UINT_1BYTE_UPPERLIMIT:
             return value.to_bytes(1, byteorder='little')
-        elif value >= UINT_1BYTE_UPPERLIMIT and value < UINT_2BYTE_UPPERLIMIT:
+        if value <= UINT_2BYTE_UPPERLIMIT:
             return value.to_bytes(2, byteorder='little')
-        elif value >= UINT_2BYTE_UPPERLIMIT and value < UINT_3BYTE_UPPERLIMIT:
+        if value <= UINT_3BYTE_UPPERLIMIT:
             return value.to_bytes(3, byteorder='little')
-        elif value >= UINT_3BYTE_UPPERLIMIT and value < UINT_4BYTE_UPPERLIMIT:
+        if value <= UINT_4BYTE_UPPERLIMIT:
             return value.to_bytes(4, byteorder='little')
-        else:
-            return binary.encode(value)
+        raise IntegerOutOfRange("integer {} is out of upper range".format(value))
