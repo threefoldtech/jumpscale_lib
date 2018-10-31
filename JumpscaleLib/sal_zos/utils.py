@@ -40,3 +40,4 @@ def get_zt_ip(nics, network=False, network_range=''):
                 # network range should be avoided
                 continue
             return ipAdress
+

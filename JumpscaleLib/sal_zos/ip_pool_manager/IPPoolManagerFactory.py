@@ -18,3 +18,4 @@ class IPPoolManagerFactory(JSBASE):
             the sal layer 
         """
         return IPPoolsManager(pools)
+

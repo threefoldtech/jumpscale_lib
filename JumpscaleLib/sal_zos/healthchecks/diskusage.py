@@ -25,3 +25,4 @@ class DiskUsage(HealthCheckRun):
                 self.add_message('{}_usage'.format(path), 'WARNING', "Disk usage of {} is {:.2%}".format(path, usage / 100))
             else:
                 self.add_message('{}_usage'.format(path), 'OK', "Disk usage of {} is {:.2%}".format(path, usage / 100))
+

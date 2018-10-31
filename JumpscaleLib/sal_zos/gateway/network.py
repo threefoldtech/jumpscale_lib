@@ -535,3 +535,4 @@ class DefaultNetwork(Network):
         if not forcontainer:
             data['public'] = self.public
         return data
+

@@ -17,3 +17,4 @@ class PrimitivesFactory(JSBASE):
             the sal layer
         """
         return Node(client)
+

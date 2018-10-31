@@ -94,3 +94,4 @@ class InfluxDB():
     def drop_databases(self, databases):
         for database in databases:
             self.client.drop_database(database)
+

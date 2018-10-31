@@ -172,3 +172,4 @@ class TestIPPoolManager(TestCase):
         with pytest.raises(OutOfIPs):
             for i in range(9):
                 pool_id, ip = self.mgr.get_any_free_ip()
+

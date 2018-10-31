@@ -19,3 +19,4 @@ class ZOS_VMFactory(JSBASE):
             the sal layer 
         """
         return ZOS_VM(node, name, flist, vcpus, memory)
+

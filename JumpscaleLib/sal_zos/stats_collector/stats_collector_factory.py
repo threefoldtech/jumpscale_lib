@@ -17,3 +17,4 @@ class StatsCollectorFactory(JSBASE):
             the sal layer 
         """
         return StatsCollector(container, ip, port, db, retention, jwt)
+

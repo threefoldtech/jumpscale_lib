@@ -37,3 +37,4 @@ class DHCP:
                 self.container.client.process.kill(process['pid'], signal.SIGKILL)
                 if not j.tools.timer.execute_until(lambda: not self.is_running(), 10):
                     raise RuntimeError('Failed to stop DNSMASQ')
+

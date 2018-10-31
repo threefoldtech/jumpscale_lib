@@ -24,3 +24,4 @@ class CapacityFactory(JSBASE):
         return Capacity(node)
 
 
+

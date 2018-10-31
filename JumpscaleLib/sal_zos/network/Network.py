@@ -156,9 +156,6 @@ class Network():
         if not freenics:
             raise j.exceptions.RuntimeError("Could not find available nic")
 
-        network = netaddr.IPNetwork(cidr)
-        addresses = self.get_addresses(network)
-
         interfaces = None
         if not bonded:
             interfaces = [freenics[0][1][0]]
@@ -211,16 +208,16 @@ class Network():
                 raise
             return  # bridge already exists in ovs subsystem (TODO: implement ovs.bridge-list)
 
-            if not bonded:
+        if not bonded:
             self.node.client.ip.link.mtu(interfaces[0], mtu)
-                container.client.json('ovs.port-add', {"bridge": "backplane", "port": interfaces[0], "vlan": 0})
-            else:
+            container.client.json('ovs.port-add', {"bridge": "backplane", "port": interfaces[0], "vlan": 0})
+        else:
             for interface in interfaces:
                 self.node.client.ip.link.mtu(interface, mtu)
                 self.node.client.ip.link.up(interface)
-                container.client.json('ovs.bond-add', {"bridge": "backplane",
-                                                       "port": "bond0",
-                                                       "links": interfaces,
+            container.client.json('ovs.bond-add', {"bridge": "backplane",
+                                                   "port": "bond0",
+                                                   "links": interfaces,
                                                    "lacp": False,
                                                    "mode": "balance-slb",
                                                    "options": {'other_config:updelay': "2000"},
@@ -228,18 +225,12 @@ class Network():
 
         self.node.client.ip.link.up('backplane')
         self.node.client.ip.link.mtu('backplane', mtu)
-            self.node.client.ip.addr.add('backplane', str(addresses['storageaddr']))
+        self.node.client.ip.addr.add('backplane', str(addresses['storageaddr']))
 
         # hack. We don't figure out why, but ovs is not happy if we don't
         # turn it off and on again...
         interface = interfaces[0]
         self.node.client.ip.link.down(interface)
         time.sleep(2)
-                self.node.client.ip.link.up(interface)
-            self.node.client.ip.link.up('backplane')
+        self.node.client.ip.link.up(interface)
 
-        if 'vxbackend' not in nicmap:
-            container.client.json('ovs.vlan-ensure', {'master': 'backplane', 'vlan': vlan_tag, 'name': 'vxbackend'})
-            self.node.client.ip.addr.add('vxbackend', str(addresses['vxaddr']))
-            self.node.client.ip.link.mtu('vxbackend', 2000)
-            self.node.client.ip.link.up('vxbackend')

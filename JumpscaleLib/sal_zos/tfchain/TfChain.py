@@ -409,3 +409,4 @@ def error_check(result, message='', parse=False):
             # check tfclient error
             err = '{}: {}'.format(message, stdout_error)
             raise RuntimeError(err)
+

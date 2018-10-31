@@ -53,3 +53,4 @@ class QemuVMLogs(HealthCheckRun):
             text = "Error occured in health check for qemu_vm_check."
             status = "ERROR"
             self.add_message(self.id, status, text)
+

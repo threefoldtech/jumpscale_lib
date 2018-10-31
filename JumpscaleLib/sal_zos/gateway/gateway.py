@@ -743,3 +743,4 @@ class Gateway:
             #     ip.link.up(nicname)
             #     ip.link.up(linkname)
             #     ip.link.up(zerotiername)
+

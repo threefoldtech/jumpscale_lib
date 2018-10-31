@@ -49,3 +49,4 @@ class CloudInit():
             if port['network'] == 'tcp' and port['port'] == 8080 and port['ip'] == '127.0.0.1':
                 return True
         return False
+

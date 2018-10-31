@@ -23,6 +23,7 @@ class Minio(Service):
                  zdbs,
                  namespace,
                  private_key,
+                 node_port,
                  namespace_secret='',
                  block_size=1048576,
                  meta_private_key='',
@@ -41,8 +42,8 @@ class Minio(Service):
         :param zdbs: a list of zerodbs addresses ex: ['0.0.0.0:9100']
         :param namespace: name of the zerodb namespace
         :param private_key: encryption private key
+        :param node_port: public port on the node that if forwarded to the minio listening port in the container
         :param namespace_secret: secret of the zerodb namespace
-        :param node_port: the port the minio container will forward to. If this port is not free, the deploy will find the next free port
         :param nr_datashards: number of datashards.
         :param nr_parityshards: number of parityshards (if it's zero it will make the mode replication otherwise mode is distribution)
         :param tlog_namespace: name of the zerodb namespace used as tlog
@@ -59,6 +60,7 @@ class Minio(Service):
         self._nr_parityshards = nr_parityshards
         self.namespace = namespace
         self.private_key = private_key
+        self.node_port = node_port
         self.namespace_secret = namespace_secret
         self.block_size = block_size
         self.login = login
@@ -86,10 +88,6 @@ class Minio(Service):
         :return: data used for zerodb container
          :rtype: dict
         """
-        ports = self.node.freeports(1)
-        if len(ports) <= 0:
-            raise RuntimeError("can't install minio, no free port available on the node")
-
         metadata_path = '/minio_metadata'
         envs = {
             'MINIO_ACCESS_KEY': self.login,
@@ -107,7 +105,7 @@ class Minio(Service):
         return {
             'name': self._container_name,
             'flist': self.flist,
-            'ports': {ports[0]: DEFAULT_PORT},
+            'ports': {self.node_port: DEFAULT_PORT},
             'nics': [{'type': 'default'}],
             'env': envs,
             'mounts': {fs.path: metadata_path},
@@ -134,6 +132,15 @@ class Minio(Service):
             result = job.get()
             raise RuntimeError('Failed to start minio server {}: {}'.format(self.name, result.stderr))
 
+    def stream(self, callback):
+        if not self.is_running:
+            raise Exception('minio is not running')
+            
+        self.container.client.subscribe(
+            self._id,
+            "%s.logs" % self._id
+        ).stream(callback)
+
     @property
     def mode(self):
         return "replication" if self._nr_parityshards <= 0 else "distribution"
@@ -148,10 +155,6 @@ class Minio(Service):
             'minio.conf', namespace=self.namespace, namespace_secret=self.namespace_secret,
             zdbs=self.zdbs, private_key=self.private_key, block_size=self.block_size, nr_datashards=self._nr_datashards,
             nr_parityshards=self._nr_parityshards, tlog=self.tlog, master=self.master).strip()
-
-    @property
-    def node_port(self):
-        return self.container.get_forwarded_port(DEFAULT_PORT)
 
     def reload(self):
         """
@@ -172,3 +175,4 @@ class Minio(Service):
             fs.delete()
         except ValueError:
             pass
+

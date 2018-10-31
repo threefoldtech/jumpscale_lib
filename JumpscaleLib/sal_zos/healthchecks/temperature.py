@@ -56,3 +56,4 @@ class Temperature(IPMIHealthCheck):
         elif temperature >= self.ERROR_TRIPPOINT:
             result["status"] = "ERROR"
         return result
+

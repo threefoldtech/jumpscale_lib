@@ -13,19 +13,18 @@ class Traefik(Service):
     Traefik a modern HTTP reverse proxy
     """
 
-    def __init__(self, name, node, etcd_endpoint, etcd_watch=True, zt_identity=None, nics=None):
+    def __init__(self, name, node, etcd_endpoint, etcd_password, etcd_watch=True, zt_identity=None, nics=None):
         super().__init__(name, node, 'traefik', [DEFAULT_PORT_HTTP, DEFAULT_PORT_HTTPS])
         self.name = name
-        self.id = 'traefik.{}'.format(self.name)
         self.node = node
         self._container = None
         self.flist = 'https://hub.grid.tf/tf-official-apps/traefik-v1.7.0-rc5.flist'
         self.etcd_endpoint = etcd_endpoint
         self.etcd_watch = etcd_watch
+        self.etcd_password = etcd_password
         self.node_port = None
 
-        self._config_dir = '/usr/bin'
-        self._config_name = 'traefik.toml'
+        self._config_path = '/usr/bin/traefik.toml'
         self.zt_identity = zt_identity
         self.nics = Nics(self)
         self.add_nics(nics)
@@ -73,20 +72,14 @@ class Traefik(Service):
         """
         logger.info('Creating traefik config for %s' % self.name)
         config = self._config_as_text()
-        self.container.upload_content(j.sal.fs.joinPaths(self._config_dir, self._config_name), config)
+        self.container.upload_content(self._config_path, config)
 
     def _config_as_text(self):
         """
-        render traefik config template using etcd ip, user, password
-        and add key of SSL certificate to etcd
+        render traefik config template using etcd endpoint, user, password
         """
-
-        # for SSL Certifcate
-        client = j.clients.etcd.get(self.name, data={'host': self.etcd_endpoint['ip'], 'port': self.etcd_endpoint['client_port'],
-                                                     'password_': self.etcd_endpoint['password'], 'user': "root"})
-        client.put("traefik/acme/account", "")
         return templates.render(
-            'traefik.conf', etcd_ip='{}:{}'.format(self.etcd_endpoint['ip'], self.etcd_endpoint['client_port']), user="root", passwd=self.etcd_endpoint['password']).strip()
+            'traefik.conf', etcd_endpoint=self.etcd_endpoint, user="root", passwd=self.etcd_password).strip()
 
     def start(self, timeout=120):
         """
@@ -101,12 +94,15 @@ class Traefik(Service):
 
         self.create_config()
 
-        cmd = '/usr/bin/traefik storeconfig -c {dir}/{config}'.format(dir=self._config_dir, config=self._config_name)
-        job = self.container.client.system(cmd, id=self.id)
-        cmd = '/usr/bin/traefik -c {dir}/{config}'.format(dir=self._config_dir, config=self._config_name)
+        cmd = '/usr/bin/traefik storeconfig -c {}'.format(self._config_path)
+        result = self.container.client.system(cmd).get()
+        if result.state != 'SUCCESS':
+            raise RuntimeError('fail to store traefik configuration in etcd: %s' % result.stderr)
 
         # wait for traefik to start
-        self.container.client.system(cmd, id=self.id)
+        cmd = '/usr/bin/traefik -c {}'.format(self._config_path)
+        job = self.container.client.system(cmd, id=self._id)
         if not j.tools.timer.execute_until(self.is_running, timeout, 0.5):
             result = job.get()
             raise RuntimeError('Failed to start Traefik server {}: {}'.format(self.name, result.stderr))
+

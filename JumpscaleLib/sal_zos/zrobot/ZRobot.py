@@ -86,3 +86,4 @@ class ZeroRobot:
         self.container.client.job.kill(self.id, signal=9)
 
         self.container.node.client.nft.drop_port(self.port)
+

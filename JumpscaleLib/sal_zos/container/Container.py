@@ -32,8 +32,10 @@ class Containers():
 
     def create(self, name, flist, hostname=None, mounts=None, nics=None,
                host_network=False, ports=None, storage=None, init_processes=None, privileged=False, env=None, identity=None):
-        container = Container(name, self.node, flist, hostname, mounts, nics,
-                              host_network, ports, storage, init_processes, privileged, env=env, identity=identity)
+
+        container = Container(name=name, node=self.node, flist=flist, hostname=hostname, mounts=mounts, nics=nics,
+                              host_network=host_network, ports=ports, storage=storage, init_processes=init_processes,
+                              privileged=privileged, env=env, identity=identity)
         container.start()
         return container
 
@@ -76,18 +78,18 @@ class Container():
         logger.debug("create container from info")
 
         arguments = containerinfo['container']['arguments']
-        return cls(arguments['name'],
-                   node,
-                   arguments['root'],
-                   arguments['hostname'],
-                   arguments['mount'],
-                   arguments['nics'],
-                   arguments['host_network'],
-                   arguments['port'],
-                   arguments['storage'],
-                   arguments['privileged'],
-                   arguments['identity'],
-                   arguments['env'],
+        return cls(name=arguments['name'],
+                   node=node,
+                   flist=arguments['root'],
+                   hostname=arguments['hostname'],
+                   mounts=arguments['mount'],
+                   nics=arguments['nics'],
+                   host_network=arguments['host_network'],
+                   ports=arguments['port'],
+                   storage=arguments['storage'],
+                   privileged=arguments['privileged'],
+                   identity=arguments['identity'],
+                   env=arguments['env'],
                    logger=logger)
 
     @property
@@ -311,7 +313,12 @@ class Container():
             return list(filter(lambda nic: nic['state'] == 'configured',
                                self.info['container']['arguments']['nics']))
         else:
-            return self._nics
+            nics = []
+            for nic in self._nics:
+                nic.pop('state', None)
+                nics.append(nic)
+
+            return nics
 
     def waitOnJob(self, job):
         MAX_LOG = 15
@@ -330,16 +337,16 @@ class Container():
 
     def get_forwarded_port(self, port):
         for k, v in self.ports.items():
-             if v == port:
-                 return int(k.split(':')[-1])
+            if v == port:
+                return int(k.split(':')[-1])
 
     @property
     def mgmt_addr(self):
         return get_zt_ip(self.client.info.nic())
-
 
     def __str__(self):
         return "Container <{}>".format(self.name)
 
     def __repr__(self):
         return str(self)
+

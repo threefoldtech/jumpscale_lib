@@ -61,3 +61,4 @@ class Interrupts(HealthCheckRun):
 
     def run(self):
         self.add_message(**self._get())
+

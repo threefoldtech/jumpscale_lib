@@ -140,3 +140,4 @@ minio:
     namespace: masterns
     password: nssecret"""
     assert expected == conf
+

@@ -54,3 +54,4 @@ class StatsCollector():
         if not self.is_running():
             return
         self.container.client.job.kill(self.job_id)
+

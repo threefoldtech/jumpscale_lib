@@ -66,3 +66,4 @@ class PowerSupply(IPMIHealthCheck):
                         self.add_message(id=id_, status='OK', text="Power supply %s is OK" % id_)
         else:
             self.add_message(id="SKIPPED", status='SKIPPED', text="No data for Power Supplies")
+

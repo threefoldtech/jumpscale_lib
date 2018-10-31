@@ -48,3 +48,4 @@ class SSHCleanup(HealthCheckRun):
             status = "ERROR"
 
         self.add_message(self.id, status, text)
+

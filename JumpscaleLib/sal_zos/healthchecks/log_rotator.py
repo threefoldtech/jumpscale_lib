@@ -78,3 +78,4 @@ def get_log_size(node, locations):
         for item in items:
             size += item['size']
     return size
+

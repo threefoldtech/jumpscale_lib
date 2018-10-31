@@ -402,3 +402,4 @@ class Node:
 
     def __hash__(self):
         return hash((self.addr, self.port))
+

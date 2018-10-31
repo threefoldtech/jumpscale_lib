@@ -61,3 +61,4 @@ class ZeroStor():
 
     def is_running(self):
         return self.container.is_job_running(self._job_id)
+

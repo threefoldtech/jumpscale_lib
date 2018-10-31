@@ -34,3 +34,4 @@ class Fan(IPMIHealthCheck):
                     self.add_message(id=id_, status="OK", text="Fan {id} is working at ({text})".format(id=id_, text=text))
         else:
             self.add_message(id="SKIPPED", status="SKIPPED", text="NO fan information available")
+

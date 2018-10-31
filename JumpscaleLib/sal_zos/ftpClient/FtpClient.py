@@ -28,3 +28,4 @@ class FtpClient():
             buff = BytesIO()
             ftp.retrbinary('RETR ' + filename, buff.write)
             return buff.getvalue().decode()
+

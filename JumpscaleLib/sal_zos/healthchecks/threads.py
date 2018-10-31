@@ -43,3 +43,4 @@ class Threads(HealthCheckRun):
             message["text"] = "Average threads per hyperthread is normal"
 
         self.add_message(**message)
+

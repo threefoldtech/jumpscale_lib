@@ -34,3 +34,4 @@ class NetworkLoad(HealthCheckRun):
                         self.add_message(id="%s_%s" % (nic_name, direction), status="WARNING", text='Nic {} {} bandwith is {:.2f}%'.format(nic_name, direction, percent))
                     else:
                         self.add_message(id="%s_%s" % (nic_name, direction), status="OK", text='Nic {} {} bandwith is {:.2f}%'.format(nic_name, direction, percent))
+

@@ -137,3 +137,4 @@ class Pubsub():
     async def subscribe(self, queue=None):
         response = await self.sync('logger.subscribe', {'queue': queue})
         return response
+

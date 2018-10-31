@@ -69,3 +69,4 @@ def get_message(type_, percent):
         message['text'] = r'Average %s load during last hour was too high' % (type_.upper())
 
     return message
+

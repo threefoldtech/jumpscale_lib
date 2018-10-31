@@ -128,3 +128,4 @@ class Grafana():
             except requests.exceptions.ConnectionError:
                 time.sleep(1)
                 pass
+

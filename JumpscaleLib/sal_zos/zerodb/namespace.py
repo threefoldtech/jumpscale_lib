@@ -153,3 +153,4 @@ class Namespaces(Collection):
         namespace = Namespace(self._parent, name, size, password, public)
         self._items.append(namespace)
         return namespace
+

@@ -26,3 +26,4 @@ class Firewall:
         job = self.container.client.system('nft -f /etc/nftables.conf').get()
         if job.state != 'SUCCESS':
             raise RuntimeError("Failed to apply nftables {} {}".format(job.stdout, job.stderr))
+

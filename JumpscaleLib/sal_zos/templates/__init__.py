@@ -12,3 +12,4 @@ def get(templatename):
 def render(templatename, **kwargs):
     env = get(templatename)
     return env.render(**kwargs) + '\n'
+
