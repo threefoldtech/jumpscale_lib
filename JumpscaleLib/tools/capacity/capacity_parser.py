@@ -6,7 +6,6 @@ import requests
 from jumpscale import j
 from JumpscaleLib.sal_zos.disks.Disks import StorageType
 
-from .continents import continent_from_country
 from .units import GB, GiB
 
 logger = j.logger.get(__name__)
@@ -54,7 +53,7 @@ class Report():
         data = {}
 
         try:
-            resp = requests.get('https://geoip-db.com/json')
+            resp = requests.get('https://geoip.grid.tf')
             if resp.status_code == 200:
                 data = resp.json()
         except Exception as err:
@@ -62,7 +61,7 @@ class Report():
 
         location = dict(
             country=data.get('country_name') or 'Unknown',
-            continent=continent_from_country.get(data.get('country_code') or 'A1'),
+            continent=data.get('continent') or 'A1',
             city=data.get('city') or 'Unknown',
             longitude=data.get('longitude') or 0,
             latitude=data.get('latitude') or 0,
