@@ -1,5 +1,13 @@
 # Jumpscale Client for Rivine
 
+## Rivine client usage
+
+The rivine client itself is only intended as a library for other projects, such
+as [TfChain](../tfchain/README.md). If you are interested in using a client, please
+check the client of the correct chain, rather than this library.
+
+## Provided functionality
+
 This is a thin client/wallet for Rivine blockchains.
 This means that it communicates with full nodes but does not store the blockchain locally and does not participate in the peer to peer protocol.
 
