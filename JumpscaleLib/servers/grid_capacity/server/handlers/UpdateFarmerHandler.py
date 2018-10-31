@@ -28,6 +28,8 @@ def UpdateFarmerHandler():
     if new_farm_name:
         farmer.name = new_farm_name
 
+    farmer.email = request.args.get('emailaddress')
+
     if 'wallet_addresses' in request.args:
         farmer.wallet_addresses = []
         for addr in request.args['wallet_addresses'].split(','):
