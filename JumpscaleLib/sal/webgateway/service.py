@@ -7,9 +7,9 @@ from JumpscaleLib.sal.coredns.ResourceRecord import RecordType
 
 class Service:
 
-    def __init__(self, name, pulic_ips, traefik, coredns):
+    def __init__(self, name, public_ips, traefik, coredns):
         self.name = name
-        self.pulic_ips = pulic_ips
+        self.public_ips = public_ips
         self._traefik = traefik
         self._coredns = coredns
         self.proxy = self._load_proxy()
@@ -35,7 +35,7 @@ class Service:
         return self._traefik.proxy_create([frontend], [backend])
 
     def _deploy_dns(self, domain):
-        for ip in self.pulic_ips:
+        for ip in self.public_ips:
             self._coredns.zone_create(domain, ip)
 
     def _deploy_reverse_proxy(self, domain, endpoints):
