@@ -41,7 +41,7 @@ class TfchainClientFactory(JSConfigBaseFactory):
         """
         return TransactionFactory.from_json(txn_json)
 
-    def create_wallet (self, walletname, testnet= False, seed = ''):
+    def create_wallet(self, walletname, testnet= False, seed = ''):
         """
         Creates a named wallet
 
@@ -112,4 +112,3 @@ class TfchainClientFactory(JSConfigBaseFactory):
         if locktime is not None:
             condition = LockTimeCondition(condition=condition, locktime=locktime)
         return condition
-
