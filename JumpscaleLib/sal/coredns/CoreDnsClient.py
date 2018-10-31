@@ -70,20 +70,3 @@ class CoreDnsClient(JSConfigBase):
             key = unregister_record(zone)
             self.etcd_client.api.delete_prefix(key)
 
-    def zone_exists(self, domain, record_type=RecordType.A ):
-        """
-        search of zone in zones list
-        
-        Arguments:
-            domain {string} 
-        
-        Keyword Arguments:
-            record_type {enum} (default: {RecordType.A})
-        
-        Returns:
-            true if exist
-        """
-        for zone in self.zones:
-            if zone.domain == domain and zone.type == record_type:
-                return True
-        return False
