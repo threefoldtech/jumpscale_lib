@@ -282,7 +282,23 @@ class MarkdownDocument(JSBASE):
 
     @property
     def html(self):
-        return str(self.htmlpage_get())        
+        return str(self.htmlpage_get())
+
+    def pdf(self,path):
+        """
+        write pdf to path specified,
+
+        :param path:
+        :return:
+        """
+        raise NotImplemented()
+        #probably best way is to use latex and then to pdf
+        #there are is also a way with html directly
+        #we need pagebreaks to work
+        #we need tables to work
+        #we need images to work
+
+
 
     # @property
     # def html(self):
