@@ -56,11 +56,13 @@ class Service:
         else:
             frontend = self._traefik.frontend_create(self.name)
 
-        if len(frontend.rules) > 0 and frontend.rules[0].value != domain:
-            rule = frontend.rules[0]
-            rule.value += ',%s' % domain
-        else:
+        if len(frontend.rules) <= 0:
             frontend.rule_add(domain)
+        else:
+            rule = frontend.rules[0]
+            existing_domains = rule.value.split(',')
+            if domain not in existing_domains:
+                rule.value += ',%s' % domain
 
         frontend.backend_name = backend.name
 
