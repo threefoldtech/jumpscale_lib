@@ -31,6 +31,18 @@ class ZeroOSClientFactory():
         cl = j.clients.zos_protocol.get(instance=instance, data=data, create=create, die=die, interactive=interactive, **kwargs)
         return j.sal_zos.node.get(cl)
 
+    def configure(self,instance='main', host="127.0.0.1",port="4444",
+                  unixsocket = "",password = "",ssl = False,timeout = 120):
+        data={}
+        data["host"] = host
+        data["port"] = port
+        data["unixsocket"] = unixsocket
+        data["password"] = password
+        data["ssl"] = ssl
+        data["timeout"] = timeout
+        data["db"] = 0
+        return self.get(data=data,instance=instance)
+
     def list(self, prefix=''):
         return j.clients.zos_protocol.list(prefix=prefix)
 
@@ -47,6 +59,16 @@ class ZeroOSClientFactory():
         return j.clients.zos_protocol.getall()
 
     def new(self, instance, data={}):
+        """
+        data = {}
+            host = "127.0.0.1"
+            port = 6379
+            unixsocket = ""
+            password_ = ""
+            db = 0
+            ssl = true
+            timeout = 120
+        """
         return j.clients.zos_protocol.new(instance=instance, data=data)
 
     def zero_node_ovh_install(self, OVHHostName, OVHClient, zerotierNetworkID, zerotierClient):

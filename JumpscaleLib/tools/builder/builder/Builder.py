@@ -6,7 +6,9 @@ import locale
 
 JSBASE = j.application.JSBaseClass
 
-from .ZOSContainer import ZOSContainer
+# from .ZOSContainer import ZOSContainer
+from .ZOS import ZOS
+from .ZOSVB import ZOSVB
 
 class Builder(JSBASE):
 
@@ -20,21 +22,21 @@ class Builder(JSBASE):
 
 
 
-    def zos_client_get(self,name="builder"):
-        """
-        if vb is True then it means we will create the zos virtualmachine locally using virtualbox
-
-        js_shell 'j.tools.builder.zos_client_get(name="container")'
-
-        """
-        self.logger.info("zos client gent:%s"%name)
-        if name not in self._clients:
-            if name not in j.clients.zos.list():
-                raise RuntimeError("zos client not found for:%s"%bame)
-
-        # if not j.sal.nettools.tcpPortConnectionTest(cl.addr,cl.port,timeout=1) or not cl.is_running():
-            self._clients[name] = j.clients.zos.get(name)
-        return self._clients[name]
+    # def zos_client_get(self,name="builder"):
+    #     """
+    #     if vb is True then it means we will create the zos virtualmachine locally using virtualbox
+    #
+    #     js_shell 'j.tools.builder.zos_client_get(name="container")'
+    #
+    #     """
+    #     self.logger.info("zos client gent:%s"%name)
+    #     if name not in self._clients:
+    #         if name not in j.clients.zos.list():
+    #             raise RuntimeError("zos client not found for:%s"%bame)
+    #
+    #     # if not j.sal.nettools.tcpPortConnectionTest(cl.addr,cl.port,timeout=1) or not cl.is_running():
+    #         self._clients[name] = j.clients.zos.get(name)
+    #     return self._clients[name]
 
 
     def zos_iso_download(self, zerotierinstance="",overwrite=True):
@@ -58,9 +60,23 @@ class Builder(JSBASE):
         """
         return j.clients.virtualbox.client
 
-    def zos_vb_create(self, name, zerotierinstance="", redis_port=4444, reset=False, memory=2000):
+    def zos_get(self, name="builder", redis_port=6600):
         """
-        js_shell 'j.tools.builder.zos_vb_create(name="test",reset=True)'
+
+        js_shell 'j.tools.builder.zos_get()'
+
+        connect to existing zero-os
+        :param name:
+        :param redis_port:
+        :return:
+        """
+        j.shell()
+        return ZOS(zosclient,name=name)
+
+
+    def zos_vb_get(self, name="builder", zerotierinstance="", redis_port=4444, reset=False, memory=4000):
+        """
+        js_shell 'j.tools.builder.zos_vb_create(reset=False)'
         """
         vm = self.vb_client.vm_get(name)
         self.logger.debug(vm)
@@ -143,9 +159,10 @@ class Builder(JSBASE):
         self.logger.info("ping test OK")
 
         if r.get("zos:active") != b'1':
-            self.logger.info("partition first time")
-            zcl.zerodbs.partition_and_mount_disks()
-            r.set("zos:active",1)
+            # self.logger.info("partition first time")
+            # zcl.zerodbs.partition_and_mount_disks()
+            # r.set("zos:active",1)
+            pass
 
         self.logger.debug("vm ready to be used")
 
