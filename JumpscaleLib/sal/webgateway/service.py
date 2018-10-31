@@ -46,9 +46,8 @@ class Service:
 
         for endpoint in endpoints:
             u = urlparse(endpoint)
-            for k in [u.hostname, u.port, u.scheme]:
-                if not k:
-                    raise ValueError("wrong format for endpoint %s" % endpoint)
+            if not all([u.hostname, u.port, u.scheme]):
+                raise ValueError("wrong format for endpoint %s" % endpoint)
             server = backend.server_add(ip=u.hostname, port=u.port, scheme=u.scheme)
             server.weight = 10  # TODO
 
