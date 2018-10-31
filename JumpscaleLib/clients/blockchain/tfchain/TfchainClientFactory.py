@@ -6,6 +6,7 @@ from Jumpscale import j
 
 from JumpscaleLib.clients.blockchain.tfchain.TfchainClient import TfchainClient
 from JumpscaleLib.clients.blockchain.tfchain.TfchainNetwork import TfchainNetwork
+from JumpscaleLib.clients.blockchain.tfchain.TfchainThreeBotClient import TfchainThreeBotClient
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory,\
         TransactionV128, TransactionV129
@@ -30,6 +31,10 @@ class TfchainClientFactory(JSConfigBaseFactory):
     @property
     def network(self):
         return TfchainNetwork
+
+    @property
+    def threebot(self):
+        return TfchainThreeBotClient
 
     def generate_seed(self):
         """
