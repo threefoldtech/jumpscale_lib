@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block body %}
+<main role="main">
+    <div class="container">
+        <form action="/login" method="post">
+            <div class="form-group">
+                <label for="organizationIdInput">Organization ID</label>
+                <input required type="text" class="form-control" name="organization" id="organizationIdInput" placeholder="my-awesome-farmid">
+                <small id="organizationIdInputHelp" class="form-text text-muted">It's You Online Organization ID</small>
+            </div>
+            <button type="submit" class="btn btn-primary">Login via It's You Online</button>
+        </form>
+    </div>
+    <script>
+    $(document).ready(function() { $('#organizationIdInput').focus(); });
+    </script>
+</main>
+{% endblock %}
+
