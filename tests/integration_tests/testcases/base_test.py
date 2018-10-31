@@ -246,7 +246,7 @@ class BaseTest(Utils):
     def get_disk_size(self):
         size_bytes = self.node_sal.client.disk.getinfo(self.disk_name)['size']
         size_gb = size_bytes / 1024**3
-        return size_gb
+        return int(size_gb)
 
     def set_vdisk_default_data(self, name=None):
         disk_params = {
