@@ -46,7 +46,6 @@
             <tr data-toggle="modal" data-target="#{{farmer.id}}" id="{{farmer.id}}" class="clickable">
                 <td>{{farmer.name}}</td>
                 <td>{{farmer.iyo_organization}}</td>
-                <td>{{farmer.email}}</td>
                 {% if farmer.location and farmer.location.country %}
                     <td>{{farmer.location.country}}, {{farmer.location.city}}</td>
                 {% else %}
