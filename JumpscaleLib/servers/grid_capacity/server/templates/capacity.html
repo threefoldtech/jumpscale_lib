@@ -33,28 +33,28 @@
     <main role="main">
 
       <div class="container">
-        <p class="float-right"><a href="https://threefoldfoundation.github.io/info_grid/#/">Threefold grid documentation</a></p>
+        <p class="float-right"><a href="https://threefoldfoundation.github.io/info_grid/#/">ThreeFold Grid documentation</a></p>
         <h2>Search for capacity</h2>
         <form action="/" method="get">
           <div class="form-group">
-              <label for="formCRU">Minimum <abbr title="CPU resource unit">CRU</abbr> : <span class="badge badge-pill badge-primary"><span id=formCRUValue></span> CPU</span></span></label>
+              <label for="formCRU">Minimum <abbr title="CPU Resource Unit">CRU</abbr>: <span class="badge badge-pill badge-primary"><span id=formCRUValue></span> CPU</span></span></label>
               <input type="range" class="form-control-range" id="formCRU" name="cru" value="{{form.cru}}" step=1>
           </div>
           <div class="form-group">
-            <label for="formMRU">Minimum <abbr title="Memory resource unit">MRU</abbr> : <span class="badge badge-pill badge-primary"><span id=formMRUValue></span> GiB</span></span></label>
+            <label for="formMRU">Minimum <abbr title="Memory Resource Unit">MRU</abbr>: <span class="badge badge-pill badge-primary"><span id=formMRUValue></span> GiB</span></span></label>
             <input type="range" class="form-control-range" id="formMRU" name="mru" value="{{form.mru}}" step=1 onchange="">
           </div>
           <div class="form-group">
-              <label for="formHRU">minimum <abbr title="HDD resource unit">HRU</abbr> : <span class="badge badge-pill badge-primary"><span id=formHRUValue></span> GiB</span></span></label>
+              <label for="formHRU">Minimum <abbr title="HDD Resource Unit">HRU</abbr>: <span class="badge badge-pill badge-primary"><span id=formHRUValue></span> GiB</span></span></label>
               <input type="range" class="form-control-range" id="formHRU" name="hru" value="{{form.hru}}" step=1 max=5000>
           </div>
           <div class="form-group">
-              <label for="formSRU">minimum <abbr title="SSD resource unit">SRU</abbr> : <span class="badge badge-pill badge-primary"><span id=formSRUValue></span> GiB</span></span></label>
+              <label for="formSRU">Minimum <abbr title="SSD Resource Unit">SRU</abbr>: <span class="badge badge-pill badge-primary"><span id=formSRUValue></span> GiB</span></span></label>
               <input type="range" class="form-control-range" id="formSRU" name="sru" value="{{form.sru}}" step=1 max=1000>
           </div>
           <div class="row">
             <div class="form-group col-6">
-                <label for="formCountry">Filter by country :</label>
+                <label for="formCountry">Filter by country:</label>
                 <select class="form-control" id="formCountry" name="country">
                   <option></option>
                   {% for country in countries %}
@@ -67,7 +67,7 @@
                 </select>
             </div>
             <div class="form-group col-6">
-                <label for="formFarmer">Filter by farmer :</label>
+                <label for="formFarmer">Filter by farmer:</label>
                 <select class="form-control" id="formFarmer" name="farmer">
                   <option></option>
                   {% for farmer in farmers if fusage[farmer.id] > 0 %}
