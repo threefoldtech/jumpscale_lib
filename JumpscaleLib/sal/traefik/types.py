@@ -1,4 +1,5 @@
 from enum import Enum
+from .import encoding
 
 
 class LoadBalanceMethod(Enum):
@@ -45,6 +46,9 @@ class BackendServer:
         self.port = port
         self.scheme = scheme
         self.weight = weight
+
+    def url(self):
+        return "%s:%s:%s" % (self.scheme, self.ip, self.port)
 
     def __repr__(self):
         return "<BackendServer> {}://{}:{}".format(self.scheme, self.ip, self.port)
