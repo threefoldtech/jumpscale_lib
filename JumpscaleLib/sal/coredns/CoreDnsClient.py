@@ -1,6 +1,7 @@
 from jumpscale import j
 import json
 from .encoding import (encode_record,unregister_record,load)
+from .RoundRobin import zone_exists_list,zone_exists_etcd
 from .ResourceRecord import ResourceRecord ,RecordType
 JSConfigBase = j.tools.configmanager.base_class_config
 
@@ -49,6 +50,12 @@ class CoreDnsClient(JSConfigBase):
             CNAME record example: rrdata = 'cn1.skydns.local skydns.local.'
         """
         zone = ResourceRecord(domain, rrdata, record_type, ttl, priority, port)
+        etcd_x = zone_exists_etcd(zone,self.etcd_client)
+        list_x = zone_exists_list(zone,self._zones)
+        if etcd_x >list_x:
+            zone.domain = 'x{}.{}'.format(etcd_x,zone.domain)
+        else:
+            zone.domain = 'x{}.{}'.format(list_x,zone.domain)
         self._zones.append(zone)
         return zone
 
