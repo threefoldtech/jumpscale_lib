@@ -5,16 +5,7 @@ JSBASE = j.application.JSBaseClass
 
 import copy
 
-import imp
 import sys
-
-def loadmodule(name, path):
-    parentname = ".".join(name.split(".")[:-1])
-    sys.modules[parentname] = __package__
-    mod = imp.load_source(name, path)
-    return mod
-
-
 
 class DocSite(JSBASE):
     """

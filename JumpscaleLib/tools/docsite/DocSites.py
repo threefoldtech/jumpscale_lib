@@ -9,12 +9,6 @@ import sys
 JSBASE = j.application.JSBaseClass
 
 
-def loadmodule(name, path):
-    parentname = ".".join(name.split(".")[:-1])
-    sys.modules[parentname] = __package__
-    mod = imp.load_source(name, path)
-    return mod
-
 
 class DocSites(JSBASE):
     """
@@ -55,44 +49,17 @@ class DocSites(JSBASE):
             self._git_repos[path] = gc
         return self._git_repos[path]
 
-    def _init(self):
-        if not self._initOK:
-            # self.install()
-            j.clients.redis.core_get()
-            j.sal.fs.remove(self._macroCodepath)
-            # load the default macro's
-            self.macros_load("https://github.com/Jumpscale/docsite/tree/master/macros")
-            self._initOK = True
+    # def _init(self):
+    #     if not self._initOK:
+    #         # self.install()
+    #         j.clients.redis.core_get()
+    #         j.sal.fs.remove(self._macroCodepath)
+    #         # load the default macro's
+    #         self.macros_load("https://github.com/Jumpscale/docsite/tree/master/macros")
+    #         self._initOK = True
 
-    def macros_load(self, pathOrUrl="https://github.com/threefoldtech/jumpscale_weblibs/tree/master/macros"):
-        """
-        @param pathOrUrl can be existing path or url
-        e.g. https://github.com/threefoldtech/jumpscale_lib/docsite/tree/master/examples
-        """
-        self.logger.info("load macros")
-        path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
-
-        if path not in self._macros_modules:
-
-            if not j.sal.fs.exists(path=path):
-                raise j.exceptions.Input(
-                    "Cannot find path:'%s' for macro's, does it exist?" % path)
-
-            for path0 in j.sal.fs.listFilesInDir(path, recursive=True, filter="*.py", followSymlinks=True):
-                code = j.sal.fs.fileGetContents(path0)
-                md5 = j.data.hash.md5_string(code)
-                if md5 not in self._macros_loaded:
-                    code = code.replace("from Jumpscale import j", "")
-                    code = "from Jumpscale import j\n\n" + code
-                    name = j.sal.fs.getBaseName(path0)[:-3] #find name, remove .py
-                    code_path = self._macroCodepath+"%s.py"%name
-                    j.sal.fs.writeFile(code_path, code)
-                    self._macros_modules[code_path] = loadmodule(name, code_path)
-                    self._macros[name] = eval("self._macros_modules[code_path].%s"%name)
-                    self._macros_loaded.append(md5)
 
     def load(self, path="", name=""):
-        self.macros_load()
         if path.startswith("http"):
             path = j.clients.git.getContentPathFromURLorPath(path)
         ds = DocSite(path=path, name=name)

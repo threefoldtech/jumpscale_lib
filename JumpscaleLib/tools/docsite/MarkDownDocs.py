@@ -9,13 +9,6 @@ import sys
 JSBASE = j.application.JSBaseClass
 
 
-def loadmodule(name, path):
-    parentname = ".".join(name.split(".")[:-1])
-    sys.modules[parentname] = __package__
-    mod = imp.load_source(name, path)
-    return mod
-
-
 class MarkDownDocs(JSBASE):
     """
     """
@@ -66,35 +59,20 @@ class MarkDownDocs(JSBASE):
     def macros_load(self, pathOrUrl="https://github.com/threefoldtech/jumpscale_weblibs/tree/master/macros"):
         """
         @param pathOrUrl can be existing path or url
-        e.g. https://github.com/threefoldtech/jumpscale_lib/markdowndocs/tree/master/examples
+        e.g. https://github.com/threefoldtech/jumpscale_lib/docsite/tree/master/examples
         """
         self.logger.info("load macros")
         path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
 
-        if path not in self._macroPathsDone:
+        if path not in self._macros_modules:
 
             if not j.sal.fs.exists(path=path):
                 raise j.exceptions.Input(
                     "Cannot find path:'%s' for macro's, does it exist?" % path)
 
-            if j.sal.fs.exists(path=self._macroCodepath):
-                code = j.sal.fs.readFile(self._macroCodepath)
-            else:
-                code = ""
-
             for path0 in j.sal.fs.listFilesInDir(path, recursive=True, filter="*.py", followSymlinks=True):
-                newdata = j.sal.fs.fileGetContents(path0)
-                md5 = j.data.hash.md5_string(newdata)
-                if md5 not in self._macros_loaded:
-                    code += newdata
-                    self._macros_loaded.append(md5)
-
-            code = code.replace("from Jumpscale import j", "")
-            code = "from Jumpscale import j\n\n" + code
-
-            j.sal.fs.writeFile(self._macroCodepath, code)
-            self.macros = loadmodule("macros", self._macroCodepath)
-            self._macroPathsDone.append(path)
+                name = j.sal.fs.getBaseName(path0)[:-3] #find name, remove .py
+                self._macros[name] = j.tools.jinja2.code_python_render(obj_key=name, path=path0,reload=False, objForHash=name)
 
     def load(self, path="", name=""):
         self.macros_load()

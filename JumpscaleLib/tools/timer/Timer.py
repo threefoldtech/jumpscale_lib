@@ -45,6 +45,7 @@ class TIMER(JSBASE):
                 TIMER.performance = float(nritems) / float(TIMER.duration)
         if log:
             TIMER.result()
+        return TIMER.performance
 
     @staticmethod
     def clean():
