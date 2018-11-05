@@ -28,11 +28,10 @@ class ZdbConfig(JSConfigBase):
             secrets = d["secrets_"]
             mode = d["mode"]
 
-            self._zdb = j.clients.zdb.get(
-                addr=addr, port=port, adminsecret=adminsecret, secrets=secrets, mode=mode)
+            self._zdb = j.clients.zdbsimple.get(addr=addr, port=port, adminsecret=adminsecret, secrets=secrets, mode=mode)
         return self._zdb
 
     def __str__(self):
-        return "redis:%-14s %-25s:%-4s (ssl:%s)" % (self.instance, self.config.data["addr"],  self.config.data["port"], self.config.data["ssl"])
+        return "redis:%-14s %-25s:%-4s" % (self.instance, self.config.data["addr"],  self.config.data["port"])
 
     __repr__ = __str__

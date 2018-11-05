@@ -28,17 +28,17 @@ class ZdbConfigFactory(JSConfigBase):
         """
 
         if port is None:
-            raise InputError("port cannot be None")
+            raise ValueError("port cannot be None")
 
         data = {}
         data["addr"] = addr
         data["port"] = str(port)
         data["mode"] = str(mode)
         data["adminsecret_"] = adminsecret
-        data["secrets_"] = secrets  #is now multiple secrets or 1 default one, in future will be our own serializion lib (the schemas)
+        data["secrets_"] = secrets  # is now multiple secrets or 1 default one, in future will be our own serializion lib (the schemas)
         return self.get(instance=instance, data=data)
 
-    def testdb_server_start_client_get(self,reset=False,mode="seq"):
+    def testdb_server_start_client_get(self, reset=False, mode="seq"):
         """
         will start a ZDB server in tmux (will only start when not there yet or when reset asked for)
         erase all content
@@ -49,20 +49,19 @@ class ZdbConfigFactory(JSConfigBase):
         db = j.servers.zdb.configure(instance="test", adminsecret="123456", reset=reset, mode=mode)
         db.start()
 
-        #if secrets only 1 secret then will be used for all namespaces
+        # if secrets only 1 secret then will be used for all namespaces
         cl = db.client_get(secrets="1234")
         return cl
 
-    def test(self,reset=True):
+    def test(self, reset=True):
         """
         js_shell 'j.clients.zdb.test(reset=True)'
 
         """
 
-        cl = j.clients.zdb.testdb_server_start_client_get(reset=reset,mode="seq")
+        cl = j.clients.zdb.testdb_server_start_client_get(reset=reset, mode="seq")
 
         cl1 = cl.namespace_new("test")
         cl1.test_seq()
 
-
-        #TODO: *1 need to test the other modes as well
+        # TODO: *1 need to test the other modes as well
