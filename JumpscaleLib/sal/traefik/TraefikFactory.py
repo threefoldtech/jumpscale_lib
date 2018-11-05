@@ -1,4 +1,4 @@
-from Jumpscale import j
+from jumpscale import j
 
 from .TraefikClient import (Backend, BackendServer, Frontend, FrontendRule,
                             TraefikClient)

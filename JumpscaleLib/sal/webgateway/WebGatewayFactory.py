@@ -1,4 +1,4 @@
-from Jumpscale import j
+from jumpscale import j
 
 from .webgateway import WebGateway
 

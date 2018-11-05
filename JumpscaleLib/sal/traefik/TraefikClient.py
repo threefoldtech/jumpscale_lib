@@ -1,4 +1,4 @@
-from Jumpscale import j
+from jumpscale import j
 
 from . import encoding
 from .types import (Backend, BackendServer, Frontend, FrontendRule,
