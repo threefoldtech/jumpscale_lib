@@ -175,3 +175,15 @@ class Minio(Service):
             fs.delete()
         except ValueError:
             pass
+
+    def check_and_repair(self):
+        cmd = '/bin/minio gateway zerstor-repair --config-dir {dir}'.format(dir=self._config_dir)
+
+        job = self.container.client.system(cmd)
+        while job.running:
+            time.sleep(10)
+            logger.info("Check and repair still running")
+
+        result = job.get()
+        if result.state == 'ERROR':
+            raise RuntimeError("Failed to do check and repair")
