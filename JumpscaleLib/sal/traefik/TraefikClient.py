@@ -43,13 +43,13 @@ class TraefikClient(JSConfigBase):
 
     def frontend_create(self, name):
         if name in self._frontends:
-            return ValueError("a frontend names {} already exists".format(name))
+            raise ValueError("a frontend names {} already exists".format(name))
         self._frontends[name] = Frontend(name)
         return self._frontends[name]
 
     def backend_create(self, name):
         if name in self._frontends:
-            return ValueError("a backend names {} already exists".format(name))
+            raise ValueError("a backend names {} already exists".format(name))
         self._backends[name] = Backend(name)
         return self._backends[name]
 
@@ -73,6 +73,11 @@ class Proxy:
         :param frontends: list of `Frontend` objects that needs to be added
         :param backends: list of `Backend` objects that will be connected to the frontend
         """
+        for backend in self.backends:
+            encoding.backend_delete(self.etcd_client, backend)
+        for frontend in self.frontends:
+            encoding.frontend_delete(self.etcd_client, frontend)
+
         # register the backends and frontends for traefik use
         for backend in self.backends:
             encoding.backend_write(self.etcd_client, backend)
@@ -91,3 +96,11 @@ class Proxy:
 
         for frontend in frontends:
             encoding.frontend_delete(self.etcd_client, frontend)
+
+    def __repr__(self):
+        out = "<Proxy>\n"
+        for f in self.frontends:
+            out += "  %s\n" % str(f)
+        for b in self.backends:
+            out += "  %s" % str(b)
+        return out

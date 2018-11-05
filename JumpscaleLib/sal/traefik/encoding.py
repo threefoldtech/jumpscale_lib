@@ -66,6 +66,7 @@ def backend_load(client, name):
         url, _ = client.api.get('/traefik/backends/{}/servers/{}/url'.format(name, server_name))
         if not url:
             continue
+
         u = urlparse(url.decode())
         server = BackendServer(u.hostname, u.port, u.scheme)
 
