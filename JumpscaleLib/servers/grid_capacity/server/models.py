@@ -74,10 +74,8 @@ class NodeRegistration:
         if sru:
             query['total_resources__sru__gte'] = sru
 
-        """
         if not fulldump:
             query['updated__gte'] = datetime.datetime.now() - datetime.timedelta(days=7)
-        """
 
         nodes = Capacity.objects(**query)
         if kwargs.get('order'):
