@@ -18,14 +18,21 @@ class CoreDnsFactory(JSConfigFactory):
         return self.get(instance_name, data={"etcd_instance": instance_name})
 
     def test(self):
-        #create etcd client
-        cl = j.sal.coredns.configure(instance_name="main",host="10.144.72.95",password="njufdmrq3k")
-        #create zones
-        zone1 = cl.zone_create('test.example.com','10.144.13.199',record_type='A')
-        zone2 = cl.zone_create('example.com','2003::8:1',record_type='AAAA')
-        #add records in etcd
-        cl.deploy() 
-        #get records from etcd
+        # create etcd client
+        cl = j.sal.coredns.configure(instance_name="main", host="127.0.0.1", password="1234")
+        # create zones
+        zone1 = cl.zone_create('test.example.com', '10.144.13.199', record_type='A')
+        zone2 = cl.zone_create('example.com', '2003::8:1', record_type='AAAA')
+        # add records in etcd
+        cl.deploy()
+        # create zones
+        zone2 = cl.zone_create('test.example.com', '10.144.13.198', record_type='A')
+        zone3 = cl.zone_create('example.com', '2003::8:2', record_type='AAAA')
+        zone4 = cl.zone_create('test2.example.com', '10.144.13.198', record_type='A')
+        zone5 = cl.zone_create('example2.com', '2003::8:2', record_type='AAAA')
+        # add records in etcd
+        cl.deploy()
+        # get records from etcd
         cl.zones
-        #remove records from etcd
-        cl.remove([zone1,zone2])
+        # remove records from etcd
+        cl.remove([zone1, zone2, zone3, zone4, zone5])

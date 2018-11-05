@@ -1,6 +1,7 @@
-from .encoding import load,encode_record,unregister_record,get_type_and_rdata
-from .CoreDnsClient import CoreDnsClient
-from .ResourceRecord import ResourceRecord
+from .CoreDnsClient import CoreDnsClient, _get_type_and_rdata, _load, _sanitize_domain
+from .ResourceRecord import ResourceRecord, RecordType
+import json
+
 
 class Meta:
 
@@ -49,37 +50,22 @@ class EtcdClientMock:
 
 def test_zone_deploy_remove():
     client = EtcdClientMock()
-    zone1 = ResourceRecord('test1.example.com','10.144.13.199',record_type='A')
-    key, value = encode_record(zone1)
-    client.put(key, value)
-    zone2 = ResourceRecord('test2.example.com','2003::8:1',record_type='AAAA')
-    key, value = encode_record(zone2)
-    client.put(key, value)
+    zones = []
+    zones.append(ResourceRecord('test1.example.com', '10.144.13.199', record_type='A'))
+    zones.append(ResourceRecord('test2.example.com', '2003::8:1', record_type='AAAA'))
+    for zone in zones:
+        client.put(zone.key(), zone.rrdata)
 
-    assert client._data == {
-        b'/hosts/com/example/test1': b'{"ttl": 300, "host": "10.144.13.199"}',
-        b'/hosts/com/example/test2': b'{"ttl": 300, "host": "2003::8:1"}',
-    }
+    for key, value in client._data.items():
+        assert key.decode() in [z.key() for z in zones]
+        for zone in zones:
+            if zone.key() == key.decode():
+                assert json.loads(value.decode()) == json.loads(zone.rrdata)
 
-    key = unregister_record(zone1)
-    client.api.delete_prefix(key)
-    key = unregister_record(zone2)
-    client.api.delete_prefix(key)
+    for zone in zones:
+        client.api.delete_prefix(zone.key())
     assert client._data == {}
 
-def test_encoding_zone():
-    client = EtcdClientMock()
-    zone1 = ResourceRecord('test1.example.com','10.144.13.199',record_type='A')
-    key, value = encode_record(zone1)
-    client.put(key, value)
-    zone2 = ResourceRecord('test2.example.com','2003::8:1',record_type='AAAA')
-    key, value = encode_record(zone2)
-    client.put(key, value)
-
-    assert client._data == {
-        b'/hosts/com/example/test1': b'{"ttl": 300, "host": "10.144.13.199"}',
-        b'/hosts/com/example/test2': b'{"ttl": 300, "host": "2003::8:1"}',
-    }
 
 def test_backend_load():
     client = EtcdClientMock()
@@ -87,19 +73,56 @@ def test_backend_load():
         b'/hosts/com/example/test1': b'{"ttl": 300, "host": "10.144.13.199"}',
         b'/hosts/com/example/test2': b'{"ttl": 300, "host": "2003::8:1"}',
     }
-    zones = load(client)
-    print(zones[0].rrdata)
-    assert zones[0].domain == "test1.example.com"
-    assert zones[0].rrdata == '{"ttl": 300, "host": "10.144.13.199"}'
-    assert zones[0].ttl == 300
-    assert zones[1].domain == 'test2.example.com'
-    assert zones[1].rrdata == '{"ttl": 300, "host": "2003::8:1"}'
-    assert zones[1].ttl == 300
+    expected = [
+        ResourceRecord('test1.example.com', '10.144.13.199', record_type=RecordType.A),
+        ResourceRecord('test2.example.com', '2003::8:1', record_type=RecordType.A),
+    ]
+    zones = _load(client)
+    assert len(zones) == 2
+    zones[0].host = 'test1.example.com'
+    zones[0].ttl = 300
+    zones[0].type = RecordType.A
+    zones[1].host = 'test2.example.com'
+    zones[1].ttl = 300
+    zones[1].type = RecordType.A
+
 
 def test_type_and_rdata():
-    type_of_record, metadata = get_type_and_rdata({"ttl": 300, "host": "10.144.13.199"})
+    type_of_record, metadata = _get_type_and_rdata({"ttl": 300, "host": "10.144.13.199"})
     assert type_of_record == "A"
     assert metadata == "10.144.13.199"
-    type_of_record, metadata = get_type_and_rdata({"ttl": 300, "host": "2003::8:1"})
+    type_of_record, metadata = _get_type_and_rdata({"ttl": 300, "host": "2003::8:1"})
     assert type_of_record == "AAAA"
     assert metadata == "2003::8:1"
+
+
+def test_multiple_ip_per_domain():
+    zones = []
+    zones.append(ResourceRecord('test.example.com', '192.168.1.1', record_type='A'))
+    zones.append(ResourceRecord('test.example.com', '192.168.1.2', record_type='A'))
+    zones.append(ResourceRecord('test.example.com', '192.168.1.10', record_type='A'))
+    zones.append(ResourceRecord('test2.example.com', '192.168.10.1', record_type='A'))
+    zones.append(ResourceRecord('test2.example.com', '192.168.10.2', record_type='A'))
+    zones.append(ResourceRecord('test3.example.com', '192.168.30.1', record_type='A'))
+    per_domain = {}
+    for zone in zones:
+        if zone.domain not in per_domain:
+            per_domain[zone.domain] = [zone]
+        else:
+            per_domain[zone.domain].append(zone)
+
+    for domain in per_domain.keys():
+        if len(per_domain[domain]) > 1:
+            for i, zone in enumerate(per_domain[domain]):
+                per_domain[domain][i].domain = 'x%d.%s' % (i, zone.domain)
+
+
+def test_sanitize_domain():
+    for test in [
+        {'domain': 'test.example.com', 'expect': 'test.example.com'},
+        {'domain': 'x1.test.example.com', 'expect': 'test.example.com'},
+        {'domain': 'x10.test.example.com', 'expect': 'test.example.com'},
+        {'domain': 'a1.test.example.com', 'expect': 'a1.test.example.com'}
+    ]:
+        result = _sanitize_domain(test['domain'])
+        assert test['expect'] == result
