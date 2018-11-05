@@ -16,8 +16,8 @@ wg = j.sal.webgateway.get('mywg', data={...})
 service = wg.service_get('my_blog')
 # the server running the web application has been moved on a different node
 backend = service.proxy.backends[0]
-backend.servers = [] # remove existing service from the backend configuration
-backend.server_add('10.242.10.10' port=8081) # configure the new backend
+backend.servers = [] # remove existing server from the backend configuration
+backend.server_add('http://10.242.10.10:8081') # configure the new backend
 service.deploy()
 ```
 

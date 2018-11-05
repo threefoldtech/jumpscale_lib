@@ -48,8 +48,7 @@ class Service:
             u = urlparse(endpoint)
             if not all([u.hostname, u.port, u.scheme]):
                 raise ValueError("wrong format for endpoint %s" % endpoint)
-            server = backend.server_add(ip=u.hostname, port=u.port, scheme=u.scheme)
-            server.weight = 10  # TODO
+            server = backend.server_add(url=endpoint, weight=10)  # TODO: allow to set weight
 
         if self.name in self._traefik.frontends:
             frontend = self._traefik.frontends[self.name]
@@ -127,7 +126,7 @@ class Service:
             buf.write("backends:\n")
             for backend in self.proxy.backends:
                 for server in backend.servers:
-                    buf.write("  %s:%s:%s\n" % (server.scheme, server.ip, server.port))
+                    buf.write("  %s://%s:%s\n" % (server.scheme, server.ip, server.port))
         return buf.getvalue()
 
     def __repr__(self):

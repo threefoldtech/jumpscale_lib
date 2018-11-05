@@ -1,5 +1,7 @@
 from enum import Enum
-from .import encoding
+from urllib.parse import urlparse
+
+from . import encoding
 
 
 class LoadBalanceMethod(Enum):
@@ -31,8 +33,8 @@ class Backend:
         self.load_balance_method = load_balance_method
         self.cb_expression = cb_expression  # TODO validate the cb_expression to be a valid one
 
-    def server_add(self, ip, port="80", scheme="http", weight="10"):
-        server = BackendServer(ip=ip, port=port, scheme=scheme, weight=weight)
+    def server_add(self, url, weight="10"):
+        server = BackendServer(url=url, weight=weight)
         self.servers.append(server)
         return server
 
@@ -41,10 +43,14 @@ class Backend:
 
 
 class BackendServer:
-    def __init__(self, ip, port="80", scheme="http", weight="10"):
-        self.ip = ip
-        self.port = port
-        self.scheme = scheme
+    def __init__(self, url, weight="10"):
+        if isinstance(url, bytes):
+            url = url.decode()
+
+        u = urlparse(url)
+        self.ip = u.hostname
+        self.port = u.port
+        self.scheme = u.scheme
         self.weight = weight
 
     def url(self):

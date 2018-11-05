@@ -23,7 +23,7 @@ class TraefikFactory(JSConfigBaseFactory):
 
         # create a first backend
         backend = cl.backend_create('backend1')
-        server = backend.server_add('192.168.1.5:8080')
+        server = backend.server_add('http://192.168.1.5:8080')
         server.weight = '20'
 
         # create a frontend

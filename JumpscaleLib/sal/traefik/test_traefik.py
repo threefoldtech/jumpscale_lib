@@ -51,8 +51,8 @@ class EtcdClientMock:
 
 def test_encoding_backend():
     client = EtcdClientMock()
-    server1 = BackendServer('192.168.1.1', 8080, 'http', 10)
-    server2 = BackendServer('192.168.1.1', 8081, 'https', 20)
+    server1 = BackendServer('http://192.168.1.1:8080', 10)
+    server2 = BackendServer('https://192.168.1.1:8081', 20)
     backend = Backend('backend1', servers=[server1, server2], load_balance_method=LoadBalanceMethod.drr)
     encoding.backend_write(client, backend)
 
@@ -87,8 +87,8 @@ def test_encoding_frontend():
 def test_proxy_deploy_delete():
     client = EtcdClientMock()
 
-    server1 = BackendServer('192.168.1.1', 8080, 'http', 10)
-    server2 = BackendServer('192.168.1.1', 8081, 'https', 20)
+    server1 = BackendServer('http://192.168.1.1:8080', 10)
+    server2 = BackendServer('https://192.168.1.1:8081', 20)
     backend = Backend('backend1', servers=[server1, server2], load_balance_method=LoadBalanceMethod.drr)
 
     rule = FrontendRule("my.domain.com", RoutingKind.Host)
@@ -97,8 +97,8 @@ def test_proxy_deploy_delete():
     proxy1 = Proxy(client, [frontend], [backend])
     proxy1.deploy()
 
-    server1 = BackendServer('192.168.2.1', 8080, 'http', 10)
-    server2 = BackendServer('192.168.2.1', 8081, 'https', 20)
+    server1 = BackendServer('http://192.168.2.1:8080', 10)
+    server2 = BackendServer('https://192.168.2.1:8081', 20)
     backend = Backend('backend2', servers=[server1, server2], load_balance_method=LoadBalanceMethod.wrr)
 
     rule = FrontendRule("his.domain.com", RoutingKind.Host)

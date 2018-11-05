@@ -67,8 +67,7 @@ def backend_load(client, name):
         if not url:
             continue
 
-        u = urlparse(url.decode())
-        server = BackendServer(u.hostname, u.port, u.scheme)
+        server = BackendServer(url)
 
         weight, _ = client.api.get('/traefik/backends/{}/servers/{}/weight'.format(name, server_name))
         if weight:
