@@ -77,7 +77,8 @@ class CoreDnsClient(JSConfigBase):
                     zone.domain = 'x%d.%s' % (i, zone.domain)
 
         for zones in per_domain.values():
-            self.etcd_client.put(zone.key(), zone.rrdata)
+            for zone in zones:
+                self.etcd_client.put(zone.key(), zone.rrdata)
 
     def remove(self, zones):
         """
