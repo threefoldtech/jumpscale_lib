@@ -3,7 +3,7 @@
 ## Staging
 Install upstream client:
 ```
-pip install --user -e 'git+https://github.com/zero-os/0-hub@api-client#egg=zerohub&subdirectory=client'
+pip install --user -e 'git+https://github.com/zero-os/0-hub@master#egg=zerohub&subdirectory=client'
 ```
 
 ## Using the client
