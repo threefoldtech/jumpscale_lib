@@ -189,15 +189,19 @@
                     <td>{{ node.used_resources.hru }}</td>
                     <td>{{ node.used_resources.sru }}</td>
                   </tr>
-		  {% if node.used_resources.cru %}
+              {% if node.used_resources.cru %}
+                  {% set available_cru = (node.total_resources.cru - node.used_resources.cru)|round(2) %}
+                  {% set available_mru = (node.total_resources.mru - node.used_resources.mru)|round(2) %}
+                  {% set available_hru = (node.total_resources.hru - node.used_resources.hru)|round(2) %}
+                  {% set available_sru = (node.total_resources.sru - node.used_resources.sru)|round(2) %}
                   <tr>
                     <td>Available</td>
-                    <td>{{ (node.total_resources.cru - node.used_resources.cru)|round(2) }}</td>
-                    <td>{{ (node.total_resources.mru - node.used_resources.mru)|round(2) }}</td>
-                    <td>{{ (node.total_resources.hru - node.used_resources.hru)|round(2) }}</td>
-                    <td>{{ (node.total_resources.sru - node.used_resources.sru)|round(2) }}</td>
+                    <td>{{ 0 if available_cru < 0 else available_cru }}</td>
+                    <td>{{ 0 if available_mru < 0 else available_mru }}</td>
+                    <td>{{ 0 if available_hru < 0 else available_hru }}</td>
+                    <td>{{ 0 if available_sru < 0 else available_sru }}</td>
                   </tr>
-		  {% endif %}
+              {% endif %}
                 </tbody>
              </table>
            </div>
