@@ -15,58 +15,25 @@ class Service:
         self.proxy = self._load_proxy()
 
     def _load_proxy(self):
-        frontend = None
-        backend = None
-        for f in self._traefik.frontends.values():
-            if f.name == self.name:
-                frontend = f
-                break
-
-        for b in self._traefik.backends.values():
-            if b.name == self.name:
-                backend = b
-                break
-
-        if not frontend or not backend:
-            return
-
-        if frontend.backend_name != backend.name:
-            raise RuntimeError()
-        return self._traefik.proxy_create([frontend], [backend])
+        for proxy in self._traefik.proxies:
+            if proxy.name == self.name:
+                return proxy
 
     def _deploy_dns(self, domain):
         for ip in self.public_ips:
             self._coredns.zone_create(domain, ip)
 
     def _deploy_reverse_proxy(self, domain, endpoints):
-        if self.name in self._traefik.backends:
-            backend = self._traefik.backends[self.name]
-        else:
-            backend = self._traefik.backend_create(self.name)
-
         for endpoint in endpoints:
             u = urlparse(endpoint)
             if not all([u.hostname, u.port, u.scheme]):
                 raise ValueError("wrong format for endpoint %s" % endpoint)
-            server = backend.server_add(url=endpoint, weight=10)  # TODO: allow to set weight
 
-        if self.name in self._traefik.frontends:
-            frontend = self._traefik.frontends[self.name]
-        else:
-            frontend = self._traefik.frontend_create(self.name)
+        if not self.proxy:
+            self.proxy = self._traefik.proxy_create(self.name)
 
-        if len(frontend.rules) <= 0:
-            frontend.rule_add(domain)
-        else:
-            rule = frontend.rules[0]
-            existing_domains = rule.value.split(',')
-            if domain not in existing_domains:
-                rule.value += ',%s' % domain
-
-        frontend.backend_name = backend.name
-
-        proxy = self._traefik.proxy_create([frontend], [backend])
-        self.proxy = proxy
+        self.proxy.backend_set(endpoints)
+        self.proxy.frontend_set(domain)
 
     def expose(self, domain, endpoints):
         """
@@ -103,7 +70,6 @@ class Service:
 
         it will remove all traefik and all coredns configuration
         """
-
         if self.proxy:
             self.proxy.delete()
         # if self._coredns: TODO
@@ -119,14 +85,12 @@ class Service:
         buf = StringIO()
         buf.write("Service %s\n" % self.name)
         if self.proxy:
-            buf.write("frontends:\n")
-            for frontend in self.proxy.frontends:
-                for rule in frontend.rules:
-                    buf.write("  %s\n" % rule.value)
-            buf.write("backends:\n")
-            for backend in self.proxy.backends:
-                for server in backend.servers:
-                    buf.write("  %s://%s:%s\n" % (server.scheme, server.ip, server.port))
+            buf.write("frontend:\n")
+            for rule in self.proxy.frontend.rules:
+                buf.write("  %s\n" % rule.value)
+            buf.write("backend:\n")
+            for server in self.proxy.backend.servers:
+                buf.write("  %s\n" % (server.url))
         return buf.getvalue()
 
     def __repr__(self):

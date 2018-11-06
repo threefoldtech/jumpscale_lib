@@ -60,16 +60,9 @@ class WebGateway(JSConfigBase):
         return self._services
 
     def _load_services(self):
-        backend_names = set()
-        frontend_names = set()
-        for value, meta in self.etcd.api.get_prefix('/traefik/backends'):
-            backend_names.add(meta.key.decode().split('/')[3])
-        for value, meta in self.etcd.api.get_prefix('/traefik/frontends'):
-            frontend_names.add(meta.key.decode().split('/')[3])
-
-        services_names = list(backend_names.intersection(frontend_names))
+        names = [p.name for p in self.traefik.proxies]
         services = []
-        for name in services_names:
+        for name in names:
             services.append(Service(name, self.public_ips, self.traefik, self.coredns))
         return services
 
