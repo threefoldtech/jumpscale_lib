@@ -30,8 +30,8 @@ class Service:
             if not all([u.hostname, u.port, u.scheme]):
                 raise ValueError("wrong format for endpoint %s" % endpoint)
 
-        if not self.proxy:
-            self.proxy = self._traefik.proxy_create(self.name)
+        if not self.name in self._traefik.proxies:
+            self._proxy = self._traefik.proxy_create(self.name)
 
         self.proxy.backend_set(endpoints)
         self.proxy.frontend_set(domain)
