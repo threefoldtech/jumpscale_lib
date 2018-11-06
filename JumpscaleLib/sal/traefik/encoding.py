@@ -94,6 +94,25 @@ def frontend_load(client, name):
     return frontend
 
 
+def proxy_list(client):
+    """
+    list all the proxy configuration present on etcd
+    """
+    backend_names = set()
+    frontend_names = set()
+    for _, meta in client.api.get_prefix('/traefik/backends'):
+        ss = meta.key.decode().split('/')
+        name = ss[3]
+        backend_names.add(name)
+
+    for _, meta in client.api.get_prefix('/traefik/frontends'):
+        ss = meta.key.decode().split('/')
+        name = ss[3]
+        frontend_names.add(name)
+
+    return sorted(list(backend_names.intersection()))
+
+
 def load(client):
     backends = {}
     frontends = {}

@@ -1,6 +1,10 @@
+from builtins import isinstance
+from collections.abc import KeysView, MutableMapping
+
 from jumpscale import j
 
 from . import encoding
+from .error import ProxyNameConflictError
 from .types import (Backend, BackendServer, Frontend, FrontendRule,
                     LoadBalanceMethod, RoutingKind)
 
@@ -17,7 +21,7 @@ class TraefikClient(JSConfigBase):
                               data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         self._etcd_client = None
         self._etcd_instance = self.config.data['etcd_instance']
-        self._proxies = []
+        self.proxies = ProxyMap(self)
         self._frontends = {}
         self._backends = {}
 
@@ -36,24 +40,11 @@ class TraefikClient(JSConfigBase):
         :return: Proxy object
         :rtype: JumpscaleLib.sal.traefik.TraefikClient.Proxy
         """
+        if name in self.proxies:
+            raise ProxyNameConflictError("a proxy named %s already exists")
 
-        return Proxy(self.etcd_client, name)
-
-    @property
-    def proxies(self):
-        """
-        list all the proxies that exists
-
-        :return: list of proxy object
-        :rtype: list
-        """
-
-        if not self._proxies:
-            frontends, backends = encoding.load(self.etcd_client)
-            for frontend in frontends.values():
-                proxy = Proxy(self.etcd_client, name=frontend.name, frontend=frontend, backend=backends.get(frontend.backend_name))
-                self._proxies.append(proxy)
-        return self._proxies
+        self.proxies[name] = Proxy(self.etcd_client, name)
+        return self.proxies[name]
 
 
 class Proxy:
@@ -135,3 +126,89 @@ class Proxy:
 
     def __repr__(self):
         return "<Proxy> %s" % self.name
+
+
+class ProxyMap(MutableMapping):
+
+    def __init__(self, traefik):
+        super().__init__()
+        self._traefik = traefik
+        self.__names = []
+        self._proxies = {}
+
+    @property
+    def _names(self):
+        if not self.__names:
+            self.__names = encoding.proxy_list(self._traefik.etcd_client)
+        return self.__names
+
+    def _load_proxy(self, name):
+        proxy = Proxy(self._traefik.etcd_client, name)
+        proxy.frontend = encoding.frontend_load(self._traefik.etcd_client, name)
+        proxy.backend = encoding.backend_load(self._traefik.etcd_client, name)
+        self._proxies[name] = proxy
+        return proxy
+
+    def keys(self):
+        return KeysView(self._names)
+
+    def __getitem__(self, key):
+        if not isinstance(key, str):
+            raise TypeError('index should be a str, not %s' % type(key))
+
+        if key not in self._names:
+            raise IndexError()
+
+        if key not in self._proxies:
+            self._load_proxy(key)
+        return self._proxies[key]
+
+    def __setitem__(self, key, value):
+        if not isinstance(value, Proxy):
+            raise TypeError()
+        if not isinstance(key, str):
+            raise TypeError()
+
+        self._names.append(key)
+        self._names.sort()
+        self._proxies[key] = value
+
+    def __delitem__(self, key):
+        if not isinstance(key, str):
+            raise TypeError('index should be a string, not %s' % type(key))
+
+        if key not in self._names:
+            raise KeyError()
+
+        self._names.remove(key)
+        if key in self._proxies:
+            del self._proxies[key]
+
+    def __len__(self):
+        return len(self._names)
+
+    def __iter__(self):
+        for name in self._names:
+            if name in self._proxies:
+                yield self._proxies[name]
+            else:
+                yield self._load_proxy(name)
+
+    def __contains__(self, item):
+        if isinstance(item, str):
+            return item in self._names
+        if isinstance(item, Proxy):
+            return item.name in self._names
+        return False
+
+    def __repr__(self):
+        d = {}
+        for name in self._names:
+            d[name] = "<Proxy> %s" % name
+        return repr(d)
+
+    def __str__(self):
+        d = {}
+        for name in self._names:
+            d[name] = "<Proxy> %s" % name
+        return str(d)

@@ -12,12 +12,13 @@ class Service:
         self.public_ips = public_ips
         self._traefik = traefik
         self._coredns = coredns
-        self.proxy = self._load_proxy()
+        self._proxy = None
 
-    def _load_proxy(self):
-        for proxy in self._traefik.proxies:
-            if proxy.name == self.name:
-                return proxy
+    @property
+    def proxy(self):
+        if not self._proxy:
+            self._proxy = self._traefik.proxies[self.name]
+        return self._proxy
 
     def _deploy_dns(self, domain):
         for ip in self.public_ips:

@@ -54,15 +54,13 @@ class WebGateway(JSConfigBase):
         :return: list of service
         :rtype: list
         """
-
         if not self._services:
             self._services = self._load_services()
         return self._services
 
     def _load_services(self):
-        names = [p.name for p in self.traefik.proxies]
         services = []
-        for name in names:
+        for name in self.traefik.proxies.keys():
             services.append(Service(name, self.public_ips, self.traefik, self.coredns))
         return services
 
