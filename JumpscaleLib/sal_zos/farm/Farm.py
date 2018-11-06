@@ -1,5 +1,5 @@
 import gevent
-from jumpscale import j
+from Jumpscale import j
 
 
 class Farm:
