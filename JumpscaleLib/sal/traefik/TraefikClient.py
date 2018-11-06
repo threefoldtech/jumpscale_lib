@@ -17,6 +17,7 @@ class TraefikClient(JSConfigBase):
                               data=data, parent=parent, template=TEMPLATE, interactive=interactive)
         self._etcd_client = None
         self._etcd_instance = self.config.data['etcd_instance']
+        self._proxies = []
         self._frontends = {}
         self._backends = {}
 
@@ -26,32 +27,33 @@ class TraefikClient(JSConfigBase):
             self._etcd_client = j.clients.etcd.get(self._etcd_instance)
         return self._etcd_client
 
-    @property
-    def frontends(self):
-        if not self._frontends:
-            self._frontends, self._backends = encoding.load(self.etcd_client)
-        return self._frontends
+    def proxy_create(self, name):
+        """
+        create a new reverse proxy
+
+        :param name: name of your proxy, it needs to be unique inside the etcd cluster
+        :type name: string
+        :return: Proxy object
+        :rtype: JumpscaleLib.sal.traefik.TraefikClient.Proxy
+        """
+
+        return Proxy(self.etcd_client, name)
 
     @property
-    def backends(self):
-        if not self._backends:
-            self._backends, self._backends = encoding.load(self.etcd_client)
-        return self._backends
+    def proxies(self):
+        """
+        list all the proxies that exists
 
-    def proxy_create(self, frontends, backends):
-        return Proxy(self.etcd_client, frontends, backends)
+        :return: list of proxy object
+        :rtype: list
+        """
 
-    def frontend_create(self, name):
-        if name in self._frontends:
-            raise ValueError("a frontend names {} already exists".format(name))
-        self._frontends[name] = Frontend(name)
-        return self._frontends[name]
-
-    def backend_create(self, name):
-        if name in self._frontends:
-            raise ValueError("a backend names {} already exists".format(name))
-        self._backends[name] = Backend(name)
-        return self._backends[name]
+        if not self._proxies:
+            frontends, backends = encoding.load(self.etcd_client)
+            for frontend in frontends.values():
+                proxy = Proxy(self.etcd_client, name=frontend.name, frontend=frontend, backend=backends.get(frontend.backend_name))
+                self._proxies.append(proxy)
+        return self._proxies
 
 
 class Proxy:
@@ -59,48 +61,77 @@ class Proxy:
     The main class to use for adding/deleting reverse proxy forwarding into etcd
     """
 
-    def __init__(self, etcd_client, frontends=None, backends=None):
+    def __init__(self, etcd_client, name, frontend=None, backend=None):
         """
         :param etcd_client: etcd client instance (j.clients.etcd.get())
         """
         self.etcd_client = etcd_client
-        self.frontends = frontends or []
-        self.backends = backends or []
+        self.name = name
+        self.frontend = frontend
+        self.backend = backend
+
+    def frontend_set(self, domain):
+        """
+        set a frontend on the proxy.
+        The frontend will redirect requests coming to domain to the backend of this proxy
+
+        :param domain: domain name
+        :type domain: str
+        :return: return a frontend object on which you can fine tune the frontend routing rules
+        :rtype: JumpscaleLib.sal.traefik.types.Frontend
+        """
+
+        # remove previous frontend if any
+        if self.frontend:
+            encoding.frontend_delete(self.etcd_client, self.frontend)
+
+        self.frontend = Frontend(name=self.name, backend_name=self.name)
+        self.frontend.rule_add(domain)
+        return self.frontend
+
+    def backend_set(self, endpoints=None):
+        """
+        set a backend on the proxy.
+        The backend will receive all the equests coming to domain configured in the frontend of this proxy
+
+        :param endpoints: if provided, a list of url to the backend servers
+        :type endpoints: list
+        :return: return a backend object on which you can configure more backend server
+        :rtype: JumpscaleLib.sal.traefik.types.Backend
+        """
+        # remove previous backend if any
+        if self.backend:
+            encoding.backend_delete(self.etcd_client, self.backend)
+
+        if not isinstance(endpoints, list):
+            endpoints = [endpoints]
+
+        self.backend = Backend(self.name)
+        for endpoint in endpoints or []:
+            self.backend.server_add(endpoint)
+        return self.backend
 
     def deploy(self):
         """
-        add proxy configurations in etcd
-        :param frontends: list of `Frontend` objects that needs to be added
-        :param backends: list of `Backend` objects that will be connected to the frontend
+        write the configuration of this proxy to etcd
         """
-        for backend in self.backends:
-            encoding.backend_delete(self.etcd_client, backend)
-        for frontend in self.frontends:
-            encoding.frontend_delete(self.etcd_client, frontend)
-
         # register the backends and frontends for traefik use
-        for backend in self.backends:
-            encoding.backend_write(self.etcd_client, backend)
-        for frontend in self.frontends:
-            encoding.frontend_write(self.etcd_client, frontend)
+        if self.backend:
+            encoding.backend_write(self.etcd_client, self.backend)
+        if self.frontend:
+            encoding.frontend_write(self.etcd_client, self.frontend)
 
     def delete(self):
         """
         remove backends or frontends from etcd
         """
-        backends = self.backends or []
-        frontends = self.frontends or []
+        if self.backend:
+            encoding.backend_delete(self.etcd_client, self.backend)
+        if self.frontend:
+            encoding.frontend_delete(self.etcd_client, self.frontend)
 
-        for backend in backends:
-            encoding.backend_delete(self.etcd_client, backend)
-
-        for frontend in frontends:
-            encoding.frontend_delete(self.etcd_client, frontend)
+        self.backend = None
+        self.frontend = None
 
     def __repr__(self):
-        out = "<Proxy>\n"
-        for f in self.frontends:
-            out += "  %s\n" % str(f)
-        for b in self.backends:
-            out += "  %s" % str(b)
-        return out
+        return "<Proxy> %s" % self.name

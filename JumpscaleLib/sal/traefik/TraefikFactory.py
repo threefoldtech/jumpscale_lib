@@ -21,20 +21,19 @@ class TraefikFactory(JSConfigBaseFactory):
     def test(self):
         cl = self.configure("test", host="10.102.64.236", user="root", password="v16ffehxnq")
 
-        # create a first backend
-        backend = cl.backend_create('backend1')
-        server = backend.server_add('http://192.168.1.5:8080')
+        # create a proxy object. A proxy has a name and is combination of frontends and backends
+        proxy = cl.proxy_create('myproxy')
+
+        # set a backend on your proxy
+        backend = proxy.backend_set(endpoints=['http://192.168.1.5:8080'])
+        # add another server to your backend
+        server = backend.server_add('http://192.168.1.15:8080')
+        # set the weight for the load balancing on the second backend server
         server.weight = '20'
 
-        # create a frontend
-        frontend = cl.frontend_create('frontend1')
-        # define the routing rule
-        frontend.rule_add("my.domain.com")
-        # link frontend1 to backend1
-        frontend.backend_name = backend.name
+        # set a frontend on your proxy
+        frontend = proxy.frontend_set('my.domain.com')
 
-        # create a proxy object. A proxy is a combinaison of frontends and backends
-        proxy = cl.proxy_create([frontend], [backend])
         # write the configuration into etcd
         proxy.deploy()
         # delete all frontend and backend configuration of this proxy from etcd

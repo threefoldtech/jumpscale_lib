@@ -87,52 +87,50 @@ def test_encoding_frontend():
 def test_proxy_deploy_delete():
     client = EtcdClientMock()
 
-    server1 = BackendServer('http://192.168.1.1:8080', 10)
-    server2 = BackendServer('https://192.168.1.1:8081', 20)
-    backend = Backend('backend1', servers=[server1, server2], load_balance_method=LoadBalanceMethod.drr)
-
-    rule = FrontendRule("my.domain.com", RoutingKind.Host)
-    frontend = Frontend("frontend1", backend.name, [rule])
-
-    proxy1 = Proxy(client, [frontend], [backend])
+    proxy1 = Proxy(client, 'proxy1')
+    backend = proxy1.backend_set(['http://192.168.1.1:8080'])
+    server = backend.server_add('https://192.168.1.1:8081')
+    server.weight = 20
+    backend.load_balance_method = LoadBalanceMethod.drr
+    frontend = proxy1.frontend_set("my.domain.com")
     proxy1.deploy()
 
-    server1 = BackendServer('http://192.168.2.1:8080', 10)
-    server2 = BackendServer('https://192.168.2.1:8081', 20)
-    backend = Backend('backend2', servers=[server1, server2], load_balance_method=LoadBalanceMethod.wrr)
-
+    proxy2 = Proxy(client, 'proxy2')
+    backend = proxy2.backend_set(['http://192.168.2.1:8080'])
+    server = backend.server_add('https://192.168.2.1:8081')
+    server.weight = 20
+    backend.load_balance_method = LoadBalanceMethod.wrr
     rule = FrontendRule("his.domain.com", RoutingKind.Host)
-    frontend = Frontend("frontend2", backend.name, [rule])
-    proxy2 = Proxy(client, [frontend], [backend])
+    frontend = proxy2.frontend_set('his.domain.com')
     proxy2.deploy()
 
     assert client._data == {
-        b'/traefik/backends/backend1/loadBalancer/method': b'drr',
-        b'/traefik/backends/backend1/servers/server0/url': b'http://192.168.1.1:8080',
-        b'/traefik/backends/backend1/servers/server0/weight': b'10',
-        b'/traefik/backends/backend1/servers/server1/url': b'https://192.168.1.1:8081',
-        b'/traefik/backends/backend1/servers/server1/weight': b'20',
-        b'/traefik/frontends/frontend1/backend': b'backend1',
-        b'/traefik/frontends/frontend1/routes/rule0/rule': b'Host:my.domain.com',
+        b'/traefik/backends/proxy1/loadBalancer/method': b'drr',
+        b'/traefik/backends/proxy1/servers/server0/url': b'http://192.168.1.1:8080',
+        b'/traefik/backends/proxy1/servers/server0/weight': b'10',
+        b'/traefik/backends/proxy1/servers/server1/url': b'https://192.168.1.1:8081',
+        b'/traefik/backends/proxy1/servers/server1/weight': b'20',
+        b'/traefik/frontends/proxy1/backend': b'proxy1',
+        b'/traefik/frontends/proxy1/routes/rule0/rule': b'Host:my.domain.com',
 
-        b'/traefik/backends/backend2/loadBalancer/method': b'wrr',
-        b'/traefik/backends/backend2/servers/server0/url': b'http://192.168.2.1:8080',
-        b'/traefik/backends/backend2/servers/server0/weight': b'10',
-        b'/traefik/backends/backend2/servers/server1/url': b'https://192.168.2.1:8081',
-        b'/traefik/backends/backend2/servers/server1/weight': b'20',
-        b'/traefik/frontends/frontend2/backend': b'backend2',
-        b'/traefik/frontends/frontend2/routes/rule0/rule': b'Host:his.domain.com',
+        b'/traefik/backends/proxy2/loadBalancer/method': b'wrr',
+        b'/traefik/backends/proxy2/servers/server0/url': b'http://192.168.2.1:8080',
+        b'/traefik/backends/proxy2/servers/server0/weight': b'10',
+        b'/traefik/backends/proxy2/servers/server1/url': b'https://192.168.2.1:8081',
+        b'/traefik/backends/proxy2/servers/server1/weight': b'20',
+        b'/traefik/frontends/proxy2/backend': b'proxy2',
+        b'/traefik/frontends/proxy2/routes/rule0/rule': b'Host:his.domain.com',
     }
 
     proxy1.delete()
     assert client._data == {
-        b'/traefik/backends/backend2/loadBalancer/method': b'wrr',
-        b'/traefik/backends/backend2/servers/server0/url': b'http://192.168.2.1:8080',
-        b'/traefik/backends/backend2/servers/server0/weight': b'10',
-        b'/traefik/backends/backend2/servers/server1/url': b'https://192.168.2.1:8081',
-        b'/traefik/backends/backend2/servers/server1/weight': b'20',
-        b'/traefik/frontends/frontend2/backend': b'backend2',
-        b'/traefik/frontends/frontend2/routes/rule0/rule': b'Host:his.domain.com',
+        b'/traefik/backends/proxy2/loadBalancer/method': b'wrr',
+        b'/traefik/backends/proxy2/servers/server0/url': b'http://192.168.2.1:8080',
+        b'/traefik/backends/proxy2/servers/server0/weight': b'10',
+        b'/traefik/backends/proxy2/servers/server1/url': b'https://192.168.2.1:8081',
+        b'/traefik/backends/proxy2/servers/server1/weight': b'20',
+        b'/traefik/frontends/proxy2/backend': b'proxy2',
+        b'/traefik/frontends/proxy2/routes/rule0/rule': b'Host:his.domain.com',
     }
     proxy2.delete()
     assert client._data == {}

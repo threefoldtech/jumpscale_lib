@@ -53,6 +53,7 @@ class BackendServer:
         self.scheme = u.scheme
         self.weight = weight
 
+    @property
     def url(self):
         return "%s:%s:%s" % (self.scheme, self.ip, self.port)
 
