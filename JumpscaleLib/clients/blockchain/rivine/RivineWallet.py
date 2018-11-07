@@ -77,7 +77,6 @@ class RivineWallet:
         self._addresses_info = {}
         self.atomicswap = AtomicSwapManager(wallet=self)
 
-
     @property
     def seed(self):
         """
@@ -118,9 +117,9 @@ class RivineWallet:
             wb.add_unconfirmed_locked_multisig_output(id, output)
         return wb
 
-    def generate_address(self, persist=True):
+    def generate_key(self, persist=True):
         """
-        Generates a new wallet address
+        Generates a new public key (and wallet address), returning the key
         """
         key = self._generate_spendable_key(index=self._nr_keys_per_seed)
         address = str(key.unlockhash)
@@ -128,8 +127,13 @@ class RivineWallet:
         self._nr_keys_per_seed += 1
         if persist is True:
             self._save_nr_of_keys()
-        return address
+        return key
 
+    def generate_address(self, persist=True):
+        """
+        Generates a new wallet address
+        """
+        return str(self.generate_key(persist=persist).unlockhash)
 
     def _save_nr_of_keys(self):
         """
@@ -145,8 +149,6 @@ class RivineWallet:
                                     create=True,
                                     interactive=False)
             cl.config.save()
-
-
 
     def _generate_spendable_key(self, index):
         """
@@ -487,7 +489,7 @@ class RivineWallet:
         for input_result in input_results:
             transaction.add_coin_input(**input_result)
 
-        for txn_input in transaction.coins_inputs:
+        for txn_input in transaction.coin_inputs:
             if used_addresses[txn_input.parent_id] not in self._keys:
             # if self._unspent_coins_outputs[txn_input.parent_id][ulh] not in self._keys:
                 raise NonExistingOutputError('Trying to spend unexisting output')
@@ -540,7 +542,7 @@ class RivineWallet:
         for input_result in input_results:
             transaction.add_coin_input(**input_result)
 
-        for txn_input in transaction.coins_inputs:
+        for txn_input in transaction.coin_inputs:
             if used_addresses[txn_input.parent_id] not in self._keys:
             # if self._unspent_coins_outputs[txn_input.parent_id][ulh] not in self._keys:
                 raise NonExistingOutputError('Trying to spend unexisting output')
@@ -579,7 +581,7 @@ class RivineWallet:
         @param transaction: Transaction object to be signed
         """
         logger.info("Signing Transaction")
-        for index, input in enumerate(transaction.coins_inputs):
+        for index, input in enumerate(transaction.coin_inputs):
             #@TODO improve the parsing of outputs its duplicated now in too many places
             ulh = self._get_unlockhash_from_output(output=self._unspent_coins_outputs[input.parent_id], address=input.parent_id)
             if ulh is not None:
@@ -617,6 +619,8 @@ class RivineWallet:
             self._sign(transaction, multisig=multisig, commit=commit)
         elif transaction.version == 128 or transaction.version == 129:
             self._sign_mint_transaction(transaction, commit=commit)
+        elif transaction.version == 144:
+            self._sign_bot_registration_transaction(transaction, commit=commit)
         else:
             raise RuntimeError("Can't sign unknown transaction version")
 
@@ -632,7 +636,7 @@ class RivineWallet:
             self._sign_transaction(transaction=transaction)
         else:
             current_height = self._get_current_chain_height()
-            for index, ci in enumerate(transaction.coins_inputs):
+            for index, ci in enumerate(transaction.coin_inputs):
                 output_info = self._check_address(ci._parent_id)
                 for txn_info in output_info['transactions']:
                     for co in txn_info['rawtransaction']['data']['coinoutputs']:
@@ -687,12 +691,29 @@ class RivineWallet:
         if commit:
             self._commit_transaction(transaction=transaction)
 
+    def _sign_bot_registration_transaction(self, transaction, commit=False):
+        """
+        Signs a bot registration transaction and optionally push it to the chain
+        @param transaction: A transactionV144 object to sign
+        @param commit: if True, the transaction will be pushed after signing
+        """
+        # sign coin inputs
+        self._sign(transaction, commit=False) # but do not commit (yet)
+        # sign bot registration
+        uh = str(transaction._identification.public_key.unlock_hash)
+        if not uh in self._keys:
+            logger.warn("no key found in wallet for unlock hash {}".format(uh.hex()))
+            return
+        key = self._keys[uh]
+        transaction._identification.sign(transaction, key.secret_key)
+        if commit:
+            self._commit_transaction(transaction=transaction)
+
 
 class SpendableKey:
     """
     SpendableKey is a secret signing key and its public verifying key
     """
-
     def __init__(self, pub_key, sec_key):
         """
         Creates new SpendableKey
@@ -703,7 +724,6 @@ class SpendableKey:
         self._sk = sec_key
         self._pk = pub_key
         self._unlockhash = None
-
 
     @property
     def public_key(self):
@@ -719,19 +739,15 @@ class SpendableKey:
         """
         return self._sk
 
-
-
     @property
     def unlockhash(self):
         """
         Calculate unlock hash of the spendable key
         """
-        if self._unlockhash is None:
-            pub_key = Ed25519PublicKey(pub_key=self._pk)
-            encoded_pub_key = binary.encode(pub_key)
-            hash = utils.hash(encoded_pub_key, encoding_type='slice')
-            self._unlockhash = UnlockHash(unlock_type=UNLOCK_TYPE_PUBKEY, hash=hash)
-        return self._unlockhash
+        pub_key = Ed25519PublicKey(pub_key=self._pk)
+        encoded_pub_key = binary.encode(pub_key)
+        hash = utils.hash(encoded_pub_key, encoding_type='slice')
+        return UnlockHash(unlock_type=UNLOCK_TYPE_PUBKEY, hash=hash)
 
 class WalletBalance:
     """

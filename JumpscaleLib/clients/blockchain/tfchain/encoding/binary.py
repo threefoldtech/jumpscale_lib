@@ -11,6 +11,7 @@ UINT_1BYTE_UPPERLIMIT = pow(2, 8) - 1
 UINT_2BYTE_UPPERLIMIT = pow(2, 16) - 1
 UINT_3BYTE_UPPERLIMIT = pow(2, 24) - 1
 UINT_4BYTE_UPPERLIMIT = pow(2, 32) - 1
+UINT_8BYTE_UPPERLIMIT = pow(2, 64) - 1
 
 class BinaryEncoder:
     """
@@ -50,9 +51,12 @@ class BinaryEncoder:
             elif value_type in (list, set, tuple, frozenset):
                 for item in value:
                     result.extend(BinaryEncoder.encode(item))
-            else:
-                if hasattr(value, 'binary'):
+            elif value_type is str:
+                result = SliceBinaryEncoder.encode(value)
+            elif hasattr(value, 'binary'):
                     result.extend(value.binary)
+            else:
+                raise ValueError('Cannot binary encode value with unknown type')
         else:
             raise ValueError('Cannot binary encode value with unknown type')
         return result
@@ -93,10 +97,12 @@ class SliceBinaryEncoder:
         length = len(value)
         result = bytearray()
         result.extend(SliceBinaryEncoder.encode_length(length))
-
-        # encode the content of the slice
-        for item in value:
-            result.extend(BinaryEncoder.encode(item))
+        if type(value) is str:
+            result.extend(value.encode('utf-8'))
+        else:
+            # encode the content of the slice
+            for item in value:
+                result.extend(BinaryEncoder.encode(item))
         return result
 
 class IntegerOutOfRange(Exception):
@@ -109,15 +115,21 @@ class IntegerBinaryEncoder:
     Support binary encoding for integers
     """
     @staticmethod
-    def encode(value):
+    def encode(value, _kind=None):
         """
         Encodes an integer value to binary
 
         @param value: Value to be encoded
+        @param _kind: specific kind of integer (optional)
         """
-        # determine the size of the integer
         if value < 0:
             raise IntegerOutOfRange("integer {} is out of lower range".format(value))
+
+        # encode forcing a specific kind of integer
+        if _kind:
+            return IntegerBinaryEncoder._encode_kind(value, _kind)
+
+        # determine the size of the integer
         if value <= UINT_1BYTE_UPPERLIMIT:
             return value.to_bytes(1, byteorder='little')
         if value <= UINT_2BYTE_UPPERLIMIT:
@@ -127,3 +139,27 @@ class IntegerBinaryEncoder:
         if value <= UINT_4BYTE_UPPERLIMIT:
             return value.to_bytes(4, byteorder='little')
         raise IntegerOutOfRange("integer {} is out of upper range".format(value))
+
+    @staticmethod
+    def _encode_kind(value, kind):
+        if kind in ('uint8', 'int8'):
+            if value > UINT_1BYTE_UPPERLIMIT:
+                 raise IntegerOutOfRange("uint8/int8 {} is out of upper range".format(value))
+            return value.to_bytes(1, byteorder='little')
+        if kind in ('uint16', 'int16'):
+            if value > UINT_2BYTE_UPPERLIMIT:
+                 raise IntegerOutOfRange("uint16/int16 {} is out of upper range".format(value))
+            return value.to_bytes(2, byteorder='little')
+        if kind == 'uint24':
+            if value > UINT_3BYTE_UPPERLIMIT:
+                 raise IntegerOutOfRange("uint24 {} is out of upper range".format(value))
+            return value.to_bytes(3, byteorder='little')
+        if kind in ('uint32', 'int32'):
+            if value > UINT_4BYTE_UPPERLIMIT:
+                 raise IntegerOutOfRange("uint32/int32 {} is out of upper range".format(value))
+            return value.to_bytes(4, byteorder='little')
+        if kind in ('int', 'uint', 'uint64', 'int64'):
+            if value > UINT_8BYTE_UPPERLIMIT:
+                 raise IntegerOutOfRange("int/uint/uint64/int64 {} is out of upper range".format(value))
+            return value.to_bytes(8, byteorder='little')
+        raise ValueError('cannot encode unknown integer kind {}'.format(kind))

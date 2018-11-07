@@ -4,6 +4,7 @@ Modules for common utilites
 import re
 import time
 import string
+import json
 import requests
 from random import choice
 from pyblake2 import blake2b
@@ -226,7 +227,7 @@ def commit_transaction(rivine_explorer_addresses, rivine_explorer_api_password, 
     """
     data = transaction.json
     res = None
-    msg = 'Faield to commit transaction to chain network.'
+    msg = 'Failed to commit transaction to chain network.'
     for rivine_explorer_address in rivine_explorer_addresses:
         url = '{}/transactionpool/transactions'.format(rivine_explorer_address.strip('/'))
         headers = {'user-agent': 'Rivine-Agent'}
@@ -234,11 +235,13 @@ def commit_transaction(rivine_explorer_addresses, rivine_explorer_api_password, 
         try:
             res = requests.post(url, headers=headers, auth=auth, json=data, timeout=30)
         except requests.exceptions.ConnectionError as ex:
-            logging.warn(msg)
+            logger.warn(msg)
+            logger.warn('error with tx: {}'.format(str(data)))
             continue
         if res.status_code != 200:
-            msg = 'Faield to commit transaction to chain network.{}'.format(res.text)
+            msg = 'Failed to commit transaction to chain network.{}'.format(res.text)
             logger.warn('{} {}'.format(msg, res.text))
+            logger.warn('error with tx: {}'.format(str(data)))
         else:
             transaction.id = res.json()['transactionid']
             logger.info('Transaction committed successfully')
@@ -365,10 +368,18 @@ def collect_transaction_outputs(current_height, address, transactions, unconfirm
     if unconfirmed_txs is None:
         unconfirmed_txs = []
     for txn_info in transactions:
-        # coinoutputs can exist in the dictionary but has the value None
-        coinoutputs = txn_info.get('rawtransaction', {}).get('data', {}).get('coinoutputs', [])
+        version = txn_info.get('rawtransaction', {}).get('version', 1)
+        coinoutputs = []
+        if version >= 144 and version <= 146:
+            # 3Bot fee payout is not supported for now,
+            # only the refund output
+            coinoutputs = [None, txn_info.get('rawtransaction', {}).get('data', {}).get('refundcoinoutput', None)]
+        else:
+            coinoutputs = txn_info.get('rawtransaction', {}).get('data', {}).get('coinoutputs', [])
         if coinoutputs:
             for index, utxo in enumerate(coinoutputs):
+                if not utxo:
+                    continue # ignore none outputs
                 condition_ulh = get_unlockhash_from_output(output=utxo, address=address, current_height=current_height)
 
                 if address in condition_ulh['locked'] or address in condition_ulh['unlocked']:
@@ -398,10 +409,18 @@ def collect_transaction_outputs(current_height, address, transactions, unconfirm
                         result['multisig_locked'][txn_info['coinoutputids'][idx]] = output
     # Add unconfirmed outputs
     for txn_info in unconfirmed_txs:
-        # coinoutputs can exist in the dictionary but has the value None
-        coinoutputs = txn_info.get('rawtransaction', {}).get('data', {}).get('coinoutputs', [])
+        version = txn_info.get('rawtransaction', {}).get('version', 1)
+        coinoutputs = []
+        if version >= 144 and version <= 146:
+            # 3Bot fee payout is not supported for now,
+            # only the refund output
+            coinoutputs = [None, txn_info.get('rawtransaction', {}).get('data', {}).get('refundcoinoutput', None)]
+        else:
+            coinoutputs = txn_info.get('rawtransaction', {}).get('data', {}).get('coinoutputs', [])
         if coinoutputs:
             for index, utxo in enumerate(coinoutputs):
+                if not utxo:
+                    continue # ignore none outputs
                 condition_ulh = get_unlockhash_from_output(output=utxo, address=address, current_height=current_height)
                 if address in condition_ulh['locked'] or address in condition_ulh['unlocked']:
                     if address in condition_ulh['locked']:

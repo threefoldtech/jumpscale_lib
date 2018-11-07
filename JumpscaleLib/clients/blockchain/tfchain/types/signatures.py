@@ -2,8 +2,11 @@
 This modules defines types related to signatures
 """
 
+from JumpscaleLib.clients.blockchain.rivine.encoding import binary as rbinary
 from JumpscaleLib.clients.blockchain.tfchain.encoding import binary
 from JumpscaleLib.clients.blockchain.rivine.types import signatures
+from JumpscaleLib.clients.blockchain.rivine import utils
+from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY
 
 from enum import IntEnum
 
@@ -24,7 +27,7 @@ class SiaPublicKeySpecifier(IntEnum):
             return SiaPublicKeySpecifier.ED25519
         raise InvalidSiaPublicKeySpecifier("{} is an invalid Sia Public Key specifier".format(algo_str))
 
-    def to_string(self):
+    def __str__(self):
         if self == SiaPublicKeySpecifier.ED25519:
             return signatures.SIGEd25519
         return ""
@@ -35,6 +38,14 @@ class SiaPublicKeySpecifier(IntEnum):
         Encodes the public key specifier into binary format
         """
         return binary.IntegerBinaryEncoder.encode(self)
+
+    @property
+    def binary_specifier(self):
+        s = bytearray(signatures.SPECIFIER_SIZE)
+        if self == SiaPublicKeySpecifier.ED25519:
+            s[:len(signatures.SIGEd25519)] = bytearray(signatures.SIGEd25519, encoding='utf-8')
+        return s
+
 
 class SiaPublicKey:
     """
@@ -63,17 +74,32 @@ class SiaPublicKey:
         Encodes the public key into binary format
         """
         key_value = bytearray()
-        key_value.extend(binary.IntegerBinaryEncoder.encode(self._algorithm))
+        key_value.extend(binary.IntegerBinaryEncoder.encode(self._algorithm, _kind='uint8'))
         key_value.extend(self._pub_key)
         return key_value
+
+    @property
+    def rivine_binary(self):
+        """
+        Encodes the public key into (rivine) binary format
+        """
+        key_value = bytearray()
+        key_value.extend(self._algorithm.binary_specifier)
+        key_value.extend(rbinary.encode(self._pub_key, type_='slice'))
+        return key_value
     
-    def to_string(self):
-        return "{}:{}".format(self._algorithm.to_string(), self._pub_key.hex())
+    def __str__(self):
+        return "{}:{}".format(str(self._algorithm), self._pub_key.hex())
 
     @property
     def json(self):
         """
         Returns a json encoded version of the SiaPublicKey
         """
-        return self.to_string()
+        return str(self)
 
+    @property
+    def unlock_hash(self):
+        encoded_pub_key = self.rivine_binary
+        hash = utils.hash(encoded_pub_key, encoding_type='slice')
+        return UnlockHash(unlock_type=UNLOCK_TYPE_PUBKEY, hash=hash)

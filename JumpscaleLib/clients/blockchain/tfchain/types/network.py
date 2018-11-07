@@ -47,15 +47,19 @@ class NetworkAddress:
         self._type = network_type
         self._address = address
     
-    def to_string(self):
+    def __str__(self):
         if self._type == NetworkAddressType.HOSTNAME:
             return self._address.decode('utf-8')
         return str(ipaddress.ip_address(self._address))
+    
+    @property
+    def json(self):
+        return str(self)
 
     @property
     def binary(self):
         bs = bytearray()
         length = len(self._address)
-        bs.extend(binary.IntegerBinaryEncoder.encode(self._type|(length<<2)))
+        bs.extend(binary.IntegerBinaryEncoder.encode(self._type|(length<<2), _kind='uint8'))
         bs.extend(self._address)
         return bs
