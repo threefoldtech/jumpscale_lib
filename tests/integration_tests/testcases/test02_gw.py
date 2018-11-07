@@ -124,7 +124,7 @@ class GWTestCases(BaseTest):
         self.gateway.remove_network(created_network)
 
         self.log("Check that network has been removed.")
-        self.assertFalse(self.gateway.list_network())
+        self.assertNotIn(network_name, self.gateway.list_network())
         with self.assertRaises(RuntimeError) as e:
             self.gateway.install()
         self.assertIn("Need exactly one public network", e.exception.args[0])

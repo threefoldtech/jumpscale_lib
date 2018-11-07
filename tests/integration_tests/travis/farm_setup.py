@@ -44,19 +44,19 @@ class Utils(object):
         rc = sub.poll()
         return rc
 
-    def send_script_to_remote_machine(self, script, ip, port):
-        templ = 'scp -o StrictHostKeyChecking=no -r -o UserKnownHostsFile=/dev/null -P {} {} root@{}:'
-        cmd = templ.format(port, script, ip)
+    def send_script_to_remote_machine(self, script, ip, port, password):
+        templ = 'sshpass -p {} scp -o StrictHostKeyChecking=no -r -o UserKnownHostsFile=/dev/null -P {} {} root@{}:'
+        cmd = templ.format(password,port, script, ip)
         self.run_cmd(cmd)
 
-    def run_cmd_on_remote_machine(self, cmd, ip, port):
-        templ = 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p {} root@{} {}'
-        cmd = templ.format(port, ip, cmd)
+    def run_cmd_on_remote_machine(self, cmd, ip, port, password):
+        templ = 'sshpass -p {} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p {} root@{} {}'
+        cmd = templ.format(password, port, ip, cmd)
         return self.stream_run_cmd(cmd)
 
-    def run_cmd_on_remote_machine_without_stream(self, cmd, ip, port):
-        templ = 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p {} root@{} {}'
-        cmd = templ.format(port, ip, cmd)
+    def run_cmd_on_remote_machine_without_stream(self, cmd, ip, port, password):
+        templ = 'sshpass -p {} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p {} root@{} {}'
+        cmd = templ.format(password, port, ip, cmd)
         return self.run_cmd(cmd)
 
 
@@ -104,6 +104,9 @@ class Utils(object):
 
 def main(options):
     utils = Utils(options)
+    if JS_FLAG == "False":
+        
+
     zos_client = j.clients.zos.get('zos-kds-farm', data={'host': '{}'.format(options.zos_ip)})
 
     # Setup the env to run testcases on it 
@@ -112,7 +115,7 @@ def main(options):
     if JS_FLAG == "True":
         vm = utils.create_ubuntu_vm(zos_client, ubuntu_port)
     # Send the script to setup the envirnment and run testcases 
-    utils.send_script_to_remote_machine(SETUP_ENV_SCRIPT, options.zos_ip, ubuntu_port)
+    utils.send_script_to_remote_machine(SETUP_ENV_SCRIPT, options.zos_ip, ubuntu_port, options.vm_password)
     # get available node to run testcaases against it 
     print('* get available node to run test cases on it ')
     zos_available_node = utils.get_farm_available_node_to_execute_testcases()
@@ -121,7 +124,7 @@ def main(options):
     
     # Access the ubuntu vm and install requirements  
     cmd = 'bash {script} {branch} {nodeip} {zt_token}'.format(script=SETUP_ENV_SCRIPT_NAME, branch="sal_testcases", nodeip=node_ip, zt_token=options.zt_token)
-    utils.run_cmd_on_remote_machine(cmd, options.zos_ip, ubuntu_port)
+    utils.run_cmd_on_remote_machine(cmd, options.zos_ip, ubuntu_port, options.vm_password)
 
         
 if __name__ == "__main__":
@@ -136,6 +139,9 @@ if __name__ == "__main__":
                         help="flag if you have jumpscale machine" )
     parser.add_argument("-t", "--zt_token", type=str, dest="zt_token", default='sgtQtwEMbRcDgKgtHEMzYfd2T7dxtbed', required=True,
                         help="zerotier token that will be used for the core0 tests")
+    parser.add_argument("-p", "--password", type=str, dest="vm_password", default='root', required=True,
+                        help="js vm password")
+
     options = parser.parse_args()
     main(options)
 
