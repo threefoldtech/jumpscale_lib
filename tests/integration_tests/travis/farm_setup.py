@@ -104,9 +104,6 @@ class Utils(object):
 
 def main(options):
     utils = Utils(options)
-    if JS_FLAG == "False":
-        
-
     zos_client = j.clients.zos.get('zos-kds-farm', data={'host': '{}'.format(options.zos_ip)})
 
     # Setup the env to run testcases on it 

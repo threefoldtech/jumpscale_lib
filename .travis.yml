@@ -17,6 +17,7 @@ matrix:
         - curl -s https://install.zerotier.com/ | sudo bash
         - sudo zerotier-cli join ${env_zt_network}
         - sudo ./tests/integration_tests/travis/jumspcale_install.sh ${JSBRANCH}
+        - sudo apt-get install sshpass
         - sudo pip3 install -r tests/integration_tests/requirements.txt
 
       before_script:
