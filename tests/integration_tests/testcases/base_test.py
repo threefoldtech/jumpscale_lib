@@ -9,6 +9,9 @@ from framework.base.vms import VM
 from framework.base.gw import GW
 from framework.base.zdb import ZDB
 import random
+logger = j.logger.get('sal_testcases')
+
+
 
 BASEFLIST = 'https://hub.grid.tf/tf-bootable/{}.flist'
 ZEROOSFLIST = 'https://hub.grid.tf/tf-bootable/zero-os-bootable.flist'
@@ -24,6 +27,7 @@ class BaseTest(Utils):
     @classmethod
     def setUpClass(cls):
         self = cls()
+        cls.logger = logger
         cls.node_sal = j.clients.zos.get(NODE_CLIENT, data={'host': config['main']['nodeip']})
         cls.node_info, cls.disks_info = self.get_zos_info()
         cls.disks_mount_paths = self.zdb_mounts()
@@ -110,6 +114,7 @@ class BaseTest(Utils):
             raise RuntimeError("Failed to retreive zt ip: Cannot get private ip address for zerotier member")
 
     def get_zos_info(self):
+        self.logger.info(colored('Get zos machine total info.', 'white'))
         info = self.node_sal.capacity.total_report()
         node_info = {'ssd': int(info.SRU), 'hdd': int(info.HRU), 'core': int(info.CRU),
                      'memory': int(info.MRU)}
@@ -140,6 +145,7 @@ class BaseTest(Utils):
         zt_machine_addr = j.tools.prefab.local.network.zerotier.get_zerotier_machine_address()
         time.sleep(30)
         for _ in range(20):
+            self.logger.info(colored('Check that host has been join zerotier network.', 'white'))
             try:
                 host_member = zt_network.member_get(address=zt_machine_addr)
                 break
@@ -200,6 +206,7 @@ class BaseTest(Utils):
         return gw_container
 
     def zdb_mounts(self):
+        self.logger.info(colored('Get zdb mount disks.', 'white'))
         disk_mount=[]
         self.node_sal.zerodbs.prepare()
         storage_pools = self.node_sal.storagepools.list()

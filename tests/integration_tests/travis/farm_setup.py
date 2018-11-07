@@ -12,8 +12,7 @@ from multiprocessing import Process, Manager
 
 SETUP_ENV_SCRIPT= "tests/integration_tests/travis/setup_env.sh"
 SETUP_ENV_SCRIPT_NAME = "setup_env.sh"
-manage = Manager()
-JS_RESULTS_que = manage.Queue()   
+ 
 
 class Utils(object):
     def __init__(self, options):
@@ -44,19 +43,19 @@ class Utils(object):
         rc = sub.poll()
         return rc
 
-    def send_script_to_remote_machine(self, script, ip, port, password):
-        templ = 'sshpass -p {} scp -o StrictHostKeyChecking=no -r -o UserKnownHostsFile=/dev/null -P {} {} root@{}:'
-        cmd = templ.format(password,port, script, ip)
+    def send_script_to_remote_machine(self, script, ip, password):
+        cmd = 'wget "https://raw.githubusercontent.com/threefoldtech/jumpscale_lib/sal_testcases/tests/integration_tests/travis/setup_env.sh"'
+        cmd = 'sshpass -p {} ssh -o StrictHostKeyChecking=no  root@{} {}'.format(password, ip, cmd)
         self.run_cmd(cmd)
 
-    def run_cmd_on_remote_machine(self, cmd, ip, port, password):
-        templ = 'sshpass -p {} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p {} root@{} {}'
-        cmd = templ.format(password, port, ip, cmd)
+    def run_cmd_on_remote_machine(self, cmd, ip, password):
+        templ = 'sshpass -p {} ssh -o StrictHostKeyChecking=no  root@{} {}'
+        cmd = templ.format(password, ip, cmd)
         return self.stream_run_cmd(cmd)
 
     def run_cmd_on_remote_machine_without_stream(self, cmd, ip, port, password):
-        templ = 'sshpass -p {} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p {} root@{} {}'
-        cmd = templ.format(password, port, ip, cmd)
+        templ = 'sshpass -p {} ssh -o StrictHostKeyChecking=no  root@{} {}'
+        cmd = templ.format(password,ip, cmd)
         return self.run_cmd(cmd)
 
 
@@ -77,7 +76,7 @@ class Utils(object):
 
     def get_farm_available_node_to_execute_testcases(self):
         capacity = j.clients.threefold_directory.get(interactive=False)
-        resp = capacity.api.ListCapacity(query_params={'farmer': 'tlre'})[1]
+        resp = capacity.api.ListCapacity(query_params={'farmer': 'kristof-farm'})[1]
         nodes = resp.json() #nodes
         return random.choice(nodes)
 
@@ -104,15 +103,8 @@ class Utils(object):
 
 def main(options):
     utils = Utils(options)
-    zos_client = j.clients.zos.get('zos-kds-farm', data={'host': '{}'.format(options.zos_ip)})
-
-    # Setup the env to run testcases on it 
-    ubuntu_port = int(options.ubuntu_port)
-    JS_FLAG = options.js_flag
-    if JS_FLAG == "True":
-        vm = utils.create_ubuntu_vm(zos_client, ubuntu_port)
     # Send the script to setup the envirnment and run testcases 
-    utils.send_script_to_remote_machine(SETUP_ENV_SCRIPT, options.zos_ip, ubuntu_port, options.vm_password)
+    utils.send_script_to_remote_machine(SETUP_ENV_SCRIPT, options.vm_ip, options.vm_password)
     # get available node to run testcaases against it 
     print('* get available node to run test cases on it ')
     zos_available_node = utils.get_farm_available_node_to_execute_testcases()
@@ -120,14 +112,17 @@ def main(options):
     print('* The available node ip {} '.format(node_ip))
     
     # Access the ubuntu vm and install requirements  
-    cmd = 'bash {script} {branch} {nodeip} {zt_token}'.format(script=SETUP_ENV_SCRIPT_NAME, branch="sal_testcases", nodeip=node_ip, zt_token=options.zt_token)
-    utils.run_cmd_on_remote_machine(cmd, options.zos_ip, ubuntu_port, options.vm_password)
+    cmd = 'bash {script} {branch} {nodeip} {zt_token}'.format(script=SETUP_ENV_SCRIPT_NAME, branch="sal_testcases", nodeip=options.zos_ip, zt_token=options.zt_token)
+    utils.run_cmd_on_remote_machine(cmd, options.vm_ip, options.vm_password)
 
         
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-z", "--zos_ip", type=str, dest="zos_ip", required=True,
                         help="IP of the zeroos machine that will be used")
+    parser.add_argument("-v", "--vm_ip", type=str, dest="vm_ip", required=True,
+                        help="IP of the zeroos machine that will be used")
+                    
     parser.add_argument("-b", "--branch", type=str, dest="branch", required=True,
                         help="0-core branch that the tests will run from")
     parser.add_argument("-jp", "--ubuntu_port", type=str, dest="ubuntu_port", required=False,
