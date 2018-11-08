@@ -28,4 +28,3 @@ add your frontend
 ```
 In [144]: client.put("/traefik/frontends/frontend1/routes/frontend1/rule", "Host:cloudrobot.org")
 ```
-
