@@ -17,7 +17,7 @@ class Service:
     @property
     def proxy(self):
         if not self._proxy:
-            self._proxy = self._traefik.proxies[self.name]
+            self._proxy = self._traefik.proxies.get(self.name)
         return self._proxy
 
     def _deploy_dns(self, domain):
@@ -30,7 +30,7 @@ class Service:
             if not all([u.hostname, u.port, u.scheme]):
                 raise ValueError("wrong format for endpoint %s" % endpoint)
 
-        if not self.name in self._traefik.proxies:
+        if not self.proxy:
             self._proxy = self._traefik.proxy_create(self.name)
 
         self.proxy.backend_set(endpoints)

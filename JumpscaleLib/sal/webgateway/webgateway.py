@@ -73,12 +73,8 @@ class WebGateway(JSConfigBase):
         :return: service object
         :rtype: JumpscaleLib.sal.webgateway.service.Service
         """
-
-        try:
-            if self.service_get(name):
-                raise ServiceExistError("a service with name %s already exist. maybe you are looking for `service_get(%s)`" % (name, name))
-        except ServiceNotFoundError:
-            pass
+        if name in [s.name for s in self.services]:
+            raise ServiceExistError("a service with name %s already exist. maybe you are looking for `service_get(%s)`" % (name, name))
 
         service = Service(name, self.public_ips, self.traefik, self.coredns)
         self.services.append(service)
