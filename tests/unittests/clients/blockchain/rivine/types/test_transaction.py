@@ -3,7 +3,7 @@ Unittests for module JumpscaleLib.clients.blockchain.rivine.types.transaction
 """
 
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import \
-    DEFAULT_TRANSACTION_VERSION, BOT_REGISTRATION_TRANSACTION_VERSION, \
+    DEFAULT_TRANSACTION_VERSION, BOT_REGISTRATION_TRANSACTION_VERSION, BOT_RECORD_UPDATE_TRANSACTION_VERSION, \
     TransactionFactory, TransactionV1, \
     CoinInput, CoinOutput, _compute_monthly_bot_fees
 from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import UnlockHashCondition, LockTimeCondition, SingleSignatureFulfillment
@@ -118,14 +118,29 @@ def test_compute_monthly_bot_fees():
         assert fees == expectedFees
 
 def test_transactionv144_load_dump_json():
+    # load and dump a valid v144 tx from tfchain Go devnet
     json_input = '{"version":144,"data":{"names":["crazybot.foobar"],"nrofmonths":1,"txfee":"1000000000","coininputs":[{"parentid":"6678e3a75da2026da76753a60ac44f7e7737784015676b37cc2cdcf670dce2e5","fulfillment":{"type":1,"data":{"publickey":"ed25519:d285f92d6d449d9abb27f4c6cf82713cec0696d62b8c123f1627e054dc6d7780","signature":"cd07fbfd78be0edd1c9ca46bc18f91cde1ed05848083828c5d3848cd9671054527b630af72f7d95c0ddcd3a0f0c940eb8cfe4b085cb00efc8338b28f39155809"}}}],"refundcoinoutput":{"value":"99979897000000000","condition":{"type":1,"data":{"unlockhash":"017fda17489854109399aa8c1bfa6bdef40f93606744d95cc5055270d78b465e6acd263c96ab2b"}}},"identification":{"publickey":"ed25519:adc4090edbe28e3628f08a85d20b5055ea301cdb080d3b65a337a326e2e3556d","signature":"5211f813fb4e34ae348e2e746846bc72255512dc246ccafbb3bd3b916aac738bfe2737308d87cced4f9476be8715983cc6000e37f8e82e7b83f120776a358105"}}}'
     tx = TransactionFactory.from_json(json_input)
     assert tx.version == BOT_REGISTRATION_TRANSACTION_VERSION
     assert tx.json == json.loads(json_input)
 
 def test_transactionv144_input_sig_hash():
-    # load a valid v144 tx from tfchain Go devnet
+    # load a valid v144 tx from tfchain Go devnet and create the input sig hash, ensure it is as expected
     json_input = '{"version":144,"data":{"names":["crazybot.foobar"],"nrofmonths":1,"txfee":"1000000000","coininputs":[{"parentid":"6678e3a75da2026da76753a60ac44f7e7737784015676b37cc2cdcf670dce2e5","fulfillment":{"type":1,"data":{"publickey":"ed25519:d285f92d6d449d9abb27f4c6cf82713cec0696d62b8c123f1627e054dc6d7780","signature":"cd07fbfd78be0edd1c9ca46bc18f91cde1ed05848083828c5d3848cd9671054527b630af72f7d95c0ddcd3a0f0c940eb8cfe4b085cb00efc8338b28f39155809"}}}],"refundcoinoutput":{"value":"99979897000000000","condition":{"type":1,"data":{"unlockhash":"017fda17489854109399aa8c1bfa6bdef40f93606744d95cc5055270d78b465e6acd263c96ab2b"}}},"identification":{"publickey":"ed25519:adc4090edbe28e3628f08a85d20b5055ea301cdb080d3b65a337a326e2e3556d","signature":"5211f813fb4e34ae348e2e746846bc72255512dc246ccafbb3bd3b916aac738bfe2737308d87cced4f9476be8715983cc6000e37f8e82e7b83f120776a358105"}}}'
     tx = TransactionFactory.from_json(json_input)
     assert tx.version == BOT_REGISTRATION_TRANSACTION_VERSION
     assert tx.get_input_signature_hash(0).hex() == 'b91b15b614b3c5c729a840542e4d6e7930a17fbd3245fe57f8cb1a9c59263637'
+
+def test_transactionv145_load_dump_json():
+    # load and dump a valid v145 tx from tfchain Go devnet
+    json_input = '{"version":145,"data":{"id":3,"addresses":{"add":["example.com","127.0.0.1"],"remove":["example.org"]},"names":{"add":["giveme.yourfeedback","thisis.anexample"],"remove":["chatbot.example"]},"nrofmonths":4,"txfee":"1000000000","coininputs":[{"parentid":"81a0c1f3094b99b0858da8ebc95b52f2c3593ea399d7b72a66a930521aae61bb","fulfillment":{"type":1,"data":{"publickey":"ed25519:880ee50bd7efa4c8b2b5949688a09818a652727fd3c0cb406013be442df68b34","signature":"d612b679377298e6ccb8a877f7a129d34c65b8850cff1806b9f62d392b6ab173020c3698658275c748047642f8012a4ac75ea23e319bcc405c9d7f2b462b6a0b"}}}],"refundcoinoutput":{"value":"99998737000000000","condition":{"type":1,"data":{"unlockhash":"01972837ee396f22f96846a0c700f9cf7c8fa83ab4110da91a1c7d02f94f28ff03e45f1470df82"}}},"signature":"f76e7ed808a9efe405804109d5e3c8695daf8b9bc7abf1e471fef94b3c4d36789b460f9e45cdf27d83d270b0836fef56bd499e1be8e1f279d367e961bbe62f03"}}'
+    tx = TransactionFactory.from_json(json_input)
+    assert tx.version == BOT_RECORD_UPDATE_TRANSACTION_VERSION
+    assert tx.json == json.loads(json_input)
+
+def test_transactionv145_input_sig_hash():
+    # load a valid v145 tx from tfchain Go devnet and create the input sig hash, ensure it is as expected
+    json_input = '{"version":145,"data":{"id":3,"addresses":{"add":["example.com","127.0.0.1"],"remove":["example.org"]},"names":{"add":["giveme.yourfeedback","thisis.anexample"],"remove":["chatbot.example"]},"nrofmonths":4,"txfee":"1000000000","coininputs":[{"parentid":"81a0c1f3094b99b0858da8ebc95b52f2c3593ea399d7b72a66a930521aae61bb","fulfillment":{"type":1,"data":{"publickey":"ed25519:880ee50bd7efa4c8b2b5949688a09818a652727fd3c0cb406013be442df68b34","signature":"d612b679377298e6ccb8a877f7a129d34c65b8850cff1806b9f62d392b6ab173020c3698658275c748047642f8012a4ac75ea23e319bcc405c9d7f2b462b6a0b"}}}],"refundcoinoutput":{"value":"99998737000000000","condition":{"type":1,"data":{"unlockhash":"01972837ee396f22f96846a0c700f9cf7c8fa83ab4110da91a1c7d02f94f28ff03e45f1470df82"}}},"signature":"f76e7ed808a9efe405804109d5e3c8695daf8b9bc7abf1e471fef94b3c4d36789b460f9e45cdf27d83d270b0836fef56bd499e1be8e1f279d367e961bbe62f03"}}'
+    tx = TransactionFactory.from_json(json_input)
+    assert tx.version == BOT_RECORD_UPDATE_TRANSACTION_VERSION
+    assert tx.get_input_signature_hash(0).hex() == 'af3293da1e441b6c832a0763e17bb5b516bbb78540509a3418cd08253e584cf0'

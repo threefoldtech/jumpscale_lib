@@ -25,7 +25,7 @@ from Jumpscale import j
 from JumpscaleLib.clients.blockchain.rivine import utils
 from JumpscaleLib.clients.blockchain.rivine.atomicswap.atomicswap import AtomicSwapManager
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory,\
-        DEFAULT_TRANSACTION_VERSION, CoinOutput, DEFAULT_MINERFEE
+        DEFAULT_TRANSACTION_VERSION, CoinOutput, DEFAULT_MINERFEE, sign_bot_transaction
 from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
 from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import UnlockCondtionFactory,\
         MULTISIG_CONDITION_TYPE, MultiSignatureFulfillment, SingleSignatureFulfillment
@@ -606,7 +606,7 @@ class RivineWallet:
         """
         return utils.get_current_minter_definition(self._bc_networks, self._bc_network_password)
 
-    def sign_transaction(self, transaction, multisig=False, commit=False):
+    def sign_transaction(self, transaction, multisig=False, commit=False, ctx=None):
         """
         Signs a transaction and optionally push it to the blockchain
 
@@ -621,6 +621,8 @@ class RivineWallet:
             self._sign_mint_transaction(transaction, commit=commit)
         elif transaction.version == 144:
             self._sign_bot_registration_transaction(transaction, commit=commit)
+        elif transaction.version == 145:
+            self._sign_bot_record_update_transaction(transaction, ctx.get('publickey', None), commit=commit)
         else:
             raise RuntimeError("Can't sign unknown transaction version")
 
@@ -702,10 +704,28 @@ class RivineWallet:
         # sign bot registration
         uh = str(transaction._identification.public_key.unlock_hash)
         if not uh in self._keys:
-            logger.warn("no key found in wallet for unlock hash {}".format(uh.hex()))
+            logger.warn("no key found in wallet for unlock hash {}".format(uh))
             return
         key = self._keys[uh]
-        transaction._identification.sign(transaction, key.secret_key)
+        transaction._identification.signature = sign_bot_transaction(transaction, transaction._identification.public_key, key.secret_key)
+        if commit:
+            self._commit_transaction(transaction=transaction)
+
+    def _sign_bot_record_update_transaction(self, transaction, public_key, commit=False):
+        """
+        Signs a bot record update transaction and optionally push it to the chain
+        @param transaction: A transactionV145 object to sign
+        @param commit: if True, the transaction will be pushed after signing
+        """
+        # sign coin inputs
+        self._sign(transaction, commit=False) # but do not commit (yet)
+        # sign bot record update
+        uh = str(public_key.unlock_hash)
+        if not uh in self._keys:
+            logger.warn("no key found in wallet for unlock hash {}".format(uh))
+            return
+        key = self._keys[uh]
+        transaction._signature = sign_bot_transaction(transaction, public_key, key.secret_key)
         if commit:
             self._commit_transaction(transaction=transaction)
 
