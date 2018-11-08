@@ -623,6 +623,8 @@ class RivineWallet:
             self._sign_bot_registration_transaction(transaction, commit=commit)
         elif transaction.version == 145:
             self._sign_bot_record_update_transaction(transaction, ctx.get('publickey', None), commit=commit)
+        elif transaction.version == 146:
+            self._sign_bot_name_transfer_transaction(transaction, ctx.get('sender_publickey', None), ctx.get('receiver_publickey', None), commit=commit)
         else:
             raise RuntimeError("Can't sign unknown transaction version")
 
@@ -725,7 +727,29 @@ class RivineWallet:
             logger.warn("no key found in wallet for unlock hash {}".format(uh))
             return
         key = self._keys[uh]
-        transaction._signature = sign_bot_transaction(transaction, public_key, key.secret_key)
+        transaction.set_signature(sign_bot_transaction(transaction, public_key, key.secret_key))
+        if commit:
+            self._commit_transaction(transaction=transaction)
+
+    def _sign_bot_name_transfer_transaction(self, transaction, sender_pub_key, receiver_pub_key, commit=False):
+        """
+        Signs a bot name transfer transaction and optionally push it to the chain
+        @param transaction: A transactionV146 object to sign
+        @param commit: if True, the transaction will be pushed after signing
+        """
+        # sign coin inputs
+        self._sign(transaction, commit=False) # but do not commit (yet)
+        # sign bot record update as sender (if possible)
+        uh = str(sender_pub_key.unlock_hash)
+        if uh in self._keys:
+            key = self._keys[uh]
+            transaction.set_sender_signature(sign_bot_transaction(transaction, sender_pub_key, key.secret_key))
+        # sign bot record update as receiver (if possible)
+        uh = str(receiver_pub_key.unlock_hash)
+        if uh in self._keys:
+            key = self._keys[uh]
+            transaction.set_receiver_signature(sign_bot_transaction(transaction, receiver_pub_key, key.secret_key))
+        # commit if desired
         if commit:
             self._commit_transaction(transaction=transaction)
 

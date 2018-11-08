@@ -132,5 +132,40 @@ class TfchainThreeBotClient():
 
     @staticmethod
     def create_name_transfer_transaction(wallet, sender_identifier, receiver_identifier, names):
-        # TODO
-        return None
+        # create the tx and fill user-defined properties in
+        tx = transaction.TransactionV146()
+        tx.set_sender_bot_id(sender_identifier)
+        tx.set_receiver_bot_id(receiver_identifier)
+        for name in names:
+            tx.add_name(name)
+
+        # add coin inputs for miner fees (implicitly computed) and required bot fees
+        input_results, used_addresses, minerfee, remainder = wallet._get_inputs(amount=tx.required_bot_fees)
+        tx.set_transaction_fee(minerfee)
+        for input_result in input_results:
+            tx.add_coin_input(**input_result)
+        for txn_input in tx.coin_inputs:
+            if used_addresses[txn_input.parent_id] not in wallet._keys:
+                raise RivineWallet.NonExistingOutputError('Trying to spend unexisting output')
+        # optionally add the remainder as a refund coin output
+        if remainder > 0:
+            # TODO: are we sure refunding to first address is always desired?
+            tx.set_refund_coin_output(value=remainder, recipient=wallet.addresses[0])
+
+        # get the sender pub key # TODO: possible optimize
+        record_sender = TfchainThreeBotClient.get_record(sender_identifier, network_addresses=wallet._bc_networks)
+        sender_public_key_str = record_sender.get('publickey', None)
+        sender_public_key = tftsig.SiaPublicKey.from_string(sender_public_key_str)
+
+        # get the receiver pub key # TODO: possible optimize
+        record_receiver = TfchainThreeBotClient.get_record(receiver_identifier, network_addresses=wallet._bc_networks)
+        receiver_public_key_str = record_receiver.get('publickey', None)
+        receiver_public_key = tftsig.SiaPublicKey.from_string(receiver_public_key_str)
+
+        # sign and commit the Tx, return the tx ID afterwards
+        ctx = {
+            'sender_publickey': sender_public_key,
+            'receiver_publickey': receiver_public_key
+        }
+        wallet.sign_transaction(transaction=tx, ctx=ctx, commit=False)
+        return tx

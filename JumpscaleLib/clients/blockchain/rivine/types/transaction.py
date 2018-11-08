@@ -54,7 +54,7 @@ class TransactionFactory:
         txn_dict = json.loads(txn_json)
         if 'version' not in txn_dict:
             return None
-        
+ 
         if txn_dict['version'] == DEFAULT_TRANSACTION_VERSION:
             if 'data' not in txn_dict:
                 raise ValueError("no data object found in Default Transaction (v{})".format(DEFAULT_TRANSACTION_VERSION))
@@ -72,7 +72,7 @@ class TransactionFactory:
                 for minerfee in txn_data['minerfees'] :
                     txn.add_minerfee(int(minerfee))
             return txn
-                    
+              
         if txn_dict['version'] == MINTERDEFINITION_TRANSACTION_VERSION:
             if 'data' not in txn_dict:
                 raise ValueError("no data object found in MinterDefinition Transaction")
@@ -90,7 +90,7 @@ class TransactionFactory:
             if 'arbitrarydata' in txn_data:
                 txn._data = base64.b64decode(txn_data['arbitrarydata'])
             return txn
-        
+   
         if txn_dict['version'] == COINCREATION_TRANSACTION_VERSION:
             if 'data' not in txn_dict:
                 raise ValueError("no data object found in CoinCreation Transaction")
@@ -110,14 +110,14 @@ class TransactionFactory:
             if 'arbitrarydata' in txn_data:
                 txn._data = base64.b64decode(txn_data['arbitrarydata'])
             return txn
-    
+
         if txn_dict['version'] == BOT_REGISTRATION_TRANSACTION_VERSION:
             if 'data' not in txn_dict:
                 raise ValueError("no data object found in BotRegistration Transaction")
             txn = TransactionV144()
             txn.from_dict(txn_dict['data'])
             return txn
-    
+
         if txn_dict['version'] == BOT_RECORD_UPDATE_TRANSACTION_VERSION:
             if 'data' not in txn_dict:
                 raise ValueError("no data object found in BotRecordUpdate Transaction")
@@ -125,8 +125,12 @@ class TransactionFactory:
             txn.from_dict(txn_dict['data'])
             return txn
 
-        # TODO
-        #if txn_dict['version'] == BOT_NAME_TRANSFER_TRANSACTION_VERSION:
+        if txn_dict['version'] == BOT_NAME_TRANSFER_TRANSACTION_VERSION:
+            if 'data' not in txn_dict:
+                raise ValueError("no data object found in BotNameTransfer Transaction")
+            txn = TransactionV146()
+            txn.from_dict(txn_dict['data'])
+            return txn
 
 class TransactionV1:
     """
@@ -850,7 +854,7 @@ class TransactionV145:
         self._transaction_fee = None
         self._coin_inputs = []
         self._refund_coin_output = None
-        self._signature = bytearray()
+        self._signature = ''
         self._publickey = None
     
     @property
@@ -953,7 +957,7 @@ class TransactionV145:
         if 'signature' in data:
             self._signature = data['signature']
         else:
-            self._signature = bytearray()
+            self._signature = ''
         self._addresses_to_add = []
         self._addresses_to_remove = []
         if 'addresses' in data:
@@ -1060,6 +1064,198 @@ class TransactionV145:
         buffer.extend(tfbinary.BinaryEncoder.encode(self._names_to_remove, type_='slice'))
         # encode number of months
         buffer.extend(tfbinary.IntegerBinaryEncoder.encode(self._number_of_months, _kind='int8'))
+
+        # encode the number of coins inputs
+        buffer.extend(tfbinary.IntegerBinaryEncoder.encode(len(self._coin_inputs), _kind='int'))
+        # encode inputs parent_ids
+        for coin_input in self._coin_inputs:
+            buffer.extend(tfbinary.BinaryEncoder.encode(coin_input.parent_id, type_='hex'))
+
+        # encode transaction fee
+        buffer.extend(binary.encode(self._transaction_fee, type_='currency'))
+        # encode refund coin output
+        if self._refund_coin_output:
+            buffer.extend([1])
+            buffer.extend(binary.encode(self._refund_coin_output))
+        else:
+            buffer.extend([0])
+
+        # now we need to return the hash value of the binary array
+        # return bytes(buffer)
+        return hash(data=buffer)
+
+class TransactionV146:
+    """
+    Bot Name Transfer transaction class. This transaction type allows
+    the transfer of one or multiple (bot) names between two existing 3 bots.
+    """
+    def __init__(self):
+        self._specifier = bytearray(b'bot nametrans tx')
+        self._id = None
+
+        self._sender_botid = None
+        self._sender_signature = ''
+        self._receiver_botid = None
+        self._receiver_signature = ''
+        self._names = []
+
+        self._transaction_fee = None
+        self._coin_inputs = []
+        self._refund_coin_output = None
+
+        self._sender_publickey = None
+        self._receiver_publickey = None
+
+    @property
+    def version(self):
+        return BOT_NAME_TRANSFER_TRANSACTION_VERSION
+
+    @property
+    def id(self):
+        """
+        Get the transaction id
+        """
+        return self._id
+    
+    @id.setter
+    def id(self, tx_id):
+        """
+        Set the transaction id
+        """
+        self._id = tx_id
+
+    @property
+    def required_bot_fees(self):
+        return HASTINGS_TFT_VALUE * len(self._names) * tfconst.BOT_FEE_PER_ADDITIONAL_NAME_MULTIPLIER
+
+    @property
+    def coin_inputs(self):
+        """
+        Retrieves coin inputs
+        """
+        return self._coin_inputs
+
+    @property
+    def json(self):
+        """
+        Returns a json version of the TransactionV144 object
+        """
+        result = {
+            'version': self.version,
+            'data': {
+                'sender': {
+                    'id': self._sender_botid,
+                    'signature': self._sender_signature
+                },
+                'receiver': {
+                    'id': self._receiver_botid,
+                    'signature': self._receiver_signature
+                },
+                'names': self._names.copy(),
+                'txfee': str(self._transaction_fee),
+                'coininputs': [ci.json for ci in self._coin_inputs]
+            }
+        }
+        if self._refund_coin_output:
+            result['data']['refundcoinoutput'] = self._refund_coin_output.json
+        return result
+    
+    def from_dict(self, data):
+        """
+        Populates this TransactionV146 object from a data (JSON-decoded) dictionary
+        """
+        sender_data = data.get('sender', {})
+        self._sender_botid = sender_data.get('id', 0)
+        self._sender_signature = sender_data.get('signature', '')
+        receiver_data = data.get('receiver', {})
+        self._sender_botid = receiver_data.get('id', 0)
+        self._sender_signature = receiver_data.get('signature', '')
+        if 'txfee' in data:
+            self._transaction_fee = int(data['txfee'])
+        else:
+            self._transaction_fee = None
+        if 'coininputs' in data:
+            for ci_info in data['coininputs']:
+                ci = CoinInput.from_dict(ci_info)
+                self._coin_inputs.append(ci)
+        else:
+            self._coin_inputs = []
+        self._names = []
+        if 'names' in data:
+            self._names = data['names'].copy()
+        if 'refundcoinoutput' in data:
+            co = CoinOutput.from_dict(data['refundcoinoutput'])
+            self._refund_coin_output = co
+        else:
+            self._refund_coin_output = None
+
+    def add_name(self, name):
+        self._names.append(name)
+
+    def set_transaction_fee(self, txfee):
+        self._transaction_fee = txfee
+
+    def set_sender_bot_id(self, identifier):
+        self._sender_botid = identifier
+    
+    def set_sender_signature(self, signature):
+        self._sender_signature = signature
+
+    def set_receiver_bot_id(self, identifier):
+        self._receiver_botid = identifier
+    
+    def set_receiver_signature(self, signature):
+        self._receiver_signature = signature
+
+    def add_coin_input(self, parent_id, pub_key):
+        """
+        Adds a new input to the transaction
+        """
+        key = Ed25519PublicKey(pub_key=pub_key)
+        fulfillment = SingleSignatureFulfillment(pub_key=key)
+        self._coin_inputs.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
+    
+    def add_multisig_coin_input(self, parent_id):
+        """
+        Adds a new coin input with an empty MultiSignatureFulfillment
+        """
+        fulfillment = MultiSignatureFulfillment()
+        self._coin_inputs.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
+
+    def set_refund_coin_output(self, value, recipient):
+        """
+        Set a coin output as refund coin output of this tx
+
+        @param value: Amout of coins
+        @param recipient: The recipient address
+        """
+        unlockhash = UnlockHash.from_string(recipient)
+        condition = UnlockHashCondition(unlockhash=unlockhash)
+        self._refund_coin_output = CoinOutput(value=value, condition=condition)
+
+    def get_input_signature_hash(self, input_index, extra_objects=None):
+        """
+        Builds a signature hash for an input
+
+        @param input_index: Index of the input we will get signature hash for
+        """
+        if extra_objects is None:
+            extra_objects = []
+        buffer = bytearray()
+        # encode the transaction version
+        buffer.extend(tfbinary.IntegerBinaryEncoder.encode(self.version))
+        # encode the specifier
+        buffer.extend(self._specifier)
+        # encode the bot identifiers
+        buffer.extend(tfbinary.IntegerBinaryEncoder.encode(self._sender_botid, _kind='uint32'))
+        buffer.extend(tfbinary.IntegerBinaryEncoder.encode(self._receiver_botid, _kind='uint32'))
+
+        # extra objects if any
+        for extra_object in extra_objects:
+            buffer.extend(tfbinary.BinaryEncoder.encode(extra_object))
+
+        # encode names
+        buffer.extend(tfbinary.BinaryEncoder.encode(self._names, type_='slice'))
 
         # encode the number of coins inputs
         buffer.extend(tfbinary.IntegerBinaryEncoder.encode(len(self._coin_inputs), _kind='int'))
