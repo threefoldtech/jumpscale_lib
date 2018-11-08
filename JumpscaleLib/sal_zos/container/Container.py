@@ -68,7 +68,7 @@ class Container():
         self.logger = logger or default_logger
 
         for nic in self.nics:
-            nic.pop('token', None)
+            nic.pop('ztClient', None)
             if nic.get('config', {}).get('gateway', ''):
                 nic['monitor'] = True
 
@@ -120,6 +120,13 @@ class Container():
                     if nic['type'] == 'zerotier':
                         self._identity = self.client.zerotier.info()['secretIdentity']
         return self._identity
+
+    @property
+    def public_identity(self):
+        if self.is_running():
+            for nic in self.nics:
+                if nic['type'] == 'zerotier':
+                    return self.client.zerotier.info()['publicIdentity']
 
     @property
     def ipv6(self, interface=None):
@@ -339,6 +346,17 @@ class Container():
         for k, v in self.ports.items():
             if v == port:
                 return int(k.split(':')[-1])
+
+    def authorize_networks(self, nics):
+        public_identity = self.public_identity
+        if not public_identity:
+            raise RuntimeError('Failed to get zerotier public identity')
+        for nic in nics:
+            if nic['type'] == 'zerotier':
+                client = j.clients.zerotier.get(nic['ztClient'], create=False, die=True, interactive=False)
+                network = client.network_get(nic['id'])
+                network.member_add(public_identity, self.name)
+
 
     @property
     def mgmt_addr(self):

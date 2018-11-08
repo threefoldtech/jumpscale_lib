@@ -234,7 +234,7 @@ class Nics(Collection):
         for nic in self:
             if nic.networkid == str(networkid) and nic.type == type_:
                 return nic
-        raise LookupError('No nic found with type id combination {}:'.format(type_, networkid))
+        raise LookupError('No nic found with type id combination {}:{}'.format(type_, networkid))
 
 
 class DynamicCollection:
