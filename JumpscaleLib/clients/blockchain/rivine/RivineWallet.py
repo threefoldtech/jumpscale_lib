@@ -30,6 +30,9 @@ from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
 from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import UnlockCondtionFactory,\
         MULTISIG_CONDITION_TYPE, MultiSignatureFulfillment, SingleSignatureFulfillment
 
+from JumpscaleLib.clients.blockchain.tfchain.TfchainThreeBotClient import TfchainThreeBotClient
+from JumpscaleLib.clients.blockchain.tfchain.types import signatures as tftsig
+
 from .const import MINER_PAYOUT_MATURITY_WINDOW, WALLET_ADDRESS_TYPE, ADDRESS_TYPE_SIZE, HASTINGS_TFT_VALUE, UNLOCKHASH_TYPE,\
         NR_OF_EXTRA_ADDRESSES_TO_CHECK
 
@@ -582,9 +585,11 @@ class RivineWallet:
         """
         logger.info("Signing Transaction")
         for index, input in enumerate(transaction.coin_inputs):
+            if input.parent_id not in self._unspent_coins_outputs:
+                continue
             #@TODO improve the parsing of outputs its duplicated now in too many places
             ulh = self._get_unlockhash_from_output(output=self._unspent_coins_outputs[input.parent_id], address=input.parent_id)
-            if ulh is not None:
+            if ulh in self._keys:
                 key = self._keys[ulh]
                 input.sign(input_idx=index, transaction=transaction, secret_key=key.secret_key)
             else:
@@ -606,7 +611,7 @@ class RivineWallet:
         """
         return utils.get_current_minter_definition(self._bc_networks, self._bc_network_password)
 
-    def sign_transaction(self, transaction, multisig=False, commit=False, ctx=None):
+    def sign_transaction(self, transaction, multisig=False, commit=False):
         """
         Signs a transaction and optionally push it to the blockchain
 
@@ -622,9 +627,9 @@ class RivineWallet:
         elif transaction.version == 144:
             self._sign_bot_registration_transaction(transaction, commit=commit)
         elif transaction.version == 145:
-            self._sign_bot_record_update_transaction(transaction, ctx.get('publickey', None), commit=commit)
+            self._sign_bot_record_update_transaction(transaction, commit=commit)
         elif transaction.version == 146:
-            self._sign_bot_name_transfer_transaction(transaction, ctx.get('sender_publickey', None), ctx.get('receiver_publickey', None), commit=commit)
+            self._sign_bot_name_transfer_transaction(transaction, commit=commit)
         else:
             raise RuntimeError("Can't sign unknown transaction version")
 
@@ -713,7 +718,7 @@ class RivineWallet:
         if commit:
             self._commit_transaction(transaction=transaction)
 
-    def _sign_bot_record_update_transaction(self, transaction, public_key, commit=False):
+    def _sign_bot_record_update_transaction(self, transaction, commit=False):
         """
         Signs a bot record update transaction and optionally push it to the chain
         @param transaction: A transactionV145 object to sign
@@ -722,6 +727,7 @@ class RivineWallet:
         # sign coin inputs
         self._sign(transaction, commit=False) # but do not commit (yet)
         # sign bot record update
+        public_key = self._get_public_key_from_bot_id(transaction.get_bot_id())
         uh = str(public_key.unlock_hash)
         if not uh in self._keys:
             logger.warn("no key found in wallet for unlock hash {}".format(uh))
@@ -731,7 +737,7 @@ class RivineWallet:
         if commit:
             self._commit_transaction(transaction=transaction)
 
-    def _sign_bot_name_transfer_transaction(self, transaction, sender_pub_key, receiver_pub_key, commit=False):
+    def _sign_bot_name_transfer_transaction(self, transaction, commit=False):
         """
         Signs a bot name transfer transaction and optionally push it to the chain
         @param transaction: A transactionV146 object to sign
@@ -740,11 +746,13 @@ class RivineWallet:
         # sign coin inputs
         self._sign(transaction, commit=False) # but do not commit (yet)
         # sign bot record update as sender (if possible)
+        sender_pub_key = self._get_public_key_from_bot_id(transaction.get_sender_bot_id())
         uh = str(sender_pub_key.unlock_hash)
         if uh in self._keys:
             key = self._keys[uh]
             transaction.set_sender_signature(sign_bot_transaction(transaction, sender_pub_key, key.secret_key))
         # sign bot record update as receiver (if possible)
+        receiver_pub_key = self._get_public_key_from_bot_id(transaction.get_receiver_bot_id())
         uh = str(receiver_pub_key.unlock_hash)
         if uh in self._keys:
             key = self._keys[uh]
@@ -753,7 +761,10 @@ class RivineWallet:
         if commit:
             self._commit_transaction(transaction=transaction)
 
-
+    def _get_public_key_from_bot_id(self, identifier):
+        record = TfchainThreeBotClient.get_record(identifier, self._bc_networks)
+        return tftsig.SiaPublicKey.from_string(record['publickey'])
+    
 class SpendableKey:
     """
     SpendableKey is a secret signing key and its public verifying key

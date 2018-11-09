@@ -1007,6 +1007,9 @@ class TransactionV145:
     def set_bot_id(self, identifier):
         self._botid = identifier
     
+    def get_bot_id(self):
+        return self._botid
+    
     def set_signature(self, signature):
         self._signature = signature
 
@@ -1168,8 +1171,8 @@ class TransactionV146:
         self._sender_botid = sender_data.get('id', 0)
         self._sender_signature = sender_data.get('signature', '')
         receiver_data = data.get('receiver', {})
-        self._sender_botid = receiver_data.get('id', 0)
-        self._sender_signature = receiver_data.get('signature', '')
+        self._receiver_botid = receiver_data.get('id', 0)
+        self._receiver_signature = receiver_data.get('signature', '')
         if 'txfee' in data:
             self._transaction_fee = int(data['txfee'])
         else:
@@ -1197,12 +1200,18 @@ class TransactionV146:
 
     def set_sender_bot_id(self, identifier):
         self._sender_botid = identifier
+
+    def get_sender_bot_id(self):
+        return self._sender_botid
     
     def set_sender_signature(self, signature):
         self._sender_signature = signature
 
     def set_receiver_bot_id(self, identifier):
         self._receiver_botid = identifier
+
+    def get_receiver_bot_id(self):
+        return self._receiver_botid
     
     def set_receiver_signature(self, signature):
         self._receiver_signature = signature
@@ -1320,7 +1329,7 @@ class TfchainPublicKeySignaturePair:
         return self._signature
     @signature.setter
     def signature(self, sig):
-        self.signature = sig
+        self._signature = sig
 
     @property
     def json(self):

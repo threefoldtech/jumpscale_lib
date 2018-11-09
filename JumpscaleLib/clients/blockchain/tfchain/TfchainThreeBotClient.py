@@ -85,7 +85,7 @@ class TfchainThreeBotClient():
 
         # sign and commit the Tx, return the tx ID afterwards
         wallet.sign_transaction(transaction=tx, commit=True)
-        return tx.id
+        return tx
     
     @staticmethod
     def update_record(wallet, identifier, months=0, names_to_add=None, names_to_remove=None, addresses_to_add=None, addresses_to_remove=None):
@@ -118,17 +118,10 @@ class TfchainThreeBotClient():
         if remainder > 0:
             # TODO: are we sure refunding to first address is always desired?
             tx.set_refund_coin_output(value=remainder, recipient=wallet.addresses[0])
-
-        # get the record, such that we can get the public key
-        # TODO: optimise, in case the given identifier is the public key we can use it directly
-        #       without having to fetch the record first
-        record = TfchainThreeBotClient.get_record(identifier, network_addresses=wallet._bc_networks)
-        public_key_str = record.get('publickey', None)
-        public_key = tftsig.SiaPublicKey.from_string(public_key_str)
         
         # sign and commit the Tx, return the tx ID afterwards
-        wallet.sign_transaction(transaction=tx, ctx={'publickey': public_key}, commit=True)
-        return tx.id
+        wallet.sign_transaction(transaction=tx, commit=True)
+        return tx
 
     @staticmethod
     def create_name_transfer_transaction(wallet, sender_identifier, receiver_identifier, names):
@@ -152,20 +145,6 @@ class TfchainThreeBotClient():
             # TODO: are we sure refunding to first address is always desired?
             tx.set_refund_coin_output(value=remainder, recipient=wallet.addresses[0])
 
-        # get the sender pub key # TODO: possible optimize
-        record_sender = TfchainThreeBotClient.get_record(sender_identifier, network_addresses=wallet._bc_networks)
-        sender_public_key_str = record_sender.get('publickey', None)
-        sender_public_key = tftsig.SiaPublicKey.from_string(sender_public_key_str)
-
-        # get the receiver pub key # TODO: possible optimize
-        record_receiver = TfchainThreeBotClient.get_record(receiver_identifier, network_addresses=wallet._bc_networks)
-        receiver_public_key_str = record_receiver.get('publickey', None)
-        receiver_public_key = tftsig.SiaPublicKey.from_string(receiver_public_key_str)
-
         # sign and commit the Tx, return the tx ID afterwards
-        ctx = {
-            'sender_publickey': sender_public_key,
-            'receiver_publickey': receiver_public_key
-        }
-        wallet.sign_transaction(transaction=tx, ctx=ctx, commit=False)
+        wallet.sign_transaction(transaction=tx, commit=False)
         return tx
