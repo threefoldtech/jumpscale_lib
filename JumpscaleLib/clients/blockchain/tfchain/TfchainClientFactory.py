@@ -50,12 +50,15 @@ class TfchainClientFactory(JSConfigBaseFactory):
         """
         return TransactionFactory.from_json(txn_json)
 
-    def create_wallet(self, walletname, network = TfchainNetwork.STANDARD, seed = '', explorers = [], password = ''):
+
+    def create_wallet(self, walletname, network = TfchainNetwork.STANDARD, seed = '', explorers = None, password = ''):
         """
         Creates a named wallet
 
         @param seed : restores a wallet from a seed
         """
+        if not explorers:
+            explorers = []
         if self.exists(walletname):
             raise WalletAlreadyExistsException(walletname)
         data = {
@@ -126,4 +129,3 @@ class TfchainClientFactory(JSConfigBaseFactory):
         if locktime is not None:
             condition = LockTimeCondition(condition=condition, locktime=locktime)
         return condition
-

@@ -292,26 +292,8 @@ class MarkdownDocument(JSBASE):
         :return:
         """
         raise NotImplemented()
-        #probably best way is to use latex and then to pdf
-        #there are is also a way with html directly
-        #we need pagebreaks to work
-        #we need tables to work
-        #we need images to work
 
 
-
-    # @property
-    # def html(self):
-    #     out="""
-    #     <!DOCTYPE html>
-    #     <html>
-    #     <body>
-    #     """
-    #     out=j.core.text.strip(out)
-    #     for part in self.parts:
-    #         out+= part.html +"\n"
-    #     out+="\n</body>\n</html>\n"
-    #     return out
 
     def htmlpage_get(self,htmlpage=None, webparts=True):
         """
