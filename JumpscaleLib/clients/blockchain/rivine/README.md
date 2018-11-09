@@ -219,3 +219,160 @@ sam_wallet.sign_transaction(transaction=txn, multisig=True, commit=True)
 
 ```
 
+## 3Bot commands
+
+Using the `threebot` property available in the `j.clients.tfchain` namespace
+as `j.clients.tfchain.threebot` allows you to:
+
+* [get the record of an existing 3Bot](#get-a-3bot-record);
+* [register a new 3Bot by creating a 3bot record](#create-a-3bot-record);
+* [update the record of an existing 3Bot](#update-a-3bot-record);
+* [transfer one or multiple names between two existing 3Bots](#Transfer-names-between-3Bot-records).
+
+Getting a 3Bot record requires only an identifier of a 3Bot.
+The other methods require a wallet as well, as these methods require (3Bot)
+transactions to be created and signed, and therefore require coin inputs to be funded and signed,
+as well as the signature of the 3Bot owning the record(s) to be created/updated.
+
+If you plan to do something other than getting the record of an existing 3Bot,
+it is important that you understand how to use the wallet of `j.clients.tfchain` and what it is.
+You can read more about the wallet earlier in this document in the
+[Creating a wallet](#creating-a-wallet) and [basic commands](#basic-commands) chapters.
+
+### Get a 3Bot record
+
+In order to get the record of an existing 3Bot from the standard network
+all you need to know is its (unique integral) identifier and the following method:
+```python
+In [1]: j.clients.tfchain.threebot.get_record(1) # get the record of the 3Bot with ID 1
+Out [1]:
+{'id': 1,
+ 'addresses': ['93.184.216.34', 'example.org', '0:0:0:0:0:ffff:5db8:d822'],
+ 'names': ['example.threebot'],
+ 'publickey': 'ed25519:dbcc428065c0bf15216884998400dc079b5ce3ec0ba4904aeaaec2ba19dfa1d6',
+ 'expiration': 1544344200}
+```
+
+Should you want to get a 3Bot record from _testnet_ you would instead do:
+```python
+In [1]: j.clients.tfchain.threebot.get_record(1, network_addresses=j.clients.tfchain.network.TESTNET.official_explorers())
+Out [1]:
+{'id': 1,
+ 'addresses': ['3bot.zaibon.be'],
+ 'names': ['tf3bot.zaibon'],
+ 'publickey': 'ed25519:72ebed8fd8b75fce87485ebe7184cf28b838d9e9ff55bbb23b8508f60fdede9e',
+ 'expiration': 1543650900}
+```
+
+You can also get a 3Bot record of any other private/dev network,
+but this requires you to give the `network_addresses` manually.
+
+### Create a 3Bot record
+
+In order to register a new 3Bot, you need to create a (3Bot) record.
+This can be done as follows:
+
+```python
+# this wallet is used in order to fund the creation of the 3Bot (spending coin outputs),
+# as well as to sign the 3Bot identification using a public/private key pair of this wallet.
+In[1]: wallet = j.clients.tfchain.open_wallet('mywallet')
+
+# if no public key is given, a new key pair ill be generated within the given wallet,
+# and the public key of that pair will be used. Should you want to use an existing key pair of that wallet,
+# you can pass the public key to this function.
+In[2]: j.clients.tfchain.threebot.create_record(wallet, names=['example.threebot'], \
+    addresses=['93.184.216.34', 'example.org', '2001:db8:85a3::8a2e:370:7334'], months=24)
+[Fri09 09:34] - RivineWallet.py   :200 :in.rivine.rivinewallet - INFO     - Current chain height is: 327
+[Fri09 09:34] - RivineWallet.py   :586 :in.rivine.rivinewallet - INFO     - Signing Transaction
+[Fri09 09:34] - utils.py          :247 :lockchain.rivine.utils - INFO     - Transaction committed successfully
+Out[2]: <JumpscaleLib.clients.blockchain.rivine.types.transaction.TransactionV144 at 0x7fd27e262eb8>
+```
+
+The network is defined here by the given wallet. It can work with any version-up-to-date (tfchain) network,
+as long as the wallet is configured for the desired network.
+
+When you register a 3Bot you do not know your unique identifier yet,
+as it is only assigned upon creation of the record in the blockchain.
+Therefore you'll need to wait until your committed transaction has been confirmed,
+such that you can get the unique identifier of the registered 3Bot by passing
+the used public key (in string format) to the ["Get a 3Bot record"](#get-a-3bot-record) functionality.
+
+### Update a 3Bot record
+
+In order to update an existing 3Bot, you need to update its (3Bot) record.
+This can be done as follows:
+
+```python
+# this wallet is used in order to fund the creation of the 3Bot (spending coin outputs),
+# as well as to sign the 3Bot transaction (as the 3Bot owning the record to be updated)
+# using the existing public/private key pair of this wallet.
+In[1]: wallet = j.clients.tfchain.open_wallet('mywallet')
+
+# you can do any or more of the following:
+# add addresses, remove addresses, add names, remove names, add (activity) months
+In[2]: j.clients.tfchain.threebot.update_record(wallet,
+    names_to_add=['anewname.formy.threebot'], names_to_remove['example.threebot'], \
+    addresses_to_add['example.com'])
+[Fri09 09:47] - RivineWallet.py   :200 :in.rivine.rivinewallet - INFO     - Current chain height is: 392
+[Fri09 09:47] - RivineWallet.py   :586 :in.rivine.rivinewallet - INFO     - Signing Transaction
+[Fri09 09:47] - utils.py          :247 :lockchain.rivine.utils - INFO     - Transaction committed successfully
+Out[2]: <JumpscaleLib.clients.blockchain.rivine.types.transaction.TransactionV145 at 0x7fd27e2abc50>
+```
+
+The network is defined here by the given wallet. It can work with any version-up-to-date (tfchain) network,
+as long as the wallet is configured for the desired network.
+
+### Transfer names between 3Bot records
+
+Transferring names involves two 3Bots, meaning two different 3Bots have to sign,
+and thus an additional step is required. The method does not take into account
+that a wallet might own both 3Bots, and thus even in that scenario you will have
+to execute the second step manually.
+
+In case you own a name, and want to give it to another 3Bot,
+you'll need to use this feature, as to not risk that someone else registers the name
+in the time window between you removing it from bot A, and bot B claiming it
+as part of a record update. Instead by using this feature,
+the name gets removed from the first bot, and added to the second bot,
+as part of the same transaction, making it completely secure.
+
+Transferring names between two 3Bot can be done as follows:
+
+```python
+# this wallet is used in order to fund the creation of the 3Bot (spending coin outputs),
+# as well as to sign the 3Bot transaction (as the 3Bot owning the record to be updated)
+# using the existing public/private key pair of this wallet.
+In[1]: wallet_b = j.clients.tfchain.open_wallet('wallet-b')
+
+In[2]: sender_bot_id = 1
+
+In[3]: receiver_bot_id = 2
+
+# you can do any or more of the following:
+# add addresses, remove addresses, add names, remove names, add (activity) months
+In[4]: tx = j.clients.tfchain.threebot.create_name_transfer_transaction(wallet_a, \
+    sender_bot_id, receiver_bot_id, ['example.threebot'])
+[Fri09 08:31] - RivineWallet.py   :200 :in.rivine.rivinewallet - INFO     - Current chain height is: 20
+[Fri09 08:31] - RivineWallet.py   :586 :in.rivine.rivinewallet - INFO     - Signing Transaction
+
+# pass the tx as json to the other 3Bot
+In[5]: tx.json # using any side-channel or software as you choose
+```
+
+```python
+# this wallet is used in order to fund the creation of the 3Bot (spending coin outputs),
+# as well as to sign the 3Bot transaction (as the 3Bot owning the record to be updated)
+# using the existing public/private key pair of this wallet.
+In[1]: wallet_a = j.clients.tfchain.open_wallet('wallet-a')
+
+# create a transaction object from the transaction json
+In[2]: txn = j.clients.rivine.create_transaction_from_json(txn_json)
+
+# sign and commit the tx, as you've seen before in other chapter of this document
+In[3]: wallet_a.sign_transaction(transaction=txn, commit=True)
+[Fri09 08:32] - RivineWallet.py   :586 :in.rivine.rivinewallet - INFO     - Signing Transaction
+[Fri09 08:32] - utils.py          :247 :lockchain.rivine.utils - INFO     - Transaction committed successfully
+```
+
+The network is defined here by the given wallets. It can work with any version-up-to-date (tfchain) network,
+as long as the wallets are configured for the (_same_) desired network.
