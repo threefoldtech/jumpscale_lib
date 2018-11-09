@@ -35,6 +35,8 @@ class NetworkAddress:
         if isinstance(na, ipaddress.IPv4Address):
             return cls(network_type=NetworkAddressType.IPV4, address=na.packed)
         if isinstance(na, ipaddress.IPv6Address):
+            if na.packed[:12] == b'\0\0\0\0\0\0\0\0\0\0\xff\xff': # IPv6 prefix for IPv4 addresses
+                return cls(network_type=NetworkAddressType.IPV4, address=na.packed[12:])
             return cls(network_type=NetworkAddressType.IPV6, address=na.packed)
 
         # anything else is an invalid network address

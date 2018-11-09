@@ -32,3 +32,11 @@ def test_network_address_binary():
         na = network.NetworkAddress.from_string(example)
         bh = na.binary.hex()
         assert(bh == expectedBinaryHexFormat)
+
+def test_network_ipv4_as_ipv6_address_binary():
+    """
+    Test the binary encoding of IPv6 addresses which are in fact IPv4 addresses
+    """
+    na = network.NetworkAddress.from_string("::ffff:5db8:d822")
+    bh = na.binary.hex()
+    assert(bh == "115db8d822")
