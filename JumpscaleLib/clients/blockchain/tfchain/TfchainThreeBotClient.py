@@ -124,7 +124,7 @@ class TfchainThreeBotClient():
         return tx
 
     @staticmethod
-    def create_name_transfer_transaction(wallet, sender_identifier, receiver_identifier, names):
+    def create_name_transfer(wallet, sender_identifier, receiver_identifier, names):
         # create the tx and fill user-defined properties in
         tx = transaction.TransactionV146()
         tx.set_sender_bot_id(sender_identifier)
@@ -146,5 +146,5 @@ class TfchainThreeBotClient():
             tx.set_refund_coin_output(value=remainder, recipient=wallet.addresses[0])
 
         # sign and commit the Tx, return the tx ID afterwards
-        wallet.sign_transaction(transaction=tx, commit=False)
+        wallet.sign_transaction(transaction=tx, commit=True)
         return tx

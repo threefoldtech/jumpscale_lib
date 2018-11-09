@@ -480,9 +480,9 @@ as long as the wallet is configured for the desired network.
 ### Transfer names between 3Bot records
 
 Transferring names involves two 3Bots, meaning two different 3Bots have to sign,
-and thus an additional step is required. The method does not take into account
-that a wallet might own both 3Bots, and thus even in that scenario you will have
-to execute the second step manually.
+and thus an additional step is required. The exception is when the used wallet
+owns the key pairs of both 3Bot parties, in which case the transaction is committed immediately.
+In all other cases the Tx will have to be still signed by the other 3Bot.
 
 In case you own a name, and want to give it to another 3Bot,
 you'll need to use this feature, as to not risk that someone else registers the name
@@ -505,7 +505,7 @@ In[3]: receiver_bot_id = 2
 
 # you can do any or more of the following:
 # add addresses, remove addresses, add names, remove names, add (activity) months
-In[4]: tx = j.clients.tfchain.threebot.create_name_transfer_transaction(wallet_a, \
+In[4]: tx = j.clients.tfchain.threebot.create_name_transfer(wallet_a, \
     sender_bot_id, receiver_bot_id, ['example.threebot'])
 [Fri09 08:31] - RivineWallet.py   :200 :in.rivine.rivinewallet - INFO     - Current chain height is: 20
 [Fri09 08:31] - RivineWallet.py   :586 :in.rivine.rivinewallet - INFO     - Signing Transaction

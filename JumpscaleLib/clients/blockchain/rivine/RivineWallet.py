@@ -748,17 +748,20 @@ class RivineWallet:
         # sign bot record update as sender (if possible)
         sender_pub_key = self._get_public_key_from_bot_id(transaction.get_sender_bot_id())
         uh = str(sender_pub_key.unlock_hash)
+        bots_signed = 0
         if uh in self._keys:
+            bots_signed += 1
             key = self._keys[uh]
             transaction.set_sender_signature(sign_bot_transaction(transaction, sender_pub_key, key.secret_key))
         # sign bot record update as receiver (if possible)
         receiver_pub_key = self._get_public_key_from_bot_id(transaction.get_receiver_bot_id())
         uh = str(receiver_pub_key.unlock_hash)
         if uh in self._keys:
+            bots_signed += 1
             key = self._keys[uh]
             transaction.set_receiver_signature(sign_bot_transaction(transaction, receiver_pub_key, key.secret_key))
         # commit if desired
-        if commit:
+        if commit and bots_signed == 2:
             self._commit_transaction(transaction=transaction)
 
     def _get_public_key_from_bot_id(self, identifier):
