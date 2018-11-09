@@ -55,6 +55,7 @@ class Doc(JSBASE):
         self._links_external = []
         self._links_doc = []
         self._links = []
+        self.render_obj = None
 
     def _clean(self,name):
         name=name.replace("/",".")
@@ -198,7 +199,7 @@ class Doc(JSBASE):
 
         if "{{" in res:
             #TODO:*1 rendering does not seem to be ok
-            res = j.tools.jinja2.text_render(text=res, **self.data)
+            res = j.tools.jinja2.text_render(text=res, obj=self.render_obj, **self.data)
         return res
 
     @property

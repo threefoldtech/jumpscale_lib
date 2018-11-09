@@ -37,9 +37,9 @@ class MarkdownFactory(JSBASE):
     def mddata_get(self):
         return MDData()
 
-    def install_dependencies_pdf_generator(self):
-        raise RuntimeError()
-        #use prefab to install components required to get pdf generation to work
+    # def install_dependencies_pdf_generator(self):
+    #     raise RuntimeError()
+    #     #use prefab to install components required to get pdf generation to work
 
 
     def test(self):

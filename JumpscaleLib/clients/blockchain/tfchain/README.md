@@ -225,10 +225,8 @@ The light wallet client supports the different atomicswap operations. It allows 
 
 For more details about the atomicswap process, it is recommended to check the documentation at the Rivine offical repository here: https://github.com/rivine/rivine/blob/master/doc/atomicswap/atomicswap.md
 
-The light wallet client exposes the APIs via the following hook:
-```python
-wallet.atomicswap.[TAB]
-```
+Detailed documentation on how to use the atomicswap api of the JumpScale client can
+be found in [the atomicswap documentation](../../../../docs/clients/blockchain/atomicswapwalkthrough.md).
 ### recovering a wallet 
 
 A wallet is essentially a seed. Using this seed, (and only

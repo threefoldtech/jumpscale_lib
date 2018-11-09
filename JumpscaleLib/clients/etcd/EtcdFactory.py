@@ -5,7 +5,6 @@ from .EtcdClient import EtcdClient
 JSConfigFactory = j.tools.configmanager.JSBaseClassConfigs
 
 
-
 class EtcdFactory(JSConfigFactory):
 
     def __init__(self):

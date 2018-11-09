@@ -7,7 +7,7 @@ JSBASE = j.application.JSBaseClass
 class JS8Stub(JSBASE):
 
     def __init__(self):
-        self.__jslocation__ = "j.tools.js8stub"
+        ##self.jslocation__ = "j.tools.js8stub"
         JSBASE.__init__(self)
         self.loaded = None
 
