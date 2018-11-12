@@ -267,7 +267,7 @@ class Zerodb(Service):
 
         # wait for zerodb to start
         self.container.client.system(cmd, id=self._id)
-        if not j.tools.timer.execute_until(self.is_running, 30, 0.5):
+        if not j.tools.timer.execute_until(self.is_running, timeout, 0.5):
             raise RuntimeError('Failed to start zerodb server: {}'.format(self.name))
 
     def _live_namespaces(self):

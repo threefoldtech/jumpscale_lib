@@ -2,11 +2,11 @@ from io import BytesIO
 
 import etcd3
 import yaml
-
 from jumpscale import j
 
 from .. import templates
 from ..abstracts import Nics, Service
+from ..globals import TIMEOUT_DEPLOY
 
 logger = j.logger.get(__name__)
 
@@ -107,7 +107,7 @@ class ETCD(Service):
         }
         return templates.render('etcd.conf', **config).strip()
 
-    def deploy(self, timeout=120):
+    def deploy(self, timeout=TIMEOUT_DEPLOY):
         # call the container property to make sure it gets created and the ports get updated
         self.container
         if not j.tools.timer.execute_until(lambda: self.container.mgmt_addr, timeout, 1):
