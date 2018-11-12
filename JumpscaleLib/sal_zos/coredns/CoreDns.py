@@ -3,6 +3,7 @@ import json
 from Jumpscale import j
 from .. import templates
 from ..abstracts import Nics, Service
+from ..globals import TIMEOUT_DEPLOY
 
 logger = j.logger.get(__name__)
 DEFAULT_PORT = 53
@@ -35,7 +36,7 @@ class Coredns(Service):
          :rtype: dict
         """
         ports = {
-            str("{}:{}|udp".format(self.backplane,DEFAULT_PORT)): DEFAULT_PORT,
+            str("{}:{}|udp".format(self.backplane, DEFAULT_PORT)): DEFAULT_PORT,
         }
         self.authorize_zt_nics()
 
@@ -48,7 +49,7 @@ class Coredns(Service):
             'env': {'ETCD_USERNAME': 'root', 'ETCD_PASSWORD': self.etcd_password},
         }
 
-    def deploy(self, timeout=120):
+    def deploy(self, timeout=TIMEOUT_DEPLOY):
         """create coredns contianer and get ZT ip
 
         Keyword Arguments:
@@ -76,7 +77,7 @@ class Coredns(Service):
         return templates.render(
             'coredns.conf', etcd_endpoint=self.etcd_endpoint).strip()
 
-    def start(self, timeout=120):
+    def start(self, timeout=TIMEOUT_DEPLOY):
         """
         Start coredns
         :param timeout: time in seconds to wait for the coredns to start

@@ -2,6 +2,7 @@ import time
 from Jumpscale import j
 from .. import templates
 from ..abstracts import Nics, Service
+from ..globals import TIMEOUT_DEPLOY
 
 logger = j.logger.get(__name__)
 DEFAULT_PORT_HTTP = 80
@@ -50,7 +51,7 @@ class Traefik(Service):
             'identity': self.zt_identity,
         }
 
-    def deploy(self, timeout=120):
+    def deploy(self, timeout=TIMEOUT_DEPLOY):
         """create traefik contianer and get ZT ip
 
         Keyword Arguments:
@@ -81,7 +82,7 @@ class Traefik(Service):
         return templates.render(
             'traefik.conf', etcd_endpoint=self.etcd_endpoint, user="root", passwd=self.etcd_password).strip()
 
-    def start(self, timeout=120):
+    def start(self, timeout=TIMEOUT_DEPLOY):
         """
         Start traefik
         store config in etcd
