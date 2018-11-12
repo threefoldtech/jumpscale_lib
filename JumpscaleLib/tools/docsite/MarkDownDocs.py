@@ -31,9 +31,15 @@ class MarkDownDocs(JSBASE):
 
         self._loaded = []  # don't double load a dir
         self._configs = []  # all found config files
-        self._macros_loaded = []
+        # self._macros_loaded = []
 
-        self._pointer_cache = {}  # so we don't have to full lookup all the time
+        self._macros_modules = {} #key is the path
+        self._macros = {} #key is the name
+
+        self._pointer_cache = {}  # so we don't have to full lookup all the time (for markdown docs)
+
+        #lets make sure we have default macros
+        self.macros_load()
 
         self.logger_enable()
 
@@ -47,32 +53,33 @@ class MarkDownDocs(JSBASE):
             self._git_repos[path] = gc
         return self._git_repos[path]
 
-    def _init(self):
-        if not self._initOK:
-            # self.install()
-            j.clients.redis.core_get()
-            j.sal.fs.remove(self._macroCodepath)
-            # load the default macro's
-            self.macros_load("https://github.com/Jumpscale/markdowndocs/tree/master/macros")
-            self._initOK = True
+    # def _init(self):
+    #     if not self._initOK:
+    #         # self.install()
+    #         j.clients.redis.core_get()
+    #         j.sal.fs.remove(self._macroCodepath)
+    #         # load the default macro's
+    #         self.macros_load("https://github.com/Jumpscale/markdowndocs/tree/master/macros")
+    #         self._initOK = True
 
     def macros_load(self, pathOrUrl="https://github.com/threefoldtech/jumpscale_weblibs/tree/master/macros"):
         """
         @param pathOrUrl can be existing path or url
         e.g. https://github.com/threefoldtech/jumpscale_lib/docsite/tree/master/examples
         """
-        self.logger.info("load macros")
+        self.logger.info("load macros:%s"%pathOrUrl)
         path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
 
         if path not in self._macros_modules:
 
             if not j.sal.fs.exists(path=path):
-                raise j.exceptions.Input(
-                    "Cannot find path:'%s' for macro's, does it exist?" % path)
+                raise j.exceptions.Input("Cannot find path:'%s' for macro's, does it exist?" % path)
 
             for path0 in j.sal.fs.listFilesInDir(path, recursive=True, filter="*.py", followSymlinks=True):
                 name = j.sal.fs.getBaseName(path0)[:-3] #find name, remove .py
                 self._macros[name] = j.tools.jinja2.code_python_render(obj_key=name, path=path0,reload=False, objForHash=name)
+        # else:
+        #     self.logger.debug("macros not loaded, already there")
 
     def load(self, path="", name=""):
         self.macros_load()

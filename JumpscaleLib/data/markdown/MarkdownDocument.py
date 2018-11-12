@@ -324,7 +324,7 @@ class MarkdownDocument(JSBASE):
                 htmlpage.html_add(mistune.markdown(part.markdown))
             elif part.type=="macro":
                 htmlpage.paragraph_add(mistune.markdown(part.markdown.strip()))
-                # if j.tools.docsites._macros_loaded is not []:
+                # if j.tools.markdowndocs_loaded is not []:
                 #     #means there is no doc generator so cannot load macro
                 #     j.data.html.webparts.codemirror_add(self=htmlpage,code=part.text)
                 # else:

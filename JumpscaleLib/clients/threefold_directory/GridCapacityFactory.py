@@ -41,13 +41,13 @@ class GridCapacityFactory(JSConfigFactory):
     def _capacity(self):
         def do():
             return [item for item in self.client.ListCapacity()[0]]
-        return self.cache.get("_capacity", method=do, expire=60)
+        return self.cache.get("_capacity", method=do, expire=600)
 
     @property
     def _farmers(self):
         def do():
             return [item for item in self.client.ListFarmers()[0]]
-        return self.cache.get("_farmers", method=do, expire=60)
+        return self.cache.get("_farmers", method=do, expire=600)
 
     @property
     def capacity(self):

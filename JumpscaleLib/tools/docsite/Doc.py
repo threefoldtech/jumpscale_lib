@@ -199,7 +199,7 @@ class Doc(JSBASE):
 
         if "{{" in res:
             #TODO:*1 rendering does not seem to be ok
-            res = j.tools.jinja2.text_render(text=res, obj=self.render_obj, **self.data)
+            res = j.tools.jinja2.template_render(text=res, obj=self.render_obj, **self.data)
         return res
 
     @property
@@ -303,13 +303,13 @@ class Doc(JSBASE):
 
             macro_name = part.method.split("(",1)[0].strip()
 
-            if not macro_name in j.tools.docsites._macros:
+            if not macro_name in j.tools.markdowndocs._macros:
                 e = "COULD NOT FIND MACRO"
                 block = "```python\nERROR IN MACRO*** TODO: *1 ***\nmacro:\n%s\nERROR:\n%s\n```\n" % (macro_name, e)
                 self.logger.error(block)
                 self.docsite.error_raise(block, doc=self)
 
-            method = j.tools.docsites._macros[macro_name]
+            method = j.tools.markdowndocs._macros[macro_name]
             args = self._args_get(part.method)
             kwargs = self._kwargs_get(part.method)
 
