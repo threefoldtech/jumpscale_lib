@@ -51,6 +51,7 @@ class TfchainClientFactory(JSConfigBaseFactory):
         """
         Creates a named wallet
 
+        @param network : defines which network to use, use j.clients.tfchain.network.TESTNET for testnet
         @param seed : restores a wallet from a seed
         """
         if self.exists(walletname):
