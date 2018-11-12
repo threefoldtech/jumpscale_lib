@@ -81,7 +81,7 @@ class VM:
         self.vm_sal.ports.add(name=name, source=source, target=target)
 
     def del_port(self, name):
-        self.vm_sal.ports.add(name=name)
+        self.vm_sal.ports.remove(name=name)
     
     def list_port(self):
         return self.vm_sal.ports.list()
