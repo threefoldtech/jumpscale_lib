@@ -10,8 +10,9 @@ JSConfigClient = j.tools.configmanager.JSBaseClassConfig
 
 if socket.socket is gevent.socket.socket:
     # this is needed when running from within 0-robot
-    import grpc.experimental.gevent
-    grpc.experimental.gevent.init_gevent()
+    import grpc.experimental.gevent as grpc_gevent
+    grpc_gevent.init_gevent()
+
 
 _template = """
 host = "127.0.0.1"
@@ -43,7 +44,6 @@ class EtcdClient(JSConfigClient):
                     'password': data['password_']
                 })
             self._api = etcd3.client(**kwargs)
-            print("client created")
         return self._api
 
     def put(self, key, value):

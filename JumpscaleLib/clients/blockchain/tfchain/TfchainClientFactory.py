@@ -5,9 +5,10 @@ Client factory for the Tfchain network, js entry point
 from Jumpscale import j
 
 from JumpscaleLib.clients.blockchain.tfchain.TfchainClient import TfchainClient
+from JumpscaleLib.clients.blockchain.tfchain.TfchainNetwork import TfchainNetwork
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory,\
-        DEFAULT_MINERFEE, TransactionV128, TransactionV129
+        TransactionV128, TransactionV129
 from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import UnlockHashCondition,\
         LockTimeCondition, MultiSignatureCondition, UnlockCondtionFactory
 from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
@@ -15,7 +16,6 @@ from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
 from JumpscaleLib.clients.blockchain.rivine.errors import WalletAlreadyExistsException
 
 JSConfigBaseFactory = j.tools.configmanager.JSBaseClassConfigs
-
 
 class TfchainClientFactory(JSConfigBaseFactory):
     """
@@ -26,6 +26,10 @@ class TfchainClientFactory(JSConfigBaseFactory):
         self.__jslocation__ = "j.clients.tfchain"
         self.__imports__ = "tfchain"
         JSConfigBaseFactory.__init__(self, TfchainClient)
+
+    @property
+    def network(self):
+        return TfchainNetwork
 
     def generate_seed(self):
         """
@@ -41,15 +45,23 @@ class TfchainClientFactory(JSConfigBaseFactory):
         """
         return TransactionFactory.from_json(txn_json)
 
-    def create_wallet(self, walletname, testnet= False, seed = ''):
+
+    def create_wallet(self, walletname, network = TfchainNetwork.STANDARD, seed = '', explorers = [], password = ''):
+
         """
         Creates a named wallet
 
+        @param network : defines which network to use, use j.clients.tfchain.network.TESTNET for testnet
         @param seed : restores a wallet from a seed
         """
         if self.exists(walletname):
             raise WalletAlreadyExistsException(walletname)
-        data = {'testnet':testnet, 'seed_':seed}
+        data = {
+            'network': network.name.lower(),
+            'seed_': seed,
+            'explorers': explorers,
+            'password': password,
+        }
         return self.get(walletname, data=data).wallet
 
     def open_wallet(self, walletname):
@@ -62,7 +74,7 @@ class TfchainClientFactory(JSConfigBaseFactory):
         return self.get(walletname).wallet
 
 
-    def create_minterdefinition_transaction(self, condition=None, description=None):
+    def create_minterdefinition_transaction(self, condition=None, description=None, network=TfchainNetwork.STANDARD):
         """
         Create a new minter definition transaction
 
@@ -70,14 +82,14 @@ class TfchainClientFactory(JSConfigBaseFactory):
         @param description: Add this description as arbitrary data to the transaction
         """
         tx = TransactionV128()
-        tx.add_minerfee(DEFAULT_MINERFEE)
+        tx.add_minerfee(network.minimum_minerfee())
         if condition is not None:
            tx.set_condition(condition)
         if description is not None:
             tx.add_data(description.encode('utf-8'))
         return tx
 
-    def create_coincreation_transaction(self, amount=None, condition=None, description=None):
+    def create_coincreation_transaction(self, amount=None, condition=None, description=None, network=TfchainNetwork.STANDARD):
         """
         Create a new coin creation transaction. If both an amount and condition are
         given, they will be used to create a first output in the transaction
@@ -87,7 +99,7 @@ class TfchainClientFactory(JSConfigBaseFactory):
         @param description: A description which is added to the transaction as arbitrary data
         """
         tx = TransactionV129()
-        tx.add_minerfee(DEFAULT_MINERFEE)
+        tx.add_minerfee(network.minimum_minerfee())
         if amount is not None and condition is not None:
             tx.add_output(amount, condition)
         if description is not None:
