@@ -32,7 +32,7 @@ class Containers():
 
     def create(self, name, flist, hostname=None, mounts=None, nics=None,
                host_network=False, ports=None, storage=None, init_processes=None, privileged=False, env=None, identity=None):
-        if 'nat0' not in nics:
+        if 'default' not in nics:
             nics.append({'type': 'default','id': 'None','hwaddr': '','name': 'nat0'})
         container = Container(name=name, node=self.node, flist=flist, hostname=hostname, mounts=mounts, nics=nics,
                               host_network=host_network, ports=ports, storage=storage, init_processes=init_processes,
