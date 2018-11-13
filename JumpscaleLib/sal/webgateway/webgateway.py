@@ -39,7 +39,7 @@ class WebGateway(JSConfigBase):
         :type public_ips: [str]
         """
         self.config.data_set('public_ips', public_ips)
-        self.config.data.save()
+        self.config.save()
 
         # update
         for service in self.services:
