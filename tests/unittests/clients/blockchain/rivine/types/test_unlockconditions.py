@@ -5,7 +5,6 @@ Unittests for module JumpscaleLib.clients.blockchain.rivine.types.unlockconditio
 from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import UnlockHashCondition, LockTimeCondition, SingleSignatureFulfillment, AtomicSwapFulfillment, AtomicSwapCondition
 from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY
 from JumpscaleLib.clients.blockchain.rivine.types.signatures import Ed25519PublicKey
-from JumpscaleLib.clients.blockchain.rivine.errors import DoubleSignatureError
 from JumpscaleLib.clients.blockchain.rivine import utils
 from unittest.mock import MagicMock
 import ed25519
@@ -71,16 +70,6 @@ def test_ssf_sign(ed25519_key, spendable_key):
     sig_ctx['transaction'].get_input_signature_hash = MagicMock(return_value=bytes('hello', encoding='utf-8'))
     ssf.sign(sig_ctx=sig_ctx)
     assert ssf._signature == expected_output
-
-
-def test_ssf_double_singature(ed25519_key):
-    """
-    Tests that the SingleSignatureFulfillment type does not allow double singnatures
-    """
-    ssf = SingleSignatureFulfillment(pub_key=ed25519_key)
-    ssf._signature = 'hello'
-    with pytest.raises(DoubleSignatureError):
-        ssf.sign(sig_ctx={})
 
 
 def test_ssf_json(ed25519_key):
