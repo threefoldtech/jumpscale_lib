@@ -33,11 +33,6 @@ class InvalidUnlockHashChecksumError(Exception):
     Invalid unlockhash checksum error
     """
 
-class DoubleSignatureError(Exception):
-    """
-    Double Signatures Error
-    """
-
 class InvalidAtomicswapContract(Exception):
     """
     InvalidAtomicswapContract error

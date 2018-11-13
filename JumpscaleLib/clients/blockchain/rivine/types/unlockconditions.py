@@ -3,7 +3,6 @@ Unlockconditions module
 """
 
 from JumpscaleLib.clients.blockchain.rivine.encoding import binary
-from JumpscaleLib.clients.blockchain.rivine.errors import DoubleSignatureError
 from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
 from JumpscaleLib.clients.blockchain.rivine.types.signatures import SiaPublicKeyFactory, Ed25519PublicKey
 
@@ -69,12 +68,13 @@ class BaseFulFillment:
 
     def sign(self, sig_ctx):
         """
-        Sign the given fulfillment, which is to be done after all properties have been filled of the parent transaction
+        Sign the given fulfillment, which is to be done after all properties have been filled of the parent transaction.
+        Should the Fulfillment already be signed, calling this method will return immediately.
 
         @param sig_ctx: Signature context should be a dictionary containing the secret key, input index, and transaction object
         """
-        if self._signature is not None:
-            raise DoubleSignatureError("cannot sign a fulfillment which is already signed")
+        if self._signature:
+            return
         sig_hash = sig_ctx['transaction'].get_input_signature_hash(input_index=sig_ctx['input_idx'],
                                                                     extra_objects=self._extra_objects)
         self._signature = sig_ctx['secret_key'].sign(sig_hash)
