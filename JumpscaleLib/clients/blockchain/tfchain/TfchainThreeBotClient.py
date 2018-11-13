@@ -4,6 +4,7 @@ import re
 import requests
 
 from JumpscaleLib.clients.blockchain.tfchain.TfchainNetwork import TfchainNetwork
+from JumpscaleLib.clients.blockchain.tfchain.errors import NoExplorerNetworkAddresses
 from JumpscaleLib.clients.blockchain.tfchain.types import signatures as tftsig
 from JumpscaleLib.clients.blockchain.rivine.errors import RESTAPIError
 from JumpscaleLib.clients.blockchain.rivine.types import transaction
@@ -18,15 +19,18 @@ class TfchainThreeBotClient():
     __bot_name_pattern = re.compile(r"^[A-Za-z]{1}[A-Za-z\-0-9]{3,61}[A-Za-z0-9]{1}(\.[A-Za-z]{1}[A-Za-z\-0-9]{3,55}[A-Za-z0-9]{1})*$")
     
     @staticmethod
-    def get_record(identifier, network_addresses=None):
+    def get_record(identifier, network=TfchainNetwork.STANDARD, explorers=None):
         """
         Get a 3Bot record registered on a TFchain network
 
-        @param id: unique 3Bot id, public key or name to search a 3Bot record for, in string format
-        @param network_addresses: network addresses from which to get the 3bot record
+        @param identifier: unique 3Bot id, public key or name to search a 3Bot record for, in string format
+        @param network: optional network, STANDARD by default, TESTNET is another valid choice, for DEVNET use the network_addresses param instead
+        @param explorers: explorer network addresses from which to get the 3bot record (only required for DEVNET, optional for other networks)
         """
-        if not network_addresses:
-            network_addresses = TfchainNetwork.STANDARD.official_explorers()
+        if not explorers:
+            explorers = network.official_explorers()
+            if not explorers:
+                raise NoExplorerNetworkAddresses("network {} has no official explorer networks and none were specified by callee".format(network.name.lower()))
 
         msg = 'Failed to retrieve 3Bot record.'
         result = None
@@ -34,7 +38,7 @@ class TfchainThreeBotClient():
         endpoint = "explorer/3bot"
         if isinstance(identifier, str) and TfchainThreeBotClient.__bot_name_pattern.match(identifier):
             endpoint = "explorer/whois/3bot"
-        for address in network_addresses:
+        for address in explorers:
             url = '{}/{}/{}'.format(address.strip('/'), endpoint, identifier)
             headers = {'user-agent': 'Rivine-Agent'}
             try:
@@ -49,7 +53,7 @@ class TfchainThreeBotClient():
             if response:
                 raise RESTAPIError('{} {}'.format(msg, response.text.strip('\n')))
             else:
-                raise RESTAPIError('error while fetching 3bot record from {} for {}: {}'.format(network_addresses, identifier, msg))
+                raise RESTAPIError('error while fetching 3bot record from {} for {}: {}'.format(explorers, identifier, msg))
         return result.get('record', {})
     
     # TODO: it might be useful to also allow the usage of spendable keys not related to the given wallet, currently this is not Possible

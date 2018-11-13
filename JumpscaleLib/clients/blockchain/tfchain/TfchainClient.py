@@ -5,6 +5,7 @@ Tfchain Client
 from Jumpscale import j
 from json import dumps
 
+from JumpscaleLib.clients.blockchain.tfchain.errors import InvalidTfchainNetwork, NoExplorerNetworkAddresses
 from JumpscaleLib.clients.blockchain.tfchain.TfchainNetwork import TfchainNetwork
 from JumpscaleLib.clients.blockchain.rivine.RivineWallet import RivineWallet
 
@@ -19,16 +20,6 @@ nr_keys_per_seed = 1
     dumps(TfchainNetwork.STANDARD.official_explorers()))
 
 JSConfigBase = j.tools.configmanager.JSBaseClassConfig
-
-class InvalidTfchainNetwork(Exception):
-    """
-    InvalidTfchainNetwork error
-    """
-
-class NoExplorerNetworkAddresses(Exception):
-    """
-    NoExplorerNetworkAddresses error
-    """
 
 class TfchainClient(JSConfigBase):
     """
@@ -58,7 +49,7 @@ class TfchainClient(JSConfigBase):
             if not explorers :
                 explorers = network.official_explorers()
                 if not explorers:
-                    raise NoExplorerNetworkAddresses("network {} has no official explorer networks and none were specified by user".format(network.name.lower()))
+                    raise NoExplorerNetworkAddresses("network {} has no official explorer networks and none were specified by callee".format(network.name.lower()))
             # Load a wallet from a given seed. If no seed is given,
             # generate a new one
             seed = self.config.data['seed_']
