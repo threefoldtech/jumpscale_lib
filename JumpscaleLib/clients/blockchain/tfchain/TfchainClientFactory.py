@@ -6,6 +6,7 @@ from Jumpscale import j
 
 from JumpscaleLib.clients.blockchain.tfchain.TfchainClient import TfchainClient
 from JumpscaleLib.clients.blockchain.tfchain.TfchainNetwork import TfchainNetwork
+from JumpscaleLib.clients.blockchain.tfchain.TfchainThreeBotClient import TfchainThreeBotClient
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory,\
         TransactionV128, TransactionV129
@@ -31,6 +32,10 @@ class TfchainClientFactory(JSConfigBaseFactory):
     def network(self):
         return TfchainNetwork
 
+    @property
+    def threebot(self):
+        return TfchainThreeBotClient
+
     def generate_seed(self):
         """
         Generates a new seed and returns it as a mnemonic
@@ -46,14 +51,15 @@ class TfchainClientFactory(JSConfigBaseFactory):
         return TransactionFactory.from_json(txn_json)
 
 
-    def create_wallet(self, walletname, network = TfchainNetwork.STANDARD, seed = '', explorers = [], password = ''):
-
+    def create_wallet(self, walletname, network = TfchainNetwork.STANDARD, seed = '', explorers = None, password = ''):
         """
         Creates a named wallet
 
         @param network : defines which network to use, use j.clients.tfchain.network.TESTNET for testnet
         @param seed : restores a wallet from a seed
         """
+        if not explorers:
+            explorers = []
         if self.exists(walletname):
             raise WalletAlreadyExistsException(walletname)
         data = {

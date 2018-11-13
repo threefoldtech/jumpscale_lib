@@ -43,7 +43,7 @@ class BaseFulFillment:
     """
     BaseFulFillment class
     """
-    def __init__(self, pub_key):
+    def __init__(self, pub_key=None):
         """
         Initializes a new BaseFulfillment object
         """
