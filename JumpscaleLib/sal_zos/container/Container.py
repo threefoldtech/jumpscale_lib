@@ -112,6 +112,7 @@ class Container():
         for containerid, container in self.node.client.container.list().items():
             if self.name == container['container']['arguments']['name']:
                 containerid = int(containerid)
+                container['container']['arguments']['identity'] = self._identity
                 if self._client and self._client.container != containerid:
                     self._client = None
                 container['container']['id'] = int(containerid)
@@ -240,7 +241,7 @@ class Container():
             identity=self.identity,
             env=self.env
         )
-
+        self._identity = self.identity
         self._client = self.node.client.container.client(int(job.get(timeout)))
 
     def is_job_running(self, id):
