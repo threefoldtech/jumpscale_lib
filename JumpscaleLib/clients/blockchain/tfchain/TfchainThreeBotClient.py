@@ -10,6 +10,11 @@ from JumpscaleLib.clients.blockchain.rivine.types import transaction
 from JumpscaleLib.clients.blockchain.rivine import RivineWallet
 
 class TfchainThreeBotClient():
+    """
+    Client used to get, create and update records.
+    This client provides all you need in order to use the Threebot support in TFChain.
+    """
+
     __bot_name_pattern = re.compile(r"^[A-Za-z]{1}[A-Za-z\-0-9]{3,61}[A-Za-z0-9]{1}(\.[A-Za-z]{1}[A-Za-z\-0-9]{3,55}[A-Za-z0-9]{1})*$")
     
     @staticmethod
@@ -81,7 +86,7 @@ class TfchainThreeBotClient():
             key = wallet.generate_key()
             public_key = key.public_key
         pk = tftsig.SiaPublicKey(tftsig.SiaPublicKeySpecifier.ED25519, public_key)
-        tx.set_public_key(pk)
+        tx.identification.public_key = pk
 
         # sign and commit the Tx, return the tx ID afterwards
         wallet.sign_transaction(transaction=tx, commit=True)

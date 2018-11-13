@@ -646,7 +646,7 @@ class TransactionV144:
         self._transaction_fee = None
         self._coin_inputs = []
         self._refund_coin_output = None
-        self._identification = None
+        self._identification = TfchainPublicKeySignaturePair(None, None)
     
     @property
     def version(self):
@@ -665,6 +665,13 @@ class TransactionV144:
         Set the transaction id
         """
         self._id = tx_id
+    
+    @property
+    def identification(self):
+        """
+        Get the 3Bot identification of this transaction.
+        """
+        return self._identification
 
     @property
     def required_bot_fees(self):
@@ -730,7 +737,7 @@ class TransactionV144:
         if 'identification' in data:
             self._identification = TfchainPublicKeySignaturePair.from_dict(data['identification'])
         else:
-            self._identification = None
+            self._identification = TfchainPublicKeySignaturePair(None, None)
         if 'addresses' in data:
             for addr_str in data['addresses']:
                 addr = tftnet.NetworkAddress.from_string(addr_str)
@@ -761,9 +768,6 @@ class TransactionV144:
         if n < 1 or n > 24:
             ValueError("number of months for a 3Bot Registration Transaction has to be in the inclusive range [1,24]")
         self._number_of_months = n
-    
-    def set_public_key(self, key):
-        self._identification = TfchainPublicKeySignaturePair(public_key=key, signature=None)
 
     def add_coin_input(self, parent_id, pub_key):
         """
@@ -1285,9 +1289,11 @@ class TransactionV146:
         # return bytes(buffer)
         return hash(data=buffer)
 
-# _compute_monthly_bot_fees computes the total monthly fees required for the given months,
-# using the given oneCoin value as the currency's unit value.
 def _compute_monthly_bot_fees(months):
+    """
+    computes the total monthly fees required for the given months,
+    using the given oneCoin value as the currency's unit value.
+    """
     multiplier = months * tfconst.BOT_MONTHLY_FEE_MULTIPLIER
     fees = HASTINGS_TFT_VALUE * multiplier
     if months < 12:

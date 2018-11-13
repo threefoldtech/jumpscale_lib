@@ -709,12 +709,12 @@ class RivineWallet:
         # sign coin inputs
         self._sign(transaction, commit=False) # but do not commit (yet)
         # sign bot registration
-        uh = str(transaction._identification.public_key.unlock_hash)
-        if not uh in self._keys:
+        uh = str(transaction.identification.public_key.unlock_hash)
+        if uh not in self._keys:
             logger.warn("no key found in wallet for unlock hash {}".format(uh))
             return
         key = self._keys[uh]
-        transaction._identification.signature = sign_bot_transaction(transaction, transaction._identification.public_key, key.secret_key)
+        transaction.identification.signature = sign_bot_transaction(transaction, transaction.identification.public_key, key.secret_key)
         if commit:
             self._commit_transaction(transaction=transaction)
 
@@ -729,7 +729,7 @@ class RivineWallet:
         # sign bot record update
         public_key = self._get_public_key_from_bot_id(transaction.get_bot_id())
         uh = str(public_key.unlock_hash)
-        if not uh in self._keys:
+        if uh not in self._keys:
             logger.warn("no key found in wallet for unlock hash {}".format(uh))
             return
         key = self._keys[uh]

@@ -51,7 +51,7 @@ class TfchainClientFactory(JSConfigBaseFactory):
         return TransactionFactory.from_json(txn_json)
 
 
-    def create_wallet(self, walletname, network = TfchainNetwork.STANDARD, seed = '', explorers = None, password = ''):
+    def create_wallet(self, wallet_name, network = TfchainNetwork.STANDARD, seed = '', explorers = None, password = ''):
         """
         Creates a named wallet
 
@@ -60,24 +60,24 @@ class TfchainClientFactory(JSConfigBaseFactory):
         """
         if not explorers:
             explorers = []
-        if self.exists(walletname):
-            raise WalletAlreadyExistsException(walletname)
+        if self.exists(wallet_name):
+            raise WalletAlreadyExistsException(wallet_name)
         data = {
             'network': network.name.lower(),
             'seed_': seed,
             'explorers': explorers,
             'password': password,
         }
-        return self.get(walletname, data=data).wallet
+        return self.get(wallet_name, data=data).wallet
 
-    def open_wallet(self, walletname):
+    def open_wallet(self, wallet_name):
         """
-        Opens a named wallet
-        Returns None if the  wallet is not found
+        Opens a named wallet.
+        Raises the j.exceptions.NotFound exception if the wallet is not found.
         """
-        if not self.exists(walletname):
-            return None
-        return self.get(walletname).wallet
+        if not self.exists(wallet_name):
+            raise j.exceptions.NotFound('No wallet found with name {}'.format(wallet_name))
+        return self.get(wallet_name).wallet
 
 
     def create_minterdefinition_transaction(self, condition=None, description=None, network=TfchainNetwork.STANDARD):

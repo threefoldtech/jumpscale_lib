@@ -236,12 +236,12 @@ def commit_transaction(rivine_explorer_addresses, rivine_explorer_api_password, 
             res = requests.post(url, headers=headers, auth=auth, json=data, timeout=30)
         except requests.exceptions.ConnectionError as ex:
             logger.warn(msg)
-            logger.warn('error with tx: {}'.format(str(data)))
+            logger.debug('error with tx: {}'.format(str(data)))
             continue
         if res.status_code != 200:
             msg = 'Failed to commit transaction to chain network.{}'.format(res.text)
             logger.warn('{} {}'.format(msg, res.text))
-            logger.warn('error with tx: {}'.format(str(data)))
+            logger.debug('error with tx: {}'.format(str(data)))
         else:
             transaction.id = res.json()['transactionid']
             logger.info('Transaction committed successfully')
