@@ -241,7 +241,10 @@ class Container():
             identity=self.identity,
             env=self.env
         )
-        self._identity = self.identity
+
+        if self.is_running():
+            self.identity
+            
         self._client = self.node.client.container.client(int(job.get(timeout)))
 
     def is_job_running(self, id):
