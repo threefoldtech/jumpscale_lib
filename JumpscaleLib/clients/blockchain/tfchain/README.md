@@ -2,12 +2,35 @@
 
 This is a thin client for the [Threefold Chain blockchain](https://github.com/threefoldfoundation/tfchain).
 It works by communicating with the public explorer nodes. This client is leveraging the rivine
-client, by adding some chain specific constants so the user does not need to bother with this.
+library, using the tfchain specific constants and supporting all tfchain features.
+
+## Provided functionality
+
+This is a thin client/wallet for tfchain blockchains.
+This means that it communicates with (a) full node(s) but does not store the blockchain locally
+and does not participate in the P2P protocol.
+
+Please see [the Usage chapter](#chapter) for all functionalities.
+Here is a summary of what this client provides:
+
+- You can get transactions, coin outputs and wallet balances from the blockchain;
+- You can create and recover TFChain (thin) wallets as to be able to manage funds and sign (multi-sig) transactions;
+- Initiate/Participate in atomic swaps;
+- Get, create and update 3Bots;
+- Manage the mint definition and create coins;
 
 ## Dependencies
 
-As the TfChain client is basically a wrapper for the rivine client, it has the same
-dependencies, see [the rivine module README](../rivine/README.md).
+The client depends on the following python libraries to be able to function properly:
+- ed25519
+- pyblake2
+
+If you installed jumpscale on your system in dev mode and without setting the full installation flag (JSFULL=1) then you will need to install these libs manually if you want to continue using the client, to do that simply execute the following commands:
+```python
+pip3 install ed25519
+pip3 install pyblake2
+```
+
 
 ## Usage
 
