@@ -157,7 +157,7 @@ class ProxyMap(MutableMapping):
             raise TypeError('index should be a str, not %s' % type(key))
 
         if key not in self._names:
-            raise IndexError()
+            raise KeyError()
 
         if key not in self._proxies:
             self._load_proxy(key)
