@@ -32,6 +32,7 @@ class NetworkMember(JSBASE):
             before = time.time()
             while not self.data['config']['ipAssignments'] and time.time() - before < timeout:
                 self._refresh()
+                time.sleep(5)
             if not self.data['config']['ipAssignments']:
                 raise ValueError('Cannot get private ip address for zerotier member')
             self._private_ip = self.data['config']['ipAssignments'][0]
