@@ -22,7 +22,7 @@ from .types.signatures import Ed25519PublicKey, SPECIFIER_SIZE
 from .types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY, UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE
 
 from Jumpscale import j
-from JumpscaleLib.clients.blockchain.rivine import utils
+from JumpscaleLib.clients.blockchain.rivine import utils, txutils
 from JumpscaleLib.clients.blockchain.rivine.atomicswap.atomicswap import AtomicSwapManager
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory,\
         DEFAULT_TRANSACTION_VERSION, CoinOutput, DEFAULT_MINERFEE, sign_bot_transaction
@@ -264,7 +264,7 @@ class RivineWallet:
         @param blocks: Blocks from an address
         @param height: The current chain height
         """
-        self._unspent_coins_outputs.update(utils.collect_miner_fees(address, blocks, height))
+        self._unspent_coins_outputs.update(txutils.collect_miner_fees(address, blocks, height))
 
 
     def _collect_transaction_outputs(self, current_height, address, transactions):
@@ -290,7 +290,7 @@ class RivineWallet:
         self._unconfirmed_locked_coin_outputs = {}
         self._unconfirmed_unspent_multisig_outputs = {}
         self._unconfirmed_locked_multisig_outputs = {}
-        txn_outputs = utils.collect_transaction_outputs(current_height, address, confirmed_tx, unconfirmed_txs)
+        txn_outputs = txutils.collect_transaction_outputs(current_height, address, confirmed_tx, unconfirmed_txs)
         self._unspent_coins_outputs.update(txn_outputs['unlocked'])
         self._locked_coin_outputs.update(txn_outputs['locked'])
         self._unspent_multisig_outputs.update(txn_outputs['multisig_unlocked'])
@@ -573,7 +573,7 @@ class RivineWallet:
         """
         Retrieves unlockhash from coin output. This should handle different types of output conditions and transaction formats
         """
-        ulh = utils.get_unlockhash_from_output(output, address, current_height=self._get_current_chain_height())
+        ulh = txutils.get_unlockhash_from_output(output, address, current_height=self._get_current_chain_height())
         return ulh['unlocked'][0] if ulh['unlocked'] else None
 
 
@@ -649,7 +649,7 @@ class RivineWallet:
                 output_info = self._check_address(ci._parent_id)
                 for txn_info in output_info['transactions']:
                     for co in txn_info['rawtransaction']['data']['coinoutputs']:
-                        ulhs = utils.get_unlockhash_from_output(output=co,
+                        ulhs = txutils.get_unlockhash_from_output(output=co,
                                                                 address=ci._parent_id,
                                                                 current_height=current_height)
                         ulh = list(set(self.addresses).intersection(ulhs['unlocked']))
@@ -687,7 +687,7 @@ class RivineWallet:
                 transaction.mint_fulfillment.sign(ctx)
         else:
             if transaction.mint_fulfillment is None:
-                transaction._mint_fulfillment = SingleSignatureFulfillment()
+                transaction._mint_fulfillment = SingleSignatureFulfillment(None)
             if not muc._unlockhash in self._keys:
                 return
             key = self._keys[muc._unlockhash]
@@ -845,10 +845,13 @@ class WalletBalance:
             string += '\nUnlocked multisig outputs:\n'
         for output_id, output in self._unlocked_multisig_outputs.items():
             string += '\n\tOutput id: {}\n'.format(output_id)
-            string += '\tSignature addresses:\n'
-            for uh in output['condition']['data']['unlockhashes']:
-                string += '\t\t{}\n'.format(uh)
-            string += '\tMinimum amount of signatures: {}\n'.format(output['condition']['data']['minimumsignaturecount'])
+            if 'condition' in output:
+                string += '\tSignature addresses:\n'
+                for uh in output['condition']['data']['unlockhashes']:
+                    string += '\t\t{}\n'.format(uh)
+                string += '\tMinimum amount of signatures: {}\n'.format(output['condition']['data']['minimumsignaturecount'])
+            elif 'unlockhash' in output:
+                string += '\tMultisig Wallet Address: {}\n'.format(output['unlockhash'])
             string += '\tValue: {}\n'.format(int(output['value']) / HASTINGS_TFT_VALUE)
 
         if len(self._unconfirmed_unlocked_multisig_outputs) > 0:
@@ -913,13 +916,13 @@ class WalletBalance:
 
     def add_unlocked_output(self, output_id, raw_output):
         # It coudl be that this is a timelock condition which has expired
-        if raw_output['condition']['type'] == 3:
+        if 'condition' in raw_output and raw_output['condition']['type'] == 3:
             raw_output['condition'] = raw_output['condition']['data']['condition']
         self._unlocked_outputs[output_id] = raw_output
 
     def add_unlocked_multisig_output(self, output_id, raw_output):
         # It could be that this is a timelock condition which has expired
-        if raw_output['condition']['type'] == 3:
+        if 'condition' in raw_output and raw_output['condition']['type'] == 3:
             raw_output['condition'] = raw_output['condition']['data']['condition']
         self._unlocked_multisig_outputs[output_id] = raw_output
 
@@ -939,13 +942,13 @@ class WalletBalance:
 
     def add_unconfirmed_unlocked_output(self, output_id, raw_output):
         # It coudl be that this is a timelock condition which has expired
-        if raw_output['condition']['type'] == 3:
+        if 'condition' in raw_output and raw_output['condition']['type'] == 3:
             raw_output['condition'] = raw_output['condition']['data']['condition']
         self._unconfirmed_unlocked_outputs[output_id] = raw_output
 
     def add_unconfirmed_unlocked_multisig_output(self, output_id, raw_output):
         # It could be that this is a timelock condition which has expired
-        if raw_output['condition']['type'] == 3:
+        if 'condition' in raw_output and raw_output['condition']['type'] == 3:
             raw_output['condition'] = raw_output['condition']['data']['condition']
         self._unconfirmed_unlocked_multisig_outputs[output_id] = raw_output
 
