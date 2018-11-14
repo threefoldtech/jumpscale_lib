@@ -53,7 +53,16 @@ class NetworkAddress:
         if self._type == NetworkAddressType.HOSTNAME:
             return self._address.decode('utf-8')
         return str(ipaddress.ip_address(self._address))
-    
+
+
+    def __repr__(self):
+        """
+        Override so we have nice output in js shell if the object is not assigned
+        without having to call the print method.
+        """
+        return str(self)
+
+
     @property
     def json(self):
         return str(self)

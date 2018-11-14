@@ -32,6 +32,13 @@ class SiaPublicKeySpecifier(IntEnum):
             return signatures.SIGEd25519
         return ""
 
+    def __repr__(self):
+        """
+        Override so we have nice output in js shell if the object is not assigned
+        without having to call the print method.
+        """
+        return str(self)
+
     @property
     def binary(self):
         """
@@ -90,6 +97,13 @@ class SiaPublicKey:
     
     def __str__(self):
         return "{}:{}".format(str(self._algorithm), self._pub_key.hex())
+
+    def __repr__(self):
+        """
+        Override so we have nice output in js shell if the object is not assigned
+        without having to call the print method.
+        """
+        return str(self)
 
     @property
     def json(self):
