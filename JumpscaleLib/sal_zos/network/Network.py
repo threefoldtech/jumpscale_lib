@@ -78,7 +78,7 @@ class Network():
             # skip all interface that have an ipv4 address
             if any(netaddr.IPNetwork(addr['addr']).version == 4 for addr in nic['addrs'] if 'addr' in addr):
                 continue
-            if nic['speed'] == 0:
+            if nic['speed'] <= 0:
                 continue
             availablenics.setdefault(nic['speed'], []).append(nic['name'])
         return sorted(availablenics.items(), reverse=True)
