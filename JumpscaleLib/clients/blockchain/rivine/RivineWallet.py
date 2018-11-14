@@ -309,6 +309,8 @@ class RivineWallet:
         """
         utils.remove_spent_inputs(self._unspent_coins_outputs, transactions)
         utils.remove_spent_inputs(self._unspent_multisig_outputs, transactions)
+        utils.remove_spent_inputs(self._unconfirmed_unspent_coin_outputs, transactions)
+        utils.remove_spent_inputs(self._unconfirmed_unspent_multisig_outputs, transactions)
 
 
     def _get_unconfirmed_transactions(self, format_inputs=False):
@@ -439,7 +441,7 @@ class RivineWallet:
         """
         if minerfee is None:
             minerfee = self._minerfee
-        wallet_fund = int(self.current_balance.unlocked_balance * HASTINGS_TFT_VALUE)
+        wallet_fund = int(self.current_balance.unlocked_unconfirmed_balance * HASTINGS_TFT_VALUE)
         required_funds = amount + minerfee
         if required_funds > wallet_fund:
             raise InsufficientWalletFundsError('No sufficient funds to make the transaction')
@@ -464,6 +466,24 @@ class RivineWallet:
 
             input_value += int(unspent_coin_output['value'])
             result.append(input_result)
+        if input_value < required_funds:
+            for address, unspent_coin_output in self._unconfirmed_unspent_coin_outputs.items():
+                # if we reach the required funds, then break
+                if input_value >= required_funds:
+                    break
+                input_result = {}
+                ulh = self._get_unlockhash_from_output(output=unspent_coin_output, address=address)
+
+                if not ulh:
+                    raise RuntimeError('Cannot retrieve unlockhash')
+
+                # used_addresses.append(ulh)
+                used_addresses[address] = ulh
+                input_result['parent_id'] = address
+                input_result['pub_key'] = self._keys[ulh].public_key
+
+                input_value += int(unspent_coin_output['value'])
+                result.append(input_result)
         return result, used_addresses, minerfee, (input_value - required_funds)
 
 
@@ -585,15 +605,23 @@ class RivineWallet:
         """
         logger.info("Signing Transaction")
         for index, input in enumerate(transaction.coin_inputs):
-            if input.parent_id not in self._unspent_coins_outputs:
+            if input.parent_id in self._unspent_coins_outputs:
+                #@TODO improve the parsing of outputs its duplicated now in too many places
+                ulh = self._get_unlockhash_from_output(output=self._unspent_coins_outputs[input.parent_id], address=input.parent_id)
+                if ulh in self._keys:
+                    key = self._keys[ulh]
+                    input.sign(input_idx=index, transaction=transaction, secret_key=key.secret_key)
+                else:
+                    logger.warn("Failed to retrieve unlockhash related to input {}".format(input))
                 continue
-            #@TODO improve the parsing of outputs its duplicated now in too many places
-            ulh = self._get_unlockhash_from_output(output=self._unspent_coins_outputs[input.parent_id], address=input.parent_id)
-            if ulh in self._keys:
-                key = self._keys[ulh]
-                input.sign(input_idx=index, transaction=transaction, secret_key=key.secret_key)
-            else:
-                logger.warn("Failed to retrieve unlockhash related to input {}".format(input))
+            if input.parent_id in self._unconfirmed_unspent_coin_outputs:
+                #@TODO improve the parsing of outputs its duplicated now in too many places
+                ulh = self._get_unlockhash_from_output(output=self._unconfirmed_unspent_coin_outputs[input.parent_id], address=input.parent_id)
+                if ulh in self._keys:
+                    key = self._keys[ulh]
+                    input.sign(input_idx=index, transaction=transaction, secret_key=key.secret_key)
+                else:
+                    logger.warn("Failed to retrieve unlockhash related to unconfirmed input {}".format(input))
 
 
     def _commit_transaction(self, transaction):
@@ -898,6 +926,10 @@ class WalletBalance:
     @property
     def unlocked_balance(self):
         return sum(int(value.get('value', 0)) for value in self._unlocked_outputs.values()) / HASTINGS_TFT_VALUE
+
+    @property
+    def unlocked_unconfirmed_balance(self):
+        return self.unlocked_balance + sum(int(value.get('value', 0)) for value in self._unconfirmed_unlocked_outputs.values()) / HASTINGS_TFT_VALUE
 
     @property
     def unlocked_outputs(self):
