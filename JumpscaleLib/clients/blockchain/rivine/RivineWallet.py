@@ -125,8 +125,7 @@ class RivineWallet:
         Generates a new public key (and wallet address), returning the key
         """
         key = self._generate_spendable_key(index=self._nr_keys_per_seed)
-        address = str(key.unlockhash)
-        self._keys[address] = key
+        self._keys[str(key.unlockhash)] = key
         self._nr_keys_per_seed += 1
         if persist is True:
             self._save_nr_of_keys()
@@ -198,12 +197,18 @@ class RivineWallet:
         self._addressis_info = {}
         current_chain_height = self._get_current_chain_height()
         logger.info('Current chain height is: {}'.format(current_chain_height))
+        # remove unconfirmed outputs from prior iteration
+        self._unconfirmed_unspent_coin_outputs = {}
+        self._unconfirmed_locked_coin_outputs = {}
+        self._unconfirmed_unspent_multisig_outputs = {}
+        self._unconfirmed_locked_multisig_outputs = {}
         # when checking the balance we will check for 10 more addresses
         nr_of_addresses_to_check = self._nr_keys_per_seed + NR_OF_EXTRA_ADDRESSES_TO_CHECK
         for address_idx in range(nr_of_addresses_to_check):
             new_address = False
-            if address_idx < self._nr_keys_per_seed:
-                address = self.addresses[address_idx]
+            addresses = self.addresses
+            if address_idx < self._nr_keys_per_seed and address_idx < len(addresses):
+                address = addresses[address_idx]
             else:
                 address = str(self._generate_spendable_key(index=address_idx).unlockhash)
                 new_address = True
@@ -285,11 +290,6 @@ class RivineWallet:
                 unconfirmed_txs.append(tx)
             else:
                 confirmed_tx.append(tx)
-        # remove unconfirmed outputs from prior iteration
-        self._unconfirmed_unspent_coin_outputs = {}
-        self._unconfirmed_locked_coin_outputs = {}
-        self._unconfirmed_unspent_multisig_outputs = {}
-        self._unconfirmed_locked_multisig_outputs = {}
         txn_outputs = txutils.collect_transaction_outputs(current_height, address, confirmed_tx, unconfirmed_txs)
         self._unspent_coins_outputs.update(txn_outputs['unlocked'])
         self._locked_coin_outputs.update(txn_outputs['locked'])
