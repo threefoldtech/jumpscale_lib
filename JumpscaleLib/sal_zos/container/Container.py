@@ -3,7 +3,6 @@ import time
 from io import BytesIO
 import signal
 import netaddr
-from ..globals import TIMEOUT_DEPLOY
 from jumpscale import j
 from ..utils import get_zt_ip
 
@@ -209,7 +208,7 @@ class Container():
         self.client.filesystem.download(remote, buff)
         return buff.getvalue().decode()
 
-    def _create_container(self, timeout=TIMEOUT_DEPLOY):
+    def _create_container(self, timeout=60):
         self.logger.debug("send create container command to zero-os (%s)", self.flist)
         tags = [self.name]
         if self.hostname and self.hostname != self.name:

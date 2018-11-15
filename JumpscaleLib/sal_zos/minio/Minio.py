@@ -111,7 +111,7 @@ class Minio(Service):
             'mounts': {fs.path: metadata_path},
         }
 
-    def start(self, timeout=TIMEOUT_DEPLOY):
+    def start(self, timeout=15):
         """
         Start minio gatway
         :param timeout: time in seconds to wait for the minio gateway to start
