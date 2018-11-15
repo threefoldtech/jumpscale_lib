@@ -312,7 +312,7 @@ class OVHClient(JSConfigBase):
     #
     # custom builder
     #
-    def _zos_build(self, url):
+    def _zos_build(self, url, tag=None):
         """
         Internal use.
         This build an OVH adapted iPXE script based on an official bootstrap URL
@@ -353,17 +353,21 @@ class OVHClient(JSConfigBase):
             description = "Zero-OS: %s (no zerotier, no arguments)" % fields[4]
             name = "zero-os-%s" % fields[4]
 
+        if tag:
+            description = "Zero-OS: %s (tag: %s)" % (fields[4], tag)
+            name = "zero-os-%s" % tag
+
         return {'description': description, 'name': name, 'script': fixed}
 
-    def zero_os_boot(self, target, zerotierNetworkID):
+    def zero_os_boot(self, target, zerotierNetworkID, args, tag=None):
         """
         Configure a node to use Zero-OS iPXE kernel
         - target: need to be an OVH server hostname
         - zerotierNetworkID: network to be used in zerotier
         """
         self.ovh_id_check(target)
-        url = "%s/%s" % (self.ipxeBase, zerotierNetworkID)
-        ipxe = self._zos_build(url)
+        url = "%s/%s/%s" % (self.ipxeBase, zerotierNetworkID, args)
+        ipxe = self._zos_build(url, tag)
 
         self.logger.info("[+] description: %s" % ipxe['description'])
         self.logger.info("[+] boot loader: %s" % ipxe['name'])
