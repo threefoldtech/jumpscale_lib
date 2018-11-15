@@ -261,11 +261,11 @@ def remove_spent_inputs(unspent_coins_outputs, transactions):
     for txn_info in transactions:
         # cointinputs can exist in the dict but have the value None
         coininputs = txn_info.get('rawtransaction', {}).get('data', {}).get('coininputs', [])
-        if coininputs:
-            for coin_input in coininputs:
-                if coin_input.get('parentid') in unspent_coins_outputs:
-                    logger.debug('Found a spent address {}'.format(coin_input.get('parentid')))
-                    del unspent_coins_outputs[coin_input.get('parentid')]
+        for coin_input in coininputs:
+            parentid = coin_input.get('parentid')
+            if parentid in unspent_coins_outputs:
+                logger.debug('Found a spent address {}'.format(parentid))
+                del unspent_coins_outputs[parentid]
 
 
 def find_subset_sum(values, target):

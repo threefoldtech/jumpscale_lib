@@ -154,13 +154,14 @@ def collect_transaction_outputs(current_height, address, transactions, unconfirm
             }
             # 3Bot fee payout is not supported for now,
             # only the refund output
-            coinoutputs = [payout_output, rawtxn.get('data', {}).get('refundcoinoutput', None)]
+            coinoutputs = [payout_output]
+            refundco = rawtxn.get('data', {}).get('refundcoinoutput', None)
+            if refundco:
+                coinoutputs.append(refundco)
         else:
             coinoutputs = rawtxn.get('data', {}).get('coinoutputs', [])
         if coinoutputs:
             for index, utxo in enumerate(coinoutputs):
-                if not utxo:
-                    continue # ignore none outputs
                 condition_ulh = get_unlockhash_from_output(output=utxo, address=address, current_height=current_height)
 
                 if address in condition_ulh['locked'] or address in condition_ulh['unlocked']:
@@ -189,8 +190,10 @@ def collect_transaction_outputs(current_height, address, transactions, unconfirm
                         result['multisig_locked'][txn_info['coinoutputids'][idx]] = output
     # Add unconfirmed outputs
     for txn_info in unconfirmed_txs:
-        version = txn_info.get('rawtransaction', {}).get('version', 1)
+        rawtxn = txn_info.get('rawtransaction', {})
+        version = rawtxn.get('version', 1)
         coinoutputs = []
+        unlockhashes = txn_info.get('coinoutputunlockhashes', [])
         if version >= 144 and version <= 146: # TODO: Remove HACK as it is only here until we fixed 3Bot transactions!!
             txn = TransactionFactory.from_json(json.dumps(rawtxn))
             payout_output = {
@@ -199,13 +202,14 @@ def collect_transaction_outputs(current_height, address, transactions, unconfirm
             }
             # 3Bot fee payout is not supported for now,
             # only the refund output
-            coinoutputs = [payout_output, txn_info.get('rawtransaction', {}).get('data', {}).get('refundcoinoutput', None)]
+            coinoutputs = [payout_output]
+            refundco = rawtxn.get('data', {}).get('refundcoinoutput', None)
+            if refundco:
+                coinoutputs.append(refundco)
         else:
-            coinoutputs = txn_info.get('rawtransaction', {}).get('data', {}).get('coinoutputs', [])
+            coinoutputs = rawtxn.get('data', {}).get('coinoutputs', [])
         if coinoutputs:
             for index, utxo in enumerate(coinoutputs):
-                if not utxo:
-                    continue # ignore none outputs
                 condition_ulh = get_unlockhash_from_output(output=utxo, address=address, current_height=current_height)
                 if address in condition_ulh['locked'] or address in condition_ulh['unlocked']:
                     if address in condition_ulh['locked']:
@@ -216,7 +220,6 @@ def collect_transaction_outputs(current_height, address, transactions, unconfirm
             # Next part collects multisig outputs, lets ignore that if we don't
             # have a multisig address
             continue
-        unlockhashes = txn_info.get('coinoutputunlockhashes', [])
         if unlockhashes:
             for idx, uh in enumerate(unlockhashes):
                 if uh == address:
