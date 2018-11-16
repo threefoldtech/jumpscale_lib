@@ -6,6 +6,7 @@ import requests
 from JumpscaleLib.clients.blockchain.tfchain.TfchainNetwork import TfchainNetwork
 from JumpscaleLib.clients.blockchain.tfchain.errors import NoExplorerNetworkAddresses
 from JumpscaleLib.clients.blockchain.tfchain.types import signatures as tftsig
+from JumpscaleLib.clients.blockchain.tfchain.types import threebot as tftbot
 from JumpscaleLib.clients.blockchain.rivine.errors import RESTAPIError
 from JumpscaleLib.clients.blockchain.rivine.types import transaction
 from JumpscaleLib.clients.blockchain.rivine import RivineWallet
@@ -54,7 +55,7 @@ class TfchainThreeBotClient():
                 raise RESTAPIError('{} {}'.format(msg, response.text.strip('\n')))
             else:
                 raise RESTAPIError('error while fetching 3bot record from {} for {}: {}'.format(explorers, identifier, msg))
-        return result.get('record', {})
+        return tftbot.ThreeBotRecord.from_dict(result.get('record', {}))
     
     # TODO: it might be useful to also allow the usage of spendable keys not related to the given wallet, currently this is not Possible
 

@@ -14,8 +14,8 @@ from Jumpscale import j
 from JumpscaleLib.clients.blockchain.rivine import secrets
 from JumpscaleLib.clients.blockchain.rivine.encoding import binary
 from JumpscaleLib.clients.blockchain.rivine.errors import RESTAPIError, BackendError
-from JumpscaleLib.clients.blockchain.rivine.const import HASH_SIZE, MINER_PAYOUT_MATURITY_WINDOW, TIMELOCK_CONDITION_HEIGHT_LIMIT
-
+from JumpscaleLib.clients.blockchain.rivine.const import \
+    HASH_SIZE, MINER_PAYOUT_MATURITY_WINDOW, TIMELOCK_CONDITION_HEIGHT_LIMIT, NIL_UNLOCK_HASH
 
 DURATION_REGX_PATTERN = '^(?P<hours>\d*)h(?P<minutes>\d*)m(?P<seconds>\d*)s$'
 DURATION_TEMPLATE = 'XXhXXmXXs'
@@ -252,201 +252,6 @@ def commit_transaction(rivine_explorer_addresses, rivine_explorer_api_password, 
         raise BackendError(msg)
 
 
-def get_unlockhash_from_output(output, address, current_height):
-    """
-    Retrieves unlockhash from coin output. This should handle different types of output conditions and transaction formats
-
-    @param current_height: The current chain height
-    """
-    result = {
-        'locked': [],
-        'unlocked': []
-    }
-    # support both v0 and v1 tnx format
-    if 'unlockhash' in output:
-        # v0 transaction format
-        result['unlocked'].append(output['unlockhash'])
-    elif 'condition' in output:
-        # v1 transaction format
-        # check condition type
-        if output['condition'].get('type') == 1:
-            # unlockhash condition type
-            result['unlocked'].append(output['condition']['data']['unlockhash'])
-        elif output['condition'].get('type') == 3:
-            # timelock condition, right now we only support timelock condition with internal unlockhash condition, and multisig condition
-            locktime = output['condition']['data']['locktime']
-            if locktime < TIMELOCK_CONDITION_HEIGHT_LIMIT:
-                if output['condition']['data']['condition']['type'] == 1:
-                    # locktime should be checked against the current chain height
-                    if current_height > locktime:
-                        result['unlocked'].append(output['condition']['data']['condition']['data'].get('unlockhash'))
-                    else:
-                        logger.warn("Found transaction output for address {} but it cannot be unlocked yet".format(address))
-                        result['locked'].append(output['condition']['data']['condition']['data'].get('unlockhash'))
-                elif output['condition']['data']['condition']['type'] == 4:
-                    # locktime should be checked against the current chain height
-                    if current_height > locktime:
-                        result['unlocked'].extend(output['condition']['data']['condition']['data'].get('unlockhashes'))
-                    else:
-                        logger.warn("Found transaction output for address {} but it cannot be unlocked yet".format(address))
-                        result['locked'].extend(output['condition']['data']['condition']['data'].get('unlockhashes'))
-            else:
-                # locktime represent timestamp
-                current_time = time.time()
-                if output['condition']['data']['condition']['type'] == 1:
-                    # locktime should be checked against the current time
-                    if current_time > locktime:
-                        result['unlocked'].append(output['condition']['data']['condition']['data'].get('unlockhash'))
-                    else:
-                        logger.warn("Found transaction output for address {} but it cannot be unlocked yet".format(address))
-                        result['locked'].append(output['condition']['data']['condition']['data'].get('unlockhash'))
-                elif output['condition']['data']['condition']['type'] == 4:
-                    # locktime should be checked against the current time
-                    if current_time > locktime:
-                        result['unlocked'].extend(output['condition']['data']['condition']['data'].get('unlockhashes'))
-                    else:
-                        logger.warn("Found transaction output for address {} but it cannot be unlocked yet".format(address))
-                        result['locked'].extend(output['condition']['data']['condition']['data'].get('unlockhashes'))
-
-        elif output['condition'].get('type') == 4:
-            result['unlocked'].extend(output['condition']['data']['unlockhashes'])
-
-    return result
-
-
-def collect_miner_fees(address, blocks, height):
-    """
-    Scan the bocks for miner fees and Collects the miner fees But only that have matured already
-
-    @param address: address to collect miner fees for
-    @param blocks: Blocks from an address
-    @param height: The current chain height
-    """
-    result = {}
-    if blocks is None:
-        blocks = {}
-    for block_info in blocks:
-        if block_info.get('height', None) and block_info['height'] + MINER_PAYOUT_MATURITY_WINDOW >= height:
-            logger.info('Ignoring miner payout that has not matured yet')
-            continue
-        # mineroutputs can exist in the dictionary but with value None
-        mineroutputs = block_info.get('rawblock', {}).get('minerpayouts', [])
-        if mineroutputs:
-            for index, minerpayout in enumerate(mineroutputs):
-                if minerpayout.get('unlockhash') == address:
-                    logger.info('Found miner output with value {}'.format(minerpayout.get('value')))
-                    result[block_info['minerpayoutids'][index]] = {
-                        'value': minerpayout['value'],
-                        'condition':{
-                            'data': {
-                                'unlockhash': address
-                            }
-                        }
-                    }
-    return result
-
-
-def collect_transaction_outputs(current_height, address, transactions, unconfirmed_txs=None):
-    """
-    Collects transactions outputs
-
-    @param current_height: The current chain height
-    @param address: address to collect transactions outputs
-    @param transactions: Details about the transactions
-    @param unconfirmed_txs: List of unconfirmed transactions
-    """
-    result = {
-        'locked': {},
-        'unlocked': {},
-        'multisig_unlocked': {},
-        'multisig_locked': {},
-        'unconfirmed_locked': {},
-        'unconfirmed_unlocked': {},
-        'unconfirmed_multisig_unlocked': {},
-        'unconfirmed_multisig_locked': {}
-    }
-    if unconfirmed_txs is None:
-        unconfirmed_txs = []
-    for txn_info in transactions:
-        version = txn_info.get('rawtransaction', {}).get('version', 1)
-        coinoutputs = []
-        if version >= 144 and version <= 146:
-            # 3Bot fee payout is not supported for now,
-            # only the refund output
-            coinoutputs = [None, txn_info.get('rawtransaction', {}).get('data', {}).get('refundcoinoutput', None)]
-        else:
-            coinoutputs = txn_info.get('rawtransaction', {}).get('data', {}).get('coinoutputs', [])
-        if coinoutputs:
-            for index, utxo in enumerate(coinoutputs):
-                if not utxo:
-                    continue # ignore none outputs
-                condition_ulh = get_unlockhash_from_output(output=utxo, address=address, current_height=current_height)
-
-                if address in condition_ulh['locked'] or address in condition_ulh['unlocked']:
-                    logger.debug('Found transaction output for address {}'.format(address))
-                    if txn_info['coinoutputids'][index] in unconfirmed_txs:
-                        logger.warn("Transaction output is part of an unconfirmed tansaction. Ignoring it...")
-                        continue
-                    if address in condition_ulh['locked']:
-                        result['locked'][txn_info['coinoutputids'][index]] = utxo
-                    else:
-                        result['unlocked'][txn_info['coinoutputids'][index]] = utxo
-        if not address.startswith('03'):
-            # Next part collects multisig outputs, lets ignore that if we don't
-            # have a multisig address
-            continue
-        unlockhashes = txn_info.get('coinoutputunlockhashes', [])
-        if unlockhashes:
-            for idx, uh in enumerate(unlockhashes):
-                if uh == address:
-                    output = txn_info['rawtransaction']['data']['coinoutputs'][idx]
-                    condition_ulh = get_unlockhash_from_output(output=output,
-                                                                address=address,
-                                                                current_height=current_height)
-                    if condition_ulh['unlocked']:
-                        result['multisig_unlocked'][txn_info['coinoutputids'][idx]] = output
-                    if condition_ulh['locked']:
-                        result['multisig_locked'][txn_info['coinoutputids'][idx]] = output
-    # Add unconfirmed outputs
-    for txn_info in unconfirmed_txs:
-        version = txn_info.get('rawtransaction', {}).get('version', 1)
-        coinoutputs = []
-        if version >= 144 and version <= 146:
-            # 3Bot fee payout is not supported for now,
-            # only the refund output
-            coinoutputs = [None, txn_info.get('rawtransaction', {}).get('data', {}).get('refundcoinoutput', None)]
-        else:
-            coinoutputs = txn_info.get('rawtransaction', {}).get('data', {}).get('coinoutputs', [])
-        if coinoutputs:
-            for index, utxo in enumerate(coinoutputs):
-                if not utxo:
-                    continue # ignore none outputs
-                condition_ulh = get_unlockhash_from_output(output=utxo, address=address, current_height=current_height)
-                if address in condition_ulh['locked'] or address in condition_ulh['unlocked']:
-                    if address in condition_ulh['locked']:
-                        result['unconfirmed_locked'][txn_info['coinoutputids'][index]] = utxo
-                    else:
-                        result['unconfirmed_unlocked'][txn_info['coinoutputids'][index]] = utxo
-        if not address.startswith('03'):
-            # Next part collects multisig outputs, lets ignore that if we don't
-            # have a multisig address
-            continue
-        unlockhashes = txn_info.get('coinoutputunlockhashes', [])
-        if unlockhashes:
-            for idx, uh in enumerate(unlockhashes):
-                if uh == address:
-                    output = txn_info['rawtransaction']['data']['coinoutputs'][idx]
-                    condition_ulh = get_unlockhash_from_output(output=output,
-                                                                address=address,
-                                                                current_height=current_height)
-                    if condition_ulh['unlocked']:
-                        result['unconfirmed_multisig_unlocked'][txn_info['coinoutputids'][idx]] = output
-                    if condition_ulh['locked']:
-                        result['unconfirmed_multisig_locked'][txn_info['coinoutputids'][idx]] = output
-
-    return result
-
-
 def remove_spent_inputs(unspent_coins_outputs, transactions):
     """
     Remvoes the already spent outputs
@@ -456,11 +261,11 @@ def remove_spent_inputs(unspent_coins_outputs, transactions):
     for txn_info in transactions:
         # cointinputs can exist in the dict but have the value None
         coininputs = txn_info.get('rawtransaction', {}).get('data', {}).get('coininputs', [])
-        if coininputs:
-            for coin_input in coininputs:
-                if coin_input.get('parentid') in unspent_coins_outputs:
-                    logger.debug('Found a spent address {}'.format(coin_input.get('parentid')))
-                    del unspent_coins_outputs[coin_input.get('parentid')]
+        for coin_input in coininputs:
+            parentid = coin_input.get('parentid')
+            if parentid in unspent_coins_outputs:
+                logger.debug('Found a spent address {}'.format(parentid))
+                del unspent_coins_outputs[parentid]
 
 
 def find_subset_sum(values, target):

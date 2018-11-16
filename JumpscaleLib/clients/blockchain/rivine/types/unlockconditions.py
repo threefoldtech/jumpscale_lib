@@ -9,6 +9,9 @@ from JumpscaleLib.clients.blockchain.rivine.types.signatures import SiaPublicKey
 ATOMICSWAP_CONDITION_TYPE = bytearray([2])
 MULTISIG_CONDITION_TYPE = bytearray([4])
 
+# TODO:
+# SUPPORT Conditions as well
+
 
 class FulfillmentFactory:
     """
@@ -46,6 +49,7 @@ class BaseFulFillment:
         """
         Initializes a new BaseFulfillment object
         """
+        self._type = bytearray()
         self._pub_key = pub_key
         self._signature = None
         self._extra_objects = None

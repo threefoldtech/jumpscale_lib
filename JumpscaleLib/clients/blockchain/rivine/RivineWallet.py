@@ -22,7 +22,7 @@ from .types.signatures import Ed25519PublicKey, SPECIFIER_SIZE
 from .types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY, UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE
 
 from Jumpscale import j
-from JumpscaleLib.clients.blockchain.rivine import utils
+from JumpscaleLib.clients.blockchain.rivine import utils, txutils
 from JumpscaleLib.clients.blockchain.rivine.atomicswap.atomicswap import AtomicSwapManager
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory,\
         DEFAULT_TRANSACTION_VERSION, CoinOutput, DEFAULT_MINERFEE, sign_bot_transaction
@@ -125,8 +125,7 @@ class RivineWallet:
         Generates a new public key (and wallet address), returning the key
         """
         key = self._generate_spendable_key(index=self._nr_keys_per_seed)
-        address = str(key.unlockhash)
-        self._keys[address] = key
+        self._keys[str(key.unlockhash)] = key
         self._nr_keys_per_seed += 1
         if persist is True:
             self._save_nr_of_keys()
@@ -198,12 +197,18 @@ class RivineWallet:
         self._addressis_info = {}
         current_chain_height = self._get_current_chain_height()
         logger.info('Current chain height is: {}'.format(current_chain_height))
+        # remove unconfirmed outputs from prior iteration
+        self._unconfirmed_unspent_coin_outputs = {}
+        self._unconfirmed_locked_coin_outputs = {}
+        self._unconfirmed_unspent_multisig_outputs = {}
+        self._unconfirmed_locked_multisig_outputs = {}
         # when checking the balance we will check for 10 more addresses
         nr_of_addresses_to_check = self._nr_keys_per_seed + NR_OF_EXTRA_ADDRESSES_TO_CHECK
         for address_idx in range(nr_of_addresses_to_check):
             new_address = False
-            if address_idx < self._nr_keys_per_seed:
-                address = self.addresses[address_idx]
+            addresses = self.addresses
+            if address_idx < self._nr_keys_per_seed and address_idx < len(addresses):
+                address = addresses[address_idx]
             else:
                 address = str(self._generate_spendable_key(index=address_idx).unlockhash)
                 new_address = True
@@ -264,7 +269,7 @@ class RivineWallet:
         @param blocks: Blocks from an address
         @param height: The current chain height
         """
-        self._unspent_coins_outputs.update(utils.collect_miner_fees(address, blocks, height))
+        self._unspent_coins_outputs.update(txutils.collect_miner_fees(address, blocks, height))
 
 
     def _collect_transaction_outputs(self, current_height, address, transactions):
@@ -285,12 +290,7 @@ class RivineWallet:
                 unconfirmed_txs.append(tx)
             else:
                 confirmed_tx.append(tx)
-        # remove unconfirmed outputs from prior iteration
-        self._unconfirmed_unspent_coin_outputs = {}
-        self._unconfirmed_locked_coin_outputs = {}
-        self._unconfirmed_unspent_multisig_outputs = {}
-        self._unconfirmed_locked_multisig_outputs = {}
-        txn_outputs = utils.collect_transaction_outputs(current_height, address, confirmed_tx, unconfirmed_txs)
+        txn_outputs = txutils.collect_transaction_outputs(current_height, address, confirmed_tx, unconfirmed_txs)
         self._unspent_coins_outputs.update(txn_outputs['unlocked'])
         self._locked_coin_outputs.update(txn_outputs['locked'])
         self._unspent_multisig_outputs.update(txn_outputs['multisig_unlocked'])
@@ -309,6 +309,8 @@ class RivineWallet:
         """
         utils.remove_spent_inputs(self._unspent_coins_outputs, transactions)
         utils.remove_spent_inputs(self._unspent_multisig_outputs, transactions)
+        utils.remove_spent_inputs(self._unconfirmed_unspent_coin_outputs, transactions)
+        utils.remove_spent_inputs(self._unconfirmed_unspent_multisig_outputs, transactions)
 
 
     def _get_unconfirmed_transactions(self, format_inputs=False):
@@ -439,7 +441,7 @@ class RivineWallet:
         """
         if minerfee is None:
             minerfee = self._minerfee
-        wallet_fund = int(self.current_balance.unlocked_balance * HASTINGS_TFT_VALUE)
+        wallet_fund = int(self.current_balance.unlocked_unconfirmed_balance * HASTINGS_TFT_VALUE)
         required_funds = amount + minerfee
         if required_funds > wallet_fund:
             raise InsufficientWalletFundsError('No sufficient funds to make the transaction')
@@ -464,6 +466,24 @@ class RivineWallet:
 
             input_value += int(unspent_coin_output['value'])
             result.append(input_result)
+        if input_value < required_funds:
+            for address, unspent_coin_output in self._unconfirmed_unspent_coin_outputs.items():
+                # if we reach the required funds, then break
+                if input_value >= required_funds:
+                    break
+                input_result = {}
+                ulh = self._get_unlockhash_from_output(output=unspent_coin_output, address=address)
+
+                if not ulh:
+                    raise RuntimeError('Cannot retrieve unlockhash')
+
+                # used_addresses.append(ulh)
+                used_addresses[address] = ulh
+                input_result['parent_id'] = address
+                input_result['pub_key'] = self._keys[ulh].public_key
+
+                input_value += int(unspent_coin_output['value'])
+                result.append(input_result)
         return result, used_addresses, minerfee, (input_value - required_funds)
 
 
@@ -573,7 +593,7 @@ class RivineWallet:
         """
         Retrieves unlockhash from coin output. This should handle different types of output conditions and transaction formats
         """
-        ulh = utils.get_unlockhash_from_output(output, address, current_height=self._get_current_chain_height())
+        ulh = txutils.get_unlockhash_from_output(output, address, current_height=self._get_current_chain_height())
         return ulh['unlocked'][0] if ulh['unlocked'] else None
 
 
@@ -585,15 +605,23 @@ class RivineWallet:
         """
         logger.info("Signing Transaction")
         for index, input in enumerate(transaction.coin_inputs):
-            if input.parent_id not in self._unspent_coins_outputs:
+            if input.parent_id in self._unspent_coins_outputs:
+                #@TODO improve the parsing of outputs its duplicated now in too many places
+                ulh = self._get_unlockhash_from_output(output=self._unspent_coins_outputs[input.parent_id], address=input.parent_id)
+                if ulh in self._keys:
+                    key = self._keys[ulh]
+                    input.sign(input_idx=index, transaction=transaction, secret_key=key.secret_key)
+                else:
+                    logger.warn("Failed to retrieve unlockhash related to input {}".format(input))
                 continue
-            #@TODO improve the parsing of outputs its duplicated now in too many places
-            ulh = self._get_unlockhash_from_output(output=self._unspent_coins_outputs[input.parent_id], address=input.parent_id)
-            if ulh in self._keys:
-                key = self._keys[ulh]
-                input.sign(input_idx=index, transaction=transaction, secret_key=key.secret_key)
-            else:
-                logger.warn("Failed to retrieve unlockhash related to input {}".format(input))
+            if input.parent_id in self._unconfirmed_unspent_coin_outputs:
+                #@TODO improve the parsing of outputs its duplicated now in too many places
+                ulh = self._get_unlockhash_from_output(output=self._unconfirmed_unspent_coin_outputs[input.parent_id], address=input.parent_id)
+                if ulh in self._keys:
+                    key = self._keys[ulh]
+                    input.sign(input_idx=index, transaction=transaction, secret_key=key.secret_key)
+                else:
+                    logger.warn("Failed to retrieve unlockhash related to unconfirmed input {}".format(input))
 
 
     def _commit_transaction(self, transaction):
@@ -649,7 +677,7 @@ class RivineWallet:
                 output_info = self._check_address(ci._parent_id)
                 for txn_info in output_info['transactions']:
                     for co in txn_info['rawtransaction']['data']['coinoutputs']:
-                        ulhs = utils.get_unlockhash_from_output(output=co,
+                        ulhs = txutils.get_unlockhash_from_output(output=co,
                                                                 address=ci._parent_id,
                                                                 current_height=current_height)
                         ulh = list(set(self.addresses).intersection(ulhs['unlocked']))
@@ -687,7 +715,7 @@ class RivineWallet:
                 transaction.mint_fulfillment.sign(ctx)
         else:
             if transaction.mint_fulfillment is None:
-                transaction._mint_fulfillment = SingleSignatureFulfillment()
+                transaction._mint_fulfillment = SingleSignatureFulfillment(None)
             if not muc._unlockhash in self._keys:
                 return
             key = self._keys[muc._unlockhash]
@@ -845,10 +873,13 @@ class WalletBalance:
             string += '\nUnlocked multisig outputs:\n'
         for output_id, output in self._unlocked_multisig_outputs.items():
             string += '\n\tOutput id: {}\n'.format(output_id)
-            string += '\tSignature addresses:\n'
-            for uh in output['condition']['data']['unlockhashes']:
-                string += '\t\t{}\n'.format(uh)
-            string += '\tMinimum amount of signatures: {}\n'.format(output['condition']['data']['minimumsignaturecount'])
+            if 'condition' in output:
+                string += '\tSignature addresses:\n'
+                for uh in output['condition']['data']['unlockhashes']:
+                    string += '\t\t{}\n'.format(uh)
+                string += '\tMinimum amount of signatures: {}\n'.format(output['condition']['data']['minimumsignaturecount'])
+            elif 'unlockhash' in output:
+                string += '\tMultisig Wallet Address: {}\n'.format(output['unlockhash'])
             string += '\tValue: {}\n'.format(int(output['value']) / HASTINGS_TFT_VALUE)
 
         if len(self._unconfirmed_unlocked_multisig_outputs) > 0:
@@ -897,6 +928,10 @@ class WalletBalance:
         return sum(int(value.get('value', 0)) for value in self._unlocked_outputs.values()) / HASTINGS_TFT_VALUE
 
     @property
+    def unlocked_unconfirmed_balance(self):
+        return self.unlocked_balance + sum(int(value.get('value', 0)) for value in self._unconfirmed_unlocked_outputs.values()) / HASTINGS_TFT_VALUE
+
+    @property
     def unlocked_outputs(self):
         return self._unlocked_outputs
 
@@ -913,13 +948,13 @@ class WalletBalance:
 
     def add_unlocked_output(self, output_id, raw_output):
         # It coudl be that this is a timelock condition which has expired
-        if raw_output['condition']['type'] == 3:
+        if 'condition' in raw_output and raw_output['condition']['type'] == 3:
             raw_output['condition'] = raw_output['condition']['data']['condition']
         self._unlocked_outputs[output_id] = raw_output
 
     def add_unlocked_multisig_output(self, output_id, raw_output):
         # It could be that this is a timelock condition which has expired
-        if raw_output['condition']['type'] == 3:
+        if 'condition' in raw_output and raw_output['condition']['type'] == 3:
             raw_output['condition'] = raw_output['condition']['data']['condition']
         self._unlocked_multisig_outputs[output_id] = raw_output
 
@@ -939,13 +974,13 @@ class WalletBalance:
 
     def add_unconfirmed_unlocked_output(self, output_id, raw_output):
         # It coudl be that this is a timelock condition which has expired
-        if raw_output['condition']['type'] == 3:
+        if 'condition' in raw_output and raw_output['condition']['type'] == 3:
             raw_output['condition'] = raw_output['condition']['data']['condition']
         self._unconfirmed_unlocked_outputs[output_id] = raw_output
 
     def add_unconfirmed_unlocked_multisig_output(self, output_id, raw_output):
         # It could be that this is a timelock condition which has expired
-        if raw_output['condition']['type'] == 3:
+        if 'condition' in raw_output and raw_output['condition']['type'] == 3:
             raw_output['condition'] = raw_output['condition']['data']['condition']
         self._unconfirmed_unlocked_multisig_outputs[output_id] = raw_output
 

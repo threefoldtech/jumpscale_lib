@@ -208,7 +208,7 @@ class AtomicSwapManager:
 
         # sign the transaction input
         input_idx = 0
-        transaction.coins_inputs[input_idx].sign(input_idx=input_idx,
+        transaction.coin_inputs[input_idx].sign(input_idx=input_idx,
                                                  transaction=transaction,
                                                  secret_key=key.secret_key
                                                  )
