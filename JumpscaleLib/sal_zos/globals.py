@@ -1,1 +1,1 @@
-TIMEOUT_DEPLOY = 300  # 5 minutes
+TIMEOUT_DEPLOY = 7200  # 120 minutes

@@ -3,7 +3,6 @@ import time
 from io import BytesIO
 import signal
 import netaddr
-
 from jumpscale import j
 from ..utils import get_zt_ip
 
