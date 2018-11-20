@@ -177,7 +177,9 @@ class Network():
 
         cl = self.node.client
 
+        used_interfaces = []
         if not bonded:
+            used_interfaces.append(interfaces[0])
             cl.ip.link.mtu(interfaces[0], mtu)
             cl.ip.link.up(interfaces[0])
             cl.ip.addr.add(interfaces[0], str(addresses['storageaddr']))
@@ -185,11 +187,16 @@ class Network():
 
         # bonded
         for interface in interfaces:
+            used_interfaces = interfaces
             cl.ip.link.mtu(interface, mtu)
             cl.ip.link.up(interface)
 
         cl.ip.bond.add('backplane', interfaces, mtu=mtu)
         cl.ip.addr.add('backplane', str(addresses['storageaddr']))
+
+        # return a list of nic used by the storage network
+        used_interfaces.append('backplane')
+        return used_interfaces
 
     def _configure_ovs(self, cidr, vlan_tag, ovs_container_name='ovs', bonded=False, mtu=9000):
         container = self._ensure_ovs_container(ovs_container_name)
@@ -208,10 +215,13 @@ class Network():
                 raise
             return  # bridge already exists in ovs subsystem (TODO: implement ovs.bridge-list)
 
+        used_interfaces = []
         if not bonded:
+            used_interfaces.append(interfaces[0])
             self.node.client.ip.link.mtu(interfaces[0], mtu)
             container.client.json('ovs.port-add', {"bridge": "backplane", "port": interfaces[0], "vlan": 0})
         else:
+            used_interfaces = interfaces
             for interface in interfaces:
                 self.node.client.ip.link.mtu(interface, mtu)
                 self.node.client.ip.link.up(interface)
@@ -233,3 +243,7 @@ class Network():
         self.node.client.ip.link.down(interface)
         time.sleep(2)
         self.node.client.ip.link.up(interface)
+
+        # return a list of nic used by the storage network
+        used_interfaces.append('backplane')
+        return used_interfaces
