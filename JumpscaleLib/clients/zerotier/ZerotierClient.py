@@ -73,11 +73,10 @@ class NetworkMember(JSBASE):
             data['config']['authorized'] = authorize
             self._network._client.network.updateMember(data=data, address=self.address, id=self._network.id)
             self._refresh()
-            timeout_ = timeout
-            while self.data['config']['authorized'] != authorize and timeout_:
+            start = time.time()
+            while self.data['config']['authorized'] != authorize and (time.time() - start) < timeout:
+                time.sleep(5)
                 self._refresh()
-                time.sleep(2)
-                timeout_ -= 2
             if self.data['config']['authorized'] != authorize:
                 self.logger.warn('{}uthorization request sent but data is not updated after {} seconds'.format(
                     'A' if authorize else 'Dea', timeout))
@@ -128,7 +127,7 @@ class ZeroTierNetwork(JSBASE):
     def mynode_member(self):
         """
         check which of my nodes exist in the network and if found return that member
-        :return: 
+        :return:
         """
         for m in self.members_list():
             if m.nodeid_check(self.client.nodeids):
