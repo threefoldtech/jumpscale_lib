@@ -55,7 +55,7 @@ class BackendServer:
 
     @property
     def url(self):
-        return "%s:%s:%s" % (self.scheme, self.ip, self.port)
+        return "%s://%s:%s" % (self.scheme, self.ip, self.port)
 
     def __repr__(self):
         return "<BackendServer> {}://{}:{}".format(self.scheme, self.ip, self.port)
