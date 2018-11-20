@@ -280,6 +280,15 @@ class Zerodb(Service):
         result = self._redis.execute_command('NSLIST')
         return [namespace.decode('utf-8') for namespace in result]
 
+    def destroy(self):
+        super().destroy()
+
+        for sp in self.node.storagepools.list():
+            for fs in sp.list():
+                if fs.path == self.path:
+                    fs.delete()
+                    return
+
     @property
     def path(self):
         return self._path
