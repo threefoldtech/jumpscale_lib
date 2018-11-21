@@ -25,7 +25,7 @@ from Jumpscale import j
 from JumpscaleLib.clients.blockchain.rivine import utils, txutils
 from JumpscaleLib.clients.blockchain.rivine.atomicswap.atomicswap import AtomicSwapManager
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory,\
-        DEFAULT_TRANSACTION_VERSION, CoinOutput, DEFAULT_MINERFEE, sign_bot_transaction
+        DEFAULT_TRANSACTION_VERSION, CoinOutput, DEFAULT_MINERFEE, sign_bot_transaction, TransactionSummary
 from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
 from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import UnlockCondtionFactory,\
         MULTISIG_CONDITION_TYPE, MultiSignatureFulfillment, SingleSignatureFulfillment
@@ -60,7 +60,7 @@ class RivineWallet:
         """
         self._client = client
         self._seed = j.data.encryption.mnemonic.to_entropy(seed)
-        self._unspent_coins_outputs = {}
+        self._unspent_coin_outputs = {}
         self._locked_coin_outputs = {}
         self._unconfirmed_unspent_coin_outputs = {}
         self._unconfirmed_locked_coin_outputs = {}
@@ -102,7 +102,7 @@ class RivineWallet:
         """
         self._check_balance()
         wb = WalletBalance()
-        for id, output in self._unspent_coins_outputs.items():
+        for id, output in self._unspent_coin_outputs.items():
             wb.add_unlocked_output(id, output)
         for id, output in self._locked_coin_outputs.items():
             wb.add_locked_output(id, output)
@@ -136,6 +136,40 @@ class RivineWallet:
         Generates a new wallet address
         """
         return str(self.generate_key(persist=persist).unlockhash)
+
+    def list_transactions(self, addresses=None):
+        """
+        List all transactions related to a wallet,
+        optionally filtering to only show the given address(es).
+        """
+        # create the list where all found transaction summaries will be stored in
+        transactions = []
+
+        # define the addresses to look for
+        if not addresses:
+            addresses = self.addresses
+        else:
+            addresses = list(set(addresses) & set(self.addresses))
+        if not addresses:
+            raise ValueError("there are no addresses to list transactions for")
+        
+        # list the transactions of all transactions, one by one
+        for address in addresses:
+            address_info = self._check_address(address=address, log_errors=False)
+            address_transactions = address_info.get('transactions', {})
+            if not address_transactions:
+                continue
+            for tx in address_transactions:
+                txid = tx.get('id', '')
+                raw_tx = tx.get('rawtransaction', {})
+                if not txid or not raw_tx:
+                    raise ValueError("invalid transaction {} returned from explorer".format(tx))
+                confirmed = not tx.get('unconfirmed', True)
+                txs = TransactionSummary.from_raw_transaction(txid, confirmed, raw_tx)
+                transactions.append(txs)
+        
+        # return all listed transactions
+        return transactions      
 
     def _save_nr_of_keys(self):
         """
@@ -269,7 +303,7 @@ class RivineWallet:
         @param blocks: Blocks from an address
         @param height: The current chain height
         """
-        self._unspent_coins_outputs.update(txutils.collect_miner_fees(address, blocks, height))
+        self._unspent_coin_outputs.update(txutils.collect_miner_fees(address, blocks, height))
 
 
     def _collect_transaction_outputs(self, current_height, address, transactions):
@@ -291,7 +325,7 @@ class RivineWallet:
             else:
                 confirmed_tx.append(tx)
         txn_outputs = txutils.collect_transaction_outputs(current_height, address, confirmed_tx, unconfirmed_txs)
-        self._unspent_coins_outputs.update(txn_outputs['unlocked'])
+        self._unspent_coin_outputs.update(txn_outputs['unlocked'])
         self._locked_coin_outputs.update(txn_outputs['locked'])
         self._unspent_multisig_outputs.update(txn_outputs['multisig_unlocked'])
         self._locked_multisig_outputs.update(txn_outputs['multisig_locked'])
@@ -307,7 +341,7 @@ class RivineWallet:
 
         @param transactions: Details about the transactions
         """
-        utils.remove_spent_inputs(self._unspent_coins_outputs, transactions)
+        utils.remove_spent_inputs(self._unspent_coin_outputs, transactions)
         utils.remove_spent_inputs(self._unspent_multisig_outputs, transactions)
         utils.remove_spent_inputs(self._unconfirmed_unspent_coin_outputs, transactions)
         utils.remove_spent_inputs(self._unconfirmed_unspent_multisig_outputs, transactions)
@@ -427,7 +461,7 @@ class RivineWallet:
         if amount is not None and total_input > amount + DEFAULT_MINERFEE:
             refund = total_input - (amount + DEFAULT_MINERFEE)
         if refund > 0 and refund_condition is not None:
-            transaction._coins_outputs.append(CoinOutput(value=refund, condition=refund_condition))
+            transaction._coin_outputs.append(CoinOutput(value=refund, condition=refund_condition))
         transaction.add_minerfee(DEFAULT_MINERFEE)
         return transaction
 
@@ -449,7 +483,7 @@ class RivineWallet:
         result = []
         input_value = 0
         used_addresses = {}
-        for address, unspent_coin_output in self._unspent_coins_outputs.items():
+        for address, unspent_coin_output in self._unspent_coin_outputs.items():
             # if we reach the required funds, then break
             if input_value >= required_funds:
                 break
@@ -514,7 +548,7 @@ class RivineWallet:
 
         for txn_input in transaction.coin_inputs:
             if used_addresses[txn_input.parent_id] not in self._keys:
-            # if self._unspent_coins_outputs[txn_input.parent_id][ulh] not in self._keys:
+            # if self._unspent_coin_outputs[txn_input.parent_id][ulh] not in self._keys:
                 raise NonExistingOutputError('Trying to spend unexisting output')
 
         transaction.add_multisig_output(value=amount, unlockhashes=recipients, min_nr_sig=min_nr_sig, locktime=locktime)
@@ -567,7 +601,7 @@ class RivineWallet:
 
         for txn_input in transaction.coin_inputs:
             if used_addresses[txn_input.parent_id] not in self._keys:
-            # if self._unspent_coins_outputs[txn_input.parent_id][ulh] not in self._keys:
+            # if self._unspent_coin_outputs[txn_input.parent_id][ulh] not in self._keys:
                 raise NonExistingOutputError('Trying to spend unexisting output')
 
         transaction.add_coin_output(value=amount, recipient=recipient, locktime=locktime)
@@ -605,9 +639,9 @@ class RivineWallet:
         """
         logger.info("Signing Transaction")
         for index, input in enumerate(transaction.coin_inputs):
-            if input.parent_id in self._unspent_coins_outputs:
+            if input.parent_id in self._unspent_coin_outputs:
                 #@TODO improve the parsing of outputs its duplicated now in too many places
-                ulh = self._get_unlockhash_from_output(output=self._unspent_coins_outputs[input.parent_id], address=input.parent_id)
+                ulh = self._get_unlockhash_from_output(output=self._unspent_coin_outputs[input.parent_id], address=input.parent_id)
                 if ulh in self._keys:
                     key = self._keys[ulh]
                     input.sign(input_idx=index, transaction=transaction, secret_key=key.secret_key)
@@ -794,7 +828,7 @@ class RivineWallet:
 
     def _get_public_key_from_bot_id(self, identifier):
         record = TfchainThreeBotClient.get_record(identifier, self._bc_networks)
-        return tftsig.SiaPublicKey.from_string(record['publickey'])
+        return record.public_key
     
 class SpendableKey:
     """
