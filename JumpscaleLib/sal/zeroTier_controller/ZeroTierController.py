@@ -75,9 +75,17 @@ class ZeroTierController():
         except:
             controller = self.ddict()
 
-    def network_add(self, network_id):
-        controller["network"][network_id] = (self.request("/controller/network/"+network_id, {}))
-        return self.request("/controller/network/"+network_id, {})
+    def network_add(self):
+        pubsecret = self.get_filepath()+'/authtoken.secret'
+        with open(pubsecret, 'r') as f:
+            authtoken = f.read().strip()
+        with open (self.get_filepath()+'/identity.public','r') as f:
+            network_id = f.read().split(':')[0]
+
+        url = "/controller/network/%s______?auth=%s" % (network_id,authtoken)
+
+        controller["network"][network_id] = self.request(url, {})
+        return controller["network"][network_id]
 
     def network_del(self, network_id):
         if network_id in controller["network"]:
