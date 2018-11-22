@@ -1710,8 +1710,10 @@ class CoinOutputSummary:
     def locked(self):
         """
         Locked is 0 if no lock is coupled to this CoinOutput.
-        Otherwise it represents the (estimated) UNIX epoch timestamp (in seconds)
+        Otherwise it represents either a block height or a UNIX epoch timestamp (in seconds)
         on which the CoinOutput unlocks, and thus becomes available for spending.
+        The lock value represents a block height if it is less than 500.000.000,
+        otherwise it represents a UNIX epoch timestamp.
         """
         return self._locked
 
