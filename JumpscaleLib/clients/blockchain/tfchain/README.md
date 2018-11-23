@@ -159,6 +159,30 @@ Locked multisig outputs:
 	Value: 5.0 locked until 2018-10-30 13:00:00
 ```
 
+### Listing all transactions of a wallet
+
+Get all transactions for a wallet from standard net:
+```python
+# parameter is a list of addresses to look up transactions for
+In [1]: wallet.list_transactions()
+Out[1]: [{"id": "a88fd6ae555630ec18912e1a6f88ffa483792a8cc8c15aaef69d3f73e6543b7b", "confirmed": true, "coin_inputs": ["a4900adb1791b4f0c51ddc1af63eb36038cb4d9ab3ff518943af3ff50142b1b9"], "coin_outputs": [{"amount": 1000000000000, "addresses": ["012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282"], "signatures_required": 1}, {"amount": 99993592000000000, "addresses": ["01f414c817c376064b1d34422bb4c434297a14a1970368fba67fcb25ab8e952799e2f9826640ea"], "signatures_required": 1}]}]
+# you can also use the tx list (a list of simplified tx objects) directly as a python list of object:
+
+In [2]: txs = _
+# get the ID
+In [3]: txs[0].id
+Out[3]: 'a88fd6ae555630ec18912e1a6f88ffa483792a8cc8c15aaef69d3f73e6543b7b'
+# get the coin inputs
+In [4]: txs[0].coin_inputs
+Out[4]: ['a4900adb1791b4f0c51ddc1af63eb36038cb4d9ab3ff518943af3ff50142b1b9']
+# get the coin output (don't index if no coin outputs exist in this tx)
+In [5]: txs[0].coin_outputs[0]
+Out[5]: {"amount": 1000000000000, "addresses": ["012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282"], "signatures_required": 1}
+# get the description (decoded from the arbitrary data of the tx)
+In [6]: txs[0].description
+Out[6]: ''
+```
+
 ### Using a multisig wallet
 
 ```python
@@ -397,6 +421,65 @@ Example of signing a transaction:
 ```python
 cl.wallet.sign_transaction(tx, commit=True)
 ```
+
+## Stand-alone commands
+
+### Get a Transaction
+
+Get a transaction from standard net:
+```python
+# parameter is the id of the trnasaction
+In [1]: j.clients.tfchain.get_transaction('c13091f07af3da1b85ffa94736aef9505ee0a718c592aad2175d2b93e54e2228')
+Out[1]: {"id": "c13091f07af3da1b85ffa94736aef9505ee0a718c592aad2175d2b93e54e2228", "coin_inputs": ["fafede06beb869023e1962afc948d6c592bed1f4bb072fae8c5c228bbd76eab3"], "coin_outputs": [{"amount": 100000000000, "addresses": ["0191dee035d25bf008817309d14e972651cc515b09dadde3155357682da120886f96133186a9f3"], "signatures_required": 1}, {"amount": 99995196000000000, "addresses": ["019bb005b78a47fd084f4f3a088d83da4fadfc8e494ce4dae0d6f70a048a0a745d88ace6ce6f1c"], "signatures_required": 1}], "description": "test data"}
+
+# you can also use the tx (a simplified object) directly as a python object:
+
+In [2]: tx = _
+# get the ID
+In [3]: tx.id
+Out[3]: 'c13091f07af3da1b85ffa94736aef9505ee0a718c592aad2175d2b93e54e2228'
+# get the coin inputs
+In [4]: tx.coin_inputs
+Out[4]: ['fafede06beb869023e1962afc948d6c592bed1f4bb072fae8c5c228bbd76eab3']
+# get the coin output (don't index if no coin outputs exist in this tx)
+In [5]: tx.coin_outputs[0]
+Out[5]: {"amount": 100000000000, "addresses": ["0191dee035d25bf008817309d14e972651cc515b09dadde3155357682da120886f96133186a9f3"], "signatures_required": 1}
+# get the description (decoded from the arbitrary data of the tx)
+In [6]: tx.description
+Out[6]: 'test data'
+```
+
+Getting a transaction from testnet can be done as follows:
+```python
+In [1]: j.clients.tfchain.get_transaction('f6acb26269e1426b7c729128ebf5c0afb1698f0b678588dcabc7644efbf7dae6', network=j.clients.tfchain.network.TESTNET)
+Out[1]: {"id": "f6acb26269e1426b7c729128ebf5c0afb1698f0b678588dcabc7644efbf7dae6", "confirmed": true}
+# in this output we see no coin outputs or inputs, which is a possibility,
+# either because the tx type doesn't support coin transfers, or because such transfers are optional.
+```
+
+You can also get a transaction from any devnet, by using the `explorers` optional parameter.
+
+### Get all transactions for one or multiple wallet addresses
+
+Get all transactions for a wallet address from standard net:
+```python
+# parameter is a list of addresses to look up transactions for
+In [1]: j.clients.tfchain.get_transactions_for(['012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282'])
+Out[1]: [{"id": "a88fd6ae555630ec18912e1a6f88ffa483792a8cc8c15aaef69d3f73e6543b7b", "confirmed": true, "coin_inputs": ["a4900adb1791b4f0c51ddc1af63eb36038cb4d9ab3ff518943af3ff50142b1b9"], "coin_outputs": [{"amount": 1000000000000, "addresses": ["012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282"], "signatures_required": 1}, {"amount": 99993592000000000, "addresses": ["01f414c817c376064b1d34422bb4c434297a14a1970368fba67fcb25ab8e952799e2f9826640ea"], "signatures_required": 1}]}]
+
+# again, each tx in that returned list can be used directly as a python object
+```
+
+Get all transactions for a wallet address from testnet can be done as follows:
+```python
+In [1]: j.clients.tfchain.get_transactions_for(['0198c17d14518655266986a55c6756dc3e79c0e7f49373f23ebaae7db9e67532ccea7043ebd9fb'], network=j.clients.tfchain.network.TESTNET)
+Out[1]: [{"id": "0028fb747d113d8f76da923af13083b55f0f64e044ade3eb0ec0baba8882ee01", "confirmed": true, "coin_inputs": ["bf8ee5073b2ddbf44353dbad88325e736b0aa332156011d60e4e344c29ff37a4"], "coin_outputs": [{"amount": 10000000000, "addresses": ["0198c17d14518655266986a55c6756dc3e79c0e7f49373f23ebaae7db9e67532ccea7043ebd9fb"], "signatures_required": 1}, {"amount": 979800000000, "addresses": ["01312bca26747afc3744e04e6c2cbe5aa7818e962d2cbd354cdad935cd6c49122b9f35eebf5f99"], "signatures_required": 1}]}]
+```
+
+You can also get a transaction from any devnet, by using the `explorers` optional parameter.
+
+Note that if you want to look up all transactions linked to the addresses of your wallet,
+you can use the `list_addresses` method of a wallet.
 
 ## 3Bot commands
 

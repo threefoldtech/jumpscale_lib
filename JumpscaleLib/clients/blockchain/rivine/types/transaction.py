@@ -19,6 +19,7 @@ from JumpscaleLib.clients.blockchain.tfchain import const as tfconst
 import base64
 import json
 
+LEGACY_TRANSACTION_VERSION = 0
 DEFAULT_TRANSACTION_VERSION = 1
 MINTERDEFINITION_TRANSACTION_VERSION = 128
 COINCREATION_TRANSACTION_VERSION = 129
@@ -52,6 +53,16 @@ class TransactionFactory:
         @param txn_json: JSON string, representing a transaction
         """
         txn_dict = json.loads(txn_json)
+        return TransactionFactory.from_dict(txn_dict)
+
+
+    @staticmethod
+    def from_dict(txn_dict):
+        """
+        Creates a new transaction object from a raw (JSON-decoded) dict.
+
+        @param from_dict: dictionary, representing a raw transaction, as decoded from a JSON object.
+        """
         if 'version' not in txn_dict:
             return None
  
@@ -61,16 +72,58 @@ class TransactionFactory:
             txn = TransactionV1()
             txn_data = txn_dict['data']
             if 'coininputs' in txn_data:
-                for ci_info in txn_data['coininputs']:
+                for ci_info in (txn_data['coininputs'] or []):
                     ci = CoinInput.from_dict(ci_info)
                     txn._coin_inputs.append(ci)
             if 'coinoutputs' in txn_data:
-                for co_info in txn_data['coinoutputs']:
+                for co_info in (txn_data['coinoutputs'] or []):
                     co = CoinOutput.from_dict(co_info)
-                    txn._coins_outputs.append(co)
+                    txn._coin_outputs.append(co)
             if 'minerfees' in txn_data:
-                for minerfee in txn_data['minerfees'] :
+                for minerfee in (txn_data['minerfees'] or []) :
                     txn.add_minerfee(int(minerfee))
+            if 'arbitrarydata' in txn_data:
+                txn._data = base64.b64decode(txn_data['arbitrarydata'])
+            return txn
+
+        if txn_dict['version'] == LEGACY_TRANSACTION_VERSION:
+            if 'data' not in txn_dict:
+                raise ValueError("no data object found in Legacy Transaction (v{})".format(LEGACY_TRANSACTION_VERSION))
+            txn = TransactionV1() # parse as v1 transaction, converting the coin inputs and outputs
+            txn_data = txn_dict['data']
+            if 'coininputs' in txn_data:
+                for legacy_ci_info in (txn_data['coininputs'] or []):
+                    unlocker = legacy_ci_info.get('unlocker', {})
+                    ci_info = {
+                        'parentid': legacy_ci_info.get('parentid', ''),
+                        'fulfillment': {
+                            'type': 1, # TODO: support legacy atomic swap fulfillments
+                            'data': {
+                                'publickey': unlocker.get('condition', {}).get('publickey'),
+                                'signature': unlocker.get('fulfillment', {}).get('signature'),
+                            }
+                        }
+                    }
+                    ci = CoinInput.from_dict(ci_info)
+                    txn._coin_inputs.append(ci)
+            if 'coinoutputs' in txn_data:
+                for legacy_co_info in (txn_data['coinoutputs'] or []):
+                    co_info = {
+                        'value': legacy_co_info.get('value', '0'),
+                        'condition': {
+                            'type': 1, # TODO: support legacy atomic swap conditions
+                            'data': {
+                                'unlockhash': legacy_co_info.get('unlockhash', ''),
+                            }
+                        }
+                    }
+                    co = CoinOutput.from_dict(co_info)
+                    txn._coin_outputs.append(co)
+            if 'minerfees' in txn_data:
+                for minerfee in (txn_data['minerfees'] or []) :
+                    txn.add_minerfee(int(minerfee))
+            if 'arbitrarydata' in txn_data:
+                txn._data = base64.b64decode(txn_data['arbitrarydata'])
             return txn
               
         if txn_dict['version'] == MINTERDEFINITION_TRANSACTION_VERSION:
@@ -147,7 +200,7 @@ class TransactionV1:
         """
         self._coin_inputs = []
         self._blockstakes_inputs = []
-        self._coins_outputs = []
+        self._coin_outputs = []
         self._blockstakes_outputs = []
         self._minerfees = []
         self._data = bytearray()
@@ -177,14 +230,21 @@ class TransactionV1:
         """
         Retrieves coins inputs
         """
-        return self._coin_inputs
+        return self._coin_inputs or []
 
     @property
-    def coins_outputs(self):
+    def coin_outputs(self):
         """
         Retrieves coins outputs
         """
-        return self._coins_outputs
+        return self._coin_outputs or []
+
+    @property
+    def data(self):
+        """
+        Gets transaction id
+        """
+        return self._data
 
 
     @property
@@ -196,7 +256,7 @@ class TransactionV1:
             'version': binary.decode(self._version, type_=int),
             'data': {
                 'coininputs': [input.json for input in self._coin_inputs],
-                'coinoutputs': [output.json for output in self._coins_outputs],
+                'coinoutputs': [output.json for output in self._coin_outputs],
                 'minerfees': [str(fee) for fee in self._minerfees]
             }
         }
@@ -254,7 +314,7 @@ class TransactionV1:
         condition = UnlockHashCondition(unlockhash=unlockhash)
         if locktime is not None:
             condition = LockTimeCondition(condition=condition, locktime=locktime)
-        self._coins_outputs.append(CoinOutput(value=value, condition=condition))
+        self._coin_outputs.append(CoinOutput(value=value, condition=condition))
 
 
 
@@ -265,7 +325,7 @@ class TransactionV1:
         condition = AtomicSwapCondition(sender=refund_address, reciever=recipient,
                                         hashed_secret=hashed_secret, locktime=locktime)
         coin_output = CoinOutput(value=value, condition=condition)
-        self._coins_outputs.append(coin_output)
+        self._coin_outputs.append(coin_output)
         return coin_output
 
 
@@ -283,7 +343,7 @@ class TransactionV1:
         if locktime is not None:
             condition = LockTimeCondition(condition=condition, locktime=locktime)
         coin_output = CoinOutput(value=value, condition=condition)
-        self._coins_outputs.append(coin_output)
+        self._coin_outputs.append(coin_output)
         return coin_output
 
 
@@ -321,7 +381,7 @@ class TransactionV1:
             buffer.extend(binary.encode(coin_input.parent_id, type_='hex'))
 
         # encode coin outputs
-        buffer.extend(binary.encode(self._coins_outputs, type_='slice'))
+        buffer.extend(binary.encode(self._coin_outputs, type_='slice'))
 
         # encode the number of blockstakes
         buffer.extend(binary.encode(len(self._blockstakes_inputs)))
@@ -376,6 +436,30 @@ class TransactionV128:
         Set transaction id
         """
         self._id = txn_id
+
+    @property
+    def coin_inputs(self):
+        """
+        Retrieves the coin inputs
+        """
+        # TODO: make this static of some Base (Abstract) Tx class
+        return []
+
+    @property
+    def coin_outputs(self):
+        """
+        Retrieves the coin outputs
+        """
+        # TODO: make this static of some Base (Abstract) Tx class
+        return []
+
+    @property
+    def data(self):
+        """
+        Retrieves the data
+        """
+        # TODO: make this static of some Base (Abstract) Tx class
+        return bytearray()
 
 
     @property
@@ -519,12 +603,29 @@ class TransactionV129:
         """
         self._id = tx_id
 
+
+    @property
+    def coin_inputs(self):
+        """
+        Retrieves the coin inputs
+        """
+        # TODO: make this static of some Base (Abstract) Tx class
+        return []
+
+
     @property
     def coin_outputs(self):
         """
         Retrieves the coin outputs
         """
-        return self._coin_outputs
+        return self._coin_outputs or []
+
+    @property
+    def data(self):
+        """
+        Retrieves the data
+        """
+        return self._data
 
     @property
     def mint_fulfillment(self):
@@ -693,6 +794,24 @@ class TransactionV144:
         Retrieves coin inputs
         """
         return self._coin_inputs
+
+    @property
+    def coin_outputs(self):
+        """
+        Retrieves coin inputs
+        """
+        # TODO: support 3Bot Fee Payout as well
+        if self._refund_coin_output:
+            return [self._refund_coin_output]
+        return []
+
+    @property
+    def data(self):
+        """
+        Retrieves the data
+        """
+        # TODO: make this static of some Base (Abstract) Tx class
+        return bytearray()
 
     @property
     def json(self):
@@ -902,6 +1021,24 @@ class TransactionV145:
         Retrieves coin inputs
         """
         return self._coin_inputs
+
+    @property
+    def coin_outputs(self):
+        """
+        Retrieves coin inputs
+        """
+        # TODO: support 3Bot Fee Payout as well
+        if self._refund_coin_output:
+            return [self._refund_coin_output]
+        return []
+
+    @property
+    def data(self):
+        """
+        Retrieves the data
+        """
+        # TODO: make this static of some Base (Abstract) Tx class
+        return bytearray()
 
     @property
     def json(self):
@@ -1141,6 +1278,24 @@ class TransactionV146:
         Retrieves coin inputs
         """
         return self._coin_inputs
+
+    @property
+    def coin_outputs(self):
+        """
+        Retrieves coin inputs
+        """
+        # TODO: support 3Bot Fee Payout as well
+        if self._refund_coin_output:
+            return [self._refund_coin_output]
+        return []
+
+    @property
+    def data(self):
+        """
+        Retrieves the data
+        """
+        # TODO: make this static of some Base (Abstract) Tx class
+        return bytearray()
 
     @property
     def json(self):
@@ -1455,7 +1610,263 @@ class CoinOutput:
         """
         Returns a json encoded version of the CointOutput
         """
-        return {
+        result = {
             'value': str(self._value),
-            'condition': self._condition.json
+            'condition': {},
         }
+        if self._condition:
+            result['condition'] = self._condition.json
+        return result
+
+
+class CoinOutputSummary:
+    def __init__(self):
+        self._amount = 0
+        self._locked = 0
+        self._addresses = []
+        self._signatures_required = 0
+        self._raw_condition = {}
+
+    def __repr__(self):
+        return json.dumps(self.json())
+
+    def __eq__(self, other):
+        if self.__class__ != other.__class__:
+            return False
+        return self.__dict__ == other.__dict__
+
+
+    @classmethod
+    def from_raw_coin_output(cls, raw_coin_output):
+        cos = cls()
+        # get the amount
+        cos._amount = int(raw_coin_output.get('value', 0))
+        # assign the raw condition
+        cos._raw_condition = raw_coin_output.get('condition', {})
+        # populate the rest of the properties using the condition
+        cos._populate_from_condition(cos._raw_condition)
+        # return the populated cos
+        return cos
+
+    def _populate_from_condition(self, condition):
+        condition_type = condition.get('type', 0)
+        if not condition or condition_type == 0:
+            self._addresses.append('0'*78) # free-for-all wallet
+            self._signatures_required = 1
+            return
+    
+        # interpret the condition data based on its type
+        condition_data = condition.get('data', {})
+
+        if condition_type == 1:
+            # v1 condition: unlockhash condition
+            self._populate_from_condition_v1(condition_data)
+        elif condition_type == 3:
+            # v3 condition: time lock condition
+            self._populate_from_condition_v3(condition_data)
+        elif condition_type == 4:
+            # v4 condition: multi-signature condition
+            self._populate_from_condition_v4(condition_data)
+        # unknown conditions are ignored, and some other ones are ignored
+        # on purpose (e.g. v2 atomic swap conditions)
+
+    def _populate_from_condition_v1(self, data):
+        uh = data.get('unlockhash', '')
+        if not uh:
+            raise ValueError("invalid raw UnlockHash condition: no unlockhash property found")
+        self._addresses.append(uh)
+        self._signatures_required = 1
+    
+    def _populate_from_condition_v3(self, data):
+        # define the locked value
+        lt = data.get('locktime', 0)
+        if not lt:
+            raise ValueError("invalid raw TimeLock condition: no locktime property found")
+        self._locked = lt
+        # populate further using the inner condition
+        condition = data.get('condition', {})
+        self._populate_from_condition(condition)
+
+    def _populate_from_condition_v4(self, data):
+        # populate the addresses
+        uhs = data.get('unlockhashes', '')
+        if not uhs:
+            raise ValueError("invalid raw MultiSignature condition: no unlockhashes property found")
+        self._addresses = uhs.copy()
+        msc = data.get('minimumsignaturecount', 0)
+        if msc < 2:
+            raise ValueError("invalid raw MultiSignature condition: {} is an invalid minimum signature count".format(msc))
+        self._signatures_required = msc
+
+
+    @property
+    def amount(self):
+        """
+        Returns the amounts of coins that are send in the form of this CoinOutput.
+        """
+        return self._amount
+
+    @property
+    def locked(self):
+        """
+        Locked is 0 if no lock is coupled to this CoinOutput.
+        Otherwise it represents either a block height or a UNIX epoch timestamp (in seconds)
+        on which the CoinOutput unlocks, and thus becomes available for spending.
+        The lock value represents a block height if it is less than 500.000.000,
+        otherwise it represents a UNIX epoch timestamp.
+        """
+        return self._locked
+
+    @property
+    def addresses(self):
+        """
+        Returns the addresses to which this CoinOutput is sent,
+        for SingleSignature CoinOutputs this is always a single address,
+        for MultiSignature CoinOutputs these will be at least 2 addresses.
+
+        If no addresses are listed, this coin output is not a regular coin output,
+        and instead might for example be part of an atomic swap contract.
+        """
+        return self._addresses
+
+    @property
+    def signatures_required(self):
+        """
+        Returns the amount of signatures required,
+        for SingleSignature CoinOutputs this value will always be be 1,
+        for MultiSignature CoinOutputs this value will always be greater than 2.
+
+        If 0 is returned, this coin output is not a regular coin output,
+        and instead might for example be part of an atomic swap contract.
+        """
+        return self._signatures_required
+
+    @property
+    def raw_condition(self):
+        """
+        Returns the condition of this CoinOutput,
+        as a decoded dictionary, as regisered on the chain.
+        """
+        return self._raw_condition
+
+    def json(self):
+        """
+        Return this CoinOutput summary as a JSON object,
+        not including the raw condition.
+        """
+        result = {
+            'amount': self._amount,
+        }
+        if self._locked:
+            result['locked'] = self._locked
+        if self._addresses:
+            result['addresses'] = self._addresses.copy()
+            result['signatures_required'] = self._signatures_required
+        return result
+
+
+class TransactionSummary:
+    def __init__(self):
+        self._id = '',
+        self._confirmed = False
+        self._coin_inputs = []
+        self._coin_outputs = []
+        self._description = ''
+
+    def __repr__(self):
+        return json.dumps(self.json())
+
+    def __eq__(self, other):
+        if self.__class__ != other.__class__:
+            return False
+        return self.__dict__ == other.__dict__
+
+
+    @classmethod
+    def from_raw_transaction(cls, id, confirmed, raw_transaction):
+        ts = cls()
+        # assign the id and confirmed-status as-is
+        ts._id = id
+        ts._confirmed = confirmed
+        # first parse the raw transaction
+        tx = TransactionFactory.from_dict(raw_transaction)
+        if not tx:
+            raise ValueError("invalid transaction {} cannot be decoded".format(raw_transaction))
+        # fetch all parent identifiers from the coin outputs
+        for coin_input in tx.coin_inputs:
+            ts._coin_inputs.append(coin_input.parent_id)
+        # fetch and summarize all listed coin outputs
+        for coin_output in tx.coin_outputs:
+            coin_output_dict = {}
+            if coin_output:
+                coin_output_dict = coin_output.json
+            cos = CoinOutputSummary.from_raw_coin_output(coin_output_dict)
+            ts._coin_outputs.append(cos)
+        # assign the description if there is one
+        data = tx.data
+        if data:
+            ts._description = data.decode("utf-8") # TODO: handle data (optional) decoding based on prefix convention
+        # return the created transaction summary
+        return ts
+
+
+    @property
+    def id(self):
+        """
+        Returns the identifier of this transaction, in
+        string hex-encoded format.
+        """
+        return self._id
+
+    @property
+    def confirmed(self):
+        """
+        Returns True if this transaction was confirmed,
+        meaning it was part of a registered block on the chain,
+        and False otherwise.
+        """
+        return self._confirmed
+
+    @property
+    def coin_inputs(self):
+        """
+        Returns an array of identifiers,
+        each identifier pointing to a coin output that was used as input
+        to fund all coin outputs of this transaction.
+
+        Can be empty in case this transaction has no coin inputs defined.
+        """
+        return self._coin_inputs
+    
+    @property
+    def coin_outputs(self):
+        """
+        Returns an array of CoinOutputs, in summarized format.
+
+        Can be empty in case this transaction has no coin outputs defined.
+        """
+        return self._coin_outputs
+
+    @property
+    def description(self):
+        """
+        Returns a description of this Transaction,
+        only defined if there is arbitrary data attached to this Transaction.
+        """
+        return self._description
+
+    def json(self):
+        """
+        Return this Transaction Summary as a JSON object.
+        """
+        result = {
+            'id': self._id,
+            'confirmed': self._confirmed,
+        }
+        if self._coin_inputs:
+            result['coin_inputs'] = self._coin_inputs.copy()
+        if self._coin_outputs:
+            result['coin_outputs'] = [co.json() for co in self._coin_outputs]
+        if self._description:
+            result['description'] = self._description
+        return result

@@ -252,7 +252,7 @@ def commit_transaction(rivine_explorer_addresses, rivine_explorer_api_password, 
         raise BackendError(msg)
 
 
-def remove_spent_inputs(unspent_coins_outputs, transactions):
+def remove_spent_inputs(unspent_coin_outputs, transactions):
     """
     Remvoes the already spent outputs
 
@@ -263,9 +263,9 @@ def remove_spent_inputs(unspent_coins_outputs, transactions):
         coininputs = txn_info.get('rawtransaction', {}).get('data', {}).get('coininputs', [])
         for coin_input in coininputs:
             parentid = coin_input.get('parentid')
-            if parentid in unspent_coins_outputs:
+            if parentid in unspent_coin_outputs:
                 logger.debug('Found a spent address {}'.format(parentid))
-                del unspent_coins_outputs[parentid]
+                del unspent_coin_outputs[parentid]
 
 
 def find_subset_sum(values, target):

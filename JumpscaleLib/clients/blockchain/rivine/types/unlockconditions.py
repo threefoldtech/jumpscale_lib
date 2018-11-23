@@ -384,13 +384,16 @@ class LockTimeCondition:
         """
         Returns a json encoded version of the LockTimeCondition
         """
-        return {
+        result = {
             'type': binary.decode(self._type, type_=int),
             'data': {
                 'locktime': self._locktime,
-                'condition': self._condition.json
+                'condition': {},
             }
         }
+        if self._condition:
+            result['data']['condition'] = self._condition.json
+        return result
 
     @classmethod
     def from_dict(cls, data):
