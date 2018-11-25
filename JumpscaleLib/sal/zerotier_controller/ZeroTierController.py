@@ -98,18 +98,18 @@ class ZeroTierController():
             network_id = f.read().split(':')[0]
         return network_id
 
-    def network_add(self, name, start_ip, end_ip, mask, private=1):
+    def network_add(self, name, start_ip, end_ip, mask, private=True):
         """
         that generate network id  doesn't exist in the worldmap using your public id
 
         Arguments:
             name {string} -- A short name for the network
-            start_Ip {string} -- Starting IP address in range e.g. "10.136.0.10"
-            end_Ip {sring} -- Ending IP address in range e.g. "10.136.0.250" 
+            start_ip {string} -- Starting IP address in range e.g. "10.136.0.10"
+            end_ip {sring} -- Ending IP address in range e.g. "10.136.0.250" 
             mask {string} -- mask of the network e.g. "255.255.255.0"
 
         Keyword Arguments:
-            private {int} -- make the network private or not using ( 1 or 0 ) (default: {1})
+            private {boolean} -- make the network private or not using ( True or False ) (default: {TrueSSSS})
 
         Returns:
             [Json] -- your network id that generated 
