@@ -109,7 +109,7 @@ class ZeroTierController():
             mask {string} -- mask of the network e.g. "255.255.255.0"
 
         Keyword Arguments:
-            private {boolean} -- make the network private or not using ( True or False ) (default: {TrueSSSS})
+            private {boolean} -- make the network private or not using ( True or False ) (default: {True})
 
         Returns:
             [Json] -- your network id that generated 
