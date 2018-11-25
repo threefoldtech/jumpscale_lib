@@ -34,13 +34,13 @@ class JSWebServers(JSConfigBase):
             "ws_dir": ws_dir,
         }
 
-        return self.get(instance, data, interactive=False)
+        return JSConfigBase.get(self, instance, data, interactive=False)
 
-    def geventserver_get(self, instance, debug=True):
+    def get(self, instance):
         """
         will return server which can be attached in a gevent_servers_rack
         """
-        ws = self.get(instance)
+        ws = JSConfigBase.get(self,instance)
         ws.init()
         return ws
 
@@ -90,3 +90,15 @@ class JSWebServers(JSConfigBase):
             host = s.config.data["host"]
             port = s.config.data["port"]
             print("webserver running on http://%s:%s/" % (host, port))
+
+
+    def test(self, name="", start=True):
+        """
+        following will run all tests
+
+        js_shell 'j.servers.web.test()'
+
+        """
+
+        self._test_run(name=name)
+

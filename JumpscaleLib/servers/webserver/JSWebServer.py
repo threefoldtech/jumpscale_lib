@@ -1,10 +1,15 @@
 from Jumpscale import j
 from gevent.pywsgi import WSGIServer
-from geventwebsocket.handler import WebSocketHandler
+# from geventwebsocket.handler import WebSocketHandler
+from flask import Flask
+# from flask_login import LoginManager
+from flask import  url_for,redirect
+from flask_sockets import Sockets
+from importlib import import_module
+from logging import basicConfig, DEBUG, getLogger, StreamHandler
 import sys
 import os
 
-from .JSWebLoader import JSWebLoader
 
 JSConfigBase = j.tools.configmanager.JSBaseClassConfig
 
@@ -15,6 +20,7 @@ TEMPLATE = """
     secret_ = ""
     ws_dir = ""
     """
+
 
 
 class JSWebServer(JSConfigBase):
@@ -29,53 +35,21 @@ class JSWebServer(JSConfigBase):
         self.port = int(self.config.data["port"])
         self.port_ssl = int(self.config.data["port_ssl"])
         self.address = '{}:{}'.format(self.host, self.port)
-        self.loader = JSWebLoader()
+
+        # self.login_manager = LoginManager()
+        self.paths = []
+        self.app = None  #flask app
+        self.websocket = None
+
         self._inited = False
+
         j.servers.web.latest = self
         self.http_server = None
 
-    def register_blueprints(self,app=None):
-        self.logger.error("issue #39, app was set to app")
-        self.init()
-        self._loader.register_blueprints(app)
+        self.path_blueprints = j.sal.fs.joinPaths(j.dirs.VARDIR,"dm_packages","blueprints")
 
+        self.logger_enable()
 
-    def init(self, debug=False):
-
-        if self._inited:
-            return
-        self.loader.load()
-        self.logger.info("init server")
-
-        if self.path not in sys.path:
-            sys.path.append(self.path)
-
-        self.app = self.loader.app
-        self.app.debug = True
-
-        self.http_server = WSGIServer((self.host, self.port), self.app, handler_class=WebSocketHandler)
-        self.app.http_server = self.http_server
-        self.app.server = self
-        # self.docs_load()
-        # self._sig_handler.append(gevent.signal(signal.SIGINT, self.stop))
-        self._inited = False
-
-    # def docs_load(self):
-    #     if "docsite" not in self.site_config:
-    #         return
-    #
-    #     for item in self.site_config["docsite"]:
-    #         url = item["url"]
-    #         name = item["name"]
-    #         if url is not "":
-    #             path = j.clients.git.getContentPathFromURLorPath(url)
-    #             if not j.sal.fs.exists(path):
-    #                 j.clients.git.pullGitRepo(url=url)
-    #             j.tools.docsites.load(path=path, name=name)
-
-    @property
-    def path(self):
-        return self.config.data['ws_dir'].rstrip("/") + "/"
 
     def sslkeys_generate(self):
         res = j.sal.ssl.ca_cert_generate(self.ws_dir)
@@ -88,10 +62,12 @@ class JSWebServer(JSConfigBase):
         return key, cert
 
     def start(self, debug=False):
-        print("start")
-        self.init(debug=debug)
-        print("Webserver running")
-        print(self)
+        self.logger.info("start")
+        self._init(debug=debug)
+
+        self._register_blueprints()
+        self.logger.info("%s"%self)
+        self._sig_handler.append(gevent.signal(signal.SIGINT, self.stop))
         self.http_server.serve_forever()
 
     def stop(self):
@@ -106,7 +82,101 @@ class JSWebServer(JSConfigBase):
         self.logger.info('stopping server')
         self.server.stop()
 
+
+    def _register_blueprints(self):
+
+        self.logger.info("register blueprints")
+
+        j.shell()
+        if self.path_blueprints not in sys.path:
+            sys.path.append(self.path_blueprints)
+
+            # if not j.sal.fs.getBaseName(src2).startswith("_"):
+            #     j.servers.web.latest.loader.paths.append(src2)
+
+        for path in paths:
+            module_name = j.sal.fs.getBaseName(path)
+            j.shell()
+            module = import_module('%s.routes'%module_name)
+            print("blueprint register:%s" % module_name)
+            self.app.register_blueprint(module.blueprint)
+            if self.sockets and hasattr(module, "ws_blueprint"):
+                self.sockets.register_blueprint(module.ws_blueprint)
+
+    # def _configure_database(self):
+    #
+    #     @app.before_first_request
+    #     def initialize_database():
+    #         self.db.create_all()
+    #
+    #     @app.teardown_request
+    #     def shutdown_session(exception=None):
+    #         self.db.session.remove()
+
+    def _configure_logs(self):
+        # TODO: why can we not use jumpscale logging?
+        basicConfig(filename='error.log', level=DEBUG)
+        self.logger = getLogger()
+        self.logger.addHandler(StreamHandler())
+
+    def _init(self, selenium=False, debug=True, websocket_support=True):
+
+        if self._inited:
+            return
+
+        class Config(object):
+            SECRET_KEY = 'js007'
+
+        class ProductionConfig(Config):
+            DEBUG = False
+
+        class DebugConfig(Config):
+            DEBUG = True
+
+
+        staticpath = j.clients.git.getContentPathFromURLorPath(
+            "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/static")
+        app = Flask(__name__, static_folder=staticpath)  # '/base/static'
+
+        if debug:
+            app.config.from_object(DebugConfig)
+        else:
+            app.config.from_object(ProductionConfig)
+
+        # Load iyo settings, TODO: change this dirty hack & re-enable this section
+        # sys.path.append("%s/dm_base" % self.path)
+        # app.config.from_json("%s/dm_base/blueprints/user/iyo.json" % self.path)
+        # from blueprints.user.user import callback
+        # app.add_url_rule(app.config['IYO_CONFIG']['callback_path'], '_callback', callback)
+
+        # if selenium:
+        #     app.config['LOGIN_DISABLED'] = True
+
+
+        # self.db.init_app(app)
+        # self.login_manager.init_app(app)
+
+        if websocket_support:
+            self.sockets = Sockets(app)
+
+        self.app = app
+
+        def redirect_wiki(*args,**kwargs):
+            return redirect("wiki/")
+
+        self.app.add_url_rule("/", "index",redirect_wiki)
+
+        #double with above
+        self.app.debug = True
+
+        self.http_server = WSGIServer((self.host, self.port), self.app, handler_class=WebSocketHandler)
+        self.app.http_server = self.http_server
+        self.app.server = self
+
+
+        self._inited = True
+
     def __repr__(self):
-        return '<Flask Server http://%s  app_dir=%s)' % (self.address, self.path)
+        return '<Flask Server http://%s:%s)' % (self.address, self.port)
 
     __str__ = __repr__
