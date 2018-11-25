@@ -1,35 +1,20 @@
 from Jumpscale import j
 import json
 import requests
-import pickle
-import collections
-
-
-JSConfigBase = j.tools.configmanager.base_class_config
+import netaddr
 
 BASE_API = "http://127.0.0.1:9993"
-controller = collections.defaultdict()
 
 class ZeroTierController():
-    def __init__(self, instance='main', data={}, parent=None, interactive=None):
-        self.set_headers()
-        self.load_ctrlr()
-        self.set_id()
-
-
-    def ddict(self):
-        return collections.defaultdict()
+    def __init__(self):
+        self.__jslocation__ = "j.sal.zerotier_Controller"
+        self.controller_status()
 
     def get_filepath(self):
         """Get filepath """
         return "/var/lib/zerotier-one"
 
-    @property
-    def save_ctrlr(self):
-        with open(self.get_filepath()+"/ctrlr.pickle", "wb") as file:
-            pickle.dump(dict(controller), file)
-
-    def request(self, url, payload=None, method="get"):
+    def _request(self, url, payload=None, method="get"):
         """Simple request wrapper
         Takes a couple of variables and wraps around the requests
         module
@@ -41,76 +26,112 @@ class ZeroTierController():
             Dataset as result from query
             JSON Object
         """
-        r = None
+        header = {"X-ZT1-Auth": self.get_authtoken}
+        req = None
         if payload is not None:
-            r = requests.post(
-                BASE_API+url, headers=controller["headers"], json=payload)
+            req = requests.post(
+                BASE_API+url, headers=header, json=payload)
         elif method == "get":
-            r = requests.get(
-                BASE_API+url, headers=controller["headers"])
+            req = requests.get(
+                BASE_API+url, headers=header)
         elif method == "delete":
-            r = requests.delete(
-                BASE_API+url, headers=controller["headers"])
-        return r.json()
-    
-    def set_headers(self):
-        """Sets authentication headers globally
+            req = requests.delete(
+                BASE_API+url, headers=header)
+        return req.json()
+
+    def controller_status(self):
+        return self._request("/controller", {})
+
+    @property
+    def get_authtoken(self):
+        """gets authentication 
         Automatically detect system and reads authtoken.secret
         to set authenticaiton headers used in request method
-        globally.
         """
-        with open(self.get_filepath()+"/authtoken.secret") as file:
-            controller["headers"] = {"X-ZT1-Auth": file.read().split('\n')[0]}
-            controller["network"] = {}
-            print(controller)
-
-    def set_id(self):
-        controller["ztid"] = self.request("/status").get("address")
-
-    def load_ctrlr(self):
-        global controller
-        try:
-            with open(self.get_filepath()+"/ctrlr.pickle", "rb") as file:
-                controller = pickle.load(file)
-        except:
-            controller = self.ddict()
-
-    def network_add(self):
         pubsecret = self.get_filepath()+'/authtoken.secret'
         with open(pubsecret, 'r') as f:
             authtoken = f.read().strip()
-        with open (self.get_filepath()+'/identity.public','r') as f:
+        return authtoken
+
+    @property
+    def get_public_id(self):
+        """gets public id 
+        Automatically detect system and reads identity.public
+        """
+        with open(self.get_filepath()+'/identity.public', 'r') as f:
             network_id = f.read().split(':')[0]
+        return network_id
 
-        url = "/controller/network/%s______?auth=%s" % (network_id,authtoken)
+    def network_add(self, name, start_Ip, end_Ip, mask, private=1):
+        """
+        that generate network id  doesn't exist in the worldmap using your public id
 
-        controller["network"][network_id] = self.request(url, {})
-        return controller["network"][network_id]
+        Arguments:
+            name {string} -- A short name for the network
+            start_Ip {string} -- Starting IP address in range e.g. "10.136.0.10"
+            end_Ip {sring} -- Ending IP address in range e.g. "10.136.0.250" 
+            mask {string} -- mask of the network e.g. "255.255.255.0"
+
+        Keyword Arguments:
+            private {int} -- make the network private or not using ( 1 or 0 ) (default: {1})
+
+        Returns:
+            [Json] -- your network id that generated 
+        """
+
+        cidr = netaddr.IPAddress(mask).netmask_bits()
+        ip = netaddr.IPNetwork('{}/{}'.format(start_Ip, cidr))
+        target = str(ip.network)
+        url = "/controller/network/%s______?auth=%s" % (self.get_public_id, self.get_authtoken)
+
+        ipAssignmentPools = [{"ipRangeStart": start_Ip, "ipRangeEnd": end_Ip}]
+        routes = [{"target": target}]
+
+        return self._request(url, {'name': name, 'ipAssignmentPools': ipAssignmentPools, 'routes': routes, 'private': private})
 
     def network_del(self, network_id):
-        if network_id in controller["network"]:
-            controller["network"][network_id].clear()
-            del controller["network"][network_id]
-        return self.request("/controller/network/"+controller, method="delete")
+        """
+        delete the network_id
+        """
+        if self.network_exist(network_id):
+            return self._request("/controller/network/"+network_id, method="delete")
+
+    def network_exist(self, network_id):
+        """
+        check if this network_id exist in your controller
+        """
+        if network_id in self.networks_list():
+            return True
+        raise Exception("this Network_id doesn't exist")
 
     def network_info(self, network_id):
-        controller["network"][network_id] = self.request("/controller/network/"+network_id)
-        return controller["network"][network_id]
+        if self.network_exist(network_id):
+            return self._request("/controller/network/"+network_id)
 
     def networks_list(self):
-        nwids = self.request("/controller/network")
-        for nwid in nwids:
-            self.network_info(nwid)
-        return controller
+        """
+        return all networks
+        """
 
-    def member_auth(self, network_id, adress):
+        return self._request("/controller/network")
 
-        return self.request("/controller/network/"+network_id+"/member/"+adress, {'authorized':'true'})
+    def member_auth(self, network_id, zt_id):
+        """
+        authorize zt_id in your network_id
+        """
+        return self._request("/controller/network/"+network_id+"/member/"+zt_id, {'authorized': 'true'})
 
-    def member_deauth(self, network_id, adress):
+    def member_deauth(self, network_id, zt_id):
 
-        return self.request("/controller/network/"+network_id+"/member/"+adress, {'authorized':'false'})
+        return self._request("/controller/network/"+network_id+"/member/"+zt_id, {'authorized': 'false'})
 
     def member_list(self, network_id):
-        ztids = self.request("/controller/network/"+network_id+"/member")
+        ztids = self._request("/controller/network/"+network_id+"/member")
+        return ztids
+
+    def member_del(self, network_id, zt_id):
+        return self._request("/controller/network/"+network_id+"/member/"+zt_id, method="delete")
+
+    def member_active_list(self, network_id):
+        ztids = self._request("/controller/network/"+network_id+"/active")
         return ztids
