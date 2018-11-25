@@ -62,7 +62,7 @@ class ZeroTierController():
             network_id = f.read().split(':')[0]
         return network_id
 
-    def network_add(self, name, start_Ip, end_Ip, mask, private=1):
+    def network_add(self, name, start_ip, end_ip, mask, private=1):
         """
         that generate network id  doesn't exist in the worldmap using your public id
 
@@ -80,14 +80,15 @@ class ZeroTierController():
         """
 
         cidr = netaddr.IPAddress(mask).netmask_bits()
-        ip = netaddr.IPNetwork('{}/{}'.format(start_Ip, cidr))
+        ip = netaddr.IPNetwork('{}/{}'.format(start_ip, cidr))
         target = str(ip.network)
         url = "/controller/network/%s______?auth=%s" % (self.get_public_id, self.get_authtoken)
 
-        ipAssignmentPools = [{"ipRangeStart": start_Ip, "ipRangeEnd": end_Ip}]
+        ipAssignmentPools = [{"ipRangeStart": start_ip, "ipRangeEnd": end_ip}]
         routes = [{"target": target}]
+        v4AssignMode = {'zt': True}
 
-        return self._request(url, {'name': name, 'ipAssignmentPools': ipAssignmentPools, 'routes': routes, 'private': private})
+        return self._request(url, {'name': name, 'ipAssignmentPools': ipAssignmentPools, 'routes': routes, 'v4AssignMode':v4AssignMode, 'private': private})
 
     def network_del(self, network_id):
         """
