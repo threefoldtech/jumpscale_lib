@@ -5,6 +5,42 @@ import netaddr
 
 BASE_API = "http://127.0.0.1:9993"
 
+# ZT EtherType constants as defined here: https://github.com/zerotier/ZeroTierOne/blob/master/node/Constants.hpp
+ZT_ETHERTYPE_IPV4 = "0x0800"
+ZT_ETHERTYPE_ARP = "0x0806"
+ZT_ETHERTYPE_IPV6 = "0x86dd"
+RULES = [
+    {
+        "etherType": int(ZT_ETHERTYPE_IPV4, 16),
+        "not": True,
+        "or": False,
+        "type": "MATCH_ETHERTYPE"
+    },
+    {
+        "etherType": int(ZT_ETHERTYPE_IPV6, 16),
+        "not": True,
+        "or": False,
+        "type": "MATCH_ETHERTYPE"
+    },
+    {
+        "etherType": int(ZT_ETHERTYPE_ARP, 16),
+        "not": True,
+        "or": False,
+        "type": "MATCH_ETHERTYPE"
+    },
+    {
+        "not": False,
+        "or": False,
+        "type": "ACTION_DROP"
+    },
+    {
+        "not": False,
+        "or": False,
+        "type": "ACTION_ACCEPT"
+    }
+]
+
+
 class ZeroTierController():
     def __init__(self):
         self.__jslocation__ = "j.sal.zerotier_Controller"
@@ -81,14 +117,15 @@ class ZeroTierController():
 
         cidr = netaddr.IPAddress(mask).netmask_bits()
         ip = netaddr.IPNetwork('{}/{}'.format(start_ip, cidr))
-        target = str(ip.network)
+        target = str(ip.cidr)
         url = "/controller/network/%s______?auth=%s" % (self.get_public_id, self.get_authtoken)
 
         ipAssignmentPools = [{"ipRangeStart": start_ip, "ipRangeEnd": end_ip}]
         routes = [{"target": target}]
         v4AssignMode = {'zt': True}
 
-        return self._request(url, {'name': name, 'ipAssignmentPools': ipAssignmentPools, 'routes': routes, 'v4AssignMode':v4AssignMode, 'private': private})
+        return self._request(url, {'name': name, 'ipAssignmentPools': ipAssignmentPools,
+                                   'routes': routes, 'v4AssignMode': v4AssignMode, 'private': private, 'rules': RULES})
 
     def network_del(self, network_id):
         """
