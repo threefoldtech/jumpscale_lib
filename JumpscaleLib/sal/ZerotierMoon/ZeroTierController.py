@@ -33,6 +33,15 @@ RULES = [
 ]
 
 
+class APIError(Exception):
+    def __init__(self, req):
+        self.req = req
+
+    @property
+    def code(self):
+        return self.req.status_code
+
+
 class ZeroTierController:
     def __init__(self):
         self.__jslocation__ = "j.sal.zerotier_Controller"
@@ -56,22 +65,17 @@ class ZeroTierController:
         """
         header = {"X-ZT1-Auth": self.auth_token}
         req = None
-        try:
-            if payload is not None:
-                req = requests.post(BASE_API + url, headers=header, json=payload)
-            elif method == "get":
-                req = requests.get(BASE_API + url, headers=header)
-            elif method == "delete":
-                req = requests.delete(BASE_API + url, headers=header)
+        if payload is not None:
+            req = requests.post(BASE_API + url, headers=header, json=payload)
+        elif method == "get":
+            req = requests.get(BASE_API + url, headers=header)
+        elif method == "delete":
+            req = requests.delete(BASE_API + url, headers=header)
 
-            if req.status_code == 200:
-                return req.json()
-            elif req.status_code == 404:
-                return "this Network doesn't exist {}".format(req)
-            else:
-                return req
-        except requests.ConnectionError:
-            raise Exception("failed to connect")
+        if req.status_code == 200:
+            return req.json()
+        else:
+            raise APIError(req)
 
     def controller_status(self):
         return self._request("/controller", {})
