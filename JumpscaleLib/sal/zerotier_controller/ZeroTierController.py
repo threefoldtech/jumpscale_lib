@@ -14,34 +14,26 @@ RULES = [
         "etherType": int(ZT_ETHERTYPE_IPV4, 16),
         "not": True,
         "or": False,
-        "type": "MATCH_ETHERTYPE"
+        "type": "MATCH_ETHERTYPE",
     },
     {
         "etherType": int(ZT_ETHERTYPE_IPV6, 16),
         "not": True,
         "or": False,
-        "type": "MATCH_ETHERTYPE"
+        "type": "MATCH_ETHERTYPE",
     },
     {
         "etherType": int(ZT_ETHERTYPE_ARP, 16),
         "not": True,
         "or": False,
-        "type": "MATCH_ETHERTYPE"
+        "type": "MATCH_ETHERTYPE",
     },
-    {
-        "not": False,
-        "or": False,
-        "type": "ACTION_DROP"
-    },
-    {
-        "not": False,
-        "or": False,
-        "type": "ACTION_ACCEPT"
-    }
+    {"not": False, "or": False, "type": "ACTION_DROP"},
+    {"not": False, "or": False, "type": "ACTION_ACCEPT"},
 ]
 
 
-class ZeroTierController():
+class ZeroTierController:
     def __init__(self):
         self.__jslocation__ = "j.sal.zerotier_Controller"
         self.controller_status()
@@ -62,40 +54,46 @@ class ZeroTierController():
             Dataset as result from query
             JSON Object
         """
-        header = {"X-ZT1-Auth": self.get_authtoken}
+        header = {"X-ZT1-Auth": self.auth_token}
         req = None
-        if payload is not None:
-            req = requests.post(
-                BASE_API+url, headers=header, json=payload)
-        elif method == "get":
-            req = requests.get(
-                BASE_API+url, headers=header)
-        elif method == "delete":
-            req = requests.delete(
-                BASE_API+url, headers=header)
-        return req.json()
+        try:
+            if payload is not None:
+                req = requests.post(BASE_API + url, headers=header, json=payload)
+            elif method == "get":
+                req = requests.get(BASE_API + url, headers=header)
+            elif method == "delete":
+                req = requests.delete(BASE_API + url, headers=header)
+
+            if req.status_code == 200:
+                return req.json()
+            elif req.status_code == 404:
+                return "this Network doesn't exist {}".format(req)
+            else:
+                return req
+        except requests.ConnectionError:
+            raise Exception("failed to connect")
 
     def controller_status(self):
         return self._request("/controller", {})
 
     @property
-    def get_authtoken(self):
+    def auth_token(self):
         """gets authentication 
         Automatically detect system and reads authtoken.secret
         to set authenticaiton headers used in request method
         """
-        pubsecret = self.get_filepath()+'/authtoken.secret'
-        with open(pubsecret, 'r') as f:
+        pubsecret = self.get_filepath() + "/authtoken.secret"
+        with open(pubsecret, "r") as f:
             authtoken = f.read().strip()
         return authtoken
 
     @property
-    def get_public_id(self):
+    def public_id(self):
         """gets public id 
         Automatically detect system and reads identity.public
         """
-        with open(self.get_filepath()+'/identity.public', 'r') as f:
-            network_id = f.read().split(':')[0]
+        with open(self.get_filepath() + "/identity.public", "r") as f:
+            network_id = f.read().split(":")[0]
         return network_id
 
     def network_add(self, name, start_ip, end_ip, mask, private=True):
@@ -116,35 +114,37 @@ class ZeroTierController():
         """
 
         cidr = netaddr.IPAddress(mask).netmask_bits()
-        ip = netaddr.IPNetwork('{}/{}'.format(start_ip, cidr))
+        ip = netaddr.IPNetwork("{}/{}".format(start_ip, cidr))
         target = str(ip.cidr)
-        url = "/controller/network/%s______?auth=%s" % (self.get_public_id, self.get_authtoken)
+        url = "/controller/network/%s______?auth=%s" % (self.public_id, self.auth_token)
 
         ipAssignmentPools = [{"ipRangeStart": start_ip, "ipRangeEnd": end_ip}]
         routes = [{"target": target}]
-        v4AssignMode = {'zt': True}
+        v4AssignMode = {"zt": True}
 
-        return self._request(url, {'name': name, 'ipAssignmentPools': ipAssignmentPools,
-                                   'routes': routes, 'v4AssignMode': v4AssignMode, 'private': private, 'rules': RULES})
+        return self._request(
+            url,
+            {
+                "name": name,
+                "ipAssignmentPools": ipAssignmentPools,
+                "routes": routes,
+                "v4AssignMode": v4AssignMode,
+                "private": private,
+                "rules": RULES,
+            },
+        )
 
-    def network_del(self, network_id):
+    def network_delete(self, network_id):
         """
         delete the network_id
         """
-        if self.network_exist(network_id):
-            return self._request("/controller/network/"+network_id, method="delete")
-
-    def network_exist(self, network_id):
-        """
-        check if this network_id exist in your controller
-        """
-        if network_id in self.networks_list():
-            return True
-        raise Exception("this Network_id doesn't exist")
+        return self._request("/controller/network/" + network_id, method="delete")
 
     def network_info(self, network_id):
-        if self.network_exist(network_id):
-            return self._request("/controller/network/"+network_id)
+        """
+        retutrn network info of spesific id
+        """
+        return self._request("/controller/network/" + network_id)
 
     def networks_list(self):
         """
@@ -153,23 +153,31 @@ class ZeroTierController():
 
         return self._request("/controller/network")
 
-    def member_auth(self, network_id, zt_id):
+    def member_authorize(self, network_id, zt_id):
         """
         authorize zt_id in your network_id
         """
-        return self._request("/controller/network/"+network_id+"/member/"+zt_id, {'authorized': 'true'})
+        return self._request(
+            "/controller/network/" + network_id + "/member/" + zt_id,
+            {"authorized": "true"},
+        )
 
-    def member_deauth(self, network_id, zt_id):
+    def member_deauthorize(self, network_id, zt_id):
 
-        return self._request("/controller/network/"+network_id+"/member/"+zt_id, {'authorized': 'false'})
+        return self._request(
+            "/controller/network/" + network_id + "/member/" + zt_id,
+            {"authorized": "false"},
+        )
 
     def member_list(self, network_id):
-        ztids = self._request("/controller/network/"+network_id+"/member")
+        ztids = self._request("/controller/network/" + network_id + "/member")
         return ztids
 
-    def member_del(self, network_id, zt_id):
-        return self._request("/controller/network/"+network_id+"/member/"+zt_id, method="delete")
+    def member_delete(self, network_id, zt_id):
+        return self._request(
+            "/controller/network/" + network_id + "/member/" + zt_id, method="delete"
+        )
 
     def member_active_list(self, network_id):
-        ztids = self._request("/controller/network/"+network_id+"/active")
+        ztids = self._request("/controller/network/" + network_id + "/active")
         return ztids
