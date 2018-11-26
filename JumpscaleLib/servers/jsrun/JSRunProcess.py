@@ -137,19 +137,23 @@ class JSRunProcess(JSBASE):
 
         j.sal.fs.chmod(tpath,0o770)
 
-        cmd2= "jsrun -f -n %s '%s'\n"%(self.name,tpath)
-        self.logger.debug(cmd2)
-        rc,out,err=j.sal.process.execute(cmd2,die=False)
-        if rc>0:
-            if err.find("session exists")!=-1:
-                if reset:
-                    self.stop()
-                    self.start(reset=False)
+        if self.tmux:
+            t=j.tools.tmux.execute(cmd2, session="jsrun", window=self.name, pane="main",window_reset=True)
+
+        else:
+            cmd2= "jsrun -f -n %s '%s'\n"%(self.name,tpath)
+            self.logger.debug(cmd2)
+            rc,out,err=j.sal.process.execute(cmd2,die=False)
+            if rc>0:
+                if err.find("session exists")!=-1:
+                    if reset:
+                        self.stop()
+                        self.start(reset=False)
+                    else:
+                        #means session does already exist
+                        self._error_raise("already started")
                 else:
-                    #means session does already exist
-                    self._error_raise("already started")
-            else:
-                self._error_raise("cannot start\n%s\n%s"%(out,err))
+                    self._error_raise("cannot start\n%s\n%s"%(out,err))
         self.wait_running()
         assert self.running
 

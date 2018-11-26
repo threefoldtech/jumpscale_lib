@@ -11,35 +11,23 @@ import sys
 import os
 
 
-JSConfigBase = j.tools.configmanager.JSBaseClassConfig
+JSBASE = j.application.JSBaseClass
 
-TEMPLATE = """
-    host = "localhost"
-    port = 5050
-    port_ssl = 0
-    secret_ = ""
-    ws_dir = ""
-    """
-
-
-
-class JSWebServer(JSConfigBase):
-    def __init__(self, instance, data=None, parent=None, interactive=False, template=None):
+class JSWebServer(JSBASE):
+    def __init__(self, port=8888):
         if not data:
             data = {}
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,
-                              template=template or TEMPLATE, interactive=interactive)
+        JSBASE.__init__(self)
 
         # Set proper instance for j.data.schema
-        self.host = self.config.data["host"]
-        self.port = int(self.config.data["port"])
-        self.port_ssl = int(self.config.data["port_ssl"])
+        self.host = "localhost"
+        self.port = port
         self.address = '{}:{}'.format(self.host, self.port)
 
         # self.login_manager = LoginManager()
         self.paths = []
         self.app = None  #flask app
-        self.websocket = None
+        # self.websocket = None
 
         self._inited = False
 
@@ -49,17 +37,6 @@ class JSWebServer(JSConfigBase):
         self.path_blueprints = j.sal.fs.joinPaths(j.dirs.VARDIR,"dm_packages","blueprints")
 
         self.logger_enable()
-
-
-    def sslkeys_generate(self):
-        res = j.sal.ssl.ca_cert_generate(self.ws_dir)
-        if res:
-            self.logger.info("generated sslkeys for gedis in %s" % self.ws_dir)
-        else:
-            self.logger.info('using existing key and cerificate for gedis @ %s' % self.ws_dir)
-        key = os.path.join(self.path, 'ca.key')
-        cert = os.path.join(self.path, 'ca.crt')
-        return key, cert
 
     def start(self, debug=False):
         self.logger.info("start")
@@ -103,15 +80,6 @@ class JSWebServer(JSConfigBase):
             if self.sockets and hasattr(module, "ws_blueprint"):
                 self.sockets.register_blueprint(module.ws_blueprint)
 
-    # def _configure_database(self):
-    #
-    #     @app.before_first_request
-    #     def initialize_database():
-    #         self.db.create_all()
-    #
-    #     @app.teardown_request
-    #     def shutdown_session(exception=None):
-    #         self.db.session.remove()
 
     def _configure_logs(self):
         # TODO: why can we not use jumpscale logging?
@@ -119,7 +87,7 @@ class JSWebServer(JSConfigBase):
         self.logger = getLogger()
         self.logger.addHandler(StreamHandler())
 
-    def _init(self, selenium=False, debug=True, websocket_support=True):
+    def _init(self, selenium=False, debug=True, websocket_support=False): #TODO: websocket support should be in openresty
 
         if self._inited:
             return
@@ -137,6 +105,14 @@ class JSWebServer(JSConfigBase):
         staticpath = j.clients.git.getContentPathFromURLorPath(
             "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/static")
         app = Flask(__name__, static_folder=staticpath)  # '/base/static'
+
+        C="""
+        location /static/ {
+            root   {j.dirs.VARDIR}/www;
+            index  index.html index.htm;
+        }        
+        """
+        j.servers.openresty.config_set("static",C)
 
         if debug:
             app.config.from_object(DebugConfig)
@@ -156,20 +132,20 @@ class JSWebServer(JSConfigBase):
         # self.db.init_app(app)
         # self.login_manager.init_app(app)
 
-        if websocket_support:
-            self.sockets = Sockets(app)
+        # if websocket_support:
+        #     self.sockets = Sockets(app)
 
         self.app = app
 
-        def redirect_wiki(*args,**kwargs):
-            return redirect("wiki/")
+        # def redirect_wiki(*args,**kwargs):
+        #     return redirect("wiki/")
 
-        self.app.add_url_rule("/", "index",redirect_wiki)
+        # self.app.add_url_rule("/", "index",redirect_wiki)
 
         #double with above
         self.app.debug = True
 
-        self.http_server = WSGIServer((self.host, self.port), self.app, handler_class=WebSocketHandler)
+        self.http_server = WSGIServer((self.host, self.port), self.app)#, handler_class=WebSocketHandler)
         self.app.http_server = self.http_server
         self.app.server = self
 

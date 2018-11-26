@@ -11,38 +11,12 @@ class JSWebServers(JSConfigBase):
         JSConfigBase.__init__(self, JSWebServer)
         self.latest = None
 
-    def configure(self, instance="main", port=5050, port_ssl=0, host="localhost", secret="", ws_dir=""):
-        """
-        params
-            - port_ssl if 0 not used
 
-        js_shell 'j.servers.web.configure()'
-
-        """
-        # if ws_dir is "":
-        #     ws_dir = j.sal.fs.getcwd()
-        #
-        # config_path = j.sal.fs.joinPaths(ws_dir, "site_config.toml")
-        # if not j.sal.fs.exists(config_path):
-        #     j.sal.fs.createEmptyFile(config_path)
-
-        data = {
-            "port": port,
-            "port_ssl": port_ssl,
-            "host": host,
-            "secret_": secret,
-            "ws_dir": ws_dir,
-        }
-
-        return JSConfigBase.get(self, instance, data, interactive=False)
-
-    def get(self, instance):
+    def get(self, port):
         """
         will return server which can be attached in a gevent_servers_rack
         """
-        ws = JSConfigBase.get(self,instance)
-        ws.init()
-        return ws
+        return JSWebServer(port=port)
 
     def install(self):
         """

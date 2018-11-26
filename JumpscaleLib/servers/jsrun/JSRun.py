@@ -50,6 +50,13 @@ class JSRun(JSBASE):
         return self.processes[name]
 
 
+    def start(self,name,cmd="",path=None,env={},ports=[],stopcmd="",process_strings=[],reset=False):
+        p=self.get(name=name,cmd=cmd,path=path,reset=reset,
+                 env=env,ports=ports,stopcmd=stopcmd,process_strings=process_strings)
+        p.start()
+        return p
+
+
 
     def test(self, name="", start=True):
         """
