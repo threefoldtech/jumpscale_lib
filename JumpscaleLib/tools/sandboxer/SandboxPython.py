@@ -148,12 +148,12 @@ class SandboxPython(JSBASE):
 
         self.jumpscale_add()
         j.sal.fs.symlink("%s/bin/js_shell" % dest, "%s/bin/js9" % dest, overwriteTarget=True)
-        j.sal.fs.symlink("%s/bin/js_tfs" % dest, "%s/bin/tfshell" % dest, overwriteTarget=True)
-        j.sal.fs.symlink("%s/bin/js_tfs" % dest, "%s/bin/tfs" % dest, overwriteTarget=True)
+        # j.sal.fs.symlink("%s/bin/js_tfs" % dest, "%s/bin/tfshell" % dest, overwriteTarget=True)
+        # j.sal.fs.symlink("%s/bin/js_tfs" % dest, "%s/bin/tfs" % dest, overwriteTarget=True)
 
         self.env_write(dest)
 
-        j.sal.process.execute("set -e;cd %s;source env.sh;js_init" % dest)
+        j.sal.process.execute("set -e;cd %s;source env.sh;js_init generate" % dest)
 
         if j.core.platformtype.myplatform.isUbuntu: #only for building
             #no need to sandbox in non linux systems
@@ -183,14 +183,15 @@ class SandboxPython(JSBASE):
             dest0 = "%s/base"%path
             src0 = dest
             j.sal.fs.createDir(dest0)
+            j.shell()
             j.sal.fs.copyDirTree(src0, dest0, keepsymlinks=False, deletefirst=False, overwriteFiles=True,
                              ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True)
 
 
-        from IPython import embed; embed()
+        j.shell()
 
         print("to test do:")
-        print("'cd %s;source env.sh;tfs" % self.PACKAGEDIR)
+        print("'cd %s;source env.sh;js_shell" % self.PACKAGEDIR)
 
     def _zip(self, dest=""):
         if dest == "":
@@ -254,23 +255,14 @@ class SandboxPython(JSBASE):
             # if key == 'JumpscalePrefab':
             #     j.sal.fs.copyDirTree(j.sal.fs.getParent(p), '%s/lib/jumpscale' % dest)
 
+
+        path = j.clients.git.getContentPathFromURLorPath("https://github.com/threefoldtech/jumpscale_core/Jumpscale/core/jumpscale.toml").rstrip("/")
+        j.sal.fs.copyDirTree(path,j.sal.fs.joinPaths(dest,"bin"))
+
+        j.sal.fs.copyFile(path,j.sal.fs.joinPaths(dest,"lib/python/Jumpscale/core/jumpscale.toml"))
+
         j.sal.fs.touch("%s/lib/jumpscale/__init__.py" % (dest))
 
-        # # SANDBOX APPS
-        # j.sal.fs.copyDirTree(j.dirs.JSAPPSDIR, dest + j.dirs.JSAPPSDIR)
-        #
-        # # COPY jumpscale.TOML FOR PORTAL CONFIG
-        # config_dir = dest + '/root/jumpscale/cfg'
-        # j.sal.fs.createDir(config_dir)
-        # j.sal.fs.copyFile(j.core.state.configJSPath, '%s/jumpscale.toml' % config_dir)
-        #
-        # # Copy startup configuration
-        #
-        # startup_file = j.dirs.JSAPPSDIR + '/0-robot-portal/autostart/startup.toml'
-        # if j.sal.fs.exists(startup_file):
-        #     j.sal.fs.copyFile(startup_file, '%s/.startup.toml' % dest)
-        #
-        # j.sal.fs.copyFile(self.JUMPSCALEFILE, "%s/lib/jumpscale/jumpscale.py" % (dest))
 
 
     def env_write(self, dest=""):
@@ -309,10 +301,10 @@ class SandboxPython(JSBASE):
 
         print("to test:\ncd %s;source env.sh" % dest)
 
-    def upload(self):
-        """
-        """
-        if self.core.isMac:
-            cmd = "cd %s/sandbox;scp -P 1022 js_sandbox.zip root@download.gig.tech:data/js_sandbox_osx.zip" % j.dirs.BUILDDIR
-        else:
-            cmd = "cd %s/sandbox;scp -P 1022 js_sandbox.zip root@download.gig.tech:data/js_sandbox_linux64.zip" % j.dirs.BUILDDIR
+    # def upload(self):
+    #     """
+    #     """
+    #     if self.core.isMac:
+    #         cmd = "cd %s/sandbox;scp -P 1022 js_sandbox.zip root@download.gig.tech:data/js_sandbox_osx.zip" % j.dirs.BUILDDIR
+    #     else:
+    #         cmd = "cd %s/sandbox;scp -P 1022 js_sandbox.zip root@download.gig.tech:data/js_sandbox_linux64.zip" % j.dirs.BUILDDIR

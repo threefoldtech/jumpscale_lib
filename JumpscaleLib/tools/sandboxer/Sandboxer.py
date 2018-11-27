@@ -59,15 +59,16 @@ class Sandboxer(JSBASE):
                             excl = True
                     if not excl:
                         self.logger.debug(("found:%s" % name))
-                        try:
-                            result[name] = Dep(name, lpath)
-                            done.append(name)
-                            result = self._ldd(lpath, result, done=done)
-                        except Exception as e:
-                            self.logger.debug(e)
-
-        done.append(path)
+                        result[lpath] = Dep(name, lpath)
+                        result = self._ldd(lpath, result, done=done)
+                        # try:
+                        #     result = self._ldd(lpath, result, done=done)
+                        # except Exception as e:
+                        #     self.logger.debug(e)
+            done.append(path)
         return result
+
+
 
     def _otool(self, path, result=dict(), done=list()):
         """
@@ -81,8 +82,16 @@ class Sandboxer(JSBASE):
                                                "png", "gif", "css", "js", "wiki", "spec", "sh", "jar", "xml", "lua"]:
             return result
 
-        exclude=["/usr/lib/libSystem","/System/Library/Frameworks/Core"]
-        import pudb; pudb.set_trace()
+        def excl(name):
+            exclude=["libSystem","/System/Library/Frameworks/Core","libiconv.2.dylib",
+                     "libutil.dylib","libc++.1.dylib"]
+            excl = False
+            for toexeclude in exclude:
+                if name.lower().find(toexeclude.lower()) != -1:
+                    self.logger.debug("exclude:%s"%name)
+                    return True
+            return False
+
         if path not in done:
             self.logger.debug(("check:%s" % path))
             name = j.sal.fs.getBaseName(path)
@@ -90,10 +99,11 @@ class Sandboxer(JSBASE):
             rc, out, err = j.sal.process.execute(cmd, die=False)
             if rc > 0:
                 raise RuntimeError(err)
-                # if out.find("not a dynamic executable") != -1:
-                #     return result
+
             for line in out.split("\n"):
-                if len(line)>0 and line[0]==" ":
+
+                if len(line)>0 and line[0]!=" " and line[0]!="\t" :
+                    #means is not a dest
                     continue
                 line = line.strip()
                 if line == "":
@@ -101,20 +111,19 @@ class Sandboxer(JSBASE):
                 lpath = line.split("(",1)[0].strip()
                 if lpath == "":
                     continue
-                excl = False
-                for toexeclude in exclude:
-                    if name.lower().find(toexeclude.lower()) != -1:
-                        excl = True
-                if not excl:
+                if not excl(lpath):
                     self.logger.debug(("found:%s" % name))
-                    try:
-                        result[name] = Dep(name, lpath)
-                        done.append(name)
-                        result = self._otool(lpath, result, done=done)
-                    except Exception as e:
-                        self.logger.debug(e)
+                    if lpath not in result:
+                        try:
+                            result[lpath] = Dep(name, lpath)
+                            result = self._otool(lpath, result=result, done=done)
+                        except Exception as e:
+                            self.logger.warning("could not process dep:%s"%lpath)
 
-        done.append(path)
+
+            done.append(path)
+
+
         return result
 
     def _libs_find(self, path):
@@ -124,13 +133,15 @@ class Sandboxer(JSBASE):
         self.logger.info("find deb:%s" % path)
         if j.core.platformtype.myplatform.isMac:
             result = self._otool(path, result=dict(), done=list())
-            from IPython import embed; embed()
         else:
             result = self._ldd(path, result=dict(), done=list())
         return result
 
     def libs_sandbox(self, path, dest=None, recursive=False):
         """
+
+        js_shell 'j.tools.sandboxer.libs_sandbox(".",".",True)'
+
         find binaries on path and look for supporting libs, copy the libs to dest
         default dest = '%s/bin/'%j.dirs.JSBASEDIR
         """
@@ -141,12 +152,12 @@ class Sandboxer(JSBASE):
 
         if j.sal.fs.isDir(path):
             # do all files in dir
-            for item in j.sal.fs.listFilesInDir(path, recursive=False, followSymlinks=True, listSymlinks=False):
+            for item in j.sal.fs.listFilesInDir(path, recursive=recursive, followSymlinks=True, listSymlinks=False):
                 if (j.sal.fs.isFile(item) and j.sal.fs.isExecutable(item)) or j.sal.fs.getFileExtension(item) == "so":
                     self.libs_sandbox(item, dest, recursive=False)
-            if recursive:
-                for item in j.sal.fs.listFilesAndDirsInDir(path, recursive=False):
-                    self.libs_sandbox(item, dest, recursive)
+            # if recursive:
+            #     for item in j.sal.fs.listFilesAndDirsInDir(path, recursive=False):
+            #         self.libs_sandbox(item, dest, recursive)
 
         else:
             if (j.sal.fs.isFile(path) and j.sal.fs.isExecutable(path)) or j.sal.fs.getFileExtension(path) == "so":
