@@ -159,28 +159,85 @@ Locked multisig outputs:
 	Value: 5.0 locked until 2018-10-30 13:00:00
 ```
 
-### Listing all transactions of a wallet
+### Listing all incoming transactions of a wallet
 
-Get all transactions for a wallet from standard net:
+Get all incoming transactions for a wallet from standard net:
 ```python
-# parameter is a list of addresses to look up transactions for
-In [1]: wallet.list_transactions()
-Out[1]: [{"id": "a88fd6ae555630ec18912e1a6f88ffa483792a8cc8c15aaef69d3f73e6543b7b", "confirmed": true, "coin_inputs": ["a4900adb1791b4f0c51ddc1af63eb36038cb4d9ab3ff518943af3ff50142b1b9"], "coin_outputs": [{"amount": 1000000000000, "addresses": ["012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282"], "signatures_required": 1}, {"amount": 99993592000000000, "addresses": ["01f414c817c376064b1d34422bb4c434297a14a1970368fba67fcb25ab8e952799e2f9826640ea"], "signatures_required": 1}]}]
+# parameter is a list of addresses to look up incoming transactions for
+In [1]: wallet.list_incoming_transactions()
+Out[1]:
+[8566 - 24b7b608a16ecfbd54d95151e4b906d5d9d2e4a44e55e735fcc828f43109ec90 :
+        01abf9030007f43ec5eaf75a63ef2e048bf6ee2b418e2c18695d0c0284d6ff40655251593da7b1 -> 012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282 : 1000000000000,
+ 8051 - 68729244ac851233d9852abd1479b1f2b1b0870e0da45f4a1c03e0081a21d608 :
+        019a87e477a68e0c4186873fe55c42334712b21ed399a15fb3598111fe1497a63ebbc2e79df718 -> 012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282 : 42000000000
+        data: Hello JumpScale, here is some money,
+ 8030 - c988654c81b4f35aa5be52315b9dda0fb79262625074b39db92ae3e20aa7367d :
+        0106d1d7938e2f06a38dc4127a727548c3c312006f973145b9e891762a1883b9932780b1f0ce31 -> 012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282 : 42000000000,
+ 8008 - 40f12e44ee07971ecb5256fd0a21fbc93c73b41a23cc59d5bbec3c48a4dcabf8 :
+        01fb747135ce38b8fbd5c3019119dccd7645cc8c7e540399df1cef170a0dd55b832d22ab8b02eb -> 012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282 : 500000000000,
+ 5798 - 91ad9468f5a01e2033df3eb33e8e0ab4d08bdb051b506bb41cea38eb93022d45 :
+        01f414c817c376064b1d34422bb4c434297a14a1970368fba67fcb25ab8e952799e2f9826640ea -> 012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282 : 1000000000000
+        data: hello old arbitrary data,
+ 2861 - a88fd6ae555630ec18912e1a6f88ffa483792a8cc8c15aaef69d3f73e6543b7b :
+        017cb06fa6f44828617b92603e95171044d9dc7c4966ffa0d8f6f97171558735974e7ecc623ff7 -> 012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282 : 1000000000000,
+ 2829 - d873e0dd655952731567b821a829e1600839921c9a8a5b64f0cf4b17cb6e580e :
+        01b88206a3300dea3dd5f6cd73568ac5797b078910c78cbce6a71fcd0837a3ea5a4f2ed9fc70a1 -> 01223b2a4e39a477ca57883b8a13820759728d6c83731223bbb65df8b508ab93f111f538224ccb : 200000000000
+        data: is this still locked?,
+ 2827 - 74ccbe28cf008b38619c9779002105eadbe74f6b6b04eac069037509be6da8cf :
+        0183841ae8952a2ba72db0d6fce6208df70f2a936ee589ff852e06b20af48b40489572b1a69b2a -> 01223b2a4e39a477ca57883b8a13820759728d6c83731223bbb65df8b508ab93f111f538224ccb : 200000000000
+        data: another gift,
+ 2792 - cf7ffb6a3d6600212fa123cffd0707ec592a04b2333024a23c67f154bda7c2ea :
+        019bb005b78a47fd084f4f3a088d83da4fadfc8e494ce4dae0d6f70a048a0a745d88ace6ce6f1c -> 01223b2a4e39a477ca57883b8a13820759728d6c83731223bbb65df8b508ab93f111f538224ccb : 200000000000
+        data: a x-mas gift,
+ 179 - 7d72232a9f99174073ab8313d8a34b54b44c21bca8dcde36169a86f725ab8177 :
+        0186cea43fa0d303a6379ae76dd79f014698956fb982751549e3ff3844b23fa9551c1725470f55 -> 01223b2a4e39a477ca57883b8a13820759728d6c83731223bbb65df8b508ab93f111f538224ccb : 1000000000000]
 # you can also use the tx list (a list of simplified tx objects) directly as a python list of object:
 
 In [2]: txs = _
 # get the ID
 In [3]: txs[0].id
-Out[3]: 'a88fd6ae555630ec18912e1a6f88ffa483792a8cc8c15aaef69d3f73e6543b7b'
-# get the coin inputs
-In [4]: txs[0].coin_inputs
-Out[4]: ['a4900adb1791b4f0c51ddc1af63eb36038cb4d9ab3ff518943af3ff50142b1b9']
-# get the coin output (don't index if no coin outputs exist in this tx)
-In [5]: txs[0].coin_outputs[0]
-Out[5]: {"amount": 1000000000000, "addresses": ["012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282"], "signatures_required": 1}
-# get the description (decoded from the arbitrary data of the tx)
-In [6]: txs[0].description
-Out[6]: ''
+Out[3]: '24b7b608a16ecfbd54d95151e4b906d5d9d2e4a44e55e735fcc828f43109ec90'
+# get the senders
+In [4]: txs[0].from_addresses
+Out[4]: ['01abf9030007f43ec5eaf75a63ef2e048bf6ee2b418e2c18695d0c0284d6ff40655251593da7b1']
+# get the address of your wallet the money was sent to
+In [5]: txs[0].to_address
+Out[5]: '012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282'
+# get the amount of money that was sent to the address above
+In [6]: txs[0].amount
+Out[6]: 1000000000000 # == 1000 TFT
+# get the data (decoded from the arbitrary data of the tx)
+In [7]: txs[1].data
+Out[7]: 'Hello JumpScale, here is some money'
+# get the confirmation state of the transaction
+In [8]: txs[1].confirmed
+Out[8]: True
+# get the identifier, senders and amount of all confirmed transactions, and which have the word 'gift' in tx
+In [9]: [(tx.id, tx.from_addresses, tx.amount) for tx in txs if tx.confirmed and 'gift' in tx.data]
+Out[9]:
+[('74ccbe28cf008b38619c9779002105eadbe74f6b6b04eac069037509be6da8cf',
+  ['0183841ae8952a2ba72db0d6fce6208df70f2a936ee589ff852e06b20af48b40489572b1a69b2a'],
+  200000000000),
+ ('cf7ffb6a3d6600212fa123cffd0707ec592a04b2333024a23c67f154bda7c2ea',
+  ['019bb005b78a47fd084f4f3a088d83da4fadfc8e494ce4dae0d6f70a048a0a745d88ace6ce6f1c'],
+  200000000000)]
+# look up the transaction details of all confirmed 'gift' transactions
+In [10]: [j.clients.tfchain.get_transaction(tx.id) for tx in txs if tx.confirmed and 'gift' in tx.data]
+Out[10]:
+[Transaction 74ccbe28cf008b38619c9779002105eadbe74f6b6b04eac069037509be6da8cf at block height 2827:
+        - Coin Inputs:
+                - (a96e259b4a2fceb51bae992c02ea5ad3ccc2f590c79231a4337cdc3eafc66200) 0183841ae8952a2ba72db0d6fce6208df70f2a936ee589ff852e06b20af48b40489572b1a69b2a : 99994995000000000
+        - Coin Outputs:
+                - 01223b2a4e39a477ca57883b8a13820759728d6c83731223bbb65df8b508ab93f111f538224ccb : 200000000000
+                - 01b88206a3300dea3dd5f6cd73568ac5797b078910c78cbce6a71fcd0837a3ea5a4f2ed9fc70a1 : 99994794000000000
+        - Data: another gift,
+ Transaction cf7ffb6a3d6600212fa123cffd0707ec592a04b2333024a23c67f154bda7c2ea at block height 2792:
+        - Coin Inputs:
+                - (6652b1db7d9f38dadd07d1482441cc57f0315a24864a335aa5ca5b8fc93473ad) 019bb005b78a47fd084f4f3a088d83da4fadfc8e494ce4dae0d6f70a048a0a745d88ace6ce6f1c : 99995196000000000
+        - Coin Outputs:
+                - 01223b2a4e39a477ca57883b8a13820759728d6c83731223bbb65df8b508ab93f111f538224ccb : 200000000000
+                - 0183841ae8952a2ba72db0d6fce6208df70f2a936ee589ff852e06b20af48b40489572b1a69b2a : 99994995000000000
+        - Data: a x-mas gift]
 ```
 
 ### Using a multisig wallet
@@ -430,7 +487,14 @@ Get a transaction from standard net:
 ```python
 # parameter is the id of the trnasaction
 In [1]: j.clients.tfchain.get_transaction('c13091f07af3da1b85ffa94736aef9505ee0a718c592aad2175d2b93e54e2228')
-Out[1]: {"id": "c13091f07af3da1b85ffa94736aef9505ee0a718c592aad2175d2b93e54e2228", "coin_inputs": ["fafede06beb869023e1962afc948d6c592bed1f4bb072fae8c5c228bbd76eab3"], "coin_outputs": [{"amount": 100000000000, "addresses": ["0191dee035d25bf008817309d14e972651cc515b09dadde3155357682da120886f96133186a9f3"], "signatures_required": 1}, {"amount": 99995196000000000, "addresses": ["019bb005b78a47fd084f4f3a088d83da4fadfc8e494ce4dae0d6f70a048a0a745d88ace6ce6f1c"], "signatures_required": 1}], "description": "test data"}
+Out[1]:
+Transaction c13091f07af3da1b85ffa94736aef9505ee0a718c592aad2175d2b93e54e2228 at block height 2038:
+        - Coin Inputs:
+                - (fafede06beb869023e1962afc948d6c592bed1f4bb072fae8c5c228bbd76eab3) 01746b199781ea316a44183726f81e0734d93e7cefc18e9a913989821100aafa33e6eb7343fa8c : 99995297000000000
+        - Coin Outputs:
+                - 0191dee035d25bf008817309d14e972651cc515b09dadde3155357682da120886f96133186a9f3 : 100000000000
+                - 019bb005b78a47fd084f4f3a088d83da4fadfc8e494ce4dae0d6f70a048a0a745d88ace6ce6f1c : 99995196000000000
+        - Data: test data
 
 # you can also use the tx (a simplified object) directly as a python object:
 
@@ -440,19 +504,20 @@ In [3]: tx.id
 Out[3]: 'c13091f07af3da1b85ffa94736aef9505ee0a718c592aad2175d2b93e54e2228'
 # get the coin inputs
 In [4]: tx.coin_inputs
-Out[4]: ['fafede06beb869023e1962afc948d6c592bed1f4bb072fae8c5c228bbd76eab3']
+Out[4]: [(fafede06beb869023e1962afc948d6c592bed1f4bb072fae8c5c228bbd76eab3) 01746b199781ea316a44183726f81e0734d93e7cefc18e9a913989821100aafa33e6eb7343fa8c : 99995297000000000]
 # get the coin output (don't index if no coin outputs exist in this tx)
 In [5]: tx.coin_outputs[0]
-Out[5]: {"amount": 100000000000, "addresses": ["0191dee035d25bf008817309d14e972651cc515b09dadde3155357682da120886f96133186a9f3"], "signatures_required": 1}
-# get the description (decoded from the arbitrary data of the tx)
-In [6]: tx.description
+Out[5]: 0191dee035d25bf008817309d14e972651cc515b09dadde3155357682da120886f96133186a9f3 : 10000000000
+# get the data (decoded from the arbitrary data of the tx)
+In [6]: tx.data
 Out[6]: 'test data'
 ```
 
 Getting a transaction from testnet can be done as follows:
 ```python
 In [1]: j.clients.tfchain.get_transaction('f6acb26269e1426b7c729128ebf5c0afb1698f0b678588dcabc7644efbf7dae6', network=j.clients.tfchain.network.TESTNET)
-Out[1]: {"id": "f6acb26269e1426b7c729128ebf5c0afb1698f0b678588dcabc7644efbf7dae6", "confirmed": true}
+Out[1]: Transaction f6acb26269e1426b7c729128ebf5c0afb1698f0b678588dcabc7644efbf7dae6 at block height 162791
+
 # in this output we see no coin outputs or inputs, which is a possibility,
 # either because the tx type doesn't support coin transfers, or because such transfers are optional.
 ```
@@ -464,16 +529,43 @@ You can also get a transaction from any devnet, by using the `explorers` optiona
 Get all transactions for a wallet address from standard net:
 ```python
 # parameter is a list of addresses to look up transactions for
-In [1]: j.clients.tfchain.get_transactions_for(['012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282'])
-Out[1]: [{"id": "a88fd6ae555630ec18912e1a6f88ffa483792a8cc8c15aaef69d3f73e6543b7b", "confirmed": true, "coin_inputs": ["a4900adb1791b4f0c51ddc1af63eb36038cb4d9ab3ff518943af3ff50142b1b9"], "coin_outputs": [{"amount": 1000000000000, "addresses": ["012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282"], "signatures_required": 1}, {"amount": 99993592000000000, "addresses": ["01f414c817c376064b1d34422bb4c434297a14a1970368fba67fcb25ab8e952799e2f9826640ea"], "signatures_required": 1}]}]
+In [1]: j.clients.tfchain.list_incoming_transactions_for(['012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282'])
+Out[1]:
+[8566 - 24b7b608a16ecfbd54d95151e4b906d5d9d2e4a44e55e735fcc828f43109ec90 :
+        01abf9030007f43ec5eaf75a63ef2e048bf6ee2b418e2c18695d0c0284d6ff40655251593da7b1 -> 012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282 : 1000000000000,
+ 8051 - 68729244ac851233d9852abd1479b1f2b1b0870e0da45f4a1c03e0081a21d608 :
+        019a87e477a68e0c4186873fe55c42334712b21ed399a15fb3598111fe1497a63ebbc2e79df718 -> 012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282 : 42000000000
+        data: Hello JumpScale, here is some money,
+ 8030 - c988654c81b4f35aa5be52315b9dda0fb79262625074b39db92ae3e20aa7367d :
+        0106d1d7938e2f06a38dc4127a727548c3c312006f973145b9e891762a1883b9932780b1f0ce31 -> 012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282 : 42000000000,
+ 8008 - 40f12e44ee07971ecb5256fd0a21fbc93c73b41a23cc59d5bbec3c48a4dcabf8 :
+        01fb747135ce38b8fbd5c3019119dccd7645cc8c7e540399df1cef170a0dd55b832d22ab8b02eb -> 012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282 : 500000000000,
+ 5798 - 91ad9468f5a01e2033df3eb33e8e0ab4d08bdb051b506bb41cea38eb93022d45 :
+        01f414c817c376064b1d34422bb4c434297a14a1970368fba67fcb25ab8e952799e2f9826640ea -> 012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282 : 1000000000000
+        data: hello old arbitrary data,
+ 2861 - a88fd6ae555630ec18912e1a6f88ffa483792a8cc8c15aaef69d3f73e6543b7b :
+        017cb06fa6f44828617b92603e95171044d9dc7c4966ffa0d8f6f97171558735974e7ecc623ff7 -> 012a564c6d9cac3c348a87d3b49a7e1612caa78e92702ea46d54b830cc27f6d0d855c08be0d282 : 1000000000000]
 
 # again, each tx in that returned list can be used directly as a python object
 ```
 
 Get all transactions for a wallet address from testnet can be done as follows:
 ```python
-In [1]: j.clients.tfchain.get_transactions_for(['0198c17d14518655266986a55c6756dc3e79c0e7f49373f23ebaae7db9e67532ccea7043ebd9fb'], network=j.clients.tfchain.network.TESTNET)
-Out[1]: [{"id": "0028fb747d113d8f76da923af13083b55f0f64e044ade3eb0ec0baba8882ee01", "confirmed": true, "coin_inputs": ["bf8ee5073b2ddbf44353dbad88325e736b0aa332156011d60e4e344c29ff37a4"], "coin_outputs": [{"amount": 10000000000, "addresses": ["0198c17d14518655266986a55c6756dc3e79c0e7f49373f23ebaae7db9e67532ccea7043ebd9fb"], "signatures_required": 1}, {"amount": 979800000000, "addresses": ["01312bca26747afc3744e04e6c2cbe5aa7818e962d2cbd354cdad935cd6c49122b9f35eebf5f99"], "signatures_required": 1}]}]
+In [1]: j.clients.tfchain.list_incoming_transactions_for(['0198c17d14518655266986a55c6756dc3e79c0e7f49373f23ebaae7db9e67532ccea7043ebd9fb'], network=j.clients.tfchain.network.TESTNET)
+Out[1]:
+# ...
+ 23999 - 2f04e9404b719f112372da0c2a8cfb29e7ebdaaf5854ba992f1a95b091f174b7 :
+        012a3b0bb55334ffc91fb84e28b0e4099d62d54ad927c9b60dae4c902c2d7eca01f0852f79f1ee -> 0198c17d14518655266986a55c6756dc3e79c0e7f49373f23ebaae7db9e67532ccea7043ebd9fb : 50000000000,
+ 23999 - 7e83fd9449515bf5551e64bed5786f017b3a4e6b7521a3af50b9173c43149a4b :
+        012a3b0bb55334ffc91fb84e28b0e4099d62d54ad927c9b60dae4c902c2d7eca01f0852f79f1ee -> 0198c17d14518655266986a55c6756dc3e79c0e7f49373f23ebaae7db9e67532ccea7043ebd9fb : 300000000000,
+ 23999 - ad5073a626036876caa90f4fcdd4d517c73cb265ad7f8f7a169d6c030270b64a :
+        012a3b0bb55334ffc91fb84e28b0e4099d62d54ad927c9b60dae4c902c2d7eca01f0852f79f1ee -> 0198c17d14518655266986a55c6756dc3e79c0e7f49373f23ebaae7db9e67532ccea7043ebd9fb : 100000000000,
+ 21890 - 6850541a9d8e8d8ed99d96d1d65a6ad4805b658d74366b3e2bf94dabc16efe59 :
+        0198c17d14518655266986a55c6756dc3e79c0e7f49373f23ebaae7db9e67532ccea7043ebd9fb -> 0198c17d14518655266986a55c6756dc3e79c0e7f49373f23ebaae7db9e67532ccea7043ebd9fb : 55766179990000,
+ 21848 - ac473099dc00b9d88a93e6964c6effb298d5e53dc5731a70f77f6ea8f74df52e :
+        0198c17d14518655266986a55c6756dc3e79c0e7f49373f23ebaae7db9e67532ccea7043ebd9fb -> 0198c17d14518655266986a55c6756dc3e79c0e7f49373f23ebaae7db9e67532ccea7043ebd9fb : 55889699990000,
+ 12235 - 9116e6d2a9a0ea53cd263963d333c4a2e70ba5fe6cbac080a94d105abe8c01c8 :
+        0175c11c8124e325cdba4f6843e917ba90519e9580adde5b10de5a7cabcc3251292194c5a0e6d2 -> 0198c17d14518655266986a55c6756dc3e79c0e7f49373f23ebaae7db9e67532ccea7043ebd9fb : 55899799990000]
 ```
 
 You can also get a transaction from any devnet, by using the `explorers` optional parameter.
