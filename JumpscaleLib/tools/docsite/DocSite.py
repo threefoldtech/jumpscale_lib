@@ -359,7 +359,7 @@ class DocSite(JSBASE):
             else:
                 return 0,None
 
-    def sidebar_get(self, url, reset=False):
+    def sidebar_get(self, url, base_url='', reset=False):
         """
         will calculate the sidebar, if not in url will return None
         """
@@ -391,19 +391,20 @@ class DocSite(JSBASE):
             return None #did not find sidebar just return None
 
         if url in self.docs:
-            self._sidebars[url_original] = self._sidebar_process(self.docs[url].markdown,url_original=url_original)
+            self._sidebars[url_original] = self._sidebar_process(self.docs[url].markdown,url_original=url_original, base_url=base_url)
             return self._sidebars[url_original]
 
-        # #did not find the usual location, lets see if we can find the doc allone
-        # url0=url.replace("_sidebar","").strip().strip(".").strip()
-        # if "." in url0: #means we can
-        #     name=url0.split(".")[-1]
-        #     doc=self.doc_get(name,die=False)
-        #     if doc:
-        #         #we found the doc, so can return the right sidebar
-        #         possiblepath = doc.path_dir_rel.replace("/",".").strip(".")+"._sidebar"
-        #         if not possiblepath == url:
-        #             return self.get(possiblepath)
+        #did not find the usual location, lets see if we can find the doc allone
+        url0=url.replace("_sidebar","").strip().strip(".").strip()
+        print(url0,", ",url)
+        if "." in url0: #means we can
+            name=url0.split(".")[-1]
+            doc=self.doc_get(name,die=False)
+            if doc:
+                #we found the doc, so can return the right sidebar
+                possiblepath = doc.path_dir_rel.replace("/",".").strip(".")+"._sidebar"
+                if not possiblepath == url:
+                    return self.get(possiblepath)
 
         #lets look at parent
         print("need to find parent for sidebar")
@@ -415,10 +416,10 @@ class DocSite(JSBASE):
 
         newurl = ".".join(url0.split(".")[:-1])+"._sidebar"
         newurl = newurl.strip(".")
-        return self.sidebar_get(newurl)
+        return self.sidebar_get(newurl, base_url=base_url)
 
 
-    def _sidebar_process(self,c,url_original):
+    def _sidebar_process(self,c,url_original, base_url=''):
 
         def clean(c):
             out= ""
@@ -488,7 +489,7 @@ class DocSite(JSBASE):
             for key,val in j.tools.docsites.docsites.items():
                 if key.startswith("www"):
                     continue
-                out+="[%s](../%s/)\n"%(key,key)
+                out+="[%s](%s/%s/)\n"%(key, base_url, key)
 
         return out
 
