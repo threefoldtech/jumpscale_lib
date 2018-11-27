@@ -81,12 +81,8 @@ class SandboxPython(JSBASE):
             if j.sal.fs.exists(src0):
                 j.sal.fs.copyFile(src0, dest0)
 
-        #copy more files from bin directory
-        tocopy = j.sal.fs.listFilesInDir("%s/bin" % path, filter="js_*", followSymlinks=True)
-        # tocopy += j.sal.fs.listFilesInDir("%s/bin" % path, filter="rq*", followSymlinks=True)
-        for item in tocopy:
-            name = j.sal.fs.getBaseName(item)
-            j.sal.fs.copyFile(item,"%s/bin/%s" % (dest, name))
+
+
 
         #LINK THE PYTHON BINARIES
         j.sal.fs.symlink("%s/bin/python3.6" % dest, "%s/bin/python" % dest, overwriteTarget=True)
@@ -107,6 +103,9 @@ class SandboxPython(JSBASE):
             """
             if "parso" in path:
                 return True
+            if "jedi" in path:
+                return True
+
             files = j.sal.fs.listFilesInDir(path, recursive=True, filter="*.so", followSymlinks=True)
             files += j.sal.fs.listFilesInDir(path, recursive=True, filter="*.so.*", followSymlinks=True)
             if len(files) > 0:
@@ -144,16 +143,9 @@ class SandboxPython(JSBASE):
                 if dest0 is not "":
                     j.sal.fs.copyFile(item, dest0)
 
-
-
-        self.jumpscale_add()
-        j.sal.fs.symlink("%s/bin/js_shell" % dest, "%s/bin/js9" % dest, overwriteTarget=True)
-        # j.sal.fs.symlink("%s/bin/js_tfs" % dest, "%s/bin/tfshell" % dest, overwriteTarget=True)
-        # j.sal.fs.symlink("%s/bin/js_tfs" % dest, "%s/bin/tfs" % dest, overwriteTarget=True)
-
         self.env_write(dest)
 
-        j.sal.process.execute("set -e;cd %s;source env.sh;js_init generate" % dest)
+        # j.sal.process.execute("set -e;cd %s;source env.sh;js_init generate" % dest)
 
         if j.core.platformtype.myplatform.isUbuntu: #only for building
             #no need to sandbox in non linux systems
@@ -170,8 +162,12 @@ class SandboxPython(JSBASE):
                 if item.find(x) is not -1:
                     j.sal.fs.remove(item)
                     pass
+        src="%s/github/threefoldtech/jumpscale_core/install/install.py"%j.dirs.CODEDIR
+
+        j.sal.fs.copyFile(src,"%s/jumpscale_install.py"%dest)
 
         self._zip(dest=dest)
+        j.shell()
 
         #copy to sandbox & upload
         ignoredir = ['.egg-info', '.dist-info', "__pycache__", "audio", "tkinter", "audio", "test",".git"]
@@ -198,70 +194,10 @@ class SandboxPython(JSBASE):
             dest = j.dirs.BUILDDIR + "/sandbox/python3/"
         cmd = "cd %s;rm -f ../js_sandbox.tar.gz;tar -czf ../js_sandbox.tar.gz .;" % dest
         j.sal.process.execute(cmd)
-        cmd = "cd %s;rm -f ../tfboot/lib/python.zip;zip -r ../tfbot/lib/python.zip .;" % dest
+        cmd = "cd %s;rm -f ../tfbot/lib/python.zip;cd ../tfbot/lib/python;zip -r ../python.zip .;" % dest
         j.sal.process.execute(cmd)
-
-
-    def jumpscale_add(self, dest=""):
-        """
-        js_shell 'j.tools.sandboxer.python.jumpscale_add()'
-        """
-
-        # def process(c):
-        #     out = ""
-        #     for line in c.split("\n"):
-        #         if line.startswith("#!"):
-        #             out += "#! /usr/bin/env python3.6\n"
-        #             continue
-        #         out += "%s\n" % line
-        #     return out
-
-        if dest == "":
-            dest = self.PACKAGEDIR
-
-        ignoredir = ['.egg-info', '.dist-info', "__pycache__", "audio", "tkinter", "audio", "test",".git"]
-        ignorefiles = ['.egg-info', ".pyc"]
-
-        todo = []
-        todo.append("https://github.com/threefoldtech/jumpscale_core/Jumpscale")
-        todo.append("https://github.com/threefoldtech/jumpscale_lib/JumpscaleLib")
-        todo.append("https://github.com/threefoldtech/jumpscale_prefab/JumpscalePrefab")
-        todo.append("https://github.com/threefoldtech/jumpscale_prefab/modules")
-        todo.append("https://github.com/threefoldtech/digital_me/DigitalMeLib")
-        todo.append("https://github.com/threefoldtech/0-robot/JumpscaleZrobot")
-        todo.append("https://github.com/threefoldtech/0-robot/zerorobot")
-
-        for item in todo:
-            path = j.clients.git.getContentPathFromURLorPath(item)
-            key = j.sal.fs.getBaseName(path)
-            if key == "modules":
-                key="prefab_modules"
-            dest0 = "%s/lib/jumpscale/%s" % (dest, key)
-            j.sal.fs.copyDirTree(path, dest0, keepsymlinks=False, deletefirst=True, overwriteFiles=True,
-                                 ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True, createdir=True)
-
-            # if key in ("Jumpscale", "ZeroRobot"):
-            #     jscodedir = "/".join(p.rstrip("/").split("/")[:-1])
-            #     cmds_dir = "{}/cmds".format(jscodedir) if key == "Jumpscale" else "{}/cmd".format(jscodedir)
-            #
-            #     for item in j.sal.fs.listFilesInDir(cmds_dir):
-            #         fname = j.sal.fs.getBaseName(item)
-            #         dest0 = "%s/bin/%s" % (dest, fname)
-            #         C = j.sal.fs.readFile(item)
-            #         C = process(C)
-            #         j.sal.fs.writeFile(dest0, C)
-            #         j.sal.fs.chmod(dest0, 0o770)
-            #
-            # if key == 'JumpscalePrefab':
-            #     j.sal.fs.copyDirTree(j.sal.fs.getParent(p), '%s/lib/jumpscale' % dest)
-
-
-        path = j.clients.git.getContentPathFromURLorPath("https://github.com/threefoldtech/jumpscale_core/Jumpscale/core/jumpscale.toml").rstrip("/")
-        j.sal.fs.copyDirTree(path,j.sal.fs.joinPaths(dest,"bin"))
-
-        j.sal.fs.copyFile(path,j.sal.fs.joinPaths(dest,"lib/python/Jumpscale/core/jumpscale.toml"))
-
-        j.sal.fs.touch("%s/lib/jumpscale/__init__.py" % (dest))
+        cmd = "cd %s;rm -rf ../tfbot/lib/python" % dest
+        j.sal.process.execute(cmd)
 
 
 
