@@ -11,6 +11,8 @@ the wallet will need the following functionality:
 """
 
 import ed25519
+import copy
+import sys
 from pyblake2 import blake2b
 from functools import partial
 import requests
@@ -25,7 +27,7 @@ from Jumpscale import j
 from JumpscaleLib.clients.blockchain.rivine import utils, txutils
 from JumpscaleLib.clients.blockchain.rivine.atomicswap.atomicswap import AtomicSwapManager
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory,\
-        DEFAULT_TRANSACTION_VERSION, CoinOutput, DEFAULT_MINERFEE, sign_bot_transaction, TransactionSummary
+        DEFAULT_TRANSACTION_VERSION, CoinOutput, DEFAULT_MINERFEE, sign_bot_transaction, FlatMoneyTransaction
 from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
 from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import UnlockCondtionFactory,\
         MULTISIG_CONDITION_TYPE, MultiSignatureFulfillment, SingleSignatureFulfillment
@@ -137,9 +139,9 @@ class RivineWallet:
         """
         return str(self.generate_key(persist=persist).unlockhash)
 
-    def list_transactions(self, addresses=None):
+    def list_incoming_transactions(self, addresses=None):
         """
-        List all transactions related to a wallet,
+        List all incoming transactions related to a wallet,
         optionally filtering to only show the given address(es).
         """
         # create the list where all found transaction summaries will be stored in
@@ -160,16 +162,15 @@ class RivineWallet:
             if not address_transactions:
                 continue
             for tx in address_transactions:
-                txid = tx.get('id', '')
-                raw_tx = tx.get('rawtransaction', {})
-                if not txid or not raw_tx:
-                    raise ValueError("invalid transaction {} returned from explorer".format(tx))
-                confirmed = not tx.get('unconfirmed', True)
-                txs = TransactionSummary.from_raw_transaction(txid, confirmed, raw_tx)
-                transactions.append(txs)
-        
-        # return all listed transactions
-        return transactions      
+                # collect all transactions
+                address_txs = FlatMoneyTransaction.create_list(tx)
+                inc_txs = [tx for tx in address_txs if tx.to_address in addresses]
+                inc_txs = [tx for tx in inc_txs if not(len(tx.from_addresses) == 1 and tx.from_addresses[0] == tx.to_address)]
+                transactions.extend(inc_txs)
+
+        # return all listed transactions, reverse-sorted by block height
+        transactions.sort(key=lambda tx: tx.block_height if tx.confirmed else sys.maxsize, reverse=True)
+        return transactions
 
     def _save_nr_of_keys(self):
         """
@@ -1036,6 +1037,6 @@ class WalletBalance:
         # make sure we are working with an integer
         locktime = int(locktime)
         if locktime < 500000000:
-            return "block " + locktime
+            return "block " + str(locktime)
         ts = datetime.fromtimestamp(locktime)
         return ts.strftime("%Y-%m-%d %H:%M:%S")

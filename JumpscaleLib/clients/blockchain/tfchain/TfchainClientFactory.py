@@ -4,6 +4,7 @@ Client factory for the Tfchain network, js entry point
 
 from Jumpscale import j
 
+import sys
 import requests
 
 from JumpscaleLib.clients.blockchain.rivine import utils
@@ -14,7 +15,7 @@ from JumpscaleLib.clients.blockchain.rivine.errors import RESTAPIError
 from JumpscaleLib.clients.blockchain.tfchain.TfchainThreeBotClient import TfchainThreeBotClient
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory,\
-        TransactionV128, TransactionV129, TransactionSummary
+        TransactionV128, TransactionV129, TransactionSummary, FlatMoneyTransaction
 from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import UnlockHashCondition,\
         LockTimeCondition, MultiSignatureCondition, UnlockCondtionFactory
 from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
@@ -88,14 +89,10 @@ class TfchainClientFactory(JSConfigBaseFactory):
         tx = result.get('transaction', {})
         if not tx:
             raise RESTAPIError('error while fetching transaction from {} for {}: transaction not found'.format(explorers, identifier))
-        raw_tx = tx.get('rawtransaction', {})
-        if not raw_tx:
-            raise RESTAPIError('error while fetching transaction from {} for {}: invalid transaction result'.format(explorers, identifier))
-        confirmed = not tx.get('unconfirmed', True)
-        return TransactionSummary.from_raw_transaction(identifier, confirmed, raw_tx)
+        return TransactionSummary.from_explorer_transaction(tx)
 
 
-    def get_transactions_for(self, addresses, network=TfchainNetwork.STANDARD, explorers=None):
+    def list_incoming_transactions_for(self, addresses, network=TfchainNetwork.STANDARD, explorers=None):
         """
         Get all transactions for the given addresses as registered on a TFchain network
 
@@ -124,16 +121,11 @@ class TfchainClientFactory(JSConfigBaseFactory):
             if not address_transactions:
                 continue
             for tx in address_transactions:
-                txid = tx.get('id', '')
-                raw_tx = tx.get('rawtransaction', {})
-                if not txid or not raw_tx:
-                    raise ValueError("invalid transaction {} returned from explorer".format(tx))
-                confirmed = not tx.get('unconfirmed', True)
-                txs = TransactionSummary.from_raw_transaction(txid, confirmed, raw_tx)
-                transactions.append(txs)
+                transactions.extend([tx for tx in FlatMoneyTransaction.create_list(tx) if tx.to_address in addresses])
         
-        # return all listed transactions
-        return transactions 
+        # return all listed transactions, reverse-sorted by block height
+        transactions.sort(key=lambda tx: tx.block_height if tx.confirmed else sys.maxsize, reverse=True)
+        return transactions
 
     def create_transaction_from_json(self, txn_json):
         """

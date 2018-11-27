@@ -16,6 +16,7 @@ from JumpscaleLib.clients.blockchain.tfchain.types import network as tftnet
 from JumpscaleLib.clients.blockchain.tfchain.types import signatures as tftsig
 from JumpscaleLib.clients.blockchain.tfchain import const as tfconst
 
+from enum import Enum
 import base64
 import json
 
@@ -1623,12 +1624,16 @@ class CoinOutputSummary:
     def __init__(self):
         self._amount = 0
         self._locked = 0
+        self._unlockhash = ''
         self._addresses = []
         self._signatures_required = 0
         self._raw_condition = {}
 
     def __repr__(self):
-        return json.dumps(self.json())
+        output = '{} : {}'.format(self._unlockhash, self._amount)
+        if self._locked:
+            output += ' ({})'.format(self._locked)
+        return output
 
     def __eq__(self, other):
         if self.__class__ != other.__class__:
@@ -1637,8 +1642,10 @@ class CoinOutputSummary:
 
 
     @classmethod
-    def from_raw_coin_output(cls, raw_coin_output):
+    def from_raw_coin_output(cls, unlockhash, raw_coin_output):
         cos = cls()
+        # set the unlockhash as-is
+        cos._unlockhash = unlockhash
         # get the amount
         cos._amount = int(raw_coin_output.get('value', 0))
         # assign the raw condition
@@ -1718,6 +1725,13 @@ class CoinOutputSummary:
         return self._locked
 
     @property
+    def unlockhash(self):
+        """
+        The unlockhash of the condition of this coin output.
+        """
+        return self._unlockhash
+
+    @property
     def addresses(self):
         """
         Returns the addresses to which this CoinOutput is sent,
@@ -1749,32 +1763,77 @@ class CoinOutputSummary:
         """
         return self._raw_condition
 
-    def json(self):
+
+class CoinInputSummary:
+    def __init__(self, id, amount, address, raw_fulfillment):
+        self._id = id
+        self._amount = amount
+        self._address = address
+        self._raw_fulfillment = raw_fulfillment
+
+    def __repr__(self):
+        return '({}) {} : {}'.format(self._id, self._address, self._amount)
+
+
+    @property
+    def identifier(self):
         """
-        Return this CoinOutput summary as a JSON object,
-        not including the raw condition.
+        The (parent) identifier of this spent coin output (coin input).
         """
-        result = {
-            'amount': self._amount,
-        }
-        if self._locked:
-            result['locked'] = self._locked
-        if self._addresses:
-            result['addresses'] = self._addresses.copy()
-            result['signatures_required'] = self._signatures_required
-        return result
+        return self._id
+
+    @property
+    def amount(self):
+        """
+        The amount of coins spend using this fulfilled coin input.
+        """
+        return self._amount
+
+    @property
+    def address(self):
+        """
+        The address (unlockhash) that spent this coin input.
+        """
+        return self._address
+
+    @property
+    def raw_fulfillment(self):
+        """
+        The raw fulfillment (JSON-decoded dict), as recored on the chain.
+        """
+        return self._raw_fulfillment
 
 
 class TransactionSummary:
     def __init__(self):
         self._id = '',
+        self._block_height = 0
         self._confirmed = False
         self._coin_inputs = []
         self._coin_outputs = []
-        self._description = ''
+        self._data = ''
+
 
     def __repr__(self):
-        return json.dumps(self.json())
+        output = ''
+        if self._confirmed:
+            output = 'Transaction {} at block height {}'.format(self._id, self._block_height)
+        else:
+            output = 'Unconfirmed ransaction {}'.format(self._id)
+        if self._coin_inputs or self._coin_outputs or self._data:
+            output += ':\n'
+        else:
+            output += '\n'
+        if self._coin_inputs:
+            output += '\t- Coin Inputs:\n\t\t- '
+            output += '\n\t\t- '.join([str(ci) for ci in self._coin_inputs]) + '\n'
+        if self._coin_outputs:
+            output += '\t- Coin Outputs:\n\t\t- '
+            output += '\n\t\t- '.join([str(co) for co in self._coin_outputs]) + '\n'
+        if self._data:
+            output += '\t- Data: ' + self._data
+        return output
+
 
     def __eq__(self, other):
         if self.__class__ != other.__class__:
@@ -1783,29 +1842,58 @@ class TransactionSummary:
 
 
     @classmethod
-    def from_raw_transaction(cls, id, confirmed, raw_transaction):
+    def from_explorer_transaction(cls, explorer_transaction):
+        # create a transaction summary
         ts = cls()
-        # assign the id and confirmed-status as-is
-        ts._id = id
-        ts._confirmed = confirmed
+
+        rawtx = explorer_transaction.get('rawtransaction', {})
+        rawtxdata = rawtx.get('data', {})
+        # collect the optional data as well
+        if 'arbitrarydata' in rawtxdata:
+            ts._data = base64.b64decode(rawtxdata['arbitrarydata']).decode('utf-8') # TODO: handle data (optional) decoding based on data type
+
+        # copy the block height, (tx) id and confirmation state as-is
+        ts._id = explorer_transaction.get('id', '')
+        ts._block_height = explorer_transaction.get('height', 0)
+        ts._confirmed = not explorer_transaction.get('unconfirmed', False)
+
         # first parse the raw transaction
-        tx = TransactionFactory.from_dict(raw_transaction)
+        tx = TransactionFactory.from_dict(rawtx)
         if not tx:
-            raise ValueError("invalid transaction {} cannot be decoded".format(raw_transaction))
-        # fetch all parent identifiers from the coin outputs
-        for coin_input in tx.coin_inputs:
-            ts._coin_inputs.append(coin_input.parent_id)
+            raise ValueError("invalid transaction {} cannot be decoded".format(rawtx))
+
+        # fetch all parent identifiers from the coin inputs,
+        # and pair them to the unlockhash and amount
+        # collect the from_addresses as-is
+        cis = rawtxdata.get('coininputs', []) or []
+        cois = explorer_transaction.get('coininputoutputs', []) or []
+        if len(cois) is not len(cis):
+            raise ValueError("explorer transaction does not contain (all) coin input unlock hashes")
+        index = 0
+        for ci in cis:
+            coi = cois[index]
+            index += 1
+            ts._coin_inputs.append(CoinInputSummary(
+                ci.get('parentid', ''),
+                int(coi.get('value', '0')),
+                coi.get('unlockhash', ''),
+                ci.get('fulfillment', {}),
+            ))
+
         # fetch and summarize all listed coin outputs
+        couhs = explorer_transaction.get('coinoutputunlockhashes', []) or []
+        if len(couhs) is not len(tx.coin_outputs):
+            raise ValueError("explorer transaction does not contain (all) coin output unlock hashes")
+        index = 0
         for coin_output in tx.coin_outputs:
+            couh = couhs[index]
+            index += 1
             coin_output_dict = {}
             if coin_output:
                 coin_output_dict = coin_output.json
-            cos = CoinOutputSummary.from_raw_coin_output(coin_output_dict)
+            cos = CoinOutputSummary.from_raw_coin_output(couh, coin_output_dict)
             ts._coin_outputs.append(cos)
-        # assign the description if there is one
-        data = tx.data
-        if data:
-            ts._description = data.decode("utf-8") # TODO: handle data (optional) decoding based on prefix convention
+
         # return the created transaction summary
         return ts
 
@@ -1848,25 +1936,163 @@ class TransactionSummary:
         return self._coin_outputs
 
     @property
-    def description(self):
+    def data(self):
         """
-        Returns a description of this Transaction,
+        Returns the (optional) data of this Transaction,
         only defined if there is arbitrary data attached to this Transaction.
         """
-        return self._description
+        return self._data
 
-    def json(self):
+
+class FlatMoneyTransaction:
+    """
+    FlatMoneyTransaction is the representation of a partial regular chain transaction,
+    with the focus on a single receiving (coin output) address. Meaning that a regular
+    Transaction that defines multiple coin outputs, will result in a list of FlatMoneyTransactions.
+    """
+    
+    @staticmethod
+    def create_list(explorer_transaction):
         """
-        Return this Transaction Summary as a JSON object.
+        Create a list of flat transactions,
+        using the data from the given explorer transaction as input.
         """
-        result = {
-            'id': self._id,
-            'confirmed': self._confirmed,
-        }
-        if self._coin_inputs:
-            result['coin_inputs'] = self._coin_inputs.copy()
-        if self._coin_outputs:
-            result['coin_outputs'] = [co.json() for co in self._coin_outputs]
-        if self._description:
-            result['description'] = self._description
-        return result
+        # check if the transaction has coin outputs,
+        # if not this static method will return an empty list
+        rawtxdata = explorer_transaction.get('rawtransaction', {}).get('data', {})
+        cos = rawtxdata.get('coinoutputs', []) or []
+        if not cos:
+            return []
+        couhs = explorer_transaction.get('coinoutputunlockhashes', []) or []
+        if len(couhs) is not len(cos):
+            raise ValueError("explorer transaction does not contain (all) coin output unlock hashes")
+
+        # collect the optional data as well
+        data = ''
+        if 'arbitrarydata' in rawtxdata:
+            data = base64.b64decode(rawtxdata['arbitrarydata']).decode('utf-8') # TODO: handle data (optional) decoding based on data type
+
+        # copy the block height, (tx) id and confirmation state as-is
+        block_height = explorer_transaction.get('height', 0)
+        transaction_id = explorer_transaction.get('id', '')
+        confirmed = not explorer_transaction.get('unconfirmed', False)
+
+        # collect the from_addresses as-is
+        from_addresses = set()
+        for ci in explorer_transaction.get('coininputoutputs', []):
+            if 'unlockhash' in ci:
+                from_addresses.add(ci['unlockhash'])
+        
+        # collect the amounts per unlockhash
+        to_addresses = {}
+        coi = 0
+        for co in cos:
+            uh = couhs[coi]
+            coi += 1
+            to_addresses[uh] = to_addresses.get(uh, 0) + int(co.get('value', '0'))
+
+        # create a flat transaction per to_address mapping
+        txs = []
+        for uh, amount in to_addresses.items():
+            tx = FlatMoneyTransaction()
+            tx._block_height = block_height
+            tx._transaction_id = transaction_id
+            tx._confirmed = confirmed
+            tx._from_addresses = list(from_addresses)
+            tx._to_address = uh
+            tx._amount = amount
+            tx._data = data
+            txs.append(tx)
+
+        # return a list of flat transactions
+        return txs
+
+
+    def __init__(self):
+        self._block_height = 0
+        self._transaction_id = ''
+        self._confirmed = False
+        self._from_addresses = []
+        self._to_address = ''
+        self._amount = 0
+        self._data = ''
+
+
+    def __repr__(self):
+        output = ''
+        if self._confirmed:
+            output += str(self._block_height) + ' - '
+        else:
+            output += 'unconfirmed - '
+        output += self._transaction_id + ' :\n\t'
+        if len(self._from_addresses) > 1:
+            output += ' & '.join(self._from_addresses)
+        elif len(self._from_addresses) == 1:
+            output += self._from_addresses[0]
+        else:
+            output += '?'
+        output += ' -> ' + self._to_address
+        output += ' : ' + str(self._amount)
+        if self._data:
+            output += '\n\tdata: ' + self._data
+        return output
+
+
+    @property
+    def block_height(self):
+        """
+        The height of the block this transaction was registered upon.
+        Using the height one can look up the block this FlatMoneyTransaction was registered with.
+        """
+        return self._block_height
+    
+    @property
+    def id(self):
+        """
+        The identifier of the transaction as registered on the chain.
+        Using the identifier you can look up a more detailed version of the Transaction if desired.
+        """
+        return self._transaction_id
+    
+    @property
+    def confirmed(self):
+        """
+        True if the transaction was already created as part of a block on the chain,
+        False if the transaction is still waiting in the transaction pool to be registered on the chain.
+        """
+        return self._confirmed
+    
+    @property
+    def from_addresses(self):
+        """
+        The addresses that funded the inputs used for the sent amount.
+        """
+        return self._from_addresses
+    
+    @property
+    def to_address(self):
+        """
+        The address to which the amount of coins were sent.
+        """
+        return self._to_address
+    
+    @property
+    def amount(self):
+        """
+        The amount of coins that were sent with this transaction.
+        """
+        return self._amount
+    
+    @property
+    def direction(self):
+        """
+        The direction in which the coins flow.
+        """
+        return self._direction
+    
+    @property
+    def data(self):
+        """
+        The optional (arbitrary) data that was attached with this transaction.
+        """
+        return self._data
