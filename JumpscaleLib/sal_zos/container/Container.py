@@ -29,15 +29,16 @@ class Containers():
             raise LookupError("Found more than one containter with name {}".format(name))
         return Container.from_containerinfo(containers[0], self.node)
 
-    def create(self, name, flist, hostname=None, mounts=None, nics=None,
-               host_network=False, ports=None, storage=None, init_processes=None, privileged=False, env=None, identity=None):
+    def create(self, name, flist, hostname=None, mounts=None, nics=None, host_network=False, ports=None,
+               storage=None, init_processes=None, privileged=False, env=None, identity=None):
         default = False
+        nics = nics or []
         for nic in nics:
             if 'default' in nic['type']:
                 default = True
                 break
         if not default:
-            nics.append({'type': 'default','id': 'None','hwaddr': '','name': 'nat0'})
+            nics.append({'type': 'default', 'id': 'None', 'hwaddr': '', 'name': 'nat0'})
         container = Container(name=name, node=self.node, flist=flist, hostname=hostname, mounts=mounts, nics=nics,
                               host_network=host_network, ports=ports, storage=storage, init_processes=init_processes,
                               privileged=privileged, env=env, identity=identity)
@@ -243,7 +244,7 @@ class Container():
 
         if self.is_running():
             self.identity
-            
+
         self._client = self.node.client.container.client(int(job.get(timeout)))
 
     def is_job_running(self, id):
@@ -365,7 +366,6 @@ class Container():
                 client = j.clients.zerotier.get(nic['ztClient'], create=False, die=True, interactive=False)
                 network = client.network_get(nic['id'])
                 network.member_add(public_identity, self.name)
-
 
     @property
     def mgmt_addr(self):
