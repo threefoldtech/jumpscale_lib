@@ -145,7 +145,6 @@ class SandboxPython(JSBASE):
 
         self.env_write(dest)
 
-        # j.sal.process.execute("set -e;cd %s;source env.sh;js_init generate" % dest)
 
         if j.core.platformtype.myplatform.isUbuntu: #only for building
             #no need to sandbox in non linux systems
@@ -167,27 +166,32 @@ class SandboxPython(JSBASE):
         j.sal.fs.copyFile(src,"%s/jumpscale_install.py"%dest)
 
         self._zip(dest=dest)
-        j.shell()
-
-        #copy to sandbox & upload
-        ignoredir = ['.egg-info', '.dist-info', "__pycache__", "audio", "tkinter", "audio", "test",".git"]
-        ignorefiles = ['.egg-info', ".pyc"]
-
-        if j.core.platformtype.myplatform.isMac:
-            url = "git@github.com:threefoldtech/sandbox_osx.git"
-            path = j.clients.git.getContentPathFromURLorPath(url)
-            dest0 = "%s/base"%path
-            src0 = dest
-            j.sal.fs.createDir(dest0)
-            j.shell()
-            j.sal.fs.copyDirTree(src0, dest0, keepsymlinks=False, deletefirst=False, overwriteFiles=True,
-                             ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True)
 
 
-        j.shell()
+        def copy2git():
+
+            #copy to sandbox & upload
+            ignoredir = ['.egg-info', '.dist-info', "__pycache__", "audio", "tkinter", "audio", "test",".git"]
+            ignorefiles = ['.egg-info', ".pyc"]
+
+            if j.core.platformtype.myplatform.isMac:
+                url = "git@github.com:threefoldtech/sandbox_osx.git"
+                path = j.clients.git.getContentPathFromURLorPath(url)
+                dest0 = "%s/base"%path
+                src0 = dest
+                j.sal.fs.createDir(dest0)
+                j.shell()
+                j.sal.fs.copyDirTree(src0, dest0, keepsymlinks=False, deletefirst=False, overwriteFiles=True,
+                                 ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True)
+
+
+        #now lets test if it all works
+        j.sal.process.execute("set -e;cd %s;source env.sh;python3 jumpscale_install.py" % dest)
+        j.sal.process.execute("set -e;cd %s;source env.sh;js_init generate" % dest)
+
 
         print("to test do:")
-        print("'cd %s;source env.sh;js_shell" % self.PACKAGEDIR)
+        print("'cd %s;source env.sh;js_shell" % dest)
 
     def _zip(self, dest=""):
         if dest == "":
