@@ -176,12 +176,19 @@ class SandboxPython(JSBASE):
 
             if j.core.platformtype.myplatform.isMac:
                 url = "git@github.com:threefoldtech/sandbox_osx.git"
-                path = j.clients.git.getContentPathFromURLorPath(url)
-                dest0 = "%s/base"%path
-                src0 = dest
-                j.sal.fs.createDir(dest0)
-                j.sal.fs.copyDirTree(src0, dest0, keepsymlinks=False, deletefirst=False, overwriteFiles=True,
-                                 ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True)
+            elif j.core.platformtype.myplatform.isUbuntu:
+                #TODO: need to check is ubuntu 1804, should only build there today
+                url = "git@github.com:threefoldtech/sandbox_ubuntu.git"
+            else:
+                raise RuntimeError("only support OSX & Ubuntu")
+
+            path = j.clients.git.getContentPathFromURLorPath(url)
+            dest0 = "%s/base"%path
+            src0 = dest
+            j.sal.fs.createDir(dest0)
+            j.sal.fs.copyDirTree(src0, dest0, keepsymlinks=False, deletefirst=False, overwriteFiles=True,
+                             ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True)
+
 
 
         copy2git()
@@ -232,7 +239,7 @@ class SandboxPython(JSBASE):
         export HOME=$PBASE/root
         export HOMEDIR=/root
 
-        export PS1="TF: "
+        export PS1="3BOT: "
 
         """
         j.sal.fs.writeFile("%s/env.sh" % dest, j.core.text.strip(C))
