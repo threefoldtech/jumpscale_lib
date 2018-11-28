@@ -34,7 +34,7 @@ class SandboxPython(JSBASE):
                             jumpscale_branch=jumpscale_branch, include_jumpscale=True)
         return path
 
-    def do(self, path="", dest="", build=True, reset=False):
+    def do(self, path="", dest="", build=True, reset=False, jumpscale_branch='development'):
         """
         js_shell 'j.tools.sandboxer.python.do(build=True)'
 
@@ -49,7 +49,7 @@ class SandboxPython(JSBASE):
             j.tools.prefab.local.system.package.install("redis-server")
 
         if build:
-            path = self.build(reset=reset)
+            path = self.build(reset=reset, jumpscale_branch=jumpscale_branch)
 
         if path == "":
             path = self.BUILDDIR
