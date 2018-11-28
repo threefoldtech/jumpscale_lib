@@ -222,7 +222,7 @@ class SandboxPython(JSBASE):
             dest = self.PACKAGEDIR
 
         C = """
-        export PBASE=`pwd`
+        export PBASE=/sandbox
 
         export PATH=$PBASE/bin:/bin:/usr/local/bin:/usr/bin:/bin:$PATH
         export PYTHONPATH=$PBASE/lib/python:$PBASE/lib/pythonbin:$PBASE/lib/python.zip:$PBASE/lib/jumpscale:$PBASE/lib/pythonbin/lib-dynload:$PBASE/bin
@@ -240,6 +240,8 @@ class SandboxPython(JSBASE):
         export HOMEDIR=/root
 
         export PS1="3BOT: "
+        
+        cd $PBASE
 
         """
         j.sal.fs.writeFile("%s/env.sh" % dest, j.core.text.strip(C))
