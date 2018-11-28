@@ -68,7 +68,7 @@ class Network():
         devices = []
         for device in self.client.ip.link.list():
             if device['type'] == 'device':
-                if device['up'] == False:
+                if device['up'] is False:
                     self.client.ip.link.up(device['name'])
                 devices.append(device['name'])
         nics = list(filter(lambda nic: nic['name'] in devices, self.client.info.nic()))

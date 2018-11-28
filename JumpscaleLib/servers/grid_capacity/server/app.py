@@ -1,3 +1,5 @@
+from .frontend_blueprint import frontend_bp
+from .api_api import api_api
 import os
 import sys
 import datetime
@@ -11,15 +13,14 @@ from .models import db
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
-configure(app, settings.IYO_CLIENTID, settings.IYO_SECRET, settings.IYO_CALLBACK, '/callback', None, True, True, 'organization')
+configure(app, settings.IYO_CLIENTID, settings.IYO_SECRET,
+          settings.IYO_CALLBACK, '/callback', None, True, True, 'organization')
 
 # connect to mongodb
 j.clients.mongoengine.get('capacity', interactive=False)
 
 db.init_app(app)
 
-from .api_api import api_api
-from .frontend_blueprint import frontend_bp
 
 app.register_blueprint(api_api)
 app.register_blueprint(frontend_bp)

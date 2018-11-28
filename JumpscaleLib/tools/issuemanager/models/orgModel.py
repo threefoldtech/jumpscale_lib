@@ -3,6 +3,7 @@ from jumpscale import j
 
 from JumpscaleLib.data.capnp.ModelBase import ModelBase
 
+
 class OrgModel(ModelBase):
     """
     Model Class for an org object

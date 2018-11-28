@@ -1,8 +1,6 @@
 from jumpscale import j
 
 
-
-
 class UnmarshallError(Exception, ):
     def __init__(self, resp, message=''):
         pass

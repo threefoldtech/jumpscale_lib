@@ -6,8 +6,7 @@ from jumpscale import j
 from . import client_support
 
 
-
-class TwoFAMethods( ):
+class TwoFAMethods():
     """
     auto-generated. don't touch.
     """

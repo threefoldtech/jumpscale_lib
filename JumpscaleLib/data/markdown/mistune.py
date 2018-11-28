@@ -950,6 +950,7 @@ class Markdown(object):
     :param inline: An inline lexer class or instance.
     :param block: A block lexer class or instance.
     """
+
     def __init__(self, renderer=None, inline=None, block=None, **kwargs):
         if not renderer:
             renderer = Renderer(**kwargs)

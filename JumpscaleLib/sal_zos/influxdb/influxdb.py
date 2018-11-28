@@ -6,8 +6,6 @@ from .. import templates
 from jumpscale import j
 
 
-
-
 class InfluxDB():
     def __init__(self, container, ip, port, rpcport):
 

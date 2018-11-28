@@ -9,7 +9,6 @@ import json
 import os
 
 
-
 JSBASE = j.application.jsbase_get_class()
 
 SUPPORTED_CURRENCIES = ['BTC', 'TFT']
@@ -31,7 +30,7 @@ def _execute_and_extract(prefab, cmd, regex, cmd_name, logger, test_output=None)
     else:
         rc, out, err = prefab.core.run(cmd=cmd, showout=False)
     if rc:
-        raise RuntimeError('Failed to execute {} step. Error {}'.format(cmd_name, '{}\n{}'.format(out,err)))
+        raise RuntimeError('Failed to execute {} step. Error {}'.format(cmd_name, '{}\n{}'.format(out, err)))
     match = re.search(regex, out)
     if not match:
         raise RuntimeError('Cannot parse the output of the {} step using output {}'.format(cmd_name, out))
@@ -85,12 +84,11 @@ def _get_prefab_from_address(address):
     return j.tools.prefab.getFromSSH(addr=ip, port=port)
 
 
-
-
 class AtomicSwapFactory(JSBASE):
     """
     Factory class for atomicswap tool
     """
+
     def __init__(self):
         self.__jslocation__ = "j.tools.atomicswap"
         JSBASE.__init__(self)
@@ -111,7 +109,6 @@ class AtomicSwapFactory(JSBASE):
                 except ValueError:
                     pass
         raise ValueError('Invlaid amount format')
-
 
     def _validate_initiate_audit(self, initiator, initiator_result, audit_result):
         """
@@ -134,8 +131,6 @@ class AtomicSwapFactory(JSBASE):
             erros.append("Contract is not valid far enough in the future")
         if errors:
             raise RuntimeError("Invalide audit result. Errors: {}".format('\n'.join(errors)))
-
-
 
     def execute(self, initiator_prefab, initiator_address, initiator_amount, participant_prefab, participant_address, participant_amount, testnet=False):
         """
@@ -160,21 +155,22 @@ class AtomicSwapFactory(JSBASE):
         # right now only BTC and TFT are supported for atomicswap
         if initiator_currency == 'BTC':
             initiator = BTCInitiator(prefab=initiator_prefab, recipient_address=participant_address,
-                                    amount=initiator_amount, testnet=testnet)
+                                     amount=initiator_amount, testnet=testnet)
             participant = TFTParticipant(prefab=participant_prefab, initiator_address=initiator_address,
-                                        amount=participant_amount, testnet=testnet)
+                                         amount=participant_amount, testnet=testnet)
         else:
             initiator = BTCInitiator(prefab=participant_prefab, recipient_address=initiator_address,
-                                    amount=participant_amount, testnet=testnet)
+                                     amount=participant_amount, testnet=testnet)
             participant = TFTParticipant(prefab=initiator_prefab, initiator_address=participant_address,
-                                        amount=initiator_amount, testnet=testnet)
+                                         amount=initiator_amount, testnet=testnet)
 
         # start initiate operation and wait for the published transaction to be confirmed
         self.logger.info("Intiating the atomicswap")
         initiate_result = initiator.initiate()
         initiator.wait_for_confirmations(transaction_id=initiate_result['published_contract_txn_address'])
         # participant audit the initiated contract
-        audit_result = participant.auditcontract(contract=initiate_result['contract'], contract_txn=initiate_result['contract_txn'])
+        audit_result = participant.auditcontract(
+            contract=initiate_result['contract'], contract_txn=initiate_result['contract_txn'])
 
         self._validate_initiate_audit(initiator, initiate_result, audit_result)
 
@@ -189,19 +185,19 @@ class AtomicSwapFactory(JSBASE):
         self.logger.info("Waiting for initiator node to be sycned")
         _tft_wait_for_height(prefab=initiator_prefab, height=participant.get_current_chain_height())
         initiator.auditcontract(output_id=participate_result['output_id'],
-                                  recipient_addr=participate_result['recipient_addr'],
-                                  secret_hash=participate_result['secret_hash'],
-                                  amount=participate_result['contract_value'])
+                                recipient_addr=participate_result['recipient_addr'],
+                                secret_hash=participate_result['secret_hash'],
+                                amount=participate_result['contract_value'])
 
-        #todo: we should validate the participate audit as well
+        # todo: we should validate the participate audit as well
         self.logger.info("Initiator redeeming the contract")
         redeem_output = initiator.redeem(output_id=participate_result['output_id'], secret=initiate_result['secret'])
         participant.wait_for_confirmations(transaction_id=redeem_output['transaction_id'])
 
         self.logger.info("Participant redeeming the contract")
-        participant_redeem_result = participant.redeem(contract=initiate_result['contract'], contract_txn=initiate_result['contract_txn'], secret=initiate_result['secret'])
+        participant_redeem_result = participant.redeem(
+            contract=initiate_result['contract'], contract_txn=initiate_result['contract_txn'], secret=initiate_result['secret'])
         initiator.wait_for_confirmations(transaction_id=participant_redeem_result['transaction_id'])
-
 
     def get_btc_initiator(self, wallet_node_address, amount, recipient_address, testnet=False):
         """
@@ -216,7 +212,7 @@ class AtomicSwapFactory(JSBASE):
         """
         prefab = _get_prefab_from_address(wallet_node_address)
         return BTCInitiator(prefab=prefab, recipient_address=recipient_address,
-                                amount=amount, testnet=testnet)
+                            amount=amount, testnet=testnet)
 
     def get_tft_participant(self, wallet_node_address, amount, recipient_address, testnet=False):
         """
@@ -238,6 +234,7 @@ class Initiator(JSBASE):
     """
     Initiator class
     """
+
     def __init__(self, prefab, recipient_address, amount, testnet=False):
         """
         Initializes an initiator
@@ -245,7 +242,7 @@ class Initiator(JSBASE):
         self._prefab = prefab
         self._recipient_address = recipient_address
         self._amount = amount
-        self._testnet= testnet
+        self._testnet = testnet
         JSBASE.__init__(self)
 
 
@@ -257,7 +254,6 @@ class BTCInitiator(Initiator):
     BTC_EXPLORER_URl = 'https://blockexplorer.com/api/tx'
     BTC_MIN_CONFIRMATIONS = 6
 
-
     def wait_for_confirmations(self, transaction_id, nr_of_confirmations=None):
         """
         Waits until the transaction have specific number of confirmations
@@ -268,7 +264,8 @@ class BTCInitiator(Initiator):
         if nr_of_confirmations is None:
             nr_of_confirmations = int(os.environ.get('BTC_MIN_CONFIRMATIONS', self.BTC_MIN_CONFIRMATIONS))
             # nr_of_confirmations = self.BTC_MIN_CONFIRMATIONS
-        self.logger.info("Waiting for transaction {} to have at least {} confirmations".format(transaction_id, nr_of_confirmations))
+        self.logger.info("Waiting for transaction {} to have at least {} confirmations".format(
+            transaction_id, nr_of_confirmations))
         not_found_timeout = 120
         url = '{}/{}'.format(self.BTC_TESTNET_EXPLORER_URL if self._testnet else self.BTC_EXPLORER_URl, transaction_id)
         while not_found_timeout > 0:
@@ -285,7 +282,6 @@ class BTCInitiator(Initiator):
             res = requests.get(url)
             time.sleep(20)
 
-
     def initiate(self, rpcuser=None, rpcpass=None, addr=None):
         """
         Initiate an atomic swap
@@ -294,9 +290,9 @@ class BTCInitiator(Initiator):
         rpcpass = rpcpass or os.environ.get('BTC_RPC_PASS', DEFAULT_BTC_RPC_PASS)
         addr = addr or os.environ.get('BTC_RPC_ADDRESS', DEFAULT_BTC_RPC_ADDRESS)
         cmd = 'btcatomicswap{} --rpcuser={} --rpcpass={} -s {} --force-yes initiate {} {}'.format(' --testnet' if self._testnet else '',
-                rpcuser, rpcpass, addr, self._recipient_address, self._amount)
+                                                                                                  rpcuser, rpcpass, addr, self._recipient_address, self._amount)
         pattern = r'Secret:\s*(?P<secret>\w+)\n*Secret\shash:\s*(?P<secret_hash>\w+)\n*.*\n*.*\n*Contract\s*\((?P<contract_addr>\w+)\):\n*(?P<contract>\w+)\n*Contract\s*transaction\s*\((?P<contract_txn_addr>\w+)\):\n*(?P<contract_txn>\w+)\n*Refund\s*transaction\s*\((?P<refund_txn_addr>\w+)\):\n*(?P<refund_txn>\w+)\n*.*\n*Published\s*contract\s*transaction\s*\((?P<published_contract_txn_address>\w+)\)'
-        test_output=None
+        test_output = None
 #         test_output="""
 # Secret:      58febdffd0dd5c141d27c45d8fb1a962e2e9a4eb991fac2da0bca56bd99736ca
 # Secret hash: 29bc7db3f1809b2bbd2091e5225d7dc2660826a78b8b734b8783cf2ae3830db8
@@ -318,7 +314,6 @@ class BTCInitiator(Initiator):
 
         return _execute_and_extract(prefab=self._prefab, cmd=cmd, regex=pattern, cmd_name="initiate", logger=self.logger, test_output=test_output)
 
-
     def participate(self, secret_hash, rpcuser=None, rpcpass=None, addr=None):
         """
         Participates in an atomicswap contract
@@ -327,9 +322,9 @@ class BTCInitiator(Initiator):
         rpcpass = rpcpass or os.environ.get('BTC_RPC_PASS', DEFAULT_BTC_RPC_PASS)
         addr = addr or os.environ.get('BTC_RPC_ADDRESS', DEFAULT_BTC_RPC_ADDRESS)
         cmd = 'btcatomicswap{} --rpcuser={} --rpcpass={} -s {} --force-yes participate {} {} {}'.format(' --testnet' if self._testnet else '',
-                rpcuser, rpcpass, addr, self._recipient_address, self._amount, secret_hash)
+                                                                                                        rpcuser, rpcpass, addr, self._recipient_address, self._amount, secret_hash)
         pattern = r'Contract\s*\((?P<contract_addr>\w+)\):\n*(?P<contract>\w+)\n*Contract\s*transaction\s*\((?P<contract_txn_addr>\w+)\):\n*(?P<contract_txn>\w+)\n*Refund\s*transaction\s*\((?P<refund_txn_addr>\w+)\):\n*(?P<refund_txn>\w+)\n*.*\n*Published\s*contract\s*transaction\s*\((?P<published_contract_txn_address>\w+)\)'
-        test_output=None
+        test_output = None
 #         test_output="""
 # Contract fee: 0.00000166 BTC (0.00000672 BTC/kB)
 # Refund fee:   0.00000297 BTC (0.00001017 BTC/kB)
@@ -346,8 +341,6 @@ class BTCInitiator(Initiator):
 
         return _execute_and_extract(prefab=self._prefab, cmd=cmd, regex=pattern, cmd_name="initiate", logger=self.logger, test_output=test_output)
 
-
-
     def auditcontract(self, output_id, recipient_addr, secret_hash, amount, daemon_address=None):
         """
         Audit contract after the participant executed the participate step
@@ -359,10 +352,9 @@ class BTCInitiator(Initiator):
         @param daemon_address: Which host/port to communicate with (i.e. the host/port tfchaind is listening on)
         """
         daemon_address = daemon_address or os.environ.get('TFT_DAEMON_ADDRESS', DEFAULT_TFT_DAEMON_ADDRESS)
-        cmd = 'tfchainc -a {} atomicswap -y --encoding json auditcontract {} --receiver {} --secrethash {} --amount {}'.format(daemon_address, output_id, recipient_addr, secret_hash, amount)
+        cmd = 'tfchainc -a {} atomicswap -y --encoding json auditcontract {} --receiver {} --secrethash {} --amount {}'.format(
+            daemon_address, output_id, recipient_addr, secret_hash, amount)
         self._prefab.core.run(cmd, showout=False)
-
-
 
     def redeem(self, output_id, secret, daemon_address=None):
         """
@@ -379,8 +371,7 @@ class BTCInitiator(Initiator):
         out = json.loads(out)
         return {
             'transaction_id': out['transactionid'],
-            }
-
+        }
 
     def refund(self, contract, contract_transaction, rpcuser=None, rpcpass=None, addr=None):
         """
@@ -390,16 +381,15 @@ class BTCInitiator(Initiator):
         rpcpass = rpcpass or os.environ.get('BTC_RPC_PASS', DEFAULT_BTC_RPC_PASS)
         addr = addr or os.environ.get('BTC_RPC_ADDRESS', DEFAULT_BTC_RPC_ADDRESS)
         cmd = 'btcatomicswap{} --rpcuser={} --rpcpass={} -s {} --force-yes refund {} {}'.format(' --testnet' if self._testnet else '',
-                rpcuser, rpcpass, addr, contract, contract_transaction)
+                                                                                                rpcuser, rpcpass, addr, contract, contract_transaction)
         self._prefab.core.run(cmd, showout=False)
-
-
 
 
 class Participant(JSBASE):
     """
     Participant class
     """
+
     def __init__(self, prefab, initiator_address, amount, testnet):
         """
         Initializes a participant
@@ -419,7 +409,6 @@ class TFTParticipant(Participant):
     TFT_EXPLORER_URL = 'https://explorer.threefoldtoken.com/'
     TFT_MIN_CONFIRMATION_HEIGHT = 5
 
-
     def wait_for_confirmations(self, transaction_id, height_difference=None):
         """
         Waits until the transaction have been confirmed
@@ -430,11 +419,13 @@ class TFTParticipant(Participant):
         if height_difference is None:
             height_difference = int(os.environ.get('TFT_MIN_CONFIRMATION_HEIGHT', self.TFT_MIN_CONFIRMATION_HEIGHT))
             # height_difference = self.TFT_MIN_CONFIRMATION_HEIGHT
-        self.logger.info("Waiting for transaction {} to have at least {} height difference".format(transaction_id, height_difference))
+        self.logger.info("Waiting for transaction {} to have at least {} height difference".format(
+            transaction_id, height_difference))
         txn_info = self._get_txn_info(transaction_id=transaction_id)
-        if txn_info['unconfirmed'] == True:
-            self.logger.debug("Transaction with id {} is unconfirmed. Waiting until its confirmed...".format(transaction_id))
-        while txn_info['unconfirmed'] == True:
+        if txn_info['unconfirmed'] is True:
+            self.logger.debug(
+                "Transaction with id {} is unconfirmed. Waiting until its confirmed...".format(transaction_id))
+        while txn_info['unconfirmed'] is True:
             time.sleep(10)
             txn_info = self._get_txn_info(transaction_id=transaction_id)
 
@@ -443,12 +434,11 @@ class TFTParticipant(Participant):
         elif txn_info['transaction'].get('height', None) is not None:
             txn_height = txn_info['transaction']['height']
         else:
-            raise RuntimeError("Failed to retrieve transaction height for transaction {}".format(transaction_id ))
+            raise RuntimeError("Failed to retrieve transaction height for transaction {}".format(transaction_id))
         current_height_difference = self.get_current_chain_height() - txn_height
         while current_height_difference < height_difference:
             time.sleep(20)
             current_height_difference = self.get_current_chain_height() - txn_height
-
 
     def get_current_chain_height(self):
         """
@@ -467,7 +457,6 @@ class TFTParticipant(Participant):
                 result = int(result)
         return result
 
-
     def _get_txn_info(self, transaction_id):
         """
         Retrieves details about a transaction
@@ -476,7 +465,8 @@ class TFTParticipant(Participant):
         """
         result = None
         timeout = 5 * 60
-        url = '{}/explorer/hashes/{}'.format(self.TFT_TESTNET_EXPLORER_URL if self._testnet else self.TFT_EXPLORER_URL, transaction_id)
+        url = '{}/explorer/hashes/{}'.format(
+            self.TFT_TESTNET_EXPLORER_URL if self._testnet else self.TFT_EXPLORER_URL, transaction_id)
         headers = {'user-agent': 'Rivine-Agent'}
         response = requests.get(url, headers=headers)
         while timeout > 0:
@@ -491,7 +481,6 @@ class TFTParticipant(Participant):
             raise RuntimeError("Failed to get transaction details for {}".format(transaction_id))
         return result
 
-
     def auditcontract(self, contract, contract_txn, addr=None):
         """
         Audit an atomicswap transaction and retieve the output data
@@ -504,7 +493,7 @@ class TFTParticipant(Participant):
         """
         addr = addr or os.environ.get('BTC_RPC_ADDRESS', DEFAULT_BTC_RPC_ADDRESS)
         cmd = 'btcatomicswap{} -s {} auditcontract {} {}'.format(' --testnet' if self._testnet else '',
-                                                                    addr, contract, contract_txn)
+                                                                 addr, contract, contract_txn)
         pattern = r'Contract\saddress:\s*(?P<contract_addr>\w+)\n*Contract\svalue:\s*(?P<contract_value>[\w.]+)\s+.*\n*Recipient\saddress:\s*(?P<recipient_addr>\w+)\n*.*refund\saddress:\s*(?P<refund_addr>\w+)\n*Secret\shash:\s*(?P<secret_hash>\w+)\n*.*\n*Locktime\sreached\sin\s*(?P<remaining_locktime>[\w.]+)\n*'
         test_output = None
 #         test_output = """
@@ -522,15 +511,14 @@ class TFTParticipant(Participant):
 
         return _execute_and_extract(prefab=self._prefab, cmd=cmd, regex=pattern, cmd_name="auditcontract", logger=self.logger, test_output=test_output)
 
-
     def initiate(self, daemon_address=None):
         """
         Initiate an atomicswap contract
         """
         daemon_address = daemon_address or os.environ.get('TFT_DAEMON_ADDRESS', DEFAULT_TFT_DAEMON_ADDRESS)
         cmd = "tfchainc -a {} atomicswap -y --encoding json initiate {} {}".format(daemon_address,
-                                                                                self._initiator_address,
-                                                                                self._amount)
+                                                                                   self._initiator_address,
+                                                                                   self._amount)
         _, out, _ = self._prefab.core.run(cmd, showout=False)
         out = json.loads(out)
         return {
@@ -543,7 +531,6 @@ class TFTParticipant(Participant):
             'transaction_id': out['transactionid'],
         }
 
-
     def participate(self, secret_hash, daemon_address=None):
         """
         Execute participate on an atomicswap transaction
@@ -555,8 +542,8 @@ class TFTParticipant(Participant):
         """
         daemon_address = daemon_address or os.environ.get('TFT_DAEMON_ADDRESS', DEFAULT_TFT_DAEMON_ADDRESS)
         cmd = "tfchainc -a {} atomicswap -y --encoding json participate {} {} {}".format(daemon_address,
-                                                                                self._initiator_address,
-                                                                                self._amount, secret_hash)
+                                                                                         self._initiator_address,
+                                                                                         self._amount, secret_hash)
         _, out, _ = self._prefab.core.run(cmd, showout=False)
         # out = """{"coins":"500000000","contract":{"sender":"012ffd03d1b4d39ba9df8294bb5135a0a69768494a54e4df0c0eb817309b6a7fba795e4ac1f4ff","receiver":"0108031a2111cec5427954fae23fdd6a0cc21d9ab91cf0e878af9d2bb0081e9c1246da7c1e2346","hashedsecret":"0900e02c2b413ad422c107862b670c7980fa24956e60699436f652ff56d98d4e","timelock":1530126270},"contractid":"02806e2cfa3aa87e2ea41d4c1f1bf8bf2b73d167eb3df610b7b364633426b8215e607e40db08b1","outputid":"e27bfac78c16e7690b5cb477f1602e0f6b074522d198d4733dd03d148cac4024","transactionid":"09bb77d6555488103f59709d27f0679fcf4d86dfa3ae77dbb06d976aeccc947e"}"""
         out = json.loads(out)
@@ -568,7 +555,6 @@ class TFTParticipant(Participant):
             'output_id': out['outputid'],
             'transaction_id': out['transactionid'],
         }
-
 
     def redeem(self, contract, contract_txn, secret, rpcuser=None, rpcpass=None, addr=None):
         """
@@ -584,7 +570,7 @@ class TFTParticipant(Participant):
         rpcpass = rpcpass or os.environ.get('BTC_RPC_PASS', DEFAULT_BTC_RPC_PASS)
         addr = addr or os.environ.get('BTC_RPC_ADDRESS', DEFAULT_BTC_RPC_ADDRESS)
         cmd = 'btcatomicswap{} -s {} --rpcuser={} --rpcpass={} --force-yes redeem {} {} {}'.format(' --testnet' if self._testnet else '', addr,
-                                                                                             rpcuser , rpcpass, contract, contract_txn, secret)
+                                                                                                   rpcuser, rpcpass, contract, contract_txn, secret)
         pattern = r'Published\sredeem\stransaction\s*\((?P<transaction_id>\w+)\)'
         test_output = None
 #         test_output = """
@@ -597,15 +583,14 @@ class TFTParticipant(Participant):
 # """
         return _execute_and_extract(prefab=self._prefab, cmd=cmd, regex=pattern, cmd_name="redeem", logger=self.logger, test_output=test_output)
 
-
     def refund(self, output_id, secret, daemon_address=None):
         """
         Refund an atomicswap contract
         """
         daemon_address = daemon_address or os.environ.get('TFT_DAEMON_ADDRESS', DEFAULT_TFT_DAEMON_ADDRESS)
         cmd = "tfchainc -a {} atomicswap -y --encoding json refund {} {}".format(daemon_address,
-                                                                                output_id,
-                                                                                secret)
+                                                                                 output_id,
+                                                                                 secret)
         _, out, _ = self._prefab.core.run(cmd, showout=False)
         out = json.loads(out)
         return {

@@ -343,7 +343,7 @@ class Row(JSBASE):
         """
         def custom2rowvalues(data):
             if str(data).find(",") == -1 and str(data).find(":") == -1:
-                raise RuntimeError("not properly formatted needs to be 5:1,10:2")                
+                raise RuntimeError("not properly formatted needs to be 5:1,10:2")
             data = data.replace("'", "").strip()
             splitted = data.split(",")
             for item in splitted:
@@ -351,14 +351,14 @@ class Row(JSBASE):
                     raise j.exceptions.RuntimeError(
                         "text2row input not properly formatted: %s, subpart: %s" % (data, item))
                 pos, value = item.split(":")
-                pos=int(pos)
+                pos = int(pos)
                 try:
                     value = j.tools.numtools.text2val(value)
                 except Exception as e:
-                    out="error: %s \n" % e
-                    out+="error in parsing input data for %s\n" % value
-                    out+="error in element %s\n" % data
-                    out+="row:%s\n" % self.name
+                    out = "error: %s \n" % e
+                    out += "error in parsing input data for %s\n" % value
+                    out += "error in element %s\n" % data
+                    out += "row:%s\n" % self.name
                     raise RuntimeError(out)
                 self.cells[pos] = value
 
@@ -385,8 +385,8 @@ class Row(JSBASE):
 
         self.setDefaultValue()
 
-        if self.ttype=="int":
-            self.round(0,0)
+        if self.ttype == "int":
+            self.round(0, 0)
 
         if round:
             self._cumul = 0.0
@@ -499,4 +499,3 @@ class Row(JSBASE):
         self.nrcols = dict["nrcols"]
         self.nrfloat = dict["nrfloat"]
         return self
-

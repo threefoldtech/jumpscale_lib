@@ -98,10 +98,11 @@ class Resource(BaseResource):
 
 
 class PortalClient(JSConfigBase, Resource):
-    def __init__(self, instance, data=None, parent=None,interactive=False):
+    def __init__(self, instance, data=None, parent=None, interactive=False):
         if not data:
             data = {}
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE,interactive=interactive)
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,
+                              template=TEMPLATE, interactive=interactive)
         cfg = self.config.data
         ip = cfg['ip']
         port = cfg['port']

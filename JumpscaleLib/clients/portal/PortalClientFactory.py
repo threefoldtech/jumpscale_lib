@@ -2,6 +2,8 @@ from jumpscale import j
 from .PortalClient import PortalClient
 
 JSConfigBaseFactory = j.tools.configmanager.base_class_configs
+
+
 class PortalClientFactory(JSConfigBaseFactory):
 
     def __init__(self):

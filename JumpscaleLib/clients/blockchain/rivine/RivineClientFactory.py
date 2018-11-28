@@ -20,13 +20,11 @@ class RivineClientFactory(JSConfigBaseFactory):
         self.__imports__ = "rivine"
         JSConfigBaseFactory.__init__(self, RivineClient)
 
-
     def generate_seed(self):
         """
         Generates a new seed
         """
         return j.data.encryption.mnemonic.generate(strength=256)
-
 
     def create_transaction_from_json(self, txn_json):
         """

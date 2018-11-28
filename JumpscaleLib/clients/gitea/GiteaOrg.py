@@ -81,7 +81,7 @@ class GiteaOrg(JSBASE):
 
         self.logger.info("repo:new:%s" % name)
         if name in self._repos_get().keys():
-            self.logger.debug("no need to create repo on gitea, exists:%s"%name)
+            self.logger.debug("no need to create repo on gitea, exists:%s" % name)
             return self._repos_get()[name]
         else:
 

@@ -17,9 +17,6 @@ from .unhandled_api_error import UnhandledAPIError
 from .unmarshall_error import UnmarshallError
 
 
-
-
-
 class ReposService():
     def __init__(self, client):
         pass

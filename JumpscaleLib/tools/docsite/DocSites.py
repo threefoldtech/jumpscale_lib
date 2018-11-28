@@ -217,7 +217,8 @@ class DocSites(JSBASE):
         doc = ds.doc_get("include_test")
 
         assert "## something to include" in doc.markdown
-        assert "COULD NOT INCLUDE:core9:macros (not found)" in doc.markdown  # the to be included document does not exist in this test
+        # the to be included document does not exist in this test
+        assert "COULD NOT INCLUDE:core9:macros (not found)" in doc.markdown
 
         doc = ds.doc_get("use_data")
         md = str(doc.markdown)

@@ -25,7 +25,7 @@ class ImageLib(JSBASE):
         return Image.open(path)
 
     def resize(self, path, pathnew, width=1024, overwrite=True):
-        #"c:\\qb6\\apps\\appserver6Base\\system\\GalleriaTest\\DSC01227.JPG"
+        # "c:\\qb6\\apps\\appserver6Base\\system\\GalleriaTest\\DSC01227.JPG"
 
         im = self.imageObjectGet(path)
         xnew = width

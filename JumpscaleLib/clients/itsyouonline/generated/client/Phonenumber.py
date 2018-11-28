@@ -7,9 +7,7 @@ from jumpscale import j
 from . import client_support
 
 
-
-
-class Phonenumber( ):
+class Phonenumber():
     """
     auto-generated. don't touch.
     """

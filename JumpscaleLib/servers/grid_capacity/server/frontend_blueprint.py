@@ -72,6 +72,7 @@ def api_index():
 def register_farmer():
     return render_template('register_farm.html')
 
+
 @frontend_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if session.get('iyo_user_info'):
@@ -86,10 +87,12 @@ def login():
 
     return handler()
 
+
 @frontend_bp.route('/logout', methods=['GET'])
 def logout():
     force_invalidate_session()
     return redirect("/")
+
 
 @frontend_bp.route('/edit_farm/<organization>', methods=['GET'])
 def edit_farmer(organization):

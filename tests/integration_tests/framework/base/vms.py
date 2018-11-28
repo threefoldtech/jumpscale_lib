@@ -52,15 +52,15 @@ class VM:
         self.vm_sal.start()
 
     def resume(self):
-        print(colored('Resuming vm %s' % self.data["name"],'white')) 
+        print(colored('Resuming vm %s' % self.data["name"], 'white'))
         self.vm_sal.resume()
-     
+
     def reboot(self):
         print(colored('Rebooting vm %s' % self.data["name"], 'white'))
         self.vm_sal.reboot()
 
     def reset(self):
-        print(colored('Resetting vm %s' % self.data["name"],'white'))
+        print(colored('Resetting vm %s' % self.data["name"], 'white'))
         self.vm_sal.reset()
 
     def info(self, timeout=None, data=None):
@@ -76,25 +76,26 @@ class VM:
 
     def generate_vm_sal(self):
         self.vm_sal = self._vm_sal
-    
+
     def add_port(self, name, source, target):
         self.vm_sal.ports.add(name=name, source=source, target=target)
 
     def del_port(self, name):
         self.vm_sal.ports.remove(name=name)
-    
+
     def list_port(self):
         return self.vm_sal.ports.list()
-    
+
     def is_running(self):
         return self.vm_sal.is_running()
 
     def add_disk(self, name_or_disk, url=None, mountpoint=None, filesystem=None, label=None):
-        self.vm_sal.disks.add(name_or_disk=name_or_disk, url=url, mountpoint=mountpoint, filesystem=filesystem, label=label)
-    
+        self.vm_sal.disks.add(name_or_disk=name_or_disk, url=url,
+                              mountpoint=mountpoint, filesystem=filesystem, label=label)
+
     def remove_disk(self, name):
         self.vm_sal.disks.remove(name)
-    
+
     def list_disk(self, name):
         return self.vm_sal.disks.list()
 
@@ -118,7 +119,7 @@ class VM:
 
     def add_mount(self, name, source, target):
         self.vm_sal.mounts.add(name=name, sourcepath=source, targetpath=target)
-    
+
     def remove_mount(self, item):
         self.vm_sal.mounts.remove(item=item)
 
@@ -127,7 +128,7 @@ class VM:
 
     def add_config(self, name, path, content):
         self.vm_sal.configs.add(name=name, path=path, content=content)
-    
+
     def remove_config(self, item):
         self.vm_sal.configs.remove(item=item)
 

@@ -1,12 +1,13 @@
+from html2text import HTML2Text
+from .HTMLWebParts import HTMLWebParts
+from .HTMLPage import HTMLPage
+import sys
+from inspect import isfunction
+from importlib import import_module
 from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
-from importlib import import_module
-from inspect import isfunction
-import sys
-from .HTMLPage import HTMLPage
-from .HTMLWebParts import HTMLWebParts
-from html2text import HTML2Text
+
 
 class HTMLFactory(JSBASE):
 
@@ -44,7 +45,6 @@ class HTMLFactory(JSBASE):
 
         return text
 
-
     def page_get(self):
         """
         return a html page on which content can be dynamically build
@@ -52,7 +52,7 @@ class HTMLFactory(JSBASE):
         """
         return HTMLPage()
 
-    def webparts_enable(self,url=""):
+    def webparts_enable(self, url=""):
         """
         will load webparts from https://github.com/threefoldtech/jumpscale_weblibs/tree/master/webparts if not url defined
 
@@ -66,18 +66,18 @@ class HTMLFactory(JSBASE):
         path = j.clients.git.getContentPathFromURLorPath(url)
         if path not in sys.path:
             sys.path.append(path)
-        for webpart_name in  j.sal.fs.listDirsInDir(path,False,True):
-            self.logger.info("found webpart:%s"%webpart_name)
-            path2="%s/%s/add.py"%(path,webpart_name)
+        for webpart_name in j.sal.fs.listDirsInDir(path, False, True):
+            self.logger.info("found webpart:%s" % webpart_name)
+            path2 = "%s/%s/add.py" % (path, webpart_name)
             if not j.sal.fs.exists(path2):
-                raise RuntimeError("cannot find webpart:%s"%path2)
-            module = import_module("%s.add"%webpart_name)
-            self.webparts.modules[webpart_name]=module
-            for key,item in module.__dict__.items():
+                raise RuntimeError("cannot find webpart:%s" % path2)
+            module = import_module("%s.add" % webpart_name)
+            self.webparts.modules[webpart_name] = module
+            for key, item in module.__dict__.items():
                 if isfunction(item):
                     if (key.find("_add") is not -1 or key is "add") and not key.startswith("_"):
-                        self.webparts.__dict__["%s_%s"%(webpart_name,key)]=item
-            
+                        self.webparts.__dict__["%s_%s" % (webpart_name, key)] = item
+
         if j.servers.web.latest is not None:
             j.servers.web.latest.webparts = self.webparts
 
@@ -89,7 +89,7 @@ class HTMLFactory(JSBASE):
     #     for module_name in apps:
     #         module = import_module('blueprints.{}.routes'.format(module_name))
     #         print("blueprint register:%s"%module_name)
-    #         app.register_blueprint(module.blueprint)        
+    #         app.register_blueprint(module.blueprint)
 
     def test(self):
         """
@@ -99,7 +99,7 @@ class HTMLFactory(JSBASE):
         p = j.data.html.page_get()
         p.heading_add("this is my heading")
 
-        bullets=["aa","bb","cc"]
+        bullets = ["aa", "bb", "cc"]
         p.bullets_add(bullets)
 
         p.newline_add()
@@ -113,5 +113,3 @@ class HTMLFactory(JSBASE):
         # p.bullet_add("something 7", level=1)
 
         print(p)
-
-

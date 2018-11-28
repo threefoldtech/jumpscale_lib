@@ -9,7 +9,7 @@ from .http_client import HTTPClient
 JSBASE = j.application.jsbase_get_class()
 JSConfigClient = j.tools.configmanager.base_class_config
 JSConfigFactory = j.tools.configmanager.base_class_configs
-TEMPLATE =  """
+TEMPLATE = """
 base_uri = "https://capacity.threefoldtoken.com"
 """
 
@@ -35,7 +35,7 @@ class GridCapacityFactory(JSConfigFactory):
     def client(self):
         if self._api is None:
             self.configure(instance="main")
-            self._api =  self.get().api
+            self._api = self.get().api
         return self._api
 
     @property
@@ -74,8 +74,7 @@ class GridCapacityFactory(JSConfigFactory):
         data["base_uri"] = base_uri
         return self.get(instance=instance, data=data, interactive=interactive)
 
-
-    def resource_units(self,reload=False):
+    def resource_units(self, reload=False):
         """
         js_shell "print(j.clients.threefold_directory.resource_units())"
         """
@@ -97,4 +96,3 @@ class GridCapacityFactory(JSConfigFactory):
             resource_units['sru'] += node['total_resources']['sru']
 
         return(resource_units)
-

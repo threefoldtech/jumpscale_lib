@@ -8,8 +8,6 @@ from six import string_types
 from . import client_support
 
 
-
-
 class MarkdownOption(object):
     """
     auto-generated. don't touch.

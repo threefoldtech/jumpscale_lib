@@ -16,7 +16,7 @@ class CloudInit():
                     continue
                 data = {'userdata': host.cloudinit.userdata,
                         'metadata': host.cloudinit.metadata
-                }
+                        }
                 fpath = "%s/%s" % (self.CONFIGPATH, host.macaddress)
                 self.container.upload_content(fpath, yaml.dump(data))
         if not self.is_running():

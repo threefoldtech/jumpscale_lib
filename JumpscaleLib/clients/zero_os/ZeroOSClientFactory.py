@@ -29,7 +29,8 @@ class ZeroOSClientFactory():
         # print("ZOSCLIENT")
         # print(data)
         # print("***")
-        cl = j.clients.zos_protocol.get(instance=instance, data=data, create=create, die=die, interactive=interactive, **kwargs)
+        cl = j.clients.zos_protocol.get(instance=instance, data=data, create=create,
+                                        die=die, interactive=interactive, **kwargs)
         return j.sal_zos.node.get(cl)
 
     def list(self, prefix=''):
@@ -139,7 +140,8 @@ class ZeroOSClientFactory():
                                     ipxeUrl=ipxe_url, wait=True, remove=False)
 
         device = packetnetClient.getDevice(server_name)
-        ip_pub = [netinfo['address'] for netinfo in device.ip_addresses if netinfo['public'] and netinfo['address_family'] == 4]
+        ip_pub = [netinfo['address']
+                  for netinfo in device.ip_addresses if netinfo['public'] and netinfo['address_family'] == 4]
 
         while True:
             try:

@@ -1,8 +1,8 @@
+from .StoragePool import StoragePools
 from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
-from .StoragePool import StoragePools
 
 class ContainerFactory(JSBASE):
 
@@ -13,10 +13,10 @@ class ContainerFactory(JSBASE):
     def get(self, node):
         """
         Get sal for storage pools
-        
+
         Arguments:
             node
-        
+
         Returns:
             the sal layer 
         """

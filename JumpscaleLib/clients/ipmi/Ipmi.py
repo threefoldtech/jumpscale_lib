@@ -12,6 +12,7 @@ password_ = ""
 port = 623
 """
 
+
 class Ipmi(JSConfigBase):
     """ Ipmi client
 
@@ -48,13 +49,12 @@ class Ipmi(JSConfigBase):
         Returns:
             str -- power status of node ('on' or 'off')
         """
-        _, out,_ = j.tools.executorLocal.execute("ipmitool -H {host} -U {user} -P {password} -p {port} chassis power status".format(
+        _, out, _ = j.tools.executorLocal.execute("ipmitool -H {host} -U {user} -P {password} -p {port} chassis power status".format(
             host=self.config.data["bmc"],
             user=self.config.data["user"],
             password=self.config.data["password_"],
             port=self.config.data["port"],
         ))
-
 
         if out.lower().strip() == "chassis power is on":
             return "on"

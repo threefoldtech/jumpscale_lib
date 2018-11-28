@@ -86,7 +86,7 @@ class Account(Authorizables):
         if not location:
             location = self.client.config.data["location"]
         if location == "":
-            self.client.config.data = {"location":self.client.locations[0]["name"]}
+            self.client.config.data = {"location": self.client.locations[0]["name"]}
             self.client.config.save()
             location = self.client.config.data["location"]
 
@@ -211,7 +211,6 @@ class Account(Authorizables):
         :return: list of dict representing image info
         :rtype: list
         """
-
 
         return self.client.api.cloudapi.images.list(cloudspaceId=cloudspaceId, accountId=self.id)
 

@@ -7,7 +7,6 @@ class FtpClient():
     def __init__(self, url):
         self.parsed_url = urlparse(url)
 
-
     def upload(self, content, filename):
         with FTP() as ftp:
 

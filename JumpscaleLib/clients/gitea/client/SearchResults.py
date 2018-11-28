@@ -8,8 +8,6 @@ from .Repository import Repository
 from . import client_support
 
 
-
-
 class SearchResults(object):
     """
     auto-generated. don't touch.

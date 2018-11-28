@@ -1,9 +1,8 @@
+from .VirtualboxDisk import VirtualboxDisk
+from .VirtualboxVM import VirtualboxVM
 from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
-
-from .VirtualboxVM import VirtualboxVM
-from .VirtualboxDisk import VirtualboxDisk
 
 
 class VirtualboxClient(JSBASE):
@@ -15,7 +14,7 @@ class VirtualboxClient(JSBASE):
     def __init__(self):
         JSBASE.__init__(self)
         self.logger_enable()
-        self.vms={}
+        self.vms = {}
         self.disks = {}
 
     def _cmd(self, cmd):
@@ -63,7 +62,6 @@ class VirtualboxClient(JSBASE):
         :return: list of disk paths
         """
         out = self._cmd("list hdds -l")
-
 
         return self._parse(out, identifier="UUID:")
 

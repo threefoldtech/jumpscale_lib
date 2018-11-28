@@ -6,7 +6,8 @@ import psutil
 
 JSBASE = j.application.jsbase_get_class()
 
-#TODO:*1 think is broken, see non existing command
+# TODO:*1 think is broken, see non existing command
+
 
 class FlistMounter(JSBASE):
     def __init__(self):
@@ -18,8 +19,7 @@ class FlistMounter(JSBASE):
         self.MOUNTDIR = "/mnt/flists/"
         self.OVERLAYDIR = j.sal.fs.joinPaths(j.dirs.VARDIR, "cache/flists/overlay")
 
-
-    def mount(self, name, flist, storageUrl = "ardb://hub.gig.tech:16379"):
+    def mount(self, name, flist, storageUrl="ardb://hub.gig.tech:16379"):
         """
         mount 0-fs file system.
 

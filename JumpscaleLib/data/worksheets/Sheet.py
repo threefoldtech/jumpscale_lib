@@ -80,12 +80,12 @@ class Sheet(JSBASE):
 
     # def renting(self,row,interest,nrmonths):
     # DOES NOT WORK, JUST COPY PASTE TO START DOING IT
-        #"""
-        #@param row is the row in which we need to fill in
-        #@param start value to start with at month 0 (is first month)
-        #@param churn 2 means 2% churn
-        #@param delay is different beween selling & being active
-        #"""
+        # """
+        # @param row is the row in which we need to fill in
+        # @param start value to start with at month 0 (is first month)
+        # @param churn 2 means 2% churn
+        # @param delay is different beween selling & being active
+        # """
         # print "churn:%s" % churn
         # if churn=="1000%":
         # row.setDefaultValue(0.0)
@@ -399,5 +399,3 @@ class Sheet(JSBASE):
         return result
 
     __repr__ = __str__
-
-

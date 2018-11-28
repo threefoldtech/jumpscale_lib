@@ -13,7 +13,8 @@ public_ips = []
 
 class WebGateway(JSConfigBase):
     def __init__(self, instance, data={}, parent=None, interactive=False):
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE, interactive=interactive)
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,
+                              template=TEMPLATE, interactive=interactive)
         self.etcd = j.clients.etcd.get(self.config.data['etcd_instance'])
         self.traefik = j.sal.traefik.configure(instance,
                                                host=self.etcd.config.data['host'],
@@ -74,7 +75,8 @@ class WebGateway(JSConfigBase):
         :rtype: JumpscaleLib.sal.webgateway.service.Service
         """
         if name in [s.name for s in self.services]:
-            raise ServiceExistError("a service with name %s already exist. maybe you are looking for `service_get(%s)`" % (name, name))
+            raise ServiceExistError(
+                "a service with name %s already exist. maybe you are looking for `service_get(%s)`" % (name, name))
 
         service = Service(name, self.public_ips, self.traefik, self.coredns)
         self.services.append(service)

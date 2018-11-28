@@ -46,7 +46,7 @@ class JSWebLoader(JSBASE):
         apps = [item for item in apps if item[0] is not "_"]
         for module_name in apps:
             module = import_module('blueprints.{}.routes'.format(module_name))
-            print("blueprint register:%s" % module_name)            
+            print("blueprint register:%s" % module_name)
             # try:
             #     module = import_module('blueprints.{}.routes'.format(module_name))
             #     print("blueprint register:%s" % module_name)
@@ -81,14 +81,12 @@ class JSWebLoader(JSBASE):
     #     app.config.from_object(rq_dashboard.default_settings)
     #     app.register_blueprint(rq_dashboard.blueprint, url_prefix="/rq")
 
-
     #     # if selenium:
     #     #     app.config['LOGIN_DISABLED'] = True
     #     # register_extensions(app)
     #     self.register_blueprints(app)
     #     # configure_database(app)
     #     # configure_logs(app)
-
 
     #     return app
 
@@ -110,7 +108,6 @@ class JSWebLoader(JSBASE):
         # if selenium:
         #     app.config['LOGIN_DISABLED'] = True
 
-
         # self.db.init_app(app)
         self.login_manager.init_app(app)
 
@@ -125,5 +122,3 @@ class JSWebLoader(JSBASE):
             app = DebuggedApplication(app, evalex=True)
 
         self.app = app
-
-

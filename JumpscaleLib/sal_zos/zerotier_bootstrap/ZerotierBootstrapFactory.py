@@ -1,7 +1,6 @@
+from .ZerotierBootstrap import ZTBootstrap
 from jumpscale import j
 JSBASE = j.application.jsbase_get_class()
-
-from .ZerotierBootstrap import ZTBootstrap
 
 
 class ZerotierBootstrapFactory(JSBASE):

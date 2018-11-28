@@ -20,7 +20,6 @@ class ElectrumClientFactory(JSConfigBaseFactory):
         # self.__imports__ = "electrum"
         JSConfigBaseFactory.__init__(self, ElectrumClient)
 
-
     def generate_seed(self, nbits=132):
         """
         Creates a new seed

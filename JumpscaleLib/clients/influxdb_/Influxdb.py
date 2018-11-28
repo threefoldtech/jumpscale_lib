@@ -21,8 +21,6 @@ udp_port = 4444
 """
 
 
-
-
 class InfluxdbFactory(JSConfigFactory):
 
     """
@@ -32,7 +30,6 @@ class InfluxdbFactory(JSConfigFactory):
         self.__jslocation__ = "j.clients.influxdb"
         self.__imports__ = "influxdb"
         JSConfigFactory.__init__(self, InfluxClient)
-
 
     def postraw(self, data, host='localhost', port=8086, username='root', password='root', database="main"):
         """
@@ -49,6 +46,7 @@ class InfluxdbFactory(JSConfigFactory):
         if r.content != "":
             raise j.exceptions.RuntimeError(
                 "Could not send data to influxdb.\n%s\n############\n%s" % (data, r.content))
+
 
 class InfluxClient(JSConfigClient, influxdb.InfluxDBClient):
 

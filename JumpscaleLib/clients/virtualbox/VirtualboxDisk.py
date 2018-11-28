@@ -51,14 +51,14 @@ class VirtualboxDisk(JSBASE):
         if self.data is None:
             return ""
         else:
-            return self.data["UUID"]                
+            return self.data["UUID"]
 
     @property
     def vm_name(self):
         """
         vm attached to this disk
         """
-        if self.data==None:
+        if self.data is None:
             return None
         c = self.data["in use by vms"]
         if "UUID:" in c:
@@ -70,7 +70,7 @@ class VirtualboxDisk(JSBASE):
             return None
 
     def delete(self):
-        if self.data == None:
+        if self.data is None:
             return
         if self.vm is None:
             self._cmd("closemedium disk %s --delete" % self.uid)

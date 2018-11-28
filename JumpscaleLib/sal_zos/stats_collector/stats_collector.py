@@ -2,8 +2,6 @@ import time
 from jumpscale import j
 
 
-
-
 class StatsCollector():
     def __init__(self, container, ip, port, db, retention, jwt):
 

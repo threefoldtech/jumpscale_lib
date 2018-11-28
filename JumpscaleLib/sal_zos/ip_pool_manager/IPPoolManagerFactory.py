@@ -1,8 +1,8 @@
+from .IPPoolManager import IPPoolsManager
 from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
-from .IPPoolManager import IPPoolsManager
 
 class IPPoolManagerFactory(JSBASE):
 

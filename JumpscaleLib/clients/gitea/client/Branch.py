@@ -9,9 +9,6 @@ from six import string_types
 from . import client_support
 
 
-
-
-
 class Branch(object):
     """
     auto-generated. don't touch.

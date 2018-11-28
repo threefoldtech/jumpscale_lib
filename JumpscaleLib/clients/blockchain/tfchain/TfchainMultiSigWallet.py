@@ -14,6 +14,7 @@ from JumpscaleLib.clients.blockchain.tfchain.types.transaction import Transactio
 
 logger = j.logger.get(__name__)
 
+
 class TfchainMultiSignatureWallet:
     """
     RivineMultiSignatureWallet class
@@ -43,7 +44,6 @@ class TfchainMultiSignatureWallet:
         }
         self._address_ulhs_map = {}
 
-
     @property
     def current_balance(self):
         """
@@ -64,7 +64,6 @@ class TfchainMultiSignatureWallet:
 
         return result
 
-
     @property
     def addresses(self):
         """
@@ -78,7 +77,6 @@ class TfchainMultiSignatureWallet:
                 self._address_ulhs_map[self._generate_multisig_address(ulhs)] = ulhs
 
         return [address for address in self._address_ulhs_map.keys()]
-
 
     def _generate_multisig_address(self, ulhs):
         """
@@ -111,7 +109,8 @@ class TfchainMultiSignatureWallet:
             coinoutputs = txn_info.get('rawtransaction', {}).get('data', {}).get('coinoutputs', [])
             if coinoutputs:
                 for index, utxo in enumerate(coinoutputs):
-                    condition_ulh = utils.get_unlockhash_from_output(output=utxo, address=address, current_height=current_height)
+                    condition_ulh = utils.get_unlockhash_from_output(
+                        output=utxo, address=address, current_height=current_height)
 
                     if set(ulhs).intersection(set(condition_ulh['locked'])) or set(ulhs).intersection(set(condition_ulh['unlocked'])):
                         logger.debug('Found transaction output for address {}'.format(address))
@@ -142,19 +141,20 @@ class TfchainMultiSignatureWallet:
                     raise BackendError('Address is not recognized as an unblock hash')
                 addresses_info[address] = address_info
                 minerfees_outputs = utils.collect_miner_fees(address=address,
-                                                            blocks=address_info.get('blocks',{}),
-                                                            height=current_chain_height)
+                                                             blocks=address_info.get('blocks', {}),
+                                                             height=current_chain_height)
                 self._unspent_outputs['unlocked'].update(minerfees_outputs)
                 transactions = address_info.get('transactions', {})
                 txn_outputs = self._collect_transaction_outputs(current_height=current_chain_height,
-                                                            address=address,
-                                                            ulhs=self._address_ulhs_map[address],
-                                                            transactions=transactions,
-                                                            unconfirmed_txs=unconfirmed_txs)
+                                                                address=address,
+                                                                ulhs=self._address_ulhs_map[address],
+                                                                transactions=transactions,
+                                                                unconfirmed_txs=unconfirmed_txs)
                 self._unspent_outputs.update(txn_outputs)
         # remove spent inputs after collection all the inputs
         for address, address_info in addresses_info.items():
-            utils.remove_spent_inputs(unspent_coins_outputs=self._unspent_outputs['unlocked'], transactions=address_info.get('transactions', {}))
+            utils.remove_spent_inputs(
+                unspent_coins_outputs=self._unspent_outputs['unlocked'], transactions=address_info.get('transactions', {}))
 
     def _get_inputs(self, amount, minerfee=None):
         """
@@ -182,14 +182,13 @@ class TfchainMultiSignatureWallet:
 
         # once we got the values that sum up to the required funds, we retrieve the input ids from the map
         if not result_values:
-            raise RuntimeError("Cannot match unspent outputs values to the the sum of (amount + minerfee)={}".format(required_funds))
+            raise RuntimeError(
+                "Cannot match unspent outputs values to the the sum of (amount + minerfee)={}".format(required_funds))
 
         for result_value in result_values:
             result.append(value_output_id_map[result_value].pop())
 
         return result
-
-
 
     def create_transaction(self, amount, recipient, minerfee=None, data=None, locktime=None):
         """

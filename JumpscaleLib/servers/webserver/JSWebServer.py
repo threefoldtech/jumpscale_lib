@@ -40,10 +40,9 @@ class JSWebServer(JSConfigBase):
         j.servers.web.latest = self
         self.http_server = None
 
-    def register_blueprints(self,app=app):
+    def register_blueprints(self, app=app):
         self.init()
         self._loader.register_blueprints(app)
-
 
     def init(self, debug=False):
 

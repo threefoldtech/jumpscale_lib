@@ -6,8 +6,7 @@ from jumpscale import j
 from . import client_support
 
 
-
-class TOTPSecret( ):
+class TOTPSecret():
     """
     auto-generated. don't touch.
     """

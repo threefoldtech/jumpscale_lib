@@ -1,8 +1,8 @@
+from .Farm import Farm
 from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
-from .Farm import Farm
 
 class FarmFactory(JSBASE):
 
@@ -16,7 +16,7 @@ class FarmFactory(JSBASE):
 
         Arguments:
             farmer_iyo_org: the farmer iyo organisation
-        
+
         Returns:
             the sal layer
         """

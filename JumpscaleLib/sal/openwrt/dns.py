@@ -6,6 +6,7 @@ from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
+
 class DNSError(Exception, JSBASE):
     def __init__(self):
         JSBASE.__init__(self)

@@ -9,7 +9,6 @@ import os
 
 def _post_install(libname, libpath):
 
-
     from jumpscale import j
     # add this plugin to the config
     c = j.core.state.configGet('plugins', defval={})

@@ -22,12 +22,12 @@ class SiaPublicKeyFactory:
             return Ed25519PublicKey(pub_key=bytearray.fromhex(pub_key))
 
 
-
 class SiaPublicKey:
     """
     A SiaPublicKey is a public key prefixed by a Specifier. The Specifier
-	indicates the algorithm used for signing and verification.
+        indicates the algorithm used for signing and verification.
     """
+
     def __init__(self, algorithm, pub_key):
         """
         Initialize new SiaPublicKey
@@ -47,7 +47,6 @@ class SiaPublicKey:
         key_value.extend(binary.encode(self._pub_key, type_='slice'))
         return key_value
 
-
     @property
     def json(self):
         """
@@ -60,6 +59,7 @@ class Ed25519PublicKey(SiaPublicKey):
     """
     Ed25519PublicKey returns pk as a SiaPublicKey, denoting its algorithm as Ed25519.
     """
+
     def __init__(self, pub_key):
         """
         Initialize new Ed25519PublicKey

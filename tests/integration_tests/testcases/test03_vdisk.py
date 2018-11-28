@@ -18,7 +18,7 @@ class Vdisktest(BaseTest):
 
     def setUp(self):
         super().setUp()
-    
+
     def tearDown(self):
         self.log('tear down vms')
         for uuid in self.vms:
@@ -32,7 +32,7 @@ class Vdisktest(BaseTest):
                 zdb.namespace_delete(namespace.name)
             self.node_sal.client.container.terminate(zdb.zerodb_sal.container.id)
         self.zdbs.clear()
-    
+
     @unittest.skip("https://github.com/threefoldtech/jumpscale_lib/issues/144")
     def test001_create_disk_with_wrong_data(self):
         """ SAl-024 create vdisk and attach it to deployed vm
@@ -42,7 +42,7 @@ class Vdisktest(BaseTest):
         #. Create zdb with default values.
         #. Create disk with worng filesystem, should fail.
         #. Create disk with large size, should fail.
-                
+
         """
         self.log("Create zdb with default values.")
         zdb_name = self.random_string()
@@ -67,7 +67,7 @@ class Vdisktest(BaseTest):
         with self.assertRaises(RuntimeError) as e:
             disk.install()
         self.assertIn('Failed to create fs', e.exception.args[0])
-    
+
     def test002_create_disk_with_exist_namespace_and_diff_size(self):
         """ SAl-025 create disk with exist namespace and different size
 
@@ -76,7 +76,7 @@ class Vdisktest(BaseTest):
         #. Add namespace [ns] to zdb.
         #. Create disk using exist namespace [ns] with different size, should fail.
         #. Create disk using zdb and namespace wirh same size [ns], should succeed.
-                
+
         """
         self.log("Create zdb with default values.")
         zdb_name = self.random_string()
@@ -137,7 +137,7 @@ class Vdisktest(BaseTest):
 
         self.log(" Add zerotier network to VM1, should succeed.")
         vm.add_zerotier_nics(network=self.zt_network)
-        
+
         if attach_by == "deploy":
             self.log("Attach disk [D1] to vm [VM1].")
             vm.add_disk(disk.disk)
@@ -161,5 +161,3 @@ class Vdisktest(BaseTest):
         vm.remove_disk(disk.disk)
         vm.update_disks()
         self.assertFalse(vm.info()['params']['media'])
-
-        

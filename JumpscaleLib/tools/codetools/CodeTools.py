@@ -12,6 +12,7 @@ from .ReplaceTool import ReplaceTool
 # ujson.dumps does not support some arguments like separators, indent ...etc
 JSBASE = j.application.jsbase_get_class()
 
+
 def isPrimAttribute(obj, key):
     if key[-1] == "s":
         funcprop = "new_%s" % key[:-1]

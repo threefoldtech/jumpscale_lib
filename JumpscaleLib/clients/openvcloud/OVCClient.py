@@ -25,6 +25,7 @@ space = ""
 
 JSConfigBase = j.tools.configmanager.base_class_config
 
+
 class OVCClient(JSConfigBase):
 
     def __init__(self, instance, data=None, parent=None, interactive=False):
@@ -41,11 +42,10 @@ class OVCClient(JSConfigBase):
                 self.config.data_set("location", self.locations[0]["locationCode"])
                 self.config.save()
 
-
     @property
     def jwt(self):
         if self.config.data.get('jwt_', None):
-            jwt =  self.config.data["jwt_"].strip()
+            jwt = self.config.data["jwt_"].strip()
             jwt = j.clients.itsyouonline.refresh_jwt_token(jwt, validity=3600)
             expires = j.clients.itsyouonline.jwt_expire_timestamp(jwt)
             if 'refresh_token' not in jose.jwt.get_unverified_claims(jwt) and j.clients.itsyouonline.jwt_is_expired(expires):

@@ -10,9 +10,9 @@ wallet = j.clients.rivine.get('mytestwallet').wallet
 # duration=1531059743
 try:
     initiator = j.tools.atomicswap.get_btc_initiator(btc_node_address, amount=0.01234, recipient_address=btc_address,
-                                                    testnet=True)
+                                                     testnet=True)
     participant = j.tools.atomicswap.get_tft_participant(tft_node_address, amount=amount, recipient_address=participant_address,
-                                                    testnet=True)
+                                                         testnet=True)
     initiate_result = participant.initiate()
     # contract = wallet.atomicswap.initiate(participant_address=participant_address, amount=amount,
     #                                     duration='48h0m0s', refund_address=refund_address)

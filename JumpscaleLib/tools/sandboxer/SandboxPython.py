@@ -31,7 +31,7 @@ class SandboxPython(JSBASE):
         builds python and returns the build dir
         """
         path = j.tools.prefab.local.runtimes.python.build(reset=reset,
-                            jumpscale_branch=jumpscale_branch, include_jumpscale=True)
+                                                          jumpscale_branch=jumpscale_branch, include_jumpscale=True)
         return path
 
     def do(self, path="", dest="", build=True, reset=False):
@@ -68,32 +68,31 @@ class SandboxPython(JSBASE):
         for item in ["bin", "root", "lib"]:
             j.sal.fs.createDir("%s/%s" % (dest, item))
 
-        for item in ["pip3", "python3.6", "ipython","bpython","electrum","pudb3","zrobot"]:
+        for item in ["pip3", "python3.6", "ipython", "bpython", "electrum", "pudb3", "zrobot"]:
             src0 = "%s/bin/%s" % (path, item)
             dest0 = "%s/bin/%s" % (dest, item)
             if j.sal.fs.exists(src0):
                 j.sal.fs.copyFile(src0, dest0)
 
-        #for OSX
+        # for OSX
         for item in ["libpython3.6m.a"]:
             src0 = "%s/lib/%s" % (path, item)
             dest0 = "%s/bin/%s" % (dest, item)
             if j.sal.fs.exists(src0):
                 j.sal.fs.copyFile(src0, dest0)
 
-        #copy more files from bin directory
+        # copy more files from bin directory
         tocopy = j.sal.fs.listFilesInDir("%s/bin" % path, filter="js_*", followSymlinks=True)
         tocopy += j.sal.fs.listFilesInDir("%s/bin" % path, filter="rq*", followSymlinks=True)
         for item in tocopy:
             name = j.sal.fs.getBaseName(item)
-            j.sal.fs.copyFile(item,"%s/bin/%s" % (dest, name))
+            j.sal.fs.copyFile(item, "%s/bin/%s" % (dest, name))
 
-        #LINK THE PYTHON BINARIES
+        # LINK THE PYTHON BINARIES
         j.sal.fs.symlink("%s/bin/python3.6" % dest, "%s/bin/python" % dest, overwriteTarget=True)
         j.sal.fs.symlink("%s/bin/python3.6" % dest, "%s/bin/python3" % dest, overwriteTarget=True)
 
-
-        #NOW DEAL WITH THE PYTHON LIBS
+        # NOW DEAL WITH THE PYTHON LIBS
 
         def dircheck(name):
             for item in ["lib2to3", "idle", ".dist-info", "__pycache__", "site-packages"]:
@@ -120,7 +119,7 @@ class SandboxPython(JSBASE):
                      "electrum_"]
         ignorefiles = ['.egg-info', ".pyc"]
 
-        todo = ["%s/lib/python3.6/site-packages" % path,"%s/lib/python3.6" % path]
+        todo = ["%s/lib/python3.6/site-packages" % path, "%s/lib/python3.6" % path]
         for src in todo:
             for ddir in j.sal.fs.listDirsInDir(src, recursive=False, dirNameOnly=True, findDirectorySymlinks=True, followSymlinks=True):
                 if dircheck(ddir):
@@ -130,8 +129,8 @@ class SandboxPython(JSBASE):
                     else:
                         dest0 = "%s/lib/python/%s" % (dest, ddir)
                     self.logger.debug("copy lib:%s ->%s" % (src0, dest0))
-                    j.sal.fs.copyDirTree(src0, dest0, keepsymlinks=False, deletefirst=True, overwriteFiles=True, ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True, createdir=True)
-
+                    j.sal.fs.copyDirTree(src0, dest0, keepsymlinks=False, deletefirst=True, overwriteFiles=True,
+                                         ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True, createdir=True)
 
             for item in j.sal.fs.listFilesInDir(src, recursive=False, exclude=ignorefiles, followSymlinks=True):
                 fname = j.sal.fs.getBaseName(item)
@@ -144,8 +143,6 @@ class SandboxPython(JSBASE):
                 if dest0 is not "":
                     j.sal.fs.copyFile(item, dest0)
 
-
-
         self.jumpscale_add()
         j.sal.fs.symlink("%s/bin/js_shell" % dest, "%s/bin/js9" % dest, overwriteTarget=True)
         j.sal.fs.symlink("%s/bin/js_tfs" % dest, "%s/bin/tfshell" % dest, overwriteTarget=True)
@@ -155,10 +152,10 @@ class SandboxPython(JSBASE):
 
         j.sal.process.execute("set -e;cd %s;source env.sh;js_init" % dest)
 
-        if j.core.platformtype.myplatform.isUbuntu: #only for building
-            #no need to sandbox in non linux systems
-            j.tools.sandboxer.libs_sandbox("%s/bin" % self.PACKAGEDIR, "%s/lib"% self.PACKAGEDIR, True)
-            j.tools.sandboxer.libs_sandbox("%s/lib" % self.PACKAGEDIR, "%s/lib"% self.PACKAGEDIR, True)
+        if j.core.platformtype.myplatform.isUbuntu:  # only for building
+            # no need to sandbox in non linux systems
+            j.tools.sandboxer.libs_sandbox("%s/bin" % self.PACKAGEDIR, "%s/lib" % self.PACKAGEDIR, True)
+            j.tools.sandboxer.libs_sandbox("%s/lib" % self.PACKAGEDIR, "%s/lib" % self.PACKAGEDIR, True)
 
         remove = ["codecs_jp", "codecs_hk", "codecs_cn", "codecs_kr", "testcapi", "tkinter", "audio"]
         # remove some stuff we don't need
@@ -173,21 +170,21 @@ class SandboxPython(JSBASE):
 
         self._zip(dest=dest)
 
-        #copy to sandbox & upload
-        ignoredir = ['.egg-info', '.dist-info', "__pycache__", "audio", "tkinter", "audio", "test",".git"]
+        # copy to sandbox & upload
+        ignoredir = ['.egg-info', '.dist-info', "__pycache__", "audio", "tkinter", "audio", "test", ".git"]
         ignorefiles = ['.egg-info', ".pyc"]
 
         if j.core.platformtype.myplatform.isMac:
             url = "git@github.com:threefoldtech/sandbox_osx.git"
             path = j.clients.git.getContentPathFromURLorPath(url)
-            dest0 = "%s/base"%path
+            dest0 = "%s/base" % path
             src0 = dest
             j.sal.fs.createDir(dest0)
             j.sal.fs.copyDirTree(src0, dest0, keepsymlinks=False, deletefirst=False, overwriteFiles=True,
-                             ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True)
+                                 ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True)
 
-
-        from IPython import embed; embed()
+        from IPython import embed
+        embed()
 
         print("to test do:")
         print("'cd %s;source env.sh;tfs" % self.PACKAGEDIR)
@@ -199,7 +196,6 @@ class SandboxPython(JSBASE):
         j.sal.process.execute(cmd)
         cmd = "cd %s;rm -f ../tfboot/lib/python.zip;zip -r ../tfbot/lib/python.zip .;" % dest
         j.sal.process.execute(cmd)
-
 
     def jumpscale_add(self, dest=""):
         """
@@ -218,7 +214,7 @@ class SandboxPython(JSBASE):
         if dest == "":
             dest = self.PACKAGEDIR
 
-        ignoredir = ['.egg-info', '.dist-info', "__pycache__", "audio", "tkinter", "audio", "test",".git"]
+        ignoredir = ['.egg-info', '.dist-info', "__pycache__", "audio", "tkinter", "audio", "test", ".git"]
         ignorefiles = ['.egg-info', ".pyc"]
 
         todo = []
@@ -234,7 +230,7 @@ class SandboxPython(JSBASE):
             path = j.clients.git.getContentPathFromURLorPath(item)
             key = j.sal.fs.getBaseName(path)
             if key == "modules":
-                key="prefab_modules"
+                key = "prefab_modules"
             dest0 = "%s/lib/jumpscale/%s" % (dest, key)
             j.sal.fs.copyDirTree(path, dest0, keepsymlinks=False, deletefirst=True, overwriteFiles=True,
                                  ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True, createdir=True)
@@ -272,7 +268,6 @@ class SandboxPython(JSBASE):
         #
         # j.sal.fs.copyFile(self.JUMPSCALEFILE, "%s/lib/jumpscale/jumpscale.py" % (dest))
 
-
     def env_write(self, dest=""):
         """
         js_shell 'j.tools.sandboxer.python.env_write()'
@@ -305,7 +300,6 @@ class SandboxPython(JSBASE):
         j.sal.fs.writeFile("%s/env.sh" % dest, j.data.text.strip(C))
         # make sure to make the env.sh file executable
         j.sal.process.execute('chmod +x %s/env.sh' % dest)
-
 
         print("to test:\ncd %s;source env.sh" % dest)
 

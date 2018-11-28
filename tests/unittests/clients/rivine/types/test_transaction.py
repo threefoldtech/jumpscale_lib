@@ -11,7 +11,8 @@ def test_create_transaction_v1():
     """
     Tests creating a V1 transaction
     """
-    assert type(TransactionFactory.create_transaction(version=DEFAULT_TRANSACTION_VERSION)) == TransactionV1, "Wrong type transaction created"
+    assert type(TransactionFactory.create_transaction(version=DEFAULT_TRANSACTION_VERSION)
+                ) == TransactionV1, "Wrong type transaction created"
 
 
 def test_coininput_json(ed25519_key, ulh):
@@ -19,9 +20,9 @@ def test_coininput_json(ed25519_key, ulh):
     Tests the json output of CoinInput
     """
     expected_output = {'parentid': '01324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf57a828ea336a',
-     'fulfillment': {'type': 1,
-      'data': {'publickey': 'ed25519:6161616161616161616161616161616161616161616161616161616161616161',
-       'signature': ''}}}
+                       'fulfillment': {'type': 1,
+                                       'data': {'publickey': 'ed25519:6161616161616161616161616161616161616161616161616161616161616161',
+                                                'signature': ''}}}
     ssf = SingleSignatureFulfillment(pub_key=ed25519_key)
     parent_id = str(ulh)
     ci = CoinInput(parent_id=parent_id, fulfillment=ssf)
@@ -51,16 +52,19 @@ def test_coinoutput_binary(ulh):
     """
     Tests the binary output of a CoinOuput
     """
-    expected_output = bytearray(b'\x02\x00\x00\x00\x00\x00\x00\x00\x01\xf4\x01!\x00\x00\x00\x00\x00\x00\x00\x012M\xcf\x02}\xd4\xa3\n\x93,D\x1f6Z%\xe8k\x17=\xef\xa4\xb8\xe5\x89H%4q\xb8\x1br\xcf')
+    expected_output = bytearray(
+        b'\x02\x00\x00\x00\x00\x00\x00\x00\x01\xf4\x01!\x00\x00\x00\x00\x00\x00\x00\x012M\xcf\x02}\xd4\xa3\n\x93,D\x1f6Z%\xe8k\x17=\xef\xa4\xb8\xe5\x89H%4q\xb8\x1br\xcf')
     ulhc = UnlockHashCondition(unlockhash=ulh)
     co = CoinOutput(value=500, condition=ulhc)
     assert co.binary == expected_output
+
 
 def test_coinoutput_json(ulh):
     """
     Tests the json output of a CoinOuput
     """
-    expected_output = {'value': '500', 'condition': {'type': 1, 'data': {'unlockhash': '01324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf57a828ea336a'}}}
+    expected_output = {'value': '500', 'condition': {'type': 1, 'data': {
+        'unlockhash': '01324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf57a828ea336a'}}}
     ulhc = UnlockHashCondition(unlockhash=ulh)
     co = CoinOutput(value=500, condition=ulhc)
     assert co.json == expected_output
@@ -70,7 +74,8 @@ def test_transactionv1_json(recipient, ulh, spendable_key):
     """
     Tests the json output of the v1 transaction
     """
-    expected_output = {'version': 1, 'data': {'coininputs': [{'parentid': '01324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf57a828ea336a', 'fulfillment': {'type': 1, 'data': {'publickey': 'ed25519:6161616161616161616161616161616161616161616161616161616161616161', 'signature': ''}}}], 'coinoutputs': [{'value': '500', 'condition': {'type': 1, 'data': {'unlockhash': '01479db781aae5ecbcc2331b7996b0d362ae7359b3fe25dcacdbf62926db506cbd3edf8bd46077'}}}], 'minerfees': ['100']}}
+    expected_output = {'version': 1, 'data': {'coininputs': [{'parentid': '01324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf57a828ea336a', 'fulfillment': {'type': 1, 'data': {
+        'publickey': 'ed25519:6161616161616161616161616161616161616161616161616161616161616161', 'signature': ''}}}], 'coinoutputs': [{'value': '500', 'condition': {'type': 1, 'data': {'unlockhash': '01479db781aae5ecbcc2331b7996b0d362ae7359b3fe25dcacdbf62926db506cbd3edf8bd46077'}}}], 'minerfees': ['100']}}
     txn = TransactionFactory.create_transaction(version=DEFAULT_TRANSACTION_VERSION)
     txn.add_coin_input(parent_id=str(ulh), pub_key=spendable_key.public_key)
     txn.add_coin_output(value=500, recipient=recipient)

@@ -3,6 +3,7 @@ from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
+
 class HTMLPage(JSBASE):
 
     """
@@ -19,19 +20,19 @@ class HTMLPage(JSBASE):
         self.head = ""
         self.tail = ""
         self.body = ""
-        
+
         self.divlevel = []
 
         self._inBlock = False
         self._inBlockType = ""
         self._inBlockClosingStatement = ""
-        
+
         self._listslevel = 0
 
         self._codeblockid = 0
 
-        #reused everywhere to make sure we don't add doubles
-        self._contentAddedCheck=[]
+        # reused everywhere to make sure we don't add doubles
+        self._contentAddedCheck = []
 
         self.padding = True
 
@@ -41,31 +42,29 @@ class HTMLPage(JSBASE):
         self.bodyattributes = []
 
         self.liblocation = "/static/"
-        
+
         # self._hasCharts = False
         # self._hasCodeblock = False
         # self._hasSidebar = False
-        
+
         # self.functionsAdded = {}
         self._explorerInstance = 0
         self._lineId = 0
         self._enableprettyprint = False
         # self.documentReadyFunctions = []
 
-    def _contentExistsCheck(self,content):
+    def _contentExistsCheck(self, content):
         """
         checks if content was already added if ues return True
         """
         content = content.lower()
-        content = content.replace("\n","").replace(" ","").replace("\t","").replace("\"","").replace("'","").replace("`","")
+        content = content.replace("\n", "").replace(" ", "").replace(
+            "\t", "").replace("\"", "").replace("'", "").replace("`", "")
         md5 = j.data.hash.md5_string(content)
         if md5 in self._contentAddedCheck:
             return True
         self._contentAddedCheck.append(md5)
         return False
-            
-            
-        
 
     def part_add(self, part, newline=False, isElement=True, blockcheck=True):
         if blockcheck:
@@ -303,7 +302,7 @@ class HTMLPage(JSBASE):
         </ul>
         </div>
         """
-        html=j.data.text.strip(html)
+        html = j.data.text.strip(html)
         id = 'id="%s"' % id if id else ''
         html = self.jenv.from_string(html).render(items=items, title=title, id=id)
         self.html_add(html)
@@ -396,14 +395,14 @@ class HTMLPage(JSBASE):
     def css_add(self, cssLink=None, cssContent=None, exlcude="", media=None):
         """
         """
-        #TODO:*1 what is this?
+        # TODO:*1 what is this?
         # if self.pagemirror4jscss is not None:
         #     self.pagemirror4jscss.css_add(cssLink, cssContent)
         # if cssLink is not None:
         #     key = cssLink.strip().lower() + (media or '')
-            # if key in self.jscsslinks:
-            #     return
-            # self.jscsslinks[key] = True
+        # if key in self.jscsslinks:
+        #     return
+        # self.jscsslinks[key] = True
 
         mediatag = ""
         if media:
@@ -447,7 +446,7 @@ class HTMLPage(JSBASE):
         #     if key in self.jscsslinks:
         #         return
         #     self.jscsslinks[key] = True
-        js=""
+        js = ""
         if jsContent:
             if not self._contentExistsCheck(jsContent):
                 js = "<script type='text/javascript'>\n%s</script>\n" % jsContent
@@ -474,7 +473,7 @@ class HTMLPage(JSBASE):
     #     self.scriptBody = "%s%s\n" % (self.scriptBody, jsContent)
 
     def jquery_add(self):
-        #TODO: *1 fix
+        # TODO: *1 fix
         self.js_add('/static/jquery/jquery.min.js')
         self.js_add("/static/jquery/jquery-ui.min.js")
 
@@ -496,7 +495,7 @@ class HTMLPage(JSBASE):
         if attribute not in self.bodyattributes:
             self.bodyattributes.append(attribute)
 
-    def document_readyfunction_add(self, function): #TODO: dont understand
+    def document_readyfunction_add(self, function):  # TODO: dont understand
         """
         e.g. $('.dataTable').dataTable();
         """
@@ -547,7 +546,8 @@ class HTMLPage(JSBASE):
                 """ % panel_data)
 
             if panel_data.get('code', False):
-                self.addCodeBlock(content, edit=False, exitpage=True, spacename='', pagename='', linenr=True, autorefresh=True)
+                self.addCodeBlock(content, edit=False, exitpage=True, spacename='',
+                                  pagename='', linenr=True, autorefresh=True)
             else:
                 self.part_add(content)
 
@@ -562,19 +562,18 @@ class HTMLPage(JSBASE):
         return str(self)
 
     def html_get(self):
-        out="<!DOCTYPE html>\n"
-        out+="<html>"
+        out = "<!DOCTYPE html>\n"
+        out += "<html>"
         if self.head:
-            out+="<head>\n"
-            out=out+self.head+"\n"
-            out+="</head>\n"
-        out+="<body>\n"
-        out=out+self.body+"\n"
-        out+="</body>\n"
-        out=out+self.tail+"\n"
-        out+="</html>"
+            out += "<head>\n"
+            out = out+self.head+"\n"
+            out += "</head>\n"
+        out += "<body>\n"
+        out = out+self.body+"\n"
+        out += "</body>\n"
+        out = out+self.tail+"\n"
+        out += "</html>"
         return out
-               
 
     def __str__(self):
         self.part_add("")
@@ -587,7 +586,6 @@ class HTMLPage(JSBASE):
         #         CC += "%s\n" % f
         #     CC += "} );\n"
         #     jsHead += "<script type='text/javascript'>" + CC + "</script>"
-        #TODO: *1
+        # TODO: *1
 
-        
     __repr__ = __str__

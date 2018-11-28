@@ -26,6 +26,7 @@ class GraphiteFactory(JSConfigFactory):
         self.__jslocation__ = "j.clients.graphite"
         JSConfigFactory.__init__(self, GraphiteClient)
 
+
 class GraphiteClient(JSConfigClient):
 
     def __init__(self, instance, data={}, parent=None, interactive=False):

@@ -47,7 +47,7 @@ class Authorizables(JSBASE):
 
         returns True if the user was successfully unauthorized
         returns False if @username is not in the list of authorized users or has flag 'canBeDeleted' set to False
-        '''        
+        '''
         canBeDeleted = [u['userGroupId']
                         for u in self.model['acl'] if u.get('canBeDeleted', True) is True]
         if username in self.authorized_users and username in canBeDeleted:
@@ -62,7 +62,7 @@ class Authorizables(JSBASE):
 
         returns True if the access was successfully updated
         returns False if @username is not in the list of the authorized users
-        '''        
+        '''
         if not right:
             right = 'ACDRUX'
         if username in self.authorized_users:

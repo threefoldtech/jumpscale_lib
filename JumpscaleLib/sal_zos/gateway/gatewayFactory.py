@@ -1,9 +1,9 @@
+from ..gateway.gateway import Gateway
 from jumpscale import j
 # import JumpscaleLib.baselib.remote
 
 JSBASE = j.application.jsbase_get_class()
 
-from ..gateway.gateway import Gateway
 
 class GatewayFactory(JSBASE):
 
@@ -14,14 +14,12 @@ class GatewayFactory(JSBASE):
     def get(self, node, name):
         """
         Get sal for Gateway
-        
+
         Arguments:
             node
             name
-        
+
         Returns:
             the sal layer 
         """
         return Gateway(node, name)
-
-

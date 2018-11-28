@@ -1,4 +1,4 @@
-#python script for 0-core testcases
+# python script for 0-core testcases
 import os
 from argparse import ArgumentParser
 from subprocess import Popen, PIPE
@@ -10,9 +10,9 @@ from jumpscale import j
 from termcolor import colored
 from multiprocessing import Process, Manager
 
-SETUP_ENV_SCRIPT= "tests/integration_tests/travis/setup_env.sh"
+SETUP_ENV_SCRIPT = "tests/integration_tests/travis/setup_env.sh"
 SETUP_ENV_SCRIPT_NAME = "setup_env.sh"
- 
+
 
 class Utils(object):
     def __init__(self, options):
@@ -55,9 +55,8 @@ class Utils(object):
 
     def run_cmd_on_remote_machine_without_stream(self, cmd, ip, port, password):
         templ = 'sshpass -p {} ssh -o StrictHostKeyChecking=no  root@{} {}'
-        cmd = templ.format(password,ip, cmd)
+        cmd = templ.format(password, ip, cmd)
         return self.run_cmd(cmd)
-
 
     def create_disk(self, zos_client):
         zdb_name = str(uuid.uuid4())[0:8]
@@ -77,11 +76,11 @@ class Utils(object):
     def get_farm_available_node_to_execute_testcases(self):
         capacity = j.clients.threefold_directory.get(interactive=False)
         resp = capacity.api.ListCapacity(query_params={'farmer': 'kristof-farm'})[1]
-        nodes = resp.json() #nodes
+        nodes = resp.json()  # nodes
         return random.choice(nodes)
 
     def random_string(self, size=10):
-        return str(uuid.uuid4()).replace('-', '')[:size]     
+        return str(uuid.uuid4()).replace('-', '')[:size]
 
     def create_ubuntu_vm(self, zos_client, ubuntu_port):
         print('* Creating ubuntu vm to fire the testsuite from')
@@ -101,34 +100,36 @@ class Utils(object):
         vm_ubuntu.deploy()
         return vm_ubuntu
 
+
 def main(options):
     utils = Utils(options)
-    # Send the script to setup the envirnment and run testcases 
+    # Send the script to setup the envirnment and run testcases
     utils.send_script_to_remote_machine(SETUP_ENV_SCRIPT, options.vm_ip, options.vm_password)
-    # get available node to run testcaases against it 
+    # get available node to run testcaases against it
     print('* get available node to run test cases on it ')
     zos_available_node = utils.get_farm_available_node_to_execute_testcases()
-    node_ip = zos_available_node["robot_address"][7:-5] 
+    node_ip = zos_available_node["robot_address"][7:-5]
     print('* The available node ip {} '.format(node_ip))
-    
-    # Access the ubuntu vm and install requirements  
-    cmd = 'bash {script} {branch} {nodeip} {zt_token}'.format(script=SETUP_ENV_SCRIPT_NAME, branch="sal_testcases", nodeip=options.zos_ip, zt_token=options.zt_token)
+
+    # Access the ubuntu vm and install requirements
+    cmd = 'bash {script} {branch} {nodeip} {zt_token}'.format(
+        script=SETUP_ENV_SCRIPT_NAME, branch="sal_testcases", nodeip=options.zos_ip, zt_token=options.zt_token)
     utils.run_cmd_on_remote_machine(cmd, options.vm_ip, options.vm_password)
 
-        
+
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-z", "--zos_ip", type=str, dest="zos_ip", required=True,
                         help="IP of the zeroos machine that will be used")
     parser.add_argument("-v", "--vm_ip", type=str, dest="vm_ip", required=True,
                         help="IP of the zeroos machine that will be used")
-                    
+
     parser.add_argument("-b", "--branch", type=str, dest="branch", required=True,
                         help="0-core branch that the tests will run from")
     parser.add_argument("-jp", "--ubuntu_port", type=str, dest="ubuntu_port", required=False,
-                        help="if you have jumpscale machine on the node provide its port" )
+                        help="if you have jumpscale machine on the node provide its port")
     parser.add_argument("-jf", "--js_flag", type=str, dest="js_flag", required=False,
-                        help="flag if you have jumpscale machine" )
+                        help="flag if you have jumpscale machine")
     parser.add_argument("-t", "--zt_token", type=str, dest="zt_token", default='sgtQtwEMbRcDgKgtHEMzYfd2T7dxtbed', required=True,
                         help="zerotier token that will be used for the core0 tests")
     parser.add_argument("-p", "--password", type=str, dest="vm_password", default='root', required=True,
@@ -136,4 +137,3 @@ if __name__ == "__main__":
 
     options = parser.parse_args()
     main(options)
-

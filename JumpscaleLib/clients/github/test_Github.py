@@ -5,8 +5,10 @@ from unittest import mock
 from jumpscale import j
 from unittest.mock import MagicMock
 from github.GithubObject import NotSet
+
+
 class TestGuthubClient(unittest.TestCase):
-    
+
     def tearDown(self):
         """
         TearDown
@@ -42,7 +44,7 @@ class TestGuthubClient(unittest.TestCase):
         try:
             githubclient.repos_get(organization_id="id")
             assert False, "failed to raise runtime error when no organizations found"
-        except RuntimeError:    
+        except RuntimeError:
             # assert the expected call for get_user().get_orgs if organization id provided
             githubclient.api.get_user().get_orgs.assert_called_with()
 
@@ -67,8 +69,8 @@ class TestGuthubClient(unittest.TestCase):
         githubclient.repo_create("repo")
         # assert the expected call for create_repo
         githubclient.api.get_user().create_repo.assert_called_with("repo", description=NotSet, homepage=NotSet, private=NotSet, has_issues=NotSet, has_wiki=NotSet,
-                    has_downloads=NotSet, auto_init=NotSet, gitignore_template=NotSet)
-    
+                                                                   has_downloads=NotSet, auto_init=NotSet, gitignore_template=NotSet)
+
     @pytest.mark.github_client
     @mock.patch('JumpscaleLib.clients.github.Github.github.Github')
     @mock.patch('JumpscaleLib.clients.github.Github.github.Repository')
@@ -81,4 +83,3 @@ class TestGuthubClient(unittest.TestCase):
         githubclient.repo_delete(repo)
         # assert the expected call for delete
         mock_repository.delete.assert_called_with()
-    

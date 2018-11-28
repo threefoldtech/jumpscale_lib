@@ -1,7 +1,6 @@
+from .ZStor import ZeroStor
 from jumpscale import j
 JSBASE = j.application.jsbase_get_class()
-
-from .ZStor import ZeroStor
 
 
 class ZeroStorFactory(JSBASE):

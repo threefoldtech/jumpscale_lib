@@ -10,7 +10,7 @@ from .utils import _extend_stories
 import gevent
 from jumpscale import j
 
-TEMPLATE =  """
+TEMPLATE = """
 github_token_ = ""
 github_repos = ""
 gitea_api_url = "https://docs.grid.tf/api/v1"
@@ -20,6 +20,7 @@ gitea_repos = ""
 """
 
 JSConfigBase = j.tools.configmanager.base_class_config
+
 
 class StoryBot(JSConfigBase):
     """
@@ -32,16 +33,16 @@ class StoryBot(JSConfigBase):
         """StoryBot constructor
         """
         JSConfigBase.__init__(self, instance=instance,
-                                    data=data,
-                                    parent=parent,
-                                    template=TEMPLATE,
-                                    interactive=interactive)
+                              data=data,
+                              parent=parent,
+                              template=TEMPLATE,
+                              interactive=interactive)
 
     @property
     def github_repos(self):
         """Returns the Github repositories as comma seperated string
         (Returned directly from config)
-        
+
         Returns:
             str -- Comma seperated list of Github repositories
         """
@@ -55,10 +56,10 @@ class StoryBot(JSConfigBase):
             [str] -- List of Github repositories
         """
         return [item.strip() for item in self.config.data["github_repos"].split(",")]
-    
+
     def add_github_repos(self, repos=""):
         """Add new Github repositories to the configuration
-        
+
         Keyword Arguments:
             repos str -- comma seperated string of repositories (default: "")
         """
@@ -75,12 +76,12 @@ class StoryBot(JSConfigBase):
 
     def remove_github_repos(self, repos=""):
         """Remove Github repositories from the configuration
-        
+
         Keyword Arguments:
             repos str -- comma seperated string of repositories (default: "")
         """
         repos_list = [x.strip() for x in repos.split(",")]
-        new_list  = self.github_repos_list
+        new_list = self.github_repos_list
 
         for repo_to_remove in repos_list:
             # loop till all items are removed, just to make sure doubles are removed
@@ -99,7 +100,7 @@ class StoryBot(JSConfigBase):
     def gitea_repos(self):
         """Returns the Gitea repositories as comma seperated string
         (Returned directly from config)
-        
+
         Returns:
             str -- Comma seperated list of Gitea repositories
         """
@@ -116,7 +117,7 @@ class StoryBot(JSConfigBase):
 
     def add_gitea_repos(self, repos=""):
         """Add new Gitea repositories to the configuration
-        
+
         Keyword Arguments:
             repos str -- comma seperated string of repositories (default: "")
         """
@@ -133,12 +134,12 @@ class StoryBot(JSConfigBase):
 
     def remove_gitea_repos(self, repos=""):
         """Remove Gitea repositories from the configuration
-        
+
         Keyword Arguments:
             repos str -- comma seperated string of repositories (default: "")
         """
         repos_list = [x.strip() for x in repos.split(",")]
-        new_list  = self.gitea_repos_list
+        new_list = self.gitea_repos_list
 
         for repo_to_remove in repos_list:
             # loop till all items are removed, just to make sure doubles are removed
@@ -158,7 +159,7 @@ class StoryBot(JSConfigBase):
         Then waits the specified interval before running it again.
 
         Stop by pressing 'ctrl+c'.
-        
+
         Keyword Arguments:
             interval int -- Wait interval in minutes (default: 60)
             check_broken_urls bool -- Check the story/task lists from broken links/URLs (default: False)
@@ -176,7 +177,7 @@ class StoryBot(JSConfigBase):
     def link_stories(self, check_broken_urls=False):
         """Link stories and tasks from all repos to eachother.
         Single run.
-        
+
         Keyword Arguments:
             check_broken_urls bool -- Check the story/task lists from broken links/URLs (default: False)
         """
@@ -214,7 +215,7 @@ class StoryBot(JSConfigBase):
             stories = _extend_stories(stories, gl.value)
         end = time.time()
         self.logger.debug("Fetching stories took %ss" % (end-start))
-        
+
         if not stories:
             self.logger.debug("No stories were found, skipping linking task to stories")
             return

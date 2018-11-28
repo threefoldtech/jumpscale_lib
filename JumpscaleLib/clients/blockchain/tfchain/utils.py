@@ -21,6 +21,7 @@ DURATION_TEMPLATE = 'XXhXXmXXs'
 
 logger = j.logger.get(__name__)
 
+
 def hash(data, encoding_type=None):
     """
     Hashes the input binary data using the blake2b algorithm
@@ -193,7 +194,6 @@ def get_unconfirmed_transactions(rivine_explorer_addresses, format_inputs=False)
     return result
 
 
-
 def commit_transaction(rivine_explorer_addresses, rivine_explorer_api_password, transaction):
     """
     Commits a singed transaction to the chain
@@ -311,7 +311,7 @@ def collect_miner_fees(address, blocks, height):
                     logger.info('Found miner output with value {}'.format(minerpayout.get('value')))
                     result[block_info['minerpayoutids'][index]] = {
                         'value': minerpayout['value'],
-                        'condition':{
+                        'condition': {
                             'data': {
                                 'unlockhash': address
                             }
@@ -389,7 +389,6 @@ def find_subset_sum(values, target):
                 id_subset.append(y)
                 S -= x
         return subset, id_subset
-
 
     def f(v, i, S, memo):
         if i >= len(v):

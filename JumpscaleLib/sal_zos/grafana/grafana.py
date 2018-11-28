@@ -6,8 +6,6 @@ import requests
 from jumpscale import j
 
 
-
-
 class Grafana():
     def __init__(self, container, ip, port, url):
 
@@ -33,7 +31,8 @@ class Grafana():
 
         template = template.replace(b'3000', str(self.port).encode())
         if self.url:
-            template = template.replace(b'root_url = %(protocol)s://%(domain)s:%(http_port)s/', b'root_url = %s' % self.url.encode())
+            template = template.replace(b'root_url = %(protocol)s://%(domain)s:%(http_port)s/',
+                                        b'root_url = %s' % self.url.encode())
         self.container.client.filesystem.mkdir('/etc/grafana/')
         self.container.upload_content('/etc/grafana/grafana.ini', template)
 

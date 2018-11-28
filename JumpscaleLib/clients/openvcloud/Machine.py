@@ -198,7 +198,7 @@ class Machine(JSBASE):
     def disk_attach(self, disk_id):
         """
         Attach disk to the machine
-        """        
+        """
         return self.client.api.cloudapi.machines.attachDisk(machineId=self.id, diskId=disk_id)
 
     def disk_limit_io(self, disk_id, total_bytes_sec, read_bytes_sec, write_bytes_sec, total_iops_sec,
@@ -399,7 +399,7 @@ class Machine(JSBASE):
     def _authorize(self, sshkeyname, instance, addr, port, priv_addr):
         login = self.model['accounts'][0]['login']
         password = self.model['accounts'][0]['password']
-        
+
         sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login=login, passwd=password,
                                       keyname="", allow_agent=False, timeout=300)
         try:

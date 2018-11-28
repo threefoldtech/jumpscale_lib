@@ -16,9 +16,7 @@ from jumpscale import j
 from . import client_support
 
 
-
-
-class userview( ):
+class userview():
     """
     auto-generated. don't touch.
     """

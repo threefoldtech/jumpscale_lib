@@ -5,11 +5,13 @@ import psutil
 from jumpscale import j
 from JumpscaleLib.sal_zos.disks.Disks import StorageType
 
+
 class FakeZOSDisk:
     def __init__(self, name, size, type):
         self.name = name
         self.type = type
         self.size = size
+
 
 class Capacity:
 
@@ -43,7 +45,7 @@ class Capacity:
         with open("/proc/meminfo", "r") as f:
             memfile = f.read()
 
-        memlist = memfile.split("\n");
+        memlist = memfile.split("\n")
         meminfo = {}
 
         for line in memlist:
@@ -143,13 +145,13 @@ class Capacity:
         resp.raise_for_status()
         return True
 
-
     def _seektime(self, device):
         cmdname = "seektime -j %s" % device
         rc, out, err = self._node._local.execute(cmdname, die=False)
         if rc != 0:
             # smartctl prints error on stdout
-            raise RuntimeError("Error getting disk data for %s (Make sure you run this on baremetal, not on a VM):\n%s\n\n%s" % (disk["name"], out, err))
+            raise RuntimeError("Error getting disk data for %s (Make sure you run this on baremetal, not on a VM):\n%s\n\n%s" % (
+                disk["name"], out, err))
 
         data = j.data.serializer.json.loads(out)
         if data['type'] == 'HDD':

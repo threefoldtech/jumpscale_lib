@@ -122,7 +122,8 @@ class OauthInstance(JSBASE):
 
 class ItsYouOnline(OauthInstance):
     def __init__(self, addr, accesstokenaddr, client_id, secret, scope, redirect_url, user_info_url, logout_url, instance):
-        OauthInstance.__init__(self, addr, accesstokenaddr, client_id, secret, scope, redirect_url, user_info_url, logout_url, instance)
+        OauthInstance.__init__(self, addr, accesstokenaddr, client_id, secret, scope,
+                               redirect_url, user_info_url, logout_url, instance)
 
     def getAccessToken(self):
         return j.clients.itsyouonline.jwt_get(self.client_id, self.secret)

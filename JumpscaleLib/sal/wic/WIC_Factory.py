@@ -78,7 +78,6 @@ class WIC_Factory(JSBASE):
             e.sshclient.execute("opkg install bash")
             e.sshclient.execute("opkg install fastd")
 
-
         # wics=[]
         for wicip in wicips:
             # j.actions.add(update, kwargs={"ipaddr":wicip}, die=True, stdOutput=True, errorOutput=True, force=False, actionshow=True)

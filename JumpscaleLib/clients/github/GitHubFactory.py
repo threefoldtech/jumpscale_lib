@@ -1,8 +1,8 @@
+from .GithubClient import GitHubClient
 from jumpscale import j
 
 JSConfigFactory = j.tools.configmanager.base_class_configs
 
-from .GithubClient import GitHubClient
 
 class GitHubFactory(JSConfigFactory):
 
@@ -23,14 +23,11 @@ class GitHubFactory(JSConfigFactory):
 
         """
 
-        #use config manager
-        #go to configured github account
+        # use config manager
+        # go to configured github account
         # create repo test_1
         # list repo
         # create some issues on repo
         # populate labels / milestones
         # list the issues
         # ...
-
-
-

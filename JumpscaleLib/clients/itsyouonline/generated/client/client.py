@@ -5,8 +5,6 @@ from .users_service import UsersService
 from jumpscale import j
 
 
-
-
 class Client():
     def __init__(self, base_uri="https://itsyou.online/api"):
         pass

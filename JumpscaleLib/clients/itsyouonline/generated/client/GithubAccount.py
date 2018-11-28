@@ -6,9 +6,7 @@ from jumpscale import j
 from . import client_support
 
 
-
-
-class GithubAccount( ):
+class GithubAccount():
     """
     auto-generated. don't touch.
     """

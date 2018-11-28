@@ -1,7 +1,7 @@
 
 def include(doc, name, **args):
     name = name.lower()
-    
+
     if name.find(":") == -1:
         doc = doc.docsite.doc_get(name, die=False)
         if doc != None:

@@ -28,8 +28,6 @@ from .userview import userview
 from jumpscale import j
 
 
-
-
 class UsersService():
     def __init__(self, client):
         pass

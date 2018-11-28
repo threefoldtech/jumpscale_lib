@@ -38,7 +38,8 @@ class Temperature(IPMIHealthCheck):
                             self.add_message(**self.get_message(sensor=id_, status='WARNING', message=message))
                             continue
                         temperature = int(message.split(" ", 1)[0])
-                        self.add_message(**self.get_message(sensor=id_, status=sensorstatus, message=message, temperature=temperature))
+                        self.add_message(**self.get_message(sensor=id_, status=sensorstatus,
+                                                            message=message, temperature=temperature))
         else:
             self.add_message(**self.get_message(status="SKIPPED", message="NO temp information available"))
 

@@ -27,10 +27,13 @@ class Fan(IPMIHealthCheck):
                 parts = [part.strip() for part in line.split("|")]
                 id_, sensorstatus, text = parts[0], parts[2], parts[-1]
                 if sensorstatus == "ns" and "no reading" in text.lower():
-                    self.add_message(id=id_, status='SKIPPED', text="Fan {id} has no reading ({text})".format(id=id_, text=text))
+                    self.add_message(id=id_, status='SKIPPED',
+                                     text="Fan {id} has no reading ({text})".format(id=id_, text=text))
                 elif sensorstatus != "ok" and "no reading" not in text.lower():
-                    self.add_message(id=id_, status='WARNING', text="Fan {id} has problem ({text})".format(id=id_, text=text))
+                    self.add_message(id=id_, status='WARNING',
+                                     text="Fan {id} has problem ({text})".format(id=id_, text=text))
                 elif sensorstatus == 'ok':
-                    self.add_message(id=id_, status="OK", text="Fan {id} is working at ({text})".format(id=id_, text=text))
+                    self.add_message(id=id_, status="OK",
+                                     text="Fan {id} is working at ({text})".format(id=id_, text=text))
         else:
             self.add_message(id="SKIPPED", status="SKIPPED", text="NO fan information available")

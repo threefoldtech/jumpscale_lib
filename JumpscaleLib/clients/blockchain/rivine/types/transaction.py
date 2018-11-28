@@ -3,7 +3,7 @@ Module contianing all transaction types
 """
 from JumpscaleLib.clients.blockchain.rivine.types.signatures import Ed25519PublicKey
 from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import SingleSignatureFulfillment, UnlockHashCondition,\
- LockTimeCondition, AtomicSwapCondition, AtomicSwapFulfillment, MultiSignatureCondition, FulfillmentFactory, UnlockCondtionFactory, MultiSignatureFulfillment
+    LockTimeCondition, AtomicSwapCondition, AtomicSwapFulfillment, MultiSignatureCondition, FulfillmentFactory, UnlockCondtionFactory, MultiSignatureFulfillment
 from JumpscaleLib.clients.blockchain.rivine.encoding import binary
 from JumpscaleLib.clients.blockchain.rivine.utils import hash
 from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
@@ -13,6 +13,7 @@ import json
 
 DEFAULT_TRANSACTION_VERSION = 1
 HASHTYPE_COINOUTPUT_ID = 'coinoutputid'
+
 
 class TransactionFactory:
     """
@@ -28,7 +29,6 @@ class TransactionFactory:
         """
         if version == 1:
             return TransactionV1()
-
 
     @staticmethod
     def from_json(txn_json):
@@ -53,21 +53,21 @@ class TransactionFactory:
                             co = CoinOutput.from_dict(co_info)
                             txn._coins_outputs.append(co)
                     if 'minerfees' in txn_data:
-                        for minerfee in txn_data['minerfees'] :
+                        for minerfee in txn_data['minerfees']:
                             txn.add_minerfee(int(minerfee))
         return txn
-
 
 
 class TransactionV1:
     """
     A Transaction is an atomic component of a block. Transactions can contain
-	inputs and outputs and even arbitrar data. They can also contain signatures to prove that a given party has
-	approved the transaction, or at least a particular subset of it.
+        inputs and outputs and even arbitrar data. They can also contain signatures to prove that a given party has
+        approved the transaction, or at least a particular subset of it.
 
-	Transactions can depend on other previous transactions in the same block,
-	but transactions cannot spend outputs that they create or otherwise beself-dependent.
+        Transactions can depend on other previous transactions in the same block,
+        but transactions cannot spend outputs that they create or otherwise beself-dependent.
     """
+
     def __init__(self):
         """
         Initializes a new tansaction
@@ -80,7 +80,6 @@ class TransactionV1:
         self._data = bytearray()
         self._version = bytearray([1])
         self._id = None
-
 
     @property
     def id(self):
@@ -110,7 +109,6 @@ class TransactionV1:
         """
         return self._coins_outputs
 
-
     @property
     def json(self):
         """
@@ -128,14 +126,11 @@ class TransactionV1:
             result['data']['arbitrarydata'] = base64.b64encode(self._data).decode('utf-8')
         return result
 
-
-
     def add_data(self, data):
         """
         Add data to the transaction
         """
         self._data.extend(data)
-
 
     def add_coin_input(self, parent_id, pub_key):
         """
@@ -144,7 +139,6 @@ class TransactionV1:
         key = Ed25519PublicKey(pub_key=pub_key)
         fulfillment = SingleSignatureFulfillment(pub_key=key)
         self._coins_inputs.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
-
 
     def add_atomicswap_input(self, parent_id, pub_key, secret=None):
         """
@@ -156,15 +150,12 @@ class TransactionV1:
         fulfillment = AtomicSwapFulfillment(pub_key=key, secret=secret)
         self._coins_inputs.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
 
-
     def add_multisig_input(self, parent_id):
         """
         Adds a new coin input with an empty MultiSignatureFulfillment
         """
         fulfillment = MultiSignatureFulfillment()
         self._coins_inputs.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
-
-
 
     def add_coin_output(self, value, recipient, locktime=None):
         """
@@ -180,8 +171,6 @@ class TransactionV1:
             condition = LockTimeCondition(condition=condition, locktime=locktime)
         self._coins_outputs.append(CoinOutput(value=value, condition=condition))
 
-
-
     def add_atomicswap_output(self, value, recipient, locktime, refund_address, hashed_secret):
         """
         Add a new atomicswap output to the transaction
@@ -191,7 +180,6 @@ class TransactionV1:
         coin_output = CoinOutput(value=value, condition=condition)
         self._coins_outputs.append(coin_output)
         return coin_output
-
 
     def add_multisig_output(self, value, unlockhashes, min_nr_sig, locktime=None):
         """
@@ -210,13 +198,11 @@ class TransactionV1:
         self._coins_outputs.append(coin_output)
         return coin_output
 
-
     def add_minerfee(self, minerfee):
         """
         Adds a minerfee to the transaction
         """
         self._minerfees.append(minerfee)
-
 
     def get_input_signature_hash(self, input_index, extra_objects=None):
         """
@@ -269,18 +255,17 @@ class TransactionV1:
         return hash(data=buffer)
 
 
-
 class CoinInput:
     """
     CoinIput class
     """
+
     def __init__(self, parent_id, fulfillment):
         """
         Initializes a new coin input object
         """
         self._parent_id = parent_id
         self._fulfillment = fulfillment
-
 
     @classmethod
     def from_dict(cls, ci_info):
@@ -299,7 +284,6 @@ class CoinInput:
     def parent_id(self):
         return self._parent_id
 
-
     @property
     def json(self):
         """
@@ -310,15 +294,14 @@ class CoinInput:
             'fulfillment': self._fulfillment.json
         }
 
-
     def sign(self, input_idx, transaction, secret_key):
         """
         Sign the input using the secret key
         """
         sig_ctx = {
-        'input_idx': input_idx,
-        'transaction': transaction,
-        'secret_key': secret_key
+            'input_idx': input_idx,
+            'transaction': transaction,
+            'secret_key': secret_key
         }
         self._fulfillment.sign(sig_ctx=sig_ctx)
 
@@ -327,13 +310,13 @@ class CoinOutput:
     """
     CoinOutput calss
     """
+
     def __init__(self, value, condition):
         """
         Initializes a new coinoutput
         """
         self._value = value
         self._condition = condition
-
 
     @classmethod
     def from_dict(cls, co_info):
@@ -348,7 +331,6 @@ class CoinOutput:
                 return cls(value=int(co_info['value']),
                            condition=condition)
 
-
     @property
     def binary(self):
         """
@@ -358,7 +340,6 @@ class CoinOutput:
         result.extend(binary.encode(self._value, type_='currency'))
         result.extend(binary.encode(self._condition))
         return result
-
 
     @property
     def json(self):

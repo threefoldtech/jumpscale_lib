@@ -21,7 +21,7 @@ class Container(JSBASE):
         self.client = client
         JSBASE.__init__(self)
 
-        self.obj=obj
+        self.obj = obj
         self.name = obj['Names'][0]
         self.id = obj['Id']
 
@@ -43,7 +43,8 @@ class Container(JSBASE):
     @property
     def sshclient(self):
         if self._sshclient is None:
-            sshclient = j.clients.ssh.new(addr=self.host, port=self.ssh_port, login="root", passwd="gig1234", timeout=10, allow_agent=True)
+            sshclient = j.clients.ssh.new(addr=self.host, port=self.ssh_port, login="root",
+                                          passwd="gig1234", timeout=10, allow_agent=True)
             self._sshclient = sshclient
         return self._sshclient
 
@@ -55,10 +56,10 @@ class Container(JSBASE):
 
     @property
     def mounts(self):
-        res=[]
-        mountinfo=self.info["Mounts"]
+        res = []
+        mountinfo = self.info["Mounts"]
         for item in mountinfo:
-            res.append((item["Source"],item["Destination"]))
+            res.append((item["Source"], item["Destination"]))
         return res
 
     @property
@@ -121,7 +122,6 @@ class Container(JSBASE):
 
         raise j.exceptions.Input("cannot find publicport for ssh?")
 
-
     def ssh_authorize(self, sshkeyname, password):
         home = j.tools.prefab.local.bash.home
         user_info = [j.tools.prefab.local.system.user.check(user) for user in j.tools.prefab.local.system.user.list()]
@@ -131,10 +131,10 @@ class Container(JSBASE):
         port = self.info['Ports'][0]['PublicPort']
         if not sshkeyname:
             sshkeyname = j.tools.configmanager.keyname
-        instance = addr.replace(".", "-") + "-%s" % port + "-%s" % self.name 
+        instance = addr.replace(".", "-") + "-%s" % port + "-%s" % self.name
 
         sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login=user, passwd=password,
-                                       timeout=300)
+                                      timeout=300)
         sshclient.connect()
         sshclient.ssh_authorize(key=j.tools.configmanager.keyname, user='root')
         sshclient.config.delete()  # remove this temp sshconnection
@@ -147,6 +147,7 @@ class Container(JSBASE):
                                             keyname=j.tools.configmanager.keyname, allow_agent=True, timeout=300, addr_priv=addr)
 
         j.tools.executor.reset()
+
     def destroy(self):
         """
         Stop and remove container.
@@ -200,8 +201,6 @@ class Container(JSBASE):
 
         if push:
             j.sal.docker.push(imagename)
-
-
 
     def __str__(self):
         return "docker:%s" % self.name

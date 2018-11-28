@@ -71,7 +71,8 @@ class Namespace:
 
     @property
     def private_url(self):
-        url = 'zdb://{}:9900?size={}G&blocksize=4096&namespace={}'.format(self.parent.container.default_ip().ip, self.size, self.name)
+        url = 'zdb://{}:9900?size={}G&blocksize=4096&namespace={}'.format(
+            self.parent.container.default_ip().ip, self.size, self.name)
         if self.password:
             url += '&password={}'.format(self.password)
         return url

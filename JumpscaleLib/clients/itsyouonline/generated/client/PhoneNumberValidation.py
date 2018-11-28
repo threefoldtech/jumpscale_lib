@@ -6,9 +6,7 @@ from jumpscale import j
 from . import client_support
 
 
-
-
-class PhoneNumberValidation( ):
+class PhoneNumberValidation():
     """
     auto-generated. don't touch.
     """

@@ -10,7 +10,8 @@ def test_Ed25519PublicKey_binary(ed25519_key):
     """
     Tests generating binary encoded version of a Ed25519Ed25519PublicKey
     """
-    expected_output = bytearray(b'ed25519\x00\x00\x00\x00\x00\x00\x00\x00\x00 \x00\x00\x00\x00\x00\x00\x00aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+    expected_output = bytearray(
+        b'ed25519\x00\x00\x00\x00\x00\x00\x00\x00\x00 \x00\x00\x00\x00\x00\x00\x00aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
     assert ed25519_key.binary == expected_output, "Ed25519PublicKey does not produce the correct binary value"
 
 

@@ -38,7 +38,7 @@ assert type(wallet._get_current_chain_height()) == int
 address = '0145df536e9ad219fcfa9b2cd295d3499e59ced97e6cbed30d81373444db01acd563a402d9690c'
 wallet._check_address(address=address)
 
-#sync the wallet
+# sync the wallet
 wallet.current_balance
 
 try:
@@ -48,7 +48,8 @@ try:
     current_height = wallet._get_current_chain_height()
     # wallet.send_money(amount=2, recipient='01b1e730f6c8d8ef0615c05e87075265cf27b929a20767e3e652b6d303e95205bdd61fdfb88925', locktime=current_height + 5)
     # transaction = wallet._create_transaction(amount=1000000000, recipient=recipient, sign_transaction=True, custom_data=data)
-    transaction = wallet._create_transaction(amount=2000000000, recipient=recipient,minerfee=100000000, sign_transaction=True, custom_data=data, locktime=current_height + 5)
+    transaction = wallet._create_transaction(amount=2000000000, recipient=recipient,
+                                             minerfee=100000000, sign_transaction=True, custom_data=data, locktime=current_height + 5)
 
     # transaction = wallet.send_money(amount=2, recipient=recipient)
     print(transaction.json)

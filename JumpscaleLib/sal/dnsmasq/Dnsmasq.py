@@ -2,6 +2,7 @@ from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
+
 class DNSMasq(JSBASE):
 
     def __init__(self):

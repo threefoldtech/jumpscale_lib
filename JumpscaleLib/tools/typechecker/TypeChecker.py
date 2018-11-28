@@ -167,8 +167,7 @@ class TypeCheckerFactory(JSBASE):
         self.__jslocation__ = "j.tools.typechecker"
         JSBASE.__init__(self)
 
-
-    def get(self,typedef):
+    def get(self, typedef):
         """
         c = j.tools.typechecker.get(<type-def>)
 
@@ -215,6 +214,7 @@ class TypeCheckerFactory(JSBASE):
 
         """
         return TypeChecker(typedef)
+
 
 class TypeChecker(JSBASE):
     def __init__(self, typedef):

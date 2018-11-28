@@ -2,8 +2,6 @@ from . import typchk
 from jumpscale import j
 
 
-
-
 class ZerotierManager():
     _network_chk = typchk.Checker({
         'network': str,
@@ -11,7 +9,6 @@ class ZerotierManager():
 
     def __init__(self, client):
         self._client = client
-
 
     def join(self, network):
         """

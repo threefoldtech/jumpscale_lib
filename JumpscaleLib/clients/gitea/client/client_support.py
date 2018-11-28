@@ -19,8 +19,6 @@ except NameError:
     basestring = str
 
 
-
-
 def timestamp_from_datetime(datetime):
     """
         Convert from datetime format to timestamp format

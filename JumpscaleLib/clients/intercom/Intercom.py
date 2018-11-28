@@ -1,10 +1,9 @@
+from intercom.client import Client
 from jumpscale import j
 from intercom.errors import HttpError
 import intercom
 intercom.HttpError = HttpError
 intercom.__version__ = '3.1.0'
-
-from intercom.client import Client
 
 
 JSConfigFactory = j.tools.configmanager.base_class_configs
@@ -13,6 +12,7 @@ JSConfigClient = j.tools.configmanager.base_class_config
 TEMPLATE = """
 token="dG9rOmNjNTRlZDFiX2E3OTZfNGFiM185Mjk5X2YzMGQyN2NjODM4ZToxOjA="
 """
+
 
 class Intercom(JSConfigFactory):
     def __init__(self):

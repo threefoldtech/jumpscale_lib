@@ -22,7 +22,8 @@ class HubDirectClient(JSConfigBase):
     def api(self):
         if self._api is None:
             self._api = Client(base_uri=self.config.data["base_uri"])
-            self._api.security_schemes.passthrough_client_jwt.set_authorization_header('bearer %s' % self.config.data['jwt_'])
+            self._api.security_schemes.passthrough_client_jwt.set_authorization_header(
+                'bearer %s' % self.config.data['jwt_'])
         return self._api
 
     def exists(self, keys):

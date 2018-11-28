@@ -29,7 +29,6 @@ def _create_electrum_dir():
     return root_dir
 
 
-
 def _start_daemon_and_get_client(wallet_name):
     """
     Starts a daemon and create a client
@@ -45,12 +44,12 @@ def _start_daemon_and_get_client(wallet_name):
     if not process_name:
         base_cmd = 'electrum --testnet -D {}'.format(electrum_dir)
         cmds = [
-                '{} setconfig rpcuser {}'.format(base_cmd, RPC_USER),
-                '{} setconfig rpcpassword {}'.format(base_cmd, RPC_PASS),
-                '{} setconfig rpcport {}'.format(base_cmd, RPC_PORT),
-                '{} setconfig rpchost {}'.format(base_cmd, RPC_HOST),
-                '{} daemon 1>/dev/null 2>&1 &'.format(base_cmd),
-                ]
+            '{} setconfig rpcuser {}'.format(base_cmd, RPC_USER),
+            '{} setconfig rpcpassword {}'.format(base_cmd, RPC_PASS),
+            '{} setconfig rpcport {}'.format(base_cmd, RPC_PORT),
+            '{} setconfig rpchost {}'.format(base_cmd, RPC_HOST),
+            '{} daemon 1>/dev/null 2>&1 &'.format(base_cmd),
+        ]
         prefab = j.tools.prefab.local
         for cmd in cmds:
             prefab.core.run(cmd)
@@ -67,7 +66,7 @@ def _start_daemon_and_get_client(wallet_name):
     }
 
     electrum_cl = j.clients.btc_electrum.get(instance=wallet_name,
-                                                    data=client_data)
+                                             data=client_data)
     electrum_cl.config.save()
     return electrum_cl
 

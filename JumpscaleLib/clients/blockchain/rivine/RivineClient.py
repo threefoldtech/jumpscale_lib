@@ -20,7 +20,6 @@ required_sig = 0
 """
 
 
-
 JSConfigBase = j.tools.configmanager.base_class_config
 
 
@@ -28,6 +27,7 @@ class RivineClient(JSConfigBase):
     """
     Rivine client object
     """
+
     def __init__(self, instance, data=None, parent=None, interactive=False):
         """
         Initializes new Rivine Client
@@ -39,7 +39,6 @@ class RivineClient(JSConfigBase):
                               template=TEMPLATE, interactive=interactive)
         self._wallet = None
 
-
     @property
     def wallet(self):
         if self._wallet is None:
@@ -48,11 +47,11 @@ class RivineClient(JSConfigBase):
                 # that is why we store it as list of a comma separated list of items, here we have to load it into list of lists
                 cosigners = [item.split(',') for item in self.config.data['cosigners']]
                 self._wallet = RivineMultiSignatureWallet(cosigners=cosigners,
-                                                        required_sig=self.config.data['required_sig'],
-                                                        bc_networks=self.config.data['bc_addresses'],
-                                                        bc_network_password=self.config.data['password_'],
-                                                        minerfee=int(self.config.data['minerfee']),
-                                                        client=self.instance)
+                                                          required_sig=self.config.data['required_sig'],
+                                                          bc_networks=self.config.data['bc_addresses'],
+                                                          bc_network_password=self.config.data['password_'],
+                                                          minerfee=int(self.config.data['minerfee']),
+                                                          client=self.instance)
             else:
                 # Load a wallet from a given seed. If no seed is given,
                 # generate a new one
@@ -63,9 +62,9 @@ class RivineClient(JSConfigBase):
                     data = dict(self.config.data)
                     data['seed_'] = seed
                     cl = j.clients.rivine.get(instance=self.instance,
-                            data=data,
-                            create=True,
-                            interactive=False)
+                                              data=data,
+                                              create=True,
+                                              interactive=False)
                     cl.config.save()
                     # make sure to set the seed in the current object.
                     # if not, we'd have a random non persistent seed until

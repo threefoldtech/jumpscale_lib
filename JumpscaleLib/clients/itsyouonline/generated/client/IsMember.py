@@ -6,9 +6,7 @@ from . import client_support
 from jumpscale import j
 
 
-
-
-class IsMember( ):
+class IsMember():
     """
     auto-generated. don't touch.
     """

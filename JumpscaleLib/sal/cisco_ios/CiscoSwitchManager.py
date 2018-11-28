@@ -1,3 +1,4 @@
+from .Router import Router
 from jumpscale import j
 # import JumpscaleLib.baselib.remote
 
@@ -12,20 +13,17 @@ class CiscoSwitchManager(JSBASE):
 
     def get(self, host, login, password):
         """get CiscoSwitch
-        
+
         Arguments:
             host {str} -- host of CiscoSwitch
             login {str} -- User of CiscoSwitch
             password {str} -- Password of CiscoSwitch
-        
+
         Returns:
             CiscoSwitch -- return your Cisco Switch 
         """
         return CiscoSwitch(host, login, password)
 #!/usr/bin/python
-
-
-from .Router import Router
 
 
 class CiscoSwitch(JSBASE):

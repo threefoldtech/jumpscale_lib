@@ -11,6 +11,7 @@ TEMPLATE = """
 api_key_ = ""
 """
 
+
 class RogerthatFactory(JSConfigFactory):
 
     def __init__(self):

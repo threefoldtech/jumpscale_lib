@@ -10,9 +10,7 @@ from jumpscale import j
 from . import client_support
 
 
-
-
-class JoinOrganizationInvitation( ):
+class JoinOrganizationInvitation():
     """
     auto-generated. don't touch.
     """

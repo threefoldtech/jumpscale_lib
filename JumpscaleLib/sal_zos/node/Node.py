@@ -157,7 +157,8 @@ class Node:
 
     def get_nic_by_ip(self, addr):
         try:
-            res = next(nic for nic in self.client.info.nic() if any(addr == a['addr'].split('/')[0] for a in nic['addrs']))
+            res = next(nic for nic in self.client.info.nic() if any(
+                addr == a['addr'].split('/')[0] for a in nic['addrs']))
             return res
         except StopIteration:
             return None
@@ -285,7 +286,8 @@ class Node:
         # create the storage pool if we don't have one yet
         if zeroos_cache_sp is None:
             disk = self._eligible_zeroos_cache_disk(disks)
-            zeroos_cache_sp = self.storagepools.create(name, devices=disk.devicename, metadata_profile='single', data_profile='single', overwrite=True)
+            zeroos_cache_sp = self.storagepools.create(
+                name, devices=disk.devicename, metadata_profile='single', data_profile='single', overwrite=True)
         zeroos_cache_sp.mount()
         try:
             zeroos_cache_sp.get('logs')
@@ -331,7 +333,8 @@ class Node:
                     logger.debug('   * Wiping disk {kname}'.format(**disk._disk_info))
                     jobs.append(self.client.system('dd if=/dev/zero of={} bs=1M count=50'.format(disk.devicename)))
             else:
-                logger.debug('   * Not wiping {device} mounted at {mountpoint}'.format(device=disk.devicename, mountpoint=disk.mountpoint))
+                logger.debug(
+                    '   * Not wiping {device} mounted at {mountpoint}'.format(device=disk.devicename, mountpoint=disk.mountpoint))
 
         # wait for wiping to complete
         for job in jobs:

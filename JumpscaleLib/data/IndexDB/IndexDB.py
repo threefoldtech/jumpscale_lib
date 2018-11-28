@@ -62,4 +62,3 @@ class IndexDB(JSBASE):
         w3 = getword(words1)
         res = db.find([w1])
         res1 = db.find([w2, w3])
-

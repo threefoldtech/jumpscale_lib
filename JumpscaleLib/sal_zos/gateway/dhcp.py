@@ -5,7 +5,6 @@ from .. import templates
 DNSMASQ = '/bin/dnsmasq --conf-file=/etc/dnsmasq.conf -d'
 
 
-
 class DHCP:
     def __init__(self, container, domain, networks):
         self.container = container

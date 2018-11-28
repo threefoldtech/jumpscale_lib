@@ -234,7 +234,7 @@ class LibvirtUtil(JSBASE):
                 domain, snapshotfile['file'].path)
             if not is_root_volume:
                 self.logger.debug('Blockcommit from %s to %s' % (snapshotfile[
-                      'file'].path, snapshotfile['file'].backing_file_path))
+                    'file'].path, snapshotfile['file'].backing_file_path))
                 result = domain.blockCommit(snapshotfile['name'], snapshotfile[
                                             'file'].backing_file_path, snapshotfile['file'].path)
                 todelete.append(snapshotfile['file'].path)

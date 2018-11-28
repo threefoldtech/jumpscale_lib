@@ -24,6 +24,7 @@ def ats_secret():
     """
     return "603eb3efa05660fe04ea1cf391d8164265721eb8acd7f071c8c37de0f2214460"
 
+
 @pytest.fixture(scope="module")
 def recipient():
     """
@@ -32,6 +33,7 @@ def recipient():
     hash = utils.hash(b'hello recipient')
     return str(UnlockHash(unlock_type=UNLOCK_TYPE_PUBKEY, hash=hash))
 
+
 @pytest.fixture(scope="module")
 def ulh():
     """
@@ -39,6 +41,7 @@ def ulh():
     """
     hash = utils.hash(b'hello')
     return UnlockHash(unlock_type=UNLOCK_TYPE_PUBKEY, hash=hash)
+
 
 @pytest.fixture(scope="module")
 def spendable_key():

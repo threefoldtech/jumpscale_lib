@@ -57,7 +57,8 @@ class FromExisting(TestCase):
         assert root.parent is None
 
         assert [d.basename for d in self.manipulator.root.dirs()] == \
-            ['bin', 'boot', 'dev', 'etc', 'home', 'lib', 'lib64', 'media', 'mnt', 'opt', 'proc', 'root', 'run', 'sbin', 'srv', 'sys', 'tmp', 'usr', 'var']
+            ['bin', 'boot', 'dev', 'etc', 'home', 'lib', 'lib64', 'media', 'mnt',
+                'opt', 'proc', 'root', 'run', 'sbin', 'srv', 'sys', 'tmp', 'usr', 'var']
 
     def test_sub_dir(self):
         dir = self.manipulator.root.dirs()[0]

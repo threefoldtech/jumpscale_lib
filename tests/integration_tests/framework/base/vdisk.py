@@ -12,7 +12,7 @@ class Vdisk:
         self.zdb = zdb
 
     def install(self):
-        
+
         self.disk = self.node_sal.primitives.create_disk(name=self.data['name'],
                                                          zdb=self.zdb,
                                                          mountpoint=self.data['mountPoint'] or None,
@@ -21,6 +21,5 @@ class Vdisk:
                                                          label=self.data['label'])
         self.disk.deploy()
 
-    
     def get_url(self):
         return self.disk.url

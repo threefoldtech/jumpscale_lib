@@ -7,9 +7,7 @@ from jumpscale import j
 from . import client_support
 
 
-
-
-class Signature( ):
+class Signature():
     """
     auto-generated. don't touch.
     """

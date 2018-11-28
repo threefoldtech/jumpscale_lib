@@ -1,8 +1,8 @@
+from .BTCClient import BTCClient
 from jumpscale import j
 
 JSConfigFactory = j.tools.configmanager.base_class_configs
 
-from .BTCClient import BTCClient
 
 class GitHubFactory(JSConfigFactory):
 

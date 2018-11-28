@@ -13,7 +13,7 @@ class SSLFactory(JSBASE):
         self.__imports__ = "pyopenssl"
         JSBASE.__init__(self)
 
-    def ca_cert_generate(self, cert_dir="",reset=False):
+    def ca_cert_generate(self, cert_dir="", reset=False):
         """
         is for CA
         If ca.crt and ca.key don't exist in cert_dir, create a new ??? #TODO: *1 this is not right I think
@@ -26,9 +26,9 @@ class SSLFactory(JSBASE):
         """
         if cert_dir == "":
             cert_dir = j.dirs.CFGDIR+"/ssl"
-            
+
         j.sal.fs.createDir(cert_dir)
-            
+
         cert_dir = j.tools.path.get(cert_dir)
         CERT_FILE = cert_dir.joinpath("ca.crt")  # info (certificaat) (pub is inhere + other info)
         KEY_FILE = cert_dir.joinpath("ca.key")  # private key
@@ -136,12 +136,12 @@ class SSLFactory(JSBASE):
         path = j.tools.path.get(path)
         cacert = path.joinpath("ca.crt").text()
         cakey = path.joinpath("ca.key").text()
-        
+
         ca_cert = OpenSSL.crypto.load_certificate(
             OpenSSL.crypto.FILETYPE_PEM, cacert)
         ca_key = OpenSSL.crypto.load_privatekey(
             OpenSSL.crypto.FILETYPE_PEM, cakey)
-            
+
         req = OpenSSL.crypto.load_certificate_request(
             OpenSSL.crypto.FILETYPE_PEM, req)
 
@@ -203,7 +203,6 @@ class SSLFactory(JSBASE):
         p12.set_ca_certificates(certification_chain)
         p12.set_friendlyname(b'Jumpscaleclientauthentication')
         return p12.export(passphrase=passphrase)
-
 
     def _load_privatekey(self, path):
         """

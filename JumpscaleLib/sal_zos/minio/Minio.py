@@ -135,7 +135,7 @@ class Minio(Service):
     def stream(self, callback):
         if not self.is_running:
             raise Exception('minio is not running')
-            
+
         self.container.client.subscribe(
             self._id,
             "%s.logs" % self._id

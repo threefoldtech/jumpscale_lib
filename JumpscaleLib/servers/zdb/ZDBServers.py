@@ -39,7 +39,7 @@ class ZDBServers(JSConfigBase):
         data["adminsecret_"] = adminsecret
         data["verbose"] = verbose
 
-        instance = self.get(instance=instance, data=data,interactive=False)
+        instance = self.get(instance=instance, data=data, interactive=False)
         if reset:
             instance.destroy()
 
@@ -66,9 +66,9 @@ class ZDBServers(JSConfigBase):
         """
         js_shell 'j.servers.zdb.build()'
         """
-        j.tools.prefab.local.zero_os.zos_db.build(install=True,reset=True)
+        j.tools.prefab.local.zero_os.zos_db.build(install=True, reset=True)
 
-    def test(self,build=False):
+    def test(self, build=False):
         """
         js_shell 'j.servers.zdb.test(build=True)'
         """
@@ -99,7 +99,7 @@ class ZDBServers(JSConfigBase):
 
     #     nr = cl.nsinfo["entries"]
     #     assert nr == 10
-            
+
     #     cl.set("test2",2)
     #     assert cl.get(2)==b"test2"
 
@@ -107,4 +107,3 @@ class ZDBServers(JSConfigBase):
     #         print("%s:%s"%(id,data))
 
     #     cl.iterate(m)
-            

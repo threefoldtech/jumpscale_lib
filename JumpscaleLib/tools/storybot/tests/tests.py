@@ -1,7 +1,10 @@
 from jumpscale import j
-import unittest, uuid, requests
+import unittest
+import uuid
+import requests
 from github import Github
 from testconfig import config
+
 
 class GitHubTests(unittest.TestCase):
     @classmethod
@@ -11,7 +14,7 @@ class GitHubTests(unittest.TestCase):
     @classmethod
     def create_repo(cls):
         repo_name = 'storybot-test-repo-{}'.format(cls.random_string())
-        response = cls.session.post('https://api.github.com/user/repos', json={'name':repo_name})
+        response = cls.session.post('https://api.github.com/user/repos', json={'name': repo_name})
         response.raise_for_status
         return response.json()['full_name']
 
@@ -28,9 +31,9 @@ class GitHubTests(unittest.TestCase):
 
         # create testing repo
         repo = cls.create_repo()
-        
+
         # configure the bot
-        data = {'github_repos':repo, 'github_token_':token}
+        data = {'github_repos': repo, 'github_token_': token}
         cls.bot = j.tools.storybot.get('storybot-test', data=data, interactive=False)
 
         # configure github client
@@ -77,7 +80,7 @@ class GitHubTests(unittest.TestCase):
         story = self.repo.get_issue(number=story.number)
         task = self.repo.get_issue(number=task.number)
 
-        self.assertIn('[ ] [{}'.format(story_name), task.body)        
+        self.assertIn('[ ] [{}'.format(story_name), task.body)
         self.assertIn('[ ] [{}]'.format(task_name), story.body)
 
     def test02_multiple_stories(self):
@@ -97,11 +100,11 @@ class GitHubTests(unittest.TestCase):
         # create story 2
         story_2_name = self.random_string()
         story_2 = self.create_story(name=story_2_name)
-        
-        # create task 1        
+
+        # create task 1
         task_name = self.random_string()
         task = self.create_task(name=task_name, stories=[story_1_name, story_2_name])
-        
+
         # link stories
         self.bot.link_stories()
 
@@ -110,12 +113,12 @@ class GitHubTests(unittest.TestCase):
         story_2 = self.repo.get_issue(number=story_2.number)
         task = self.repo.get_issue(number=task.number)
 
-        self.assertIn('[ ] [{}'.format(story_1_name), task.body)        
-        self.assertIn('[ ] [{}'.format(story_2_name), task.body)        
-        
+        self.assertIn('[ ] [{}'.format(story_1_name), task.body)
+        self.assertIn('[ ] [{}'.format(story_2_name), task.body)
+
         self.assertIn('[ ] [{}]'.format(task_name), story_1.body)
         self.assertIn('[ ] [{}]'.format(task_name), story_2.body)
-        
+
     def test03_test_close_reopen_task(self):
         """SBT-003
 
@@ -126,9 +129,9 @@ class GitHubTests(unittest.TestCase):
         #. Close task 1, check that task 1 checkbox is checked.
         #. Reopen task 1, check that task 1 checkbox is unchecked.
         """
-        
+
         # create story 1
-        story_name = self.random_string()        
+        story_name = self.random_string()
         story = self.create_story(name=story_name)
 
         # create task 1
@@ -145,7 +148,7 @@ class GitHubTests(unittest.TestCase):
 
         # close task 1
         task.edit(state='closed')
-        
+
         # link stories
         self.bot.link_stories()
 

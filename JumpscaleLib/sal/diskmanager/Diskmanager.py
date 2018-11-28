@@ -4,6 +4,7 @@ import errno
 import stat
 JSBASE = j.application.jsbase_get_class()
 
+
 def _is_block(file):
     try:
         st = os.stat(file)
@@ -262,7 +263,7 @@ class Diskmanager(JSBASE):
                                         toml.set("diskinfoType", ",".join(j.tools.console.askChoiceMultiple(
                                             ["BOOT", "CACHE", "TMP", "DATA", "OTHER"])))
                                         toml.set("diskinfoEpoch",
-                                                j.data.time.getTimeEpoch())
+                                                 j.data.time.getTimeEpoch())
 
                                         # TODO (*4*) ---> get connection from
                                         # AYS, lets discuss this does not seem

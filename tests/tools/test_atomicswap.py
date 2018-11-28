@@ -28,11 +28,11 @@ testnet = True
 btc_prefab = j.tools.prefab.getFromSSH('localhost', port=2200)
 tft_prefab = j.tools.prefab.getFromSSH('localhost', port=2222)
 j.tools.atomicswap.execute(initiator_prefab=btc_prefab, initiator_address=initiator_address,
-                          initiator_amount='{}BTC'.format(initiator_amount),
-                          participant_prefab=tft_prefab,
-                          participant_address=participant_address,
-                          participant_amount='{}TFT'.format(participant_amount),
-                          testnet=testnet)
+                           initiator_amount='{}BTC'.format(initiator_amount),
+                           participant_prefab=tft_prefab,
+                           participant_address=participant_address,
+                           participant_amount='{}TFT'.format(participant_amount),
+                           testnet=testnet)
 
 
 # initiate_cmd = 'btcatomicswap --testnet --rpcuser=user --rpcpass=pass -s localhost:8332 --force-yes initiate {} 0.01234'.format(participant_address)

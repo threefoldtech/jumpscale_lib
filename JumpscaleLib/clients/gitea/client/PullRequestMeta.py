@@ -8,8 +8,6 @@ from datetime import datetime
 from . import client_support
 
 
-
-
 class PullRequestMeta(object):
     """
     auto-generated. don't touch.

@@ -25,7 +25,8 @@ class KubernetesMaster(JSConfigBase):
         """
         Creates a client instance that connects to either a config path or context or both
         """
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE, interactive=interactive)
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,
+                              template=TEMPLATE, interactive=interactive)
         # load data from jsconfig
         c = self.config.data
         config_path = c['config_path']
@@ -92,6 +93,7 @@ class KubernetesMaster(JSConfigBase):
 #      master.NODE    #
 #######################
 
+
     def get_node(self, name):
         """
         will get the cluster with the defined name.
@@ -122,6 +124,7 @@ class KubernetesMaster(JSConfigBase):
 ######################
 #  master.DEPLOYMENT #
 ######################
+
 
     def get_deployment(self, name, namespace='default'):
         """

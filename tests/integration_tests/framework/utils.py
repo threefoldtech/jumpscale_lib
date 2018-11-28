@@ -1,7 +1,8 @@
 from termcolor import colored
 import unittest
 from jumpscale import j
-import uuid, time
+import uuid
+import time
 import logging
 
 import random
@@ -15,7 +16,7 @@ class Utils(unittest.TestCase):
     def setUp(self):
         self._testID = self._testMethodName
         self._startTime = time.time()
-        
+
         self._logger = logging.LoggerAdapter(logging.getLogger('SAL testcases'),
                                              {'testid': self.shortDescription() or self._testID})
 

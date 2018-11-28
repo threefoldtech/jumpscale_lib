@@ -24,7 +24,6 @@ class MarkdownFactory(JSBASE):
     def _path(self):
         return j.sal.fs.getDirName(os.path.abspath(__file__))
 
-
     def document_get(self, content="", path=""):
         """
         returns a tool which allows easy creation of a markdown document
@@ -37,7 +36,6 @@ class MarkdownFactory(JSBASE):
     def mddata_get(self):
         return MDData()
 
-
     def test(self):
         '''
         js_shell 'j.data.markdown.test()'
@@ -45,9 +43,8 @@ class MarkdownFactory(JSBASE):
         # from .tests.test1 import test
         # test()
         # from .tests.test2 import test
-        # test()        
+        # test()
         # from .tests.test3 import test
-        # test()        
+        # test()
         from .tests.test4 import test
         test()
-

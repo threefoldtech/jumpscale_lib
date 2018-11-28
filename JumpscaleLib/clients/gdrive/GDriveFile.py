@@ -178,7 +178,8 @@ class GDriveFile(JSBASE):
                 done = False
                 while done is False:
                     status, done = downloader.next_chunk()
-                    self.logger.debug("\033[92m Downloading : \033[0m", " %s -- %d%%. " % (path, int(status.progress() * 100)))
+                    self.logger.debug("\033[92m Downloading : \033[0m", " %s -- %d%%. " %
+                                      (path, int(status.progress() * 100)))
 
     def save(self):
         if self.changed:

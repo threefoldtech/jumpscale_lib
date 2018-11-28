@@ -21,7 +21,6 @@ testnet = 0
 """
 
 
-
 JSConfigBase = j.tools.configmanager.base_class_config
 
 
@@ -29,6 +28,7 @@ class ElectrumClient(JSConfigBase):
     """
     Electrum client object
     """
+
     def __init__(self, instance, data=None, parent=None, interactive=False):
         """
         Initializes new Rivine Client
@@ -41,7 +41,6 @@ class ElectrumClient(JSConfigBase):
         self._wallet = None
         self._atomicswap = None
 
-
     @property
     def wallet(self):
         if self._wallet is None:
@@ -50,7 +49,6 @@ class ElectrumClient(JSConfigBase):
                 config_data[key.strip('_')] = value
             self._wallet = ElectrumWallet(name=self.instance, config=config_data)
         return self._wallet
-
 
     @property
     def atomicswap(self):

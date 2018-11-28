@@ -17,8 +17,6 @@ except NameError:
     basestring = str
 
 
-
-
 def timestamp_from_datetime(datetime):
     """
         Convert from datetime format to timestamp format
@@ -176,10 +174,11 @@ def to_dict(cls, convert_datetime=True):
     return todict(cls)
 
 
-class DatetimeHandler( ):
+class DatetimeHandler():
     """
     output datetime objects as iso-8601 compliant strings
     """
+
     def __init__(self):
         pass
 
@@ -194,10 +193,11 @@ class DatetimeHandler( ):
         return timestamp_to_datetime(data)
 
 
-class UUIDHandler( ):
+class UUIDHandler():
     """
     output UUID objects as a string
     """
+
     def __init__(self):
         pass
 
@@ -212,10 +212,11 @@ class UUIDHandler( ):
         return UUID(data)
 
 
-class EnumHandler( ):
+class EnumHandler():
     """
     output Enum objects as their value
     """
+
     def __init__(self):
         pass
 

@@ -23,7 +23,7 @@ class QemuVMLogs(HealthCheckRun):
             domains_list = []
             # go for multiprocessing.
             results = []
-            
+
             def report_domain(domain):
                 logpath = vmlogpath.format(vm_name=domain)
                 if self.node.client.filesystem.exists(logpath):
@@ -41,7 +41,7 @@ class QemuVMLogs(HealthCheckRun):
                 name = machine.get('name')
                 if name:
                     domains_list.append(name)
-                
+
             list(map(report_domain, domains_list))
 
             if len(results) == 0:

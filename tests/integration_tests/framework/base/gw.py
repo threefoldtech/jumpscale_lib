@@ -28,7 +28,7 @@ class GW:
         self.data['ztIdentity'] = gateway_sal.zt_identity
 
     def destroy(self, gateway_name=None):
-        gateway_name = gateway_name or self.data["name"] 
+        gateway_name = gateway_name or self.data["name"]
         self.node_sal.primitives.drop_gateway(gateway_name)
 
     def stop(self):
@@ -52,7 +52,7 @@ class GW:
         self.gw_sal.networks.remove(item=item)
 
     def list_network(self):
-        return self.gw_sal.networks.list()    
+        return self.gw_sal.networks.list()
 
     def add_port_forward(self, name, source, target, protocols=None):
         self.gw_sal.portforwards.add(name=name, source=source, target=target, protocols=protocols)

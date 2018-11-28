@@ -81,8 +81,9 @@ class Sandboxer(JSBASE):
                                                "png", "gif", "css", "js", "wiki", "spec", "sh", "jar", "xml", "lua"]:
             return result
 
-        exclude=["/usr/lib/libSystem","/System/Library/Frameworks/Core"]
-        import pudb; pudb.set_trace()
+        exclude = ["/usr/lib/libSystem", "/System/Library/Frameworks/Core"]
+        import pudb
+        pudb.set_trace()
         if path not in done:
             self.logger.debug(("check:%s" % path))
             name = j.sal.fs.getBaseName(path)
@@ -93,12 +94,12 @@ class Sandboxer(JSBASE):
                 # if out.find("not a dynamic executable") != -1:
                 #     return result
             for line in out.split("\n"):
-                if len(line)>0 and line[0]==" ":
+                if len(line) > 0 and line[0] == " ":
                     continue
                 line = line.strip()
                 if line == "":
                     continue
-                lpath = line.split("(",1)[0].strip()
+                lpath = line.split("(", 1)[0].strip()
                 if lpath == "":
                     continue
                 excl = False
@@ -124,7 +125,8 @@ class Sandboxer(JSBASE):
         self.logger.info("find deb:%s" % path)
         if j.core.platformtype.myplatform.isMac:
             result = self._otool(path, result=dict(), done=list())
-            from IPython import embed; embed()
+            from IPython import embed
+            embed()
         else:
             result = self._ldd(path, result=dict(), done=list())
         return result
@@ -151,7 +153,7 @@ class Sandboxer(JSBASE):
         else:
             if (j.sal.fs.isFile(path) and j.sal.fs.isExecutable(path)) or j.sal.fs.getFileExtension(path) == "so":
                 result = self._libs_find(path)
-                for _,deb in list(result.items()):
+                for _, deb in list(result.items()):
                     deb.copyTo(dest)
 
     def copyTo(self, path, dest, excludeFileRegex=[], excludeDirRegex=[], excludeFiltersExt=["pyc", "bak"]):
@@ -373,4 +375,3 @@ class Sandboxer(JSBASE):
     #     # copy needed binaries and required libs
     #     j.tools.sandboxer.libs_sandbox(bin_path, dest=LIBSDIR)
     #     j.sal.fs.copyFile(bin_path, BINDIR+'/')
-

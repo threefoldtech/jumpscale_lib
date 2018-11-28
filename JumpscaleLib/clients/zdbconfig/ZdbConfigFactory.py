@@ -35,7 +35,8 @@ class ZdbConfigFactory(JSConfigBase):
         data["port"] = str(port)
         data["mode"] = str(mode)
         data["adminsecret_"] = adminsecret
-        data["secrets_"] = secrets  # is now multiple secrets or 1 default one, in future will be our own serializion lib (the schemas)
+        # is now multiple secrets or 1 default one, in future will be our own serializion lib (the schemas)
+        data["secrets_"] = secrets
         return self.get(instance=instance, data=data)
 
     def testdb_server_start_client_get(self, reset=False, mode="seq"):

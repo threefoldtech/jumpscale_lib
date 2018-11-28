@@ -94,7 +94,7 @@ class IssueManager(JSBASE):
         schema = self.getIssueSchema()
         if not kvs:
             kvs = j.data.kvs.getRedisStore(name=self.store, namespace=self.namespace + ":issue",
-                                              unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
+                                           unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
 
         collection = j.data.capnp.getModelCollection(
             schema, namespace=self.namespace + ":issue", category="issues", modelBaseClass=IssueModel,
@@ -105,7 +105,7 @@ class IssueManager(JSBASE):
         schema = self.getUserSchema()
         if not kvs:
             kvs = j.data.kvs.getRedisStore(name=self.store, namespace=self.namespace + ":user",
-                                              unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
+                                           unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
 
         collection = j.data.capnp.getModelCollection(
             schema, namespace=self.namespace + ":user", category="user", modelBaseClass=UserModel,
@@ -116,7 +116,7 @@ class IssueManager(JSBASE):
         schema = self.getRepoSchema()
         if not kvs:
             kvs = j.data.kvs.getRedisStore(name=self.store, namespace=self.namespace + ":repo",
-                                              unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
+                                           unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
 
         collection = j.data.capnp.getModelCollection(
             schema, namespace=self.namespace + ":repo", category="repo", modelBaseClass=RepoModel,
@@ -127,7 +127,7 @@ class IssueManager(JSBASE):
         schema = self.getOrgSchema()
         if not kvs:
             kvs = j.data.kvs.getRedisStore(name=self.store, namespace=self.namespace + ":org",
-                                              unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
+                                           unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
 
         collection = j.data.capnp.getModelCollection(
             schema, namespace=self.namespace + ":org", category="orgs", modelBaseClass=OrgModel,

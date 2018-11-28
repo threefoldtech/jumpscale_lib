@@ -3,11 +3,10 @@ import copy
 from termcolor import colored
 
 
-
 class ZDB:
 
     def __init__(self, node, guid=None, data=None):
-        self.guid = guid 
+        self.guid = guid
         self.data = data
         self.node_sal = node
         self.zerodb_sal = None
@@ -79,7 +78,7 @@ class ZDB:
         Get private url of the namespace
         :param name: namespace name
         :return: dict
-        """       
+        """
         return self.zerodb_sal.namespaces[name].private_url
 
     def namespace_create(self, name, size=None, password=None, public=True):

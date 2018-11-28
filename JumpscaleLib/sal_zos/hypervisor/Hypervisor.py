@@ -22,4 +22,3 @@ class Hypervisor:
         vm = ZOS_VM(self.node, name)
         vm.load_from_reality()
         return vm
-

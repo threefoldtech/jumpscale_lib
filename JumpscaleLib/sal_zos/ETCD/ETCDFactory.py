@@ -1,8 +1,8 @@
+from .ETCD import ETCD
 from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
-from .ETCD import ETCD
 
 class ETCDFactory(JSBASE):
 
@@ -13,7 +13,7 @@ class ETCDFactory(JSBASE):
     def get(self, node, name, password, data_dir='/mnt/data', zt_identity=None, nics=None, token=None, cluster=None):
         """
         Get sal for etcd management in ZOS
-        
+
         Arguments:
             node: the node sal instance the etcd will be created on
             name: the name of the etcd instance
@@ -23,7 +23,7 @@ class ETCDFactory(JSBASE):
             nics: nics to be attached to the etcd container
             token: etcd cluster token
             cluster: all the cluster members. ex: [{'name': 'etcd_one', 'address': 'http://172.22.14.232:2380'}]
-        
+
         Returns:
             the sal layer 
         """

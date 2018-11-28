@@ -118,7 +118,7 @@ def requires_auth(org_from_request=False, email=False):
                     "client_id": config["organization"],
                     "redirect_uri": config["callback_uri"],
                     "scope": scope,
-                    "state" : state
+                    "state": state
                 }
                 base_url = "{}/oauth/authorize?".format(ITSYOUONLINEV1)
                 login_url = base_url + urlencode(params)
@@ -146,10 +146,10 @@ def _callback():
     organization = config["organization"]
     authorg = session['_iyo_organization']
     params = {
-        "code" : code,
+        "code": code,
         "state": state,
         "grant_type": "authorization_code",
-        "client_id" : organization,
+        "client_id": organization,
         "client_secret": config["client_secret"],
         "redirect_uri": config["callback_uri"],
     }

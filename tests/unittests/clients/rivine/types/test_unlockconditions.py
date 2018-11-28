@@ -33,11 +33,11 @@ def test_atsf_json(ed25519_key):
     Test Atomicswap fulfillment json encoding
     """
     expected_output = {'type': 2,
-                      'data': {
-                            'publickey': 'ed25519:6161616161616161616161616161616161616161616161616161616161616161',
-                            'signature': ''
-                            }
-                        }
+                       'data': {
+                           'publickey': 'ed25519:6161616161616161616161616161616161616161616161616161616161616161',
+                           'signature': ''
+                       }
+                       }
     atsf = AtomicSwapFulfillment(pub_key=ed25519_key)
     assert atsf.json == expected_output, "Failed to generate the correct json representation of the AtomicSwapFulfillment"
 
@@ -47,12 +47,12 @@ def test_atsf_with_secret_json(ed25519_key, ats_secret):
     Test Atomicswap fulfillment json encoding with secret
     """
     expected_output = {'type': 2,
-                      'data': {
-                            'publickey': 'ed25519:6161616161616161616161616161616161616161616161616161616161616161',
-                            'signature': '',
-                            'secret': '603eb3efa05660fe04ea1cf391d8164265721eb8acd7f071c8c37de0f2214460'
-                            }
-                        }
+                       'data': {
+                           'publickey': 'ed25519:6161616161616161616161616161616161616161616161616161616161616161',
+                           'signature': '',
+                           'secret': '603eb3efa05660fe04ea1cf391d8164265721eb8acd7f071c8c37de0f2214460'
+                       }
+                       }
     atsf = AtomicSwapFulfillment(pub_key=ed25519_key, secret=ats_secret)
     assert atsf.json == expected_output, "Failed to generate the correct json representation of the AtomicSwapFulfillment"
 
@@ -88,11 +88,11 @@ def test_ssf_json(ed25519_key):
     Tests the json representation of SingleSignatureFulfillment
     """
     expected_output = {'type': 1,
-                      'data': {
-                            'publickey': 'ed25519:6161616161616161616161616161616161616161616161616161616161616161',
-                            'signature': ''
-                            }
-                        }
+                       'data': {
+                           'publickey': 'ed25519:6161616161616161616161616161616161616161616161616161616161616161',
+                           'signature': ''
+                       }
+                       }
     ssf = SingleSignatureFulfillment(pub_key=ed25519_key)
     assert ssf.json == expected_output, "Failed to generate the correct json representation of the SingleSignatureFulfillment"
 
@@ -101,7 +101,8 @@ def test_unlockhashcondition_binary(ulh):
     """
     Tests the generation of binary encoded version of unlockhashcondition object
     """
-    expected_output = bytearray(b'\x01!\x00\x00\x00\x00\x00\x00\x00\x012M\xcf\x02}\xd4\xa3\n\x93,D\x1f6Z%\xe8k\x17=\xef\xa4\xb8\xe5\x89H%4q\xb8\x1br\xcf')
+    expected_output = bytearray(
+        b'\x01!\x00\x00\x00\x00\x00\x00\x00\x012M\xcf\x02}\xd4\xa3\n\x93,D\x1f6Z%\xe8k\x17=\xef\xa4\xb8\xe5\x89H%4q\xb8\x1br\xcf')
     ulhc = UnlockHashCondition(unlockhash=ulh)
     assert ulhc.binary == expected_output, "Failed to generate the expected binary value of unlockhashcondition"
 
@@ -112,9 +113,9 @@ def test_unlockhashcondition_json(ulh):
     """
     expected_output = {'type': 1,
                        'data': {
-                                'unlockhash': '01324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf57a828ea336a'
-                                }
-                        }
+                           'unlockhash': '01324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf57a828ea336a'
+                       }
+                       }
     ulhc = UnlockHashCondition(unlockhash=ulh)
     assert ulhc.json == expected_output, "Failed to generate the expected json value of unlockhashcondition"
 
@@ -123,7 +124,8 @@ def test_locktimecondition_binary(ulh):
     """
     Tests the generation of binary encoded version of LockTimeCondition object
     """
-    expected_output = bytearray(b'\x03*\x00\x00\x00\x00\x00\x00\x00\n\x00\x00\x00\x00\x00\x00\x00\x01\x012M\xcf\x02}\xd4\xa3\n\x93,D\x1f6Z%\xe8k\x17=\xef\xa4\xb8\xe5\x89H%4q\xb8\x1br\xcf')
+    expected_output = bytearray(
+        b'\x03*\x00\x00\x00\x00\x00\x00\x00\n\x00\x00\x00\x00\x00\x00\x00\x01\x012M\xcf\x02}\xd4\xa3\n\x93,D\x1f6Z%\xe8k\x17=\xef\xa4\xb8\xe5\x89H%4q\xb8\x1br\xcf')
     ulhc = UnlockHashCondition(unlockhash=ulh)
     ltc = LockTimeCondition(condition=ulhc, locktime=10)
     assert ltc.binary == expected_output, "Failed to generate the expected binary value of locktimecondition"
@@ -135,15 +137,15 @@ def test_locktimecondition_json(ulh):
     """
     expected_output = {'type': 3,
                        'data': {
-                            'locktime': 10,
-                            'condition': {
-                                'type': 1,
-                                'data': {
-                                    'unlockhash': '01324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf57a828ea336a'
-                                    }
-                                }
-                            }
-                        }
+                           'locktime': 10,
+                           'condition': {
+                               'type': 1,
+                               'data': {
+                                   'unlockhash': '01324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf57a828ea336a'
+                               }
+                           }
+                       }
+                       }
 
     ulhc = UnlockHashCondition(unlockhash=ulh)
     ltc = LockTimeCondition(condition=ulhc, locktime=10)
@@ -154,10 +156,11 @@ def test_atomicswapcondition_json(ulh, ats_hashed_secret):
     """
     Tests the generation of josn encoded version of the AtomicswapCondition object
     """
-    expected_output = {'type': 2, 'data': {'timelock': 10, 'sender': '01324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf57a828ea336a', 'receiver': '01324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf57a828ea336a', 'hashedsecret': 'b5011ef9e6e03dcce148282ead7dd1cdf6f397d1c05680e8f12f39ba7b9c5dc4'}}
+    expected_output = {'type': 2, 'data': {'timelock': 10, 'sender': '01324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf57a828ea336a',
+                                           'receiver': '01324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf57a828ea336a', 'hashedsecret': 'b5011ef9e6e03dcce148282ead7dd1cdf6f397d1c05680e8f12f39ba7b9c5dc4'}}
     atsc = AtomicSwapCondition(sender=str(ulh), reciever=str(ulh),
-                                hashed_secret=ats_hashed_secret,
-                                locktime=10)
+                               hashed_secret=ats_hashed_secret,
+                               locktime=10)
     assert atsc.json == expected_output, "Failed to generate the expected json value of AtomicSwapCondition"
 
 
@@ -165,8 +168,9 @@ def test_atomicswapcondition_json(ulh, ats_hashed_secret):
     """
     Tests the generation of binary encoded version of the AtomicswapCondition object
     """
-    expected_output =bytearray(b'\x02j\x00\x00\x00\x00\x00\x00\x00\x012M\xcf\x02}\xd4\xa3\n\x93,D\x1f6Z%\xe8k\x17=\xef\xa4\xb8\xe5\x89H%4q\xb8\x1br\xcf\x012M\xcf\x02}\xd4\xa3\n\x93,D\x1f6Z%\xe8k\x17=\xef\xa4\xb8\xe5\x89H%4q\xb8\x1br\xcf\xb5\x01\x1e\xf9\xe6\xe0=\xcc\xe1H(.\xad}\xd1\xcd\xf6\xf3\x97\xd1\xc0V\x80\xe8\xf1/9\xba{\x9c]\xc4\n\x00\x00\x00\x00\x00\x00\x00')
+    expected_output = bytearray(
+        b'\x02j\x00\x00\x00\x00\x00\x00\x00\x012M\xcf\x02}\xd4\xa3\n\x93,D\x1f6Z%\xe8k\x17=\xef\xa4\xb8\xe5\x89H%4q\xb8\x1br\xcf\x012M\xcf\x02}\xd4\xa3\n\x93,D\x1f6Z%\xe8k\x17=\xef\xa4\xb8\xe5\x89H%4q\xb8\x1br\xcf\xb5\x01\x1e\xf9\xe6\xe0=\xcc\xe1H(.\xad}\xd1\xcd\xf6\xf3\x97\xd1\xc0V\x80\xe8\xf1/9\xba{\x9c]\xc4\n\x00\x00\x00\x00\x00\x00\x00')
     atsc = AtomicSwapCondition(sender=str(ulh), reciever=str(ulh),
-                                hashed_secret=ats_hashed_secret,
-                                locktime=10)
+                               hashed_secret=ats_hashed_secret,
+                               locktime=10)
     assert atsc.binary == expected_output, "Failed to generate the expected binary value of AtomicSwapCondition"

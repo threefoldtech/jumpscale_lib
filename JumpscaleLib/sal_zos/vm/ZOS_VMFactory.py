@@ -1,7 +1,6 @@
+from .ZOS_VM import ZOS_VM
 from jumpscale import j
 JSBASE = j.application.jsbase_get_class()
-
-from .ZOS_VM import ZOS_VM
 
 
 class ZOS_VMFactory(JSBASE):

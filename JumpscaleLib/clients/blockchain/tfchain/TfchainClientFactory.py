@@ -9,6 +9,7 @@ from JumpscaleLib.clients.blockchain.tfchain.types.transaction import Transactio
 
 JSConfigBaseFactory = j.tools.configmanager.base_class_configs
 
+
 class TfchainClientFactory(JSConfigBaseFactory):
     """
     Factory class to get a tfchain client object

@@ -21,14 +21,14 @@ class IYOFactory(JSConfigBaseFactory):
 
     def install(self):
         """installs python-jose library locally
-        
+
         """
 
         j.tools.prefab.local.runtimes.pip.install("python-jose")
 
     def refresh_jwt_token(self, token, validity=86400):
         """refresh a jwt if expired, needs to be refreshable
-        
+
         :param token: refreshable jwt token
         :type token: str
         :param validity: expiration time of the refreshed jwt, defaults to 86400
@@ -55,7 +55,7 @@ class IYOFactory(JSConfigBaseFactory):
 
     def jwt_is_expired(self, expiration):
         """check if jwt is expired
-        
+
         :param expiration: jwt expiration timestamp
         :type expiration: int
         :return: true if expired
@@ -70,12 +70,11 @@ class IYOFactory(JSConfigBaseFactory):
     def default(self):
         """ return default itsyou.online instance"""
 
-        if self._default == None:
+        if self._default is None:
             if j.tools.configmanager.sandbox_check():
                 raise RuntimeError("should not call IYO client in sandbox!")
             self._default = self.get(interactive=False)
         return self._default
-
 
     def test(self):
         """

@@ -1,8 +1,8 @@
+from .Container import Containers
 from jumpscale import j
 
 JSBASE = j.application.jsbase_get_class()
 
-from .Container import Containers
 
 class ContainerFactory(JSBASE):
 
@@ -13,10 +13,10 @@ class ContainerFactory(JSBASE):
     def get(self, node):
         """
         Get sal for VM management in ZOS
-        
+
         Arguments:
             node
-        
+
         Returns:
             the sal layer 
         """

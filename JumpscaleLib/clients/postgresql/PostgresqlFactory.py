@@ -131,7 +131,7 @@ class PostgresClient(JSConfigClient):
             self.logger.debug("process table:%s" % name)
             args["table"] = name
             args["path"] = "%s/%s.sql" % (path, name)
-            #--quote-all-identifiers
+            # --quote-all-identifiers
             cmd = "cd /opt/postgresql/bin;./pg_dump -U %(login)s -h %(ipaddr)s -p %(port)s -t %(table)s -a -b --column-inserts -d %(dbname)s -w > %(path)s" % (
                 args)
             j.sal.process.execute(cmd, showout=False)

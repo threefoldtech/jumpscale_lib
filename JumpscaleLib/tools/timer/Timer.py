@@ -2,6 +2,7 @@ import time
 from jumpscale import j
 JSBASE = j.application.jsbase_get_class()
 
+
 class TIMER(JSBASE):
     def __init__(self):
         self.__jslocation__ = "j.tools.timer"
@@ -56,8 +57,8 @@ class TIMER(JSBASE):
 
     @staticmethod
     def result():
-        if TIMER._cat !="":
-            print("\nDURATION FOR:%s"%TIMER._cat)
+        if TIMER._cat != "":
+            print("\nDURATION FOR:%s" % TIMER._cat)
         print(("duration:%s" % TIMER.duration))
         print(("nritems:%s" % TIMER.nritems))
         print(("performance:%s/sec" % int(TIMER.performance)))

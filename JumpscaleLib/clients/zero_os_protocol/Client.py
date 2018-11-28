@@ -52,7 +52,8 @@ class Client(BaseClient, JSConfigClientBase):
     })
 
     def __init__(self, instance="main", data={}, parent=None, template=None, ui=None, interactive=True):
-        JSConfigClientBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE, ui=ui, interactive=interactive)
+        JSConfigClientBase.__init__(self, instance=instance, data=data, parent=parent,
+                                    template=TEMPLATE, ui=ui, interactive=interactive)
         timeout = self.config.data['timeout']
         BaseClient.__init__(self, timeout=timeout)
 
@@ -261,7 +262,8 @@ class Client(BaseClient, JSConfigClientBase):
         self._redis.rpush('core:default', json.dumps(payload))
         if self._redis.brpoplpush(flag, flag, DefaultTimeout) is None:
             TimeoutError('failed to queue job {}'.format(id))
-        self.logger.debug('%s >> g8core.%s(%s)', id, command, ', '.join(("%s=%s" % (k, v) for k, v in arguments.items())))
+        self.logger.debug('%s >> g8core.%s(%s)', id, command, ', '.join(
+            ("%s=%s" % (k, v) for k, v in arguments.items())))
 
         return Response(self, id)
 

@@ -23,7 +23,7 @@ class TelegramBot(JSConfigClient):
     def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigClient.__init__(self, instance=instance,
                                 data=data, parent=parent, template=TEMPLATE)
-        self._conn =  HTTPSConnection("api.telegram.org")
+        self._conn = HTTPSConnection("api.telegram.org")
 
     def config_check(self):
         """

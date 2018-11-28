@@ -1,9 +1,8 @@
+from ..zerodb.zerodb import Zerodb
 from jumpscale import j
 # import JumpscaleLib.baselib.remote
 
 JSBASE = j.application.jsbase_get_class()
-
-from ..zerodb.zerodb import Zerodb
 
 
 class ZerodbFactory(JSBASE):

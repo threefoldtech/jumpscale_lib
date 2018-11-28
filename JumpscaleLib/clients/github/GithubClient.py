@@ -127,7 +127,7 @@ class GitHubClient(JSConfigClient):
         :rtype:   class:'github.Repository.Repository'
         """
         return self.api.get_user().create_repo(name, description=description, homepage=homepage, private=private, has_issues=has_issues,
-                    has_wiki=has_wiki, has_downloads=has_downloads, auto_init=auto_init, gitignore_template=gitignore_template)
+                                               has_wiki=has_wiki, has_downloads=has_downloads, auto_init=auto_init, gitignore_template=gitignore_template)
 
     def repo_delete(self, repo):
         """deletes a repo

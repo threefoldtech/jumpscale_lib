@@ -4,6 +4,7 @@ from io import StringIO
 from jumpscale import j
 JSBASE = j.application.jsbase_get_class()
 
+
 class UCISection(collections.OrderedDict, JSBASE):
     _option = '\toption {key} \'{value}\'\n'
     _list = '\tlist {key} \'{value}\'\n'

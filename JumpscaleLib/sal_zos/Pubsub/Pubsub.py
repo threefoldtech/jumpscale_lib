@@ -118,7 +118,8 @@ class Pubsub():
         await self._redis.rpush('core:default', json.dumps(payload))
         if await self._redis.brpoplpush(flag, flag, 10) is None:
             raise TimeoutError('failed to queue job {}'.format(id))
-        self.logger.debug('%s >> g8core.%s(%s)', id, command, ', '.join(("%s=%s" % (k, v) for k, v in arguments.items())))
+        self.logger.debug('%s >> g8core.%s(%s)', id, command, ', '.join(
+            ("%s=%s" % (k, v) for k, v in arguments.items())))
 
         return Response(self, id)
 

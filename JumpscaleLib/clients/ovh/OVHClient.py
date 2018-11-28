@@ -159,7 +159,7 @@ class OVHClient(JSConfigBase):
                        useDistribKernel=True, noRaid=True, hostname="", wait=True):
         """
 
-        if sshKeyName == None, and there is only 1 loaded, then will take that key
+        if sshKeyName is None, and there is only 1 loaded, then will take that key
 
         will return node_client
 
@@ -174,7 +174,7 @@ class OVHClient(JSConfigBase):
         if installationTemplate not in self.installationtemplates_get():
             raise j.exceptions.Input(message="could not find install template:%s" % name)
 
-        if sshKeyName == None:
+        if sshKeyName is None:
             items = j.clients.sshkey.list()
             # if len(items) != 1:
             #     raise RuntimeError(

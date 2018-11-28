@@ -7,9 +7,7 @@ from jumpscale import j
 from . import client_support
 
 
-
-
-class BankAccount( ):
+class BankAccount():
     """
     auto-generated. don't touch.
     """

@@ -46,7 +46,7 @@ class ZDBCLIENT:
             cmd = cmd.lower()
         cmd = '{} {}'.format(cmd, key)
         return self.send_receive(cmd)
-    
+
     def key_cursor(self, key, case='lower'):
         cmd = 'KEYCUR'
         if case == "lower":
@@ -109,7 +109,7 @@ class ZDBCLIENT:
         result = []
         namespaces = self.send_receive(cmd)
         for namespace in namespaces:
-            result.append(namespace.decode('utf-8')) 
+            result.append(namespace.decode('utf-8'))
         return result
 
     def nsset(self, namespace, property, value, case='lower'):

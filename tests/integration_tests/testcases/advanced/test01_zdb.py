@@ -10,8 +10,9 @@ import requests
 import random
 import subprocess
 
+
 class Vdisktest(BaseTest):
-    
+
     @classmethod
     def setUpClass(cls):
         self = cls()
@@ -25,7 +26,7 @@ class Vdisktest(BaseTest):
         self.zdb.data = self.set_zdb_default_data(name=zdb_name)
         self.zdb.install()
         self.zdbs.append(self.zdb)
-        
+
         self.log("Create disk [D1] with default data")
         self.disk = Vdisk(node=self.node_sal, zdb=self.zdb.zerodb_sal)
         self.disk.data = self.set_vdisk_default_data()
@@ -40,16 +41,16 @@ class Vdisktest(BaseTest):
 
         self.log("Update default data by adding type default nics")
         network_name = self.random_string()
-        nics = {'nics': [{'name': network_name, 'type': 'default'}]}  
+        nics = {'nics': [{'name': network_name, 'type': 'default'}]}
         self.vm.data = self.update_default_data(self.vm.data, nics)
         self.vm.generate_vm_sal()
 
         self.log(" Add zerotier network to VM1, should succeed.")
         self.vm.add_zerotier_nics(network=self.zt_network)
-        
+
         self.log("Attach disk [D1] to vm [VM1].")
         self.vm.add_disk(self.disk.disk)
-    
+
     def tearDown(self):
         self.log('tear down vms')
         for uuid in self.vms:
@@ -63,12 +64,12 @@ class Vdisktest(BaseTest):
                 zdb.namespace_delete(namespace.name)
             self.node_sal.client.container.terminate(zdb.zerodb_sal.container.id)
         self.zdbs.clear()
-        
 
     def read_write_file(self, mount_path, guest_port, vm_zt_ip, i, result_dict):
         self.log("Download specific file with size 10M to vm[VM1].")
         file_name = self.random_string()
-        cmd = 'cd {}; wget https://github.com/AhmedHanafy725/test/raw/master/test_file -O {}'.format(mount_path, file_name)
+        cmd = 'cd {}; wget https://github.com/AhmedHanafy725/test/raw/master/test_file -O {}'.format(
+            mount_path, file_name)
         self.ssh_vm_execute_command(vm_ip=vm_zt_ip, cmd=cmd)
 
         self.log("Get file md5 of the downloaded file.")
@@ -78,18 +79,21 @@ class Vdisktest(BaseTest):
 
         self.log("Download this file from [VM1] to the test machine through the server[S1].")
         cmd = 'wget http://{}:{}/{}'.format(vm_zt_ip, guest_port, file_name)
-        response = subprocess.run(cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        response = subprocess.run(cmd, shell=True, universal_newlines=True,
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.assertFalse(response.returncode)
 
         self.log("Get file md5 of the downloaded file.")
         cmd = 'md5sum {}'.format(file_name)
-        response = subprocess.run(cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        response = subprocess.run(cmd, shell=True, universal_newlines=True,
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         result2 = response.stdout.strip()
         result2 = result2[:result2.find(' ')]
 
         self.log("remove downloaded files")
         cmd = 'rm -f  {}'.format(file_name)
-        response = subprocess.run(cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        response = subprocess.run(cmd, shell=True, universal_newlines=True,
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.assertFalse(response.returncode)
 
         result_dict[i] = (result1, result2)
@@ -116,7 +120,7 @@ class Vdisktest(BaseTest):
 
         """
         self.log("Add port to create server on it.")
-        port_name = self.random_string()   
+        port_name = self.random_string()
         host_port = random.randint(3000, 4000)
         guest_port = random.randint(5000, 6000)
         self.vm.add_port(name=port_name, source=host_port, target=guest_port)
@@ -124,7 +128,7 @@ class Vdisktest(BaseTest):
         self.log("deploy vm [VM1].")
         self.vm.install()
         self.vms.append(self.vm.info()['uuid'])
-        
+
         self.log("get ztIdentity and vm ip")
         ztIdentity = self.vm.data["ztIdentity"]
         vm_zt_ip = self.get_zerotier_ip(ztIdentity)
@@ -133,35 +137,39 @@ class Vdisktest(BaseTest):
         cmd = 'cd {}; python3 -m http.server {} &> /tmp/server.log &'.format(self.mount_path, guest_port)
         self.ssh_vm_execute_command(vm_ip=vm_zt_ip, cmd=cmd)
         time.sleep(10)
-        
+
         self.log("Create dict to get data from multiprocess")
         manager = multiprocessing.Manager()
         result_dict = manager.dict()
         jobs = []
-        
+
         for i in range(5):
-            process = multiprocessing.Process(target=self.read_write_file, args=(self.mount_path, guest_port, vm_zt_ip, i, result_dict))
+            process = multiprocessing.Process(target=self.read_write_file, args=(
+                self.mount_path, guest_port, vm_zt_ip, i, result_dict))
             jobs.append(process)
             process.start()
 
         self.log("wait till all processes finish")
         for proc in jobs:
             proc.join()
-        
+
         self.log("Download the same to the test machine.")
         file_name2 = self.random_string()
         cmd = 'wget https://github.com/AhmedHanafy725/test/raw/master/test_file -O {}'.format(file_name2)
-        response = subprocess.run(cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        response = subprocess.run(cmd, shell=True, universal_newlines=True,
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.assertFalse(response.returncode)
 
         cmd = 'md5sum {}'.format(file_name2)
-        response = subprocess.run(cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        response = subprocess.run(cmd, shell=True, universal_newlines=True,
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         result = response.stdout.strip()
         result = result[:result.find(' ')]
-        
+
         self.log("remove downoaded file")
         cmd = 'rm -f {}'.format(file_name2)
-        response = subprocess.run(cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        response = subprocess.run(cmd, shell=True, universal_newlines=True,
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.assertFalse(response.returncode)
 
         self.log("Check md5 of the those three files, should be the same")
@@ -169,7 +177,7 @@ class Vdisktest(BaseTest):
             self.assertEqual(result_dict[i][0], result)
             self.assertEqual(result_dict[i][1], result)
 
-    @parameterized.expand(['namespace', 'zdb'])    
+    @parameterized.expand(['namespace', 'zdb'])
     def test002_delete_namespace_or_stop_zdb_of_vdisk(self, delete):
         """ SAL-041 delete namespace or stop zdb of vdisk.
 
@@ -187,7 +195,7 @@ class Vdisktest(BaseTest):
         self.vms.append(self.vm.info()['uuid'])
         ztIdentity = self.vm.data["ztIdentity"]
         vm_zt_ip = self.get_zerotier_ip(ztIdentity)
-        
+
         self.log("Try to write on disk mounting point, should succeed.")
         file_name = self.random_string()
         content = self.random_string()

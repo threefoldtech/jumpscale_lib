@@ -12,6 +12,7 @@ from .network import Networks
 
 PUBLIC_THREEFOLD_NETWORK = "9bee8941b5717835"
 
+
 class DestBind:
     def __init__(self, ipaddress, port):
         """
@@ -406,7 +407,7 @@ class Gateway:
                     ztnetwork = network.client.network_create(False, cidr, name=network.name)
                     network.networkid = ztnetwork.id
                 if network.networkid == PUBLIC_THREEFOLD_NETWORK:
-                    public_threefold_nic=True
+                    public_threefold_nic = True
                 if network.client:
                     ztnetwork = network.client.network_get(network.networkid)
                     privateip = None
@@ -415,7 +416,7 @@ class Gateway:
                     ztnetwork.member_add(ztpublic, self.name, private_ip=privateip)
             nics.append(network.to_dict(forcontainer=True))
         if not public_threefold_nic:
-            network=self.networks.add(name='threefold',type_='zerotier',networkid= PUBLIC_THREEFOLD_NETWORK)
+            network = self.networks.add(name='threefold', type_='zerotier', networkid=PUBLIC_THREEFOLD_NETWORK)
             nics.append(network.to_dict(forcontainer=True))
             # zerotierbridge = nic.pop('zerotierbridge', None)
             # if zerotierbridge:
@@ -574,7 +575,8 @@ class Gateway:
         Update the gateway container portforwards
         """
         publicip = self.node.get_nic_hwaddr_and_ip()[1]
-        container_forwards = set([v for k, v in self.container.info['container']['arguments']['port'].items() if v == int(k.split(':')[-1])])
+        container_forwards = set([v for k, v in self.container.info['container']['arguments']
+                                  ['port'].items() if v == int(k.split(':')[-1])])
         wanted_forwards = {80, 443}
         container_ip = str(self.container.default_ip(self._default_nic).ip)
         for forward in self.portforwards:
@@ -582,9 +584,11 @@ class Gateway:
             if str(source.ipaddress) == container_ip:
                 wanted_forwards.add(source.port)
         for port in container_forwards - wanted_forwards:
-            self.container.node.client.container.remove_portforward(self.container.id, '{}:{}'.format(publicip, port), port)
+            self.container.node.client.container.remove_portforward(
+                self.container.id, '{}:{}'.format(publicip, port), port)
         for port in wanted_forwards - container_forwards:
-            self.container.node.client.container.add_portforward(self.container.id, '{}:{}'.format(publicip, port), port)
+            self.container.node.client.container.add_portforward(
+                self.container.id, '{}:{}'.format(publicip, port), port)
 
     def save_certificates(self, caddy_dir="/.caddy"):
         """
@@ -597,9 +601,11 @@ class Gateway:
                     users = []
                     sites = []
                     if self.container.client.filesystem.exists("{}/acme/{}/users".format(caddy_dir, cert_authority['name'])):
-                        users = self.container.client.filesystem.list("{}/acme/{}/users".format(caddy_dir, cert_authority['name']))
+                        users = self.container.client.filesystem.list(
+                            "{}/acme/{}/users".format(caddy_dir, cert_authority['name']))
                     if self.container.client.filesystem.exists("{}/acme/{}/sites".format(caddy_dir, cert_authority['name'])):
-                        sites = self.container.client.filesystem.list("{}/acme/{}/sites".format(caddy_dir, cert_authority['name']))
+                        sites = self.container.client.filesystem.list(
+                            "{}/acme/{}/sites".format(caddy_dir, cert_authority['name']))
                     for user in users:
                         if user['is_dir']:
                             cert_path = "{}/acme/{}/users/{}".format(caddy_dir, cert_authority['name'], user['name'])
@@ -633,10 +639,12 @@ class Gateway:
         """
         for cert in self.certificates:
             self.container.client.filesystem.mkdir(cert['path'])
-            self.container.upload_content("{}/{}.json".format(cert['path'], cert['path'].split('/')[-1]), cert['metadata'])
+            self.container.upload_content(
+                "{}/{}.json".format(cert['path'], cert['path'].split('/')[-1]), cert['metadata'])
             self.container.upload_content("{}/{}.key".format(cert['path'], cert['path'].split('/')[-1]), cert['key'])
             if cert.get('cert'):
-                self.container.upload_content("{}/{}.crt".format(cert['path'], cert['path'].split('/')[-1]), cert['cert'])
+                self.container.upload_content(
+                    "{}/{}.crt".format(cert['path'], cert['path'].split('/')[-1]), cert['cert'])
 
     def get_zerotier_nic(self, zerotierid):
         """

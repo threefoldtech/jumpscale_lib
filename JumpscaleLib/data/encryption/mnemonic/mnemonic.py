@@ -28,7 +28,8 @@ import itertools
 import os
 import sys
 import unicodedata
-import hashlib, re
+import hashlib
+import re
 from binascii import hexlify, unhexlify
 from pbkdf2 import PBKDF2
 
@@ -52,7 +53,8 @@ class Mnemonic(object):
         with open('%s/%s.txt' % (self._get_directory(), language), 'r') as f:
             self.wordlist = [w.strip().decode('utf8') if sys.version < '3' else w.strip() for w in f.readlines()]
         if len(self.wordlist) != self.radix:
-            raise ConfigurationError('Wordlist should contain %d words, but it contains %d words.' % (self.radix, len(self.wordlist)))
+            raise ConfigurationError('Wordlist should contain %d words, but it contains %d words.' %
+                                     (self.radix, len(self.wordlist)))
 
     @classmethod
     def _get_directory(cls):
@@ -88,7 +90,8 @@ class Mnemonic(object):
 
     def generate(self, strength=128):
         if strength not in [128, 160, 192, 224, 256]:
-            raise ValueError('Strength should be one of the following [128, 160, 192, 224, 256], but it is not (%d).' % strength)
+            raise ValueError(
+                'Strength should be one of the following [128, 160, 192, 224, 256], but it is not (%d).' % strength)
         return self.to_mnemonic(os.urandom(strength // 8))
 
     # Adapted from <http://tinyurl.com/oxmn476>
@@ -96,7 +99,8 @@ class Mnemonic(object):
         if not isinstance(words, list):
             words = words.split(' ')
         if len(words) not in [12, 15, 18, 21, 24]:
-            raise ValueError('Number of words must be one of the following: [12, 15, 18, 21, 24], but it is not (%d).' % len(words))
+            raise ValueError(
+                'Number of words must be one of the following: [12, 15, 18, 21, 24], but it is not (%d).' % len(words))
         # Look up all the words in the list and construct the
         # concatenation of the original entropy and the checksum.
         concatLenBits = len(words) * 11
@@ -126,9 +130,11 @@ class Mnemonic(object):
         # Take the digest of the entropy.
         hashBytes = hashlib.sha256(entropy).digest()
         if sys.version < '3':
-            hashBits = list(itertools.chain.from_iterable(([ord(c) & (1 << (7 - i)) != 0 for i in range(8)] for c in hashBytes)))
+            hashBits = list(itertools.chain.from_iterable(
+                ([ord(c) & (1 << (7 - i)) != 0 for i in range(8)] for c in hashBytes)))
         else:
-            hashBits = list(itertools.chain.from_iterable(([c & (1 << (7 - i)) != 0 for i in range(8)] for c in hashBytes)))
+            hashBits = list(itertools.chain.from_iterable(
+                ([c & (1 << (7 - i)) != 0 for i in range(8)] for c in hashBytes)))
         # Check all the checksum bits.
         for i in range(checksumLengthBits):
             if concatBits[entropyLengthBits + i] != hashBits[i]:
@@ -137,7 +143,8 @@ class Mnemonic(object):
 
     def to_mnemonic(self, data):
         if len(data) not in [16, 20, 24, 28, 32]:
-            raise ValueError('Data length should be one of the following: [16, 20, 24, 28, 32], but it is not (%d).' % len(data))
+            raise ValueError(
+                'Data length should be one of the following: [16, 20, 24, 28, 32], but it is not (%d).' % len(data))
         h = hashlib.sha256(data).hexdigest()
         b = bin(int(binascii.hexlify(data), 16))[2:].zfill(len(data) * 8) + \
             bin(int(h, 16))[2:].zfill(256)[:len(data) * 8 // 32]

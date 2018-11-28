@@ -51,6 +51,7 @@ class CacheKeyError(KeyError, JSBASE):
     When a cache record is accessed which no longer exists (or never did),
     this error is raised. To avoid it, you may want to check for the existence
     of a cache record before reading or deleting it."""
+
     def __init__(self):
         JSBASE.__init__(self)
 

@@ -22,36 +22,36 @@ class ZDBServer(JSConfigBase):
         """
         JSConfigBase.__init__(self, instance=instance, data=data,
                               parent=parent, template=TEMPLATE, ui=None, interactive=interactive)
-        
+
         j.sal.fs.createDir(self.config.data["path"])
 
         self._initdir()
 
     def client_get(self, secrets=""):
         """
-        
+
         """
         cl = j.clients.zdb.configure(instance=self.instance,
-                                       secrets=secrets,
-                                       adminsecret=self.config.data['adminsecret_'],
-                                       addr=self.config.data['addr'],
-                                       port=self.config.data['port'],
-                                       mode=self.config.data['mode']
-                                       )
+                                     secrets=secrets,
+                                     adminsecret=self.config.data['adminsecret_'],
+                                     addr=self.config.data['addr'],
+                                     port=self.config.data['port'],
+                                     mode=self.config.data['mode']
+                                     )
         return cl
 
-    def client_namespace_get(self, namespace="default",secrets="",encryptionkey=""):
+    def client_namespace_get(self, namespace="default", secrets="", encryptionkey=""):
         """
-        
+
         """
         cl = j.clients.zdb.configure(instance=self.instance,
-                                       secrets=secrets,
-                                       adminsecret=self.config.data['adminsecret_'],
-                                       addr=self.config.data['addr'],
-                                       port=self.config.data['port'],
-                                       mode=self.config.data['mode']
-                                       )
-        return cl.namespace_get(namespace)        
+                                     secrets=secrets,
+                                     adminsecret=self.config.data['adminsecret_'],
+                                     addr=self.config.data['addr'],
+                                     port=self.config.data['port'],
+                                     mode=self.config.data['mode']
+                                     )
+        return cl.namespace_get(namespace)
 
     def _initdir(self):
         root_path = self.config.data['path']
@@ -69,9 +69,9 @@ class ZDBServer(JSConfigBase):
 
         mode = self.config.data['mode']
 
-        d=self.config.data
-        if j.sal.nettools.tcpPortConnectionTest(d["addr"],d["port"]):
-            r=j.clients.redis.get(ipaddr=d["addr"], port=d["port"])
+        d = self.config.data
+        if j.sal.nettools.tcpPortConnectionTest(d["addr"], d["port"]):
+            r = j.clients.redis.get(ipaddr=d["addr"], port=d["port"])
             r.ping()
             return()
 
@@ -83,11 +83,13 @@ class ZDBServer(JSConfigBase):
                                                   verbose=self.config.data['verbose'],
                                                   mode=mode,
                                                   adminsecret=self.config.data['adminsecret_'])
-        self.logger.info("waiting for zdb server to start on (%s:%s)" % (self.config.data['addr'], self.config.data['port']))
+        self.logger.info("waiting for zdb server to start on (%s:%s)" %
+                         (self.config.data['addr'], self.config.data['port']))
         # time.sleep(0.5)
         res = j.sal.nettools.waitConnectionTest(self.config.data['addr'], self.config.data['port'])
         if res is False:
-            raise RuntimeError("could not start zdb:'%s' (%s:%s)" % (self.instance, self.config.data['addr'], self.config.data['port']))
+            raise RuntimeError("could not start zdb:'%s' (%s:%s)" %
+                               (self.instance, self.config.data['addr'], self.config.data['port']))
 
     def stop(self):
         j.tools.prefab.local.zero_os.zos_db.stop(self.instance)

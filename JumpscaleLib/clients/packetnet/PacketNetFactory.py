@@ -170,7 +170,6 @@ class PacketNet(JSConfigClient):
             raise RuntimeError("zerotierAPI needs to be specified")
         ipxeUrl = "http://unsecure.bootstrap.grid.tf/ipxe/{}/{}".format(branch, zerotierId)
 
-
         if params is not None:
             pstring = '%20'.join(params)
             ipxeUrl = ipxeUrl + '/' + pstring
@@ -181,7 +180,6 @@ class PacketNet(JSConfigClient):
         # data = {'token_': zerotierAPI, 'networkID_': zerotierId}
         data = {'token_': zerotierAPI}
         zerotierClient = j.clients.zerotier.get(self.instance, data=data)
-
 
         public_ip = node.addr
         if not public_ip:

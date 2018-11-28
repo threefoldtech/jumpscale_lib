@@ -162,7 +162,7 @@ def test_backend_load():
     backend = encoding.backend_load(client, 'backend1')
     assert backend.name == 'backend1'
     assert backend.load_balance_method == LoadBalanceMethod.drr
-    assert backend.cb_expression == None
+    assert backend.cb_expression is None
     assert len(backend.servers) == 2
     assert backend.servers[0].ip == '192.168.1.1'
     assert backend.servers[0].port == 8080

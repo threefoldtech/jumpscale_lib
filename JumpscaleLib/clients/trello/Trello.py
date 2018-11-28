@@ -23,19 +23,19 @@ class TrelloClient(JSConfigClient):
         if not self.config.data["token_secret_"]:
             print("**WILL TRY TO DO OAUTH SESSION")
             from trello.util import create_oauth_token
-            access_token = create_oauth_token(key=self.config.data["api_key_"],secret=self.config.data["secret_"])
-            self.config.data_set("token_",access_token["oauth_token"])
-            self.config.data_set("token_secret_",access_token["oauth_token_secret"])
+            access_token = create_oauth_token(key=self.config.data["api_key_"], secret=self.config.data["secret_"])
+            self.config.data_set("token_", access_token["oauth_token"])
+            self.config.data_set("token_secret_", access_token["oauth_token_secret"])
 
         self.client = TrelloClient(
             api_key=self.config.data["api_key_"],
             api_secret=self.config.data["secret_"],
-             token=self.config.data["token_"],
+            token=self.config.data["token_"],
             token_secret=self.config.data["token_secret_"]
         )
 
     def test(self):
-    
+
         boards = self.client.list_boards()
         print(boards)
 
@@ -48,11 +48,11 @@ class Trello(JSConfigFactory):
     def install(self, reset=False):
         j.tools.prefab.local.runtimes.pip.install("py-trello", reset=reset)
 
-    def configure(self,instance="main",apikey="",secret="secret"):
-        data={}
-        data["api_key_"]=apikey
-        data["secret_"]=secret
-        self.get(instance=instance,data=data)
+    def configure(self, instance="main", apikey="", secret="secret"):
+        data = {}
+        data["api_key_"] = apikey
+        data["secret_"] = secret
+        self.get(instance=instance, data=data)
 
     def test(self):
         """
@@ -64,5 +64,5 @@ class Trello(JSConfigFactory):
         get appkey: https://trello.com/app-key
 
         """
-        cl=self.get(instance="main")
+        cl = self.get(instance="main")
         cl.test()

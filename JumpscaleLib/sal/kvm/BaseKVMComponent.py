@@ -1,6 +1,7 @@
 from jumpscale import j
 JSBASE = j.application.jsbase_get_class()
 
+
 class BaseKVMComponent(JSBASE):
 
     def __init__(self, controller):

@@ -339,7 +339,7 @@ iface $bondname inet manual
             # self._exec("ifup %s"%backplanename, failOnError=True)
 
         # TODO: need to do more checks here that it came up and retry couple of times if it did not
-        #@ can do this by investigating self.getConfigFromSystem
+        # @ can do this by investigating self.getConfigFromSystem
 
         self._executor.execute("/etc/init.d/openvswitch-switch restart")
 

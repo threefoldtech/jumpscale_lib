@@ -1,3 +1,20 @@
+from .errors import RESTAPIError, BackendError,\
+    InsufficientWalletFundsError, NonExistingOutputError,\
+    NotEnoughSignaturesFound, InvalidUnlockHashChecksumError
+from .const import MINER_PAYOUT_MATURITY_WINDOW, WALLET_ADDRESS_TYPE, ADDRESS_TYPE_SIZE, HASTINGS_TFT_VALUE, UNLOCKHASH_TYPE
+from JumpscaleLib.clients.blockchain.tfchain.types.unlockhash import UnlockHash
+from JumpscaleLib.clients.blockchain.tfchain.types.transaction import TransactionFactory, DEFAULT_TRANSACTION_VERSION
+from JumpscaleLib.clients.blockchain.tfchain.atomicswap.atomicswap import AtomicSwapManager
+from JumpscaleLib.clients.blockchain.tfchain import utils
+from .types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY, UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE
+from .types.signatures import Ed25519PublicKey, SPECIFIER_SIZE
+from .encoding import binary
+import time
+import base64
+import requests
+from functools import partial
+from pyblake2 import blake2b
+import ed25519
 """
 This module implements the Tfchain client, a wrapper for the rivine ligth client.
 It hard codes some tfchain specific values, so the amount of parameters which need
@@ -13,34 +30,15 @@ from JumpscaleLib.clients.blockchain.rivine.RivineWallet import RivineWallet
 
 logger = j.logger.get(__name__)
 
-import ed25519
-from pyblake2 import blake2b
-from functools import partial
-import requests
-import base64
-import time
-from .encoding import binary
-from .types.signatures import Ed25519PublicKey, SPECIFIER_SIZE
-from .types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY, UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE
-
-from Jumpscale import j
-from JumpscaleLib.clients.blockchain.tfchain import utils
-from JumpscaleLib.clients.blockchain.tfchain.atomicswap.atomicswap import AtomicSwapManager
-from JumpscaleLib.clients.blockchain.tfchain.types.transaction import TransactionFactory, DEFAULT_TRANSACTION_VERSION
-from JumpscaleLib.clients.blockchain.tfchain.types.unlockhash import UnlockHash
-
-from .const import MINER_PAYOUT_MATURITY_WINDOW, WALLET_ADDRESS_TYPE, ADDRESS_TYPE_SIZE, HASTINGS_TFT_VALUE, UNLOCKHASH_TYPE
-
-from .errors import RESTAPIError, BackendError,\
-InsufficientWalletFundsError, NonExistingOutputError,\
-NotEnoughSignaturesFound, InvalidUnlockHashChecksumError
 
 logger = j.logger.get(__name__)
+
 
 class TfchainWallet:
     """
     Tfchain class
     """
+
     def __init__(self, seed, bc_networks, bc_network_password, nr_keys_per_seed=50, minerfee=100000000, client=None):
         """
         Creates new wallet
@@ -67,14 +65,12 @@ class TfchainWallet:
         self._addresses_info = {}
         self.atomicswap = AtomicSwapManager(wallet=self)
 
-
     @property
     def addresses(self):
         """
         Wallet addresses to recieve and send funds
         """
         return [str(key) for key in self._keys.keys()]
-
 
     @property
     def current_balance(self):
@@ -83,7 +79,6 @@ class TfchainWallet:
         """
         self._check_balance()
         return sum(int(value.get('value', 0)) for value in self._unspent_coins_outputs.values()) / HASTINGS_TFT_VALUE
-
 
     def generate_address(self):
         """
@@ -105,7 +100,6 @@ class TfchainWallet:
 
         return address
 
-
     def _generate_spendable_key(self, index):
         """
         Generate a @Spendablekey object from the seed and index
@@ -120,13 +114,11 @@ class TfchainWallet:
         pk = sk.get_verifying_key()
         return SpendableKey(pub_key=pk.to_bytes(), sec_key=sk)
 
-
     def _get_current_chain_height(self):
         """
         Retrieves the current chain height
         """
         return utils.get_current_chain_height(self._bc_networks)
-
 
     def _check_address(self, address, log_errors=True):
         """
@@ -139,7 +131,6 @@ class TfchainWallet:
         @raises: @RESTAPIError if failed to check address
         """
         return utils.check_address(self._bc_networks, address, log_errors)
-
 
     def _check_balance(self):
         """
@@ -159,8 +150,8 @@ class TfchainWallet:
                 if address_info.get('hashtype', None) != UNLOCKHASH_TYPE:
                     raise BackendError('Address is not recognized as an unblock hash')
                 self._addresses_info[address] = address_info
-                self._collect_miner_fees(address=address, blocks=address_info.get('blocks',{}),
-                                        height=current_chain_height)
+                self._collect_miner_fees(address=address, blocks=address_info.get('blocks', {}),
+                                         height=current_chain_height)
                 transactions = address_info.get('transactions', {})
                 self._collect_transaction_outputs(current_height=current_chain_height,
                                                   address=address,
@@ -168,8 +159,7 @@ class TfchainWallet:
                                                   unconfirmed_txs=unconfirmed_txs)
         # remove spent inputs after collection all the inputs
         for address, address_info in self._addresses_info.items():
-            self._remove_spent_inputs(transactions = address_info.get('transactions', {}))
-
+            self._remove_spent_inputs(transactions=address_info.get('transactions', {}))
 
     def _collect_miner_fees(self, address, blocks, height):
         """
@@ -181,7 +171,6 @@ class TfchainWallet:
         """
         self._unspent_coins_outputs.update(utils.collect_miner_fees(address, blocks, height))
 
-
     def _collect_transaction_outputs(self, current_height, address, transactions, unconfirmed_txs=None):
         """
         Collects transactions outputs
@@ -191,9 +180,9 @@ class TfchainWallet:
         @param transactions: Details about the transactions
         @param unconfirmed_txs: List of unconfirmed transactions
         """
-        unlocked_txn_outputs = utils.collect_transaction_outputs(current_height, address, transactions, unconfirmed_txs)['unlocked']
+        unlocked_txn_outputs = utils.collect_transaction_outputs(
+            current_height, address, transactions, unconfirmed_txs)['unlocked']
         self._unspent_coins_outputs.update(unlocked_txn_outputs)
-
 
     def _remove_spent_inputs(self, transactions):
         """
@@ -202,7 +191,6 @@ class TfchainWallet:
         @param transactions: Details about the transactions
         """
         utils.remove_spent_inputs(self._unspent_coins_outputs, transactions)
-
 
     def _get_unconfirmed_transactions(self, format_inputs=False):
         """
@@ -226,7 +214,6 @@ class TfchainWallet:
         """
         return utils.get_unconfirmed_transactions(self._bc_networks, format_inputs=format_inputs)
 
-
     def send_money(self, amount, recipient, reuse_addr=True, data=None, locktime=None):
         """
         Sends TFT tokens from the user's wallet to the recipient address
@@ -242,14 +229,13 @@ class TfchainWallet:
         # convert amount to hastings
         amount = int(amount * HASTINGS_TFT_VALUE)
         transaction = self._create_transaction(amount=amount,
-                                                recipient=recipient,
-                                                sign_transaction=True,
-                                                reuse_addr=reuse_addr,
-                                                custom_data=data,
-                                                locktime=locktime)
+                                               recipient=recipient,
+                                               sign_transaction=True,
+                                               reuse_addr=reuse_addr,
+                                               custom_data=data,
+                                               locktime=locktime)
         self._commit_transaction(transaction=transaction)
         return transaction
-
 
     def send_to_many(self, amount, recipients, required_nr_of_signatures, reuse_addr=True, data=None, locktime=None):
         """
@@ -278,7 +264,6 @@ class TfchainWallet:
                                                         locktime=locktime)
         self._commit_transaction(transaction=transaction)
         return transaction
-
 
     def _get_inputs(self, amount, minerfee=None):
         """
@@ -317,7 +302,6 @@ class TfchainWallet:
             result.append(input_result)
         return result, used_addresses, minerfee, (input_value - required_funds)
 
-
     def _create_multisig_transaction(self, amount, recipients, min_nr_sig=None, minerfee=None, sign_transaction=True, custom_data=None, locktime=None):
         """
         Creates a transaction with Mulitsignature condition
@@ -338,14 +322,13 @@ class TfchainWallet:
         if custom_data is not None:
             transaction.add_data(custom_data)
 
-
         input_results, used_addresses, minerfee, remainder = self._get_inputs(amount=amount)
         for input_result in input_results:
             transaction.add_coin_input(**input_result)
 
         for txn_input in transaction.coins_inputs:
             if used_addresses[txn_input.parent_id] not in self._keys:
-            # if self._unspent_coins_outputs[txn_input.parent_id][ulh] not in self._keys:
+                # if self._unspent_coins_outputs[txn_input.parent_id][ulh] not in self._keys:
                 raise NonExistingOutputError('Trying to spend unexisting output')
 
         transaction.add_multisig_output(value=amount, unlockhashes=recipients, min_nr_sig=min_nr_sig, locktime=locktime)
@@ -369,7 +352,6 @@ class TfchainWallet:
 
         return transaction
 
-
     def _create_transaction(self, amount, recipient, minerfee=None, sign_transaction=True, reuse_addr=True, custom_data=None, locktime=None):
         """
         Creates new transaction and sign it
@@ -391,14 +373,13 @@ class TfchainWallet:
         if custom_data is not None:
             transaction.add_data(custom_data)
 
-
         input_results, used_addresses, minerfee, remainder = self._get_inputs(amount=amount)
         for input_result in input_results:
             transaction.add_coin_input(**input_result)
 
         for txn_input in transaction.coins_inputs:
             if used_addresses[txn_input.parent_id] not in self._keys:
-            # if self._unspent_coins_outputs[txn_input.parent_id][ulh] not in self._keys:
+                # if self._unspent_coins_outputs[txn_input.parent_id][ulh] not in self._keys:
                 raise NonExistingOutputError('Trying to spend unexisting output')
 
         transaction.add_coin_output(value=amount, recipient=recipient, locktime=locktime)
@@ -424,14 +405,12 @@ class TfchainWallet:
 
         return transaction
 
-
     def _get_unlockhash_from_output(self, output, address):
         """
         Retrieves unlockhash from coin output. This should handle different types of output conditions and transaction formats
         """
         ulh = utils.get_unlockhash_from_output(output, address, current_height=self._get_current_chain_height())
         return ulh['unlocked'][0] if ulh['unlocked'] else None
-
 
     def _sign_transaction(self, transaction):
         """
@@ -441,14 +420,14 @@ class TfchainWallet:
         """
         logger.info("Signing Trasnaction")
         for index, input in enumerate(transaction.coins_inputs):
-            #@TODO improve the parsing of outputs its duplicated now in too many places
-            ulh = self._get_unlockhash_from_output(output=self._unspent_coins_outputs[input.parent_id], address=input.parent_id)
+            # @TODO improve the parsing of outputs its duplicated now in too many places
+            ulh = self._get_unlockhash_from_output(
+                output=self._unspent_coins_outputs[input.parent_id], address=input.parent_id)
             if ulh is not None:
                 key = self._keys[ulh]
                 input.sign(input_idx=index, transaction=transaction, secret_key=key.secret_key)
             else:
                 logger.warn("Failed to retrieve unlockhash related to input {}".format(input))
-
 
     def _commit_transaction(self, transaction):
         """
@@ -457,7 +436,6 @@ class TfchainWallet:
         @param transaction: Transaction object to be committed
         """
         return utils.commit_transaction(self._bc_networks, self._bc_network_password, transaction)
-
 
     def sign_transaction(self, transaction, multisig=False, commit=False):
         """
@@ -508,7 +486,6 @@ class SpendableKey:
         self._pk = pub_key
         self._unlockhash = None
 
-
     @property
     def public_key(self):
         """
@@ -522,8 +499,6 @@ class SpendableKey:
         Returns the secret key
         """
         return self._sk
-
-
 
     @property
     def unlockhash(self):
