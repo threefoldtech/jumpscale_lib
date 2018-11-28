@@ -23,26 +23,28 @@ class NetworkMember(JSBASE):
         self.data = data
         self._network = network
         self.address = address
-        self._private_ip = None
 
     def get_private_ip(self, timeout=120):
         """
         Gets the private ip address of the member node
         """
         logger.info('get private ip')
-        if not self._private_ip:
-            before = time.time()
-            while not self.data['config']['ipAssignments'] and time.time() - before < timeout:
-                logger.info('ipAssigments : {}'.format(self.data['config']['ipAssignments']))
-                logger.info('remain timeout : {}'.format(time.time() - before < timeout))
-                logger.info('timeout: {}, remain timeout: {}'.format(timeout, time.time() - before))
+        logger.info('ipAssigments : {}'.format(self.data['config']['ipAssignments']))
+        if not self.data['config']['ipAssignments']:
+
+            if not self.data['config']['authorized']:
+                self.authorize(timeout=timeout)
+
+            def _cb():
                 self._refresh()
-                time.sleep(5)
+                return self.data['config']['ipAssignments']
+            j.tools.timer.execute_until(_cb, timeout=timeout, interval=5)
+
             if not self.data['config']['ipAssignments']:
                 raise ValueError('Cannot get private ip address for zerotier member')
-            self._private_ip = self.data['config']['ipAssignments'][0]
-        logger.info('private ip : {}'.format(self._private_ip))
-        return self._private_ip
+
+        logger.info('private ip : {}'.format(self.data['config']['ipAssignments'][0]))
+        return self.data['config']['ipAssignments'][0]
 
     @property
     def private_ip(self):
