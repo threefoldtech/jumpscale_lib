@@ -180,10 +180,11 @@ class SandboxPython(JSBASE):
                 dest0 = "%s/base"%path
                 src0 = dest
                 j.sal.fs.createDir(dest0)
-                j.shell()
                 j.sal.fs.copyDirTree(src0, dest0, keepsymlinks=False, deletefirst=False, overwriteFiles=True,
                                  ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True)
 
+
+        copy2git()
 
         #now lets test if it all works
         j.sal.process.execute("set -e;cd %s;source env.sh;python3 jumpscale_install.py" % dest)
@@ -193,16 +194,16 @@ class SandboxPython(JSBASE):
         print("to test do:")
         print("'cd %s;source env.sh;js_shell" % dest)
 
-    def _zip(self, dest=""):
+    def _zip(self, dest="", python_lib_zip=False):
         if dest == "":
             dest = j.dirs.BUILDDIR + "/sandbox/python3/"
         cmd = "cd %s;rm -f ../js_sandbox.tar.gz;tar -czf ../js_sandbox.tar.gz .;" % dest
         j.sal.process.execute(cmd)
-        cmd = "cd %s;rm -f ../tfbot/lib/python.zip;cd ../tfbot/lib/python;zip -r ../python.zip .;" % dest
-        j.sal.process.execute(cmd)
-        cmd = "cd %s;rm -rf ../tfbot/lib/python" % dest
-        j.sal.process.execute(cmd)
-
+        if python_lib_zip:
+            cmd = "cd %s;rm -f ../tfbot/lib/python.zip;cd ../tfbot/lib/python;zip -r ../python.zip .;" % dest
+            j.sal.process.execute(cmd)
+            cmd = "cd %s;rm -rf ../tfbot/lib/python" % dest
+            j.sal.process.execute(cmd)
 
 
     def env_write(self, dest=""):
