@@ -33,6 +33,8 @@ class NetworkMember(JSBASE):
         if not self._private_ip:
             before = time.time()
             while not self.data['config']['ipAssignments'] and time.time() - before < timeout:
+                logger.info('ipAssigments : {}'.format(self.data['config']['ipAssignments']))
+                logger.info('remain timeout : {}'.format(time.time() - before < timeout))
                 self._refresh()
                 time.sleep(5)
             if not self.data['config']['ipAssignments']:
