@@ -35,6 +35,7 @@ class NetworkMember(JSBASE):
             while not self.data['config']['ipAssignments'] and time.time() - before < timeout:
                 logger.info('ipAssigments : {}'.format(self.data['config']['ipAssignments']))
                 logger.info('remain timeout : {}'.format(time.time() - before < timeout))
+                logger.info('timeout: {}, remain timeout: {}'.format(timeout, time.time() - before))
                 self._refresh()
                 time.sleep(5)
             if not self.data['config']['ipAssignments']:
