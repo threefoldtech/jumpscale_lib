@@ -68,7 +68,9 @@ class NetworkMember(JSBASE):
         Refresh the data of the member by querying the lastest info from the server
         """
         logger.info('refresh the data of the member')
+        logger.info("current data: %s", self.data)
         member = self._network.member_get(address=self.address)
+        logger.info("new data: %s", member.data)
         self.data = member.data
         logger.info('done')
 
