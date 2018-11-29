@@ -15,7 +15,6 @@ from electrum.simple_config import SimpleConfig
 
 EXECLUDED_COMMANDS = ['create', 'commands', 'restore', 'dumpprivkeys']
 
-
 class ElectrumWallet:
     """
     An Electrum wallet wrapper
