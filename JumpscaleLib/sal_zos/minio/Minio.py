@@ -53,8 +53,7 @@ class Minio(Service):
         """
         super().__init__(name, node, 'minio', [DEFAULT_PORT])
 
-        # self.flist = 'https://hub.grid.tf/tf-official-apps/minio.flist'
-        self.flist = 'https://hub.grid.tf/tf-autobuilder/threefoldtech-minio-zerostor.flist'  # TODO replace me when merging to master
+        self.flist = 'https://hub.grid.tf/tf-official-apps/minio.flist'
         self.zdbs = zdbs
         self._nr_datashards = nr_datashards
         self._nr_parityshards = nr_parityshards
