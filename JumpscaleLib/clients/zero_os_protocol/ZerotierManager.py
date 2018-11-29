@@ -1,5 +1,6 @@
+import netaddr
+
 from . import typchk
-from jumpscale import j
 
 
 class ZerotierManager():
@@ -23,7 +24,7 @@ class ZerotierManager():
         result = response.get()
 
         if result.state != 'SUCCESS':
-            raise RuntimeError('failed to join zerotier network: %s', result.stderr)
+            raise RuntimeError('failed to join zerotier network: %s' % result.stderr)
 
     def leave(self, network):
         """
@@ -38,7 +39,7 @@ class ZerotierManager():
         result = response.get()
 
         if result.state != 'SUCCESS':
-            raise RuntimeError('failed to leave zerotier network: %s', result.stderr)
+            raise RuntimeError('failed to leave zerotier network: %s' % result.stderr)
 
     def list(self):
         """
@@ -55,3 +56,12 @@ class ZerotierManager():
         :return: dict of zerotier statusinfo
         """
         return self._client.json('zerotier.info', {})
+
+    def ip_from_network(self, network_id):
+        for zerotier in self.list():
+            if zerotier['id'] == network_id:
+                for ip_addr in zerotier.get('assignedAddresses', []):
+                    network = netaddr.IPNetwork(ip_addr)
+                    if network.ip.version != 4:
+                        continue
+                    return str(network.ip)
