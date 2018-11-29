@@ -389,6 +389,7 @@ Type=simple
         publiczt = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
         for nic in self.nics:
             if nic.type == 'zerotier':
+                logger.info('******* processing zerotier nic for vm {}'.format(self.name))
                 if nic.networkid == PUBLIC_THREEFOLD_NETWORK:
                     public_threefold_nic = True
                 haszerotier = True
@@ -423,6 +424,7 @@ Type=simple
             config['/var/lib/zerotier-one/identity.public'] = publiczt
             if not nics:
                 nics.append({'type': 'default'})
+            logger.info('***** authorizing zerotiers')
             authorize_zerotiers(publiczt, self.nics)
         cmdline = ' '.join([arg.parameter() for arg in self.kernel_args])
         self.node.client.kvm.create(self.name, media, self.flist, self.vcpus,

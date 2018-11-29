@@ -141,6 +141,7 @@ class ZTNic(Nic):
     def client(self):
         if self._client is None and j.clients.zerotier.exists(self._client_name):
             self._client = j.clients.zerotier.get(self._client_name, create=False, die=True, interactive=False)
+        logger.info("****** zt client {}".format(self._client))
         return self._client
 
     @client.setter
@@ -166,8 +167,10 @@ class ZTNic(Nic):
         """
         Authorize zerotier network
         """
+
         if not self.client:
             return False
+        logger.info("authorizing {} on network {}".format(self._parent.name, self.networkid))
         network = self.client.network_get(self.networkid)
         network.member_add(publicidentity, self._parent.name)
         return True
