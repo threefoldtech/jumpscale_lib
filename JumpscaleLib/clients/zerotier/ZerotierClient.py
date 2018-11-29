@@ -1,9 +1,11 @@
 from jumpscale import j
-
 import zerotier
 import copy
 import time
 import ipcalc
+from JumpscaleLib.sal_zos.globals import TIMEOUT_DEPLOY
+
+
 
 JSBASE = j.application.jsbase_get_class()
 JSConfigClient = j.tools.configmanager.base_class_config
@@ -24,7 +26,7 @@ class NetworkMember(JSBASE):
         self._network = network
         self.address = address
 
-    def get_private_ip(self, timeout=120):
+    def get_private_ip(self, timeout=TIMEOUT_DEPLOY):
         """
         Gets the private ip address of the member node
         """
@@ -76,7 +78,7 @@ class NetworkMember(JSBASE):
         self.data = member.data
         logger.info('done')
 
-    def _update_authorization(self, authorize=True, timeout=30):
+    def _update_authorization(self, authorize=True, timeout=TIMEOUT_DEPLOY):
         """
         Update authorization setting
         """
@@ -101,7 +103,7 @@ class NetworkMember(JSBASE):
             self.logger.info("Member {}/{} already {}".format(self._network.id, self.address,
                                                               'authorized' if authorize else 'deauthorized'))
 
-    def authorize(self, timeout=30):
+    def authorize(self, timeout=TIMEOUT_DEPLOY):
         """
         Authorize the member if not already authorized
 
@@ -109,7 +111,7 @@ class NetworkMember(JSBASE):
         """
         self._update_authorization(authorize=True, timeout=timeout)
 
-    def deauthorize(self, timeout=30):
+    def deauthorize(self, timeout=TIMEOUT_DEPLOY):
         """
         Deauthorize the member if already authorized
 
