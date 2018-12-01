@@ -371,7 +371,7 @@ class RivineWallet:
         return utils.get_unconfirmed_transactions(self._bc_networks, format_inputs=format_inputs)
 
 
-    def send_money(self, amount, recipient, data=None, locktime=None):
+    def send_money(self, amount, recipient, data=None, data_type=0, locktime=None):
         """
         Sends TFT tokens from the user's wallet to the recipient address
 
@@ -387,13 +387,14 @@ class RivineWallet:
         transaction = self._create_transaction(amount=amount,
                                                 recipient=recipient,
                                                 sign_transaction=True,
-                                                custom_data=data,
+                                                data=data,
+                                                data_type=data_type,
                                                 locktime=locktime)
         self._commit_transaction(transaction=transaction)
         return transaction
 
 
-    def send_to_multisig(self, amount, recipients, required_nr_of_signatures, data=None, locktime=None):
+    def send_to_multisig(self, amount, recipients, required_nr_of_signatures, data=None, data_type=0, locktime=None):
         """
         Sends funds to multiple recipients
         Also specificies how many recipients need to sign before the funds can be spent
@@ -414,7 +415,8 @@ class RivineWallet:
                                                         recipients=recipients,
                                                         min_nr_sig=required_nr_of_signatures,
                                                         sign_transaction=True,
-                                                        custom_data=data,
+                                                        data=data,
+                                                        data_type=data_type,
                                                         locktime=locktime)
         self._commit_transaction(transaction=transaction)
         return transaction
@@ -522,7 +524,7 @@ class RivineWallet:
         return result, used_addresses, minerfee, (input_value - required_funds)
 
 
-    def _create_multisig_transaction(self, amount, recipients, min_nr_sig=None, minerfee=None, sign_transaction=True, custom_data=None, locktime=None):
+    def _create_multisig_transaction(self, amount, recipients, min_nr_sig=None, minerfee=None, sign_transaction=True, data=None, data_type=0, locktime=None):
         """
         Creates a transaction with Mulitsignature condition
         MultiSignature Condition allows the funds to be sent to multiple wallet addresses and specify how many signatures required to make this transaction spendable
@@ -539,8 +541,8 @@ class RivineWallet:
         transaction = TransactionFactory.create_transaction(version=DEFAULT_TRANSACTION_VERSION)
 
         # set the the custom data on the transaction
-        if custom_data is not None:
-            transaction.add_data(custom_data)
+        if data is not None:
+            transaction.set_data(data, data_type=data_type)
 
 
         input_results, used_addresses, minerfee, remainder = self._get_inputs(amount=amount)
@@ -574,7 +576,7 @@ class RivineWallet:
         return transaction
 
 
-    def _create_transaction(self, amount, recipient, minerfee=None, sign_transaction=True, custom_data=None, locktime=None):
+    def _create_transaction(self, amount, recipient, minerfee=None, sign_transaction=True, data=None, data_type=0, locktime=None):
         """
         Creates new transaction and sign it
         creates a new transaction of the specified ammount to a specified address. A remainder address
@@ -592,8 +594,8 @@ class RivineWallet:
         transaction = TransactionFactory.create_transaction(version=DEFAULT_TRANSACTION_VERSION)
 
         # set the the custom data on the transaction
-        if custom_data is not None:
-            transaction.add_data(custom_data)
+        if data is not None:
+            transaction.set_data(data, data_type=data_type)
 
 
         input_results, used_addresses, minerfee, remainder = self._get_inputs(amount=amount)

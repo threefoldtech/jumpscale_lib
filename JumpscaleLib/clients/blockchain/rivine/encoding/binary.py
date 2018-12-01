@@ -45,6 +45,8 @@ def encode(value, type_=None):
         elif value_type in (list, set, tuple, frozenset):
             for item in value:
                 result.extend(encode(item))
+        elif value_type is str:
+            result.extend(value.encode('utf-8'))
         else:
             if hasattr(value, 'binary'):
                 result.extend(value.binary)

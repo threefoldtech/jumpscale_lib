@@ -124,7 +124,9 @@ class TransactionFactory:
                 for minerfee in (txn_data['minerfees'] or []) :
                     txn.add_minerfee(int(minerfee))
             if 'arbitrarydata' in txn_data:
-                txn._data = base64.b64decode(txn_data['arbitrarydata'])
+                txn._data.value = base64.b64decode(txn_data['arbitrarydata'])
+            if 'arbitrarydatatype' in txn_data:
+                txn._data.type = int(txn_data['arbitrarydatatype'])
             return txn
               
         if txn_dict['version'] == MINTERDEFINITION_TRANSACTION_VERSION:
@@ -142,7 +144,9 @@ class TransactionFactory:
                 for minerfee in txn_data['minerfees']:
                     txn.add_minerfee(int(minerfee))
             if 'arbitrarydata' in txn_data:
-                txn._data = base64.b64decode(txn_data['arbitrarydata'])
+                txn._data.value = base64.b64decode(txn_data['arbitrarydata'])
+            if 'arbitrarydatatype' in txn_data:
+                txn._data.type = int(txn_data['arbitrarydatatype'])
             return txn
    
         if txn_dict['version'] == COINCREATION_TRANSACTION_VERSION:
@@ -162,7 +166,9 @@ class TransactionFactory:
                 for minerfee in txn_data['minerfees']:
                     txn.add_minerfee(int(minerfee))
             if 'arbitrarydata' in txn_data:
-                txn._data = base64.b64decode(txn_data['arbitrarydata'])
+                txn._data.value = base64.b64decode(txn_data['arbitrarydata'])
+            if 'arbitrarydatatype' in txn_data:
+                txn._data.type = int(txn_data['arbitrarydatatype'])
             return txn
 
         if txn_dict['version'] == BOT_REGISTRATION_TRANSACTION_VERSION:
@@ -204,7 +210,7 @@ class TransactionV1:
         self._coin_outputs = []
         self._blockstakes_outputs = []
         self._minerfees = []
-        self._data = bytearray()
+        self._data = ArbitraryData()
         self._version = bytearray([1])
         self._id = None
 
@@ -243,9 +249,16 @@ class TransactionV1:
     @property
     def data(self):
         """
-        Gets transaction id
+        Gets the arbitrary data of the transaction
         """
-        return self._data
+        return self._data.value
+
+    @property
+    def data_type(self):
+        """
+        Gets the optional type of the arbitrary data of the transaction
+        """
+        return self._data.type
 
 
     @property
@@ -254,24 +267,26 @@ class TransactionV1:
         Returns a json version of the TransactionV1 object
         """
         result = {
-            'version': binary.decode(self._version, type_=int),
+            'version': self.version,
             'data': {
                 'coininputs': [input.json for input in self._coin_inputs],
                 'coinoutputs': [output.json for output in self._coin_outputs],
                 'minerfees': [str(fee) for fee in self._minerfees]
             }
         }
-        if self._data:
-            result['data']['arbitrarydata'] = base64.b64encode(self._data).decode('utf-8')
+        if self._data.value:
+            result['data']['arbitrarydata'] = base64.b64encode(self._data.value).decode('utf-8')
+        if self._data.type != 0:
+            result['data']['arbitrarydatatype'] = self._data.type 
         return result
 
 
-
-    def add_data(self, data):
+    def set_data(self, data, data_type=0):
         """
-        Add data to the transaction
+        Set data of the transaction
         """
-        self._data.extend(data)
+        self._data.value = data
+        self._data.type = data_type
 
 
     def add_coin_input(self, parent_id, pub_key):
@@ -398,8 +413,8 @@ class TransactionV1:
         for miner_fee in self._minerfees:
             buffer.extend(binary.encode(miner_fee, type_='currency'))
 
-        # encode custom data_
-        buffer.extend(binary.encode(self._data, type_='slice'))
+        # encode custom data
+        buffer.extend(binary.encode(self._data))
 
         # now we need to return the hash value of the binary array
         # return bytes(buffer)
@@ -415,7 +430,7 @@ class TransactionV128:
         self._mint_fulfillment = None
         self._mint_condition = None
         self._minerfees = []
-        self._data = bytearray()
+        self._data = ArbitraryData()
         self._version = bytearray([128])
         self._id = None
         self._nonce = token_bytes(nbytes=8)
@@ -460,7 +475,16 @@ class TransactionV128:
         Retrieves the data
         """
         # TODO: make this static of some Base (Abstract) Tx class
-        return bytearray()
+        return self._data.value
+
+
+    @property
+    def data_type(self):
+        """
+        Retrieves the data type
+        """
+        # TODO: make this static of some Base (Abstract) Tx class
+        return self._data.type
 
 
     @property
@@ -493,15 +517,19 @@ class TransactionV128:
                     'minerfees': [str(fee) for fee in self._minerfees]
                 }
         }
-        if self._data:
-            result['data']['arbitrarydata'] = base64.b64encode(self._data).decode('utf-8')
+        if self._data.value:
+            result['data']['arbitrarydata'] = base64.b64encode(self._data.value).decode('utf-8')
+        if self._data.type != 0:
+            result['data']['arbitrarydatatype'] = self._data.type 
         return result
 
-    def add_data(self, data):
+    
+    def set_data(self, data, data_type=0):
         """
-        Add data to the transaction
+        Set data of the transaction
         """
-        self._data.extend(data)
+        self._data.value = data
+        self._data.type = data_type
 
 
     def set_singlesig_mint_condition(self, minter_address, locktime=None):
@@ -565,7 +593,7 @@ class TransactionV128:
         for miner_fee in self._minerfees:
             buffer.extend(binary.encode(miner_fee, type_='currency'))
         # arb data
-        buffer.extend(binary.encode(self._data, type_='slice'))
+        buffer.extend(binary.encode(self._data))
 
         return hash(data=buffer)
 
@@ -581,7 +609,7 @@ class TransactionV129:
         self._version = bytearray([129])
         self._id = None
         self._minerfees = []
-        self._data = bytearray()
+        self._data = ArbitraryData()
         self._coin_outputs = []
         self._specifier = bytearray(b'coin mint tx')
         self._specifier.extend([0,0,0,0])
@@ -626,7 +654,14 @@ class TransactionV129:
         """
         Retrieves the data
         """
-        return self._data
+        return self._data.value
+
+    @property
+    def data_type(self):
+        """
+        Retrieves the data type
+        """
+        return self._data.type
 
     @property
     def mint_fulfillment(self):
@@ -649,15 +684,20 @@ class TransactionV129:
                 'minerfees': [str(fee) for fee in self._minerfees]
             }
         }
-        if self._data:
-            result['data']['arbitrarydata'] = base64.b64encode(self._data).decode('utf-8')
+        if self._data.value:
+            result['data']['arbitrarydata'] = base64.b64encode(self._data.value).decode('utf-8')
+        if self._data.type != 0:
+            result['data']['arbitrarydatatype'] = self._data.type 
         return result
 
-    def add_data(self, data):
+    
+    def set_data(self, data, data_type=0):
         """
-        Add data to the transaction
+        Set data of the transaction
         """
-        self._data.extend(data)
+        self._data.value = data
+        self._data.type = data_type
+
 
     def add_coin_output(self, value, recipient, locktime=None):
         """
@@ -730,7 +770,7 @@ class TransactionV129:
             buffer.extend(binary.encode(miner_fee, type_='currency'))
 
         # finally custom data
-        buffer.extend(binary.encode(self._data, type_='slice'))
+        buffer.extend(binary.encode(self._data))
 
         return hash(data=buffer)
 
@@ -1620,6 +1660,49 @@ class CoinOutput:
         return result
 
 
+class ArbitraryData:
+    def __init__(self):
+        self._value = bytearray()
+        self._type = 0
+    
+    @property
+    def value(self):
+        return self._value
+    @value.setter
+    def value(self, data):
+        if isinstance(data, bytearray):
+            self._value = data
+            return
+        if not data:
+            self._value = bytearray()
+        elif isinstance(data, bytes):
+            self._value = bytearray(data)
+        elif isinstance(data, str):
+            self._value = data.encode('utf-8')
+        else:
+            raise ValueError("value of unsupported type {} cannot be used as arbitrary data".format(type(data)))
+    
+    @property
+    def type(self):
+        return self._type
+    @type.setter
+    def type(self, i):
+        if not isinstance(i, int):
+            raise ValueError("value of unsupported type {} cannot be used as the integral type of arbitrary data".format(type(i)))
+        if i < 0 or i > 255:
+            raise ValueError("invalid arbitrary data type {}, it has to be in the inclusive range [0,255]".format(i))
+        self._type = i
+
+    
+    @property
+    def binary(self):
+        length = len(self._value)
+        output = bytearray(binary.encode(length))
+        output[3] = self._type # type in using byte 3 of the 8-byte length of arbitrary data in Sia-encoding
+        output.extend(self._value) # append arbitrary data and return the total array
+        return output
+    
+
 class CoinOutputSummary:
     def __init__(self):
         self._amount = 0
@@ -2082,13 +2165,6 @@ class FlatMoneyTransaction:
         The amount of coins that were sent with this transaction.
         """
         return self._amount
-    
-    @property
-    def direction(self):
-        """
-        The direction in which the coins flow.
-        """
-        return self._direction
     
     @property
     def data(self):

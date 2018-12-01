@@ -177,7 +177,7 @@ class TfchainClientFactory(JSConfigBaseFactory):
         if condition is not None:
            tx.set_condition(condition)
         if description is not None:
-            tx.add_data(description.encode('utf-8'))
+            tx.set_data(description.encode('utf-8'), data_type=1)
         return tx
 
     def create_coincreation_transaction(self, amount=None, condition=None, description=None, network=TfchainNetwork.STANDARD):
@@ -194,7 +194,7 @@ class TfchainClientFactory(JSConfigBaseFactory):
         if amount is not None and condition is not None:
             tx.add_output(amount, condition)
         if description is not None:
-            tx.add_data(description.encode('utf-8'))
+            tx.set_data(description.encode('utf-8'), data_type=1)
         return tx
 
     def create_singlesig_condition(self, address, locktime=None):
