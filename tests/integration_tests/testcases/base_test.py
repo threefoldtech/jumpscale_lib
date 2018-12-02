@@ -99,7 +99,7 @@ class BaseTest(Utils):
             old_data[key] = new_data[key]
         return old_data
 
-    def get_zerotier_ip(self, ztIdentity, timeout=None, zt_client=None, zt_network=None):
+    def get_zerotier_ip(self, ztIdentity, timeout=300, zt_client=None, zt_network=None):
         ztAddress = ztIdentity.split(':')[0]
         zt_client = zt_client or self.zt_client
         zt_network = zt_network or self.zt_network

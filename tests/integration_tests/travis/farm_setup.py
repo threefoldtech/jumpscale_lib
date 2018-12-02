@@ -44,7 +44,7 @@ class Utils(object):
         return rc
 
     def send_script_to_remote_machine(self, script, ip, password):
-        cmd = 'wget "https://raw.githubusercontent.com/threefoldtech/jumpscale_lib/sal_testcases/tests/integration_tests/travis/setup_env.sh"'
+        cmd = 'wget "https://raw.githubusercontent.com/threefoldtech/jumpscale_lib/development/tests/integration_tests/travis/setup_env.sh"'
         cmd = 'sshpass -p {} ssh -o StrictHostKeyChecking=no  root@{} {}'.format(password, ip, cmd)
         self.run_cmd(cmd)
 
@@ -113,7 +113,7 @@ def main(options):
 
     # Access the ubuntu vm and install requirements
     cmd = 'bash {script} {branch} {nodeip} {zt_token}'.format(
-        script=SETUP_ENV_SCRIPT_NAME, branch="sal_testcases", nodeip=options.zos_ip, zt_token=options.zt_token)
+        script=SETUP_ENV_SCRIPT_NAME, branch=options.branch, nodeip=options.zos_ip, zt_token=options.zt_token)
     utils.run_cmd_on_remote_machine(cmd, options.vm_ip, options.vm_password)
 
 
