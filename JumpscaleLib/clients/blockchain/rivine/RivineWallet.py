@@ -139,7 +139,7 @@ class RivineWallet:
         """
         return str(self.generate_key(persist=persist).unlockhash)
 
-    def list_incoming_transactions(self, addresses=None):
+    def list_incoming_transactions(self, addresses=None, min_height=0):
         """
         List all incoming transactions related to a wallet,
         optionally filtering to only show the given address(es).
@@ -157,16 +157,20 @@ class RivineWallet:
         
         # list the transactions of all transactions, one by one
         for address in addresses:
-            address_info = self._check_address(address=address, log_errors=False)
-            address_transactions = address_info.get('transactions', {})
-            if not address_transactions:
-                continue
-            for tx in address_transactions:
-                # collect all transactions
-                address_txs = FlatMoneyTransaction.create_list(tx)
-                inc_txs = [tx for tx in address_txs if tx.to_address in addresses]
-                inc_txs = [tx for tx in inc_txs if not(len(tx.from_addresses) == 1 and tx.from_addresses[0] == tx.to_address)]
-                transactions.extend(inc_txs)
+            try:
+                address_info = self._check_address(address=address, min_height=min_height, log_errors=False)
+            except RESTAPIError:
+                pass
+            else:
+                address_transactions = address_info.get('transactions', {})
+                if not address_transactions:
+                    continue
+                for tx in address_transactions:
+                    # collect all transactions
+                    address_txs = FlatMoneyTransaction.create_list(tx)
+                    inc_txs = [tx for tx in address_txs if tx.to_address in addresses]
+                    inc_txs = [tx for tx in inc_txs if not(len(tx.from_addresses) == 1 and tx.from_addresses[0] == tx.to_address)]
+                    transactions.extend(inc_txs)
 
         # return all listed transactions, reverse-sorted by block height
         transactions.sort(key=lambda tx: tx.block_height if tx.confirmed else sys.maxsize, reverse=True)
@@ -209,7 +213,7 @@ class RivineWallet:
         return utils.get_current_chain_height(self._bc_networks)
 
 
-    def _check_address(self, address, log_errors=True):
+    def _check_address(self, address, min_height=0, log_errors=True):
         """
         Check if an address is valid
         performs a http call to an explorer to check if an address has (an) (unspent) output(s)
@@ -219,7 +223,7 @@ class RivineWallet:
 
         @raises: @RESTAPIError if failed to check address
         """
-        return utils.check_address(self._bc_networks, address, log_errors)
+        return utils.check_address(self._bc_networks, address, min_height=min_height, log_errors=log_errors)
 
 
     def _check_balance(self):

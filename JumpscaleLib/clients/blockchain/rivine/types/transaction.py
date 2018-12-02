@@ -1664,6 +1664,13 @@ class ArbitraryData:
     def __init__(self):
         self._value = bytearray()
         self._type = 0
+
+    def __str__(self):
+        if self._type == 1:
+            return self._value.decode('utf-8')
+        return self._value.hex()
+    def __repr__(self):
+        return str(self)
     
     @property
     def value(self):
@@ -1895,6 +1902,7 @@ class TransactionSummary:
         self._coin_inputs = []
         self._coin_outputs = []
         self._data = ''
+        self._data_type = 0
 
 
     def __repr__(self):
@@ -1914,7 +1922,7 @@ class TransactionSummary:
             output += '\t- Coin Outputs:\n\t\t- '
             output += '\n\t\t- '.join([str(co) for co in self._coin_outputs]) + '\n'
         if self._data:
-            output += '\t- Data: ' + self._data
+            output += '\t- Data ({}): {}'.format(self._data_type, self._data)
         return output
 
 
@@ -1933,7 +1941,12 @@ class TransactionSummary:
         rawtxdata = rawtx.get('data', {})
         # collect the optional data as well
         if 'arbitrarydata' in rawtxdata:
-            ts._data = base64.b64decode(rawtxdata['arbitrarydata']).decode('utf-8') # TODO: handle data (optional) decoding based on data type
+            ad = ArbitraryData()
+            ad.value = base64.b64decode(rawtxdata['arbitrarydata'])
+            if 'arbitrarydatatype' in rawtxdata:
+                ad.type = int(rawtxdata['arbitrarydatatype'])
+            ts._data = str(ad)
+            ts._data_type = ad.type
 
         # copy the block height, (tx) id and confirmation state as-is
         ts._id = explorer_transaction.get('id', '')
@@ -2026,6 +2039,13 @@ class TransactionSummary:
         """
         return self._data
 
+    @property
+    def data_type(self):
+        """
+        The optional (arbitrary) data type that was attached to the data in this transaction.
+        """
+        return self._data_type
+
 
 class FlatMoneyTransaction:
     """
@@ -2052,8 +2072,14 @@ class FlatMoneyTransaction:
 
         # collect the optional data as well
         data = ''
+        data_type = 0
         if 'arbitrarydata' in rawtxdata:
-            data = base64.b64decode(rawtxdata['arbitrarydata']).decode('utf-8') # TODO: handle data (optional) decoding based on data type
+            ad = ArbitraryData()
+            ad.value = base64.b64decode(rawtxdata['arbitrarydata'])
+            if 'arbitrarydatatype' in rawtxdata:
+                ad.type = int(rawtxdata['arbitrarydatatype'])
+            data = str(ad)
+            data_type = ad.type
 
         # copy the block height, (tx) id and confirmation state as-is
         block_height = explorer_transaction.get('height', 0)
@@ -2085,6 +2111,7 @@ class FlatMoneyTransaction:
             tx._to_address = uh
             tx._amount = amount
             tx._data = data
+            tx._data_type = data_type
             txs.append(tx)
 
         # return a list of flat transactions
@@ -2099,6 +2126,7 @@ class FlatMoneyTransaction:
         self._to_address = ''
         self._amount = 0
         self._data = ''
+        self._data_type = 0
 
 
     def __repr__(self):
@@ -2117,7 +2145,7 @@ class FlatMoneyTransaction:
         output += ' -> ' + self._to_address
         output += ' : ' + str(self._amount)
         if self._data:
-            output += '\n\tdata: ' + self._data
+            output += '\n\tdata ({}): {}'.format(self._data_type, self._data)
         return output
 
 
@@ -2172,3 +2200,10 @@ class FlatMoneyTransaction:
         The optional (arbitrary) data that was attached with this transaction.
         """
         return self._data
+
+    @property
+    def data_type(self):
+        """
+        The optional (arbitrary) data type that was attached to the data in this transaction.
+        """
+        return self._data_type

@@ -92,7 +92,7 @@ class TfchainClientFactory(JSConfigBaseFactory):
         return TransactionSummary.from_explorer_transaction(tx)
 
 
-    def list_incoming_transactions_for(self, addresses, network=TfchainNetwork.STANDARD, explorers=None):
+    def list_incoming_transactions_for(self, addresses, network=TfchainNetwork.STANDARD, explorers=None, min_height=0):
         """
         Get all transactions for the given addresses as registered on a TFchain network
 
@@ -116,12 +116,16 @@ class TfchainClientFactory(JSConfigBaseFactory):
         
         # list the transactions of all transactions, one by one
         for address in addresses:
-            address_info = utils.check_address(explorers, address, log_errors=False)
-            address_transactions = address_info.get('transactions', {})
-            if not address_transactions:
-                continue
-            for tx in address_transactions:
-                transactions.extend([tx for tx in FlatMoneyTransaction.create_list(tx) if tx.to_address in addresses])
+            try:
+                address_info = utils.check_address(explorers, address, min_height=min_height, log_errors=False)
+            except RESTAPIError:
+                pass
+            else:
+                address_transactions = address_info.get('transactions', {})
+                if not address_transactions:
+                    continue
+                for tx in address_transactions:
+                    transactions.extend([tx for tx in FlatMoneyTransaction.create_list(tx) if tx.to_address in addresses])
         
         # return all listed transactions, reverse-sorted by block height
         transactions.sort(key=lambda tx: tx.block_height if tx.confirmed else sys.maxsize, reverse=True)

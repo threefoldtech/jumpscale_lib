@@ -105,7 +105,7 @@ def get_current_chain_height(rivine_explorer_addresses):
     return result
 
 
-def check_address(rivine_explorer_addresses, address, log_errors=True):
+def check_address(rivine_explorer_addresses, address, min_height=0, log_errors=True):
     """
     Check if an address is valid and return its details
 
@@ -118,8 +118,9 @@ def check_address(rivine_explorer_addresses, address, log_errors=True):
     msg = 'Failed to retrieve address information.'
     result = None
     response = None
+    min_height = max(0, int(min_height))
     for rivine_explorer_address in rivine_explorer_addresses:
-        url = '{}/explorer/hashes/{}'.format(rivine_explorer_address.strip('/'), address)
+        url = '{}/explorer/hashes/{}?minheight={}'.format(rivine_explorer_address.strip('/'), address, min_height)
         headers = {'user-agent': 'Rivine-Agent'}
         try:
             response = requests.get(url, headers=headers, timeout=10)
