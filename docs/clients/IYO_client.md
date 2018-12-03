@@ -1,8 +1,8 @@
-# How to use the JumpScale client for ItsYou.online
+# How to use the Jumpscale client for ItsYou.online
 
-The ItsYou.online client is available as part of [jumpscale/lib9](https://github.com/Jumpscale/lib9).
+The ItsYou.online client is available as part of [jumpscale/lib](https://github.com/Jumpscale/lib).
 
-To use the client you need to have a client instance. See [here](https://github.com/Jumpscale/core9/blob/master/docs/config/configmanager.md) for how to configure an instance. Client can then be used as follows:
+To use the client you need to have a client instance. See [here](https://github.com/Jumpscale/core/blob/master/docs/config/configmanager.md) for how to configure an instance. Client can then be used as follows:
 
 ```python
 iyo_cl = j.clients.itsyouonline.get('myinstance')

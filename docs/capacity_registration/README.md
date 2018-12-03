@@ -10,9 +10,9 @@ This database will be expose using a small REST API server that also host a smal
 ### Architecture
 So there are 3 major component in this architecture:
 - mongo cluster
-- REST API server (https://github.com/Jumpscale/lib9/tree/development/JumpScale9Lib/servers/grid_capacity)
+- REST API server (https://github.com/Jumpscale/lib/tree/development/JumpscaleLib/servers/grid_capacity)
  - talk to the mongo database using a SAL
-- REST API client (https://github.com/Jumpscale/lib9/tree/development/JumpScale9Lib/clients/grid_capacity)
+- REST API client (https://github.com/Jumpscale/lib/tree/development/JumpscaleLib/clients/grid_capacity)
 
 ### Types:
 They are 2 types register in the database:
@@ -45,7 +45,7 @@ wallet_addresses: list of tf wallet addresses
 
 
 ### Methods:
-See https://github.com/Jumpscale/lib9/blob/development/JumpScale9Lib/servers/grid_capacity/server/models.py
+See https://github.com/Jumpscale/lib/blob/development/JumpscaleLib/servers/grid_capacity/server/models.py
 
 For node capacity:
 - def register(capacity): register node capacity
@@ -59,4 +59,4 @@ For Farmers:
 - def get(id): get a specific farmer detail
 
 ## Usage example:
-See how the client is used in the node template: https://github.com/Jumpscale/lib9/blob/development/JumpScale9Lib/clients/zero_os/sal/Capacity.py#L73
+See how the client is used in the node template: https://github.com/Jumpscale/lib/blob/development/JumpscaleLib/clients/zero_os/sal/Capacity.py#L73

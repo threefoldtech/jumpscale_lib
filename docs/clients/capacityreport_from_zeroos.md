@@ -17,12 +17,12 @@ zerotier-cli join <network-ID>
 
 Make sure the host is authorized on the network. (https://my.zerotier.com/network/\<network-id\>)
 
-## Step 2: Get the Zero-OS client in Jumpscale9
+## Step 2: Get the Zero-OS client in Jumpscale
 
-Start the Jumpscale9 Python interpreter.
-If not installed, the jumpscale bash utilities can be used to install JS9 (https://github.com/Jumpscale/bash)
+Start the Jumpscale Python interpreter.
+If not installed, the jumpscale bash utilities can be used to install Jumpscale (https://github.com/Jumpscale/bash)
 ```bash
-js9
+jumpscale
 ```
 
 Get the Zero-OS client

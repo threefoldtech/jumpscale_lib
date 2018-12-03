@@ -1,11 +1,11 @@
-# How to use the JumpScale client for AYS
+# How to use the Jumpscale client for AYS
 
-The AYS client is available as part of [jumpscale/lib9](https://github.com/Jumpscale/lib9).
+The AYS client is available as part of [jumpscale/lib](https://github.com/Jumpscale/lib).
 
 > The AYS client is also available as an independent package:
 ```bash
 BRANCH="9.3.0"
-sudo -H pip3 install --upgrade git+https://github.com/jumpscale/lib9.git@${BRANCH}#subdirectory=JumpScale9Lib/clients/atyourservice
+sudo -H pip3 install --upgrade git+https://github.com/jumpscale/lib.git@${BRANCH}#subdirectory=JumpscaleLib/clients/atyourservice
 ```
 
 Below we discuss:
@@ -36,7 +36,7 @@ cl = j.clients.ays.getWithClientID(url=url, clientID=client_id, secret=secret)
 
 Or in case you saved the client ID and password in a YAML formated configuration file:
 ```python
-from js9 import j
+from jumpscale import j
 config = j.data.serializer.yaml.load("config.yaml")
 client_id = config["iyo"]["client_id"]
 secret = config["iyo"]["secret"]
@@ -60,7 +60,7 @@ cl = j.clients.ays.get(url=url, jwt=jwt)
 <a id="auto-generated"></a>
 ## Working with the auto-generated client
 
-This AYS client is actually a wrapper for the AYS client that is auto-generated from the [RAML specification of the AYS RESTful API](https://github.com/Jumpscale/ays9/blob/master/JumpScale9AYS/ays/server/apidocs/api.raml).
+This AYS client is actually a wrapper for the AYS client that is auto-generated from the [RAML specification of the AYS RESTful API](https://github.com/Jumpscale/ays9/blob/master/JumpscaleAYS/ays/server/apidocs/api.raml).
 
 The auto-generated client is available through the `_ayscl` attribute of the AYS client.
 

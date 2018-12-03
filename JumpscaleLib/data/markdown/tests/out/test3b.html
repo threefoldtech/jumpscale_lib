@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html><head>
+<script  src='/static//codemirror/lib/codemirror.js' type='text/javascript'></script>
+<link  href='/static//codemirror/lib/codemirror.css' type='text/css' rel='stylesheet' />
+<script  src='/static//codemirror/mode/javascript/javascript.js' type='text/javascript'></script>
+<link  href='/static//codemirror/theme/monokai.css' type='text/css' rel='stylesheet' />
+<script  src='/static//codemirror/mode/python/python.js' type='text/javascript'></script>
+
+<style type='text/css' >.CodeMirror {
+    height: auto;
+    border: #eee;
+    border-top: 1px solid black;
+    border-bottom: 1px solid black
+}
+.CodeMirror-scroll {
+    overflow-y: hidden;
+    overflow-x: auto;
+}
+</style>
+
+</head>
+<body>
+<h1 class="title">Introduction</h1>
+<p>This is some paragraph.</p>
+<p>Should you have any question, any remark, or if you find a bug,</p>
+<p>or if there is something you can do with the API but not with PyGithub,</p>
+<p>please `open an issue <https://github.com/jacquev6/PyGithub/issues>`.</p>
+<p><textarea id="code1" name="code1">
+res = {}
+for item in self.items:
+    if item.type == "data" and item.name == ttype:
+        res[item.guid] = item.ddict
+        key = "%s__%s" % (ttype, item.guid)
+        self._dataCache[key] = item
+return res
+
+</textarea></p>
+<p><table>
+<thead><tr>
+<th>Format</th>
+<th>Tag example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Headings</td>
+<td>=heading1=<br />==heading2==<br />===heading3===</td>
+</tr>
+<tr>
+<td>New paragraph</td>
+<td>A blank line starts a new paragraph</td>
+</tr>
+<tr>
+<td>Source code block</td>
+<td>// all on one line<br /> {{{ if (foo) bar else   baz }}}</td>
+</tr>
+</tbody>
+</table></p>
+<h1 class="title">header 1</h1>
+<h2 class="title">header 2</h2>
+<h3 class="title">(Very short) tutorial</h3>
+<p>First create a Github instance::</p>
+<ul >
+<li>1</li>
+<ul >
+<li>2</li>
+<ul >
+<li>3</li>
+<li>4</li>
+</ul>
+<li>5</li>
+</ul>
+<li>6</li>
+<li>7</li>
+<ul >
+<li>8</li>
+</ul>
+<p><textarea id="code1" name="code1">
+
+
+</textarea></p>
+<h3 class="title">Download and install</h3>
+<p>This package is in the `Python Package Index <http://pypi.python.org/pypi/PyGithub>`__,</p>
+<p>so ``easy_install PyGithub`` or ``pip install PyGithub`` should be enough.</p>
+<p>You can also clone it on `Github <http://github.com/jacquev6/PyGithub>`__.</p>
+<h3 class="title">They talk about PyGithub</h3>
+<p><textarea id="code1" name="code1">
+title = "some title in my macro"
+
+</textarea></p>
+</ul>
+<li>- [link test](https://github.com/jacquev6/PyGithub/issues)</li>
+<li>http://stackoverflow.com/questions/10625190/most-suitable-python-library-for-github-api-v3</li>
+<ul >
+<li>http://stackoverflow.com/questions/12379637/django-social-auth-github-authentication</li>
+<ul >
+<li>http://www.freebsd.org/cgi/cvsweb.cgi/ports/devel/py-pygithub/</li>
+</ul>
+</ul>
+<li>https://bugzilla.redhat.com/show_bug.cgi?id=910565</li>
+
+</body>
+<script type='text/javascript'>
+var editor1 = CodeMirror.fromTextArea(document.getElementById("code1"),
+{
+lineNumbers: $linenr,
+readOnly: $readonly,
+theme: "monokai",
+autoRefresh: "False",
+lineWrapping: $wrap,
+mode: "python",
+onCursorActivity: function() {
+    editor1.addLineClass(hlLine, null, null);
+    hlLine = editor1.addLineClass(editor1.getCursor().line, null, "activeline");
+    }
+}
+);
+var hlLine = editor1.addLineClass(0, "activeline");
+
+function copyText1() {
+    var text=editor1.getValue()
+    document.hiddenForm1.text.value = text;
+    document.forms["hiddenForm1"].submit();
+}</script>
+
+</html>

@@ -1,17 +1,52 @@
-language: python
-sudo: enabled
-dist: trusty
-group: edge
+matrix:
+  include:
+    - language: python
+      sudo: true
+      dist: trusty
+      python: 3.5
+      if: type IN (api, cron)
+      install:
+        - curl -s https://install.zerotier.com/ | sudo bash
+        - sudo zerotier-cli join ${env_zt_network}
+        - sudo ./tests/integration_tests/travis/jumspcale_install.sh ${JSBRANCH}
+        - sudo apt-get install sshpass
+        - sudo pip3 install -r tests/integration_tests/requirements.txt
 
-# whitelist master/development branch only		
-branches:		
-  only:		
-    - master
-    - development
+      before_script:
+        - sudo python3 tests/integration_tests/travis/farm_setup.py --password ${vm_password} --js_flag ${js_flag} --vm_ip ${VM_IP} --zos_ip ${ZOS_IP} --branch ${JSBRANCH} --zt_token ${zerotier_token} --ubuntu_port ${ubuntu_port}
 
-python:
-  - "3.5"
+      script:
+        cmd = 'sshpass -p {} ssh -o StrictHostKeyChecking=no  root@{} {}'.format(password, ip, cmd)
 
-install: ./.travis_ci/prepare.sh
+        - sudo sshpass -p ${vm_password} ssh -o StrictHostKeyChecking=no root@${VM_IP} "cd sal_tests/jumpscale_lib/tests/integration_tests; nosetests -v -s ${tests_path} --tc-file config.ini"
+      after_script:
+        - sudo zerotier-cli leave ${env_zt_network}
 
-script: ./run_tests.sh
+
+    - language: python
+      sudo: enabled
+      dist: trusty
+      group: edge
+
+      # whitelist master/development branch only
+      branches:
+        only:
+          - master
+          - development
+
+      python:
+        - "3.5"
+
+      before_install:
+        - sudo apt-get install -y python3.5 python3.5-dev
+        - sudo rm -f /usr/bin/python
+        - sudo rm -f /usr/bin/python3
+        - sudo ln -s /usr/bin/python3.5 /usr/bin/python
+        - sudo ln -s /usr/bin/python3.5 /usr/bin/python3
+
+      install: sudo ./.travis_ci/prepare.sh
+
+      before_script:
+        - sudo pip3 install pytest 
+
+      script: sudo ./run_tests.sh

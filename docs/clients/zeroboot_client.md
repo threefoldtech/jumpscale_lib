@@ -1,13 +1,13 @@
-# Zeroboot client
+# zero_boot client
 
 ![diagram picture](https://docs.google.com/drawings/d/e/2PACX-1vS19x58a_V6ulx1PzdmyrAHqIxnOOrVzNIYji6_CklosivjrZVOkW2534LWgFmTDVAxpq6vmzPeN7Cy/pub?w=960&h=720)
 [edit picture](https://docs.google.com/drawings/d/1t5qFq8DfJfLGW-IdeO2llEPwFQc-ckR3RUo2YjxFni4/edit)
 
 ## Prerequisites
 
-The router needs first to be installed check the docs [here](https://github.com/Jumpscale/prefab9/blob/development/docs/prefab.zeroboot.md) for more information.
+The router needs first to be installed check the docs [here](https://github.com/Jumpscale/prefab/blob/development/docs/prefab.zero_boot.md) for more information.
 
-Zeroboot client requires instances of the following clients before it can be used:
+zero_boot client requires instances of the following clients before it can be used:
 
 - `j.clients.sshclient`: to connect to the router
 - `j.clients.racktivity`: to connect to the racktivity device and perform required operations, if no power options are required not necessary
@@ -15,7 +15,7 @@ Zeroboot client requires instances of the following clients before it can be use
 
 ### Configuring the clients
 
-JumpScale clients uses a [config manager](https://github.com/Jumpscale/core9/blob/master/docs/config/configmanager.md) to configure and manage client instances.
+Jumpscale clients uses a [config manager](https://github.com/Jumpscale/core/blob/master/docs/config/configmanager.md) to configure and manage client instances.
 
 Getting a new instance of a client can be done in interactive way, where the user will be prompted to enter the client data in a window. By default most clients are interactive although there are some exceptions. For example to get an instance of the ssh client in interactive mode:
 
@@ -34,7 +34,7 @@ data = {
 sshclient = j.clients.ssh.get('instance_name', data=data)
 ```
 
-It is possible to get the zeroboot instance wihtout first configuring the necessary clients and the user will be prompted to enter the required data.
+It is possible to get the zero_boot instance wihtout first configuring the necessary clients and the user will be prompted to enter the required data.
 
 #### SSH client
 
@@ -53,7 +53,7 @@ The above will prompt the user to enter the necessary data.
 
 #### Racktivity client
 
-Is not necessary in order to use the zeroboot client. Needed only for power operations. 
+Is not necessary in order to use the zero_boot client. Needed only for power operations. 
 
 - `hostname`: address of the racktivity device in the internal router network
 - `port`: connection port
@@ -229,7 +229,7 @@ net.hosts.remove(hostname)
 
 Get host object:
 
-```python
+```python   
 net.hosts.get(hostname)
 ```
 
@@ -256,5 +256,5 @@ host.configure_ipxe_boot(boot_url)
 !!!
 date = "2018-05-20"
 tags = []
-title = "Zeroboot Client"
+title = "zero_boot Client"
 ```

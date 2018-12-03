@@ -1,12 +1,12 @@
 """
-Test module for RivineWallet js9 client
+Test module for RivineWallet jumpscale client
 """
 
-from js9 import j
+from jumpscale import j
 import time
 
 
-from JumpScale9Lib.clients.rivine.types.transaction import TransactionFactory
+from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory
 txn = TransactionFactory.create_transaction(1)
 # txn.add_data(bytearray('ot', encoding='utf-8'))
 # txn.add_data(b'ot')
@@ -18,7 +18,7 @@ txn = TransactionFactory.create_transaction(1)
 # use specific seed that has some funds
 seed = 'siren own oil clean often undo castle sure creek squirrel group income size boost cart picture wing cram candy dutch congress actor taxi prosper'
 
-client_data = {'bc_address': 'https://explorer.testnet.threefoldtoken.com/',
+client_data = {'bc_addresses': ['https://explorer.testnet.threefoldtoken.com/'],
                'password_': 'test123',
                'minerfee': 100000000,
                'nr_keys_per_seed': 15,
@@ -38,7 +38,7 @@ assert type(wallet._get_current_chain_height()) == int
 address = '0145df536e9ad219fcfa9b2cd295d3499e59ced97e6cbed30d81373444db01acd563a402d9690c'
 wallet._check_address(address=address)
 
-#sync the wallet
+# sync the wallet
 wallet.current_balance
 
 try:
@@ -48,10 +48,29 @@ try:
     current_height = wallet._get_current_chain_height()
     # wallet.send_money(amount=2, recipient='01b1e730f6c8d8ef0615c05e87075265cf27b929a20767e3e652b6d303e95205bdd61fdfb88925', locktime=current_height + 5)
     # transaction = wallet._create_transaction(amount=1000000000, recipient=recipient, sign_transaction=True, custom_data=data)
-    transaction = wallet._create_transaction(amount=2000000000, recipient=recipient,minerfee=100000000, sign_transaction=True, custom_data=data, locktime=current_height + 5)
+    transaction = wallet._create_transaction(amount=2000000000, recipient=recipient,
+                                             minerfee=100000000, sign_transaction=True, custom_data=data, locktime=current_height + 5)
 
     # transaction = wallet.send_money(amount=2, recipient=recipient)
     print(transaction.json)
 finally:
     import IPython
     IPython.embed()
+
+
+# test HA configs
+
+client_data = {'bc_addresses': ['https://explorer.testnet.threefoldtoken.com/',
+                                'https://unreachable.com'],
+               'password_': 'test123',
+               'minerfee': 100000000,
+               'nr_keys_per_seed': 15,
+               'seed_': seed}
+
+
+ha_rivine_client = j.clients.rivine.get('hatestwallet', data=client_data)
+ha_rivine_client.config.save()
+
+ha_wallet = ha_rivine_client.wallet
+
+ha_wallet.current_balance

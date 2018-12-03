@@ -1,14 +1,10 @@
 #!/bin/bash
 set -e
 
-# Install lib9 in a docker contianer using bash installers
-ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
+sudo ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa
+export SSHKEYNAME=id_rsa
 
-export ZUTILSBRANCH=${ZUTILSBRANCH:-master}
+export JUMPSCALEBRANCH=${JUMPSCALEBRANCH:-development}
+export JSFULL=1
 
-curl https://raw.githubusercontent.com/Jumpscale/bash/$ZUTILSBRANCH/install.sh?$RANDOM > /tmp/install.sh;sudo -E bash /tmp/install.sh
-sudo -HE bash -c "source /opt/code/github/jumpscale/bash/zlibs.sh; ZCodeGetJS"
-sudo -HE bash -c "source /opt/code/github/jumpscale/bash/zlibs.sh; ZDockerInstallLocal"
-eval $(ssh-agent)
-ssh-add
-sudo -HE bash -c "source /opt/code/github/jumpscale/bash/zlibs.sh; ZInstall_js9_full"
+curl https://raw.githubusercontent.com/threefoldtech/jumpscale_core/$JUMPSCALEBRANCH/install.sh?$RANDOM > /tmp/install_jumpscale.sh;sudo -HE bash -c 'bash /tmp/install_jumpscale.sh'

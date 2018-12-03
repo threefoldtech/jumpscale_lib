@@ -2,9 +2,9 @@
 
 ## js
 
-In order to start the JumpScale shell just type `js9`.
+In order to start the Jumpscale shell just type `jumpscale`.
 
-There are many more command line tools installed for you to explore, type `js9` to see available modules.
+There are many more command line tools installed for you to explore, type `jumpscale` to see available modules.
 
 ```python
 * ***Application started***: jsshell
@@ -15,12 +15,12 @@ IPython 6.1.0 -- An enhanced Interactive Python. Type '?' for help.
 In [1]:
 ```
 
-## Import JumpScale in any Python script
+## Import Jumpscale in any Python script
 
 e.g. try using ipython.
 
 ```python
-from js9 import j
+from jumpscale import j
 j.[tab]
 ```
 
@@ -28,10 +28,10 @@ Now underneath j there is a basic set of functionality available. Just type j an
 
 There are tons of extensions available which can be installed using jspackages (more about that later).
 
-## From an existing Python script start JumpScale and go to the debug shell
+## From an existing Python script start Jumpscale and go to the debug shell
 
 ```python
-from js9 import j
+from jumpscale import j
 
 #your python code here ... optionally using jumpscale
 

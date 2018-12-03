@@ -20,7 +20,6 @@ j.sal.disklayout.getDisks()
 - Each disk has the following methods:
 
   - `disk.erase(force=True)` cleans up the disk by by deleting all non protected partitions and if force=True, deletes all partitions included protected
-  - `disk.format(size, hrd)` creates new partition and formats it as configured in the HRD file
 
 Example:
 
@@ -31,7 +30,6 @@ disk.name
 disk.size
 disk.type
 disk.erase(force=True)
-disk.format(size, hrd)
 ```
 
 ## Partition API
@@ -46,12 +44,9 @@ Each partition holds the following attributes:
 - `partition.uuid`: file system UUID
 - `partition.mountpoint`: get the mount point of partition
 - `partition.delete(force=False)`: deletes the partition and deletes protected partitions if force = True
-- `partition.format()`: formats the partition according to HRD
-- `partition.mount()`: mounts partition to mountpath defined in HRD
 - `partition.setAutoMount(options='defaults', _dump=0, _pass=0)`: which configures partition auto mount `fstab` on `mountpoint`
 - `partition.unsetAutoMount()`: remotes partition from fstab
 
-partition.hrd can be `None`, in that case partition is considered `unmanaged` which means partition is not created by the SAL. This type of partitions is considered 'protected' by default.
 
 Partition attributes reflects the **real** state of the partition. For example, `mountpoint` will be set if the partition is actually mounted.
 Example:
@@ -64,7 +59,6 @@ partition.size
 partition.fstype
 partition.uuid
 partition.mountpoint
-partition.hrd
 partition.delete(force=False)
 partition.mount()
 partition.format()

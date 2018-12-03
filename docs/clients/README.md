@@ -1,8 +1,8 @@
 # clients
 
-A `JumpScale9` client is usually a module that allows the user to connect to different services. It provides an accessible interface to connect to the service and exposes the needed functionalities.
+A `Jumpscale` client is usually a module that allows the user to connect to different services. It provides an accessible interface to connect to the service and exposes the needed functionalities.
 
-Some of `JumpScale9` clients:
+Some of `Jumpscale` clients:
 
 - [Ays client](AYS_client.md)
   - [How to get jwt](JWT_for_AYS.md)

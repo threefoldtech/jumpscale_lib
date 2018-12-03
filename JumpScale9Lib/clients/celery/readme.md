@@ -1,5 +1,0 @@
-
-## celery workers
-
-### actors directory
-
