@@ -139,7 +139,7 @@ class ZTNic(Nic):
 
     @property
     def client(self):
-        logger.info("******* zt client name {}".format(self._client_name))
+        logger.info("******* zt client name {} exists {}".format(self._client_name, j.clients.zerotier.exists(self._client_name)))
         if self._client is None and j.clients.zerotier.exists(self._client_name):
             self._client = j.clients.zerotier.get(self._client_name, create=False, die=True, interactive=False)
         logger.info("****** zt client {}".format(self._client))
