@@ -171,7 +171,7 @@ class Doc(JSBASE):
             if header.level == level:
                 return header
 
-    def dynamic_process(self,url):
+    def dynamic_process(self,url, base_url=None):
         self.kwargs = {}
         if "?" in url:
             # query=url.split("?",1)[1]
