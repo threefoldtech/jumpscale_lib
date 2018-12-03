@@ -567,7 +567,7 @@ Type=simple
             info = self.info
         toremove = []
         wanted = list(self.disks)
-        for disk in info['params']['media']:
+        for disk in info['params']['media'] or []:
             try:
                 disk = self.disks.get_by_url(disk['url'])
                 wanted.remove(disk)
@@ -583,8 +583,8 @@ Type=simple
         if not info:
             info = self.info
         toremove = []
-        wanted = list(self.nics)
-        for nic in info['params']['nics']:
+        wanted = list(filter(lambda n: n.type != 'zerotier', self.nics))
+        for nic in info['params']['nics'] or []:
             try:
                 nic = self.nics.get_by_type_id(nic['type'], nic['id'])
                 wanted.remove(nic)
