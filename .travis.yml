@@ -15,7 +15,7 @@ matrix:
       before_script:
         - sudo python3 tests/integration_tests/travis/farm_setup.py --password ${vm_password} --js_flag ${js_flag} --vm_ip ${VM_IP} --zos_ip ${ZOS_IP} --branch ${JSBRANCH} --zt_token ${zerotier_token} --ubuntu_port ${ubuntu_port}
       script:
-        - sudo sshpass -p ${vm_password} ssh -o ConnectTimeout=300  -o StrictHostKeyChecking=no root@${VM_IP} "cd sal_tests/jumpscale_lib/tests/integration_tests; nosetests -v -s ${tests_path} --tc-file config.ini"
+        - sudo sshpass -p ${vm_password} ssh -o ConnectTimeout=700  -o StrictHostKeyChecking=no root@${VM_IP} "cd sal_tests/jumpscale_lib/tests/integration_tests; nosetests -v -s ${tests_path} --tc-file config.ini"
       after_script:
         - sudo zerotier-cli leave ${env_zt_network}
 

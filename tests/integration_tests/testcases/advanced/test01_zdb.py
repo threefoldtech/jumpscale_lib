@@ -98,6 +98,7 @@ class Vdisktest(BaseTest):
 
         result_dict[i] = (result1, result2)
 
+    @unittest.skip("https://github.com/threefoldtech/jumpscale_lib/issues/255")
     def test001_read_and_write_file_from_vdisk(self):
         """ SAL-040 read and write several file at same time.
 
@@ -178,6 +179,7 @@ class Vdisktest(BaseTest):
             self.assertEqual(result_dict[i][1], result)
 
     @parameterized.expand(['namespace', 'zdb'])
+    @unittest.skip("https://github.com/threefoldtech/jumpscale_lib/issues/255")
     def test002_delete_namespace_or_stop_zdb_of_vdisk(self, delete):
         """ SAL-041 delete namespace or stop zdb of vdisk.
 

@@ -27,7 +27,8 @@ class ZDBTestCases(BaseTest):
                 zdb.namespace_delete(namespace.name)
             self.node_sal.client.container.terminate(zdb.zerodb_sal.container.id)
         self.zdbs.clear()
-
+    
+    @unittest.skip("https://github.com/threefoldtech/jumpscale_lib/issues/255")
     def test001_create_zdb(self):
         """ SAL-027 Install zdb.
         **Test Scenario:**
@@ -85,6 +86,7 @@ class ZDBTestCases(BaseTest):
             zdb2.install()
         self.assertIn('there is zdb with same name {}'.format(zdb_name), e.exception.args[0])
 
+    @unittest.skip("https://github.com/threefoldtech/jumpscale_lib/issues/255")
     def test003_start_stop_zdb(self):
         """ SAL-029 start and stop zdb
 
@@ -121,6 +123,7 @@ class ZDBTestCases(BaseTest):
         result = zdb_client.ping()
         self.assertEqual(result, "PONG")
 
+    @unittest.skip("https://github.com/threefoldtech/jumpscale_lib/issues/255")
     def test004_add_remove_namespace_to_zdb(self):
         """ SAL-030 create zdb and add/remove namespace.
 
