@@ -68,7 +68,9 @@ class Container():
         self.storage = storage
         self.init_processes = init_processes or []
         self.privileged = privileged
-        self._identity = identity
+        self._identity = identity or self.node.client.system('zerotier-idtool generate').get().stdout.strip()
+        self._private_identity = self.node.client.system(
+            'zerotier-idtool getpublic {}'.format(self._identity)).get().stdout.strip()
         self.env = env or {}
         self._client = None
         self.logger = logger or default_logger
@@ -119,21 +121,25 @@ class Container():
                 return container
         return
 
+    def _set_ids(self):
+        if self.is_running():
+            for nic in self.nics:
+                if nic['type'] == 'zerotier':
+                    self._identity = self.client.zerotier.info()['secretIdentity']
+                    self._private_identity = self.client.zerotier.info()['publicIdentity']
+                    return
+
     @property
     def identity(self):
         if not self._identity:
-            if self.is_running():
-                for nic in self.nics:
-                    if nic['type'] == 'zerotier':
-                        self._identity = self.client.zerotier.info()['secretIdentity']
+            self._set_ids()
         return self._identity
 
     @property
     def public_identity(self):
-        if self.is_running():
-            for nic in self.nics:
-                if nic['type'] == 'zerotier':
-                    return self.client.zerotier.info()['publicIdentity']
+        if not self._private_identity:
+            self._set_ids()
+        return self._private_identity
 
     @property
     def ipv6(self, interface=None):
