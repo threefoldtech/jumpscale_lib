@@ -43,7 +43,7 @@ class IndexDBNamespace(JSBASE):
             # pre & post for performance & mem usage
 
             bdata = self.db.hget(pre, post)
-            if bdata == None:
+            if bdata is None:
                 # does not exist yet, need to add
                 bdata = j.tools.numtools.listint_to_bin([uid])
                 self.db.hset(pre, post, bdata)

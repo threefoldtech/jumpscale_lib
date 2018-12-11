@@ -4,9 +4,13 @@
 
 <div class="container">
     <h2>Farm Registered</h2>
-    <p>Your farm has been registered successfully.
-    Please boot your nodes with the following kernel parameter.</p>
-    <pre>farmer_id={{jwt}}</pre>
+
+    <div class="alert alert-success" role="alert">
+        Your farm has been registered successfully.
+    </div>
+
+    <p>Please boot your nodes with the following kernel parameter.</p>
+    <pre id="registered">farmer_id={{jwt}}</pre>
 </div>
 </main>
 {% endblock %}

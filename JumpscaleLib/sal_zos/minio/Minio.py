@@ -53,8 +53,7 @@ class Minio(Service):
         """
         super().__init__(name, node, 'minio', [DEFAULT_PORT])
 
-        # self.flist = 'https://hub.grid.tf/tf-official-apps/minio.flist'
-        self.flist = 'https://hub.grid.tf/tf-autobuilder/threefoldtech-minio-zerostor.flist'  # TODO replace me when merging to master
+        self.flist = 'https://hub.grid.tf/tf-official-apps/minio-1.5.0.flist'
         self.zdbs = zdbs
         self._nr_datashards = nr_datashards
         self._nr_parityshards = nr_parityshards
@@ -175,3 +174,15 @@ class Minio(Service):
             fs.delete()
         except ValueError:
             pass
+
+    def check_and_repair(self):
+        cmd = '/bin/minio gateway zerstor-repair --config-dir {dir}'.format(dir=self._config_dir)
+
+        job = self.container.client.system(cmd)
+        while job.running:
+            time.sleep(10)
+            logger.info("Check and repair still running")
+
+        result = job.get()
+        if result.state == 'ERROR':
+            raise RuntimeError("Failed to do check and repair")

@@ -5,6 +5,7 @@ import stat
 JSBASE = j.application.JSBaseClass
 
 
+
 def _is_block(file):
     try:
         st = os.stat(file)

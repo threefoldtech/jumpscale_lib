@@ -26,6 +26,7 @@ space = ""
 JSConfigBase = j.tools.configmanager.JSBaseClassConfig
 
 
+
 class OVCClient(JSConfigBase):
 
     def __init__(self, instance, data=None, parent=None, interactive=False):

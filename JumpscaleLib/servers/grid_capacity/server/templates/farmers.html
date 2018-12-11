@@ -36,18 +36,6 @@
                             {% if farmer.location and farmer.location.country %}
                                 <p>Location: <code>{{farmer.location.country}}, {{farmer.location.city}}</code></p>
                             {% endif %}
-                            {% if farmer.wallet_addresses|length > 0 %}
-                                <p>
-                                    Wallet addresses:
-                                    <ul>
-                                    {% for addr in farmer.wallet_addresses %}
-                                    <li>
-                                        <pre>{{addr}}</pre>
-                                    </li>
-                                    {% endfor %}
-                                    </ul>
-                                </p>
-                            {% endif %}
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -63,7 +51,11 @@
                 {% else %}
                     <td></td>
                 {% endif %}
-                <td><a href="/edit_farm/{{farmer.id}}"><i class="far fa-edit" onclick="event.stopPropagation();"></i></a></td>
+                <td>
+                    {% if session['_iyo_organization'] == farmer.iyo_organization %}
+                    <a href="/edit_farm/{{farmer.id}}"><i class="far fa-edit" onclick="event.stopPropagation();"></i></a>
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </tbody>

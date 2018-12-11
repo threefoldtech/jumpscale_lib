@@ -58,6 +58,8 @@ class StoragePools:
         for btrfs in btrfs_list:
             if btrfs['label'].startswith('sp_'):
                 name = btrfs['label'].split('_', 1)[1]
+                if not btrfs['devices']:
+                    continue
                 device = btrfs['devices'][0]['path']
                 if (fs_uuid and btrfs['uuid'] == fs_uuid) or not fs_uuid:
                     storagepools.append(StoragePool(self.node, name, device))

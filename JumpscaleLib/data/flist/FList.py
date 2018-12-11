@@ -453,7 +453,7 @@ class FList:
             else:
                 recurse = True
 
-            if not recurse == False:
+            if not recurse is False:
                 if key == "":
                     raise RuntimeError("Key cannot be empty in a subdir of ddir: %s" % ddir)
 

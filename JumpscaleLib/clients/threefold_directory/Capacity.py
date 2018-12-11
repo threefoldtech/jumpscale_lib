@@ -24,9 +24,11 @@ class Capacity(object):
         :type location: Location
         :type node_id: string_types
         :type os_version: string_types
+        :type parameters: list[string_types]
         :type reserved_resources: ResourceUnits
         :type robot_address: string_types
         :type total_resources: ResourceUnits
+        :type updated: datetime
         :type uptime: int
         :type used_resources: ResourceUnits
         :rtype: Capacity
@@ -51,6 +53,9 @@ class Capacity(object):
         data_types = [string_types]
         self.os_version = client_support.set_property(
             'os_version', data, data_types, False, [], False, True, class_name)
+        data_types = [string_types]
+        self.parameters = client_support.set_property(
+            'parameters', data, data_types, False, [], True, False, class_name)
         data_types = [ResourceUnits]
         self.reserved_resources = client_support.set_property(
             'reserved_resources', data, data_types, False, [], False, False, class_name)
@@ -60,6 +65,8 @@ class Capacity(object):
         data_types = [ResourceUnits]
         self.total_resources = client_support.set_property(
             'total_resources', data, data_types, False, [], False, True, class_name)
+        data_types = [datetime]
+        self.updated = client_support.set_property('updated', data, data_types, False, [], False, False, class_name)
         data_types = [int]
         self.uptime = client_support.set_property('uptime', data, data_types, False, [], False, False, class_name)
         data_types = [Timestamp]

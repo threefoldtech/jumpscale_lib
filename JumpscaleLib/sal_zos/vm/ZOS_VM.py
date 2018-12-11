@@ -389,6 +389,7 @@ Type=simple
         publiczt = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
         for nic in self.nics:
             if nic.type == 'zerotier':
+                logger.info('******* processing zerotier nic for vm {}'.format(self.name))
                 if nic.networkid == PUBLIC_THREEFOLD_NETWORK:
                     public_threefold_nic = True
                 haszerotier = True
@@ -423,6 +424,7 @@ Type=simple
             config['/var/lib/zerotier-one/identity.public'] = publiczt
             if not nics:
                 nics.append({'type': 'default'})
+            logger.info('***** authorizing zerotiers')
             authorize_zerotiers(publiczt, self.nics)
         cmdline = ' '.join([arg.parameter() for arg in self.kernel_args])
         self.node.client.kvm.create(self.name, media, self.flist, self.vcpus,
@@ -565,7 +567,7 @@ Type=simple
             info = self.info
         toremove = []
         wanted = list(self.disks)
-        for disk in info['params']['media']:
+        for disk in info['params']['media'] or []:
             try:
                 disk = self.disks.get_by_url(disk['url'])
                 wanted.remove(disk)
@@ -581,8 +583,8 @@ Type=simple
         if not info:
             info = self.info
         toremove = []
-        wanted = list(self.nics)
-        for nic in info['params']['nics']:
+        wanted = list(filter(lambda n: n.type != 'zerotier', self.nics))
+        for nic in info['params']['nics'] or []:
             try:
                 nic = self.nics.get_by_type_id(nic['type'], nic['id'])
                 wanted.remove(nic)

@@ -6,6 +6,7 @@ import time
 JSBASE = j.application.JSBaseClass
 
 
+
 class Netconfig(JSBASE):
     """
     Helps you to configure the network.

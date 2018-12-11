@@ -44,11 +44,17 @@ def RegisterCapacityHandler():
             capacity.location = farmer.location
         inputs['farmer'] = farmer
         capacity.update(**inputs)
+
     except NodeNotFoundError:
         inputs['farmer'] = iyo_organization
+        inputs['created'] = datetime.now()
+
         capacity = Capacity(**inputs)
         if farmer.location:
             capacity.location = farmer.location
         capacity.save()
 
-    return capacity.to_json(use_db_field=False), 201, {'Content-type': 'application/json'}
+    response = JSON.loads(capacity.to_json(use_db_field=False))
+    response['updated'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+
+    return JSON.dumps(response), 201, {'Content-type': 'application/json'}

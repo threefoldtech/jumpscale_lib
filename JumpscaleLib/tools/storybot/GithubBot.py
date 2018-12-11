@@ -7,6 +7,7 @@ from .utils import _index_story, _parse_body, _repoowner_reponame
 from Jumpscale import j
 
 
+
 class GithubBot:
     """Github specific bot for Storybot
     """

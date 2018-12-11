@@ -323,7 +323,7 @@ class Sandboxer(JSBASE):
     #                 continue
     #             out += copy2dest(src, removePrefix)
 
-    #     out = j.core.text.sort(out)
+    #     out = j.data.text.sort(out)
     #     j.sal.fs.writeFile(plistfile, out)
 
     # def sandboxBinWithPrefab(self, prefab, bin_path, sandbox_dir):

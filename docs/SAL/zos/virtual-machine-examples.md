@@ -26,7 +26,7 @@ We can specify the version of the operating system
 - `16.04`: points to a specific release
 See [hub](https://hub.gig.tech/gig-bootable) for a list of available versions
 ### Zero-OS versioning
-Points to branch/tag zero-os was build from see [bootstrap](https://bootstrap.gig.tech/images) for a list of images
+Points to branch/tag zero-os was build from see [boostrap](https://bootstrap.grid.tf/images) for a list of images
 ```
 vm = node.primitives.create_virtual_machine(name='myubuntu', type_='ubuntu:lts')
 zosvm = node.primitives.create_virtual_machine(name='myubuntu', type_='zero-os:master')

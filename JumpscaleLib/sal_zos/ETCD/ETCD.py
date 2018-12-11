@@ -2,7 +2,6 @@ from io import BytesIO
 
 import etcd3
 import yaml
-
 from Jumpscale import j
 
 from .. import templates

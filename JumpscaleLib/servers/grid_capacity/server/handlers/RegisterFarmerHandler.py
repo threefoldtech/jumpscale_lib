@@ -1,7 +1,7 @@
 # THIS FILE IS SAFE TO EDIT. It will not be overwritten when rerunning go-raml.
 import os
 
-from flask import request, redirect
+from flask import request, redirect, session
 from ..flask_itsyouonline import requires_auth
 
 import json as JSON
@@ -16,15 +16,25 @@ Farmer_schema_resolver = jsonschema.RefResolver('file://' + dir_path + '/schema/
 Farmer_schema_validator = Draft4Validator(Farmer_schema, resolver=Farmer_schema_resolver)
 
 
-@requires_auth(org_from_request=True)
+@requires_auth(org_from_request=True, email=True)
 def RegisterFarmerHandler():
     wallet_addresses = []
     address = request.args.get('walletAddress')
+
     if address:
         wallet_addresses.append(address)
 
-    farmer = Farmer(name=request.args['name'],
-                    iyo_organization=request.args['organization'], wallet_addresses=wallet_addresses)
+    if len(session['iyo_user_info']['emailaddresses']) < 1:
+        return "Invalid email address", 400
+
+    email = session['iyo_user_info']['emailaddresses'][0]['emailaddress']
+
+    farmer = Farmer(
+        name=request.args['name'],
+        iyo_organization=request.args['organization'],
+        wallet_addresses=wallet_addresses,
+        email=email,
+    )
 
     farmAddress = request.args.get('farmAddress')
     if farmAddress:

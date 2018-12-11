@@ -240,7 +240,7 @@ class Response():
     def get(self, timeout=None):
         """
         Waits for a job to finish (max of given timeout seconds) and return job results. When a job exits get() will
-        keep returning the same result until zero-os doesn't remember the job anymore (self.exists == False)
+        keep returning the same result until zero-os doesn't remember the job anymore (self.exists is False)
 
         :notes: the timeout here is a client side timeout, it's different than the timeout given to the job on start
         (like in system method) witch will cause the job to be killed if it exceeded this timeout.

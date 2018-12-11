@@ -4,6 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
+
 class HTMLPage(JSBASE):
 
     """
@@ -303,7 +304,7 @@ class HTMLPage(JSBASE):
         </ul>
         </div>
         """
-        html = j.core.text.strip(html)
+        html = j.data.text.strip(html)
         id = 'id="%s"' % id if id else ''
         html = self.jenv.from_string(html).render(items=items, title=title, id=id)
         self.html_add(html)

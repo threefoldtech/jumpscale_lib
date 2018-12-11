@@ -4,6 +4,9 @@ from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
+TEMPLATE = """
+zerotiernetwork = ""
+"""
 
 class VirtualboxClient(JSBASE):
     """

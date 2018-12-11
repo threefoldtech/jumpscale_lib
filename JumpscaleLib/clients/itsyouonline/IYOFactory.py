@@ -70,7 +70,7 @@ class IYOFactory(JSConfigBaseFactory):
     def default(self):
         """ return default itsyou.online instance"""
 
-        if self._default == None:
+        if self._default is None:
             if j.tools.configmanager.sandbox_check():
                 raise RuntimeError("should not call IYO client in sandbox!")
             self._default = self.get(interactive=False)

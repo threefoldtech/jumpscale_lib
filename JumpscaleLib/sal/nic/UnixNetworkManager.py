@@ -8,6 +8,7 @@ import netaddr
 JSBASE = j.application.JSBaseClass
 
 
+
 class NetworkingError(Exception, JSBASE):
     def __init__(self, msg=""):
         JSBASE.__init__(self)

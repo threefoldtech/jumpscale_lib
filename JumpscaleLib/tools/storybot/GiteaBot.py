@@ -7,6 +7,7 @@ from .utils import _parse_body, _repoowner_reponame, _index_story
 from Jumpscale import j
 
 
+
 class GiteaBot:
     """Gitea specific bot for Storybot
     """

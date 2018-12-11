@@ -13,6 +13,7 @@ from .ReplaceTool import ReplaceTool
 JSBASE = j.application.JSBaseClass
 
 
+
 def isPrimAttribute(obj, key):
     if key[-1] == "s":
         funcprop = "new_%s" % key[:-1]

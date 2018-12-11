@@ -13,8 +13,6 @@ mymember.deauthorize()
 from Jumpscale import j
 
 JSConfigFactory = j.tools.configmanager.JSBaseClassConfigs
-
-
 JSBASE = j.application.JSBaseClass
 
 
@@ -68,11 +66,11 @@ class ZerotierFactory(JSConfigFactory):
         # lets try to authorize the member, shouldnt affect anything since it a public netowrk
         member = members[0]
         member.authorize()
-        assert member.data['config']['authorized'] == True, "Members of public networks should be authorized"
+        assert member.data['config']['authorized'] is True, "Members of public networks should be authorized"
 
         # now lets unauthorize, shouldnt have any effect
         member.deauthorize()
-        assert member.data['config']['authorized'] == True, "Members of public networks should be authorized"
+        assert member.data['config']['authorized'] is True, "Members of public networks should be authorized"
 
         # lets list all the networks for our current user
         networks = zt_client.networks_list()

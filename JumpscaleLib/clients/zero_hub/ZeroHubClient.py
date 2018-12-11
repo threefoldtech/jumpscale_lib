@@ -49,7 +49,9 @@ class ZeroHubClient(JSConfigClient):
         """
         Returns available repositories (users) in a list
         """
-        return self.api.repositories.repositories_get().json()
+        resp = self.api.repositories.repositories_get()
+        resp.raise_for_status()
+        return resp.json()
 
     def list(self, username=None):
         """
@@ -58,16 +60,22 @@ class ZeroHubClient(JSConfigClient):
         If you provide a username, only flists on this repository will be listed
         """
         if not username:
-            return self.api.flist.flist_get().json()
+            resp = self.api.flist.flist_get()
+            resp.raise_for_status()
+            return resp.json()
 
-        return self.api.flist.flist_byUsername_get(username).json()
+        resp = self.api.flist.flist_byUsername_get(username)
+        resp.raise_for_status()
+        return resp.json()
 
     def get(self, username, flist):
         """
         Get information about a specific flist
         Theses informations contains files, directories, symlinks, etc. in the archive
         """
-        return self.api.flist.flist_byUsernameflist_get(username, flist).json()
+        resp = self.api.flist.flist_byUsernameflist_get(username, flist)
+        resp.raise_for_status()
+        return resp.json()
 
     def upload(self, filename):
         """
@@ -94,7 +102,9 @@ class ZeroHubClient(JSConfigClient):
 
         This method requires authentication (see authenticate method)
         """
-        return self.api.flist.flist_memerge_post(target, flists).json()
+        resp = self.api.flist.flist_memerge_post(target, flists)
+        resp.raise_for_status()
+        return resp.json()
 
     def promote(self, srepo, sfile, destination):
         """
@@ -106,7 +116,9 @@ class ZeroHubClient(JSConfigClient):
 
         This method requires authentication (see authenticate method)
         """
-        return self.api.flist.flist_meflistpromote_get(srepo, sfile, destination).json()
+        resp = self.api.flist.flist_meflistpromote_get(srepo, sfile, destination)
+        resp.raise_for_status()
+        return resp.json()
 
     def rename(self, source, destination):
         """
@@ -115,7 +127,9 @@ class ZeroHubClient(JSConfigClient):
 
         This method requires authentication (see authenticate method)
         """
-        return self.api.flist.flist_meflistrenametarget_get(source, destination).json()
+        resp = self.api.flist.flist_meflistrenametarget_get(source, destination)
+        resp.raise_for_status()
+        return resp.json()
 
     def symlink(self, source, linkname):
         """
@@ -126,7 +140,9 @@ class ZeroHubClient(JSConfigClient):
 
         This method requires authentication (see authenticate method)
         """
-        return self.api.flist.flist_meflistlinklinkname_get(source, linkname).json()
+        resp = self.api.flist.flist_meflistlinklinkname_get(source, linkname)
+        resp.raise_for_status()
+        return resp.json()
 
     def delete(self, filename):
         """
@@ -134,7 +150,9 @@ class ZeroHubClient(JSConfigClient):
 
         This method requires authentication (see authenticate method)
         """
-        return self.api.flist.flist_meflist_delete(filename).json()
+        resp = self.api.flist.flist_meflist_delete(filename)
+        resp.raise_for_status()
+        return resp.json()
 
     def sandbox_upload(self, path):
         """
@@ -147,6 +165,6 @@ class ZeroHubClient(JSConfigClient):
         pass
 
     def exists(self, chunks):
-        import ipdb
-        ipdb.set_trace()
-        self.api.exists.exists_post(chunks).json()
+        resp = self.api.exists.exists_post(chunks)
+        resp.raise_for_status()
+        return resp.json()

@@ -3,6 +3,7 @@ from .utils import _find_second, _check_broken_links
 from Jumpscale import j
 
 
+
 class Task():
     """Represents a task
     """

@@ -23,11 +23,11 @@
     <script src="/static/generatemap.js" type="text/javaScript"></script>
     {% block js %}{% endblock %}
 
-    <title>Threefold token grid capacity</title>
+    <title>ThreeFold Token Grid Capacity</title>
   </head>
   <body>
     <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
-        <a class="navbar-brand" href="#">Threefold grid capacity</a>
+        <a class="navbar-brand" href="/">ThreeFold Grid Capacity</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsDefault" aria-controls="navbarsDefault" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -44,6 +44,20 @@
                 <li>
                     <a class="nav-link" href="/register_farm">Register Farm</a>
                 </li>
+                {% if session['iyo_user_info'] %}
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle nav-link" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span class="current-user">{{ session['_iyo_organization'] }}</span> <span class="caret"></span>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="/logout">Logout</a>
+                    </div>
+                </li>
+                {% else %}
+                <li>
+                    <a class="nav-link" href="/login">Login</a>
+                </li>
+                {% endif %}
             </ul>
         </div>
     </nav>

@@ -30,9 +30,16 @@ class Containers():
             raise LookupError("Found more than one containter with name {}".format(name))
         return Container.from_containerinfo(containers[0], self.node)
 
-    def create(self, name, flist, hostname=None, mounts=None, nics=None,
-               host_network=False, ports=None, storage=None, init_processes=None, privileged=False, env=None, identity=None):
-
+    def create(self, name, flist, hostname=None, mounts=None, nics=None, host_network=False, ports=None,
+               storage=None, init_processes=None, privileged=False, env=None, identity=None):
+        default = False
+        nics = nics or []
+        for nic in nics:
+            if 'default' in nic['type']:
+                default = True
+                break
+        if not default:
+            nics.append({'type': 'default', 'id': 'None', 'hwaddr': '', 'name': 'nat0'})
         container = Container(name=name, node=self.node, flist=flist, hostname=hostname, mounts=mounts, nics=nics,
                               host_network=host_network, ports=ports, storage=storage, init_processes=init_processes,
                               privileged=privileged, env=env, identity=identity)
@@ -68,7 +75,7 @@ class Container():
         self.logger = logger or default_logger
 
         for nic in self.nics:
-            nic.pop('token', None)
+            nic.pop('ztClient', None)
             if nic.get('config', {}).get('gateway', ''):
                 nic['monitor'] = True
 
@@ -106,6 +113,7 @@ class Container():
         for containerid, container in self.node.client.container.list().items():
             if self.name == container['container']['arguments']['name']:
                 containerid = int(containerid)
+                container['container']['arguments']['identity'] = self._identity
                 if self._client and self._client.container != containerid:
                     self._client = None
                 container['container']['id'] = int(containerid)
@@ -120,6 +128,13 @@ class Container():
                     if nic['type'] == 'zerotier':
                         self._identity = self.client.zerotier.info()['secretIdentity']
         return self._identity
+
+    @property
+    def public_identity(self):
+        if self.is_running():
+            for nic in self.nics:
+                if nic['type'] == 'zerotier':
+                    return self.client.zerotier.info()['publicIdentity']
 
     @property
     def ipv6(self, interface=None):
@@ -227,6 +242,9 @@ class Container():
             identity=self.identity,
             env=self.env
         )
+
+        if self.is_running():
+            self.identity
 
         self._client = self.node.client.container.client(int(job.get(timeout)))
 
@@ -339,6 +357,16 @@ class Container():
         for k, v in self.ports.items():
             if v == port:
                 return int(k.split(':')[-1])
+
+    def authorize_networks(self, nics):
+        public_identity = self.public_identity
+        if not public_identity:
+            raise RuntimeError('Failed to get zerotier public identity')
+        for nic in nics:
+            if nic['type'] == 'zerotier':
+                client = j.clients.zerotier.get(nic['ztClient'], create=False, die=True, interactive=False)
+                network = client.network_get(nic['id'])
+                network.member_add(public_identity, self.name)
 
     @property
     def mgmt_addr(self):

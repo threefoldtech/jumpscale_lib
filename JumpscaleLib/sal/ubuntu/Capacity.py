@@ -6,6 +6,13 @@ from Jumpscale import j
 from JumpscaleLib.sal_zos.disks.Disks import StorageType
 
 
+class FakeZOSDisk:
+    def __init__(self, name, size, type):
+        self.name = name
+        self.type = type
+        self.size = size
+
+
 class Capacity:
 
     def __init__(self, node):
@@ -14,24 +21,63 @@ class Capacity:
         self._disk_info = None
         self._smartmontools_installed = False
 
-    @property
-    def hw_info(self):
-        if self._hw_info is None:
-            self._node.apt_install_check("dmidecode", "dmidecode")
+    def cpu_info(self):
+        """
+        Return a dumb list, amount of item on the list
+        is the amount of cpu on the host
+        """
+        with open("/proc/cpuinfo", "r") as f:
+            cpuinfo = f.read()
 
-            rc, dmi_data, err = self._node._local.execute("dmidecode", die=False)
-            if rc != 0:
-                raise RuntimeError("Error getting hardware info:\n%s" % (err))
+        cpus = []
 
-            self._hw_info = j.tools.capacity.parser.hw_info_from_dmi(dmi_data)
-        return self._hw_info
+        for line in cpuinfo.split("\n"):
+            if line.startswith("processor\t:"):
+                cpus.append(line)
 
-    @property
+        return cpus
+
+    def mem_info(self):
+        """
+        Simulate a core0 response of info.mem()
+        from local machine
+        """
+        with open("/proc/meminfo", "r") as f:
+            memfile = f.read()
+
+        memlist = memfile.split("\n")
+        meminfo = {}
+
+        for line in memlist:
+            temp = line.split()
+            if len(temp) < 1:
+                break
+
+            meminfo[temp[0]] = int(temp[1]) * 1024
+
+        return {
+            'active': meminfo['MemTotal:'],
+            'available': meminfo['MemAvailable:'],
+            'buffers': meminfo['Buffers:'],
+            'cached': meminfo['Cached:'],
+            'dirty': meminfo['Dirty:'],
+            'free': meminfo['MemFree:'],
+            'inactive': meminfo['Inactive:'],
+            'pagetables': meminfo['PageTables:'],
+            'shared': meminfo['Shmem:'],
+            'slab': meminfo['Slab:'],
+            'swapcached': 0,
+            'total': meminfo['MemTotal:'],
+            'used': 0,
+            'usedPercent': 0,
+            'wired': 0,
+            'writeback': 0,
+            'writebacktmp': 0
+        }
+
     def disk_info(self):
         if self._disk_info is None:
-            j.tools.prefab.local.monitoring.smartmontools.install()
-
-            self._disk_info = {}
+            self._disk_info = []
 
             rc, out, err = self._node._local.execute(
                 "lsblk -Jb -o NAME,SIZE,ROTA,TYPE", die=False)
@@ -43,18 +89,12 @@ class Capacity:
                 if not disk["name"].startswith("/dev/"):
                     disk["name"] = "/dev/%s" % disk["name"]
 
-                rc, out, err = self._node._local.execute(
-                    "smartctl -T permissive -i %s" % disk["name"], die=False)
-                if rc != 0:
-                    # smartctl prints error on stdout
-                    raise RuntimeError("Error getting disk data for %s (Make sure you run this on baremetal, not on a VM):\n%s\n\n%s" % (
-                        disk["name"], out, err))
+                if disk["name"].startswith("/dev/loop"):
+                    continue
 
-                self._disk_info[disk["name"]] = j.tools.capacity.parser.disk_info_from_smartctl(
-                    out,
-                    disk["size"],
-                    _disk_type(disk).name,
-                )
+                diskinfo = FakeZOSDisk(disk['name'], disk['size'], self._disk_type(disk))
+                self._disk_info.append(diskinfo)
+
         return self._disk_info
 
     def report(self, indent=None):
@@ -62,7 +102,7 @@ class Capacity:
         create a report of the hardware capacity for
         processor, memory, motherboard and disks
         """
-        return j.tools.capacity.parser.get_report(psutil.virtual_memory().total, self.hw_info, self.disk_info, indent=indent)
+        return j.tools.capacity.parser.get_report(self.cpu_info(), self.mem_info(), self.disk_info())
 
     def get(self, farmer_id):
         """
@@ -75,7 +115,7 @@ class Capacity:
         """
         interface, _ = j.sal.nettools.getDefaultIPConfig()
         mac = j.sal.nettools.getMacAddress(interface)
-        node_id = mac.replace(':', '')
+        node_id = mac[0].replace(':', '')
         if not node_id:
             raise RuntimeError("can't detect node ID")
 
@@ -105,21 +145,35 @@ class Capacity:
         resp.raise_for_status()
         return True
 
+    def _seektime(self, device):
+        cmdname = "seektime -j %s" % device
+        rc, out, err = self._node._local.execute(cmdname, die=False)
+        if rc != 0:
+            # smartctl prints error on stdout
+            raise RuntimeError("Error getting disk data for %s (Make sure you run this on baremetal, not on a VM):\n%s\n\n%s" % (
+                disk["name"], out, err))
 
-def _disk_type(disk_info):
-    """
-    return the type of the disk
-    """
-    if disk_info['rota'] == "1":
-        if disk_info['type'] == 'rom':
-            return StorageType.CDROM
-        # assume that if a disk is more than 7TB it's a SMR disk
-        elif int(disk_info['size']) > (1024 * 1024 * 1024 * 1024 * 7):
-            return StorageType.ARCHIVE
-        else:
+        data = j.data.serializer.json.loads(out)
+        if data['type'] == 'HDD':
             return StorageType.HDD
-    else:
-        if "nvme" in disk_info['name']:
-            return StorageType.NVME
+
+        return StorageType.SSD
+
+    def _disk_type(self, disk_info):
+        """
+        return the type of the disk
+        """
+        if disk_info['rota'] == "1":
+            if disk_info['type'] == 'rom':
+                return StorageType.CDROM
+
+            # assume that if a disk is more than 7TB it's a SMR disk
+            elif int(disk_info['size']) > (1024 * 1024 * 1024 * 1024 * 7):
+                return StorageType.ARCHIVE
+            else:
+                return self._seektime(disk_info['name'])
         else:
-            return StorageType.SSD
+            if "nvme" in disk_info['name']:
+                return StorageType.NVME
+            else:
+                return StorageType.SSD

@@ -16,6 +16,7 @@ class Farmer(object):
     @staticmethod
     def create(**kwargs):
         """
+        :type email: string_types
         :type iyo_organization: string_types
         :type name: string_types
         :type wallet_addresses: list[string_types]
@@ -32,6 +33,8 @@ class Farmer(object):
         data = json or kwargs
 
         # set attributes
+        data_types = [string_types]
+        self.email = client_support.set_property('email', data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
         self.iyo_organization = client_support.set_property(
             'iyo_organization', data, data_types, False, [], False, True, class_name)

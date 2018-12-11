@@ -44,4 +44,4 @@ class RedisConfigFactory(JSConfigBase):
     def test(self):
         j.clients.redis.core_start()
         cl = self.configure(instance="test", port=6379)
-        assert cl.redis.ping()
+        assert cl.redis.ping() is True

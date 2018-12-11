@@ -1,10 +1,10 @@
 
 from Jumpscale import j
-
 import zerotier
 import copy
 import time
 import ipcalc
+from JumpscaleLib.sal_zos.globals import TIMEOUT_DEPLOY
 
 JSBASE = j.application.JSBaseClass
 JSConfigClient = j.tools.configmanager.JSBaseClassConfig
@@ -25,19 +25,27 @@ class NetworkMember(JSBASE):
         self.address = address
         self._private_ip = None
 
-    def get_private_ip(self, timeout=120):
+    def get_private_ip(self, timeout=TIMEOUT_DEPLOY):
         """
         Gets the private ip address of the member node
         """
-        if not self._private_ip:
-            while not self.data['config']['ipAssignments'] and timeout:
-                timeout -= 2
-                time.sleep(2)
+        logger.info('get private ip')
+        logger.info('ipAssigments : {}'.format(self.data['config']['ipAssignments']))
+        if not self.data['config']['ipAssignments']:
+
+            if not self.data['config']['authorized']:
+                self.authorize(timeout=timeout)
+
+            def _cb():
                 self._refresh()
+                return self.data['config']['ipAssignments']
+            j.tools.timer.execute_until(_cb, timeout=timeout, interval=5)
+
             if not self.data['config']['ipAssignments']:
                 raise ValueError('Cannot get private ip address for zerotier member')
-            self._private_ip = self.data['config']['ipAssignments'][0]
-        return self._private_ip
+
+        logger.info('private ip : {}'.format(self.data['config']['ipAssignments'][0]))
+        return self.data['config']['ipAssignments'][0]
 
     @property
     def private_ip(self):
@@ -45,27 +53,36 @@ class NetworkMember(JSBASE):
 
     @property
     def nodeid(self):
+        logger.info('node id : {}'.format(self.data['nodeId']))
         return self.data["nodeId"]
 
     def nodeid_check(self, nodeids=[]):
+        logger.info('check nodeid')
         for item in nodeids:
             item = item.lower()
             if item == self.nodeid:
+                logger.info('node id is existing')
                 return True
+        logger.info('node id is not existing')
         return False
 
     def _refresh(self):
         """
         Refresh the data of the member by querying the lastest info from the server
         """
+        logger.info('refresh the data of the member')
+        logger.info("current data: %s", self.data)
         member = self._network.member_get(address=self.address)
+        logger.info("new data: %s", member.data)
         self.data = member.data
+        logger.info('done')
 
-    def _update_authorization(self, authorize=True, timeout=30):
+    def _update_authorization(self, authorize=True, timeout=TIMEOUT_DEPLOY):
         """
         Update authorization setting
         """
         # check if the network is private/public, it does not make sense to authorize on public nets
+        logger.info('update authorization settings')
         if self._network.config['private'] is False:
             self.logger.warn('Cannot authorize on public network.')
             return
@@ -74,19 +91,18 @@ class NetworkMember(JSBASE):
             data['config']['authorized'] = authorize
             self._network._client.network.updateMember(data=data, address=self.address, id=self._network.id)
             self._refresh()
-            timeout_ = timeout
-            while self.data['config']['authorized'] != authorize and timeout_:
+            start = time.time()
+            while self.data['config']['authorized'] != authorize and (time.time() - start) < timeout:
+                time.sleep(5)
                 self._refresh()
-                time.sleep(2)
-                timeout_ -= 2
             if self.data['config']['authorized'] != authorize:
                 self.logger.warn('{}uthorization request sent but data is not updated after {} seconds'.format(
                     'A' if authorize else 'Dea', timeout))
         else:
-            self.logger.info("Member {}/{} already {}".format(self._network.id,
-                                                              self.address, 'authorized' if authorize else 'deauthorized'))
+            self.logger.info("Member {}/{} already {}".format(self._network.id, self.address,
+                                                              'authorized' if authorize else 'deauthorized'))
 
-    def authorize(self, timeout=30):
+    def authorize(self, timeout=TIMEOUT_DEPLOY):
         """
         Authorize the member if not already authorized
 
@@ -94,7 +110,7 @@ class NetworkMember(JSBASE):
         """
         self._update_authorization(authorize=True, timeout=timeout)
 
-    def deauthorize(self, timeout=30):
+    def deauthorize(self, timeout=TIMEOUT_DEPLOY):
         """
         Deauthorize the member if already authorized
 
@@ -129,11 +145,14 @@ class ZeroTierNetwork(JSBASE):
     def mynode_member(self):
         """
         check which of my nodes exist in the network and if found return that member
-        :return: 
+        :return:
         """
+        logger.info('return member node if it is existing')
         for m in self.members_list():
             if m.nodeid_check(self.client.nodeids):
+                logger.info('member : {}'.format(m))
                 return m
+        logger.info('member is not existing, return None')
         return None
 
     def mynode_member_authorise(self):
@@ -148,6 +167,7 @@ class ZeroTierNetwork(JSBASE):
 
         @param raw: If true, then members info will be returned as dict and not @NetworkMember objects
         """
+        logger.info('lists the members of the current network')
         resp = self._client.network.listMembers(id=self.id)
         if resp.status_code != 200:
             msg = 'Failed to list network memebers. Error: {}'.format(resp.text)
@@ -157,7 +177,8 @@ class ZeroTierNetwork(JSBASE):
 
         return items if raw else self._create_netork_memebers_from_dict(items=items)
 
-    def member_add(self, identity, name=None, description=None, private_ip=None, authorized=True):
+    def member_add(self, identity, name=None, private_ip=None, authorized=True):
+        logger.info('member_add')
         data = {
             'config': {
                 'identity': identity,
@@ -177,6 +198,7 @@ class ZeroTierNetwork(JSBASE):
         Retrieves a member of the network that match the given filter
         @TODO: handle conflict between filters like providing two filters that conflict with each other
         """
+        logger.info('get member address')
         filters = [address, name, public_ip, private_ip]
         if not any(filters):
             msg = 'At least one filter need to be specified'
@@ -199,12 +221,14 @@ class ZeroTierNetwork(JSBASE):
             msg = 'Cannot find a member that match the provided filters'
             self.logger.error(msg)
             raise RuntimeError(msg)
+        logger.info('member : {}'.format(result))
         return result
 
     def _create_netork_memebers_from_dict(self, items):
         """
         Convert network members info into @NetworkMember objects
         """
+        logger.info('create network members from dict')
         result = []
         for item in items:
             result.append(NetworkMember(network=self, address=item['nodeId'], data=item))
@@ -214,6 +238,7 @@ class ZeroTierNetwork(JSBASE):
         """
         Deletes a member from the network
         """
+        logger.info('delete {} member from netwrok'.format(address))
         resp = self._client.network.deleteMember(address=address, id=self.id)
         if resp.status_code != 200:
             msg = 'Failed to delete member. Error: {}'.format(resp.text)
@@ -229,7 +254,7 @@ class ZeroTierNetwork(JSBASE):
         :return: routes available
         :rtype: list
         """
-
+        logger.info('list routes')
         resp = self._client.network.getNetwork(id=self.id)
         if resp.status_code != 200:
             msg = 'Failed to retrieve network routes. Error: {}'.format(resp.text)
@@ -245,10 +270,13 @@ class ZeroTierNetwork(JSBASE):
         :return: true if router with correct configuration exists, returns list of routes and the index of that route in the list
         :rtype: tuple
         """
+        logger.info('check if route data already exists and returns necessary information')
         routes = self.list_routes()
         for idx, item in enumerate(routes):
             if item['target'] == route['target'] and item['via'] == route['via']:
+                logger.info('True, {}, {}'.format(idx, routes))
                 return True, idx, routes
+        logger.info('False, -1, {}'.format(routes))
         return False, -1, routes
 
     def remove_route(self, route):
@@ -258,6 +286,7 @@ class ZeroTierNetwork(JSBASE):
         :type route: dict
         :raises j.exceptions.RuntimeError: if removing it fails
         """
+        logger.info('remove route with same data')
         exists, idx, routes = self.check_route(route)
         if exists:
             routes.pop(idx)
@@ -274,6 +303,7 @@ class ZeroTierNetwork(JSBASE):
         :param route: contains the target and the host that will do the routing, eg: {'target': '10.111.1.0/24', 'via': '10.126.112.302'}
         :type route: dict
         """
+        logger.info('add a managed route to the network')
         exists, _, routes = self.check_route(route)
         if not exists:
             routes.append(route)
@@ -311,6 +341,7 @@ class ZerotierClient(JSConfigClient):
 
     @property
     def nodeids(self):
+        logger.info('get node id')
         if "nodeids" in self.config.data:
             return [item for item in self.config.data["nodeids"].split(",") if item.strip() is not ""]
         return []
@@ -319,6 +350,7 @@ class ZerotierClient(JSConfigClient):
         """
         Lists all the networks for that belongs to the current instance
         """
+        logger.info('lists all the networks for that belongs to the current instance')
         resp = self.client.network.listNetworks()
         if resp.status_code != 200:
             msg = 'Failed to list networks. Error: {}'.format(resp.text)
@@ -332,6 +364,7 @@ class ZerotierClient(JSConfigClient):
 
         @param network_id: ID of the network, if not specified will check if it is in the config
         """
+        logger.info('retrieves details information about {} netowrk'.format(network_id))
         if network_id is "":
             if self.config.data['networkid'] is "":
                 raise j.exceptions.Input("could not find network id in config")
@@ -352,13 +385,14 @@ class ZerotierClient(JSConfigClient):
         for item in items:
             result.append(ZeroTierNetwork(network_id=item['id'], name=item['config']['name'],
                                           description=item['description'], config=item['config'], client=self))
+        logger.info('network object from dict {}'.format(result))
         return result
 
     def network_create(self, public, subnet=None, name=None, auto_assign=True, routes=None):
         """
         Create new network
         """
-
+        logger.info('create new network')
         if routes is None:
             routes = []
         subnet_info = None
@@ -404,11 +438,13 @@ class ZerotierClient(JSConfigClient):
 
         @param network_id: ID of the network to delete
         """
+        logger.info('delete network')
         resp = self.client.network.deleteNetwork(id=network_id)
         if resp.status_code != 200:
             msg = "Failed to delete network. Error: {}".format(resp.text)
             self.logger.error(msg)
             raise RuntimeError(msg)
+        logger.info('done')
         return True
 
     def members_nonactive_delete(self):

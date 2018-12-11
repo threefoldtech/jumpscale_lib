@@ -22,6 +22,7 @@ gitea_repos = ""
 JSConfigBase = j.tools.configmanager.JSBaseClassConfig
 
 
+
 class StoryBot(JSConfigBase):
     """
     Story bot will automaticall link story issues and task/bug/FR issues with each other.

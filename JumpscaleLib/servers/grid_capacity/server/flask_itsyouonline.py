@@ -73,18 +73,21 @@ def get_auth_org(org_from_request=False):
     return config['organization']
 
 
-def requires_auth(org_from_request=False):
+def requires_auth(org_from_request=False, email=False):
     def decorator(handler):
         """
         Wraps route handler to be only accessible after authentication via Itsyou.Online
         """
-
         @wraps(handler)
         def _wrapper(*args, **kwargs):
             if not session.get("_iyo_authenticated"):
                 organization = get_auth_org(org_from_request=org_from_request)
                 config = current_app.config["iyo_config"]
                 scopes = []
+
+                if email:
+                    scopes.append("user:email")
+
                 scopes.append("user:memberof:{}".format(organization))
                 if config["scope"]:
                     scopes.append(config['scope'])
@@ -101,9 +104,11 @@ def requires_auth(org_from_request=False):
                             username = jwt_info["username"]
                             session["iyo_user_info"] = _get_info(username, jwt=jwt_string)
                             session["_iyo_authenticated"] = time.time()
-                            session['iyo_jwt'] = jwt_string
+                            session["iyo_jwt"] = jwt_string
                             return handler(*args, **kwargs)
+
                     return "Could not authorize this request!", 403
+
                 state = str(uuid.uuid4())
                 session["_iyo_state"] = state
                 session['_iyo_organization'] = organization
@@ -154,9 +159,11 @@ def _callback():
     response.raise_for_status()
     response = response.json()
     scope_parts = response["scope"].split(",")
+
     if not "user:memberof:{}".format(authorg) in scope_parts:
         flash("User is not authorized", "danger")
         return redirect("/")
+
     access_token = response["access_token"]
     username = response["info"]["username"]
     # Get user info

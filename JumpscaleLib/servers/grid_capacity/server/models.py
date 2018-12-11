@@ -1,3 +1,4 @@
+import datetime
 from flask_mongoengine import MongoEngine, Pagination
 from mongoengine import (DateTimeField, Document, EmbeddedDocument,
                          EmbeddedDocumentField, FloatField, IntField,
@@ -42,7 +43,7 @@ class NodeRegistration:
         return capacity[0]
 
     @staticmethod
-    def search(country=None, mru=None, cru=None, hru=None, sru=None, farmer=None, ** kwargs):
+    def search(country=None, mru=None, cru=None, hru=None, sru=None, farmer=None, fulldump=False, ** kwargs):
         """
         search based on country and minimum resource unit available
 
@@ -72,6 +73,9 @@ class NodeRegistration:
             query['total_resources__hru__gte'] = hru
         if sru:
             query['total_resources__sru__gte'] = sru
+
+        if not fulldump:
+            query['updated__gte'] = datetime.datetime.now() - datetime.timedelta(days=7)
 
         nodes = Capacity.objects(**query)
         if kwargs.get('order'):
@@ -111,6 +115,15 @@ class FarmerRegistration:
         if not isinstance(farmer, Farmer):
             raise TypeError("farmer need to be a Farmer object, not %s" % type(farmer))
         farmer.save()
+
+    @staticmethod
+    def usage(farmers):
+        usage = {}
+
+        for farmer in farmers:
+            usage[farmer.id] = Capacity.objects(farmer=farmer.id).count()
+
+        return usage
 
     @staticmethod
     def list(name=None, organization=None, **kwargs):
@@ -154,6 +167,7 @@ class Farmer(db.Document):
     name = StringField()
     wallet_addresses = ListField(StringField())
     location = EmbeddedDocumentField(Location)
+    email = StringField(default="")
 
 
 class Resources(EmbeddedDocument):
@@ -175,8 +189,10 @@ class Capacity(db.Document):
     used_resources = EmbeddedDocumentField(Resources)
     robot_address = StringField()
     os_version = StringField()
+    parameters = ListField(StringField(), default=list)
     uptime = IntField()
     updated = DateTimeField(required=True)
+    created = DateTimeField()
 
 
 class FarmerNotFoundError(KeyError):

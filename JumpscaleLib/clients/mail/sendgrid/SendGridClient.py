@@ -9,6 +9,7 @@ Attachment = namedtuple('Attachment', ['originalfilename', 'binarycontent', 'typ
 JSBASE = j.application.JSBaseClass
 
 
+
 class SendGridClient(JSBASE):
 
     def __init__(self):

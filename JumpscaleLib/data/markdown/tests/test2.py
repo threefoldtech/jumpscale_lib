@@ -1,6 +1,7 @@
 from Jumpscale import j
 
 
+
 def test():
 
     md = j.data.markdown.document_get()
@@ -21,11 +22,12 @@ def test():
     |1    |2               |3      |
     |1    |2               |3      |
     """
-    r = j.core.text.strip(r)
+    r = j.data.text.strip(r)
 
     assert t.markdown.strip() == r.strip()
 
     assert t.rows[2] == ['1', '2', '3']
+
 
 
 if __name__ == '__main__':

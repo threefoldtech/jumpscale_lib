@@ -17,6 +17,6 @@ class VirtualboxFactory(JSBASE):
 
     @property
     def client(self):
-        if self._client == None:
+        if self._client is None:
             self._client = VirtualboxClient()
         return self._client

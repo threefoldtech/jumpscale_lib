@@ -1,6 +1,5 @@
 from Jumpscale import j
 
-
 class Config():
 
     def __init__(self, client):

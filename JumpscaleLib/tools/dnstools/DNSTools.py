@@ -35,7 +35,7 @@ class DNSTools(JSBASE):
 
     @property
     def default(self):
-        if self._default == None:
+        if self._default is None:
             self._default = self.get()
 
         return self._default

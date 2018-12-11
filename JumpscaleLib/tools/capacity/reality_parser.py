@@ -4,6 +4,7 @@ this module contain the logic of parsing the actual usage of the ressource unit 
 
 from .units import GiB
 from JumpscaleLib.sal_zos.disks.Disks import StorageType
+from JumpscaleLib.sal_zos.node.Node import ZOS_CACHE
 
 
 class RealityParser():
@@ -71,13 +72,10 @@ def _parse_storage(disks, storage_pools):
 
     ressoures = {'sru': 0, 'hru': 0}
     for sp in storage_pools:
-        if len(sp.devices) <= 0:
+        if not sp.device or sp.name == ZOS_CACHE:
             continue
 
-        if sp.mountpoint == '/mnt/storagepools/sp_zos-cache':
-            continue
-
-        disk_type = disk_mapping[sp.devices[0]]
+        disk_type = sp.type
         size = sp.fsinfo['data']['used']
 
         if disk_type in [StorageType.HDD, StorageType.ARCHIVE]:

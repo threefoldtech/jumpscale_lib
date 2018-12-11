@@ -1,4 +1,5 @@
 import time
+from urllib.parse import urlparse
 
 from Jumpscale import j
 
@@ -71,6 +72,17 @@ class ZeroOSClientFactory():
             timeout = 120
         """
         return j.clients.zos_protocol.new(instance=instance, data=data)
+
+    def get_by_id(self, node_id):
+        directory = j.clients.threefold_directory.get()
+        node, resp = directory.api.GetCapacity(node_id)
+        resp.raise_for_status()
+        u = urlparse(node.robot_address)
+        node = self.get(node_id)
+        if node.client.config.data['host'] != u.hostname:
+            node.client.config.data_set('host', u.hostname)
+            node.client.config.save()
+        return self.get(node_id)
 
     def zero_node_ovh_install(self, OVHHostName, OVHClient, zerotierNetworkID, zerotierClient):
         """

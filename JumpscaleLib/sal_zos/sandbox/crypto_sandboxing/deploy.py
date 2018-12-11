@@ -268,6 +268,7 @@ def create_blockchain_zos_vms(zos_node_name='main', sshkeyname=None):
         time.sleep(20)
 
 
+
 # def create_packet_machines(sshkeyname=None):
 #     """
 #     This will create 4 nodes each running all the blockchains

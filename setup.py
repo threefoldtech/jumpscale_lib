@@ -61,7 +61,7 @@ setup(
     install_requires=[
         'Brotli>=0.6.0',
         'Jinja2>=2.9.6',
-        'Jumpscale>=9.5.1',
+        'Jumpscale>=9.6.0',
         'Pillow>=4.1.1',
         'PyGithub>=1.34',
         'SQLAlchemy>=1.1.9',
@@ -86,8 +86,7 @@ setup(
         'pyblake2>=0.9.3',
         'pycapnp>=0.5.12',
         'pymux>=0.13',
-        # 'pypandoc>=1.3.3',
-        'redis>=2.10.5',
+        'redis<3.0.0',
         'requests>=2.13.0',
         'toml>=0.9.2',
         # 'uvloop>=0.8.0',

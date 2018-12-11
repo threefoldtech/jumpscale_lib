@@ -27,6 +27,14 @@ def UpdateFarmerHandler():
     new_farm_name = request.args.get('name')
     if new_farm_name:
         farmer.name = new_farm_name
+
+    farmer.email = request.args.get('emailaddress')
+
+    if 'wallet_addresses' in request.args:
+        farmer.wallet_addresses = []
+        for addr in request.args['wallet_addresses'].split(','):
+            farmer.wallet_addresses.append(addr.strip())
+
     farm_address = request.args.get('farmAddress')
     if farm_address:
         lng = lat = 0

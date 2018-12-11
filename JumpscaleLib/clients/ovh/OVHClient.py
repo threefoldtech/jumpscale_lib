@@ -179,7 +179,7 @@ class OVHClient(JSConfigBase):
                        useDistribKernel=True, noRaid=True, hostname="", wait=True):
         """
 
-        if sshKeyName == None, and there is only 1 loaded, then will take that key
+        if sshKeyName is None, and there is only 1 loaded, then will take that key
 
         will return node_client
 
@@ -194,7 +194,7 @@ class OVHClient(JSConfigBase):
         if installationTemplate not in self.installationtemplates_get():
             raise j.exceptions.Input(message="could not find install template:%s" % name)
 
-        if sshKeyName == None:
+        if sshKeyName is None:
             items = j.clients.sshkey.list()
             # if len(items) != 1:
             #     raise RuntimeError(
@@ -332,7 +332,7 @@ class OVHClient(JSConfigBase):
     #
     # custom builder
     #
-    def _zos_build(self, url):
+    def _zos_build(self, url, tag=None):
         """
         Internal use.
         This build an OVH adapted iPXE script based on an official bootstrap URL
@@ -373,17 +373,21 @@ class OVHClient(JSConfigBase):
             description = "Zero-OS: %s (no zerotier, no arguments)" % fields[4]
             name = "zero-os-%s" % fields[4]
 
+        if tag:
+            description = "Zero-OS: %s (tag: %s)" % (fields[4], tag)
+            name = "zero-os-%s" % tag
+
         return {'description': description, 'name': name, 'script': fixed}
 
-    def zero_os_boot(self, target, zerotierNetworkID):
+    def zero_os_boot(self, target, zerotierNetworkID, args, tag=None):
         """
         Configure a node to use Zero-OS iPXE kernel
         - target: need to be an OVH server hostname
         - zerotierNetworkID: network to be used in zerotier
         """
         self.ovh_id_check(target)
-        url = "%s/%s" % (self.ipxeBase, zerotierNetworkID)
-        ipxe = self._zos_build(url)
+        url = "%s/%s/%s" % (self.ipxeBase, zerotierNetworkID, args)
+        ipxe = self._zos_build(url, tag)
 
         self.logger.info("[+] description: %s" % ipxe['description'])
         self.logger.info("[+] boot loader: %s" % ipxe['name'])
