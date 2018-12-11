@@ -146,7 +146,7 @@ class ETCD(Service):
                     raise RuntimeError(result.stderr)
 
     def prepare_traefik(self):
-        result = self.container.client.system('/bin/etcdctl --endpoints={} --user=root:{} put "traefik/acme/account" "foo"'.format(self.client_url, self.password)).get()
+        result = self.container.client.system(
+            '/bin/etcdctl --endpoints={} --user=root:{} put "traefik/acme/account" "foo"'.format(self.client_url, self.password)).get()
         if result.state != 'SUCCESS':
             raise RuntimeError('fail to prepare traefik configuration: %s' % result.stderr)
-

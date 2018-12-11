@@ -36,4 +36,3 @@ class MinioFactory(JSBASE):
                      tlog_address=tlog_address,
                      master_namespace=master_namespace,
                      master_address=master_address)
-

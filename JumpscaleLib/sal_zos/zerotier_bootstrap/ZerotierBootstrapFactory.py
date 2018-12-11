@@ -1,7 +1,6 @@
+from .ZerotierBootstrap import ZTBootstrap
 from Jumpscale import j
 JSBASE = j.application.JSBaseClass
-
-from .ZerotierBootstrap import ZTBootstrap
 
 
 class ZerotierBootstrapFactory(JSBASE):
@@ -16,4 +15,3 @@ class ZerotierBootstrapFactory(JSBASE):
             the sal layer 
         """
         return ZTBootstrap(zt_token, bootstap_id, grid_id, cidr)
-

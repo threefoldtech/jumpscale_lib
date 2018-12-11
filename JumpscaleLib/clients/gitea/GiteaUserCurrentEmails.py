@@ -15,7 +15,7 @@ class GiteaUserCurrentEmails(JSBASE):
 
     def add(self, emails):
         try:
-            self.client.api.user.userAddEmail({'emails':emails})
+            self.client.api.user.userAddEmail({'emails': emails})
             return True
         except Exception as e:
             self.logger.debug(e.response.content)
@@ -23,7 +23,7 @@ class GiteaUserCurrentEmails(JSBASE):
 
     def remove(self, emails):
         try:
-            self.client.api.user.userDeleteEmail({'emails':emails})
+            self.client.api.user.userDeleteEmail({'emails': emails})
             return True
         except Exception as e:
             self.logger.debug(e.response.content)
@@ -33,7 +33,7 @@ class GiteaUserCurrentEmails(JSBASE):
         if self.position >= len(self._items):
             self.position = 0
             raise StopIteration()
-        item =  self._items[self.position]
+        item = self._items[self.position]
         self.position += 1
         return item
 

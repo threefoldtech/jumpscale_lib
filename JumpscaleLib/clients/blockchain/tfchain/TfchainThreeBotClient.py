@@ -11,14 +11,16 @@ from JumpscaleLib.clients.blockchain.rivine.errors import RESTAPIError
 from JumpscaleLib.clients.blockchain.rivine.types import transaction
 from JumpscaleLib.clients.blockchain.rivine import RivineWallet
 
+
 class TfchainThreeBotClient():
     """
     Client used to get, create and update records.
     This client provides all you need in order to use the Threebot support in TFChain.
     """
 
-    __bot_name_pattern = re.compile(r"^[A-Za-z]{1}[A-Za-z\-0-9]{3,61}[A-Za-z0-9]{1}(\.[A-Za-z]{1}[A-Za-z\-0-9]{3,55}[A-Za-z0-9]{1})*$")
-    
+    __bot_name_pattern = re.compile(
+        r"^[A-Za-z]{1}[A-Za-z\-0-9]{3,61}[A-Za-z0-9]{1}(\.[A-Za-z]{1}[A-Za-z\-0-9]{3,55}[A-Za-z0-9]{1})*$")
+
     @staticmethod
     def get_record(identifier, network=TfchainNetwork.STANDARD, explorers=None):
         """
@@ -31,7 +33,8 @@ class TfchainThreeBotClient():
         if not explorers:
             explorers = network.official_explorers()
             if not explorers:
-                raise NoExplorerNetworkAddresses("network {} has no official explorer networks and none were specified by callee".format(network.name.lower()))
+                raise NoExplorerNetworkAddresses(
+                    "network {} has no official explorer networks and none were specified by callee".format(network.name.lower()))
 
         msg = 'Failed to retrieve 3Bot record.'
         result = None
@@ -54,9 +57,10 @@ class TfchainThreeBotClient():
             if response:
                 raise RESTAPIError('{} {}'.format(msg, response.text.strip('\n')))
             else:
-                raise RESTAPIError('error while fetching 3bot record from {} for {}: {}'.format(explorers, identifier, msg))
+                raise RESTAPIError('error while fetching 3bot record from {} for {}: {}'.format(
+                    explorers, identifier, msg))
         return tftbot.ThreeBotRecord.from_dict(result.get('record', {}))
-    
+
     # TODO: it might be useful to also allow the usage of spendable keys not related to the given wallet, currently this is not Possible
 
     @staticmethod
@@ -96,7 +100,7 @@ class TfchainThreeBotClient():
         # sign and commit the Tx, return the tx ID afterwards
         wallet.sign_transaction(transaction=tx, commit=True)
         return tx
-    
+
     @staticmethod
     def update_record(wallet, identifier, months=0, names_to_add=None, names_to_remove=None, addresses_to_add=None, addresses_to_remove=None):
         # create the tx and fill user-defined properties in
@@ -115,7 +119,7 @@ class TfchainThreeBotClient():
         if addresses_to_remove:
             for addr in addresses_to_remove:
                 tx.add_address_to_remove(addr)
-        
+
         # add coin inputs for miner fees (implicitly computed) and required bot fees
         input_results, used_addresses, minerfee, remainder = wallet._get_inputs(amount=tx.required_bot_fees)
         tx.set_transaction_fee(minerfee)
@@ -128,7 +132,7 @@ class TfchainThreeBotClient():
         if remainder > 0:
             # TODO: are we sure refunding to first address is always desired?
             tx.set_refund_coin_output(value=remainder, recipient=wallet.addresses[0])
-        
+
         # sign and commit the Tx, return the tx ID afterwards
         wallet.sign_transaction(transaction=tx, commit=True)
         return tx

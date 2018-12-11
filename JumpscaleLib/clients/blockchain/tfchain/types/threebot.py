@@ -7,6 +7,7 @@ import datetime
 from JumpscaleLib.clients.blockchain.tfchain.types import signatures as tftsig
 from JumpscaleLib.clients.blockchain.tfchain.types import network as tftnet
 
+
 class ThreeBotRecord:
     """
     ThreeBotRecord defines the class of a 3Bot Record,
@@ -20,7 +21,6 @@ class ThreeBotRecord:
         self._public_key = None
         self._expiration = 0
 
-
     def __str__(self):
         s = 'Record of 3Bot {}:\n'.format(self._identifier)
         if self._addresses:
@@ -31,14 +31,12 @@ class ThreeBotRecord:
         s += '* expiration time: {} ({})\n'.format(datetime.datetime.fromtimestamp(self._expiration), self._expiration)
         return s
 
-
     def __repr__(self):
         """
         Override so we have nice output in js shell if the object is not assigned
         without having to call the print method.
         """
         return str(self)
-
 
     @classmethod
     def from_dict(cls, dict_data):
@@ -65,10 +63,10 @@ class ThreeBotRecord:
             raise ValueError("required 3Bot record 'publickey' property is missing for 3Bot {}".format(record._identifier))
         record._public_key = tftsig.SiaPublicKey.from_string(dict_data['publickey'])
         if 'expiration' not in dict_data:
-            raise ValueError("required 3Bot record 'expiration' property is missing for 3Bot {}".format(record._identifier))
+            raise ValueError(
+                "required 3Bot record 'expiration' property is missing for 3Bot {}".format(record._identifier))
         record._expiration = int(dict_data['expiration'])
         return record
-
 
     @property
     def identifier(self):

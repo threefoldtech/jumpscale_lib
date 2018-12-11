@@ -6,9 +6,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class OrganizationLogo( ):
+class OrganizationLogo():
     """
     auto-generated. don't touch.
     """

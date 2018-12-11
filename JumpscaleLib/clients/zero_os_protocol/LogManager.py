@@ -2,8 +2,6 @@ from . import typchk
 from Jumpscale import j
 
 
-
-
 class LogManager():
     _level_chk = typchk.Checker({
         'level': typchk.Enum("CRITICAL", "ERROR", "WARNING", "NOTICE", "INFO", "DEBUG"),
@@ -16,7 +14,6 @@ class LogManager():
 
     def __init__(self, client):
         self._client = client
-
 
     def set_level(self, level):
         """

@@ -15,7 +15,8 @@ JSConfigBase = j.tools.configmanager.JSBaseClassConfig
 class CapacityServer(JSConfigBase):
 
     def __init__(self, instance, data={}, parent=None, interactive=False, template=None):
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE, interactive=interactive)
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,
+                              template=TEMPLATE, interactive=interactive)
         settings.HOST = self.config.data['host']
         settings.PORT = self.config.data['port']
         settings.DEBUG = self.config.data['debug']
@@ -27,4 +28,3 @@ class CapacityServer(JSConfigBase):
 
     def start(self):
         self.app.run(host=settings.HOST, port=settings.PORT, debug=settings.DEBUG)
-

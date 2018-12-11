@@ -79,5 +79,5 @@ class GiteaReposForClient(JSBASE):
             else:
                 self.logger.error(e.response.content)
 
-    def __repr__ (self):
+    def __repr__(self):
         return "<General Repos finder and getter (by ID)>"

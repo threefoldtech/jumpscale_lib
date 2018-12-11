@@ -15,6 +15,8 @@ logger = j.logger.get(__name__)
 
 # TODO: simplify this function a lot or eliminate it,
 #       the logic chain in this function is really convoluted...
+
+
 def get_unlockhash_from_output(output, address, current_height):
     """
     Retrieves unlockhash from coin output. This should handle different types of output conditions and transaction formats
@@ -111,7 +113,7 @@ def collect_miner_fees(address, blocks, height):
                     logger.info('Found miner output with value {}'.format(minerpayout.get('value')))
                     result[block_info['minerpayoutids'][index]] = {
                         'value': minerpayout['value'],
-                        'condition':{
+                        'condition': {
                             'data': {
                                 'unlockhash': address
                             }
@@ -146,11 +148,12 @@ def collect_transaction_outputs(current_height, address, transactions, unconfirm
         version = rawtxn.get('version', 1)
         coinoutputs = []
         unlockhashes = txn_info.get('coinoutputunlockhashes', [])
-        if version >= 144 and version <= 146: # TODO: Remove HACK as it is only here until we fixed 3Bot transactions!!
+        if version >= 144 and version <= 146:  # TODO: Remove HACK as it is only here until we fixed 3Bot transactions!!
             txn = TransactionFactory.from_json(json.dumps(rawtxn))
             payout_output = {
                 'value': txn.required_bot_fees,
-                'unlockhash': unlockhashes[0] # TODO: remove this dirty HACK, for now it will work as it mimics v0 Txn outputs
+                # TODO: remove this dirty HACK, for now it will work as it mimics v0 Txn outputs
+                'unlockhash': unlockhashes[0]
             }
             # 3Bot fee payout is not supported for now,
             # only the refund output
@@ -182,8 +185,8 @@ def collect_transaction_outputs(current_height, address, transactions, unconfirm
                 if uh == address:
                     output = coinoutputs[idx]
                     condition_ulh = get_unlockhash_from_output(output=output,
-                                                                address=address,
-                                                                current_height=current_height)
+                                                               address=address,
+                                                               current_height=current_height)
                     if condition_ulh['unlocked']:
                         result['multisig_unlocked'][txn_info['coinoutputids'][idx]] = output
                     if condition_ulh['locked']:
@@ -194,11 +197,12 @@ def collect_transaction_outputs(current_height, address, transactions, unconfirm
         version = rawtxn.get('version', 1)
         coinoutputs = []
         unlockhashes = txn_info.get('coinoutputunlockhashes', [])
-        if version >= 144 and version <= 146: # TODO: Remove HACK as it is only here until we fixed 3Bot transactions!!
+        if version >= 144 and version <= 146:  # TODO: Remove HACK as it is only here until we fixed 3Bot transactions!!
             txn = TransactionFactory.from_json(json.dumps(rawtxn))
             payout_output = {
                 'value': txn.required_bot_fees,
-                'unlockhash': unlockhashes[0] # TODO: remove this dirty HACK, for now it will work as it mimics v0 Txn outputs
+                # TODO: remove this dirty HACK, for now it will work as it mimics v0 Txn outputs
+                'unlockhash': unlockhashes[0]
             }
             # 3Bot fee payout is not supported for now,
             # only the refund output
@@ -225,8 +229,8 @@ def collect_transaction_outputs(current_height, address, transactions, unconfirm
                 if uh == address:
                     output = coinoutputs[idx]
                     condition_ulh = get_unlockhash_from_output(output=output,
-                                                                address=address,
-                                                                current_height=current_height)
+                                                               address=address,
+                                                               current_height=current_height)
                     if condition_ulh['unlocked']:
                         result['unconfirmed_multisig_unlocked'][txn_info['coinoutputids'][idx]] = output
                     if condition_ulh['locked']:

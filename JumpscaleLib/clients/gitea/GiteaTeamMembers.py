@@ -48,4 +48,3 @@ class GiteTeamMembers(JSBASE):
         return self
 
     __str__ = __repr__ = lambda self: "Gitea Members Iterator for team: {0}".format(self.team.id)
-

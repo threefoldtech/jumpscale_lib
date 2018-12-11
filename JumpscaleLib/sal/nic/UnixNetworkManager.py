@@ -7,6 +7,7 @@ import netaddr
 #     pass
 JSBASE = j.application.JSBaseClass
 
+
 class NetworkingError(Exception, JSBASE):
     def __init__(self, msg=""):
         JSBASE.__init__(self)
@@ -91,13 +92,13 @@ class UnixNetworkManager(JSBASE):
         return self._nics
 
     def commit(self, device=None):
-        #- make sure loopback exist
+        # - make sure loopback exist
         self.configSet()
         content = 'auto lo\niface lo inet loopback\n'
         j.tools.path.get('/etc/network/interfaces.d/lo').write_text(content)
         if device:
             self.logger.info('Restarting interface %s' % device)
             (ip, _) = self.ipGet(device)
-            self._executor.execute('ip a del %s dev %s'% (ip, device))
+            self._executor.execute('ip a del %s dev %s' % (ip, device))
         self._executor.execute('systemctl restart networking')
         self.logger.info('DONE')

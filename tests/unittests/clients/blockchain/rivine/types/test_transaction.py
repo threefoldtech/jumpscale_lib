@@ -18,7 +18,8 @@ def test_create_transaction_v1():
     """
     Tests creating a V1 transaction
     """
-    assert type(TransactionFactory.create_transaction(version=DEFAULT_TRANSACTION_VERSION)) == TransactionV1, "Wrong type transaction created"
+    assert type(TransactionFactory.create_transaction(version=DEFAULT_TRANSACTION_VERSION)
+                ) == TransactionV1, "Wrong type transaction created"
 
 
 def test_coininput_json(ed25519_key, ulh):
@@ -26,9 +27,9 @@ def test_coininput_json(ed25519_key, ulh):
     Tests the json output of CoinInput
     """
     expected_output = {'parentid': '01324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf57a828ea336a',
-     'fulfillment': {'type': 1,
-      'data': {'publickey': 'ed25519:6161616161616161616161616161616161616161616161616161616161616161',
-       'signature': ''}}}
+                       'fulfillment': {'type': 1,
+                                       'data': {'publickey': 'ed25519:6161616161616161616161616161616161616161616161616161616161616161',
+                                                'signature': ''}}}
     ssf = SingleSignatureFulfillment(pub_key=ed25519_key)
     parent_id = str(ulh)
     ci = CoinInput(parent_id=parent_id, fulfillment=ssf)
@@ -58,16 +59,19 @@ def test_coinoutput_binary(ulh):
     """
     Tests the binary output of a CoinOuput
     """
-    expected_output = bytearray(b'\x02\x00\x00\x00\x00\x00\x00\x00\x01\xf4\x01!\x00\x00\x00\x00\x00\x00\x00\x012M\xcf\x02}\xd4\xa3\n\x93,D\x1f6Z%\xe8k\x17=\xef\xa4\xb8\xe5\x89H%4q\xb8\x1br\xcf')
+    expected_output = bytearray(
+        b'\x02\x00\x00\x00\x00\x00\x00\x00\x01\xf4\x01!\x00\x00\x00\x00\x00\x00\x00\x012M\xcf\x02}\xd4\xa3\n\x93,D\x1f6Z%\xe8k\x17=\xef\xa4\xb8\xe5\x89H%4q\xb8\x1br\xcf')
     ulhc = UnlockHashCondition(unlockhash=ulh)
     co = CoinOutput(value=500, condition=ulhc)
     assert co.binary == expected_output
+
 
 def test_coinoutput_json(ulh):
     """
     Tests the json output of a CoinOuput
     """
-    expected_output = {'value': '500', 'condition': {'type': 1, 'data': {'unlockhash': '01324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf57a828ea336a'}}}
+    expected_output = {'value': '500', 'condition': {'type': 1, 'data': {
+        'unlockhash': '01324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf57a828ea336a'}}}
     ulhc = UnlockHashCondition(unlockhash=ulh)
     co = CoinOutput(value=500, condition=ulhc)
     assert co.json == expected_output
@@ -77,7 +81,8 @@ def test_transactionv1_json(recipient, ulh, spendable_key):
     """
     Tests the json output of the v1 transaction
     """
-    expected_output = {'version': 1, 'data': {'coininputs': [{'parentid': '01324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf57a828ea336a', 'fulfillment': {'type': 1, 'data': {'publickey': 'ed25519:6161616161616161616161616161616161616161616161616161616161616161', 'signature': ''}}}], 'coinoutputs': [{'value': '500', 'condition': {'type': 1, 'data': {'unlockhash': '01479db781aae5ecbcc2331b7996b0d362ae7359b3fe25dcacdbf62926db506cbd3edf8bd46077'}}}], 'minerfees': ['100']}}
+    expected_output = {'version': 1, 'data': {'coininputs': [{'parentid': '01324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf57a828ea336a', 'fulfillment': {'type': 1, 'data': {
+        'publickey': 'ed25519:6161616161616161616161616161616161616161616161616161616161616161', 'signature': ''}}}], 'coinoutputs': [{'value': '500', 'condition': {'type': 1, 'data': {'unlockhash': '01479db781aae5ecbcc2331b7996b0d362ae7359b3fe25dcacdbf62926db506cbd3edf8bd46077'}}}], 'minerfees': ['100']}}
     txn = TransactionFactory.create_transaction(version=DEFAULT_TRANSACTION_VERSION)
     txn.add_coin_input(parent_id=str(ulh), pub_key=spendable_key.public_key)
     txn.add_coin_output(value=500, recipient=recipient)
@@ -103,6 +108,7 @@ summary types are used to return blockchain data to the user
 in a user-friendly way, where the details are abstracted or hidden
 """
 
+
 def __create_cos(amount, locked, addresses, signatures):
     v = CoinOutputSummary()
     v._amount = amount
@@ -111,6 +117,7 @@ def __create_cos(amount, locked, addresses, signatures):
     v._signatures_required = signatures
     # raw_condition is assigned when executing the test case
     return v
+
 
 def test_coin_output_summary():
     test_cases = {
@@ -122,13 +129,13 @@ def test_coin_output_summary():
         '{"value":"123", "condition":{"type":3,"data":{"locktime":1542791200}}}': __create_cos(123, 1542791200, ['0'*78], 1),
         # single-signature/multi-signature, optionally time-locked outputs
         '{"value":"100000000000000000","condition":{"type":1,"data":{"unlockhash":"015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f"}}}': __create_cos(100000000000000000, 0, ['015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f'], 1),
-        '{"value":"100000000000000000","condition":{"type":4,"data":{"unlockhashes":["015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f","01b49da2ff193f46ee0fc684d7a6121a8b8e324144dffc7327471a4da79f1730960edcb2ce737f"],"minimumsignaturecount":10}}}': __create_cos(100000000000000000, 0, ['015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f','01b49da2ff193f46ee0fc684d7a6121a8b8e324144dffc7327471a4da79f1730960edcb2ce737f'], 10),
+        '{"value":"100000000000000000","condition":{"type":4,"data":{"unlockhashes":["015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f","01b49da2ff193f46ee0fc684d7a6121a8b8e324144dffc7327471a4da79f1730960edcb2ce737f"],"minimumsignaturecount":10}}}': __create_cos(100000000000000000, 0, ['015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f', '01b49da2ff193f46ee0fc684d7a6121a8b8e324144dffc7327471a4da79f1730960edcb2ce737f'], 10),
         '{"value":"100000000000000000","condition":{"type":3, "data":{"locktime":2,"condition":{"type":1,"data":{"unlockhash":"015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f"}}}}}': __create_cos(100000000000000000, 2, ['015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f'], 1),
         '{"value":"100000000000000000","condition":{"type":3, "data":{"locktime":4,"condition":{"type":1,"data":{"unlockhash":"015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f"}}}}}': __create_cos(100000000000000000, 4, ['015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f'], 1),
         '{"value":"100000000000000000","condition":{"type":3, "data":{"locktime":1,"condition":{"type":1,"data":{"unlockhash":"015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f"}}}}}': __create_cos(100000000000000000, 1, ['015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f'], 1),
-        '{"value":"100000000000000000","condition":{"type":3, "data":{"locktime":2,"condition":{"type":4,"data":{"unlockhashes":["015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f","01b49da2ff193f46ee0fc684d7a6121a8b8e324144dffc7327471a4da79f1730960edcb2ce737f"],"minimumsignaturecount":2}}}}}': __create_cos(100000000000000000, 2, ['015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f','01b49da2ff193f46ee0fc684d7a6121a8b8e324144dffc7327471a4da79f1730960edcb2ce737f'], 2),
-        '{"value":"100000000000000000","condition":{"type":3, "data":{"locktime":4,"condition":{"type":4,"data":{"unlockhashes":["015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f","01b49da2ff193f46ee0fc684d7a6121a8b8e324144dffc7327471a4da79f1730960edcb2ce737f"],"minimumsignaturecount":3}}}}}': __create_cos(100000000000000000, 4, ['015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f','01b49da2ff193f46ee0fc684d7a6121a8b8e324144dffc7327471a4da79f1730960edcb2ce737f'], 3),
-        '{"value":"100000000000000000","condition":{"type":3, "data":{"locktime":1,"condition":{"type":4,"data":{"unlockhashes":["015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f","01b49da2ff193f46ee0fc684d7a6121a8b8e324144dffc7327471a4da79f1730960edcb2ce737f"],"minimumsignaturecount":4}}}}}': __create_cos(100000000000000000, 1, ['015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f','01b49da2ff193f46ee0fc684d7a6121a8b8e324144dffc7327471a4da79f1730960edcb2ce737f'], 4),
+        '{"value":"100000000000000000","condition":{"type":3, "data":{"locktime":2,"condition":{"type":4,"data":{"unlockhashes":["015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f","01b49da2ff193f46ee0fc684d7a6121a8b8e324144dffc7327471a4da79f1730960edcb2ce737f"],"minimumsignaturecount":2}}}}}': __create_cos(100000000000000000, 2, ['015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f', '01b49da2ff193f46ee0fc684d7a6121a8b8e324144dffc7327471a4da79f1730960edcb2ce737f'], 2),
+        '{"value":"100000000000000000","condition":{"type":3, "data":{"locktime":4,"condition":{"type":4,"data":{"unlockhashes":["015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f","01b49da2ff193f46ee0fc684d7a6121a8b8e324144dffc7327471a4da79f1730960edcb2ce737f"],"minimumsignaturecount":3}}}}}': __create_cos(100000000000000000, 4, ['015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f', '01b49da2ff193f46ee0fc684d7a6121a8b8e324144dffc7327471a4da79f1730960edcb2ce737f'], 3),
+        '{"value":"100000000000000000","condition":{"type":3, "data":{"locktime":1,"condition":{"type":4,"data":{"unlockhashes":["015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f","01b49da2ff193f46ee0fc684d7a6121a8b8e324144dffc7327471a4da79f1730960edcb2ce737f"],"minimumsignaturecount":4}}}}}': __create_cos(100000000000000000, 1, ['015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f', '01b49da2ff193f46ee0fc684d7a6121a8b8e324144dffc7327471a4da79f1730960edcb2ce737f'], 4),
         # atomic swap condition (v2) is ignored
         '{"value":"1000000000000","condition":{"type":2,"data":{"sender":"01822fd5fefd2748972ea828a5c56044dec9a2b2275229ce5b212f926cd52fba015846451e4e46","receiver":"01c56890b1b31ec8dbfe87c6829096c12839ae31bb62f1b10d9dacd4947df8e25bb5ff2ba13f4d","hashedsecret":"66028cc407a168b39ae7b538e8b4b25f0d945e18e32c502a1f3bc6ff3b71ca37","timelock":1542965902}}}': __create_cos(1000000000000, 0, [], 0),
         # output with unknown condition
@@ -140,6 +147,7 @@ def test_coin_output_summary():
         summary = CoinOutputSummary.from_raw_coin_output('', raw_output)
         assert expected_summary == summary
 
+
 def __create_ts(inputs, outputs, description):
     v = TransactionSummary()
     v._coin_inputs = inputs
@@ -147,6 +155,7 @@ def __create_ts(inputs, outputs, description):
     v._description = description
     # id still has to be assigned
     return v
+
 
 """
 TODO: fix again, would require the use of explorer_transactions
@@ -190,11 +199,12 @@ def test_transaction_summary():
 3Bot transaction tests
 """
 
+
 def test_compute_monthly_bot_fees():
     testCases = {
         0: 0,
-		1: 10,
-		2: 20,
+        1: 10,
+        2: 20,
         8: 80,
         11: 110,
         12: 84,
@@ -205,9 +215,10 @@ def test_compute_monthly_bot_fees():
         255: 1275,
     }
     for months, expectedFees in testCases.items():
-        expectedFees *= HASTINGS_TFT_VALUE # in JS the oneCoin value is hardcoded (o.o)
+        expectedFees *= HASTINGS_TFT_VALUE  # in JS the oneCoin value is hardcoded (o.o)
         fees = _compute_monthly_bot_fees(months)
         assert fees == expectedFees
+
 
 def test_transactionv144_load_dump_json():
     # load and dump a valid v144 tx from tfchain Go devnet
@@ -216,6 +227,7 @@ def test_transactionv144_load_dump_json():
     assert tx.version == BOT_REGISTRATION_TRANSACTION_VERSION
     assert tx.json == json.loads(json_input)
 
+
 def test_transactionv144_input_sig_hash():
     # load a valid v144 tx from tfchain Go devnet and create the input sig hash, ensure it is as expected
     json_input = '{"version":144,"data":{"names":["crazybot.foobar"],"nrofmonths":1,"txfee":"1000000000","coininputs":[{"parentid":"6678e3a75da2026da76753a60ac44f7e7737784015676b37cc2cdcf670dce2e5","fulfillment":{"type":1,"data":{"publickey":"ed25519:d285f92d6d449d9abb27f4c6cf82713cec0696d62b8c123f1627e054dc6d7780","signature":"cd07fbfd78be0edd1c9ca46bc18f91cde1ed05848083828c5d3848cd9671054527b630af72f7d95c0ddcd3a0f0c940eb8cfe4b085cb00efc8338b28f39155809"}}}],"refundcoinoutput":{"value":"99979897000000000","condition":{"type":1,"data":{"unlockhash":"017fda17489854109399aa8c1bfa6bdef40f93606744d95cc5055270d78b465e6acd263c96ab2b"}}},"identification":{"publickey":"ed25519:adc4090edbe28e3628f08a85d20b5055ea301cdb080d3b65a337a326e2e3556d","signature":"5211f813fb4e34ae348e2e746846bc72255512dc246ccafbb3bd3b916aac738bfe2737308d87cced4f9476be8715983cc6000e37f8e82e7b83f120776a358105"}}}'
@@ -223,12 +235,14 @@ def test_transactionv144_input_sig_hash():
     assert tx.version == BOT_REGISTRATION_TRANSACTION_VERSION
     assert tx.get_input_signature_hash(0).hex() == 'b91b15b614b3c5c729a840542e4d6e7930a17fbd3245fe57f8cb1a9c59263637'
 
+
 def test_transactionv145_load_dump_json():
     # load and dump a valid v145 tx from tfchain Go devnet
     json_input = '{"version":145,"data":{"id":3,"addresses":{"add":["example.com","127.0.0.1"],"remove":["example.org"]},"names":{"add":["giveme.yourfeedback","thisis.anexample"],"remove":["chatbot.example"]},"nrofmonths":4,"txfee":"1000000000","coininputs":[{"parentid":"81a0c1f3094b99b0858da8ebc95b52f2c3593ea399d7b72a66a930521aae61bb","fulfillment":{"type":1,"data":{"publickey":"ed25519:880ee50bd7efa4c8b2b5949688a09818a652727fd3c0cb406013be442df68b34","signature":"d612b679377298e6ccb8a877f7a129d34c65b8850cff1806b9f62d392b6ab173020c3698658275c748047642f8012a4ac75ea23e319bcc405c9d7f2b462b6a0b"}}}],"refundcoinoutput":{"value":"99998737000000000","condition":{"type":1,"data":{"unlockhash":"01972837ee396f22f96846a0c700f9cf7c8fa83ab4110da91a1c7d02f94f28ff03e45f1470df82"}}},"signature":"f76e7ed808a9efe405804109d5e3c8695daf8b9bc7abf1e471fef94b3c4d36789b460f9e45cdf27d83d270b0836fef56bd499e1be8e1f279d367e961bbe62f03"}}'
     tx = TransactionFactory.from_json(json_input)
     assert tx.version == BOT_RECORD_UPDATE_TRANSACTION_VERSION
     assert tx.json == json.loads(json_input)
+
 
 def test_transactionv145_input_sig_hash():
     # load a valid v145 tx from tfchain Go devnet and create the input sig hash, ensure it is as expected

@@ -24,7 +24,7 @@ class GiteaBranch(JSBASE):
         self.commit = commit
         self.committer = committer
         self.id = id
-        self.message=message
+        self.message = message
         self.url = url
         self.timestamp = timestamp
         self.verification = verification

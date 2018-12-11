@@ -6,8 +6,6 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
 class OrganizationTreeItem():
     """
     auto-generated. don't touch.

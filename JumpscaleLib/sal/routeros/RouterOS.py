@@ -1,3 +1,10 @@
+import netaddr
+import select
+import socket
+import binascii
+import posix
+import sys
+from hashlib import md5
 from Jumpscale import j
 # import JumpscaleLib.baselib.remote
 import time
@@ -13,16 +20,6 @@ class RouterOSFactory:
         return RouterOS(host, login, password)
 
 
-from hashlib import md5
-
-import sys
-import posix
-import time
-import binascii
-import socket
-import select
-import netaddr
-from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 

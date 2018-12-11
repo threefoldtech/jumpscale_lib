@@ -3,7 +3,7 @@ Module contianing all transaction types
 """
 from JumpscaleLib.clients.blockchain.rivine.types.signatures import Ed25519PublicKey
 from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import SingleSignatureFulfillment, UnlockHashCondition,\
- LockTimeCondition, AtomicSwapCondition, AtomicSwapFulfillment, MultiSignatureCondition, FulfillmentFactory, UnlockCondtionFactory, MultiSignatureFulfillment
+    LockTimeCondition, AtomicSwapCondition, AtomicSwapFulfillment, MultiSignatureCondition, FulfillmentFactory, UnlockCondtionFactory, MultiSignatureFulfillment
 from JumpscaleLib.clients.blockchain.rivine.encoding import binary
 
 from JumpscaleLib.clients.blockchain.rivine.utils import hash
@@ -30,6 +30,7 @@ BOT_NAME_TRANSFER_TRANSACTION_VERSION = 146
 HASHTYPE_COINOUTPUT_ID = 'coinoutputid'
 DEFAULT_MINERFEE = 100000000
 
+
 class TransactionFactory:
     """
     A transaction factory class
@@ -45,7 +46,6 @@ class TransactionFactory:
         if version == 1:
             return TransactionV1()
 
-
     @staticmethod
     def from_json(txn_json):
         """
@@ -56,7 +56,6 @@ class TransactionFactory:
         txn_dict = json.loads(txn_json)
         return TransactionFactory.from_dict(txn_dict)
 
-
     @staticmethod
     def from_dict(txn_dict):
         """
@@ -66,10 +65,11 @@ class TransactionFactory:
         """
         if 'version' not in txn_dict:
             return None
- 
+
         if txn_dict['version'] == DEFAULT_TRANSACTION_VERSION:
             if 'data' not in txn_dict:
-                raise ValueError("no data object found in Default Transaction (v{})".format(DEFAULT_TRANSACTION_VERSION))
+                raise ValueError("no data object found in Default Transaction (v{})".format(
+                    DEFAULT_TRANSACTION_VERSION))
             txn = TransactionV1()
             txn_data = txn_dict['data']
             if 'coininputs' in txn_data:
@@ -81,7 +81,7 @@ class TransactionFactory:
                     co = CoinOutput.from_dict(co_info)
                     txn._coin_outputs.append(co)
             if 'minerfees' in txn_data:
-                for minerfee in (txn_data['minerfees'] or []) :
+                for minerfee in (txn_data['minerfees'] or []):
                     txn.add_minerfee(int(minerfee))
             if 'arbitrarydata' in txn_data:
                 txn._data = base64.b64decode(txn_data['arbitrarydata'])
@@ -90,7 +90,7 @@ class TransactionFactory:
         if txn_dict['version'] == LEGACY_TRANSACTION_VERSION:
             if 'data' not in txn_dict:
                 raise ValueError("no data object found in Legacy Transaction (v{})".format(LEGACY_TRANSACTION_VERSION))
-            txn = TransactionV1() # parse as v1 transaction, converting the coin inputs and outputs
+            txn = TransactionV1()  # parse as v1 transaction, converting the coin inputs and outputs
             txn_data = txn_dict['data']
             if 'coininputs' in txn_data:
                 for legacy_ci_info in (txn_data['coininputs'] or []):
@@ -98,7 +98,7 @@ class TransactionFactory:
                     ci_info = {
                         'parentid': legacy_ci_info.get('parentid', ''),
                         'fulfillment': {
-                            'type': 1, # TODO: support legacy atomic swap fulfillments
+                            'type': 1,  # TODO: support legacy atomic swap fulfillments
                             'data': {
                                 'publickey': unlocker.get('condition', {}).get('publickey'),
                                 'signature': unlocker.get('fulfillment', {}).get('signature'),
@@ -112,7 +112,7 @@ class TransactionFactory:
                     co_info = {
                         'value': legacy_co_info.get('value', '0'),
                         'condition': {
-                            'type': 1, # TODO: support legacy atomic swap conditions
+                            'type': 1,  # TODO: support legacy atomic swap conditions
                             'data': {
                                 'unlockhash': legacy_co_info.get('unlockhash', ''),
                             }
@@ -121,14 +121,14 @@ class TransactionFactory:
                     co = CoinOutput.from_dict(co_info)
                     txn._coin_outputs.append(co)
             if 'minerfees' in txn_data:
-                for minerfee in (txn_data['minerfees'] or []) :
+                for minerfee in (txn_data['minerfees'] or []):
                     txn.add_minerfee(int(minerfee))
             if 'arbitrarydata' in txn_data:
                 txn._data.value = base64.b64decode(txn_data['arbitrarydata'])
             if 'arbitrarydatatype' in txn_data:
                 txn._data.type = int(txn_data['arbitrarydatatype'])
             return txn
-              
+
         if txn_dict['version'] == MINTERDEFINITION_TRANSACTION_VERSION:
             if 'data' not in txn_dict:
                 raise ValueError("no data object found in MinterDefinition Transaction")
@@ -148,7 +148,7 @@ class TransactionFactory:
             if 'arbitrarydatatype' in txn_data:
                 txn._data.type = int(txn_data['arbitrarydatatype'])
             return txn
-   
+
         if txn_dict['version'] == COINCREATION_TRANSACTION_VERSION:
             if 'data' not in txn_dict:
                 raise ValueError("no data object found in CoinCreation Transaction")
@@ -192,15 +192,17 @@ class TransactionFactory:
             txn.from_dict(txn_dict['data'])
             return txn
 
+
 class TransactionV1:
     """
     A Transaction is an atomic component of a block. Transactions can contain
-	inputs and outputs and even arbitrar data. They can also contain signatures to prove that a given party has
-	approved the transaction, or at least a particular subset of it.
+        inputs and outputs and even arbitrar data. They can also contain signatures to prove that a given party has
+        approved the transaction, or at least a particular subset of it.
 
-	Transactions can depend on other previous transactions in the same block,
-	but transactions cannot spend outputs that they create or otherwise beself-dependent.
+        Transactions can depend on other previous transactions in the same block,
+        but transactions cannot spend outputs that they create or otherwise beself-dependent.
     """
+
     def __init__(self):
         """
         Initializes a new tansaction
@@ -260,7 +262,6 @@ class TransactionV1:
         """
         return self._data.type
 
-
     @property
     def json(self):
         """
@@ -277,9 +278,8 @@ class TransactionV1:
         if self._data.value:
             result['data']['arbitrarydata'] = base64.b64encode(self._data.value).decode('utf-8')
         if self._data.type != 0:
-            result['data']['arbitrarydatatype'] = self._data.type 
+            result['data']['arbitrarydatatype'] = self._data.type
         return result
-
 
     def set_data(self, data, data_type=0):
         """
@@ -288,7 +288,6 @@ class TransactionV1:
         self._data.value = data
         self._data.type = data_type
 
-
     def add_coin_input(self, parent_id, pub_key):
         """
         Adds a new input to the transaction
@@ -296,7 +295,6 @@ class TransactionV1:
         key = Ed25519PublicKey(pub_key=pub_key)
         fulfillment = SingleSignatureFulfillment(pub_key=key)
         self._coin_inputs.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
-
 
     def add_atomicswap_input(self, parent_id, pub_key, secret=None):
         """
@@ -308,15 +306,12 @@ class TransactionV1:
         fulfillment = AtomicSwapFulfillment(pub_key=key, secret=secret)
         self._coin_inputs.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
 
-
     def add_multisig_input(self, parent_id):
         """
         Adds a new coin input with an empty MultiSignatureFulfillment
         """
         fulfillment = MultiSignatureFulfillment()
         self._coin_inputs.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
-
-
 
     def add_coin_output(self, value, recipient, locktime=None):
         """
@@ -332,8 +327,6 @@ class TransactionV1:
             condition = LockTimeCondition(condition=condition, locktime=locktime)
         self._coin_outputs.append(CoinOutput(value=value, condition=condition))
 
-
-
     def add_atomicswap_output(self, value, recipient, locktime, refund_address, hashed_secret):
         """
         Add a new atomicswap output to the transaction
@@ -343,7 +336,6 @@ class TransactionV1:
         coin_output = CoinOutput(value=value, condition=condition)
         self._coin_outputs.append(coin_output)
         return coin_output
-
 
     def add_multisig_output(self, value, unlockhashes, min_nr_sig, locktime=None):
         """
@@ -362,13 +354,11 @@ class TransactionV1:
         self._coin_outputs.append(coin_output)
         return coin_output
 
-
     def add_minerfee(self, minerfee):
         """
         Adds a minerfee to the transaction
         """
         self._minerfees.append(minerfee)
-
 
     def get_input_signature_hash(self, input_index, extra_objects=None):
         """
@@ -426,6 +416,7 @@ class TransactionV128:
     Minter definition transaction class. This transaction type
     allows the current coin creators to redefine who has the ability to create coins.
     """
+
     def __init__(self):
         self._mint_fulfillment = None
         self._mint_condition = None
@@ -446,6 +437,7 @@ class TransactionV128:
         Get transaction id
         """
         return self._id
+
     @id.setter
     def id(self, txn_id):
         """
@@ -477,7 +469,6 @@ class TransactionV128:
         # TODO: make this static of some Base (Abstract) Tx class
         return self._data.value
 
-
     @property
     def data_type(self):
         """
@@ -486,14 +477,12 @@ class TransactionV128:
         # TODO: make this static of some Base (Abstract) Tx class
         return self._data.type
 
-
     @property
     def mint_condition(self):
         """
         Retrieve the new mint condition which will be set
         """
         return self._mint_condition
-
 
     @property
     def mint_fulfillment(self):
@@ -502,35 +491,32 @@ class TransactionV128:
         """
         return self._mint_fulfillment
 
-
     @property
     def json(self):
         """
         Returns a json representation of the transaction
         """
         result = {
-                'version': binary.decode(self._version, type_=int),
-                'data': {
-                    'nonce': base64.b64encode(self._nonce).decode('utf-8'),
-                    'mintfulfillment': self._mint_fulfillment.json if self._mint_fulfillment else '{}',
-                    'mintcondition': self._mint_condition.json if self._mint_condition else '{}',
-                    'minerfees': [str(fee) for fee in self._minerfees]
-                }
+            'version': binary.decode(self._version, type_=int),
+            'data': {
+                'nonce': base64.b64encode(self._nonce).decode('utf-8'),
+                'mintfulfillment': self._mint_fulfillment.json if self._mint_fulfillment else '{}',
+                'mintcondition': self._mint_condition.json if self._mint_condition else '{}',
+                'minerfees': [str(fee) for fee in self._minerfees]
+            }
         }
         if self._data.value:
             result['data']['arbitrarydata'] = base64.b64encode(self._data.value).decode('utf-8')
         if self._data.type != 0:
-            result['data']['arbitrarydatatype'] = self._data.type 
+            result['data']['arbitrarydatatype'] = self._data.type
         return result
 
-    
     def set_data(self, data, data_type=0):
         """
         Set data of the transaction
         """
         self._data.value = data
         self._data.type = data_type
-
 
     def set_singlesig_mint_condition(self, minter_address, locktime=None):
         """
@@ -542,7 +528,6 @@ class TransactionV128:
         if locktime is not None:
             condition = LockTimeCondition(condition=condition, locktime=locktime)
         self._mint_condition = condition
-
 
     def set_multisig_mint_condition(self, unlockhashes, min_nr_sig, locktime=None):
         """
@@ -568,7 +553,6 @@ class TransactionV128:
         """
         self._minerfees.append(minerfee)
 
-
     def get_input_signature_hash(self, input_index, extra_objects=None):
         """
         Builds a signature hash for an input
@@ -582,7 +566,7 @@ class TransactionV128:
         buffer.extend(self._specifier)
         # encode nonce
         buffer.extend(self._nonce)
-         # extra objects if any
+        # extra objects if any
         for extra_object in extra_objects:
             buffer.extend(binary.encode(extra_object))
          # encode new mintcondition
@@ -603,6 +587,7 @@ class TransactionV129:
     Coin creation transaction class. This transaction type allows the current
     coin creators to create new coins and spend them.
     """
+
     def __init__(self):
         self._mint_fulfillment = None
         self._nonce = token_bytes(nbytes=8)
@@ -612,7 +597,7 @@ class TransactionV129:
         self._data = ArbitraryData()
         self._coin_outputs = []
         self._specifier = bytearray(b'coin mint tx')
-        self._specifier.extend([0,0,0,0])
+        self._specifier.extend([0, 0, 0, 0])
 
     @property
     def version(self):
@@ -632,7 +617,6 @@ class TransactionV129:
         """
         self._id = tx_id
 
-
     @property
     def coin_inputs(self):
         """
@@ -640,7 +624,6 @@ class TransactionV129:
         """
         # TODO: make this static of some Base (Abstract) Tx class
         return []
-
 
     @property
     def coin_outputs(self):
@@ -687,17 +670,15 @@ class TransactionV129:
         if self._data.value:
             result['data']['arbitrarydata'] = base64.b64encode(self._data.value).decode('utf-8')
         if self._data.type != 0:
-            result['data']['arbitrarydatatype'] = self._data.type 
+            result['data']['arbitrarydatatype'] = self._data.type
         return result
 
-    
     def set_data(self, data, data_type=0):
         """
         Set data of the transaction
         """
         self._data.value = data
         self._data.type = data_type
-
 
     def add_coin_output(self, value, recipient, locktime=None):
         """
@@ -774,11 +755,13 @@ class TransactionV129:
 
         return hash(data=buffer)
 
+
 class TransactionV144:
     """
     Bot Registration transaction class. This transaction type allows a
     new 3Bot to be registered.
     """
+
     def __init__(self):
         self._specifier = bytearray(b'bot register tx\0')
         self._id = None
@@ -789,7 +772,7 @@ class TransactionV144:
         self._coin_inputs = []
         self._refund_coin_output = None
         self._identification = TfchainPublicKeySignaturePair(None, None)
-    
+
     @property
     def version(self):
         return BOT_REGISTRATION_TRANSACTION_VERSION
@@ -800,14 +783,14 @@ class TransactionV144:
         Get the transaction id
         """
         return self._id
-    
+
     @id.setter
     def id(self, tx_id):
         """
         Set the transaction id
         """
         self._id = tx_id
-    
+
     @property
     def identification(self):
         """
@@ -875,7 +858,7 @@ class TransactionV144:
         if self._refund_coin_output:
             result['data']['refundcoinoutput'] = self._refund_coin_output.json
         return result
-    
+
     def from_dict(self, data):
         """
         Populates this TransactionV144 object from a data (JSON-decoded) dictionary
@@ -917,7 +900,7 @@ class TransactionV144:
     def add_address(self, addr_str):
         addr = tftnet.NetworkAddress.from_string(addr_str)
         self._addresses.append(addr)
-    
+
     def add_name(self, name):
         self._names.append(name)
 
@@ -936,7 +919,7 @@ class TransactionV144:
         key = Ed25519PublicKey(pub_key=pub_key)
         fulfillment = SingleSignatureFulfillment(pub_key=key)
         self._coin_inputs.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
-    
+
     def add_multisig_coin_input(self, parent_id):
         """
         Adds a new coin input with an empty MultiSignatureFulfillment
@@ -1001,11 +984,13 @@ class TransactionV144:
         # return bytes(buffer)
         return hash(data=buffer)
 
+
 class TransactionV145:
     """
     Bot Record Update transaction class. This transaction type allows
     an existing 3Bot to be updated.
     """
+
     def __init__(self):
         self._specifier = bytearray(b'bot recupdate tx')
         self._id = None
@@ -1020,7 +1005,7 @@ class TransactionV145:
         self._refund_coin_output = None
         self._signature = ''
         self._publickey = None
-    
+
     @property
     def version(self):
         return BOT_RECORD_UPDATE_TRANSACTION_VERSION
@@ -1031,7 +1016,7 @@ class TransactionV145:
         Get the transaction id
         """
         return self._id
-    
+
     @id.setter
     def id(self, tx_id):
         """
@@ -1049,7 +1034,7 @@ class TransactionV145:
         if self._addresses_to_add or self._addresses_to_remove:
             fees += tfconst.BOT_FEE_FOR_NETWORK_ADDRESS_INFO_CHANGE_MULTIPLIER * HASTINGS_TFT_VALUE
         # each additional name has to be paid as well
-	    # (regardless of the fact that the 3bot has a name or not)
+            # (regardless of the fact that the 3bot has a name or not)
         lnames = len(self._names_to_add)
         if lnames > 0:
             fees += HASTINGS_TFT_VALUE * lnames * tfconst.BOT_FEE_PER_ADDITIONAL_NAME_MULTIPLIER
@@ -1113,7 +1098,7 @@ class TransactionV145:
         if self._refund_coin_output:
             result['data']['refundcoinoutput'] = self._refund_coin_output.json
         return result
-    
+
     def from_dict(self, data):
         """
         Populates this TransactionV145 object from a data (JSON-decoded) dictionary
@@ -1121,7 +1106,7 @@ class TransactionV145:
         if 'id' in data:
             self._botid = data['id']
         else:
-            self._botid = 0 # 0 is an invalid botID, the identifiers start at 1
+            self._botid = 0  # 0 is an invalid botID, the identifiers start at 1
         if 'nrofmonths' in data:
             self._number_of_months = data['nrofmonths']
         else:
@@ -1171,10 +1156,10 @@ class TransactionV145:
     def add_address_to_remove(self, addr_str):
         addr = tftnet.NetworkAddress.from_string(addr_str)
         self._addresses_to_remove.append(addr)
-    
+
     def add_name_to_add(self, name):
         self._names_to_add.append(name)
-    
+
     def add_name_to_remove(self, name):
         self._names_to_remove.append(name)
 
@@ -1185,13 +1170,13 @@ class TransactionV145:
         if n < 1 or n > 24:
             ValueError("number of months for a 3Bot Registration Transaction has to be in the inclusive range [1,24]")
         self._number_of_months = n
-    
+
     def set_bot_id(self, identifier):
         self._botid = identifier
-    
+
     def get_bot_id(self):
         return self._botid
-    
+
     def set_signature(self, signature):
         self._signature = signature
 
@@ -1202,7 +1187,7 @@ class TransactionV145:
         key = Ed25519PublicKey(pub_key=pub_key)
         fulfillment = SingleSignatureFulfillment(pub_key=key)
         self._coin_inputs.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
-    
+
     def add_multisig_coin_input(self, parent_id):
         """
         Adds a new coin input with an empty MultiSignatureFulfillment
@@ -1269,11 +1254,13 @@ class TransactionV145:
         # return bytes(buffer)
         return hash(data=buffer)
 
+
 class TransactionV146:
     """
     Bot Name Transfer transaction class. This transaction type allows
     the transfer of one or multiple (bot) names between two existing 3 bots.
     """
+
     def __init__(self):
         self._specifier = bytearray(b'bot nametrans tx')
         self._id = None
@@ -1301,7 +1288,7 @@ class TransactionV146:
         Get the transaction id
         """
         return self._id
-    
+
     @id.setter
     def id(self, tx_id):
         """
@@ -1362,7 +1349,7 @@ class TransactionV146:
         if self._refund_coin_output:
             result['data']['refundcoinoutput'] = self._refund_coin_output.json
         return result
-    
+
     def from_dict(self, data):
         """
         Populates this TransactionV146 object from a data (JSON-decoded) dictionary
@@ -1403,7 +1390,7 @@ class TransactionV146:
 
     def get_sender_bot_id(self):
         return self._sender_botid
-    
+
     def set_sender_signature(self, signature):
         self._sender_signature = signature
 
@@ -1412,7 +1399,7 @@ class TransactionV146:
 
     def get_receiver_bot_id(self):
         return self._receiver_botid
-    
+
     def set_receiver_signature(self, signature):
         self._receiver_signature = signature
 
@@ -1423,7 +1410,7 @@ class TransactionV146:
         key = Ed25519PublicKey(pub_key=pub_key)
         fulfillment = SingleSignatureFulfillment(pub_key=key)
         self._coin_inputs.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
-    
+
     def add_multisig_coin_input(self, parent_id):
         """
         Adds a new coin input with an empty MultiSignatureFulfillment
@@ -1485,6 +1472,7 @@ class TransactionV146:
         # return bytes(buffer)
         return hash(data=buffer)
 
+
 def _compute_monthly_bot_fees(months):
     """
     computes the total monthly fees required for the given months,
@@ -1498,37 +1486,41 @@ def _compute_monthly_bot_fees(months):
         return int(fees * 0.7)
     return int(fees * 0.5)
 
+
 class TfchainPublicKeySignaturePair:
     """
     TfchainPublicKeySignaturePair class
     """
+
     def __init__(self, public_key, signature):
         self._public_key = public_key
         self._signature = signature
-    
+
     @classmethod
     def from_dict(cls, pair_info):
         """
         Creates a new TfchainPublicKeySignaturePair from dict
-        
+
         @param pair_info: JSON dict representing a TfchainPublicKeySignaturePair
         """
         if 'publickey' in pair_info and 'signature' in pair_info:
             return cls(
-                public_key = tftsig.SiaPublicKey.from_string(pair_info['publickey']),
-                signature = pair_info['signature'],
+                public_key=tftsig.SiaPublicKey.from_string(pair_info['publickey']),
+                signature=pair_info['signature'],
             )
-    
+
     @property
     def public_key(self):
         return self._public_key
+
     @public_key.setter
     def public_key(self, key):
         self._public_key = key
-    
+
     @property
     def signature(self):
         return self._signature
+
     @signature.setter
     def signature(self, sig):
         self._signature = sig
@@ -1543,6 +1535,7 @@ class TfchainPublicKeySignaturePair:
             'signature': self._signature
         }
 
+
 def sign_bot_transaction(transaction, public_key, secret_key):
     """
     Sign the pair using the secret key and fulfillment
@@ -1556,17 +1549,18 @@ def sign_bot_transaction(transaction, public_key, secret_key):
     fulfillment.sign(sig_ctx=sig_ctx)
     return fulfillment._signature.hex()
 
+
 class CoinInput:
     """
     CoinIput class
     """
+
     def __init__(self, parent_id, fulfillment):
         """
         Initializes a new coin input object
         """
         self._parent_id = parent_id
         self._fulfillment = fulfillment
-
 
     @classmethod
     def from_dict(cls, ci_info):
@@ -1585,7 +1579,6 @@ class CoinInput:
     def parent_id(self):
         return self._parent_id
 
-
     @property
     def json(self):
         """
@@ -1595,7 +1588,6 @@ class CoinInput:
             'parentid': self._parent_id,
             'fulfillment': self._fulfillment.json
         }
-
 
     def sign(self, input_idx, transaction, secret_key):
         """
@@ -1613,13 +1605,13 @@ class CoinOutput:
     """
     CoinOutput calss
     """
+
     def __init__(self, value, condition):
         """
         Initializes a new coinoutput
         """
         self._value = value
         self._condition = condition
-
 
     @classmethod
     def from_dict(cls, co_info):
@@ -1634,7 +1626,6 @@ class CoinOutput:
                 return cls(value=int(co_info['value']),
                            condition=condition)
 
-
     @property
     def binary(self):
         """
@@ -1644,7 +1635,6 @@ class CoinOutput:
         result.extend(binary.encode(self._value, type_='currency'))
         result.extend(binary.encode(self._condition))
         return result
-
 
     @property
     def json(self):
@@ -1669,12 +1659,14 @@ class ArbitraryData:
         if self._type == 1:
             return self._value.decode('utf-8')
         return self._value.hex()
+
     def __repr__(self):
         return str(self)
-    
+
     @property
     def value(self):
         return self._value
+
     @value.setter
     def value(self, data):
         if isinstance(data, bytearray):
@@ -1688,27 +1680,28 @@ class ArbitraryData:
             self._value = data.encode('utf-8')
         else:
             raise ValueError("value of unsupported type {} cannot be used as arbitrary data".format(type(data)))
-    
+
     @property
     def type(self):
         return self._type
+
     @type.setter
     def type(self, i):
         if not isinstance(i, int):
-            raise ValueError("value of unsupported type {} cannot be used as the integral type of arbitrary data".format(type(i)))
+            raise ValueError(
+                "value of unsupported type {} cannot be used as the integral type of arbitrary data".format(type(i)))
         if i < 0 or i > 255:
             raise ValueError("invalid arbitrary data type {}, it has to be in the inclusive range [0,255]".format(i))
         self._type = i
 
-    
     @property
     def binary(self):
         length = len(self._value)
         output = bytearray(binary.encode(length))
-        output[3] = self._type # type in using byte 3 of the 8-byte length of arbitrary data in Sia-encoding
-        output.extend(self._value) # append arbitrary data and return the total array
+        output[3] = self._type  # type in using byte 3 of the 8-byte length of arbitrary data in Sia-encoding
+        output.extend(self._value)  # append arbitrary data and return the total array
         return output
-    
+
 
 class CoinOutputSummary:
     def __init__(self):
@@ -1730,7 +1723,6 @@ class CoinOutputSummary:
             return False
         return self.__dict__ == other.__dict__
 
-
     @classmethod
     def from_raw_coin_output(cls, unlockhash, raw_coin_output):
         cos = cls()
@@ -1748,10 +1740,10 @@ class CoinOutputSummary:
     def _populate_from_condition(self, condition):
         condition_type = condition.get('type', 0)
         if not condition or condition_type == 0:
-            self._addresses.append('0'*78) # free-for-all wallet
+            self._addresses.append('0'*78)  # free-for-all wallet
             self._signatures_required = 1
             return
-    
+
         # interpret the condition data based on its type
         condition_data = condition.get('data', {})
 
@@ -1773,7 +1765,7 @@ class CoinOutputSummary:
             raise ValueError("invalid raw UnlockHash condition: no unlockhash property found")
         self._addresses.append(uh)
         self._signatures_required = 1
-    
+
     def _populate_from_condition_v3(self, data):
         # define the locked value
         lt = data.get('locktime', 0)
@@ -1794,7 +1786,6 @@ class CoinOutputSummary:
         if msc < 2:
             raise ValueError("invalid raw MultiSignature condition: {} is an invalid minimum signature count".format(msc))
         self._signatures_required = msc
-
 
     @property
     def amount(self):
@@ -1864,7 +1855,6 @@ class CoinInputSummary:
     def __repr__(self):
         return '({}) {} : {}'.format(self._id, self._address, self._amount)
 
-
     @property
     def identifier(self):
         """
@@ -1904,7 +1894,6 @@ class TransactionSummary:
         self._data = ''
         self._data_type = 0
 
-
     def __repr__(self):
         output = ''
         if self._confirmed:
@@ -1925,12 +1914,10 @@ class TransactionSummary:
             output += '\t- Data ({}): {}'.format(self._data_type, self._data)
         return output
 
-
     def __eq__(self, other):
         if self.__class__ != other.__class__:
             return False
         return self.__dict__ == other.__dict__
-
 
     @classmethod
     def from_explorer_transaction(cls, explorer_transaction):
@@ -1993,7 +1980,6 @@ class TransactionSummary:
         # return the created transaction summary
         return ts
 
-
     @property
     def id(self):
         """
@@ -2021,7 +2007,7 @@ class TransactionSummary:
         Can be empty in case this transaction has no coin inputs defined.
         """
         return self._coin_inputs
-    
+
     @property
     def coin_outputs(self):
         """
@@ -2053,7 +2039,7 @@ class FlatMoneyTransaction:
     with the focus on a single receiving (coin output) address. Meaning that a regular
     Transaction that defines multiple coin outputs, will result in a list of FlatMoneyTransactions.
     """
-    
+
     @staticmethod
     def create_list(explorer_transaction):
         """
@@ -2091,7 +2077,7 @@ class FlatMoneyTransaction:
         for ci in explorer_transaction.get('coininputoutputs', []):
             if 'unlockhash' in ci:
                 from_addresses.add(ci['unlockhash'])
-        
+
         # collect the amounts per unlockhash
         to_addresses = {}
         coi = 0
@@ -2117,7 +2103,6 @@ class FlatMoneyTransaction:
         # return a list of flat transactions
         return txs
 
-
     def __init__(self):
         self._block_height = 0
         self._transaction_id = ''
@@ -2127,7 +2112,6 @@ class FlatMoneyTransaction:
         self._amount = 0
         self._data = ''
         self._data_type = 0
-
 
     def __repr__(self):
         output = ''
@@ -2148,7 +2132,6 @@ class FlatMoneyTransaction:
             output += '\n\tdata ({}): {}'.format(self._data_type, self._data)
         return output
 
-
     @property
     def block_height(self):
         """
@@ -2156,7 +2139,7 @@ class FlatMoneyTransaction:
         Using the height one can look up the block this FlatMoneyTransaction was registered with.
         """
         return self._block_height
-    
+
     @property
     def id(self):
         """
@@ -2164,7 +2147,7 @@ class FlatMoneyTransaction:
         Using the identifier you can look up a more detailed version of the Transaction if desired.
         """
         return self._transaction_id
-    
+
     @property
     def confirmed(self):
         """
@@ -2172,28 +2155,28 @@ class FlatMoneyTransaction:
         False if the transaction is still waiting in the transaction pool to be registered on the chain.
         """
         return self._confirmed
-    
+
     @property
     def from_addresses(self):
         """
         The addresses that funded the inputs used for the sent amount.
         """
         return self._from_addresses
-    
+
     @property
     def to_address(self):
         """
         The address to which the amount of coins were sent.
         """
         return self._to_address
-    
+
     @property
     def amount(self):
         """
         The amount of coins that were sent with this transaction.
         """
         return self._amount
-    
+
     @property
     def data(self):
         """

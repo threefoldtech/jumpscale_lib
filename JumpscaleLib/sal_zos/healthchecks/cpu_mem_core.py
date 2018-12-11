@@ -20,7 +20,8 @@ class Memory(HealthCheckRun):
 
     def run(self):
         total_mem = self.node.client.info.mem()['total']/(1024*1024)
-        mem_history = self.node.client.aggregator.query('machine.memory.ram.available').get('machine.memory.ram.available', {}).get('history', {})
+        mem_history = self.node.client.aggregator.query('machine.memory.ram.available').get(
+            'machine.memory.ram.available', {}).get('history', {})
 
         if '3600' not in mem_history:
             self.add_message('MEMORY', 'WARNING', 'Average memory load is not collected yet')
@@ -69,4 +70,3 @@ def get_message(type_, percent):
         message['text'] = r'Average %s load during last hour was too high' % (type_.upper())
 
     return message
-

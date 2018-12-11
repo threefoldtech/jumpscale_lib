@@ -70,7 +70,7 @@ class GiteaRepos(JSBASE):
                 u = self.client.users.new()
                 for k, v in item['owner'].items():
                     setattr(u, k, v)
-                repo.user  = u
+                repo.user = u
 
             for k, v in item.items():
                 setattr(repo, k, v)
@@ -172,7 +172,7 @@ class GiteaRepos(JSBASE):
 
         return self
 
-    def __repr__ (self):
+    def __repr__(self):
         return "<Repos Iterator for user: {0}>".format(self.user.username)
 
     __str__ = __repr__

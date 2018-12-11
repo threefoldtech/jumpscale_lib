@@ -101,7 +101,6 @@ class GiteaRepo(JSBASE):
         :rtype: list
         """
 
-
         today = datetime.today()
         thismonth = today.month
         months = [i for i in range(thismonth, thismonth + 5)]

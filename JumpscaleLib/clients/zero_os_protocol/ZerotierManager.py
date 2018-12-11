@@ -2,8 +2,6 @@ from . import typchk
 from Jumpscale import j
 
 
-
-
 class ZerotierManager():
     _network_chk = typchk.Checker({
         'network': str,
@@ -11,7 +9,6 @@ class ZerotierManager():
 
     def __init__(self, client):
         self._client = client
-
 
     def join(self, network):
         """
@@ -42,7 +39,7 @@ class ZerotierManager():
 
         if result.state != 'SUCCESS':
             j.shell()
-            raise RuntimeError('failed to leave zerotier network:%s\nsterr:\n%s', (network,result.stderr))
+            raise RuntimeError('failed to leave zerotier network:%s\nsterr:\n%s', (network, result.stderr))
 
     def list(self):
         """

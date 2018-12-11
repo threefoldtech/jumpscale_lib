@@ -32,7 +32,7 @@ class IYOClient(JSConfigBase):
     def client(self):
         """Generated itsyou.onine client"""
         if self._client is None:
-            self._client = Client( base_uri=self.config.data['baseurl'])
+            self._client = Client(base_uri=self.config.data['baseurl'])
         return self._client
 
     @property
@@ -46,7 +46,7 @@ class IYOClient(JSConfigBase):
     def oauth2_client(self):
         """Generated itsyou.onine client oauth2 client"""
         if self._oauth2_client is None:
-            self._oauth2_client = self.client.Oauth2ClientOauth_2_0  #WEIRD NAME???
+            self._oauth2_client = self.client.Oauth2ClientOauth_2_0  # WEIRD NAME???
         return self._oauth2_client
 
     @property
@@ -92,11 +92,10 @@ class IYOClient(JSConfigBase):
         :rtype: str
         """
 
-
         if use_cache:
             key = 'jwt_' + str(refreshable)
             if scope:
-                key +=  '_' + scope
+                key += '_' + scope
             if self.cache.exists(key):
                 jwt = self.cache.get(key)
                 jwt, expires = jwt
@@ -107,7 +106,6 @@ class IYOClient(JSConfigBase):
                         return jwt
                 else:
                     return jwt
-
 
         base_url = self.config.data["baseurl"]
 

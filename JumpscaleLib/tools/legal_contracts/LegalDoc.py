@@ -1,10 +1,11 @@
 from reportlab.lib.pagesizes import A4
-from  reportlab.lib.units import cm
+from reportlab.lib.units import cm
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import BaseDocTemplate, Frame, PageTemplate, Paragraph
 
+
 class LegalDoc():
-    def __init__(self,path):
+    def __init__(self, path):
 
         self.path = path
 
@@ -13,7 +14,6 @@ class LegalDoc():
         self._styleH1 = styles['Heading1']
         self._styleH2 = styles['Heading2']
         self.page = 0
-
 
         doc = BaseDocTemplate(self.path, pagesize=A4)
         frame = Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height-2*cm, id='normal')
@@ -27,7 +27,7 @@ class LegalDoc():
         doc.build(text)
 
     def header_footer(self, canvas, doc):
-        self.page+=1
+        self.page += 1
 
         canvas.saveState()
         P = Paragraph("This is a multi-line header.  It goes on every page.  " * 2, self._styleN)
@@ -36,9 +36,7 @@ class LegalDoc():
         canvas.restoreState()
 
         canvas.saveState()
-        P = Paragraph("This is a multi-line footer:%s.  It goes on every page.  "%self.page, self._styleN)
+        P = Paragraph("This is a multi-line footer:%s.  It goes on every page.  " % self.page, self._styleN)
         w, h = P.wrap(doc.width, doc.bottomMargin)
         P.drawOn(canvas, doc.leftMargin, h)
         canvas.restoreState()
-
-

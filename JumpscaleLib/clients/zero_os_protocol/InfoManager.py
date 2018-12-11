@@ -1,13 +1,10 @@
 from Jumpscale import j
 
 
-
-
 class InfoManager():
 
     def __init__(self, client):
         self._client = client
-
 
     def cpu(self):
         """
@@ -65,4 +62,3 @@ class InfoManager():
         """
 
         return self._client.json('info.dmi', {'types': types})
-

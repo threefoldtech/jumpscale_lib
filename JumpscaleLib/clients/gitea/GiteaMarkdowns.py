@@ -11,17 +11,17 @@ class GiteaMarkdowns(JSBASE):
     def render(self, text, context=None, mode=None, wiki=True):
         return self.client.api.markdown.renderMarkdown(
             data={
-                'Context':context,
-                'Mode':mode,
-                'Text':text,
-                'Wiki':wiki
+                'Context': context,
+                'Mode': mode,
+                'Text': text,
+                'Wiki': wiki
             }
         ).content
 
     def render_raw(self, text):
         return self.client.api.markdown.renderMarkdownRaw(
             data={
-                'body':text
+                'body': text
             }
         ).content
 

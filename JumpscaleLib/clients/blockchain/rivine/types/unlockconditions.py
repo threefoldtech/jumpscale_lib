@@ -45,6 +45,7 @@ class BaseFulFillment:
     """
     BaseFulFillment class
     """
+
     def __init__(self, pub_key=None):
         """
         Initializes a new BaseFulfillment object
@@ -54,7 +55,6 @@ class BaseFulFillment:
         self._signature = None
         self._extra_objects = None
 
-
     @property
     def json(self):
         """
@@ -62,13 +62,11 @@ class BaseFulFillment:
         """
         return {
             'type': binary.decode(self._type, type_=int),
-            'data':{
+            'data': {
                 'publickey': self._pub_key.json,
                 'signature': self._signature.hex() if self._signature else ''
             }
         }
-
-
 
     def sign(self, sig_ctx):
         """
@@ -80,7 +78,7 @@ class BaseFulFillment:
         if self._signature:
             return
         sig_hash = sig_ctx['transaction'].get_input_signature_hash(input_index=sig_ctx['input_idx'],
-                                                                    extra_objects=self._extra_objects)
+                                                                   extra_objects=self._extra_objects)
         self._signature = sig_ctx['secret_key'].sign(sig_hash)
 
 
@@ -88,13 +86,13 @@ class MultiSignatureFulfillment:
     """
     MultiSignatureFulfillment class
     """
+
     def __init__(self):
         """
         Initializes new MultiSignatureFulfillment object
         """
         self._type = bytearray([3])
         self._pairs = []
-
 
     @classmethod
     def from_dict(cls, data):
@@ -106,9 +104,8 @@ class MultiSignatureFulfillment:
             for pair in data['pairs']:
                 if 'publickey' in pair and 'signature' in pair:
                     f.add_signature_pair(public_key=SiaPublicKeyFactory.from_string(pair['publickey']),
-                                        signature=bytearray.fromhex(pair['signature']))
+                                         signature=bytearray.fromhex(pair['signature']))
         return f
-
 
     def sign(self, sig_ctx):
         """
@@ -119,12 +116,10 @@ class MultiSignatureFulfillment:
         pk = sig_ctx['secret_key'].get_verifying_key()
         public_key = Ed25519PublicKey(pub_key=pk.to_bytes())
         sig_hash = sig_ctx['transaction'].get_input_signature_hash(input_index=sig_ctx['input_idx'],
-                                                                    extra_objects=[public_key])
+                                                                   extra_objects=[public_key])
         signature = sig_ctx['secret_key'].sign(sig_hash)
         self.add_signature_pair(public_key=public_key,
                                 signature=signature)
-
-
 
     def add_signature_pair(self, public_key, signature):
         """
@@ -144,7 +139,7 @@ class MultiSignatureFulfillment:
             'type': binary.decode(self._type, type_=int),
             'data': {
                 "pairs": [{'publickey': pair['publickey'].json,
-                            'signature': pair['signature'].hex()} for pair in self._pairs]
+                           'signature': pair['signature'].hex()} for pair in self._pairs]
             }
         }
 
@@ -153,6 +148,7 @@ class AtomicSwapFulfillment(BaseFulFillment):
     """
     AtomicSwapFulfillment class
     """
+
     def __init__(self, pub_key, secret=None):
         """
         Initializes a new AtomicSwapFulfillment object
@@ -163,7 +159,6 @@ class AtomicSwapFulfillment(BaseFulFillment):
         self._extra_objects = [self._pub_key]
         if self._secret is not None:
             self._extra_objects.append(bytearray.fromhex(self._secret))
-
 
     @property
     def json(self):
@@ -180,6 +175,7 @@ class SingleSignatureFulfillment(BaseFulFillment):
     """
     SingleSignatureFulfillment class
     """
+
     def __init__(self, pub_key):
         """
         Initialzies new single singnature fulfillment class
@@ -244,7 +240,6 @@ class MultiSignatureCondition:
             result.extend(binary.encode(UnlockHash.from_string(unlockhash)))
         return result
 
-
     @property
     def binary(self):
         """
@@ -260,7 +255,6 @@ class MultiSignatureCondition:
         result.extend(binary.encode(condition_binary, type_='slice'))
         return result
 
-
     @property
     def json(self):
         """
@@ -273,7 +267,6 @@ class MultiSignatureCondition:
                 'minimumsignaturecount': self._min_nr_sig
             }
         }
-
 
     @classmethod
     def from_dict(cls, data):
@@ -288,6 +281,7 @@ class AtomicSwapCondition:
     """
     AtomicSwapCondition class
     """
+
     def __init__(self, sender, reciever, hashed_secret, locktime):
         """
         Initializes a new AtomicSwapCondition object
@@ -297,7 +291,6 @@ class AtomicSwapCondition:
         self._hashed_secret = hashed_secret
         self._locktime = locktime
         self._type = ATOMICSWAP_CONDITION_TYPE
-
 
     @property
     def binary(self):
@@ -315,7 +308,6 @@ class AtomicSwapCondition:
 
         return result
 
-
     @property
     def json(self):
         """
@@ -331,22 +323,22 @@ class AtomicSwapCondition:
             }
         }
 
-
     @classmethod
     def from_dict(cls, data):
         """
         Creates a new AtomicSwapCondition object
         """
         return cls(sender=data['sender'],
-                  reciever=data['receiver'],
-                  hashed_secret=data['hashedsecret'],
-                  locktime=data['timelock'])
+                   reciever=data['receiver'],
+                   hashed_secret=data['hashedsecret'],
+                   locktime=data['timelock'])
 
 
 class LockTimeCondition:
     """
     LockTimeCondition class
     """
+
     def __init__(self, condition, locktime):
         """
         Initializes a new LockTimeCondition
@@ -360,8 +352,6 @@ class LockTimeCondition:
         self._locktime = int(locktime)
         self._condition = condition
         self._type = bytearray([3])
-
-
 
     @property
     def binary(self):
@@ -377,7 +367,6 @@ class LockTimeCondition:
         result.extend(self._condition.type)
         result.extend(binary.encode(self._condition.data))
         return result
-
 
     @property
     def json(self):
@@ -408,6 +397,7 @@ class UnlockHashCondition:
     """
     UnlockHashCondition class
     """
+
     def __init__(self, unlockhash):
         """SingleSignatureFulfillment
         Initializes a new unlockhashcondition
@@ -416,8 +406,6 @@ class UnlockHashCondition:
         self._type = bytearray([1])
         self._unlockhash_size = 33
 
-
-
     @property
     def type(self):
         """
@@ -425,14 +413,12 @@ class UnlockHashCondition:
         """
         return self._type
 
-
     @property
     def data(self):
         """
         Returns the condtion data being the unlockhash in this condition type
         """
         return self._unlockhash
-
 
     @property
     def binary(self):
@@ -445,7 +431,6 @@ class UnlockHashCondition:
         result.extend(binary.encode(self._unlockhash_size))
         result.extend(binary.encode(self._unlockhash))
         return result
-
 
     @property
     def json(self):

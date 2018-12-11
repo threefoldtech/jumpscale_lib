@@ -11,7 +11,6 @@ class JSWebServers(JSConfigBase):
         JSConfigBase.__init__(self, JSWebServer)
         self.latest = None
 
-
     def get(self, port):
         """
         will return server which can be attached in a gevent_servers_rack
@@ -65,7 +64,6 @@ class JSWebServers(JSConfigBase):
             port = s.config.data["port"]
             print("webserver running on http://%s:%s/" % (host, port))
 
-
     def test(self, name="", start=True):
         """
         following will run all tests
@@ -75,4 +73,3 @@ class JSWebServers(JSConfigBase):
         """
 
         self._test_run(name=name)
-

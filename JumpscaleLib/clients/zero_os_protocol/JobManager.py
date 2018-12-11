@@ -4,8 +4,6 @@ from . import typchk
 from Jumpscale import j
 
 
-
-
 class JobManager():
     _job_chk = typchk.Checker({
         'id': typchk.Or(str, typchk.IsNone()),
@@ -15,9 +13,9 @@ class JobManager():
         'id': str,
         'signal': int,
     })
+
     def __init__(self, client):
         self._client = client
-
 
     def list(self, id=None):
         """

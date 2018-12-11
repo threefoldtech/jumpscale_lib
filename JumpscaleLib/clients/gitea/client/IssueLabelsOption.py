@@ -7,8 +7,6 @@ Auto-generated class for IssueLabelsOption
 from . import client_support
 
 
-
-
 class IssueLabelsOption(object):
     """
     auto-generated. don't touch.

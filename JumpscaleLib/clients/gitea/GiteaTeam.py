@@ -1,3 +1,4 @@
+from .GiteaTeamMembers import GiteTeamMembers
 import json
 from Jumpscale import j
 
@@ -5,7 +6,6 @@ from JumpscaleLib.clients.gitea import GiteaRepos
 
 JSBASE = j.application.JSBaseClass
 
-from .GiteaTeamMembers import GiteTeamMembers
 
 class GiteaTeam(JSBASE):
     def __init__(
@@ -19,10 +19,10 @@ class GiteaTeam(JSBASE):
     ):
         self.client = client
         self.organization = organization
-        self.description=description
+        self.description = description
         self.name = name
         self.permission = permission
-        self.id=id
+        self.id = id
         JSBASE.__init__(self)
 
     @property
@@ -64,7 +64,6 @@ class GiteaTeam(JSBASE):
             elif not self.permission in ['owner', 'admin', 'read', 'write']:
                 is_valid = False
                 errors['permission'] = "Only allowed [owner, admin, read, write]"
-
 
         elif update:
             operation = 'update'

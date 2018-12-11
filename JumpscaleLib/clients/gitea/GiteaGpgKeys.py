@@ -33,7 +33,7 @@ class GiteaGpgKeys(JSBASE):
         self._items = self.user.client.api.users.userListGPGKeys(username=self.user.username).json()
         return self
 
-    def __repr__ (self):
+    def __repr__(self):
         return "<GpgKeys Iterator for user: {0}>".format(self.user.username)
 
     __str__ = __repr__

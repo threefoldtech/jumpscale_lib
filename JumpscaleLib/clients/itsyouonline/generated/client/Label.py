@@ -6,8 +6,6 @@ from . import client_support
 from Jumpscale import j
 
 
-
-
 class Label(str, ):
     """
     auto-generated. don't touch.

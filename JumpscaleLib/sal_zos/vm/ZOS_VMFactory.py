@@ -1,7 +1,6 @@
+from .ZOS_VM import ZOS_VM
 from Jumpscale import j
 JSBASE = j.application.JSBaseClass
-
-from .ZOS_VM import ZOS_VM
 
 
 class ZOS_VMFactory(JSBASE):
@@ -19,4 +18,3 @@ class ZOS_VMFactory(JSBASE):
             the sal layer 
         """
         return ZOS_VM(node, name, flist, vcpus, memory)
-

@@ -1,5 +1,6 @@
 from . import typchk
 
+
 class RTInfoManager:
     _rtinfo_start_params_chk = typchk.Checker({
         'host': str,
@@ -54,4 +55,3 @@ class RTInfoManager:
         List running rtinfo clients
         """
         return self._client.json("rtinfo.list", {})
-

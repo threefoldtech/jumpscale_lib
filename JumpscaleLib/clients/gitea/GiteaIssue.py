@@ -20,12 +20,12 @@ class GiteaIssue(JSBASE):
             body=None,
             closed=False,
             due_date=None,
-            labels = [],
+            labels=[],
             milestone=0,
             title=None,
             state=None,
             updated_at=None,
-            url = None,
+            url=None,
     ):
         JSBASE.__init__(self)
         self.client = client
@@ -35,7 +35,7 @@ class GiteaIssue(JSBASE):
         self.assignee = assignee
         self.assignees = assignees
         self.body = body
-        self.closed=closed
+        self.closed = closed
         self.due_date = due_date
         self.labels = labels
         self.milestone = milestone
@@ -154,6 +154,5 @@ class GiteaIssue(JSBASE):
     @property
     def issue_comments(self):
         return GiteaIssueComments(self.client, self.repo, self, self.user)
-
 
     __str__ = __repr__ = lambda self: json.dumps(self.data)

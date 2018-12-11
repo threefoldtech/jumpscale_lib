@@ -8,6 +8,7 @@ _extract_pattern = re.compile('\s*([^=]+)="([^"]*)"')
 
 JSBASE = j.application.JSBaseClass
 
+
 class LsblkError(Exception, JSBASE):
     def __init__(self):
         JSBASE.__init__(self)

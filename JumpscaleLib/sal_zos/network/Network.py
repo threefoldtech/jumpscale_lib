@@ -233,4 +233,3 @@ class Network():
         self.node.client.ip.link.down(interface)
         time.sleep(2)
         self.node.client.ip.link.up(interface)
-

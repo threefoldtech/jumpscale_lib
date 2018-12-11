@@ -23,4 +23,3 @@ class ZeroRobotFactory(JSBASE):
                          data_repo=data_repo, config_repo=config_repo, config_key=config_key,
                          organization=organization, auto_push=auto_push,
                          auto_push_interval=auto_push_interval)
-

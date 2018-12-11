@@ -126,6 +126,7 @@ class BlkInfo(JSBASE):
 
         self._executor.prefab.core.file_write('/etc/fstab', '\n'.join(fstab), mode='0644')
 
+
 class DiskInfo(BlkInfo):
     """
     Represents a disk

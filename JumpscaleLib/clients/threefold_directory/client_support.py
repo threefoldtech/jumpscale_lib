@@ -36,8 +36,10 @@ def timestamp_to_datetime(timestamp):
     """
     return parser.parse(timestamp).replace(tzinfo=None)
 
+
 def datetime_to_timestamp(indate):
     return int(indate.strftime("%s"))
+
 
 def has_properties(cls, property, child_properties):
     for child_prop in child_properties:
@@ -192,6 +194,7 @@ class DatetimeHandler(object):
         """restore"""
         return timestamp_to_datetime(data)
 
+
 class UnixDatetime(object):
     """
     output datetime objects as iso-8601 compliant strings
@@ -206,6 +209,7 @@ class UnixDatetime(object):
         """restore"""
         dt = timestamp_to_datetime(data)
         return datetime_to_timestamp(dt)
+
 
 class UUIDHandler(object):
     """
@@ -238,8 +242,10 @@ class EnumHandler(object):
         """
         raise NotImplementedError
 
+
 class Timestamp(object):
     pass
+
 
 handlers = {
     datetime: DatetimeHandler,

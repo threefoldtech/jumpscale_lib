@@ -23,7 +23,7 @@ class GiteaOrgRepo(JSBASE):
             owner=None
     ):
         self.organization = organization
-        self.clone_url= clone_url
+        self.clone_url = clone_url
         self.created_at = created_at
         self.default_branch = default_branch
         self.description = description
@@ -31,10 +31,9 @@ class GiteaOrgRepo(JSBASE):
         self.fork = fork
         self.forks_count = forks_count
         self.full_name = full_name
-        self.html_url=html_url
+        self.html_url = html_url
         self.id = id
         self.mirror = mirror
         self.name = name
         self.open_issues_count = open_issues_count
         self.owner = owner
-

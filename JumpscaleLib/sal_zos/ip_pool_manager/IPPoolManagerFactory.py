@@ -1,8 +1,8 @@
+from .IPPoolManager import IPPoolsManager
 from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
-from .IPPoolManager import IPPoolsManager
 
 class IPPoolManagerFactory(JSBASE):
 
@@ -18,4 +18,3 @@ class IPPoolManagerFactory(JSBASE):
             the sal layer 
         """
         return IPPoolsManager(pools)
-

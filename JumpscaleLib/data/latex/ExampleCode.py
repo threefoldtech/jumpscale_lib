@@ -1,5 +1,5 @@
 
-latex="""
+latex = """
 \documentclass{article}
 
     \usepackage{listings}

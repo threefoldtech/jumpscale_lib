@@ -8,6 +8,7 @@ from .LRUCache import LRUCache
 from operator import itemgetter, attrgetter
 JSBASE = j.application.JSBaseClass
 
+
 class RWCache(JSBASE):
 
     def __init__(self, nrItemsReadCache, maxNrItemsWriteCache=50, maxTimeWriteCache=2000, writermethod=None):

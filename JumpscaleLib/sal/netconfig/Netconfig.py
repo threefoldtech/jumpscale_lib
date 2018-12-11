@@ -5,6 +5,7 @@ import time
 # MAYBE WE SHOULD STANDARDISE ON ARCH LINUX & USE SYSTEMDNETWORKING
 JSBASE = j.application.JSBaseClass
 
+
 class Netconfig(JSBASE):
     """
     Helps you to configure the network.

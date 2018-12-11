@@ -1,9 +1,8 @@
+from ..zerodb.zerodb import Zerodb
 from Jumpscale import j
 # import JumpscaleLib.baselib.remote
 
 JSBASE = j.application.JSBaseClass
-
-from ..zerodb.zerodb import Zerodb
 
 
 class ZerodbFactory(JSBASE):
@@ -23,4 +22,3 @@ class ZerodbFactory(JSBASE):
             the sal layer
         """
         return Zerodb(node=node, name=name, node_port=node_port, path=path, mode=mode, sync=sync, admin=admin)
-

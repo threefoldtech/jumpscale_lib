@@ -1,17 +1,19 @@
+from reportlab.platypus.tableofcontents import TableOfContents
+from reportlab.lib.units import inch
+from reportlab.rl_config import defaultPageSize
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import *
+import sys
 from Jumpscale import j
 j.sal.fs.createDir("/tmp/reportlab")
 
-#Copyright ReportLab Europe Ltd. 2000-2017
-#see license.txt for license details
-__doc__=''
-__version__='3.3.0'
+# Copyright ReportLab Europe Ltd. 2000-2017
+# see license.txt for license details
+__doc__ = ''
+__version__ = '3.3.0'
 
-#REPORTLAB_TEST_SCRIPT
-import sys
-from reportlab.platypus import *
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.rl_config import defaultPageSize
-PAGE_HEIGHT=defaultPageSize[1]
+# REPORTLAB_TEST_SCRIPT
+PAGE_HEIGHT = defaultPageSize[1]
 
 styles = getSampleStyleSheet()
 
@@ -33,39 +35,43 @@ can add functionality to the engine such as alternative disk based
 indexed table implementations, dynamic interfaces to remote data
 bases or or other data sources, and user defined computations."""
 
-from reportlab.lib.units import inch
 
 pageinfo = "%s / %s / %s" % (Author, email, Title)
 
+
 def myFirstPage(canvas, doc):
     canvas.saveState()
-    #canvas.setStrokeColorRGB(1,0,0)
-    #canvas.setLineWidth(5)
-    #canvas.line(66,72,66,PAGE_HEIGHT-72)
-    canvas.setFont('Times-Bold',16)
+    # canvas.setStrokeColorRGB(1,0,0)
+    # canvas.setLineWidth(5)
+    # canvas.line(66,72,66,PAGE_HEIGHT-72)
+    canvas.setFont('Times-Bold', 16)
     canvas.drawString(108, PAGE_HEIGHT-108, Title)
-    canvas.setFont('Times-Roman',9)
+    canvas.setFont('Times-Roman', 9)
     canvas.drawString(inch, 0.75 * inch, "First Page / %s" % pageinfo)
     canvas.restoreState()
+
 
 def myLaterPages(canvas, doc):
     #canvas.drawImage("snkanim.gif", 36, 36)
     canvas.saveState()
-    #canvas.setStrokeColorRGB(1,0,0)
-    #canvas.setLineWidth(5)
-    #canvas.line(66,72,66,PAGE_HEIGHT-72)
-    canvas.setFont('Times-Roman',9)
+    # canvas.setStrokeColorRGB(1,0,0)
+    # canvas.setLineWidth(5)
+    # canvas.line(66,72,66,PAGE_HEIGHT-72)
+    canvas.setFont('Times-Roman', 9)
     canvas.drawString(inch, 0.75 * inch, "Page %d %s" % (doc.page, pageinfo))
     canvas.restoreState()
 
+
 def go():
-    Elements.insert(0,Spacer(0,inch))
+    Elements.insert(0, Spacer(0, inch))
     doc = SimpleDocTemplate('/tmp/reportlab/gfe.pdf')
-    doc.build(Elements,onFirstPage=myFirstPage, onLaterPages=myLaterPages)
+    doc.build(Elements, onFirstPage=myFirstPage, onLaterPages=myLaterPages)
+
 
 Elements = []
 
-HeaderStyle = styles["Heading1"] # XXXX
+HeaderStyle = styles["Heading1"]  # XXXX
+
 
 def header(txt, style=HeaderStyle, klass=Paragraph, sep=0.3):
     s = Spacer(0.2*inch, sep*inch)
@@ -73,14 +79,18 @@ def header(txt, style=HeaderStyle, klass=Paragraph, sep=0.3):
     para = klass(txt, style)
     Elements.append(para)
 
+
 ParaStyle = styles["Normal"]
+
 
 def p(txt):
     return header(txt, style=ParaStyle, sep=0.1)
 
-#pre = p # XXX
+# pre = p # XXX
+
 
 PreStyle = styles["Code"]
+
 
 def pre(txt):
     s = Spacer(0.1*inch, 0.1*inch)
@@ -88,7 +98,8 @@ def pre(txt):
     p = Preformatted(txt, PreStyle)
     Elements.append(p)
 
-#header(Title, sep=0.1. style=ParaStyle)
+
+# header(Title, sep=0.1. style=ParaStyle)
 header(Author, sep=0.1, style=ParaStyle)
 header(URL, sep=0.1, style=ParaStyle)
 header(email, sep=0.1, style=ParaStyle)
@@ -275,8 +286,8 @@ and like at least two beers not served by lolas
 """)
 
 if 0:
-   go()
-   sys.exit(1)
+    go()
+    sys.exit(1)
 
 pre("""
     select f.drinker
@@ -351,8 +362,6 @@ a later release. This paper also does not intend to explain
 the complete operations of the internals; it is intended to provide
 at least enough information to understand the basic mechanisms
 for extending gadfly.""")
-
-
 
 
 p("""Some concepts and definitions provided next help with the description
@@ -902,6 +911,5 @@ Data Base System Concepts, McGraw-Hill Series in Computer Science, Boston,
 p("""[Gadfly]Gadfly: SQL Relational Database in Python,
 http://www.chordate.com/kwParsing/gadfly.html""")
 
-from  reportlab.platypus.tableofcontents import TableOfContents
 
 go()

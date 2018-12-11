@@ -1,3 +1,4 @@
+from .ZerotierClient import ZerotierClient
 """
 zc = j.clients.zerotier.get(name="geert", data={'token_':"jkhljhbljb"})
 mynetworks = zc.networks_list()-> [ZerotierNetwork]
@@ -14,11 +15,7 @@ from Jumpscale import j
 JSConfigFactory = j.tools.configmanager.JSBaseClassConfigs
 
 
-from .ZerotierClient import ZerotierClient
-
-
 JSBASE = j.application.JSBaseClass
-
 
 
 class ZerotierFactory(JSConfigFactory):
@@ -29,15 +26,15 @@ class ZerotierFactory(JSConfigFactory):
         self.connections = {}
         JSConfigFactory.__init__(self, ZerotierClient)
 
-    def configure(self,instance,token,nodeids="",networkid_default="",interactive=False):
+    def configure(self, instance, token, nodeids="", networkid_default="", interactive=False):
         """
         @PARAM networkid is optional
         @PARAM nodeids is optional, comma separated list of nodeids, used to define your connection (you're a member of a network)
         """
-        data={}
-        data["token_"]=token
-        data["networkid"]=networkid_default
-        return self.get(instance=instance,data=data,interactive=interactive)
+        data = {}
+        data["token_"] = token
+        data["networkid"] = networkid_default
+        return self.get(instance=instance, data=data, interactive=interactive)
 
     def test(self):
         """

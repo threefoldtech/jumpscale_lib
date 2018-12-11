@@ -17,7 +17,7 @@ class GiteaMilestone(JSBASE):
             description=None,
             due_on=None,
             open_issues=0,
-            state = None,
+            state=None,
             title=None,
     ):
         JSBASE.__init__(self)
@@ -28,7 +28,7 @@ class GiteaMilestone(JSBASE):
         self.closed_at = closed_at
         self.closed_issues = closed_issues
         self.description = description
-        self.due_on=due_on
+        self.due_on = due_on
         self.open_issues = open_issues
         self.title = title
         self.state = state
@@ -90,7 +90,8 @@ class GiteaMilestone(JSBASE):
             return is_valid, err
 
         try:
-            resp = self.client.api.repos.issueCreateMilestone(data=self.data, repo=self.repo.name, owner=self.user.username)
+            resp = self.client.api.repos.issueCreateMilestone(
+                data=self.data, repo=self.repo.name, owner=self.user.username)
             c = resp.json()
             for k, v in c.items():
                 setattr(self, k, v)

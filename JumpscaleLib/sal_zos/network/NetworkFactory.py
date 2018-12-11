@@ -17,4 +17,3 @@ class NetworkFactory(JSBASE):
             the sal layer 
         """
         return Network(node)
-

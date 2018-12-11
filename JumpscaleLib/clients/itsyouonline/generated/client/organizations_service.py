@@ -19,8 +19,6 @@ from .unmarshall_error import UnmarshallError
 from Jumpscale import j
 
 
-
-
 class OrganizationsService():
     def __init__(self, client):
         pass

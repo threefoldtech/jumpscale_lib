@@ -68,7 +68,7 @@ class GiteaUserCurrentOrg(JSBASE):
             else:
                 if not self.user.username:
                     is_valid = False
-                    errors['user'] = {'username':'Missing'}
+                    errors['user'] = {'username': 'Missing'}
 
                 if not self.full_name:
                     is_valid = False
@@ -131,6 +131,6 @@ class GiteaUserCurrentOrg(JSBASE):
 
     @property
     def teams(self):
-        return  GiteaTeams(self.user.client, self)
+        return GiteaTeams(self.user.client, self)
 
     __str__ = __repr__ = lambda self: json.dumps(self.data)

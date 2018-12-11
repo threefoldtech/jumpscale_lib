@@ -358,6 +358,6 @@ class Service:
     def authorize_zt_nics(self):
         if not self.zt_identity:
             self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
-        zt_public = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
+        zt_public = self.node.client.system(
+            'zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
         authorize_zerotiers(zt_public, self.nics)
-

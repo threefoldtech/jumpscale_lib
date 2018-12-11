@@ -9,29 +9,29 @@ TODO: move this module to the correct (digitalme?) file location
 """
 
 
-MAX_VALUE_CRU = (1<<8)-1
-MAX_VALUE_MRU = (1<<16)-1
-MAX_VALUE_HRU = (1<<32)-1
-MAX_VALUE_SRU = (1<<32)-1
-MAX_VALUE_NRU = (1<<16)-1
+MAX_VALUE_CRU = (1 << 8)-1
+MAX_VALUE_MRU = (1 << 16)-1
+MAX_VALUE_HRU = (1 << 32)-1
+MAX_VALUE_SRU = (1 << 32)-1
+MAX_VALUE_NRU = (1 << 16)-1
 
-MAX_VALUE_DURATION = (1<<16)-1
+MAX_VALUE_DURATION = (1 << 16)-1
 
 MAX_LENGTH_DESCRIPTION = 32
+
 
 class CapacityOrder:
     def __init__(self):
         # resource units
-        self._cru = 0 # core unit
-        self._mru = 0 # memory unit
-        self._hru = 0 # HD unit
-        self._sru = 0 # SSD unit
-        self._nru = 0 # network unit
+        self._cru = 0  # core unit
+        self._mru = 0  # memory unit
+        self._hru = 0  # HD unit
+        self._sru = 0  # SSD unit
+        self._nru = 0  # network unit
         # duration, expressed in cycles of 30 days
         self._duration = 0
         # optional `bytearray` description of maximum 32 bytes
         self._description = bytearray()
-
 
     def __repr__(self):
         output = 'Capacity order for {} days:\n'.format(self._duration*30)
@@ -39,18 +39,16 @@ class CapacityOrder:
         for name, unit in resources:
             value = getattr(self, name)
             if value == 0:
-                continue # skip if not defined
+                continue  # skip if not defined
             output += '\t- {}: {} {}\n'.format(name.upper(), value, unit)
         if self._description:
             output += '\t- description: {}\n'.format(self._description)
         return output
 
-    
     def __eq__(self, other):
         if self.__class__ != other.__class__:
             return False
         return self.__dict__ == other.__dict__
-
 
     @property
     def cru(self):
@@ -58,6 +56,7 @@ class CapacityOrder:
         Core Unit, expressed in cores.
         """
         return self._cru
+
     @cru.setter
     def cru(self, value):
         """
@@ -74,6 +73,7 @@ class CapacityOrder:
         Memory Unit, expressed in GB.
         """
         return self._mru
+
     @mru.setter
     def mru(self, value):
         """
@@ -90,6 +90,7 @@ class CapacityOrder:
         HD Unit, expressed in GB.
         """
         return self._hru
+
     @hru.setter
     def hru(self, value):
         """
@@ -106,6 +107,7 @@ class CapacityOrder:
         SSD Unit, expressed in GB.
         """
         return self._sru
+
     @sru.setter
     def sru(self, value):
         """
@@ -122,6 +124,7 @@ class CapacityOrder:
         Network Unit, expressed in GB in/out.
         """
         return self._nru
+
     @nru.setter
     def nru(self, value):
         """
@@ -132,13 +135,13 @@ class CapacityOrder:
             raise ValueError("{} exceeds maximum NRU value of {}".format(value, MAX_VALUE_NRU))
         self._nru = value
 
-
     @property
     def duration(self):
         """
         Amount of 30-day cycles the capacity is to be reserved.
         """
         return self._duration
+
     @duration.setter
     def duration(self, value):
         """
@@ -152,13 +155,13 @@ class CapacityOrder:
             raise ValueError("{} exceeds maximum duration value of {}".format(value, MAX_VALUE_DURATION))
         self._duration = value
 
-
     @property
     def description(self):
         """
         Optional short description, attached to the Capacity order.
         """
         return self._description
+
     @description.setter
     def description(self, value):
         """
@@ -174,7 +177,6 @@ class CapacityOrder:
         if len(value) > MAX_LENGTH_DESCRIPTION:
             raise ValueError("description can have maximum a length of {} bytes".format(MAX_LENGTH_DESCRIPTION))
         self._description = value
-
 
     def binary(self):
         """
@@ -255,7 +257,7 @@ class CapacityOrder:
 
         # create the Capacity Order to fill
         co = cls()
-        
+
         # decode the first byte as the resource flags
         position = 0
         resource_flags = b[position]
@@ -263,13 +265,13 @@ class CapacityOrder:
         # decode all the resource units
         resource_names_and_sizes = [('cru', 1), ('mru', 2), ('hru', 4), ('sru', 4), ('nru', 2)]
         for index in range(5):
-            if (resource_flags >> (7-index))&1 == 0:
-                continue # flag not set
+            if (resource_flags >> (7-index)) & 1 == 0:
+                continue  # flag not set
             name, size = resource_names_and_sizes[index]
             start = position
             position += size
             setattr(co, name, int.from_bytes(b[start:position], byteorder='little'))
-        
+
         # decode the duration
         start = position
         position += 2
@@ -284,7 +286,7 @@ class CapacityOrder:
             start = position
             position += desclen
             co.description = b[start:position]
-        
+
         # ensure the byre array is completely decoded
         if position != len(b):
             raise ValueError("not everything of the given bytearray was decoded")

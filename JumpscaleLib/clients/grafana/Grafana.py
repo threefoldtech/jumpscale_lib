@@ -27,7 +27,8 @@ JSConfigBase = j.tools.configmanager.JSBaseClassConfig
 class GrafanaClient(JSConfigBase):
 
     def __init__(self, instance, data={}, parent=None, interactive=False):
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE, interactive=interactive)
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,
+                              template=TEMPLATE, interactive=interactive)
         c = self.config.data
         self._url = c['url']
         self.setAuth(c['username'], c['password_'])

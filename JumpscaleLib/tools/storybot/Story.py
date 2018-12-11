@@ -2,6 +2,7 @@ from .utils import _find_second, _parse_body, _check_broken_links
 
 from Jumpscale import j
 
+
 class Story():
     """Represents a story
     """
@@ -10,7 +11,7 @@ class Story():
 
     def __init__(self, title="", url="", description="", state="open", body="", update_func=None):
         """Constructor of a Story
-        
+
         Keyword Arguments:
             title str -- title of the story (default: "")
             url str -- URL to the story issue (default: "")
@@ -18,7 +19,7 @@ class Story():
             state str -- state of the story ("open", "closed") (default: "open")
             body str -- Current body of the story issue (default: "")
             update_func func -- function that updates the Stories body (default: None)
-        
+
         Raises:
             ValueError -- if title was not provided
             ValueError -- if url was not provided
@@ -50,7 +51,7 @@ class Story():
     @property
     def md_item(self):
         """Returns the representation of the Story as a markdown list item
-        
+
         Returns:
             str -- Story as mardown list item
         """
@@ -58,7 +59,7 @@ class Story():
 
     def update_list(self, task):
         """Updated task list of story with provided task
-        
+
         Arguments:
             task Task -- Task to add to Story
         """
@@ -70,23 +71,23 @@ class Story():
         Starting and ending from provided indexes
 
         Returns -1 if not found
-        
+
         Arguments:
             body str -- issue body to look up the index of the task
-        
+
         Keyword Arguments:
             start_i int -- Start index if lookup (default: 0)
             end_i int -- End index of lookup (default: -1)
-        
+
         Raises:
             RuntimeError -- item could be wrongly formatted
-        
+
         Returns:
             int -- line index of item in body
         """
         lines = body.splitlines()[start_i: end_i + 1 if end_i != -1 else None]
         for i, line in enumerate(lines, start=start_i):
-            if i > end_i and not end_i < 0 :
+            if i > end_i and not end_i < 0:
                 break
             # check if list item
             if not line.startswith("- ["):

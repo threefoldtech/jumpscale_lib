@@ -23,7 +23,8 @@ class PowerSupply(IPMIHealthCheck):
 
     def run(self, container):
         ps_errmsgs = [x.lower() for x in self.ps_errmsgs if x.strip()]
-        linehaserrmsg = lambda line: any([x in line.lower() for x in ps_errmsgs])
+
+        def linehaserrmsg(line): return any([x in line.lower() for x in ps_errmsgs])
 
         out = self.execute_ipmi(container, """ipmitool -c sdr type "Power Supply" """)
         if out:
@@ -59,11 +60,12 @@ class PowerSupply(IPMIHealthCheck):
                     id_ = id_.strip("Status").strip("_").strip()  # clean the power supply name.
                     if linehaserrmsg(line):
                         if psu_redun_in_out and is_fully_redundant:
-                            self.add_message(id=id_, status='SKIPPED', text="Power redundancy problem on %s (%s)" % (id_, presence))
+                            self.add_message(id=id_, status='SKIPPED',
+                                             text="Power redundancy problem on %s (%s)" % (id_, presence))
                         else:
-                            self.add_message(id=id_, status='WARNING', text="Power redundancy problem on %s (%s)" % (id_, presence))
+                            self.add_message(id=id_, status='WARNING',
+                                             text="Power redundancy problem on %s (%s)" % (id_, presence))
                     else:
                         self.add_message(id=id_, status='OK', text="Power supply %s is OK" % id_)
         else:
             self.add_message(id="SKIPPED", status='SKIPPED', text="No data for Power Supplies")
-

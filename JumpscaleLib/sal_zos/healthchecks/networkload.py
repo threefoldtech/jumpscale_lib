@@ -5,6 +5,7 @@ descr = """
 Check the bandwith consumption of the network
 """
 
+
 class NetworkLoad(HealthCheckRun):
     def __init__(self, node):
         self.node = node
@@ -27,11 +28,13 @@ class NetworkLoad(HealthCheckRun):
                 nic_speed = nics_speed.get(nic_name, 0)
                 if nic_speed > 0:
                     nic_speed = nic_speed / 8
-                    percent = (last_throughput/ float(nic_speed)) * 100
+                    percent = (last_throughput / float(nic_speed)) * 100
                     if percent > 90:
-                        self.add_message(id="%s_%s" % (nic_name, direction), status="ERROR", text='Nic {} {} bandwith is {:.2f}%'.format(nic_name, direction, percent))
+                        self.add_message(id="%s_%s" % (nic_name, direction), status="ERROR",
+                                         text='Nic {} {} bandwith is {:.2f}%'.format(nic_name, direction, percent))
                     elif percent > 80:
-                        self.add_message(id="%s_%s" % (nic_name, direction), status="WARNING", text='Nic {} {} bandwith is {:.2f}%'.format(nic_name, direction, percent))
+                        self.add_message(id="%s_%s" % (nic_name, direction), status="WARNING",
+                                         text='Nic {} {} bandwith is {:.2f}%'.format(nic_name, direction, percent))
                     else:
-                        self.add_message(id="%s_%s" % (nic_name, direction), status="OK", text='Nic {} {} bandwith is {:.2f}%'.format(nic_name, direction, percent))
-
+                        self.add_message(id="%s_%s" % (nic_name, direction), status="OK",
+                                         text='Nic {} {} bandwith is {:.2f}%'.format(nic_name, direction, percent))

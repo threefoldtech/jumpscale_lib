@@ -18,4 +18,3 @@ class PubsubFactory(JSBASE):
             the sal layer 
         """
         return Pubsub(loop, host, port, password, db, ctx, timeout, testConnectionAttempts, callback)
-

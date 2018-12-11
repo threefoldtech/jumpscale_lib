@@ -1,8 +1,6 @@
 from Jumpscale import j
 
 
-
-
 class UnhandledAPIError(Exception, ):
     """ UnhandledAPIError is exception when the API response doesnt have handler.
 

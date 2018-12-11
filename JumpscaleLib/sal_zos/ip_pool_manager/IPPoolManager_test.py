@@ -27,7 +27,7 @@ class TestIPPool(TestCase):
         # hosts are the full range - 192.168.20.3
         self._HOSTS = ['192.168.20.1', '192.168.20.2', '192.168.20.3', '192.168.20.5', '192.168.20.6']
         self.p = IPPool(id="pool_1", name="poolname", network_address="192.168.20.0/29", registered_ips=self._HOSTS)
-        self.pool_full_range_hosts = IPPool(id="pool_2", name="pool2name",network_address="192.168.20.0/29")
+        self.pool_full_range_hosts = IPPool(id="pool_2", name="pool2name", network_address="192.168.20.0/29")
 
     def test_subnetmask(self):
         assert str(self.p.subnetmask) == '255.255.255.248'
@@ -51,7 +51,7 @@ class TestIPPool(TestCase):
 
     def test_pool_gets_network_range_if_no_registered_ips(self):
         assert len(self.pool_full_range_hosts.available_ips) == len(self._HOSTS) + 1
-    
+
     def test_pool_doesnt_get_network_range_if_registered_ips(self):
         assert len(self.p.available_ips) == len(self._HOSTS)
 
@@ -109,6 +109,7 @@ class TestIPPool(TestCase):
             for i in range(len(self._HOSTS)+1):
                 ip = self.p.get_first_free_ip()
                 self.p.reserve_ip(ip)
+
 
 class TestIPPoolManager(TestCase):
 
@@ -172,4 +173,3 @@ class TestIPPoolManager(TestCase):
         with pytest.raises(OutOfIPs):
             for i in range(9):
                 pool_id, ip = self.mgr.get_any_free_ip()
-

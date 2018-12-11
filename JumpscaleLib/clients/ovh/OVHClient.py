@@ -35,15 +35,15 @@ class OVHClient(JSConfigBase):
 
         self.client.get("/me")
 
-        if self.config.data["consumerkey_"]=="":
+        if self.config.data["consumerkey_"] == "":
             self.consumer_key_get()
             self._connect()
 
         self.client.get("/me")
 
     def consumer_key_get(self):
-        #TODO:*1 something still goes wrong here, need to debug
-        ck=self.client.new_consumer_key_request()
+        # TODO:*1 something still goes wrong here, need to debug
+        ck = self.client.new_consumer_key_request()
         ck.add_recursive_rules(ovh.API_READ_WRITE, '/')
         # ck.add_rules(["GET", "POST", "PUT", "DELETE"], "/*")
         validation = ck.request()
@@ -59,10 +59,6 @@ class OVHClient(JSConfigBase):
             consumer_key=c["consumerkey_"],
         )
         self.ipxeBase = c["ipxeBase"]
-
-
-
-
 
     def ovh_id_check(self, ovh_id):
         if "ns302912" in ovh_id:

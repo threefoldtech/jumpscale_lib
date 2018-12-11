@@ -2,6 +2,7 @@
 from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
+
 class StatManager(JSBASE):
 
     def __init__(self):

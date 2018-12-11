@@ -2,7 +2,7 @@
 from Jumpscale import j
 import re
 
-#@review [kristof,incubaid] name:codereviewtools tools for codereview, check all new code
+# @review [kristof,incubaid] name:codereviewtools tools for codereview, check all new code
 JSBASE = j.application.JSBaseClass
 
 

@@ -5,7 +5,6 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-
 class Aggregator(JSBASE):
     """
     """

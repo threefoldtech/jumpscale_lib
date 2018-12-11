@@ -45,4 +45,3 @@ class ContextSwitch(HealthCheckRun):
             text = 'Contex-switches exceeded warning threshold of {} ({})'.format(self._warn, value)
 
         return self.add_message(self.id, status, text)
-

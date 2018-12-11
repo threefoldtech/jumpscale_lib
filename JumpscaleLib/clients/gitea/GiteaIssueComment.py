@@ -22,12 +22,12 @@ class GiteaIssueComment(JSBASE):
         self.repo = repo
         self.issue = issue
         self.user = user
-        self.created_at=created_at
+        self.created_at = created_at
         self.body = body
         self.issue_url = issue_url
-        self.html_url=html_url
+        self.html_url = html_url
         self.pull_request_url = pull_request_url
-        self.id=id
+        self.id = id
         JSBASE.__init__(self)
 
     @property
@@ -86,7 +86,8 @@ class GiteaIssueComment(JSBASE):
             return is_valid, err
 
         try:
-            resp = self.client.api.repos.issueCreateComment(data=self.data, index=str(self.issue.id), repo=self.repo.name, owner=self.user.username)
+            resp = self.client.api.repos.issueCreateComment(data=self.data, index=str(
+                self.issue.id), repo=self.repo.name, owner=self.user.username)
             c = resp.json()
             for k, v in c.items():
                 setattr(self, k, v)

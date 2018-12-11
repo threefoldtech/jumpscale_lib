@@ -28,12 +28,13 @@ class ZeroOSClientFactory():
         # print("ZOSCLIENT")
         # print(data)
         # print("***")
-        cl = j.clients.zos_protocol.get(instance=instance, data=data, create=create, die=die, interactive=interactive, **kwargs)
+        cl = j.clients.zos_protocol.get(instance=instance, data=data, create=create,
+                                        die=die, interactive=interactive, **kwargs)
         return j.sal_zos.node.get(cl)
 
-    def configure(self,instance='main', host="127.0.0.1",port="4444",
-                  unixsocket = "",password = "",ssl = False,timeout = 120):
-        data={}
+    def configure(self, instance='main', host="127.0.0.1", port="4444",
+                  unixsocket="", password="", ssl=False, timeout=120):
+        data = {}
         data["host"] = host
         data["port"] = port
         data["unixsocket"] = unixsocket
@@ -41,7 +42,7 @@ class ZeroOSClientFactory():
         data["ssl"] = ssl
         data["timeout"] = timeout
         data["db"] = 0
-        return self.get(data=data,instance=instance)
+        return self.get(data=data, instance=instance)
 
     def list(self, prefix=''):
         return j.clients.zos_protocol.list(prefix=prefix)
@@ -149,7 +150,8 @@ class ZeroOSClientFactory():
                                     ipxeUrl=ipxe_url, wait=True, remove=False)
 
         device = packetnetClient.getDevice(server_name)
-        ip_pub = [netinfo['address'] for netinfo in device.ip_addresses if netinfo['public'] and netinfo['address_family'] == 4]
+        ip_pub = [netinfo['address']
+                  for netinfo in device.ip_addresses if netinfo['public'] and netinfo['address_family'] == 4]
 
         while True:
             try:

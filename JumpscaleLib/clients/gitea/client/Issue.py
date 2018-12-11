@@ -13,8 +13,6 @@ from six import string_types
 from . import client_support
 
 
-
-
 class Issue(object):
     """
     auto-generated. don't touch.

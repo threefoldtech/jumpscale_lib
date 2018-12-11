@@ -15,14 +15,15 @@ from JumpscaleLib.clients.blockchain.rivine.errors import RESTAPIError
 from JumpscaleLib.clients.blockchain.tfchain.TfchainThreeBotClient import TfchainThreeBotClient
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory,\
-        TransactionV128, TransactionV129, TransactionSummary, FlatMoneyTransaction
+    TransactionV128, TransactionV129, TransactionSummary, FlatMoneyTransaction
 from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import UnlockHashCondition,\
-        LockTimeCondition, MultiSignatureCondition, UnlockCondtionFactory
+    LockTimeCondition, MultiSignatureCondition, UnlockCondtionFactory
 from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
 
 from JumpscaleLib.clients.blockchain.rivine.errors import WalletAlreadyExistsException
 
 JSConfigBaseFactory = j.tools.configmanager.JSBaseClassConfigs
+
 
 class TfchainClientFactory(JSConfigBaseFactory):
     """
@@ -48,7 +49,6 @@ class TfchainClientFactory(JSConfigBaseFactory):
         """
         return j.data.encryption.mnemonic.generate(strength=256)
 
-
     def get_transaction(self, identifier, network=TfchainNetwork.STANDARD, explorers=None):
         """
         Get a transaction registered on a TFchain network
@@ -64,7 +64,8 @@ class TfchainClientFactory(JSConfigBaseFactory):
         if not explorers:
             explorers = network.official_explorers()
             if not explorers:
-                raise NoExplorerNetworkAddresses("network {} has no official explorer networks and none were specified by callee".format(network.name.lower()))
+                raise NoExplorerNetworkAddresses(
+                    "network {} has no official explorer networks and none were specified by callee".format(network.name.lower()))
 
         msg = 'Failed to retrieve transaction.'
         result = None
@@ -84,13 +85,14 @@ class TfchainClientFactory(JSConfigBaseFactory):
             if response:
                 raise RESTAPIError('{} {}'.format(msg, response.text.strip('\n')))
             else:
-                raise RESTAPIError('error while fetching transaction from {} for {}: {}'.format(explorers, identifier, msg))
+                raise RESTAPIError('error while fetching transaction from {} for {}: {}'.format(
+                    explorers, identifier, msg))
 
         tx = result.get('transaction', {})
         if not tx:
-            raise RESTAPIError('error while fetching transaction from {} for {}: transaction not found'.format(explorers, identifier))
+            raise RESTAPIError(
+                'error while fetching transaction from {} for {}: transaction not found'.format(explorers, identifier))
         return TransactionSummary.from_explorer_transaction(tx)
-
 
     def list_incoming_transactions_for(self, addresses, network=TfchainNetwork.STANDARD, explorers=None, min_height=0):
         """
@@ -106,14 +108,15 @@ class TfchainClientFactory(JSConfigBaseFactory):
         if not explorers:
             explorers = network.official_explorers()
             if not explorers:
-                raise NoExplorerNetworkAddresses("network {} has no official explorer networks and none were specified by callee".format(network.name.lower()))
+                raise NoExplorerNetworkAddresses(
+                    "network {} has no official explorer networks and none were specified by callee".format(network.name.lower()))
         if not addresses:
             raise ValueError("no addresses given to look transactions for")
-        
+
         # list all transactions
         # create the list where all found transaction summaries will be stored in
         transactions = []
-        
+
         # list the transactions of all transactions, one by one
         for address in addresses:
             try:
@@ -125,8 +128,9 @@ class TfchainClientFactory(JSConfigBaseFactory):
                 if not address_transactions:
                     continue
                 for tx in address_transactions:
-                    transactions.extend([tx for tx in FlatMoneyTransaction.create_list(tx) if tx.to_address in addresses])
-        
+                    transactions.extend([tx for tx in FlatMoneyTransaction.create_list(tx)
+                                         if tx.to_address in addresses])
+
         # return all listed transactions, reverse-sorted by block height
         transactions.sort(key=lambda tx: tx.block_height if tx.confirmed else sys.maxsize, reverse=True)
         return transactions
@@ -139,8 +143,7 @@ class TfchainClientFactory(JSConfigBaseFactory):
         """
         return TransactionFactory.from_json(txn_json)
 
-
-    def create_wallet(self, wallet_name, network = TfchainNetwork.STANDARD, seed = '', explorers = None, password = ''):
+    def create_wallet(self, wallet_name, network=TfchainNetwork.STANDARD, seed='', explorers=None, password=''):
         """
         Creates a named wallet
 
@@ -168,7 +171,6 @@ class TfchainClientFactory(JSConfigBaseFactory):
             raise j.exceptions.NotFound('No wallet found with name {}'.format(wallet_name))
         return self.get(wallet_name).wallet
 
-
     def create_minterdefinition_transaction(self, condition=None, description=None, network=TfchainNetwork.STANDARD):
         """
         Create a new minter definition transaction
@@ -179,7 +181,7 @@ class TfchainClientFactory(JSConfigBaseFactory):
         tx = TransactionV128()
         tx.add_minerfee(network.minimum_minerfee())
         if condition is not None:
-           tx.set_condition(condition)
+            tx.set_condition(condition)
         if description is not None:
             tx.set_data(description.encode('utf-8'), data_type=1)
         return tx

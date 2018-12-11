@@ -50,4 +50,3 @@ class GiteaRepoHooks(JSBASE):
         return self
 
     __str__ = __repr__ = lambda self: "Gitea Hooks Iterator for Repo: {0}".format(self.repo.name)
-

@@ -24,7 +24,6 @@ class MarkdownFactory(JSBASE):
     def _path(self):
         return j.sal.fs.getDirName(os.path.abspath(__file__))
 
-
     def document_get(self, content="", path=""):
         """
         returns a tool which allows easy creation of a markdown document
@@ -41,7 +40,6 @@ class MarkdownFactory(JSBASE):
     #     raise RuntimeError()
     #     #use prefab to install components required to get pdf generation to work
 
-
     def test(self):
         '''
         js_shell 'j.data.markdown.test()'
@@ -56,4 +54,3 @@ class MarkdownFactory(JSBASE):
         test()
         from .tests.test5 import test
         test()
-

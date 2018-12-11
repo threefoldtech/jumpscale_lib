@@ -5,6 +5,7 @@ Test module for the capacity order class
 import pytest
 from JumpscaleLib.clients.blockchain.tfchain.capacity import order
 
+
 def test_binary_encoding_capacity_order():
     def create_co(cru, mru, hru, sru, nru, duration, description):
         co = order.CapacityOrder()

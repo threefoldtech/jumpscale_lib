@@ -23,7 +23,7 @@ class GiteaRepoPublicKey(JSBASE):
         self.key = key
         self.title = title
         self.created_at = created_at
-        self.fingerprint=fingerprint
+        self.fingerprint = fingerprint
         self.url = url
         self.repo = repo
 

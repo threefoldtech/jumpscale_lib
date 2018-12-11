@@ -20,16 +20,16 @@ class GiteaRepoHook(JSBASE):
             created_at=None
     ):
         self.client = client
-        self.repo= repo
+        self.repo = repo
         self.user = user
-        self.created_at=created_at
-        self.updated_at=updated_at
+        self.created_at = created_at
+        self.updated_at = updated_at
         self.active = active
         self.events = events
-        self.content_type=content_type
+        self.content_type = content_type
         self.url = url
-        self.type=type
-        self.id=id
+        self.type = type
+        self.id = id
         JSBASE.__init__(self)
 
     @property
@@ -48,7 +48,7 @@ class GiteaRepoHook(JSBASE):
         ]:
             v = getattr(self, attr)
             d[attr] = v
-        d['config'] = {'url': d['url'], 'content_type':d['content_type']}
+        d['config'] = {'url': d['url'], 'content_type': d['content_type']}
         return d
 
     def _validate(self, create=False, update=False, delete=False):
@@ -133,7 +133,8 @@ class GiteaRepoHook(JSBASE):
 
         try:
 
-            resp = self.client.api.repos.repoEditHook(data=self.data, repo=self.repo.name, owner=self.user.username, id=str(self.id))
+            resp = self.client.api.repos.repoEditHook(
+                data=self.data, repo=self.repo.name, owner=self.user.username, id=str(self.id))
             return True, ''
         except Exception as e:
             return False, e.response.content
@@ -147,7 +148,7 @@ class GiteaRepoHook(JSBASE):
         try:
 
             resp = self.client.api.repos.repoDeleteHook(repo=self.repo.name, owner=self.user.username,
-                                                      id=str(self.id))
+                                                        id=str(self.id))
             return True, ''
         except Exception as e:
             return False, e.response.content

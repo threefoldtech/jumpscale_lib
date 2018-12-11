@@ -1,67 +1,69 @@
+from reportlab.lib.units import cm
+from reportlab.platypus.frames import Frame
+from reportlab.platypus.tableofcontents import TableOfContents
+from reportlab.platypus.doctemplate import PageTemplate, BaseDocTemplate
+from reportlab.platypus.paragraph import Paragraph
+from reportlab.platypus import PageBreak
+from reportlab.lib.styles import ParagraphStyle as PS
 from Jumpscale import j
 j.sal.fs.createDir("/tmp/reportlab")
 
-from  reportlab.lib.styles import ParagraphStyle as PS
-from  reportlab.platypus import PageBreak
-from  reportlab.platypus.paragraph import Paragraph
-from  reportlab.platypus.doctemplate import PageTemplate, BaseDocTemplate
-from  reportlab.platypus.tableofcontents import TableOfContents
-from  reportlab.platypus.frames import Frame
-from  reportlab.lib.units import cm
 
 class MyDocTemplate(BaseDocTemplate):
-     def __init__(self, filename, **kw):
-         self.allowSplitting = 0
-         BaseDocTemplate.__init__(self, filename=filename, **kw)
-         template = PageTemplate('normal', [Frame(1.5*cm, 1.5*cm, 18.5*cm, 26*cm, id='F1')])
-         self.addPageTemplates(template)
+    def __init__(self, filename, **kw):
+        self.allowSplitting = 0
+        BaseDocTemplate.__init__(self, filename=filename, **kw)
+        template = PageTemplate('normal', [Frame(1.5*cm, 1.5*cm, 18.5*cm, 26*cm, id='F1')])
+        self.addPageTemplates(template)
 
-     def afterFlowable(self, flowable):
+    def afterFlowable(self, flowable):
         if isinstance(flowable, Paragraph):
             txt = flowable.getPlainText()
             style = flowable.style.name
             if style == 'Heading1':
                 key = 'h1-%s' % self.seq.nextf('heading1')
                 self.canv.bookmarkPage(key)
-                self.notify('TOCEntry', (0, txt, self.page,key))
+                self.notify('TOCEntry', (0, txt, self.page, key))
             elif style == 'Heading2':
                 # ...
                 key = 'h2-%s' % self.seq.nextf('heading2')
                 self.canv.bookmarkPage(key)
                 self.notify('TOCEntry', (1, txt, self.page, key))
 
-centered = PS(name = 'centered',
-    fontSize = 12,
-    leading = 14,
-    alignment = 1,
-    spaceAfter = 5)
+
+centered = PS(name='centered',
+              fontSize=12,
+              leading=14,
+              alignment=1,
+              spaceAfter=5)
 
 h1 = PS(
-    name = 'Heading1',
-    fontSize = 14,
-    leading = 16)
+    name='Heading1',
+    fontSize=14,
+    leading=16)
 
 
-h2 = PS(name = 'Heading2',
-    fontSize = 12,
-    leading = 14)
+h2 = PS(name='Heading2',
+        fontSize=12,
+        leading=14)
 
-normal = PS(name = 'normal',
-    fontSize = 12,
-    leading = 14)
+normal = PS(name='normal',
+            fontSize=12,
+            leading=14)
 
 story = []
 
 toc = TableOfContents()
 toc.levelStyles = [
-    PS(fontName='Times-Bold', fontSize=10, name='TOCHeading1', leftIndent=10, firstLineIndent=-10, spaceBefore=5, leading=10),
+    PS(fontName='Times-Bold', fontSize=10, name='TOCHeading1',
+       leftIndent=10, firstLineIndent=-10, spaceBefore=5, leading=10),
     PS(fontSize=10, name='TOCHeading2', leftIndent=10, firstLineIndent=-5, spaceBefore=0, leading=10),
 ]
 story.append(toc)
 
 story.append(Paragraph('<b>Table of contents</b>', centered))
 story.append(PageBreak())
-C="""
+C = """
 
 <b>You are hereby charged</b>
 <a name="MYANCHOR2"/><font color="green">here</font>
@@ -77,7 +79,7 @@ story.append(Paragraph('Second sub heading', h2))
 story.append(Paragraph('Text in second sub heading', PS('body')))
 story.append(PageBreak())
 story.append(Paragraph('Last heading', h1))
-C="""
+C = """
 
 <b>You are hereby charged</b>
 <br/>
@@ -107,8 +109,8 @@ def getdrawing():
     from reportlab.graphics.charts.barcharts import VerticalBarChart
     drawing = Drawing(400, 200)
     data = [
-    (13, 5, 20, 22, 37, 45, 19, 4),
-    (14, 6, 21, 23, 38, 46, 20, 5)
+        (13, 5, 20, 22, 37, 45, 19, 4),
+        (14, 6, 21, 23, 38, 46, 20, 5)
     ]
     bc = VerticalBarChart()
     bc.x = 50
@@ -124,10 +126,11 @@ def getdrawing():
     bc.categoryAxis.labels.dx = 8
     bc.categoryAxis.labels.dy = -2
     bc.categoryAxis.labels.angle = 30
-    bc.categoryAxis.categoryNames = ['Jan-99','Feb-99','Mar-99',
-        'Apr-99','May-99','Jun-99','Jul-99','Aug-99']
+    bc.categoryAxis.categoryNames = ['Jan-99', 'Feb-99', 'Mar-99',
+                                     'Apr-99', 'May-99', 'Jun-99', 'Jul-99', 'Aug-99']
     drawing.add(bc)
     return drawing
+
 
 story.append(getdrawing())
 

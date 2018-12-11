@@ -68,8 +68,6 @@ class Sandboxer(JSBASE):
             done.append(path)
         return result
 
-
-
     def _otool(self, path, result=dict(), done=list()):
         """
         like ldd on linux but for osx
@@ -83,12 +81,12 @@ class Sandboxer(JSBASE):
             return result
 
         def excl(name):
-            exclude=["libSystem","/System/Library/Frameworks/Core","libiconv.2.dylib",
-                     "libutil.dylib","libc++.1.dylib"]
+            exclude = ["libSystem", "/System/Library/Frameworks/Core", "libiconv.2.dylib",
+                       "libutil.dylib", "libc++.1.dylib"]
             excl = False
             for toexeclude in exclude:
                 if name.lower().find(toexeclude.lower()) != -1:
-                    self.logger.debug("exclude:%s"%name)
+                    self.logger.debug("exclude:%s" % name)
                     return True
             return False
 
@@ -102,13 +100,13 @@ class Sandboxer(JSBASE):
 
             for line in out.split("\n"):
 
-                if len(line)>0 and line[0]!=" " and line[0]!="\t" :
-                    #means is not a dest
+                if len(line) > 0 and line[0] != " " and line[0] != "\t":
+                    # means is not a dest
                     continue
                 line = line.strip()
                 if line == "":
                     continue
-                lpath = line.split("(",1)[0].strip()
+                lpath = line.split("(", 1)[0].strip()
                 if lpath == "":
                     continue
                 if not excl(lpath):
@@ -118,11 +116,9 @@ class Sandboxer(JSBASE):
                             result[lpath] = Dep(name, lpath)
                             result = self._otool(lpath, result=result, done=done)
                         except Exception as e:
-                            self.logger.warning("could not process dep:%s"%lpath)
-
+                            self.logger.warning("could not process dep:%s" % lpath)
 
             done.append(path)
-
 
         return result
 
@@ -162,7 +158,7 @@ class Sandboxer(JSBASE):
         else:
             if (j.sal.fs.isFile(path) and j.sal.fs.isExecutable(path)) or j.sal.fs.getFileExtension(path) == "so":
                 result = self._libs_find(path)
-                for _,deb in list(result.items()):
+                for _, deb in list(result.items()):
                     deb.copyTo(dest)
 
     def copyTo(self, path, dest, excludeFileRegex=[], excludeDirRegex=[], excludeFiltersExt=["pyc", "bak"]):
@@ -384,4 +380,3 @@ class Sandboxer(JSBASE):
     #     # copy needed binaries and required libs
     #     j.tools.sandboxer.libs_sandbox(bin_path, dest=LIBSDIR)
     #     j.sal.fs.copyFile(bin_path, BINDIR+'/')
-

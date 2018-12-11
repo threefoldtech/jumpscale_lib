@@ -37,6 +37,7 @@ def jsonrpc(func):
         return result
     return wrapper
 
+
 JSBASE = j.application.JSBaseClass
 
 

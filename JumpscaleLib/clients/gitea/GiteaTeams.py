@@ -48,4 +48,3 @@ class GiteaTeams(JSBASE):
         return self
 
     __str__ = __repr__ = lambda self: "Gitea Teams Iterator for organization: {0}".format(self.organization.username)
-

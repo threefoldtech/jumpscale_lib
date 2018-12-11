@@ -31,13 +31,13 @@ class GiteaIssues(JSBASE):
             issue.id = issue.number
 
         if hasattr(issue, 'user') and type(issue.user) == dict:
-            u  = GiteaUser(self.user.client)
+            u = GiteaUser(self.user.client)
             for k, v in issue.user.items():
                 setattr(u, k, v)
             issue.user = u
 
         if hasattr(issue, 'repo') and type(issue.repo) == dict:
-            r  = GiteaRepo(self.user.client)
+            r = GiteaRepo(self.user.client)
             for k, v in issue.repo.items():
                 setattr(r, k, v)
             issue.repo = r

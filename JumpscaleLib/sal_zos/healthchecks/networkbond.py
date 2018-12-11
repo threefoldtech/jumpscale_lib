@@ -51,4 +51,3 @@ class NetworkBond(HealthCheckRun):
                 msg = 'Bond: {}, all slave are ok'.format(bond['name'])
 
             self.add_message(bond, state, msg)
-

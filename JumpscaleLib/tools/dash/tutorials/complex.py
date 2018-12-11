@@ -16,8 +16,8 @@ df = pd.read_csv(
 app = Dash()
 app.config['suppress_callback_exceptions'] = True
 my_css_urls = [
-  "https://codepen.io/rmarren1/pen/mLqGRg.css",
-  "https://use.fontawesome.com/releases/v5.1.0/css/all.css"
+    "https://codepen.io/rmarren1/pen/mLqGRg.css",
+    "https://use.fontawesome.com/releases/v5.1.0/css/all.css"
 ]
 
 for url in my_css_urls:
@@ -39,7 +39,7 @@ state_select = dcc.Dropdown(
     options=[{
         'label': x.title(),
         'value': x
-        } for x in df["state"].tolist()
+    } for x in df["state"].tolist()
     ],
     value=df["state"].tolist()[0]
 )
@@ -59,7 +59,7 @@ another = dcc.Dropdown(
     options=[{
         'label': "example",
         'value': "show"
-        }
+    }
     ],
     value="show"
 )

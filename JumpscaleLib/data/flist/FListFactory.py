@@ -145,13 +145,13 @@ class FListFactory:
         """ DISABLED as FuseExample has been commented out
         """
         return
-        TEST_DIR = tempfile.mkdtemp() # use a temporary directory...
+        TEST_DIR = tempfile.mkdtemp()  # use a temporary directory...
         FuseExample(TEST_DIR)
-        shutil.rmtree(TEST_DIR) # ... and delete it afterwards
+        shutil.rmtree(TEST_DIR)  # ... and delete it afterwards
 
     def test(self):
 
-        testDir = tempfile.mkdtemp() # use a temporary directory...
+        testDir = tempfile.mkdtemp()  # use a temporary directory...
         flist = self.getFlist(rootpath=testDir)
         flist.add(testDir)
 
@@ -164,7 +164,7 @@ class FListFactory:
             specialFunction=pprint,
             linkFunction=pprint)
 
-        shutil.rmtree(testDir) # ... and delete it afterwards
+        shutil.rmtree(testDir)  # ... and delete it afterwards
 
     def destroy(self, rootpath="/", namespace="main", kvs=None):
         fl = self.getFlist(rootpath, namespace, kvs)

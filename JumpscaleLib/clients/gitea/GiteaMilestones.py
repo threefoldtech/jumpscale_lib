@@ -19,7 +19,8 @@ class GiteaMilestones(JSBASE):
     def get(self, id, fetch=False):
         o = self.new()
         if fetch:
-            resp = self.client.api.repos.issueGetMilestone(id=str(id), repo=self.repo.name, owner=self.user.username).json()
+            resp = self.client.api.repos.issueGetMilestone(
+                id=str(id), repo=self.repo.name, owner=self.user.username).json()
             for k, v in resp.items():
                 setattr(o, k, v)
         return o
@@ -44,4 +45,3 @@ class GiteaMilestones(JSBASE):
         return self
 
     __str__ = __repr__ = lambda self: "Gitea Milestones Iterator for repo: {0}".format(self.repo.name)
-

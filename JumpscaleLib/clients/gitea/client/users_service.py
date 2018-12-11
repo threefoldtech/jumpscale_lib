@@ -7,9 +7,6 @@ from .unhandled_api_error import UnhandledAPIError
 from .unmarshall_error import UnmarshallError
 
 
-
-
-
 class UsersService():
     def __init__(self, client):
         pass

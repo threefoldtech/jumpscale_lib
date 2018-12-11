@@ -1,6 +1,7 @@
 from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
+
 class Dep(JSBASE):
 
     def __init__(self, name, path):

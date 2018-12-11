@@ -4,6 +4,7 @@ from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
+
 class HTMLWebParts(JSBASE):
 
     def __init__(self, ):
@@ -11,4 +12,3 @@ class HTMLWebParts(JSBASE):
         """
         JSBASE.__init__(self)
         self.modules = {}
-

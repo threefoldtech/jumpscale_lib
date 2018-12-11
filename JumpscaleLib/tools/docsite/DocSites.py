@@ -9,7 +9,6 @@ import sys
 JSBASE = j.application.JSBaseClass
 
 
-
 class DocSites(JSBASE):
     """
     """
@@ -18,7 +17,7 @@ class DocSites(JSBASE):
         self.__jslocation__ = "j.tools.docsites"
         JSBASE.__init__(self)
         self.__imports__ = "toml"
-        
+
         self._initOK = False
         self._macroCodepath = j.sal.fs.joinPaths(j.dirs.VARDIR, "markdowndocs_internal")
         j.sal.fs.createDir(self._macroCodepath)
@@ -57,7 +56,6 @@ class DocSites(JSBASE):
     #         # load the default macro's
     #         self.macros_load("https://github.com/Jumpscale/docsite/tree/master/macros")
     #         self._initOK = True
-
 
     def load(self, path="", name=""):
         if path.startswith("http"):
@@ -179,7 +177,8 @@ class DocSites(JSBASE):
         doc = ds.doc_get("include_test")
 
         assert "## something to include" in doc.markdown
-        assert "COULD NOT INCLUDE:core9:macros (not found)" in doc.markdown  # the to be included document does not exist in this test
+        # the to be included document does not exist in this test
+        assert "COULD NOT INCLUDE:core9:macros (not found)" in doc.markdown
 
         doc = ds.doc_get("use_data")
         md = str(doc.markdown)

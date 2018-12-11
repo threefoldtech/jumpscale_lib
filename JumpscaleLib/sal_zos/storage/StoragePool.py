@@ -27,7 +27,8 @@ def _prepare_device(node, devicename):
             disk = node.disks.get(name)
             if len(disk.partitions) > 0:
                 partition = disk.partitions[0]
-                resp = node.client.bash('test -b {0} && dd if={0} of=/dev/null bs=4k count=1024'.format(partition.devicename)).get()
+                resp = node.client.bash(
+                    'test -b {0} && dd if={0} of=/dev/null bs=4k count=1024'.format(partition.devicename)).get()
                 if resp.state == 'SUCCESS':
                     return partition
         except:
@@ -133,7 +134,8 @@ class StoragePool(Mountable):
             disk = partition.disk
             self.client.disk.rmpart(disk.name, 1)
             if zero:
-                self.client.bash('test -b /dev/{0} && dd if=/dev/zero bs=1M count=500 of=/dev/{0}'.format(diskpath)).get()
+                self.client.bash(
+                    'test -b /dev/{0} && dd if=/dev/zero bs=1M count=500 of=/dev/{0}'.format(diskpath)).get()
         return
 
     @property
@@ -373,4 +375,3 @@ class Snapshot():
 
     def __repr__(self):
         return "Snapshot <{}: {!r}>".format(self.name, self.filesystem)
-

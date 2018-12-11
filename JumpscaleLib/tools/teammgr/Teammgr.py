@@ -200,7 +200,7 @@ class Person(JSBASE):
                     return newtoml
 
                 newtoml, errors = j.data.serializers.toml.merge(newtoml, tomlupdate, keys_replace={
-                                                               'name': 'first_name'}, add_non_exist=False, die=False, errors=[])
+                    'name': 'first_name'}, add_non_exist=False, die=False, errors=[])
 
                 for error in errors:
                     self.department.add_to_do(

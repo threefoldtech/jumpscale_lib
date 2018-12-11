@@ -10,6 +10,7 @@ EXPORT_OPT_REGEXT = re.compile('^(?:([\w/]+)|"([\w\s/]+)")\s+(.+)$')
 CLIENT_OPT_REGEXT = re.compile('\s*([^\(]+)\(([^\)]+)\)')
 JSBASE = j.application.JSBaseClass
 
+
 class NFSError(Exception, JSBASE):
     def __init__(self):
         JSBASE.__init__(self)

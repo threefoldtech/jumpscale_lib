@@ -22,7 +22,8 @@ class GiteaBranches(JSBASE):
         """
         o = self.new()
         if fetch:
-            resp = self.client.api.repos.repoGetBranch(repo=self.repo.name, owner=self.user.username, branch=name).json()
+            resp = self.client.api.repos.repoGetBranch(
+                repo=self.repo.name, owner=self.user.username, branch=name).json()
             for k, v in resp.items():
                 setattr(o, k, v)
         return o
@@ -44,4 +45,3 @@ class GiteaBranches(JSBASE):
         return self
 
     __str__ = __repr__ = lambda self: "Gitea Branch Iterator for Repo: {0}".format(self.repo.name)
-

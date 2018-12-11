@@ -53,7 +53,6 @@ class GiteaToken(JSBASE):
                     is_valid = False
                     errors['name'] = 'Missing'
 
-
         elif delete:
             operation = 'delete'
             if not self.id:
@@ -82,7 +81,8 @@ class GiteaToken(JSBASE):
             if not self.user.is_current:
                 return False
             else:
-                resp = self.user.client.api.users.userCreateToken(data=self.data, name=self.name, username=self.user.username)
+                resp = self.user.client.api.users.userCreateToken(
+                    data=self.data, name=self.name, username=self.user.username)
             token = resp.json()
             for k, v in token.items():
                 setattr(self, k, v)
@@ -93,12 +93,10 @@ class GiteaToken(JSBASE):
                 self.logger.error('#FIX ME: THIS API not working')
             return False
 
-    def __repr__ (self):
+    def __repr__(self):
         return '\n<Token name={0}>\n{1}'.format(
             self.name,
             json.dumps(self.data, indent=4)
         )
 
     __str__ = __repr__
-
-

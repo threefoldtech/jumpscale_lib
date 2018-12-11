@@ -8,6 +8,7 @@ from sendgrid.helpers.mail import Email, Content, Mail, Personalization, Attachm
 Attachment = namedtuple('Attachment', ['originalfilename', 'binarycontent', 'type'])
 JSBASE = j.application.JSBaseClass
 
+
 class SendGridClient(JSBASE):
 
     def __init__(self):
@@ -72,7 +73,6 @@ class SendGridClient(JSBASE):
 
         self.logger.info(statCode)
 
-
     def build_attachment(self, attachment):
         """
         Returns a valid sendgrid attachment from typical attachment object.
@@ -97,4 +97,3 @@ class SendGridClient(JSBASE):
         sendgridattachment.content_id = attachment.originalfilename
 
         return sendgridattachment
-

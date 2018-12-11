@@ -7,8 +7,6 @@ Auto-generated class for CreateHookOptionconfig
 from . import client_support
 
 
-
-
 class CreateHookOptionconfig(object):
     """
     auto-generated. don't touch.

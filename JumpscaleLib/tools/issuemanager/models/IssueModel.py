@@ -5,7 +5,6 @@ from Jumpscale import j
 from JumpscaleLib.data.capnp.ModelBase import ModelBase
 
 
-
 class IssueModel(ModelBase):
     """
     Model Class for an Issue object

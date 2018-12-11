@@ -8,9 +8,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class Notification( ):
+class Notification():
     """
     auto-generated. don't touch.
     """

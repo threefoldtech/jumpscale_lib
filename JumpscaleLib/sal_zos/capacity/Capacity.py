@@ -133,4 +133,3 @@ class Capacity:
 
         resp = client.api.UpdateReservedCapacity(data=data, node_id=self._node.name)
         resp.raise_for_status()
-

@@ -16,8 +16,9 @@ JSBASE = j.application.JSBaseClass
 
 class GiteaClient(JSConfigBase):
 
-    def __init__(self, instance, data={}, parent=None,interactive=False):
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE,interactive=interactive)
+    def __init__(self, instance, data={}, parent=None, interactive=False):
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,
+                              template=TEMPLATE, interactive=interactive)
         self._api = None
 
     def config_check(self):

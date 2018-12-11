@@ -5,8 +5,6 @@ import traceback
 from Jumpscale import j
 
 
-
-
 class HealthCheckObject():
     def __init__(self, id, name, category, resource):
 
@@ -55,7 +53,6 @@ class ContainerContext():
         self.container = None
         self._name = 'healthcheck_{}'.format(hashlib.md5(flist.encode()).hexdigest())
 
-
     def __enter__(self):
         try:
             self.container = self.node.containers.get(self._name)
@@ -71,7 +68,6 @@ class HealthCheck():
     def __init__(self, node):
         self.node = node
         self.healtcheckfolder = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'healthchecks')
-
 
     def with_container(self, flist):
         return ContainerContext(self.node, flist)
@@ -177,4 +173,3 @@ class HealthCheck():
         from .networkload import NetworkLoad
         load = NetworkLoad(self.node)
         return load.start()
-

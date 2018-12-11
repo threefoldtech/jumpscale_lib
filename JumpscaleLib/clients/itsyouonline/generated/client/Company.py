@@ -7,9 +7,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class Company( ):
+class Company():
     """
     auto-generated. don't touch.
     """

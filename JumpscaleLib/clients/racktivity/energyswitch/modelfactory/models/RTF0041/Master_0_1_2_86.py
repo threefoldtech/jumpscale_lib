@@ -390,7 +390,7 @@ class Model(BaseModule):
         return self._parent.getObjectFromData(data, valDef, setter=True)
 
     # Get  to request status of module scan.
-    #(idle = 0, busy = 1, success = 2, fail = 3)
+    # (idle = 0, busy = 1, success = 2, fail = 3)
     def getModuleScan(self):
         guid = 40027
         moduleID = 'M1'

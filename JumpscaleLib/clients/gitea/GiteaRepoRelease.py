@@ -28,13 +28,13 @@ class GiteaRepoRelease(JSBASE):
     ):
         self.client = client
         self.repo = repo
-        self.created_at=created_at
-        self.assets=assets
+        self.created_at = created_at
+        self.assets = assets
         self.author = author
         self.prerelease = prerelease
-        self.draft=draft
+        self.draft = draft
         self.url = url
-        self.id=id
+        self.id = id
         self.body = body
         self.tag_name = tag_name
         self.name = name
@@ -69,7 +69,6 @@ class GiteaRepoRelease(JSBASE):
             v = getattr(self, attr)
             d[attr] = v
         return d
-
 
     def __repr__(self):
         return "Release %s" % json.dumps(self.data)
@@ -156,7 +155,8 @@ class GiteaRepoRelease(JSBASE):
 
         try:
 
-            resp = self.client.api.repos.repoEditHook(data=self.data, repo=self.repo.name, owner=self.user.username, id=str(self.id))
+            resp = self.client.api.repos.repoEditHook(
+                data=self.data, repo=self.repo.name, owner=self.user.username, id=str(self.id))
             return True, ''
         except Exception as e:
             return False, e.response.content
@@ -170,7 +170,7 @@ class GiteaRepoRelease(JSBASE):
         try:
 
             resp = self.client.api.repos.repoDeleteHook(repo=self.repo.name, owner=self.user.username,
-                                                      id=str(self.id))
+                                                        id=str(self.id))
             return True, ''
         except Exception as e:
             return False, e.response.content

@@ -106,4 +106,3 @@ class Traefik(Service):
         if not j.tools.timer.execute_until(self.is_running, timeout, 0.5):
             result = job.get()
             raise RuntimeError('Failed to start Traefik server {}: {}'.format(self.name, result.stderr))
-

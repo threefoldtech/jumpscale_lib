@@ -30,22 +30,22 @@ class IndexDB(JSBASE):
             data = str(i) * index.nrbytes
             index.set(i, data)
 
-        assert index.count==10
+        assert index.count == 10
 
-        assert index.list(0,0) == {0: b'0000'}
-        assert index.list(0,1) == {0: b'0000', 1: b'1111'}
-        assert index.list(1,1) == {1: b'1111'}
+        assert index.list(0, 0) == {0: b'0000'}
+        assert index.list(0, 1) == {0: b'0000', 1: b'1111'}
+        assert index.list(1, 1) == {1: b'1111'}
 
         assert index.list() == {0: b'0000',
-                1: b'1111',
-                2: b'2222',
-                3: b'3333',
-                4: b'4444',
-                5: b'5555',
-                6: b'6666',
-                7: b'7777',
-                8: b'8888',
-                9: b'9999'}
+                                1: b'1111',
+                                2: b'2222',
+                                3: b'3333',
+                                4: b'4444',
+                                5: b'5555',
+                                6: b'6666',
+                                7: b'7777',
+                                8: b'8888',
+                                9: b'9999'}
 
         try:
             index.set(11, b"data too long")

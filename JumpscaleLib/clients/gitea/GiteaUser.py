@@ -6,8 +6,8 @@ from .GiteaUserCurrentPublicKeys import GiteaUserCurrentPublicKeys
 from .GiteaIssues import GiteaIssues
 from .GiteaGpgKeys import GiteaGpgKeys
 from .GiteaTokens import GiteaTokens
-from .GiteaOrgs import  GiteaOrgs
-from .GiteaRepos import  GiteaRepos
+from .GiteaOrgs import GiteaOrgs
+from .GiteaRepos import GiteaRepos
 from .GiteaPublicKeys import GiteaPublicKeys
 
 JSBASE = j.application.JSBaseClass
@@ -39,8 +39,8 @@ class GiteaUser(JSBASE):
 
         JSBASE.__init__(self)
         self.client = client
-        self.id=id
-        self.username=username
+        self.id = id
+        self.username = username
         self.password = password
         self.full_name = full_name
         self.login_name = login_name

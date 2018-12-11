@@ -156,4 +156,3 @@ class Primitives:
             zdb.from_dict(data)
             return zdb
         raise RuntimeError('Unkown type {}, supported types are gateway, vm and zerodb'.format(type_))
-

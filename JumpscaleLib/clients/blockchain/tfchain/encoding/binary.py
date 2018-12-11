@@ -13,6 +13,7 @@ UINT_3BYTE_UPPERLIMIT = pow(2, 24) - 1
 UINT_4BYTE_UPPERLIMIT = pow(2, 32) - 1
 UINT_8BYTE_UPPERLIMIT = pow(2, 64) - 1
 
+
 class BinaryEncoder:
     """
     Support binary encoding for tfchain
@@ -54,17 +55,19 @@ class BinaryEncoder:
             elif value_type is str:
                 result = SliceBinaryEncoder.encode(value)
             elif hasattr(value, 'binary'):
-                    result.extend(value.binary)
+                result.extend(value.binary)
             else:
                 raise ValueError('Cannot binary encode value with unknown type')
         else:
             raise ValueError('Cannot binary encode value with unknown type')
         return result
 
+
 class SliceLengthOutOfRange(Exception):
     """
     SliceLengthOutOfRange error
     """
+
 
 class SliceBinaryEncoder:
     """
@@ -105,10 +108,12 @@ class SliceBinaryEncoder:
                 result.extend(BinaryEncoder.encode(item))
         return result
 
+
 class IntegerOutOfRange(Exception):
     """
     IntegerOutOfRange error
     """
+
 
 class IntegerBinaryEncoder:
     """
@@ -144,22 +149,22 @@ class IntegerBinaryEncoder:
     def _encode_kind(value, kind):
         if kind in ('uint8', 'int8'):
             if value > UINT_1BYTE_UPPERLIMIT:
-                 raise IntegerOutOfRange("uint8/int8 {} is out of upper range".format(value))
+                raise IntegerOutOfRange("uint8/int8 {} is out of upper range".format(value))
             return value.to_bytes(1, byteorder='little')
         if kind in ('uint16', 'int16'):
             if value > UINT_2BYTE_UPPERLIMIT:
-                 raise IntegerOutOfRange("uint16/int16 {} is out of upper range".format(value))
+                raise IntegerOutOfRange("uint16/int16 {} is out of upper range".format(value))
             return value.to_bytes(2, byteorder='little')
         if kind == 'uint24':
             if value > UINT_3BYTE_UPPERLIMIT:
-                 raise IntegerOutOfRange("uint24 {} is out of upper range".format(value))
+                raise IntegerOutOfRange("uint24 {} is out of upper range".format(value))
             return value.to_bytes(3, byteorder='little')
         if kind in ('uint32', 'int32'):
             if value > UINT_4BYTE_UPPERLIMIT:
-                 raise IntegerOutOfRange("uint32/int32 {} is out of upper range".format(value))
+                raise IntegerOutOfRange("uint32/int32 {} is out of upper range".format(value))
             return value.to_bytes(4, byteorder='little')
         if kind in ('int', 'uint', 'uint64', 'int64'):
             if value > UINT_8BYTE_UPPERLIMIT:
-                 raise IntegerOutOfRange("int/uint/uint64/int64 {} is out of upper range".format(value))
+                raise IntegerOutOfRange("int/uint/uint64/int64 {} is out of upper range".format(value))
             return value.to_bytes(8, byteorder='little')
         raise ValueError('cannot encode unknown integer kind {}'.format(kind))

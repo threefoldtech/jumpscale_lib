@@ -40,13 +40,13 @@ class GiteaRepoPullRequest(JSBASE):
     ):
         self.client = client
         self.repo = repo
-        self.created_at=created_at
-        self.updated_at=updated_at
+        self.created_at = created_at
+        self.updated_at = updated_at
         self.assignee = assignee
         self.assignees = assignees
-        self.base=base
+        self.base = base
         self.url = url
-        self.id=id
+        self.id = id
         self.body = body
         self.closed_at = closed_at
         self.comments = comments
@@ -105,7 +105,6 @@ class GiteaRepoPullRequest(JSBASE):
             d[attr] = v
         return d
 
-
     def __repr__(self):
         return "PR %s" % json.dumps(self.data)
 
@@ -115,7 +114,6 @@ class GiteaRepoPullRequest(JSBASE):
             return True
         except:
             return False
-
 
     def is_merged(self):
         resp = self.client.api.repos.repoPullRequestIsMerged(str(self.id), self.repo.name, self.user.username)

@@ -13,6 +13,7 @@ def _post_install(libname, libpath):
     j.sal.process.execute(
         "pip3 install 'git+https://github.com/spesmilo/electrum.git@3.2.2'")
 
+
 class install(_install):
 
     def run(self):
@@ -55,8 +56,8 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     package_data={'JumpscaleLib':
-                    ['JumpscaleLib/data/flist/model.capnp',
-                     'JumpscaleLib/tools/issuemanager/model.capnp']},
+                  ['JumpscaleLib/data/flist/model.capnp',
+                   'JumpscaleLib/tools/issuemanager/model.capnp']},
     install_requires=[
         'Brotli>=0.6.0',
         'Jinja2>=2.9.6',

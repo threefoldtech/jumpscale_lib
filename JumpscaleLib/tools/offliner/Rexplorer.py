@@ -1,6 +1,7 @@
 from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
+
 class Rexplorer(JSBASE):
     def __init__(self):
         self.__jslocation__ = "j.tools.rexplorer"
@@ -24,9 +25,8 @@ class Rexplorer(JSBASE):
         js_shell 'j.tools.rexplorer.start()'
         :return:
         """
-        cmd="cd /tmp;rexplorer -f 'threefold:*'"
+        cmd = "cd /tmp;rexplorer -f 'threefold:*'"
         j.tools.tmux.execute(
             cmd,
-            session='main',window='rexplorer',pane='rexplorer',session_reset=False,window_reset=True
+            session='main', window='rexplorer', pane='rexplorer', session_reset=False, window_reset=True
         )
-

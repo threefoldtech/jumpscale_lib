@@ -12,6 +12,7 @@ tfchainSignatureAlgoSpecifiers = {
     1: "ed25519",
 }
 
+
 def test_signature_algorithm_specifiers_binary():
     """
     Test binary encoding of the signature algorithm specifiers
@@ -19,6 +20,7 @@ def test_signature_algorithm_specifiers_binary():
     for i in tfchainSignatureAlgoSpecifiers:
         bs = signatures.SiaPublicKeySpecifier(i).binary
         assert(bs is not i or len(bs) != 1)
+
 
 def test_signature_algorithm_specifiers_string():
     """
@@ -30,6 +32,7 @@ def test_signature_algorithm_specifiers_string():
         specifier = signatures.SiaPublicKeySpecifier.from_string(s)
         assert(i == specifier)
 
+
 # examples and expected binary-hex encoded strings taken from
 # the tfchain Go reference implementation (github.com/threefoldfoundation/tfchain)
 exampleSiaKeys = {
@@ -38,6 +41,7 @@ exampleSiaKeys = {
     "ed25519:857c029d8689c97d51f314e1a4e6a4543c42a696ee93ce848d1247bf24eb52a3": "01857c029d8689c97d51f314e1a4e6a4543c42a696ee93ce848d1247bf24eb52a3",
     "ed25519:4683705f729a65e9e133e1719d05ad8ac45a14e44fcf6c85de19e5ac7fcd2e9d": "014683705f729a65e9e133e1719d05ad8ac45a14e44fcf6c85de19e5ac7fcd2e9d",
 }
+
 
 def test_sia_public_key_string():
     """
@@ -48,6 +52,7 @@ def test_sia_public_key_string():
         s = str(k)
         assert(s == example)
 
+
 def test_sia_public_key_binary():
     """
     Test binary encoding of the sia public keys
@@ -57,12 +62,15 @@ def test_sia_public_key_binary():
         hk = k.binary.hex()
         assert(hk == expectedHexBinary)
 
+
 # taken from tfchain testnet and devnet
-exampleTfchainPublicUnlockHashes= {
+exampleTfchainPublicUnlockHashes = {
     'ed25519:9e095c02584a5b042dfcf679837c88be924c40c95f173fe24d96852f6fd8c193': '01bebecb3acb74852cf50691a5be41785f1fd040a6594be203c7df1d13b398cfd77786a247e909',
     'ed25519:846bc547599b9ed6f686fd1bca39e8fc5524559b559081ec7bb76b6a7e5c2218': '0165c4d7cf3c52cab81fd7e82cd9e39d7fb8a1c7ab7515ac904299495244d0822c15841672f205',
     'ed25519:8f9812bfebb5b95ee25b94c9600ed8061356c8885c67dd5eae832535a6c5ef2d': '01a56161fbd36275f870a322afa60656a10d8d8a179bf55b17804f098c46b50da25c23ccdf5bc3',
 }
+
+
 def test_sia_public_key_rivine_binary():
     """
     Test the unlock_hash property of the (tfchain implementation) of the sia public key
@@ -73,6 +81,8 @@ def test_sia_public_key_rivine_binary():
         tfb = k.rivine_binary.hex()
         rivb = rbinary.encode(rk).hex()
         assert(tfb == rivb)
+
+
 def test_sia_public_key_unlockhash():
     """
     Test the unlock_hash property of the (tfchain implementation) of the sia public key

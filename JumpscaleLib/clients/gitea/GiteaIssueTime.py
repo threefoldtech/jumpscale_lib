@@ -18,9 +18,9 @@ class GiteaIssueTime(JSBASE):
 
         JSBASE.__init__(self)
         self.user = user
-        self.created=created
-        self.id=id
-        self.issue_id=issue_id
+        self.created = created
+        self.id = id
+        self.issue_id = issue_id
         self.time = time
         self.user_id = user_id
 
@@ -41,8 +41,5 @@ class GiteaIssueTime(JSBASE):
                 d[attr] = v
         return d
 
-    __repr__ = __str__ = lambda self: '<Gitea Issue time> for user <%s> %s' % (self.user.username, json.dumps(self.data))
-
-
-
-
+    __repr__ = __str__ = lambda self: '<Gitea Issue time> for user <%s> %s' % (
+        self.user.username, json.dumps(self.data))

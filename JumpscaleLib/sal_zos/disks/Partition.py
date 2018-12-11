@@ -47,4 +47,3 @@ class Partition(Mountable):
 
     def __repr__(self):
         return str(self)
-

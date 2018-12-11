@@ -9,9 +9,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class Contract( ):
+class Contract():
     """
     auto-generated. don't touch.
     """

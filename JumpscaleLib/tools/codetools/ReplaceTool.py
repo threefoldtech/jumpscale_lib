@@ -185,20 +185,20 @@ class ReplaceTool(JSBASE):
             text = syn.replace(text)
         return text
 
-    def replace_in_dir(self,path, recursive=False, filter=None):
-        for item in j.sal.fs.listFilesInDir(path=path,recursive=recursive,filter=filter,followSymlinks=True):
+    def replace_in_dir(self, path, recursive=False, filter=None):
+        for item in j.sal.fs.listFilesInDir(path=path, recursive=recursive, filter=filter, followSymlinks=True):
             try:
-                C=j.sal.fs.readFile(item)
+                C = j.sal.fs.readFile(item)
             except Exception as e:
                 if "codec can't" not in str(e):
                     raise RuntimeError(e)
-                C=""
-            if C=="":
+                C = ""
+            if C == "":
                 continue
-            C2=self.replace(C)
-            if C!=C2:
+            C2 = self.replace(C)
+            if C != C2:
                 self.logger.debug("replaced %s in dir for: %s" % (item, path))
-                j.sal.fs.writeFile(item,C2)
+                j.sal.fs.writeFile(item, C2)
 
     # def replaceInConfluence(self, text):
     #     """

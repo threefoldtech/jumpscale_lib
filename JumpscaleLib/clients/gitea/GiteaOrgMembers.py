@@ -96,4 +96,3 @@ class GiteaOrgMembers(JSBASE):
         return self
 
     __str__ = __repr__ = lambda self: "Gitea Members Iterator for organization: {0}".format(self.organization.username)
-

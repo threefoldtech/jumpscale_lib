@@ -173,4 +173,3 @@ class HealthCheck():
         from .healthchecks.networkload import NetworkLoad
         load = NetworkLoad(self.node)
         return load.start()
-

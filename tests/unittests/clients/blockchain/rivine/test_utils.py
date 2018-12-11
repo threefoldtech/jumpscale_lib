@@ -5,6 +5,7 @@ import pytest
 from JumpscaleLib.clients.blockchain.rivine import utils
 from JumpscaleLib.clients.blockchain.rivine.errors import RESTAPIError
 
+
 def test_locktime_from_duration():
     """
     Tests parsing locktime from duration string

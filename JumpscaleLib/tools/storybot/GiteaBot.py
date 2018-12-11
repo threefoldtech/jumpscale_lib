@@ -6,15 +6,16 @@ from .utils import _parse_body, _repoowner_reponame, _index_story
 
 from Jumpscale import j
 
+
 class GiteaBot:
     """Gitea specific bot for Storybot
     """
 
     LABEL_STORY = "type_story"
 
-    def __init__(self, token=None, api_url="", base_url = "", repos=None):
+    def __init__(self, token=None, api_url="", base_url="", repos=None):
         """GiteaBot constructor
-        
+
         Keyword Arguments:
             token str -- Gitea API token (default: None)
             url str -- gitea API url
@@ -65,10 +66,10 @@ class GiteaBot:
         # If wildcard reponame, fetch all repos from repoowner
         gls = []
         for r in repos:
-             repoowner, reponame = _repoowner_reponame(r, self.username)
-             if reponame == "*":
-                 # fetch all repos from repoowner
-                 gls.append(gevent.spawn(self._get_all_repos_user, repoowner))
+            repoowner, reponame = _repoowner_reponame(r, self.username)
+            if reponame == "*":
+                # fetch all repos from repoowner
+                gls.append(gevent.spawn(self._get_all_repos_user, repoowner))
 
         gevent.joinall(gls)
 
@@ -84,7 +85,7 @@ class GiteaBot:
 
     def _get_all_repos_user(self, user):
         """Returns list of repositories from provided user
-        
+
         Arguments:
             user str -- username/owner of repositories to fetch from
 
@@ -97,7 +98,7 @@ class GiteaBot:
         except Exception as err:
             self.logger.error("Something went wrong getting Gitea repos from user '%s': %s" % (user, err))
             return repos
-        
+
         for r in repos_l:
             repos.append(user + "/" + r.name)
 
@@ -126,13 +127,13 @@ class GiteaBot:
 
         self.logger.info("Done checking for stories on Gitea!")
         return stories
-    
+
     def _get_story_repo(self, repo):
         """Get stories from a single repo
-        
+
         Arguments:
             repo str -- Name of Gitea repo
-        
+
         Returns:
             [Story] -- List of stories (Story) found in repo
         """
@@ -140,19 +141,19 @@ class GiteaBot:
         stories = []
 
         repoowner, reponame = _repoowner_reponame(repo, self.username)
-        
+
         # skip wildcard repos
         if reponame == "*":
             return stories
 
         try:
-            issues = self.client.api.repos.issueListIssues(reponame, repoowner, query_params={"state":"all"})[0]
+            issues = self.client.api.repos.issueListIssues(reponame, repoowner, query_params={"state": "all"})[0]
         except Exception as err:
             self.logger.error("Could not fetch Gitea repo '%s': %s" % (repo, err))
             return stories
 
         for iss in issues:
-            html_url = self._parse_html_url(repoowner,reponame,iss.number)
+            html_url = self._parse_html_url(repoowner, reponame, iss.number)
 
             self.logger.debug("checking issue '%s'" % html_url)
             # not a story if no type story label
@@ -205,10 +206,10 @@ class GiteaBot:
         for gl in gls:
             tasks.extend(gl.value)
 
-        self.logger.info("Done linking tasks on Gitea to stories!")    
+        self.logger.info("Done linking tasks on Gitea to stories!")
 
         return tasks
-    
+
     def _link_issues_stories_repo(self, repo, stories):
         """links issues from a single repo with stories
 
@@ -222,12 +223,12 @@ class GiteaBot:
         self.logger.debug("checking repo '%s'" % repo)
         tasks = []
         repoowner, reponame = _repoowner_reponame(repo, self.username)
-         # skip wildcard repos
+        # skip wildcard repos
         if reponame == "*":
             return tasks
 
         try:
-            issues = self.client.api.repos.issueListIssues(reponame, repoowner, query_params={"state":"all"})[0]
+            issues = self.client.api.repos.issueListIssues(reponame, repoowner, query_params={"state": "all"})[0]
         except Exception as err:
             self.logger.error("Could not fetch Gitea repo '%s': %s" % (repo, err))
             return tasks
@@ -261,9 +262,9 @@ class GiteaBot:
 
                 # update story with task
                 self.logger.debug("Parsing story issue body")
-                desc = title[end_i +1 :].strip()
-                task = Task(url=html_url, description=desc, state=iss.state,body=data["body"], 
-                    update_func=self._update_iss_func(iss.number, reponame, repoowner))
+                desc = title[end_i + 1:].strip()
+                task = Task(url=html_url, description=desc, state=iss.state, body=data["body"],
+                            update_func=self._update_iss_func(iss.number, reponame, repoowner))
                 try:
                     story.update_list(task)
                 except RuntimeError as err:
@@ -279,7 +280,7 @@ class GiteaBot:
         return tasks
 
     def _update_iss_func(self, iss_number, repo, owner):
-        
+
         def updater(body):
             data = {}
             data["body"] = body
@@ -289,7 +290,7 @@ class GiteaBot:
 
     def _parse_html_url(self, owner, repo, iss_number):
         """Tries to parse a html page url for a Gitea issue
-        
+
         Arguments:
             issue JumpscaleLib.clients.gitea.client.Issue.Issue -- Gitea Issue
             owner str -- repo owner
@@ -304,13 +305,13 @@ class GiteaBot:
                 url = url[:-1]
             if url.endswith("/api/v1"):
                 url = url[:-7]
-            url = url.replace("api.","")
+            url = url.replace("api.", "")
 
             self.base_url = url
-        
+
         if url.endswith("/"):
             url = url[:-1]
-        
+
         url += "/%s/%s/issues/%s" % (owner, repo, str(iss_number))
 
         return url

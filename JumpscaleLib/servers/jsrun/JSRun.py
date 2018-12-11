@@ -13,7 +13,6 @@ class JSRun(JSBASE):
         self._installed = False
         self.logger_enable()
 
-
     def install(self):
         """
         js_shell 'j.servers.jsrun.install()'
@@ -31,7 +30,7 @@ class JSRun(JSBASE):
 
         self._installed = True
 
-    def get(self,name,cmd="",path=None,env={},ports=[],stopcmd="",process_strings=[],reset=False):
+    def get(self, name, cmd="", path=None, env={}, ports=[], stopcmd="", process_strings=[], reset=False):
         """
 
         :param name: name of the session
@@ -43,20 +42,18 @@ class JSRun(JSBASE):
         :param process_strings: if specified will look for processes which have this as par of name & kill
         :return:
         """
-        p = JSRunProcess(name=name,cmd=cmd,path=path,env=env,ports=ports,stopcmd=stopcmd,process_strings=process_strings)
+        p = JSRunProcess(name=name, cmd=cmd, path=path, env=env, ports=ports,
+                         stopcmd=stopcmd, process_strings=process_strings)
         if reset:
             p.stop()
         self.processes[name] = p
         return self.processes[name]
 
-
-    def start(self,name,cmd="",path=None,env={},ports=[],stopcmd="",process_strings=[],reset=False):
-        p=self.get(name=name,cmd=cmd,path=path,reset=reset,
-                 env=env,ports=ports,stopcmd=stopcmd,process_strings=process_strings)
+    def start(self, name, cmd="", path=None, env={}, ports=[], stopcmd="", process_strings=[], reset=False):
+        p = self.get(name=name, cmd=cmd, path=path, reset=reset,
+                     env=env, ports=ports, stopcmd=stopcmd, process_strings=process_strings)
         p.start()
         return p
-
-
 
     def test(self, name="", start=True):
         """
@@ -67,4 +64,3 @@ class JSRun(JSBASE):
         """
 
         self._test_run(name=name)
-

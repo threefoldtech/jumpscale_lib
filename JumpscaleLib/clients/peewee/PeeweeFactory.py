@@ -16,6 +16,7 @@ schema = ""
 cache = true
 """
 
+
 class PeeweeFactory(JSConfigFactory):
     """
     """
@@ -46,6 +47,7 @@ class PeeweeFactory(JSConfigFactory):
     def resetCache(self):
         for item in j.core.db.keys("peewee.*"):
             j.core.db.delete(item)
+
 
 class PeeweeClient(JSConfigClient):
     def __init__(self, instance, data={}, parent=None, interactive=False):

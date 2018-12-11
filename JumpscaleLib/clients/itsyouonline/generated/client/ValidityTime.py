@@ -5,9 +5,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class ValidityTime( ):
+class ValidityTime():
     """
     auto-generated. don't touch.
     """

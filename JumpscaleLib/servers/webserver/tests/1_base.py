@@ -1,5 +1,6 @@
 from Jumpscale import j
 
+
 def main(self):
     """
     to run:
@@ -10,13 +11,12 @@ def main(self):
 
     ws = j.servers.web.configure("test")
 
-    #link to blueprints dir in tests
-    ws.path_blueprints = "%s/tests/blueprints"%self._dirpath
+    # link to blueprints dir in tests
+    ws.path_blueprints = "%s/tests/blueprints" % self._dirpath
 
     ws.start()
 
     j.shell()
-
 
     self.logger.info("TEST DONE")
 

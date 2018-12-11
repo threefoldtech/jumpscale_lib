@@ -30,13 +30,13 @@ class GiteaGpgKey(JSBASE):
         self.can_encrypt_comms = can_encrypt_comms
         self.can_sign = can_sign
         self.created_at = created_at
-        self.emails=emails
+        self.emails = emails
         self.can_certify = can_certify
-        self.expires_at=expires_at
-        self.key_id=key_id
-        self.can_encrypt_storage=can_encrypt_storage
-        self.primary_key_id=primary_key_id
-        self.public_key=public_key
+        self.expires_at = expires_at
+        self.key_id = key_id
+        self.can_encrypt_storage = can_encrypt_storage
+        self.primary_key_id = primary_key_id
+        self.public_key = public_key
         self.subkeys = subkeys
 
     @property
@@ -96,8 +96,7 @@ class GiteaGpgKey(JSBASE):
 
         return False, '{0} Error '.format(operation) + json.dumps(errors)
 
-
-    def __repr__ (self):
+    def __repr__(self):
         return '\n<GPG Key: user={0}>\n{1}'.format(
             self.user.username,
             json.dumps(self.data, indent=4)

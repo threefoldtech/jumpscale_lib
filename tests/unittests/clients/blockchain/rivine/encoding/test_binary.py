@@ -35,6 +35,7 @@ def test_encode_unknown_type():
     with pytest.raises(ValueError):
         binary.encode('hello', type_='not supported type')
 
+
 def test_encode_hex():
     """
     Test encode hex values
@@ -88,6 +89,7 @@ def test_encode_object():
     Test encode custom object that implement the binary property
     """
     expected_output = b'custom object here'
+
     class CustomObj:
         @property
         def binary(self):

@@ -16,4 +16,3 @@ class CorednsFactory(JSBASE):
             the sal layer 
         """
         return Coredns(name, node, etcd_endpoint, etcd_password, zt_identity, nics, backplane)
-

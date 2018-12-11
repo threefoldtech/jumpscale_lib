@@ -22,15 +22,15 @@ def RegisterFarmerHandler():
     address = request.args.get('walletAddress')
     if address:
         wallet_addresses.append(address)
- 
 
-    farmer = Farmer(name=request.args['name'], iyo_organization=request.args['organization'], wallet_addresses=wallet_addresses)
+    farmer = Farmer(name=request.args['name'],
+                    iyo_organization=request.args['organization'], wallet_addresses=wallet_addresses)
 
     farmAddress = request.args.get('farmAddress')
     if farmAddress:
         lat, lng = [float(x.strip()) for x in farmAddress.split(",")]
         continent, country, city = reverse_geocode(lat, lng)
-        
+
         if continent and country and city:
             farmer.location = Location()
             farmer.location.country = country

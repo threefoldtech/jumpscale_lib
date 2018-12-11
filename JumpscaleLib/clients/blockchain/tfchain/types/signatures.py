@@ -10,10 +10,12 @@ from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash, 
 
 from enum import IntEnum
 
+
 class InvalidSiaPublicKeySpecifier(Exception):
     """
     InvalidSiaPublicKeySpecifier error
     """
+
 
 class SiaPublicKeySpecifier(IntEnum):
     NIL = 0
@@ -57,7 +59,7 @@ class SiaPublicKeySpecifier(IntEnum):
 class SiaPublicKey:
     """
     A SiaPublicKey is a public key prefixed by a Specifier. The Specifier
-	indicates the algorithm used for signing and verification.
+        indicates the algorithm used for signing and verification.
     """
 
     @classmethod
@@ -94,7 +96,7 @@ class SiaPublicKey:
         key_value.extend(self._algorithm.binary_specifier)
         key_value.extend(rbinary.encode(self._pub_key, type_='slice'))
         return key_value
-    
+
     def __str__(self):
         return "{}:{}".format(str(self._algorithm), self._pub_key.hex())
 

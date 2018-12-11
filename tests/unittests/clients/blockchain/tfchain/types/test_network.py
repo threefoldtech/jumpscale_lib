@@ -15,6 +15,7 @@ tfchainExampleNetworkAddresses = {
     "2001:db8:85a3::8a2e:370:7334": "4220010db885a3000000008a2e03707334",
 }
 
+
 def test_network_address_string():
     """
     Test string encoding and decoding of the network addresses
@@ -24,6 +25,7 @@ def test_network_address_string():
         s = str(na)
         assert(s == example)
 
+
 def test_network_address_binary():
     """
     Test binary encoding and decoding of the network addresses
@@ -32,6 +34,7 @@ def test_network_address_binary():
         na = network.NetworkAddress.from_string(example)
         bh = na.binary.hex()
         assert(bh == expectedBinaryHexFormat)
+
 
 def test_network_ipv4_as_ipv6_address_binary():
     """

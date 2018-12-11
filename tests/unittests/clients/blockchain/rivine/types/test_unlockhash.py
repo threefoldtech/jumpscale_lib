@@ -5,6 +5,7 @@ Unittests for JumpscaleJumpscaleLib.clients.blockchain.rivine.types.unlockhash m
 from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY
 from JumpscaleLib.clients.blockchain.rivine import utils
 
+
 def test_unlock_to_string(ulh):
     """
     Tests the string representation of an unlockhash
@@ -17,8 +18,10 @@ def test_unlockhash_binary(ulh):
     """
     Tests the binary representation of an unlockhash
     """
-    expected_output = bytearray(b'\x012M\xcf\x02}\xd4\xa3\n\x93,D\x1f6Z%\xe8k\x17=\xef\xa4\xb8\xe5\x89H%4q\xb8\x1br\xcf')
+    expected_output = bytearray(
+        b'\x012M\xcf\x02}\xd4\xa3\n\x93,D\x1f6Z%\xe8k\x17=\xef\xa4\xb8\xe5\x89H%4q\xb8\x1br\xcf')
     assert ulh.binary == expected_output, "Binary representation of unlockhash is not correct"
+
 
 def test_unlockhash_from_string():
     """

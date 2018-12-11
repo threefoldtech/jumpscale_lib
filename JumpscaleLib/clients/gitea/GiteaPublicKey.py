@@ -24,7 +24,7 @@ class GiteaPublicKey(JSBASE):
         self.key = key
         self.title = title
         self.created_at = created_at
-        self.fingerprint=fingerprint
+        self.fingerprint = fingerprint
         self.url = url
 
     @property
@@ -115,7 +115,7 @@ class GiteaPublicKey(JSBASE):
             self.logger.debug(e.response.content)
             return False
 
-    def __repr__ (self):
+    def __repr__(self):
         return '\n<Public Key: user={0}>\n{1}'.format(
             self.user.username,
             json.dumps(self.data, indent=4)

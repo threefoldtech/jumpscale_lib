@@ -43,5 +43,5 @@ class ZeroStorClient:
 
     def testPerformance(self):
 
-        #... do some performance test
+        # ... do some performance test
         raise NotImplementedError()

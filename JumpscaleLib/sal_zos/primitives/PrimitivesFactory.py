@@ -17,4 +17,3 @@ class PrimitivesFactory(JSBASE):
             the sal layer 
         """
         return Primitives(node)
-

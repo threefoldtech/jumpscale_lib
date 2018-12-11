@@ -12,7 +12,7 @@ DEF_PORTS = {
     'CONFIG': 27018,
     'SHARD': 27019,
     'ROUTE': 27017,
-    }
+}
 
 
 class Mongod:
@@ -36,7 +36,7 @@ class Mongod:
 
     def start(self, timeout=30, log_to_file=False):
         """ Start instance of mongod  
-        
+
             :param timeout: timeout on starting the instance of mongod
             :param log_to_file: if True log mongod output to /tmp/log_shard or /tmp/log_config, depending on the instance type
         """
@@ -48,7 +48,7 @@ class Mongod:
         self.container.client.filesystem.mkdir(self.dir)
 
         cmd = "mongod --{} --replSet {} --dbpath {}  --bind_ip localhost,{} --port {}".format(
-                self._cmd, self.replica_set, self.dir, self.ip, self.port)
+            self._cmd, self.replica_set, self.dir, self.ip, self.port)
         if log_to_file:
             cmd = "{} --logpath /tmp/log_{}".format(cmd, self.db_type)
 
@@ -63,7 +63,6 @@ class Mongod:
         else:
             raise RuntimeError('Failed to start mongodb server')
 
-
     def init_replica_set(self, hosts):
         """ Init replica set 
 
@@ -72,7 +71,8 @@ class Mongod:
 
         # check if server is running
         if not self.is_running():
-            raise RuntimeError('Cannot initialize replica set, "{}" mongodb instance is not running'.format(self.replica_set))
+            raise RuntimeError(
+                'Cannot initialize replica set, "{}" mongodb instance is not running'.format(self.replica_set))
 
         logger.info('init replica set {}'.format(self.replica_set))
 
@@ -83,7 +83,7 @@ class Mongod:
         config = ''
         for idx, host in enumerate(hosts):
             config = "%s { _id: %d, host: '%s' }," % (config, idx, host)
-            
+
         config = """
         rs.initiate( 
             {_id : '%s',
@@ -91,32 +91,30 @@ class Mongod:
                 %s
             ]
         })""" % (self.replica_set, config)
-        
+
         # create config file to init config replica set
         conf_file = '/tmp/config.js'
         self.container.client.filesystem.remove(conf_file)
         self.container.client.bash('echo "%s" >> %s' % (config, conf_file)).get()
         cmd = 'mongo --port {port} {file}'.format(port=self.port, file=conf_file)
         result = self.container.client.system(cmd).get()
-        error_check(result)        
-
+        error_check(result)
 
     def is_running(self):
         """ Check if instance is running  """
         try:
             for _ in self.container.client.job.list(self._job_id):
-                    return True
+                return True
             return False
         except Exception as err:
             if str(err).find("invalid container id"):
                 return False
-            raise        
-
+            raise
 
     def stop(self, timeout=30):
         """
         Stop all started mongodb instances
-        
+
         :param timeout: time in seconds to wait for the mongodb instance to stop
         """
         if not self.container.is_running():
@@ -133,6 +131,7 @@ class Mongod:
             else:
                 raise RuntimeError('failed to stop mongod instance')
 
+
 class Mongodb:
     """ Class Mongodb is responsible to create and manage containers with mongodb instances.
 
@@ -141,16 +140,15 @@ class Mongodb:
         :method stop: stops all mongodb instances in the container.
         :method destroy: stop the container.
 """
-    
+
     FLIST = 'https://hub.gig.tech/ekaterina_evdokimova_1/ubuntu-16.04-mongodb.flist'
     _CONFIG_DIR = '/data/configdb'
     _SHARD_DIR = '/data/db'
 
-
-    def __init__(self, name, node, container_name=None, 
-                config_replica_set=None, config_port=None, config_mount=None,
-                shard_replica_set=None, shard_port=None, shard_mount=None,
-                route_port=None):
+    def __init__(self, name, node, container_name=None,
+                 config_replica_set=None, config_port=None, config_mount=None,
+                 shard_replica_set=None, shard_port=None, shard_mount=None,
+                 route_port=None):
         """
         :param name: instance name
         :param node: sal of the node to deploy mongodb on
@@ -174,7 +172,7 @@ class Mongodb:
         self.node = node
         self._container_name = container_name or 'mongodb_{}'.format(self.name)
         self._container = None
-        
+
         self.config_replica_set = config_replica_set
         self.shard_replica_set = shard_replica_set
 
@@ -192,7 +190,6 @@ class Mongodb:
         self.config_server = None
         self.shard_server = None
 
-
     def _validate(self):
         # check mount configs whether all required fields are provided
         for mount in [self.shard_mount, self.config_mount]:
@@ -200,12 +197,11 @@ class Mongodb:
                 if not mount.get(key):
                     raise ValueError("""Mount point config should be set to None or given correctly.
                                         Current config: {}, expected: {}""".format(mount,
-                                    """ {'storagepool': '<storagepool name>'
+                                                                                   """ {'storagepool': '<storagepool name>'
                                         'fs': '<fs_name>'         
                                         'dir': '<subdir on fs_name>'}
                                     """
-                    ))
-
+                                                                                   ))
 
     @property
     def _container_data(self):
@@ -238,16 +234,16 @@ class Mongodb:
         if not candidates:
             raise RuntimeError("Could not find interface for macvlan parent")
         elif len(candidates) > 1:
-            raise RuntimeError("Found multiple eligible interfaces for macvlan parent: %s" % ", ".join(c['dev'] for c in candidates))
+            raise RuntimeError("Found multiple eligible interfaces for macvlan parent: %s" %
+                               ", ".join(c['dev'] for c in candidates))
         parent_if = candidates[0]['dev']
 
         return {
             'name': self._container_name,
             'flist': self.FLIST,
-            'nics': [{'type': 'macvlan', 'id': parent_if, 'name': 'stoffel', 'config': { 'dhcp': True }}],
+            'nics': [{'type': 'macvlan', 'id': parent_if, 'name': 'stoffel', 'config': {'dhcp': True}}],
             'mounts': mounts,
         }
-
 
     @property
     def container(self):
@@ -269,7 +265,7 @@ class Mongodb:
         """ Shortcut to ip address of the container """
         if not self.container.is_running:
             raise RuntimeError('container "{}" is not running'.format(self._container_name))
-        
+
         # return self.container.default_ip().ip.format()
 
         # wait for interface to start
@@ -287,7 +283,7 @@ class Mongodb:
 
     def start(self, timeout=15, log_to_file=False):
         """ Start mongodb instance
-            
+
             :param timeout: time in seconds to wait for the mongod gateway to start
             :param log_to_file: enable writing log for SHARD and CONFIG servers to 
                 the corrsponding files: /tmp/log_SHARD, /tmp/log_CONFIG
@@ -319,18 +315,15 @@ class Mongodb:
 
         self.shard_server.start(log_to_file=log_to_file)
 
-
     def init_replica_sets(self, config_hosts, shard_hosts):
         """ Initialize config replica set and shard replica set """
         self.config_server.init_replica_set(config_hosts)
         self.shard_server.init_replica_set(shard_hosts)
 
-
     def stop(self):
         """ Stop config server and shard server in the container """
         self.config_server.stop()
         self.shard_server.stop()
-
 
     def destroy(self):
         """ Stop container where mongodb is running """
@@ -344,7 +337,7 @@ class Mongos:
         :method start: deploys instance of mongos server
         :method stop: stops mongos instance
     """
-       
+
     _JOB_ID = 'mongos-routing-service'
 
     def __init__(self, container, port=None):
@@ -355,13 +348,12 @@ class Mongos:
         self.container = container
         self.port = port or DEF_PORTS['ROUTE']
 
-
     @property
     def ip(self):
         """ Shortcut to ip address of the container """
         if not self.container.is_running:
             raise RuntimeError('container "{}" is not running'.format(self.container.name))
-        
+
         # wait for interface to start
         start, timeout = time.time(), 30
         while time.time() < start + timeout:
@@ -375,11 +367,10 @@ class Mongos:
 
         return ip
 
-
     def start(self, config_replica_set, config_hosts, timeout=15, log_to_file=False):
         """
         Start mongos instance with access to previously configured mongodb cluster.
-        
+
             :param config_replica_set: name of config replica set.            
             :param config_hosts: list of addresses of config server shards
             :param timeout: time in seconds to wait for the mongod gateway to start
@@ -389,10 +380,10 @@ class Mongos:
             return
 
         logger.info('start mongos service')
-    
+
         cmd = "mongos --configdb {}/{}  --bind_ip localhost,{} --port {}".format(
-                config_replica_set, ','.join(config_hosts), self.ip, self.port)
-        
+            config_replica_set, ','.join(config_hosts), self.ip, self.port)
+
         if log_to_file:
             cmd = "{} --logpath /tmp/log_mongos".format(cmd)
 
@@ -407,30 +398,28 @@ class Mongos:
         else:
             raise RuntimeError('Failed to start mongodb routing service in contaner {}'.format(self.container.name))
 
-
     def add_shards(self, shard_replica_set, shard_hosts):
         """ Add members of shards replica set """
 
         for shard in shard_hosts:
-            cmd = """mongo --host {}:{} --eval 'sh.addShard("{}/{}")' """.format(self.ip, self.port, shard_replica_set, shard)
+            cmd = """mongo --host {}:{} --eval 'sh.addShard("{}/{}")' """.format(self.ip,
+                                                                                 self.port, shard_replica_set, shard)
             result = self.container.client.system(cmd).get()
             error_check(result)
-        
 
     def is_running(self):
         """ Check if server of type @role is running
-            
+
             Roles: SHARD, CONFIG, ROUTE
         """
         try:
             for _ in self.container.client.job.list(self._JOB_ID):
-                    return True
+                return True
             return False
         except Exception as err:
             if str(err).find("invalid container id"):
                 return False
             raise
-
 
     def stop(self, timeout=30):
         """
@@ -451,7 +440,6 @@ class Mongos:
             else:
                 raise RuntimeError('failed to stop mongos instance')
 
-
     def destroy(self):
         """ Stop container where mongodb is running """
         self.stop()
@@ -463,7 +451,4 @@ def error_check(result, message=''):
 
     if result.state != 'SUCCESS':
         err = '{}: {} \n {}'.format(message, result.stderr, result.data)
-        raise RuntimeError(err)    
-
-
-    
+        raise RuntimeError(err)

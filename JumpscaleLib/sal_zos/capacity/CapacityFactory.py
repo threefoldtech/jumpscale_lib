@@ -1,9 +1,9 @@
+from .Capacity import Capacity
 from Jumpscale import j
 # import JumpscaleLib.baselib.remote
 
 JSBASE = j.application.JSBaseClass
 
-from .Capacity import Capacity
 
 class CapacityFactory(JSBASE):
 
@@ -14,14 +14,11 @@ class CapacityFactory(JSBASE):
     def get(self, node):
         """
         Get sal for Capacity
-        
+
         Arguments:
             node
-        
+
         Returns:
             the sal layer 
         """
         return Capacity(node)
-
-
-

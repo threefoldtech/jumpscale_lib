@@ -6,9 +6,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class UpdateApikeyReqBody( ):
+class UpdateApikeyReqBody():
     """
     auto-generated. don't touch.
     """

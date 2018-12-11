@@ -41,7 +41,7 @@ class Docker(JSBASE):
 
         self._containers = []
         for obj in self.client.containers():
-            self._containers.append(Container(obj,self.client))
+            self._containers.append(Container(obj, self.client))
         return self._containers
 
     @property
@@ -71,7 +71,7 @@ class Docker(JSBASE):
             if container.isRunning():
                 res.append(container.name)
         return res
-    
+
     @property
     def containers_names(self):
         """lists only container names
@@ -88,7 +88,7 @@ class Docker(JSBASE):
     @property
     def containers_running(self):
         """lists only running containers
-        
+
         Returns:
             [Container] -- list of containers
         """
@@ -137,8 +137,8 @@ class Docker(JSBASE):
 
         res = []
         for item in self.containers:
-            res.append([item.name,item.image ,
-                        item.ssh_port,item.status])
+            res.append([item.name, item.image,
+                        item.ssh_port, item.status])
 
         return res
 
@@ -147,13 +147,13 @@ class Docker(JSBASE):
         j.sal.docker.container_get(name)
         Arguments:
             name {String} -- name of the container
-        
+
         Keyword Arguments:
             die {bool} -- if True it will die if container not found (default: {True})
-        
+
         Raises:
             j.exceptions.RuntimeError -- when no container with this id exists
-        
+
         Returns:
             Container -- container
         """
@@ -172,13 +172,13 @@ class Docker(JSBASE):
         j.sal.docker.container_get_by_id(id)
         Arguments:
             id {string} -- id of the container
-        
+
         Keyword Arguments:
             die {bool} -- if True it will die if container not found (default: {True})
-        
+
         Raises:
             j.exceptions.RuntimeError -- when no container with this id exists
-        
+
         Returns:
             Container -- container
         """
@@ -361,7 +361,7 @@ class Docker(JSBASE):
             self.logger.info(binds)
 
         hostname = name.replace('_', '-')
-        
+
         for k, v in portsdict.items():
             if isinstance(k, tuple) and len(k) == 2:
                 portsdict["%s/%s" % (k[0], k[1])] = v
@@ -399,9 +399,9 @@ class Docker(JSBASE):
             mac_address=None,
             labels=None,
             stop_signal=None,
-            networking_config=None, 
-            healthcheck=None, 
-            stop_timeout=None, 
+            networking_config=None,
+            healthcheck=None,
+            stop_timeout=None,
             runtime=None)
         if res["Warnings"] is not None:
             raise j.exceptions.RuntimeError(
@@ -440,7 +440,7 @@ class Docker(JSBASE):
 
     def images_get(self):
         """lists images
-        
+
         Returns:
             [String] -- list of image names
         """
@@ -456,7 +456,7 @@ class Docker(JSBASE):
 
     def images_remove(self, tag="<none>:<none>"):
         """Delete a certain Docker image using tag
-        
+
         Keyword Arguments:
             tag {str} -- images tag (default: {"<none>:<none>"})
         """
@@ -467,7 +467,7 @@ class Docker(JSBASE):
 
     def ping(self):
         """pings the docker
-        
+
         Returns:
             bool -- true if ping is successful
         """
@@ -481,7 +481,7 @@ class Docker(JSBASE):
     def destroy_all(self, images_remove=False):
         """destroy all containers
         if images_remove is true it will remove all images too
-        
+
         Keyword Arguments:
             images_remove {bool} -- [description] (default: {False})
         """

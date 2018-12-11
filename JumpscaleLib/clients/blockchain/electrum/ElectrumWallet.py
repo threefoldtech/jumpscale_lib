@@ -15,6 +15,7 @@ from electrum.simple_config import SimpleConfig
 
 EXECLUDED_COMMANDS = ['create', 'commands', 'restore', 'dumpprivkeys']
 
+
 class ElectrumWallet:
     """
     An Electrum wallet wrapper
@@ -72,11 +73,10 @@ class ElectrumWallet:
 
         self._init_commands()
 
-
     def _init_commands(self):
         """
         Scans the electrum commands class and binds all its methods to this class
         """
-        execlude_cmd = lambda item: (not item[0].startswith('_')) and item[0] not in EXECLUDED_COMMANDS
+        def execlude_cmd(item): return (not item[0].startswith('_')) and item[0] not in EXECLUDED_COMMANDS
         for name, func in filter(execlude_cmd, inspect.getmembers(self._commands, inspect.ismethod)):
             setattr(self, name, func)

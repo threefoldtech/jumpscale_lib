@@ -4,6 +4,7 @@ from Jumpscale import j
 
 JSConfigBaseFactory = j.tools.configmanager.JSBaseClassConfigs
 
+
 class IpmiFactory(JSConfigBaseFactory):
     """ Ipmi client factory
 

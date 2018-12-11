@@ -22,6 +22,7 @@ DURATION_TEMPLATE = 'XXhXXmXXs'
 
 logger = j.logger.get(__name__)
 
+
 def hash(data, encoding_type=None):
     """
     Hashes the input binary data using the blake2b algorithm
@@ -218,7 +219,6 @@ def get_current_minter_definition(rivine_explorer_addresses, explorer_password):
     return mint_condition
 
 
-
 def commit_transaction(rivine_explorer_addresses, rivine_explorer_api_password, transaction):
     """
     Commits a singed transaction to the chain
@@ -288,7 +288,6 @@ def find_subset_sum(values, target):
                 id_subset.append(y)
                 S -= x
         return subset, id_subset
-
 
     def f(v, i, S, memo):
         if i >= len(v):

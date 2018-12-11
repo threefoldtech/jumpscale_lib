@@ -21,11 +21,12 @@ class OpenFileDescriptor(HealthCheckRun):
                 if rlimit['resource'] == psutil.RLIMIT_NOFILE:
                     pid = str(process['pid'])
                     if (0.9 * rlimit['soft']) <= process['ofd'] < (0.9 * rlimit['hard']):
-                        self.add_message(pid, 'WARNING', 'Open file descriptors for process %s exceeded 90%% of the soft limit' % pid)
+                        self.add_message(
+                            pid, 'WARNING', 'Open file descriptors for process %s exceeded 90%% of the soft limit' % pid)
                     elif process['ofd'] >= (0.9 * rlimit['hard']):
-                        self.add_message(pid, 'ERROR', 'Open file descriptors for process %s exceeded 90%% of the hard limit' % pid)
+                        self.add_message(
+                            pid, 'ERROR', 'Open file descriptors for process %s exceeded 90%% of the hard limit' % pid)
                     break
 
         if not self._messages:
             self.add_message('-1', 'OK', 'Open file descriptors for all processes are within limit')
-

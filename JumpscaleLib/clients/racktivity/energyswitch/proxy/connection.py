@@ -4,10 +4,14 @@ import urllib.parse
 import urllib.request
 from Jumpscale import j
 
+
 def Connect(username, password, hostname="127.0.0.1", port=8080):
     return BlockingConnection(username, password, hostname, port)
 
+
 JSBASE = j.application.JSBaseClass
+
+
 class BlockingConnection(JSBASE):
 
     def __init__(self, username, password, hostname="127.0.0.1", port=8080):
@@ -149,7 +153,7 @@ class BlockingConnection(JSBASE):
         if not self.basicAuth:
             if port > 0:
                 url = url + "&INDEX=" + str(port) + "&COUNT=1"
-            #, "data": self.urllib.quote(str(value))
+            # , "data": self.urllib.quote(str(value))
         data = self._send_data(url)
         return data
 

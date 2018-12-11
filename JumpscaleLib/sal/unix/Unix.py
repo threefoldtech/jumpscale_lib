@@ -91,7 +91,7 @@ class UnixSystem(JSBASE):
             if matches:
                 int_values = [int(x) for x in matches]
                 nrcpu = len(matches)
-                cpumhz = int(sum(int_values) / nrcpu) # get average of CPUs speeds
+                cpumhz = int(sum(int_values) / nrcpu)  # get average of CPUs speeds
             return mem, cpumhz, nrcpu
         elif j.core.platformtype.myplatform.isSolaris():
             command = "prtconf | grep Memory | awk '{print $3}'"
@@ -244,6 +244,7 @@ class UnixSystem(JSBASE):
                 os.chown(path, uid, gid)
 
             j.sal.fswalker.walk(path, process_path, recursive=True, includeFolders=True)
+
     def chmod(self, root, mode, recurse=0, dirPattern='*', filePattern='*', dirs=True, files=True):
         """
         Chmod based on system.fs.walk
@@ -253,7 +254,7 @@ class UnixSystem(JSBASE):
             os.chmod(root, mode)
         else:
             items = j.sal.fswalker.walkExtended(root=root, recurse=recurse, dirPattern=dirPattern,
-                                          filePattern=filePattern, dirs=dirs, files=files)
+                                                filePattern=filePattern, dirs=dirs, files=files)
 
             for item in items:
                 os.chmod(item, mode)
@@ -289,7 +290,7 @@ class UnixSystem(JSBASE):
 
         return j.sal.process.execute(**kwargs)
 
-    #@deprecated('j.sal.unix.executeDaemonAsUser',
+    # @deprecated('j.sal.unix.executeDaemonAsUser',
     #            alternative='j.sal.process.executeDaemon', version='3.2')
     def executeDaemonAsUser(self, command, username, **kwargs):
         '''Execute a given command as a background process as a specific user

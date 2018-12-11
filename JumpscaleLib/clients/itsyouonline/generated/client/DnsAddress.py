@@ -6,9 +6,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class DnsAddress( ):
+class DnsAddress():
     """
     auto-generated. don't touch.
     """

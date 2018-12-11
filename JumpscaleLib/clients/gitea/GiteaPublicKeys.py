@@ -20,7 +20,7 @@ class GiteaPublicKeys(JSBASE):
         if self.position < len(self._items):
             item = self._items[self.position]
             self.position += 1
-            key = GiteaPublicKey(client= self.client, user=self.user)
+            key = GiteaPublicKey(client=self.client, user=self.user)
             for k, v in item.items():
                 setattr(key, k, v)
             return key
@@ -32,7 +32,7 @@ class GiteaPublicKeys(JSBASE):
         self._items = self.client.api.users.userListKeys(username=self.user.username).json()
         return self
 
-    def __repr__ (self):
+    def __repr__(self):
         return "<PublicKeys Iterator for user: {0}>".format(self.user.username)
 
     __str__ = __repr__

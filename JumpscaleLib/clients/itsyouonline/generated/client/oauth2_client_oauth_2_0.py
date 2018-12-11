@@ -2,9 +2,6 @@ import requests
 from Jumpscale import j
 
 
-
-
-
 class Oauth2ClientOauth_2_0():
     def __init__(self, access_token_uri='https://itsyou.online/v1/oauth/access_token'):
         pass

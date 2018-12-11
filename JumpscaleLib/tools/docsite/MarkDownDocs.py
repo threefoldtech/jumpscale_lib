@@ -33,12 +33,12 @@ class MarkDownDocs(JSBASE):
         self._configs = []  # all found config files
         # self._macros_loaded = []
 
-        self._macros_modules = {} #key is the path
-        self._macros = {} #key is the name
+        self._macros_modules = {}  # key is the path
+        self._macros = {}  # key is the name
 
         self._pointer_cache = {}  # so we don't have to full lookup all the time (for markdown docs)
 
-        #lets make sure we have default macros
+        # lets make sure we have default macros
         self.macros_load()
 
         self.logger_enable()
@@ -67,7 +67,7 @@ class MarkDownDocs(JSBASE):
         @param pathOrUrl can be existing path or url
         e.g. https://github.com/threefoldtech/jumpscale_lib/docsite/tree/master/examples
         """
-        self.logger.info("load macros:%s"%pathOrUrl)
+        self.logger.info("load macros:%s" % pathOrUrl)
         path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
 
         if path not in self._macros_modules:
@@ -76,8 +76,9 @@ class MarkDownDocs(JSBASE):
                 raise j.exceptions.Input("Cannot find path:'%s' for macro's, does it exist?" % path)
 
             for path0 in j.sal.fs.listFilesInDir(path, recursive=True, filter="*.py", followSymlinks=True):
-                name = j.sal.fs.getBaseName(path0)[:-3] #find name, remove .py
-                self._macros[name] = j.tools.jinja2.code_python_render(obj_key=name, path=path0,reload=False, objForHash=name)
+                name = j.sal.fs.getBaseName(path0)[:-3]  # find name, remove .py
+                self._macros[name] = j.tools.jinja2.code_python_render(
+                    obj_key=name, path=path0, reload=False, objForHash=name)
         # else:
         #     self.logger.debug("macros not loaded, already there")
 

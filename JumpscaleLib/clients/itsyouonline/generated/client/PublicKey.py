@@ -7,8 +7,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-class PublicKey( ):
+class PublicKey():
     """
     auto-generated. don't touch.
     """

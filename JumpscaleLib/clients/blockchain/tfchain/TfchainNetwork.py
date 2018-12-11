@@ -8,6 +8,8 @@ from enum import Enum, auto
 standard and testnet are official tfchain networks,
 use devnet for everything else
 """
+
+
 class TfchainNetwork(str, Enum):
     STANDARD = 'standard'
     TESTNET = 'testnet'
@@ -16,6 +18,7 @@ class TfchainNetwork(str, Enum):
     """
     returns the official explorers for the networks that have them
     """
+
     def official_explorers(self):
         if self is TfchainNetwork.STANDARD:
             return [
@@ -30,10 +33,11 @@ class TfchainNetwork(str, Enum):
                 'https://explorer2.testnet.threefoldtoken.com',
             ]
         return []
-    
+
     """
     returns the minimum miner fee as expected by a tfchain network
     """
+
     def minimum_minerfee(self):
         if self is TfchainNetwork.DEVNET:
             return 1000000000

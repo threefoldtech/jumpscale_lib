@@ -73,7 +73,7 @@ class IndexFile(JSBASE):
         self._f.seek(self._offset(id))
         self._f.write(data)
 
-    def iterate(self, method, start=None, end=None,result=None):
+    def iterate(self, method, start=None, end=None, result=None):
         """walk over the indexfile and apply method as follows
 
         call for each item:
@@ -93,7 +93,7 @@ class IndexFile(JSBASE):
         if start is not None:
             id = start
         else:
-            id=0
+            id = 0
 
         self._f.seek(self._offset(id))
 
@@ -108,11 +108,12 @@ class IndexFile(JSBASE):
 
         return result
 
-    def list(self,start=None, end=None):
+    def list(self, start=None, end=None):
         result = {}
-        def do(id,data,result):
+
+        def do(id, data, result):
             # print("id:%s:%s"%(id,data))
-            result[id]=data
+            result[id] = data
             return result
         result = self.iterate(do, start=start, end=end, result={})
         return result

@@ -6,9 +6,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class UpdatePasswordReqBody( ):
+class UpdatePasswordReqBody():
     """
     auto-generated. don't touch.
     """

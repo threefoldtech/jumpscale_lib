@@ -32,6 +32,7 @@ class KrakenClient(JSConfigClient):
         self.logger.debug("get account balance")
         self.logger.debug(k.get_account_balance())
 
+
 class Kraken(JSConfigFactory):
     def __init__(self):
         self.__jslocation__ = 'j.clients.kraken'

@@ -6,7 +6,7 @@ OP_ERS = '--'
 
 
 # TODO: add to JSExceptions Factory
-#class SSHError(Exception, JSBASE):
+# class SSHError(Exception, JSBASE):
 #    def __init__(self):
 #        JSBASE.__init__(self)
 
@@ -43,17 +43,17 @@ class SSHD:
     def addKey(self, key):
         """ Add pubkey to authorized_keys
         """
-        self._transactions.append( (OP_ADD, key.strip()))
+        self._transactions.append((OP_ADD, key.strip()))
 
     def deleteKey(self, key):
         """ Delete pubkey from authorized_keys
         """
-        self._transactions.append( (OP_DEL, key.strip()))
+        self._transactions.append((OP_DEL, key.strip()))
 
     def erase(self):
         """ Erase all keys from authorized_keys
         """
-        self._transactions.append( (OP_ERS, None))
+        self._transactions.append((OP_ERS, None))
 
     def commit(self):
         """ Apply all pending changes to authorized_keys

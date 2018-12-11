@@ -6,9 +6,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class AuthorizationMap( ):
+class AuthorizationMap():
     """
     auto-generated. don't touch.
     """

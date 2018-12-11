@@ -239,7 +239,7 @@ class Space(Authorizables):
         description="",
         managed_private=False,
         authorize_ssh=True,
-        userdata = ""
+        userdata=""
     ):
         """
         Creates a new virtual machine.
@@ -282,7 +282,7 @@ class Space(Authorizables):
         if authorize_ssh:
             if not sshkeyname:
                 # if sshkey is not provided, use sshkey configured in the config manager
-                sshkeyname=j.tools.configmanager.keyname
+                sshkeyname = j.tools.configmanager.keyname
 
             if "sshkeyname:" not in description:
                 description += "\nsshkeyname: %s" % sshkeyname
@@ -303,13 +303,13 @@ class Space(Authorizables):
 
             else:
                 self.client.api.cloudapi.machines.create(cloudspaceId=self.id,
-                                                        name=name,
-                                                        sizeId=sizeId,
-                                                        imageId=imageId,
-                                                        disksize=disksize,
-                                                        datadisks=datadisks,
-                                                        description=description,
-                                                        userdata=userdata)
+                                                         name=name,
+                                                         sizeId=sizeId,
+                                                         imageId=imageId,
+                                                         disksize=disksize,
+                                                         datadisks=datadisks,
+                                                         description=description,
+                                                         userdata=userdata)
             self.logger.info("machine created.")
         except Exception as err:
             if err.response.status_code == 409:
@@ -389,7 +389,7 @@ class Space(Authorizables):
 
         # url of the (ipxe)[http://ipxe.org/scripting/] script.
         ipxe = 'https://bootstrap.grid.tf/ipxe/{branch}/{zerotier_id}/organisation={organization}%20{dev_mode}'.format(
-             branch=branch, zerotier_id=zerotier_id, organization=organization, dev_mode='development' if dev_mode else '')
+            branch=branch, zerotier_id=zerotier_id, organization=organization, dev_mode='development' if dev_mode else '')
         userdata = 'ipxe: %s' % ipxe
 
         machine = self.machine_create(
@@ -431,8 +431,8 @@ class Space(Authorizables):
         # accept VM to the ZeroTier network
         candidate.authorize()
 
-        return  {'openvcloud': machine,
-                 'zerotier': candidate}
+        return {'openvcloud': machine,
+                'zerotier': candidate}
 
     @property
     def portforwards(self):

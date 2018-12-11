@@ -38,7 +38,7 @@ class GiteaTokens(JSBASE):
                 self.logger.error('#FIX ME: THIS API not working')
         return self
 
-    def __repr__ (self):
+    def __repr__(self):
         return "<Tokens Iterator for user: {0}>".format(self.user.username)
 
     __str__ = __repr__

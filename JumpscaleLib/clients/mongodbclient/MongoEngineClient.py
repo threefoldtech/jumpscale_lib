@@ -15,6 +15,7 @@ ssl = false # Boolean
 replicaset = ""
 """
 
+
 class MongoEngineClient(JSConfigClient):
 
     def __init__(self, instance, data={}, parent=None, interactive=False):

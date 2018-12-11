@@ -5,6 +5,7 @@ from JumpscaleLib.clients.gitea.GiteaCommit import GiteaCommit
 
 JSBASE = j.application.JSBaseClass
 
+
 class GiteaCommits(JSBASE):
     def __init__(
             self,
@@ -46,4 +47,3 @@ class GiteaCommits(JSBASE):
         return result
 
     __str__ = __repr__ = lambda self: 'Commits Object for repo %s' % self.repo.name
-
