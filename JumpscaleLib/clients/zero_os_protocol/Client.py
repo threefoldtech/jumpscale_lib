@@ -24,6 +24,7 @@ from .WebManager import WebManager
 from .ZerotierManager import ZerotierManager
 from .ZFSManager import ZFSManager
 from .SocatManager import SocatManager
+from .PowerManager import PowerManager
 
 
 TEMPLATE = """
@@ -75,6 +76,11 @@ class Client(BaseClient, JSConfigClientBase):
         self._cgroup = CGroupManager(self)
         self._zfs = ZFSManager(self)
         self._socat = SocatManager(self)
+        self._power = PowerManager(self)
+
+    @property
+    def power(self):
+        return self._power
 
     @property
     def socat(self):
