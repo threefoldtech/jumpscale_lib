@@ -1,12 +1,11 @@
-from urllib.parse import urlparse, parse_qs, parse_qsl
-from .Link import Link
 from Jumpscale import j
 import toml
 
 import copy
 
 JSBASE = j.application.JSBaseClass
-
+from .Link import Link
+from urllib.parse import urlparse,parse_qs,parse_qsl
 
 class Doc(JSBASE):
     """
@@ -171,7 +170,7 @@ class Doc(JSBASE):
             if header.level == level:
                 return header
 
-    def dynamic_process(self, url):
+    def dynamic_process(self, url, base_url=None):
         self.kwargs = {}
         if "?" in url:
             # query=url.split("?",1)[1]
