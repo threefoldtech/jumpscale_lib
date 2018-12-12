@@ -109,7 +109,7 @@ class Client(BaseClient, JSConfigClientBase):
                 self.__redis = redis.Redis(host=self.config.data['host'],
                                            port=self.config.data['port'],
                                            password=self.config.data['password_'],
-                                           db=self.config.data['db'], ssl=self.config.data['ssl'],
+                                           db=self.config.data['db'], ssl=self.config.data['ssl'], ssl_cert_reqs=None,
                                            socket_timeout=socket_timeout,
                                            socket_keepalive=True, socket_keepalive_options=socket_keepalive_options)
 
