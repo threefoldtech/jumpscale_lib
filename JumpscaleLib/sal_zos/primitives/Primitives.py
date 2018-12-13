@@ -3,7 +3,7 @@ from ..vm.ZOS_VM import ZOS_VM, IpxeVM, ZDBDisk
 
 
 BASEFLIST = 'https://hub.grid.tf/tf-bootable/{}.flist'
-ZEROOSFLIST = 'https://hub.grid.tf/tf-autobuilder/zero-os-development.flist'
+ZEROOSFLIST = 'https://hub.grid.tf/tf-autobuilder/{}.flist'
 
 
 class Primitives:
@@ -24,7 +24,9 @@ class Primitives:
         templatename, _, version = type_.partition(':')
         kwargs = {'name': name, 'node': self.node}
         if templatename == 'zero-os':
-            kwargs['flist'] = ZEROOSFLIST
+            version = version or 'development'
+            flistname = '{}-{}'.format(templatename, version)
+            kwargs['flist'] = ZEROOSFLIST.format(flistname)
         elif templatename == 'ubuntu':
             version = version or 'lts'
             flistname = '{}:{}'.format(templatename, version)
