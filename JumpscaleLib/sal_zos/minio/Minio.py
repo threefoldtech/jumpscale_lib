@@ -176,7 +176,7 @@ class Minio(Service):
             pass
 
     def check_and_repair(self):
-        cmd = '/bin/minio gateway zerstor-repair --config-dir {dir}'.format(dir=self._config_dir)
+        cmd = '/bin/minio gateway zerostor-repair --config-dir {dir}'.format(dir=self._config_dir)
 
         job = self.container.client.system(cmd)
         while job.running:
