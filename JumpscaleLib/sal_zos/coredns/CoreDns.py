@@ -1,6 +1,8 @@
-import time
 import json
+import time
+
 from jumpscale import j
+
 from .. import templates
 from ..abstracts import Nics, Service
 from ..globals import TIMEOUT_DEPLOY
@@ -87,6 +89,7 @@ class Coredns(Service):
 
         logger.info('start coredns %s' % self.name)
 
+        self.deploy()
         self.create_config()
         cmd = '/usr/bin/coredns -conf {}'.format(self._config_path)
         # wait for coredns to start
