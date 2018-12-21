@@ -1,5 +1,7 @@
 import time
+
 from jumpscale import j
+
 from .. import templates
 from ..abstracts import Nics, Service
 from ..globals import TIMEOUT_DEPLOY
@@ -93,6 +95,7 @@ class Traefik(Service):
 
         logger.info('start traefik %s' % self.name)
 
+        self.deploy()
         self.create_config()
 
         cmd = '/usr/bin/traefik storeconfig -c {}'.format(self._config_path)
