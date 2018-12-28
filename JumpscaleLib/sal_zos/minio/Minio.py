@@ -95,7 +95,16 @@ class Minio(Service):
             'MINIO_ZEROSTOR_META_DIR': metadata_path,
         }
 
-        sp = self.node.storagepools.get('zos-cache')
+        # select a storage pool where to create subvolume to mount into the container
+        # we want only the storage pool on top of an SSD
+        pools = filter(lambda p: p.type.value == 'SSD', self.node.storagepools.list())
+        # sort all the SSD storage pool by ussage
+        pools = sorted(pools, key=lambda p: p.used)
+        if not pools:
+            sp = self.node.storagepools.get('zos-cache')
+        else:
+            sp = pools[0]
+
         try:
             fs = sp.get(self._id)
         except ValueError:
@@ -168,12 +177,13 @@ class Minio(Service):
     def destroy(self):
         super().destroy()
 
-        sp = self.node.storagepools.get('zos-cache')
-        try:
-            fs = sp.get(self._id)
-            fs.delete()
-        except ValueError:
-            pass
+        for sp in self.node.storagepools.list():
+            try:
+                fs = sp.get(self._id)
+                fs.delete()
+                break
+            except ValueError:
+                continue
 
     def check_and_repair(self):
         cmd = '/bin/minio gateway zerstor-repair --config-dir {dir}'.format(dir=self._config_dir)
