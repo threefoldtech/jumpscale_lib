@@ -1774,6 +1774,7 @@ class TransactionV209:
         self._bridge_fee = 0
         self._address = None
         self._value = 0
+        self._erc20_blockid = ''
         self._erc20_txid = ''
         self._id = None
 
@@ -1851,6 +1852,7 @@ class TransactionV209:
             'data': {
                 'address': self._address or '',
                 'value': str(self._value) if self._value else '0',
+                'blockid': self._erc20_blockid or '',
                 'txid': self._erc20_txid or '',
                 'bridgefee': str(self._bridge_fee),
                 'txfee': str(self._tx_fee),
@@ -1863,6 +1865,7 @@ class TransactionV209:
         """
         self._address = data.get('address', '')
         self._value = int(data.get('value', '0'))
+        self._erc20_blockid = data.get('blockid', '')
         self._erc20_txid = data.get('txid', '')
         if 'bridgefee' in data:
             self._bridge_fee = int(data['bridgefee'])

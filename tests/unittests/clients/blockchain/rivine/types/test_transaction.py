@@ -261,7 +261,7 @@ def test_transactionv208_input_sig_hash():
 
 def test_transactionv209_load_dump_json():
     # load and dump a valid v209 tx from tfchain Go devnet
-    json_input = '{"version":209,"data":{"address":"01f68299b26a89efdb4351a61c3a062321d23edbc1399c8499947c1313375609adbbcd3977363c","value":"100000000000","txfee":"1000000000","bridgefee":"50000000000","txid":"0000000000000000000000000000000000000000000000000000000000000000"}}'
+    json_input = '{"version":209,"data":{"address":"01f68299b26a89efdb4351a61c3a062321d23edbc1399c8499947c1313375609adbbcd3977363c","value":"100000000000","txfee":"1000000000","bridgefee":"50000000000","blockid":"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef","txid":"abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"}}'
     tx = TransactionFactory.from_json(json_input)
     assert tx.version == ERC20_COIN_CREATION_TRANSACTION_VERSION
     assert tx.json == json.loads(json_input)
