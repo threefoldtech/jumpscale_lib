@@ -27,6 +27,9 @@ COINCREATION_TRANSACTION_VERSION = 129
 BOT_REGISTRATION_TRANSACTION_VERSION = 144
 BOT_RECORD_UPDATE_TRANSACTION_VERSION = 145
 BOT_NAME_TRANSFER_TRANSACTION_VERSION = 146
+ERC20_CONVERSION_TRANSACTION_VERSION = 208
+ERC20_COIN_CREATION_TRANSACTION_VERSION = 209
+ERC20_ADDRESS_REGISTRATION_TRANSACTION_VERSION = 210
 HASHTYPE_COINOUTPUT_ID = 'coinoutputid'
 DEFAULT_MINERFEE = 100000000
 
@@ -191,6 +194,28 @@ class TransactionFactory:
             txn = TransactionV146()
             txn.from_dict(txn_dict['data'])
             return txn
+
+        if txn_dict['version'] == ERC20_CONVERSION_TRANSACTION_VERSION:
+            if 'data' not in txn_dict:
+                raise ValueError("no data object found in ERC20 Conversion Transaction")
+            txn = TransactionV208()
+            txn.from_dict(txn_dict['data'])
+            return txn
+
+        if txn_dict['version'] == ERC20_COIN_CREATION_TRANSACTION_VERSION:
+            if 'data' not in txn_dict:
+                raise ValueError("no data object found in ERC20 CoinCreation Transaction")
+            txn = TransactionV209()
+            txn.from_dict(txn_dict['data'])
+            return txn
+
+        if txn_dict['version'] == ERC20_ADDRESS_REGISTRATION_TRANSACTION_VERSION:
+            if 'data' not in txn_dict:
+                raise ValueError("no data object found in ERC20 AddressRegistration Transaction")
+            txn = TransactionV210()
+            txn.from_dict(txn_dict['data'])
+            return txn
+
 
 class TransactionV1:
     """
@@ -1555,6 +1580,378 @@ def sign_bot_transaction(transaction, public_key, secret_key):
     fulfillment = SingleSignatureFulfillment(pub_key=public_key)
     fulfillment.sign(sig_ctx=sig_ctx)
     return fulfillment._signature.hex()
+
+
+class TransactionV208:
+    """
+    TransactionV208 defines the decoding logic for
+    an ERC20 Conversion Transaction (v208).
+
+    Creation of this Transaction from the JS API is not supported,
+    as such this implementation is only meant to allow to keep your balance
+    up to date, should you also use your seed on other platforms
+    where you might have interacted with the ERC20 network.
+    """
+    def __init__(self):
+        """
+        Initializes a new v208 tansaction
+        """
+        self._coin_inputs = []
+        self._refund_coin_output = None
+        self._tx_fee = None
+        self._erc20_address = ''
+        self._erc20_value = ''
+        self._id = None
+
+    @property
+    def version(self):
+        return ERC20_CONVERSION_TRANSACTION_VERSION
+
+    @property
+    def id(self):
+        """
+        Gets transaction id
+        """
+        return self._id
+
+    @id.setter
+    def id(self, txn_id):
+        """
+        Sets transaction id
+        """
+        self._id = txn_id
+
+    @property
+    def coin_inputs(self):
+        """
+        Retrieves coins inputs
+        """
+        return self._coin_inputs or []
+
+    @property
+    def coin_outputs(self):
+        """
+        Retrieves coins outputs
+        """
+        if self._refund_coin_output:
+            return [self._refund_coin_output]
+        return []
+    
+    @property
+    def miner_fees(self):
+        """
+        Retrieves the miner fees
+        """
+        if self._tx_fee:
+            return [self._tx_fee]
+        return []
+
+    @property
+    def data(self):
+        """
+        Gets the arbitrary data of the transaction
+        """
+        return bytearray()
+
+    @property
+    def data_type(self):
+        """
+        Gets the optional type of the arbitrary data of the transaction
+        """
+        return 0
+
+    @property
+    def json(self):
+        """
+        Returns a json version of the TransactionV208 object
+        """
+        result = {
+            'version': self.version,
+            'data': {
+                'address': self._erc20_address,
+                'value': self._erc20_value,
+                'txfee': str(self._tx_fee),
+                'coininputs': [input.json for input in self._coin_inputs]
+            }
+        }
+        if self._refund_coin_output:
+            result['data']['refundcoinoutput'] = self._refund_coin_output.json
+        return result
+
+    def from_dict(self, data):
+        """
+        Populates this TransactionV208 object from a data (JSON-decoded) dictionary
+        """
+        self._erc20_address = data.get('address', '')
+        self._erc20_value = data.get('value', '')
+        if 'txfee' in data:
+            self._tx_fee = int(data['txfee'])
+        else:
+            self._tx_fee = 0
+        if 'coininputs' in data:
+            for ci_info in data['coininputs']:
+                ci = CoinInput.from_dict(ci_info)
+                self._coin_inputs.append(ci)
+        else:
+            self._coin_inputs = []
+        if 'refundcoinoutput' in data:
+            co = CoinOutput.from_dict(data['refundcoinoutput'])
+            self._refund_coin_output = co
+        else:
+            self._refund_coin_output = None
+
+
+class TransactionV209:
+    """
+    TransactionV209 defines the decoding logic for
+    an ERC20 CoinCreation Transaction (v209).
+
+    Creation of this Transaction from the JS API is not supported,
+    as such this implementation is only meant to allow to keep your balance
+    up to date, should you also use your seed on other platforms
+    where you might have interacted with the ERC20 network.
+    """
+    def __init__(self):
+        """
+        Initializes a new v209 tansaction
+        """
+        self._coin_inputs = []
+        self._refund_coin_output = None
+        self._tx_fee = 0
+        self._bridge_fee = 0
+        self._address = None
+        self._value = 0
+        self._erc20_txid = ''
+        self._id = None
+
+    @property
+    def version(self):
+        return ERC20_COIN_CREATION_TRANSACTION_VERSION
+
+    @property
+    def id(self):
+        """
+        Gets transaction id
+        """
+        return self._id
+
+    @id.setter
+    def id(self, txn_id):
+        """
+        Sets transaction id
+        """
+        self._id = txn_id
+
+    @property
+    def coin_inputs(self):
+        """
+        Retrieves coins inputs
+        """
+        return []
+
+    @property
+    def coin_outputs(self):
+        """
+        Retrieves coins outputs
+        """
+        return [CoinOutput.from_dict({
+            'value': self._value or 0,
+            'condition': {
+                'type': 1,
+                'data': {
+                    'unlockhash': self._address or ''
+                }
+            }
+        })]
+    
+    @property
+    def miner_fees(self):
+        """
+        Retrieves the miner fees
+        """
+        # TODO: include the registration fee as miner fee
+        if self._tx_fee:
+            return [self._tx_fee]
+        return []
+
+    @property
+    def data(self):
+        """
+        Gets the arbitrary data of the transaction
+        """
+        return bytearray()
+
+    @property
+    def data_type(self):
+        """
+        Gets the optional type of the arbitrary data of the transaction
+        """
+        return 0
+
+    @property
+    def json(self):
+        """
+        Returns a json version of the TransactionV209 object
+        """
+        return {
+            'version': self.version,
+            'data': {
+                'address': self._address or '',
+                'value': str(self._value) if self._value else '0',
+                'txid': self._erc20_txid or '',
+                'bridgefee': str(self._bridge_fee),
+                'txfee': str(self._tx_fee),
+            }
+        }
+
+    def from_dict(self, data):
+        """
+        Populates this TransactionV09 object from a data (JSON-decoded) dictionary
+        """
+        self._address = data.get('address', '')
+        self._value = int(data.get('value', '0'))
+        self._erc20_txid = data.get('txid', '')
+        if 'bridgefee' in data:
+            self._bridge_fee = int(data['bridgefee'])
+        else:
+            self._bridge_fee = 0
+        if 'txfee' in data:
+            self._tx_fee = int(data['txfee'])
+        else:
+            self._tx_fee = 0
+
+
+class TransactionV210:
+    """
+    TransactionV210 defines the decoding logic for
+    an ERC20 Address Registration Transaction (v210).
+
+    Creation of this Transaction from the JS API is not supported,
+    as such this implementation is only meant to allow to keep your balance
+    up to date, should you also use your seed on other platforms
+    where you might have interacted with the ERC20 network.
+    """
+    def __init__(self):
+        """
+        Initializes a new v210 tansaction
+        """
+        self._coin_inputs = []
+        self._refund_coin_output = None
+        self._tx_fee = None
+        self._erc20_reg_fee = None
+        self._erc20_pub_key = ''
+        self._erc20_tft_adddress = ''
+        self._erc20_address = ''
+        self._erc20_signature = ''
+        self._id = None
+
+    @property
+    def version(self):
+        return ERC20_ADDRESS_REGISTRATION_TRANSACTION_VERSION
+
+    @property
+    def id(self):
+        """
+        Gets transaction id
+        """
+        return self._id
+
+    @id.setter
+    def id(self, txn_id):
+        """
+        Sets transaction id
+        """
+        self._id = txn_id
+
+    @property
+    def coin_inputs(self):
+        """
+        Retrieves coins inputs
+        """
+        return self._coin_inputs or []
+
+    @property
+    def coin_outputs(self):
+        """
+        Retrieves coins outputs
+        """
+        if self._refund_coin_output:
+            return [self._refund_coin_output]
+        return []
+    
+    @property
+    def miner_fees(self):
+        """
+        Retrieves the miner fees
+        """
+        # TODO: include the registration fee as miner fee
+        if self._tx_fee:
+            return [self._tx_fee]
+        return []
+
+    @property
+    def data(self):
+        """
+        Gets the arbitrary data of the transaction
+        """
+        return bytearray()
+
+    @property
+    def data_type(self):
+        """
+        Gets the optional type of the arbitrary data of the transaction
+        """
+        return 0
+
+    @property
+    def json(self):
+        """
+        Returns a json version of the TransactionV210 object
+        """
+        result = {
+            'version': self.version,
+            'data': {
+                'pubkey': self._erc20_pub_key or '',
+                'tftaddress': self._erc20_tft_adddress or '',
+                'erc20address': self._erc20_address or '',
+                'signature': self._erc20_signature or '',
+                'regfee': str(self._erc20_reg_fee),
+                'txfee': str(self._tx_fee),
+                'coininputs': [input.json for input in self._coin_inputs]
+            }
+        }
+        if self._refund_coin_output:
+            result['data']['refundcoinoutput'] = self._refund_coin_output.json
+        return result
+
+    def from_dict(self, data):
+        """
+        Populates this TransactionV210 object from a data (JSON-decoded) dictionary
+        """
+        self._erc20_pub_key = data.get('pubkey', '')
+        self._erc20_tft_adddress = data.get('tftaddress', '')
+        self._erc20_address = data.get('erc20address', '')
+        self._erc20_signature = data.get('signature', '')
+        if 'regfee' in data:
+            self._erc20_reg_fee = int(data['regfee'])
+        else:
+            self._erc20_reg_fee = 0
+        if 'txfee' in data:
+            self._tx_fee = int(data['txfee'])
+        else:
+            self._tx_fee = 0
+        if 'coininputs' in data:
+            for ci_info in data['coininputs']:
+                ci = CoinInput.from_dict(ci_info)
+                self._coin_inputs.append(ci)
+        else:
+            self._coin_inputs = []
+        if 'refundcoinoutput' in data:
+            co = CoinOutput.from_dict(data['refundcoinoutput'])
+            self._refund_coin_output = co
+        else:
+            self._refund_coin_output = None
+
 
 class CoinInput:
     """

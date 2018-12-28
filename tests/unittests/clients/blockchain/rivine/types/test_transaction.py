@@ -4,10 +4,11 @@ Unittests for module JumpscaleLib.clients.blockchain.rivine.types.transaction
 
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import \
     DEFAULT_TRANSACTION_VERSION, BOT_REGISTRATION_TRANSACTION_VERSION, BOT_RECORD_UPDATE_TRANSACTION_VERSION, \
+    ERC20_CONVERSION_TRANSACTION_VERSION, ERC20_COIN_CREATION_TRANSACTION_VERSION, ERC20_ADDRESS_REGISTRATION_TRANSACTION_VERSION, \
     TransactionFactory, TransactionV1, \
     CoinOutputSummary, TransactionSummary, \
     CoinInput, CoinOutput, _compute_monthly_bot_fees
-from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import UnlockHashCondition, LockTimeCondition, SingleSignatureFulfillment
+from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import UnlockHashCondition, LockTimeCondition, SingleSignatureFulfillment, UnlockCondtionFactory
 from JumpscaleLib.clients.blockchain.rivine.const import HASTINGS_TFT_VALUE
 from unittest.mock import MagicMock
 import json
@@ -236,3 +237,35 @@ def test_transactionv145_input_sig_hash():
     tx = TransactionFactory.from_json(json_input)
     assert tx.version == BOT_RECORD_UPDATE_TRANSACTION_VERSION
     assert tx.get_input_signature_hash(0).hex() == 'af3293da1e441b6c832a0763e17bb5b516bbb78540509a3418cd08253e584cf0'
+
+def test_transactionv208_load_dump_json():
+    # load and dump a valid v208 tx from tfchain Go devnet
+    json_input = '{"version":208,"data":{"address":"0123456789012345678901234567890123456789","value":"200000000000","txfee":"1000000000","coininputs":[{"parentid":"9c61ec964105ec48bc95ffc0ac820ada600a2914a8dd4ef511ed7f218a3bf469","fulfillment":{"type":1,"data":{"publickey":"ed25519:7469d51063cdb690cc8025db7d28faadc71ff69f7c372779bf3a1e801a923e02","signature":"a0c683e8728710b4d3cd7eed4e1bd38a4be8145a2cf91b875986870aa98c6265d76cbb637d78500010e3ab1b651e31ab26b05de79938d7d0aee01f8566d08b09"}}}],"refundcoinoutput":{"value":"99999476000000000","condition":{"type":1,"data":{"unlockhash":"011c17aaf2d54f63644f9ce91c06ff984182483d1b943e96b5e77cc36fdb887c846b60460bceb0"}}}}}'
+    tx = TransactionFactory.from_json(json_input)
+    assert tx.version == ERC20_CONVERSION_TRANSACTION_VERSION
+    assert tx.json == json.loads(json_input)
+    assert len(tx.coin_inputs) == 1
+    assert tx.coin_inputs[0].json == {"parentid":"9c61ec964105ec48bc95ffc0ac820ada600a2914a8dd4ef511ed7f218a3bf469","fulfillment":{"type":1,"data":{"publickey":"ed25519:7469d51063cdb690cc8025db7d28faadc71ff69f7c372779bf3a1e801a923e02","signature":"a0c683e8728710b4d3cd7eed4e1bd38a4be8145a2cf91b875986870aa98c6265d76cbb637d78500010e3ab1b651e31ab26b05de79938d7d0aee01f8566d08b09"}}}
+    assert len(tx.coin_outputs) == 1
+    assert tx.coin_outputs[0].json == {"value":"99999476000000000","condition":{"type":1,"data":{"unlockhash":"011c17aaf2d54f63644f9ce91c06ff984182483d1b943e96b5e77cc36fdb887c846b60460bceb0"}}}
+
+def test_transactionv209_load_dump_json():
+    # load and dump a valid v209 tx from tfchain Go devnet
+    json_input = '{"version":209,"data":{"address":"01f68299b26a89efdb4351a61c3a062321d23edbc1399c8499947c1313375609adbbcd3977363c","value":"100000000000","txfee":"1000000000","bridgefee":"50000000000","txid":"0000000000000000000000000000000000000000000000000000000000000000"}}'
+    tx = TransactionFactory.from_json(json_input)
+    assert tx.version == ERC20_COIN_CREATION_TRANSACTION_VERSION
+    assert tx.json == json.loads(json_input)
+    assert len(tx.coin_inputs) == 0
+    assert len(tx.coin_outputs) == 1
+    assert tx.coin_outputs[0].json == {'value': '100000000000', 'condition': {'type': 1, 'data': {'unlockhash': '01f68299b26a89efdb4351a61c3a062321d23edbc1399c8499947c1313375609adbbcd3977363c'}}}
+
+def test_transactionv210_load_dump_json():
+    # load and dump a valid v210 tx from tfchain Go devnet
+    json_input = '{"version":210,"data":{"pubkey":"ed25519:a271b9d4c1258f070e1e8d95250e6d29f683649829c2227564edd5ddeb75819d","tftaddress":"01b49da2ff193f46ee0fc684d7a6121a8b8e324144dffc7327471a4da79f1730960edcb2ce737f","erc20address":"828de486adc50aa52dab52a2ec284bcac75be211","signature":"fe13823a96928a573f20a63f3b8d3cde08c506fa535d458120fdaa5f1c78f6939c81bf91e53393130fbfee32ff4e9cb6022f14ae7750d126a7b6c0202c674b02","regfee":"10000000000","txfee":"1000000000","coininputs":[{"parentid":"a3c8f44d64c0636018a929d2caeec09fb9698bfdcbfa3a8225585a51e09ee563","fulfillment":{"type":1,"data":{"publickey":"ed25519:d285f92d6d449d9abb27f4c6cf82713cec0696d62b8c123f1627e054dc6d7780","signature":"4fe14adcbded85476680bfd4fa8ff35d51ac34bb8a9b3f4904eac6eee4f53e19b6a39c698463499b9961524f026db2fb5c8173307f483c6458d401ecec2e7a0c"}}}],"refundcoinoutput":{"value":"99999999000000000","condition":{"type":1,"data":{"unlockhash":"01370af706b547dd4e562a047e6265d7e7750771f9bff633b1a12dbd59b11712c6ef65edb1690d"}}}}}'
+    tx = TransactionFactory.from_json(json_input)
+    assert tx.version == ERC20_ADDRESS_REGISTRATION_TRANSACTION_VERSION
+    assert tx.json == json.loads(json_input)
+    assert len(tx.coin_inputs) == 1
+    assert tx.coin_inputs[0].json == {"parentid":"a3c8f44d64c0636018a929d2caeec09fb9698bfdcbfa3a8225585a51e09ee563","fulfillment":{"type":1,"data":{"publickey":"ed25519:d285f92d6d449d9abb27f4c6cf82713cec0696d62b8c123f1627e054dc6d7780","signature":"4fe14adcbded85476680bfd4fa8ff35d51ac34bb8a9b3f4904eac6eee4f53e19b6a39c698463499b9961524f026db2fb5c8173307f483c6458d401ecec2e7a0c"}}}
+    assert len(tx.coin_outputs) == 1
+    assert tx.coin_outputs[0].json == {"value":"99999999000000000","condition":{"type":1,"data":{"unlockhash":"01370af706b547dd4e562a047e6265d7e7750771f9bff633b1a12dbd59b11712c6ef65edb1690d"}}}
