@@ -395,11 +395,9 @@ class TransactionV1:
         self._minerfees.append(minerfee)
 
 
-    def get_input_signature_hash(self, input_index, extra_objects=None):
+    def get_input_signature_hash(self, extra_objects=None):
         """
         Builds a signature hash for an input
-
-        @param input_index: Index of the input we will get signature hash for
         """
         if extra_objects is None:
             extra_objects = []
@@ -407,8 +405,6 @@ class TransactionV1:
         buffer = bytearray()
         # encode the transaction version
         buffer.extend(self._version)
-        # encode the input index
-        buffer.extend(binary.encode(input_index))
 
         # encode extra objects if exists
         for extra_object in extra_objects:
@@ -594,7 +590,7 @@ class TransactionV128:
         self._minerfees.append(minerfee)
 
 
-    def get_input_signature_hash(self, input_index, extra_objects=None):
+    def get_input_signature_hash(self, extra_objects=None):
         """
         Builds a signature hash for an input
         """
@@ -765,11 +761,9 @@ class TransactionV129:
         """
         self._minerfees.append(minerfee)
 
-    def get_input_signature_hash(self, input_index, extra_objects=None):
+    def get_input_signature_hash(self, extra_objects=None):
         """
         Builds a signature hash for an input
-
-        @param input_index: ignored
         """
         if extra_objects is None:
             extra_objects = []
@@ -980,11 +974,9 @@ class TransactionV144:
         condition = UnlockHashCondition(unlockhash=unlockhash)
         self._refund_coin_output = CoinOutput(value=value, condition=condition)
 
-    def get_input_signature_hash(self, input_index, extra_objects=None):
+    def get_input_signature_hash(self, extra_objects=None):
         """
         Builds a signature hash for an input
-
-        @param input_index: Index of the input we will get signature hash for
         """
         if extra_objects is None:
             extra_objects = []
@@ -1246,11 +1238,9 @@ class TransactionV145:
         condition = UnlockHashCondition(unlockhash=unlockhash)
         self._refund_coin_output = CoinOutput(value=value, condition=condition)
 
-    def get_input_signature_hash(self, input_index, extra_objects=None):
+    def get_input_signature_hash(self, extra_objects=None):
         """
         Builds a signature hash for an input
-
-        @param input_index: Index of the input we will get signature hash for
         """
         if extra_objects is None:
             extra_objects = []
@@ -1467,11 +1457,9 @@ class TransactionV146:
         condition = UnlockHashCondition(unlockhash=unlockhash)
         self._refund_coin_output = CoinOutput(value=value, condition=condition)
 
-    def get_input_signature_hash(self, input_index, extra_objects=None):
+    def get_input_signature_hash(self, extra_objects=None):
         """
         Builds a signature hash for an input
-
-        @param input_index: Index of the input we will get signature hash for
         """
         if extra_objects is None:
             extra_objects = []
@@ -1584,7 +1572,7 @@ def sign_bot_transaction(transaction, public_key, secret_key):
 
 class TransactionV208:
     """
-    TransactionV208 defines the decoding logic for
+    TransactionV208 defines the complete logic for
     an ERC20 Conversion Transaction (v208).
 
     Creation of this Transaction from the JS API is not supported,
@@ -1596,6 +1584,7 @@ class TransactionV208:
         """
         Initializes a new v208 tansaction
         """
+        self._specifier = bytearray(b"erc20 convert tx")
         self._coin_inputs = []
         self._refund_coin_output = None
         self._tx_fee = None
@@ -1699,6 +1688,70 @@ class TransactionV208:
             self._refund_coin_output = co
         else:
             self._refund_coin_output = None
+
+    def add_coin_input(self, parent_id, pub_key):
+        """
+        Adds a new input to the transaction
+        """
+        key = Ed25519PublicKey(pub_key=pub_key)
+        fulfillment = SingleSignatureFulfillment(pub_key=key)
+        self._coin_inputs.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
+
+    def set_transaction_fee(self, txfee):
+        self._tx_fee = txfee
+    
+    def set_erc20_output(self, address, value):
+        self._erc20_address = address
+        self._erc20_value = value
+
+    def set_refund_coin_output(self, value, recipient):
+        """
+        Set a coin output as refund coin output of this tx
+
+        @param value: Amout of coins
+        @param recipient: The recipient address
+        """
+        unlockhash = UnlockHash.from_string(recipient)
+        condition = UnlockHashCondition(unlockhash=unlockhash)
+        self._refund_coin_output = CoinOutput(value=value, condition=condition)
+
+    def get_input_signature_hash(self, extra_objects=None):
+        """
+        Builds a signature hash for an input
+        """
+        if extra_objects is None:
+            extra_objects = []
+        buffer = bytearray()
+        # encode the transaction version
+        buffer.extend(tfbinary.IntegerBinaryEncoder.encode(self.version))
+        # encode the specifier
+        buffer.extend(self._specifier)
+        # encode the ERC20 output
+        buffer.extend(tfbinary.BinaryEncoder.encode(self._erc20_address, type_='hex'))
+        buffer.extend(tfbinary.BinaryEncoder.encode(int(self._erc20_value), type_='currency'))
+
+        # extra objects if any
+        for extra_object in extra_objects:
+            buffer.extend(tfbinary.BinaryEncoder.encode(extra_object))
+
+        # encode the number of coins inputs
+        buffer.extend(tfbinary.IntegerBinaryEncoder.encode(len(self._coin_inputs), _kind='int'))
+        # encode inputs parent_ids
+        for coin_input in self._coin_inputs:
+            buffer.extend(tfbinary.BinaryEncoder.encode(coin_input.parent_id, type_='hex'))
+
+        # encode transaction fee
+        buffer.extend(tfbinary.BinaryEncoder.encode(self._tx_fee, type_='currency'))
+        # encode refund coin output
+        if self._refund_coin_output:
+            buffer.extend([1])
+            buffer.extend(tfbinary.BinaryEncoder.encode(self._refund_coin_output))
+        else:
+            buffer.extend([0])
+
+        # now we need to return the hash value of the binary array
+        # return bytes(buffer)
+        return hash(data=buffer)
 
 
 class TransactionV209:
@@ -2040,6 +2093,17 @@ class CoinOutput:
         result = bytearray()
         result.extend(binary.encode(self._value, type_='currency'))
         result.extend(binary.encode(self._condition))
+        return result
+
+
+    @property
+    def rivbinary(self):
+        """
+        Returns a rivine-binary encoded version of the CoinOutput
+        """
+        result = bytearray()
+        result.extend(tfbinary.BinaryEncoder.encode(self._value, type_='currency'))
+        result.extend(tfbinary.BinaryEncoder.encode(self._condition))
         return result
 
 

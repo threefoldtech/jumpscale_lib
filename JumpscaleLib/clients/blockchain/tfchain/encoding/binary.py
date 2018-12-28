@@ -35,7 +35,7 @@ class BinaryEncoder:
             nbytes, rem = divmod(value.bit_length(), 8)
             if rem:
                 nbytes += 1
-            result.extend(BinaryEncoder.encode(nbytes))
+            result.extend(SliceBinaryEncoder.encode_length(nbytes))
             result.extend(value.to_bytes(nbytes, byteorder='big'))
         elif type_ == 'hex':
             result.extend(bytearray.fromhex(value))
@@ -45,7 +45,8 @@ class BinaryEncoder:
             if value_type in (bytes, bytearray):
                 result.extend(value)
             elif value_type is int:
-                result = IntegerBinaryEncoder.encode(value)
+                # default to int, as python has no specific int types to fall back to
+                result = IntegerBinaryEncoder.encode(value, _kind='int')
             elif value_type is bool:
                 result = bytearray([1]) if value else bytearray([0])
             elif value_type in (list, set, tuple, frozenset):
@@ -53,10 +54,10 @@ class BinaryEncoder:
                     result.extend(BinaryEncoder.encode(item))
             elif value_type is str:
                 result = SliceBinaryEncoder.encode(value)
-            elif hasattr(value, 'binary'):
-                    result.extend(value.binary)
+            elif hasattr(value, 'rivbinary'):
+                result.extend(value.rivbinary)
             else:
-                raise ValueError('Cannot binary encode value with unknown type')
+                raise ValueError('Cannot binary encode ({}) value with unknown type {}'.format(type(value), type_))
         else:
             raise ValueError('Cannot binary encode value with unknown type')
         return result
@@ -99,6 +100,8 @@ class SliceBinaryEncoder:
         result.extend(SliceBinaryEncoder.encode_length(length))
         if type(value) is str:
             result.extend(value.encode('utf-8'))
+        elif type(value) in (bytes, bytearray):
+            result.extend(value)
         else:
             # encode the content of the slice
             for item in value:

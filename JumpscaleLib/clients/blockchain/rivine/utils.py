@@ -31,7 +31,8 @@ def hash(data, encoding_type=None):
     @returns: Hashed value of the input data
     """
     binary_data = binary.encode(data, type_=encoding_type)
-    return blake2b(binary_data, digest_size=HASH_SIZE).digest()
+    h = blake2b(binary_data, digest_size=HASH_SIZE).digest()
+    return h
 
 
 def locktime_from_duration(duration):

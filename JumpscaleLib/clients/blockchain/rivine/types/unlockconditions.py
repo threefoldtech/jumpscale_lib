@@ -3,6 +3,7 @@ Unlockconditions module
 """
 
 from JumpscaleLib.clients.blockchain.rivine.encoding import binary
+from JumpscaleLib.clients.blockchain.tfchain.encoding import binary as tfbinary
 from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
 from JumpscaleLib.clients.blockchain.rivine.types.signatures import SiaPublicKeyFactory, Ed25519PublicKey
 
@@ -79,8 +80,10 @@ class BaseFulFillment:
         """
         if self._signature:
             return
-        sig_hash = sig_ctx['transaction'].get_input_signature_hash(input_index=sig_ctx['input_idx'],
-                                                                    extra_objects=self._extra_objects)
+        extraobjs = [sig_ctx['input_idx']]
+        if self._extra_objects:
+            extraobjs.extend(self._extra_objects)
+        sig_hash = sig_ctx['transaction'].get_input_signature_hash(extra_objects=extraobjs)
         self._signature = sig_ctx['secret_key'].sign(sig_hash)
 
 
@@ -118,8 +121,7 @@ class MultiSignatureFulfillment:
         """
         pk = sig_ctx['secret_key'].get_verifying_key()
         public_key = Ed25519PublicKey(pub_key=pk.to_bytes())
-        sig_hash = sig_ctx['transaction'].get_input_signature_hash(input_index=sig_ctx['input_idx'],
-                                                                    extra_objects=[public_key])
+        sig_hash = sig_ctx['transaction'].get_input_signature_hash(extra_objects=[sig_ctx['input_idx'], public_key])
         signature = sig_ctx['secret_key'].sign(sig_hash)
         self.add_signature_pair(public_key=public_key,
                                 signature=signature)
@@ -250,15 +252,28 @@ class MultiSignatureCondition:
         """
         Returns a binary encoded versoin of the MultiSignatureCondition
         """
+        return self._binary(binary)
+
+
+    @property
+    def rivbinary(self):
+        """
+        Returns a rivine-binary encoded versoin of the MultiSignatureCondition
+        """
+        return self._binary(tfbinary.BinaryEncoder)
+
+
+    def _binary(self, encoder):
         result = bytearray()
         result.extend(self._type)
         condition_binary = bytearray()
-        condition_binary.extend(binary.encode(self._min_nr_sig))
-        condition_binary.extend(binary.encode(len(self._unlockhashes)))
+        condition_binary.extend(encoder.encode(self._min_nr_sig))
+        condition_binary.extend(encoder.encode(len(self._unlockhashes)))
         for unlockhash in self._unlockhashes:
-            condition_binary.extend(binary.encode(UnlockHash.from_string(unlockhash)))
+            condition_binary.extend(encoder.encode(UnlockHash.from_string(unlockhash)))
         result.extend(binary.encode(condition_binary, type_='slice'))
         return result
+
 
 
     @property
@@ -298,20 +313,30 @@ class AtomicSwapCondition:
         self._locktime = locktime
         self._type = ATOMICSWAP_CONDITION_TYPE
 
-
     @property
     def binary(self):
         """
         Returns a binary encoded versoin of the AtomicSwapCondition
         """
+        return self._binary(binary)
+
+
+    @property
+    def rivbinary(self):
+        """
+        Returns a rivine-binary encoded versoin of the AtomicSwapCondition
+        """
+        return self._binary(tfbinary.BinaryEncoder)
+
+    def _binary(self, encoder):
         result = bytearray()
         result.extend(self._type)
         # 106 size of the atomicswap condition in binary form
-        result.extend(binary.encode(106))
-        result.extend(binary.encode(UnlockHash.from_string(self._sender)))
-        result.extend(binary.encode(UnlockHash.from_string(self._reciever)))
-        result.extend(binary.encode(self._hashed_secret, type_='hex'))
-        result.extend(binary.encode(self._locktime))
+        result.extend(encoder.encode(106))
+        result.extend(encoder.encode(UnlockHash.from_string(self._sender)))
+        result.extend(encoder.encode(UnlockHash.from_string(self._reciever)))
+        result.extend(encoder.encode(self._hashed_secret, type_='hex'))
+        result.extend(encoder.encode(self._locktime))
 
         return result
 
@@ -362,20 +387,31 @@ class LockTimeCondition:
         self._type = bytearray([3])
 
 
-
     @property
     def binary(self):
         """
         Returns a binary encoded versoin of the LockTimeCondition
         """
+        return self._binary(binary)
+
+
+    @property
+    def rivbinary(self):
+        """
+        Returns a rivine-binary encoded versoin of the LockTimeCondition
+        """
+        return self._binary(tfbinary.BinaryEncoder)
+
+
+    def _binary(self, encoder):
         result = bytearray()
         result.extend(self._type)
         # encode the length of all properties: len(locktime) = 8 + len(binary(condition)) - 8
         # the -8 in the above statement is due to the fact that we do not need to include the length of the interal condition's data
-        result.extend(binary.encode(len(self._condition.binary)))
-        result.extend(binary.encode(self._locktime))
+        result.extend(encoder.encode(len(self._condition.binary)))
+        result.extend(encoder.encode(self._locktime))
         result.extend(self._condition.type)
-        result.extend(binary.encode(self._condition.data))
+        result.extend(encoder.encode(self._condition.data))
         return result
 
 
@@ -414,8 +450,6 @@ class UnlockHashCondition:
         """
         self._unlockhash = unlockhash
         self._type = bytearray([1])
-        self._unlockhash_size = 33
-
 
 
     @property
@@ -437,13 +471,24 @@ class UnlockHashCondition:
     @property
     def binary(self):
         """
-        Returns a binary encoded version of the unlockhashcondition
+        Returns a binary encoded versoin of the unlockhashcondition
         """
+        return self._binary(binary)
+
+
+    @property
+    def rivbinary(self):
+        """
+        Returns a rivine-binary encoded versoin of the unlockhashcondition
+        """
+        return self._binary(tfbinary.BinaryEncoder)
+
+
+    def _binary(self, encoder):
         result = bytearray()
         result.extend(self._type)
         # add the size of the unlockhash
-        result.extend(binary.encode(self._unlockhash_size))
-        result.extend(binary.encode(self._unlockhash))
+        result.extend(encoder.encode(self._unlockhash.binary, type_='slice'))
         return result
 
 

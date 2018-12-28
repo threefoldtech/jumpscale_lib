@@ -68,9 +68,13 @@ class NetworkAddress:
         return str(self)
 
     @property
-    def binary(self):
+    def rivbinary(self):
         bs = bytearray()
         length = len(self._address)
         bs.extend(binary.IntegerBinaryEncoder.encode(self._type|(length<<2), _kind='uint8'))
         bs.extend(self._address)
         return bs
+
+    @property
+    def binary(self):
+        return self.rivbinary

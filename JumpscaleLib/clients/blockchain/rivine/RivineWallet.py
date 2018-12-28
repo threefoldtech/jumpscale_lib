@@ -27,7 +27,8 @@ from Jumpscale import j
 from JumpscaleLib.clients.blockchain.rivine import utils, txutils
 from JumpscaleLib.clients.blockchain.rivine.atomicswap.atomicswap import AtomicSwapManager
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory,\
-        DEFAULT_TRANSACTION_VERSION, CoinOutput, DEFAULT_MINERFEE, sign_bot_transaction, FlatMoneyTransaction
+        DEFAULT_TRANSACTION_VERSION, CoinOutput, DEFAULT_MINERFEE, sign_bot_transaction, FlatMoneyTransaction,\
+        TransactionV208
 from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
 from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import UnlockCondtionFactory,\
         MULTISIG_CONDITION_TYPE, MultiSignatureFulfillment, SingleSignatureFulfillment
@@ -375,12 +376,13 @@ class RivineWallet:
         return utils.get_unconfirmed_transactions(self._bc_networks, format_inputs=format_inputs)
 
 
+    # TODO: this method contains tfchain-specific functions, should really move to tfchain-specific lib/client
     def send_money(self, amount, recipient, data=None, data_type=0, locktime=None):
         """
         Sends TFT tokens from the user's wallet to the recipient address
 
         @param amount: Amount to be transfered in TF tokens
-        @param recipient: Address of the fund recipient
+        @param recipient: Address of the fund recipient (TFT or ERC20 Address)
         @param data: Custom data to be sent with the transaction
         @param locktime: Identifies the height or timestamp until which this transaction is locked
         """
@@ -388,12 +390,18 @@ class RivineWallet:
             data = binary.encode(data)
         # convert amount to hastings
         amount = int(amount * HASTINGS_TFT_VALUE)
-        transaction = self._create_transaction(amount=amount,
-                                                recipient=recipient,
-                                                sign_transaction=True,
-                                                data=data,
-                                                data_type=data_type,
-                                                locktime=locktime)
+        transaction = None
+        if len(recipient) == 78:
+            transaction = self._create_transaction(amount=amount,
+                                                    recipient=recipient,
+                                                    sign_transaction=True,
+                                                    data=data,
+                                                    data_type=data_type,
+                                                    locktime=locktime)
+        elif len(recipient) == 40:
+            transaction = self._create_erc20_conversion_transaction(amount=amount, recipient=recipient, sign_transaction=True)
+        else:
+            raise ValueError("invalid recipient input parameter")
         self._commit_transaction(transaction=transaction)
         return transaction
 
@@ -622,6 +630,39 @@ class RivineWallet:
 
         # add minerfee to the transaction
         transaction.add_minerfee(minerfee)
+
+        if sign_transaction:
+            # sign the transaction
+            self._sign_transaction(transaction)
+
+        return transaction
+    
+    def _create_erc20_conversion_transaction(self, amount, recipient, sign_transaction=True):
+        """
+        TODO: move to tfchain-specific lib/client
+        """
+        transaction = TransactionV208()
+
+        input_results, used_addresses, minerfee, remainder = self._get_inputs(amount=amount)
+        for input_result in input_results:
+            transaction.add_coin_input(**input_result)
+
+        for txn_input in transaction.coin_inputs:
+            if used_addresses[txn_input.parent_id] not in self._keys:
+            # if self._unspent_coin_outputs[txn_input.parent_id][ulh] not in self._keys:
+                raise NonExistingOutputError('Trying to spend unexisting output')
+
+        transaction.set_erc20_output(recipient, amount)
+
+        # we need to check if the sum of the inputs is more than the required fund and if so, we need
+        # to send the remainder back to the original user
+        if remainder > 0:
+            # we have leftover fund, so we create new transaction, and pick on user key that is not used
+            if self.addresses:
+                transaction.set_refund_coin_output(value=remainder, recipient=self.addresses[0])
+
+        # add minerfee to the transaction
+        transaction.set_transaction_fee(minerfee)
 
         if sign_transaction:
             # sign the transaction

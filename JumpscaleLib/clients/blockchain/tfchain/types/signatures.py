@@ -86,7 +86,7 @@ class SiaPublicKey:
         return key_value
 
     @property
-    def rivine_binary(self):
+    def rivbinary(self):
         """
         Encodes the public key into (rivine) binary format
         """
@@ -114,6 +114,6 @@ class SiaPublicKey:
 
     @property
     def unlock_hash(self):
-        encoded_pub_key = self.rivine_binary
+        encoded_pub_key = self.rivbinary
         hash = utils.hash(encoded_pub_key, encoding_type='slice')
         return UnlockHash(unlock_type=UNLOCK_TYPE_PUBKEY, hash=hash)
