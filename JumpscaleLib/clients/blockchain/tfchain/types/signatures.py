@@ -44,6 +44,13 @@ class SiaPublicKeySpecifier(IntEnum):
         """
         Encodes the public key specifier into binary format
         """
+        return self.rivbinary
+    
+    @property
+    def rivbinary(self):
+        """
+        Encodes the public key specifier into binary format
+        """
         return binary.IntegerBinaryEncoder.encode(self)
 
     @property
@@ -78,11 +85,11 @@ class SiaPublicKey:
     @property
     def binary(self):
         """
-        Encodes the public key into binary format
+        Encodes the public key into (sia) binary format
         """
         key_value = bytearray()
-        key_value.extend(binary.IntegerBinaryEncoder.encode(self._algorithm, _kind='uint8'))
-        key_value.extend(self._pub_key)
+        key_value.extend(self._algorithm.binary_specifier)
+        key_value.extend(rbinary.encode(self._pub_key, type_='slice'))
         return key_value
 
     @property
@@ -91,9 +98,10 @@ class SiaPublicKey:
         Encodes the public key into (rivine) binary format
         """
         key_value = bytearray()
-        key_value.extend(self._algorithm.binary_specifier)
-        key_value.extend(rbinary.encode(self._pub_key, type_='slice'))
+        key_value.extend(binary.IntegerBinaryEncoder.encode(self._algorithm, _kind='uint8'))
+        key_value.extend(self._pub_key)
         return key_value
+
     
     def __str__(self):
         return "{}:{}".format(str(self._algorithm), self._pub_key.hex())
@@ -114,6 +122,6 @@ class SiaPublicKey:
 
     @property
     def unlock_hash(self):
-        encoded_pub_key = self.rivbinary
+        encoded_pub_key = self.binary
         hash = utils.hash(encoded_pub_key, encoding_type='slice')
         return UnlockHash(unlock_type=UNLOCK_TYPE_PUBKEY, hash=hash)

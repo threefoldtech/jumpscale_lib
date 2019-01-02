@@ -69,8 +69,6 @@ class BaseFulFillment:
             }
         }
 
-
-
     def sign(self, sig_ctx):
         """
         Sign the given fulfillment, which is to be done after all properties have been filled of the parent transaction.
@@ -80,7 +78,7 @@ class BaseFulFillment:
         """
         if self._signature:
             return
-        extraobjs = [sig_ctx['input_idx']]
+        extraobjs = sig_ctx['extra_objects']
         if self._extra_objects:
             extraobjs.extend(self._extra_objects)
         sig_hash = sig_ctx['transaction'].get_input_signature_hash(extra_objects=extraobjs)
@@ -121,7 +119,7 @@ class MultiSignatureFulfillment:
         """
         pk = sig_ctx['secret_key'].get_verifying_key()
         public_key = Ed25519PublicKey(pub_key=pk.to_bytes())
-        sig_hash = sig_ctx['transaction'].get_input_signature_hash(extra_objects=[sig_ctx['input_idx'], public_key])
+        sig_hash = sig_ctx['transaction'].get_input_signature_hash(extra_objects=[sig_ctx['extra_objects'], public_key])
         signature = sig_ctx['secret_key'].sign(sig_hash)
         self.add_signature_pair(public_key=public_key,
                                 signature=signature)

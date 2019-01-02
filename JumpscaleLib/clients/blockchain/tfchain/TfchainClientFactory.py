@@ -8,17 +8,20 @@ import sys
 import requests
 
 from JumpscaleLib.clients.blockchain.rivine import utils
+from JumpscaleLib.clients.blockchain.rivine import RivineWallet
 from JumpscaleLib.clients.blockchain.tfchain.TfchainClient import TfchainClient
 from JumpscaleLib.clients.blockchain.tfchain.TfchainNetwork import TfchainNetwork
 from JumpscaleLib.clients.blockchain.tfchain.errors import NoExplorerNetworkAddresses
 from JumpscaleLib.clients.blockchain.rivine.errors import RESTAPIError
 from JumpscaleLib.clients.blockchain.tfchain.TfchainThreeBotClient import TfchainThreeBotClient
-from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory
 from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory,\
-        TransactionV128, TransactionV129, TransactionSummary, FlatMoneyTransaction
+        TransactionV128, TransactionV129, TransactionV210, TransactionSummary, FlatMoneyTransaction
 from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import UnlockHashCondition,\
         LockTimeCondition, MultiSignatureCondition, UnlockCondtionFactory
 from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
+from JumpscaleLib.clients.blockchain.tfchain.types import signatures as tftsig
+from JumpscaleLib.clients.blockchain.rivine.const import HASTINGS_TFT_VALUE
+from JumpscaleLib.clients.blockchain.tfchain import const as tfconst
 
 from JumpscaleLib.clients.blockchain.rivine.errors import WalletAlreadyExistsException
 
@@ -219,3 +222,32 @@ class TfchainClientFactory(JSConfigBaseFactory):
         if locktime is not None:
             condition = LockTimeCondition(condition=condition, locktime=locktime)
         return condition
+
+    def register_erc20_address(self, wallet, public_key=None):
+        # create the tx and fill the easiest properties already
+        tx = TransactionV210()
+
+        if not public_key:
+            key = wallet.generate_key()
+            public_key = key.public_key
+        pk = tftsig.SiaPublicKey(tftsig.SiaPublicKeySpecifier.ED25519, public_key)
+        tx.set_erc20_public_key(pubkey=pk)
+
+        # add coin inputs for miner fees (implicitly computed) and required bot fees
+        regfees = tfconst.ERC20_REGISTRATION_FEE_MULTIPLIER * HASTINGS_TFT_VALUE
+        input_results, used_addresses, minerfee, remainder = wallet._get_inputs(amount=regfees)
+        tx.set_transaction_fee(minerfee)
+        tx.set_registration_fee(regfees)
+        for input_result in input_results:
+            tx.add_coin_input(**input_result)
+        for txn_input in tx.coin_inputs:
+            if used_addresses[txn_input.parent_id] not in wallet._keys:
+                raise RivineWallet.NonExistingOutputError('Trying to spend unexisting output')
+        # optionally add the remainder as a refund coin output
+        if remainder > 0:
+            # TODO: are we sure refunding to first address is always desired?
+            tx.set_refund_coin_output(value=remainder, recipient=wallet.addresses[0])
+
+        # sign and commit the Tx, return the tx ID afterwards
+        wallet.sign_transaction(transaction=tx, commit=True)
+        return tx

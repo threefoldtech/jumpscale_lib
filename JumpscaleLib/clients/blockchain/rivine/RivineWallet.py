@@ -740,6 +740,8 @@ class RivineWallet:
             self._sign_bot_record_update_transaction(transaction, commit=commit)
         elif transaction.version == 146:
             self._sign_bot_name_transfer_transaction(transaction, commit=commit)
+        elif transaction.version == 210:
+            self._sign_erc20_address_registration_transaction(transaction, commit=commit)
         else:
             raise RuntimeError("Can't sign unknown transaction version")
 
@@ -803,7 +805,7 @@ class RivineWallet:
             key = self._keys[muc._unlockhash]
             ctx = {
                 'secret_key': key.secret_key,
-                'input_idx': 0,
+                'extra_objects': [0],
                 'transaction': transaction
             }
             transaction.mint_fulfillment.sign(ctx)
@@ -872,6 +874,30 @@ class RivineWallet:
             transaction.set_receiver_signature(sign_bot_transaction(transaction, receiver_pub_key, key.secret_key))
         # commit if desired
         if commit and bots_signed == 2:
+            self._commit_transaction(transaction=transaction)
+    
+    def _sign_erc20_address_registration_transaction(self, transaction, commit=False):
+        """
+        Signs an ERC20 Address Registration transaction and optionally push it to the chain
+        @param transaction: A transactionV146 object to sign
+        @param commit: if True, the transaction will be pushed after signing
+        """
+        # sign coin inputs
+        self._sign(transaction, commit=False) # but do not commit (yet)
+        # sign transaction using the given public key
+        uh = str(transaction.erc20_public_key.unlock_hash)
+        if uh in self._keys:
+            key = self._keys[uh]
+            sig_ctx = {
+                'extra_objects': [bytearray(b"registration")],
+                'transaction': transaction,
+                'secret_key': key.secret_key
+            }
+            fulfillment = SingleSignatureFulfillment(pub_key=transaction.erc20_public_key)
+            fulfillment.sign(sig_ctx=sig_ctx)
+            transaction.set_erc20_signature(signature=fulfillment._signature.hex())
+        # commit if desired
+        if commit:
             self._commit_transaction(transaction=transaction)
 
     def _get_public_key_from_bot_id(self, identifier):

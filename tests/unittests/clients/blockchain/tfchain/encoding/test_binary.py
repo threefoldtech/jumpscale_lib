@@ -32,8 +32,8 @@ def test_encode_slice():
             'expected_result': bytearray(b'\x00')
         },
         {
-            'value': [1, 2, 3],
-            'expected_result': bytearray(b'\x06\x01\x02\x03')
+            'value': [False, True, False],
+            'expected_result': bytearray(b'\x06\x00\x01\x00')
         },
     ]
 

@@ -143,23 +143,10 @@ def collect_transaction_outputs(current_height, address, transactions, unconfirm
         unconfirmed_txs = []
     for txn_info in transactions:
         rawtxn = txn_info.get('rawtransaction', {})
-        version = rawtxn.get('version', 1)
-        coinoutputs = []
-        unlockhashes = txn_info.get('coinoutputunlockhashes', [])
-        if version >= 144 and version <= 146: # TODO: Remove HACK as it is only here until we fixed 3Bot transactions!!
-            txn = TransactionFactory.from_json(json.dumps(rawtxn))
-            payout_output = {
-                'value': txn.required_bot_fees,
-                'unlockhash': unlockhashes[0] # TODO: remove this dirty HACK, for now it will work as it mimics v0 Txn outputs
-            }
-            # 3Bot fee payout is not supported for now,
-            # only the refund output
-            coinoutputs = [payout_output]
-            refundco = rawtxn.get('data', {}).get('refundcoinoutput', None)
-            if refundco:
-                coinoutputs.append(refundco)
-        else:
-            coinoutputs = rawtxn.get('data', {}).get('coinoutputs', [])
+        tx = TransactionFactory.from_dict(rawtxn)
+        # hack to not have to change too much of the codebase for now,
+        # ideally this works with the Python object though
+        coinoutputs = [co.json for co in tx.coin_outputs] 
         if coinoutputs:
             for index, utxo in enumerate(coinoutputs):
                 condition_ulh = get_unlockhash_from_output(output=utxo, address=address, current_height=current_height)
@@ -191,23 +178,10 @@ def collect_transaction_outputs(current_height, address, transactions, unconfirm
     # Add unconfirmed outputs
     for txn_info in unconfirmed_txs:
         rawtxn = txn_info.get('rawtransaction', {})
-        version = rawtxn.get('version', 1)
-        coinoutputs = []
-        unlockhashes = txn_info.get('coinoutputunlockhashes', [])
-        if version >= 144 and version <= 146: # TODO: Remove HACK as it is only here until we fixed 3Bot transactions!!
-            txn = TransactionFactory.from_json(json.dumps(rawtxn))
-            payout_output = {
-                'value': txn.required_bot_fees,
-                'unlockhash': unlockhashes[0] # TODO: remove this dirty HACK, for now it will work as it mimics v0 Txn outputs
-            }
-            # 3Bot fee payout is not supported for now,
-            # only the refund output
-            coinoutputs = [payout_output]
-            refundco = rawtxn.get('data', {}).get('refundcoinoutput', None)
-            if refundco:
-                coinoutputs.append(refundco)
-        else:
-            coinoutputs = rawtxn.get('data', {}).get('coinoutputs', [])
+        tx = TransactionFactory.from_dict(rawtxn)
+        # hack to not have to change too much of the codebase for now,
+        # ideally this works with the Python object though
+        coinoutputs = [co.json for co in tx.coin_outputs]
         if coinoutputs:
             for index, utxo in enumerate(coinoutputs):
                 condition_ulh = get_unlockhash_from_output(output=utxo, address=address, current_height=current_height)

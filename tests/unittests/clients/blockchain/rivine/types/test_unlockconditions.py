@@ -18,7 +18,7 @@ def test_atsf_sign(ed25519_key, spendable_key):
     expected_output = b'Y\xcf5rp\xc5\xf5\xd2\xc2\xeay\xcag\x8d\xb7GB\x7f\x81l\xfa.\xfd\x9aQV\xf2#V&\xb4\x00G\xa3\xd0\xaf\x9bBQ\x02=\xe9\xb7\xcc\x8e\xbaYv"\xd8\x97\x0ec\x01/%\x02_\xa2\xe9\x07\x98:\x04'
     atsf = AtomicSwapFulfillment(pub_key=ed25519_key)
     sig_ctx = {
-        'input_idx': 0,
+        'extra_objects': [0],
         'secret_key': spendable_key.secret_key,
         'transaction': MagicMock(),
     }
@@ -63,7 +63,7 @@ def test_ssf_sign(ed25519_key, spendable_key):
     expected_output = b'Y\xcf5rp\xc5\xf5\xd2\xc2\xeay\xcag\x8d\xb7GB\x7f\x81l\xfa.\xfd\x9aQV\xf2#V&\xb4\x00G\xa3\xd0\xaf\x9bBQ\x02=\xe9\xb7\xcc\x8e\xbaYv"\xd8\x97\x0ec\x01/%\x02_\xa2\xe9\x07\x98:\x04'
     ssf = SingleSignatureFulfillment(pub_key=ed25519_key)
     sig_ctx = {
-        'input_idx': 0,
+        'extra_objects': [0],
         'secret_key': spendable_key.secret_key,
         'transaction': MagicMock(),
     }

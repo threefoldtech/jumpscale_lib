@@ -1561,7 +1561,7 @@ def sign_bot_transaction(transaction, public_key, secret_key):
     Sign the pair using the secret key and fulfillment
     """
     sig_ctx = {
-        'input_idx': 0,
+        'extra_objects': [0],
         'transaction': transaction,
         'secret_key': secret_key
     }
@@ -1879,7 +1879,7 @@ class TransactionV209:
 
 class TransactionV210:
     """
-    TransactionV210 defines the decoding logic for
+    TransactionV210 defines the decoding and signing logic for
     an ERC20 Address Registration Transaction (v210).
 
     Creation of this Transaction from the JS API is not supported,
@@ -1895,11 +1895,12 @@ class TransactionV210:
         self._refund_coin_output = None
         self._tx_fee = None
         self._erc20_reg_fee = None
-        self._erc20_pub_key = ''
+        self._erc20_pub_key = None
         self._erc20_tft_adddress = ''
         self._erc20_address = ''
         self._erc20_signature = ''
         self._id = None
+        self._specifier = bytearray(b"erc20 addrreg tx")
 
     @property
     def version(self):
@@ -1967,7 +1968,7 @@ class TransactionV210:
         result = {
             'version': self.version,
             'data': {
-                'pubkey': self._erc20_pub_key or '',
+                'pubkey': self._erc20_pub_key.json if self._erc20_pub_key else '',
                 'tftaddress': self._erc20_tft_adddress or '',
                 'erc20address': self._erc20_address or '',
                 'signature': self._erc20_signature or '',
@@ -1984,7 +1985,9 @@ class TransactionV210:
         """
         Populates this TransactionV210 object from a data (JSON-decoded) dictionary
         """
-        self._erc20_pub_key = data.get('pubkey', '')
+        self._erc20_pub_key = data.get('pubkey', None)
+        if self._erc20_pub_key:
+            self._erc20_pub_key = tftsig.SiaPublicKey.from_string(self._erc20_pub_key)
         self._erc20_tft_adddress = data.get('tftaddress', '')
         self._erc20_address = data.get('erc20address', '')
         self._erc20_signature = data.get('signature', '')
@@ -2007,6 +2010,81 @@ class TransactionV210:
             self._refund_coin_output = co
         else:
             self._refund_coin_output = None
+
+    def add_coin_input(self, parent_id, pub_key):
+        """
+        Adds a new input to the transaction
+        """
+        key = Ed25519PublicKey(pub_key=pub_key)
+        fulfillment = SingleSignatureFulfillment(pub_key=key)
+        self._coin_inputs.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
+
+    def set_transaction_fee(self, fee):
+        self._tx_fee = fee
+    
+    def set_registration_fee(self, fee):
+        self._erc20_reg_fee = fee
+
+    @property
+    def erc20_public_key(self):
+        return self._erc20_pub_key
+
+    def set_erc20_public_key(self, pubkey):
+        self._erc20_pub_key = pubkey
+    
+    def set_erc20_signature(self, signature):
+        self._erc20_signature = signature
+
+    def set_refund_coin_output(self, value, recipient):
+        """
+        Set a coin output as refund coin output of this tx
+
+        @param value: Amout of coins
+        @param recipient: The recipient address
+        """
+        unlockhash = UnlockHash.from_string(recipient)
+        condition = UnlockHashCondition(unlockhash=unlockhash)
+        self._refund_coin_output = CoinOutput(value=value, condition=condition)
+
+    def get_input_signature_hash(self, extra_objects=None):
+        """
+        Builds a signature hash for an input
+        """
+        if extra_objects is None:
+            extra_objects = []
+        buffer = bytearray()
+        # encode the transaction version
+        buffer.extend(tfbinary.IntegerBinaryEncoder.encode(self.version))
+        # encode the specifier
+        buffer.extend(self._specifier)
+        # encode the public key
+        buffer.extend(tfbinary.BinaryEncoder.encode(self._erc20_pub_key))
+
+        # extra objects if any
+        for extra_object in extra_objects:
+            buffer.extend(tfbinary.BinaryEncoder.encode(extra_object))
+
+        # encode the number of coins inputs
+        buffer.extend(tfbinary.IntegerBinaryEncoder.encode(len(self._coin_inputs), _kind='int'))
+        # encode inputs parent_ids
+        for coin_input in self._coin_inputs:
+            buffer.extend(tfbinary.BinaryEncoder.encode(coin_input.parent_id, type_='hex'))
+
+        # encode fees
+        buffer.extend(tfbinary.BinaryEncoder.encode(self._erc20_reg_fee, type_='currency'))
+        buffer.extend(tfbinary.BinaryEncoder.encode(self._tx_fee, type_='currency'))
+
+        # encode refund coin output
+        if self._refund_coin_output:
+            buffer.extend([1])
+            buffer.extend(tfbinary.BinaryEncoder.encode(self._refund_coin_output))
+        else:
+            buffer.extend([0])
+
+        # now we need to return the hash value of the binary array
+        # return bytes(buffer)
+        return hash(data=buffer)
+
 
 
 class CoinInput:
@@ -2055,7 +2133,7 @@ class CoinInput:
         Sign the input using the secret key
         """
         sig_ctx = {
-            'input_idx': input_idx,
+            'extra_objects': [input_idx],
             'transaction': transaction,
             'secret_key': secret_key
         }

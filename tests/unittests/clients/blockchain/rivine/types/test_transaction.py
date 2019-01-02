@@ -279,3 +279,10 @@ def test_transactionv210_load_dump_json():
     assert tx.coin_inputs[0].json == {"parentid":"a3c8f44d64c0636018a929d2caeec09fb9698bfdcbfa3a8225585a51e09ee563","fulfillment":{"type":1,"data":{"publickey":"ed25519:d285f92d6d449d9abb27f4c6cf82713cec0696d62b8c123f1627e054dc6d7780","signature":"4fe14adcbded85476680bfd4fa8ff35d51ac34bb8a9b3f4904eac6eee4f53e19b6a39c698463499b9961524f026db2fb5c8173307f483c6458d401ecec2e7a0c"}}}
     assert len(tx.coin_outputs) == 1
     assert tx.coin_outputs[0].json == {"value":"99999999000000000","condition":{"type":1,"data":{"unlockhash":"01370af706b547dd4e562a047e6265d7e7750771f9bff633b1a12dbd59b11712c6ef65edb1690d"}}}
+
+def test_transactionv210_input_sig_hash():
+    # load a valid v210 tx from tfchain Go devnet and create the input sig hash, ensure it is as expected
+    json_input = '{"version":210,"data":{"pubkey":"ed25519:a271b9d4c1258f070e1e8d95250e6d29f683649829c2227564edd5ddeb75819d","tftaddress":"01b49da2ff193f46ee0fc684d7a6121a8b8e324144dffc7327471a4da79f1730960edcb2ce737f","erc20address":"828de486adc50aa52dab52a2ec284bcac75be211","signature":"fe13823a96928a573f20a63f3b8d3cde08c506fa535d458120fdaa5f1c78f6939c81bf91e53393130fbfee32ff4e9cb6022f14ae7750d126a7b6c0202c674b02","regfee":"10000000000","txfee":"1000000000","coininputs":[{"parentid":"a3c8f44d64c0636018a929d2caeec09fb9698bfdcbfa3a8225585a51e09ee563","fulfillment":{"type":1,"data":{"publickey":"ed25519:d285f92d6d449d9abb27f4c6cf82713cec0696d62b8c123f1627e054dc6d7780","signature":"4fe14adcbded85476680bfd4fa8ff35d51ac34bb8a9b3f4904eac6eee4f53e19b6a39c698463499b9961524f026db2fb5c8173307f483c6458d401ecec2e7a0c"}}}],"refundcoinoutput":{"value":"99999999000000000","condition":{"type":1,"data":{"unlockhash":"01370af706b547dd4e562a047e6265d7e7750771f9bff633b1a12dbd59b11712c6ef65edb1690d"}}}}}'
+    tx = TransactionFactory.from_json(json_input)
+    assert tx.version == ERC20_ADDRESS_REGISTRATION_TRANSACTION_VERSION
+    assert tx.get_input_signature_hash().hex() == '50e21f65b48fc1c81847a0169aed4357384c6915e77818e35b1f603ce523b764'

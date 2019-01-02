@@ -251,6 +251,7 @@ def commit_transaction(rivine_explorer_addresses, rivine_explorer_api_password, 
     if res:
         raise BackendError('{} {}'.format(msg, res.text))
     else:
+        logger.debug('error with tx: {} {}'.format(msg, str(data)))
         raise BackendError(msg)
 
 
