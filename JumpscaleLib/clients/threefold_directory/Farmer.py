@@ -38,6 +38,8 @@ class Farmer(object):
         data_types = [string_types]
         self.name = client_support.set_property('name', data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
+        self.email = client_support.set_property('email', data, data_types, False, [], False, True, class_name)
+        data_types = [string_types]
         self.wallet_addresses = client_support.set_property(
             'wallet_addresses', data, data_types, False, [], True, True, class_name)
 
