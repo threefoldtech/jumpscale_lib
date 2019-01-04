@@ -49,7 +49,6 @@ class ETCD(Service):
         """
         return client url
         """
-
         return 'http://{}:{}'.format(self.container.mgmt_addr, CLIENT_PORT)
 
     @property
@@ -57,7 +56,7 @@ class ETCD(Service):
         """
         return peer url
         """
-        return 'http://{}:{}'.format(self.container.mgmt_addr, PEER_PORT)
+        return 'http://{}:{}'.format(self.node.storage_addr, PEER_PORT)
 
     @property
     def _container_data(self):
@@ -80,6 +79,10 @@ class ETCD(Service):
             'mounts': {fs.path: self.data_dir},
             'identity': self.zt_identity,
             'env': {'ETCDCTL_API': '3'},
+            'ports': {
+                '2380':2380,
+                '2379':2379,
+            },
         }
 
     def create_config(self):
@@ -98,8 +101,8 @@ class ETCD(Service):
         config = {
             'name': self.name,
             'initial_peer_urls': self.peer_url,
-            'listen_peer_urls': self.peer_url,
-            'listen_client_urls': self.client_url,
+            'listen_peer_urls': 'http://0.0.0.0:{}'.format(PEER_PORT),
+            'listen_client_urls': 'http://0.0.0.0:{}'.format(CLIENT_PORT),
             'advertise_client_urls': self.client_url,
             'data_dir': self.data_dir,
             'token': self.token,
