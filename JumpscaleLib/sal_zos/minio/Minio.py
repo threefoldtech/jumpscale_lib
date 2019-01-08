@@ -34,7 +34,6 @@ class Minio(Service):
                  master_namespace=None,
                  master_address=None):
         """
-
         :param name: instance name
         :param node: sal of the node to deploy minio on
         :param login: minio access key
@@ -100,15 +99,21 @@ class Minio(Service):
         pools = filter(lambda p: p.type.value == 'SSD', self.node.storagepools.list())
         # sort all the SSD storage pool by ussage
         pools = sorted(pools, key=lambda p: p.used)
-        if not pools:
-            sp = self.node.storagepools.get('zos-cache')
-        else:
-            sp = pools[0]
+        fs = None
+        for sp in pools:
+            try:
+                fs = sp.get(self._id)
+            except ValueError:
+                try:
+                    fs = sp.create(self._id)
+                except Exception as err:
+                    logger.warning('couldn create storage pool filesystem: %s\nTrying another disk' % str(err))
+                    continue
+            if fs:
+                break
 
-        try:
-            fs = sp.get(self._id)
-        except ValueError:
-            fs = sp.create(self._id)
+        if fs is None:
+            raise RuntimeError("couldn't find a disk to use to mount in the container")
 
         return {
             'name': self._container_name,
