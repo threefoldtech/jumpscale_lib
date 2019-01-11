@@ -10,7 +10,7 @@ class ETCDFactory(JSBASE):
         self.__jslocation__ = "j.sal_zos.etcd"
         JSBASE.__init__(self)
 
-    def get(self, node, name, password, data_dir='/mnt/data', zt_identity=None, nics=None, token=None, cluster=None):
+    def get(self, node, name, password, data_dir='/mnt/data', zt_identity=None, nics=None, token=None, cluster=None, host_network=False):
         """
         Get sal for etcd management in ZOS
 
@@ -25,6 +25,6 @@ class ETCDFactory(JSBASE):
             cluster: all the cluster members. ex: [{'name': 'etcd_one', 'address': 'http://172.22.14.232:2380'}]
 
         Returns:
-            the sal layer 
+            the sal layer
         """
-        return ETCD(node, name, password, data_dir, zt_identity, nics, token, cluster)
+        return ETCD(node, name, password, data_dir, zt_identity, nics, token, cluster, host_network)
