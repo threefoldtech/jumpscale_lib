@@ -17,7 +17,7 @@ PEER_PORT = 2380
 class ETCD(Service):
     """etced server"""
 
-    def __init__(self, node, name, password, data_dir='/mnt/data', zt_identity=None, nics=None, token=None, cluster=None):
+    def __init__(self, node, name, password, data_dir='/mnt/data', zt_identity=None, nics=None, token=None, cluster=None, host_network=False):
         super().__init__(name, node, 'etcd', [CLIENT_PORT, PEER_PORT])
         self.flist = 'https://hub.grid.tf/tf-official-apps/etcd-3.3.4.flist'
         self.data_dir = data_dir
@@ -26,6 +26,7 @@ class ETCD(Service):
         self.token = token
         self.cluster = cluster
         self.password = password
+        self.host_network = host_network
         self.nics = Nics(self)
         self.add_nics(nics)
 
@@ -72,18 +73,25 @@ class ETCD(Service):
 
         self.authorize_zt_nics()
 
-        return {
+        data = {
             'name': self._container_name,
             'flist': self.flist,
             'nics': [nic.to_dict(forcontainer=True) for nic in self.nics],
             'mounts': {fs.path: self.data_dir},
             'identity': self.zt_identity,
             'env': {'ETCDCTL_API': '3'},
-            'ports': {
-                '2380':2380,
-                '2379':2379,
-            },
+            'host_network': self.host_network
         }
+        if not self.host_network:
+            data['ports'] = {
+                '2380': 2380,
+                '2379': 2379,
+            }
+        else:
+            self.node.client.nft.open_port(2379)
+            self.node.client.nft.open_port(2380)
+
+        return data
 
     def create_config(self):
         """
@@ -127,6 +135,12 @@ class ETCD(Service):
         self.container.client.system(cmd, id=self._id)
         if not j.tools.timer.execute_until(self.is_running, 30, 0.5):
             raise RuntimeError('Failed to start etcd server: {}'.format(self.name))
+
+    def stop(self):
+        super().stop()
+        if self.host_network:
+            self.node.client.nft.open_port(2379)
+            self.node.client.nft.open_port(2380)
 
     def enable_auth(self):
         """
