@@ -20,6 +20,8 @@ class TfChain:
     def client(self, name, container, wallet_passphrase, api_addr='localhost:23110'):
         return TfChainClient(name=name, container=container, addr=api_addr, wallet_passphrase=wallet_passphrase)
 
+    def bridged(self, name, container, rpc_addr, eth_network, eth_port, account_json, account_password):
+        return TfChainBridged(name, container, rpc_addr, eth_network, eth_port, account_json, account_password)
 
 class TfChainDaemon:
     """
@@ -60,6 +62,62 @@ class TfChainDaemon:
             if not self.is_running():
                 result = cmd.get()
                 raise RuntimeError("Could not start tfchaind.\nstdout: %s\nstderr: %s" % (
+                    result.stdout, result.stderr))
+
+    def stop(self, timeout=30):
+        """
+        Stop the tfchain daemon
+        :param timeout: time in seconds to wait for the daemon to stop
+        """
+        if not self.is_running():
+            return
+
+        logger.debug('stop %s', self)
+        self.container.stop_job(self.id, signal=signal.SIGINT, timeout=timeout)
+
+    def is_running(self):
+        return self.container.is_job_running(self.id)
+
+
+class TfChainBridged:
+    def __init__(self, name, container, rpc_addr, eth_network, eth_port, account_json, account_password):
+        self.name = name
+        self.id = 'bridged.{}'.format(self.name) 
+        self.bridged_ps_id = 'bridged.{}'.format(self.name)
+        self.container = container
+        self.rpc_addr = rpc_addr
+        self.eth_network = eth_network
+        self.eth_port = eth_port
+        self.account_json = account_json
+        self.account_password = account_password
+
+    def start(self, timeout=150):
+        """
+        Start bridged daemon
+        :param timeout: time in seconds to wait for the bridged daemon to start
+        """
+        if self.is_running():
+            return
+
+        cmd_line = '/bridged \
+            --rpc-addr {rpc_addr} \
+            --ethnetwork {eth_network} \
+            --ethport {eth_port} \
+            --account-json {account_json} \
+            --account-password {account_password} \
+            '.format(rpc_addr=self.rpc_addr,
+                     eth_network=self.eth_network,
+                     eth_port=self.eth_port,
+                     account_json=self.account_json,
+                     account_password=self.account_password)
+
+        cmd = self.container.client.system(cmd_line, id=self.id)
+
+        port = int(self.rpc_addr.split(":")[1])
+        while not self.container.is_port_listening(port, timeout):
+            if not self.is_running():
+                result = cmd.get()
+                raise RuntimeError("Could not start bridged.\nstdout: %s\nstderr: %s" % (
                     result.stdout, result.stderr))
 
     def stop(self, timeout=30):
