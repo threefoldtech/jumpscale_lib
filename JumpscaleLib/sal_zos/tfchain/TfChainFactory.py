@@ -18,5 +18,5 @@ class TfChainFactory(JSBASE):
     def client(self, name, container, wallet_passphrase, api_addr='localhost:23110'):
         return TfChainClient(name=name, container=container, addr=api_addr, wallet_passphrase=wallet_passphrase)
 
-    def bridged(self, name, container, rpc_addr, eth_network, eth_port, account_json, account_password):
-        return TfChainBridged(name, container, rpc_addr, eth_network, eth_port, account_json, account_password)
+    def bridged(self, name, container, rpc_addr, network, eth_port, account_json, account_password):
+        return TfChainBridged(name, container, rpc_addr, network, eth_port, account_json, account_password)

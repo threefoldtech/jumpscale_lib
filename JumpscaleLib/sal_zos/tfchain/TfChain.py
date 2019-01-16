@@ -77,13 +77,13 @@ class TfChainDaemon:
 
 
 class TfChainBridged:
-    def __init__(self, name, container, rpc_addr, eth_network, eth_port, account_json, account_password):
+    def __init__(self, name, container, rpc_addr, network, eth_port, account_json, account_password):
         self.name = name
         self.id = 'bridged.{}'.format(self.name) 
         self.bridged_ps_id = 'bridged.{}'.format(self.name)
         self.container = container
         self.rpc_addr = rpc_addr
-        self.eth_network = eth_network
+        self.network = network
         self.eth_port = eth_port
         self.account_json = account_json
         self.account_password = account_password
@@ -98,12 +98,12 @@ class TfChainBridged:
 
         cmd_line = '/bin/bridged \
             --rpc-addr {rpc_addr} \
-            --ethnetwork {eth_network} \
+            --network {network} \
             --ethport {eth_port} \
             --account-json {account_json} \
             --account-password {account_password} \
             '.format(rpc_addr=self.rpc_addr,
-                     eth_network=self.eth_network,
+                     eth_network=self.network,
                      eth_port=self.eth_port,
                      account_json=self.account_json,
                      account_password=self.account_password)
