@@ -10,6 +10,9 @@ logging.basicConfig(level=logging.INFO)
 default_logger = logging.getLogger(__name__)
 
 
+MiB = 1024 ** 2
+
+
 class Containers():
 
     def __init__(self, node, logger=None):
@@ -30,7 +33,7 @@ class Containers():
         return Container.from_containerinfo(containers[0], self.node)
 
     def create(self, name, flist, hostname=None, mounts=None, nics=None, host_network=False, ports=None,
-               storage=None, init_processes=None, privileged=False, env=None, identity=None):
+               storage=None, init_processes=None, privileged=False, env=None, identity=None, cpu=None, memory=None):
         default = False
         nics = nics or []
         for nic in nics:
@@ -41,7 +44,7 @@ class Containers():
             nics.append({'type': 'default', 'id': 'None', 'hwaddr': '', 'name': 'nat0'})
         container = Container(name=name, node=self.node, flist=flist, hostname=hostname, mounts=mounts, nics=nics,
                               host_network=host_network, ports=ports, storage=storage, init_processes=init_processes,
-                              privileged=privileged, env=env, identity=identity)
+                              privileged=privileged, env=env, identity=identity, cpu=cpu, memory=memory)
         container.start()
         return container
 
@@ -51,7 +54,7 @@ class Container():
 
     def __init__(self, name, node, flist, hostname=None, mounts=None, nics=None,
                  host_network=False, ports=None, storage=None, init_processes=None,
-                 privileged=False, identity=None, env=None, logger=None):
+                 privileged=False, identity=None, env=None, cpu=None, memory=None, logger=None):
         """
         TODO: write doc string
         filesystems: dict {filesystemObj: target}
@@ -70,6 +73,8 @@ class Container():
         self.privileged = privileged
         self._identity = identity
         self.env = env or {}
+        self.cpu = cpu
+        self.memory = memory
         self._client = None
         self.logger = logger or default_logger
 
@@ -227,20 +232,43 @@ class Container():
                 mounts[fs.path] = mount['target']
             self.mounts = mounts
 
-        job = self.node.client.container.create(
-            root_url=self.flist,
-            mount=self.mounts,
-            host_network=self.host_network,
-            nics=self.nics,
-            port=self.ports,
-            tags=tags,
-            name=self.name,
-            hostname=self.hostname,
-            storage=self.storage,
-            privileged=self.privileged,
-            identity=self.identity,
-            env=self.env
-        )
+        cgroups = []
+        if self.cpu:
+            # create a cgroup for this container
+            # and assign self.cpu number of cpu to the cgroup
+            self.node.client.cgroup.ensure('cpuset', self.name)
+            cpu_to_use = next_cpus(self.node, int(self.cpu))
+            cpu_to_use = ','.join([str(x) for x in cpu_to_use])
+            self.node.client.cgroup.cpuset(self.name, cpu_to_use)
+            cgroups.append(('cpuset', self.name))
+
+        if self.memory:
+            self.node.client.cgroup.ensure('memory', self.name)
+            memory = self.memory * MiB
+            self.node.client.cgroup.memory(self.name, memory)
+            cgroups.append(('memory', self.name))
+
+        try:
+            job = self.node.client.container.create(
+                root_url=self.flist,
+                mount=self.mounts,
+                host_network=self.host_network,
+                nics=self.nics,
+                port=self.ports,
+                tags=tags,
+                name=self.name,
+                hostname=self.hostname,
+                storage=self.storage,
+                privileged=self.privileged,
+                identity=self.identity,
+                env=self.env,
+                cgroups=cgroups,
+            )
+        except:
+            # clean up cgroups in case the container fails to start
+            self.node.client.cgroup.remove('memory', self.name)
+            self.node.client.cgroup.remove('cpuset', self.name)
+            raise
 
         if self.is_running():
             self.identity
@@ -318,6 +346,9 @@ class Container():
             return
         self.logger.debug("stop %s", self)
 
+        self.node.client.cgroup.remove('memory', self.name)
+        self.node.client.cgroup.remove('cpuset', self.name)
+
         self.node.client.container.terminate(self.id)
         self._client = None
 
@@ -376,3 +407,62 @@ class Container():
 
     def __repr__(self):
         return str(self)
+
+
+def next_cpus(node, nr):
+    """
+    return the cpu numbers of the cpu
+    the least assgined
+
+    :param nr: number of cpu to return
+    :type nr: int
+    :return: list of cpu number
+    :rtype: list
+    """
+    max_cpu_nr = len(node.client.info.cpu())
+    if nr > max_cpu_nr:
+        raise ValueError("maximum number of cpu is %s" % max_cpu_nr)
+
+    cgroup = node.client.cgroup
+
+    cgroup_names = cgroup.list()['cpuset']
+    all_used = []
+    for name in cgroup_names:
+        all_used.append(cpu_used(cgroup.cpuset(name)['cpus']))
+
+    appearances = {cpu: 0 for cpu in range(max_cpu_nr)}
+    for outer in all_used:
+        for cpu in outer:
+            if cpu not in appearances:
+                raise RuntimeError("cpu number %s doesn't exist, but it is reported as used" % cpu)
+            appearances[cpu] += 1
+
+    # sort by less used
+    appearances = sort_by_least_used(appearances)
+    return sorted(appearances[:nr])
+
+
+def cpu_used(cpuset):
+    """
+    parse the cpu used as outputed by cgroup
+    """
+
+    used = set()
+    groups = cpuset.split(',')
+    for group in groups:
+        splitted = group.split('-')
+        if len(splitted) == 1:
+            # handle empty
+            if not splitted[0]:
+                continue
+            used.add(int(splitted[0]))
+        else:
+            start = int(splitted[0])
+            end = int(splitted[1])
+            for i in range(start, end+1):
+                used.add(i)
+    return list(used)
+
+
+def sort_by_least_used(dict_):
+    return [x[0] for x in sorted(dict_.items(), key=lambda kv: kv[1])]
