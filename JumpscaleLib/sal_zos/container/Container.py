@@ -33,7 +33,7 @@ class Containers():
         return Container.from_containerinfo(containers[0], self.node)
 
     def create(self, name, flist, hostname=None, mounts=None, nics=None, host_network=False, ports=None,
-               storage=None, init_processes=None, privileged=False, env=None, identity=None, cpu=None, memory=None):
+               storage=None, init_processes=None, privileged=False, env=None, identity=None, cpu=None, memory=None, config=None):
         default = False
         nics = nics or []
         for nic in nics:
@@ -44,7 +44,7 @@ class Containers():
             nics.append({'type': 'default', 'id': 'None', 'hwaddr': '', 'name': 'nat0'})
         container = Container(name=name, node=self.node, flist=flist, hostname=hostname, mounts=mounts, nics=nics,
                               host_network=host_network, ports=ports, storage=storage, init_processes=init_processes,
-                              privileged=privileged, env=env, identity=identity, cpu=cpu, memory=memory)
+                              privileged=privileged, env=env, identity=identity, cpu=cpu, memory=memory, config=config)
         container.start()
         return container
 
@@ -54,7 +54,7 @@ class Container():
 
     def __init__(self, name, node, flist, hostname=None, mounts=None, nics=None,
                  host_network=False, ports=None, storage=None, init_processes=None,
-                 privileged=False, identity=None, env=None, cpu=None, memory=None, logger=None):
+                 privileged=False, identity=None, env=None, cpu=None, memory=None, logger=None, config=None):
         """
         TODO: write doc string
         filesystems: dict {filesystemObj: target}
@@ -76,6 +76,7 @@ class Container():
         self.cpu = cpu
         self.memory = memory
         self._client = None
+        self.config = config or {}
         self.logger = logger or default_logger
 
         for nic in self.nics:
