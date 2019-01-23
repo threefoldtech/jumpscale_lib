@@ -123,7 +123,7 @@ class Minio(Service):
             'env': envs,
             'mounts': {fs.path: metadata_path},
             'cpu': 2,
-            'memory': 32768,  # 4GiB,
+            'memory': 4906,  # 4GiB
         }
 
     def start(self, timeout=15):
