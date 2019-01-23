@@ -34,6 +34,79 @@ class Containers():
 
     def create(self, name, flist, hostname=None, mounts=None, nics=None, host_network=False, ports=None,
                storage=None, init_processes=None, privileged=False, env=None, identity=None, cpu=None, memory=None, config=None):
+        """
+        Create a new container
+
+        :param name: name of the container
+        :type name: string
+        :param flist: location of the flist to use. It can be an URL or a absolute path on the host 0-OS.
+        :type flist: string
+        :param hostname: if specified set the hostname of the container, defaults to None
+        :param hostname: string, optional
+        :param mounts: a dict with {host_source: container_target} mount points.
+                       where host_source directory must exists.
+                       host_source can be a url to a flist to mount.
+        :param mounts: dict, optional
+        :param nics: Configure the attached nics to the container
+                     nics is a list of dict
+                     each nic object is a dict of the format
+                     {
+                        'type': nic_type # one of default, bridge, zerotier, macvlan, passthrough, vlan, or vxlan (note, vlan and vxlan only supported by ovs)
+                        'id': id # depends on the type
+                            bridge: bridge name,
+                            zerotier: network id,
+                            macvlan: the parent link name,
+                            passthrough: the link name,
+                            vlan: the vlan tag,
+                            vxlan: the vxlan id
+                        'name': name of the nic inside the container (ignored in zerotier type)
+                        'hwaddr': Mac address of nic.
+                        'config': { # config is only honored for bridge, vlan, and vxlan types
+                            'dhcp': bool,
+                            'cidr': static_ip # ip/mask
+                            'gateway': gateway
+                            'dns': [dns]
+                        }
+                     }
+        :param nics: list, optional
+        :param host_network: Specify if the container should share the same network stack as the host.
+                             if True, container creation ignores ports arguments below.
+        :param host_network: bool, optional
+        :param ports: A dict of host_port: container_port pairs (only if default networking is enabled)
+                       Example: ports={8080: 80, 7000:7000}
+                       Source Format: NUMBER, IP:NUMBER, IP/MAST:NUMBER, or DEV:NUMBER
+                       Check https://github.com/threefoldtech/0-core/blob/development/docs/networking/portforwards.md for full syntax
+        :param ports: dict, optional
+        :param storage: An Url to the 0-db storage to use to mount the root flist (or any other mount that requires 0-fs)
+                        if not provided, the default one from core0 configuration will be used.
+        :param storage: string, optional
+        :param init_processes: a list of dict describing some processes to run when starting the container
+                               examples:
+                               [{
+                                    "name": "echo",
+                                    "args": ["hello", "world"],
+                                    "pwd": "/root",
+                                    "stdin": "",
+                                    "id": None,
+                                    "environment": ["DEBUG=0"]
+                                }]
+        :param init_processes: list, optional
+        :param privileged: If true, container runs in privileged mode.
+        :param privileged: bool, optional
+        :param env: a dict with the environment variables needed to be set for the container, defaults to None
+        :param env: dict, optional
+        :param identity: zerotier identity to assign to the container, if not specified an identify will be created automatically
+        :param identity: string, optional
+        :param cpu: if not None, specified the number of CPU the container can use
+                    if None, on limitation
+        :param cpu: int, optional
+        :param memory: if not None, specified the amount of memory in MiB the container can allocate
+                       if None, no limitation
+        :param memory: int, optional
+        :return: a Container
+        :rtype: Container
+        """
+
         default = False
         nics = nics or []
         for nic in nics:
