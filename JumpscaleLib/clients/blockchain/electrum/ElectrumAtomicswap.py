@@ -6,7 +6,6 @@ import json
 
 logger = j.logger.get(__name__)
 
-
 class ElectrumAtomicswap:
     """
     ElectrumAtomicswap class
@@ -25,10 +24,11 @@ class ElectrumAtomicswap:
         self._host = '{}:{}'.format(rpchost, rpcport)
         self._testnet = testnet
         self._wallet_path = j.sal.fs.joinPaths(data_dir,
-                                               'testnet' if testnet else 'mainnet',
-                                               'wallets',
-                                               wallet_name)
+                                              'testnet' if testnet else 'mainnet',
+                                              'wallets',
+                                              wallet_name)
         self._load_wallet()
+
 
     def _load_wallet(self):
         """
@@ -41,6 +41,7 @@ class ElectrumAtomicswap:
         logger.info("Loading wallet {} using command: {}".format(self._wallet_name, cmd))
         self._prefab.core.run(cmd)
 
+
     def initiate(self, participant_address, amount):
         """
         Initialize a new atomicswap contract
@@ -52,16 +53,17 @@ class ElectrumAtomicswap:
             a dict with the contract details
         """
         cmd = 'btcatomicswap{} -automated --rpcuser={} --rpcpass={} -s "{}" initiate {} {}'.format(
-            ' -testnet' if self._testnet else '',
-            self._rpcuser,
-            self._rpcpass,
-            self._host,
-            participant_address,
-            amount
+                    ' -testnet' if self._testnet else '',
+                    self._rpcuser,
+                    self._rpcpass,
+                    self._host,
+                    participant_address,
+                    amount
         )
         logger.info("Initiating a new atomicswap contract using command: {}".format(cmd))
-        _, out, _ = self._prefab.core.run(cmd)
+        _, out, _= self._prefab.core.run(cmd)
         return json.loads(out)
+
 
     def participate(self, initiator_address, amount, secret_hash):
         """
@@ -72,17 +74,18 @@ class ElectrumAtomicswap:
         @param secret_hash: The secret hash of the atomicswap contract
         """
         cmd = 'btcatomicswap{} -automated --rpcuser={} --rpcpass={} -s "{}" participate {} {} {}'.format(
-            ' -testnet' if self._testnet else '',
-            self._rpcuser,
-            self._rpcpass,
-            self._host,
-            initiator_address,
-            amount,
-            secret_hash
+                    ' -testnet' if self._testnet else '',
+                    self._rpcuser,
+                    self._rpcpass,
+                    self._host,
+                    initiator_address,
+                    amount,
+                    secret_hash
         )
         logger.info("Participating in an atomicswap contract using command: {}".format(cmd))
-        _, out, _ = self._prefab.core.run(cmd)
+        _, out, _= self._prefab.core.run(cmd)
         return json.loads(out)
+
 
     def auditcontract(self, contract, contract_transaction):
         """
@@ -92,16 +95,17 @@ class ElectrumAtomicswap:
         @param contract_transaction: Atomicswap contract transaction address
         """
         cmd = 'btcatomicswap{} -automated --rpcuser={} --rpcpass={} -s "{}" auditcontract {} {}'.format(
-            ' -testnet' if self._testnet else '',
-            self._rpcuser,
-            self._rpcpass,
-            self._host,
-            contract,
-            contract_transaction
+                    ' -testnet' if self._testnet else '',
+                    self._rpcuser,
+                    self._rpcpass,
+                    self._host,
+                    contract,
+                    contract_transaction
         )
         logger.info("Auditing an atomicswap contract using command: {}".format(cmd))
-        _, out, _ = self._prefab.core.run(cmd)
+        _, out, _= self._prefab.core.run(cmd)
         return json.loads(out)
+
 
     def refund(self, contract, contract_transaction):
         """
@@ -111,16 +115,17 @@ class ElectrumAtomicswap:
         @param contract_transaction: Atomicswap contract transaction address
         """
         cmd = 'btcatomicswap{} -automated --rpcuser={} --rpcpass={} -s "{}" refund {} {}'.format(
-            ' -testnet' if self._testnet else '',
-            self._rpcuser,
-            self._rpcpass,
-            self._host,
-            contract,
-            contract_transaction
+                    ' -testnet' if self._testnet else '',
+                    self._rpcuser,
+                    self._rpcpass,
+                    self._host,
+                    contract,
+                    contract_transaction
         )
         logger.info("Refunding an atomicswap contract using command: {}".format(cmd))
-        _, out, _ = self._prefab.core.run(cmd)
+        _, out, _= self._prefab.core.run(cmd)
         return json.loads(out)
+
 
     def redeem(self, contract, contract_transaction, secret):
         """
@@ -131,17 +136,18 @@ class ElectrumAtomicswap:
         @param secret: The atomicswap contract secret
         """
         cmd = 'btcatomicswap{} -automated --rpcuser={} --rpcpass={} -s "{}" redeem {} {} {}'.format(
-            ' -testnet' if self._testnet else '',
-            self._rpcuser,
-            self._rpcpass,
-            self._host,
-            contract,
-            contract_transaction,
-            secret
+                    ' -testnet' if self._testnet else '',
+                    self._rpcuser,
+                    self._rpcpass,
+                    self._host,
+                    contract,
+                    contract_transaction,
+                    secret
         )
         logger.info("Redeeming the atomicswap contract using command: {}".format(cmd))
-        _, out, _ = self._prefab.core.run(cmd)
+        _, out, _= self._prefab.core.run(cmd)
         return json.loads(out)
+
 
     def extract_secret(self, redemption_transaction, secret_hash):
         """
@@ -151,13 +157,13 @@ class ElectrumAtomicswap:
         @param secret_hash: Atomicswap contract secret hash
         """
         cmd = 'btcatomicswap{} -automated --rpcuser={} --rpcpass={} -s "{}" extractsecret {} {}'.format(
-            ' -testnet' if self._testnet else '',
-            self._rpcuser,
-            self._rpcpass,
-            self._host,
-            redemption_transaction,
-            secret_hash
+                    ' -testnet' if self._testnet else '',
+                    self._rpcuser,
+                    self._rpcpass,
+                    self._host,
+                    redemption_transaction,
+                    secret_hash
         )
         logger.info("Extracting secret from an atomicswap contract using command: {}".format(cmd))
-        _, out, _ = self._prefab.core.run(cmd)
+        _, out, _= self._prefab.core.run(cmd)
         return json.loads(out)

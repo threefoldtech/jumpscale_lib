@@ -3,40 +3,27 @@ Tfchain Client
 """
 
 from Jumpscale import j
+from json import dumps
 
-from JumpscaleLib.clients.blockchain.tfchain.TfchainWallet import TfchainWallet
-from JumpscaleLib.clients.blockchain.tfchain.TfchainMultiSigWallet import TfchainMultiSignatureWallet
+from JumpscaleLib.clients.blockchain.tfchain.errors import InvalidTfchainNetwork, NoExplorerNetworkAddresses
+from JumpscaleLib.clients.blockchain.tfchain.TfchainNetwork import TfchainNetwork
+from JumpscaleLib.clients.blockchain.rivine.RivineWallet import RivineWallet
 
 TEMPLATE = """
-testnet = false
+network = "{}"
 seed_ = ""
-multisig = false
-cosigners = []
-required_sig = 0
-nr_keys_per_seed = 50
-"""
+explorers = {}
+password = ""
+nr_keys_per_seed = 1
+""".format(
+    TfchainNetwork.STANDARD.name.lower(),
+    dumps(TfchainNetwork.STANDARD.official_explorers()))
 
+# JSConfigBase = j.tools.configmanager.JSBaseClassConfig
 JSConfigBase = j.tools.configmanager.base_class_config
 
 
 class TfchainClient(JSConfigBase):
-    """
-    Constants specific for the Tfchain network
-    """
-    _tfchain_consts = {
-        'standard': {
-            'explorers': ['https://explorer.threefoldtoken.com',
-                          'https://explorer2.threefoldtoken.com',
-                          'https://explorer3.threefoldtoken.com',
-                          'https://explorer4.threefoldtoken.com'],
-            'password': '',
-            'minerfee': 100000000},
-        'testnet': {
-            'explorers': ['https://explorer.testnet.threefoldtoken.com',
-                          'https://explorer2.testnet.threefoldtoken.com'],
-            'password': '',
-            'minerfee': 100000000}}
-
     """
     Tfchain client object
     """
@@ -55,42 +42,41 @@ class TfchainClient(JSConfigBase):
     @property
     def wallet(self):
         if self._wallet is None:
-            # Load the correct constants regarding testnet or standard net
-            consts = self._tfchain_consts['standard']
-            if self._config.data['testnet'] is True:
-                consts = self._tfchain_consts['testnet']
-            if self._config.data['multisig'] is True:
-                cosigners = [item.split(',') for item in self.config.data['cosigners']]
-                self._wallet = TfchainMultiSignatureWallet(cosigners=cosigners,
-                                                           required_sig=self.config.data['required_sig'],
-                                                           bc_networks=consts['explorers'],
-                                                           bc_network_password=consts['password'],
-                                                           minerfee=consts['minerfee'],
-                                                           client=self.instance)
-            else:
-                # Load a wallet from a given seed. If no seed is given,
-                # generate a new one
-                seed = self.config.data['seed_']
-                if seed == "":
-                    seed = self.generate_seed()
-                    # Save the seed in the config
-                    data = dict(self.config.data)
-                    data['seed_'] = seed
-                    cl = j.clients.tfchain.get(instance=self.instance,
-                                               data=data,
-                                               create=True,
-                                               interactive=False)
-                    cl.config.save()
-                    # make sure to set the seed in the current object.
-                    # if not, we'd have a random non persistent seed until
-                    # the first reload
-                    self.config.data['seed_'] = seed
-                self._wallet = TfchainWallet(seed=seed,
-                                             bc_networks=consts['explorers'],
-                                             bc_network_password=consts['password'],
-                                             nr_keys_per_seed=self.config.data['nr_keys_per_seed'],
-                                             minerfee=consts['minerfee'],
-                                             client=self.instance)
+            client = j.clients.tfchain.get(self.instance, create=False)
+            # Load the correct config params specific to the network
+            network = TfchainNetwork(self.config.data['network'])
+            if not isinstance(network, TfchainNetwork):
+                raise InvalidTfchainNetwork("invalid tfchain network specified")
+            minerfee = network.minimum_minerfee()
+            explorers = self.config.data['explorers']
+            if not explorers:
+                explorers = network.official_explorers()
+                if not explorers:
+                    raise NoExplorerNetworkAddresses(
+                        "network {} has no official explorer networks and none were specified by callee".format(network.name.lower()))
+            # Load a wallet from a given seed. If no seed is given,
+            # generate a new one
+            seed = self.config.data['seed_']
+            if seed == "":
+                seed = self.generate_seed()
+                # Save the seed in the config
+                data = dict(self.config.data)
+                data['seed_'] = seed
+                cl = j.clients.tfchain.get(instance=self.instance,
+                                           data=data,
+                                           create=True,
+                                           interactive=False)
+                cl.config.save()
+                # make sure to set the seed in the current object.
+                # if not, we'd have a random non persistent seed until
+                # the first reload
+                self.config.data['seed_'] = seed
+            self._wallet = RivineWallet(seed=seed,
+                                        bc_networks=explorers,
+                                        bc_network_password=self.config.data['password'],
+                                        nr_keys_per_seed=self.config.data['nr_keys_per_seed'],
+                                        minerfee=minerfee,
+                                        client=client)
         return self._wallet
 
     def generate_seed(self):

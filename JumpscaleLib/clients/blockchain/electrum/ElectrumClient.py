@@ -21,14 +21,14 @@ testnet = 0
 """
 
 
-JSConfigBase = j.tools.configmanager.base_class_config
+
+JSConfigBase = j.tools.configmanager.JSBaseClassConfig
 
 
 class ElectrumClient(JSConfigBase):
     """
     Electrum client object
     """
-
     def __init__(self, instance, data=None, parent=None, interactive=False):
         """
         Initializes new Rivine Client
@@ -41,14 +41,19 @@ class ElectrumClient(JSConfigBase):
         self._wallet = None
         self._atomicswap = None
 
+
     @property
     def wallet(self):
+        # access atomicswap to make sure the wallet is loaded
+        # need to figure out a better wayt to do this using a call to the library
+        self.atomicswap
         if self._wallet is None:
             config_data = {}
             for key, value in self.config.data.items():
                 config_data[key.strip('_')] = value
             self._wallet = ElectrumWallet(name=self.instance, config=config_data)
         return self._wallet
+
 
     @property
     def atomicswap(self):
