@@ -1,7 +1,9 @@
+import requests
+
 from jumpscale import j
+
 from ..abstracts import Collection, Nics
 from ..utils import authorize_zerotiers
-import requests
 
 IPXEURL = 'https://bootstrap.grid.tf/ipxe/master/0'
 logger = j.logger.get(__name__)
@@ -528,7 +530,7 @@ Type=simple
             self._flist = data['flist']
             self._vcpus = data['cpu']
             self._memory = data['memory']
-            self._kvm = data['kvm']
+            self._kvm = data.get('kvm', False)
             self.tags = data['tags']
             self.disks = Disks(self)
             self.nics = VMNics(self)
@@ -624,12 +626,11 @@ Type=simple
 
     @kvm.setter
     def kvm(self, boolean):
-        if not isinstance(boolean, bool): 
+        if not isinstance(boolean, bool):
             raise RuntimeError('Provided value need to be of type boolean')
         if self.is_running():
             raise RuntimeError('Can not change kvm flag of running vm')
         self._kvm = boolean
-
 
     @property
     def flist(self):
