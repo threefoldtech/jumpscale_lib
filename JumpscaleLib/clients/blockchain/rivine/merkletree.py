@@ -4,22 +4,20 @@
 # // The Tree also constructs proof that a single leaf is a part of the tree. The
 # // leaf can be chosen with 'SetIndex'. The memory footprint of Tree grows in
 # // O(log(n)) in the number of leaves.
-
-
 class Tree:
     """
     // The Tree is stored as a stack of subtrees. Each subtree has a height,
-        // and is the Merkle root of 2^height leaves. A Tree with 11 nodes is
-        // represented as a subtree of height 3 (8 nodes), a subtree of height 1 (2
-        // nodes), and a subtree of height 0 (1 node). Head points to the smallest
-        // tree. When a new leaf is inserted, it is inserted as a subtree of height
-        // 0. If there is another subtree of the same height, both can be removed,
-        // combined, and then inserted as a subtree of height n + 1.
+	// and is the Merkle root of 2^height leaves. A Tree with 11 nodes is
+	// represented as a subtree of height 3 (8 nodes), a subtree of height 1 (2
+	// nodes), and a subtree of height 0 (1 node). Head points to the smallest
+	// tree. When a new leaf is inserted, it is inserted as a subtree of height
+	// 0. If there is another subtree of the same height, both can be removed,
+	// combined, and then inserted as a subtree of height n + 1.
     """
-
     def __init__(self, hash_func):
         self.head = None
         self.hash_func = hash_func
+
 
     def push(self, data):
         """
@@ -46,6 +44,7 @@ class Tree:
             # // compare the new subTree to the next subTree.
             self.head = join_subtree(self.hash_func, self.head.next, self.head)
 
+
     def root(self):
         """
         // Root returns the Merkle root of the data that has been pushed.
@@ -68,7 +67,6 @@ class SubTree:
     // of the Tree. 'sum' is the Merkle root of the subTree. If 'next' is not nil,
     // it will be a tree with a higher height.
     """
-
     def __init__(self, next, height):
         self.next = next
         self.height = height
@@ -99,7 +97,6 @@ def leaf_sum(hash_func, data):
     data_.extend(data)
     return sum_(hash_func, data_)
 
-
 def node_sum(hash_func, a, b):
     """
     // nodeSum returns the hash created from two sibling nodes being combined into
@@ -118,9 +115,10 @@ def join_subtree(hash_func, a, b):
     // joinSubTrees combines two equal sized subTrees into a larger subTree.
     """
     # print('Calling joinSubtree')
-    stree = SubTree(next=a.next, height=a.height+1)
+    stree = SubTree(next = a.next, height=a.height+1)
     stree.sum = node_sum(hash_func, a.sum, b.sum)
     return stree
+
 
 
 if __name__ == '__main__':

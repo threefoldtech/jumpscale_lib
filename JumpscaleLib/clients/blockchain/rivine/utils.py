@@ -4,6 +4,7 @@ Modules for common utilites
 import re
 import time
 import string
+import json
 import requests
 from random import choice
 from pyblake2 import blake2b
@@ -13,14 +14,13 @@ from Jumpscale import j
 from JumpscaleLib.clients.blockchain.rivine import secrets
 from JumpscaleLib.clients.blockchain.rivine.encoding import binary
 from JumpscaleLib.clients.blockchain.rivine.errors import RESTAPIError, BackendError
-from JumpscaleLib.clients.blockchain.rivine.const import HASH_SIZE, MINER_PAYOUT_MATURITY_WINDOW, TIMELOCK_CONDITION_HEIGHT_LIMIT
-
+from JumpscaleLib.clients.blockchain.rivine.const import \
+    HASH_SIZE, MINER_PAYOUT_MATURITY_WINDOW, TIMELOCK_CONDITION_HEIGHT_LIMIT, NIL_UNLOCK_HASH
 
 DURATION_REGX_PATTERN = '^(?P<hours>\d*)h(?P<minutes>\d*)m(?P<seconds>\d*)s$'
 DURATION_TEMPLATE = 'XXhXXmXXs'
 
 logger = j.logger.get(__name__)
-
 
 def hash(data, encoding_type=None):
     """
@@ -31,7 +31,8 @@ def hash(data, encoding_type=None):
     @returns: Hashed value of the input data
     """
     binary_data = binary.encode(data, type_=encoding_type)
-    return blake2b(binary_data, digest_size=HASH_SIZE).digest()
+    h = blake2b(binary_data, digest_size=HASH_SIZE).digest()
+    return h
 
 
 def locktime_from_duration(duration):
@@ -105,7 +106,7 @@ def get_current_chain_height(rivine_explorer_addresses):
     return result
 
 
-def check_address(rivine_explorer_addresses, address, log_errors=True):
+def check_address(rivine_explorer_addresses, address, min_height=0, log_errors=True):
     """
     Check if an address is valid and return its details
 
@@ -118,8 +119,9 @@ def check_address(rivine_explorer_addresses, address, log_errors=True):
     msg = 'Failed to retrieve address information.'
     result = None
     response = None
+    min_height = max(0, int(min_height))
     for rivine_explorer_address in rivine_explorer_addresses:
-        url = '{}/explorer/hashes/{}'.format(rivine_explorer_address.strip('/'), address)
+        url = '{}/explorer/hashes/{}?minheight={}'.format(rivine_explorer_address.strip('/'), address, min_height)
         headers = {'user-agent': 'Rivine-Agent'}
         try:
             response = requests.get(url, headers=headers, timeout=10)
@@ -177,21 +179,45 @@ def get_unconfirmed_transactions(rivine_explorer_addresses, format_inputs=False)
         if response.status_code != 200:
             logger.warn('{} {}'.format(msg, response.text))
         else:
-            transactions = response.json()['transactions']
+            transactions = response.json().get('transactions', None)
             if transactions is None:
                 transactions = []
             if format_inputs:
                 for txn in transactions:
                     result.extend([coininput['parentid'] for coininput in txn['data']['coininputs']])
+            else:
+                result = transactions
+            return result
 
-            break
+    if response:
+        raise RESTAPIError('{} {}'.format(msg, response.text))
+    else:
+        raise RESTAPIError(msg)
 
-    if result:
-        if response:
-            raise RESTAPIError('{} {}'.format(msg, response.text))
+
+def get_current_minter_definition(rivine_explorer_addresses, explorer_password):
+    """
+    Retrieve the current minter definition from the chain
+    """
+    msg = 'Failed to retrieve current mint condition'
+    response = None
+    mint_condition = None
+    for rivine_explorer_address in rivine_explorer_addresses:
+        url = '{}/explorer/mintcondition'.format(rivine_explorer_address.strip('/'))
+        headers = {'user-agent': 'Rivine-Agent'}
+        auth = HTTPBasicAuth('', explorer_password)
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+        except request.exceptions.ConnectionError as ex:
+            logger.warn(msg)
+            continue
+        if response.status_code != 200:
+            logger.warn('{} {}'.format(msg, response.text))
         else:
-            raise RESTAPIError(msg)
-    return result
+            mint_condition = response.json()['mintcondition']
+            break
+    return mint_condition
+
 
 
 def commit_transaction(rivine_explorer_addresses, rivine_explorer_api_password, transaction):
@@ -203,7 +229,7 @@ def commit_transaction(rivine_explorer_addresses, rivine_explorer_api_password, 
     """
     data = transaction.json
     res = None
-    msg = 'Faield to commit transaction to chain network.'
+    msg = 'Failed to commit transaction to chain network.'
     for rivine_explorer_address in rivine_explorer_addresses:
         url = '{}/transactionpool/transactions'.format(rivine_explorer_address.strip('/'))
         headers = {'user-agent': 'Rivine-Agent'}
@@ -211,11 +237,13 @@ def commit_transaction(rivine_explorer_addresses, rivine_explorer_api_password, 
         try:
             res = requests.post(url, headers=headers, auth=auth, json=data, timeout=30)
         except requests.exceptions.ConnectionError as ex:
-            logging.warn(msg)
+            logger.warn(msg)
+            logger.debug('error with tx: {}'.format(str(data)))
             continue
         if res.status_code != 200:
-            msg = 'Faield to commit transaction to chain network.{}'.format(res.text)
+            msg = 'Failed to commit transaction to chain network.{}'.format(res.text)
             logger.warn('{} {}'.format(msg, res.text))
+            logger.debug('error with tx: {}'.format(str(data)))
         else:
             transaction.id = res.json()['transactionid']
             logger.info('Transaction committed successfully')
@@ -223,138 +251,11 @@ def commit_transaction(rivine_explorer_addresses, rivine_explorer_api_password, 
     if res:
         raise BackendError('{} {}'.format(msg, res.text))
     else:
+        logger.debug('error with tx: {} {}'.format(msg, str(data)))
         raise BackendError(msg)
 
 
-def get_unlockhash_from_output(output, address, current_height):
-    """
-    Retrieves unlockhash from coin output. This should handle different types of output conditions and transaction formats
-
-    @param current_height: The current chain height
-    """
-    result = {
-        'locked': [],
-        'unlocked': []
-    }
-    # support both v0 and v1 tnx format
-    if 'unlockhash' in output:
-        # v0 transaction format
-        result['unlocked'].append(output['unlockhash'])
-    elif 'condition' in output:
-        # v1 transaction format
-        # check condition type
-        if output['condition'].get('type') == 1:
-            # unlockhash condition type
-            result['unlocked'].append(output['condition']['data']['unlockhash'])
-        elif output['condition'].get('type') == 3:
-            # timelock condition, right now we only support timelock condition with internal unlockhash condition, and multisig condition
-            locktime = output['condition']['data']['locktime']
-            if locktime < TIMELOCK_CONDITION_HEIGHT_LIMIT:
-                if output['condition']['data']['condition']['type'] == 1:
-                    # locktime should be checked against the current chain height
-                    if current_height > locktime:
-                        result['unlocked'].append(output['condition']['data']['condition']['data'].get('unlockhash'))
-                    else:
-                        logger.warn("Found transaction output for address {} but it cannot be unlocked yet".format(address))
-                        result['locked'].append(output['condition']['data']['condition']['data'].get('unlockhash'))
-                elif output['condition']['data']['condition']['type'] == 4:
-                    # locktime should be checked against the current chain height
-                    if current_height > locktime:
-                        result['unlocked'].extend(output['condition']['data']['condition']['data'].get('unlockhashes'))
-                    else:
-                        logger.warn("Found transaction output for address {} but it cannot be unlocked yet".format(address))
-                        result['locked'].extend(output['condition']['data']['condition']['data'].get('unlockhashes'))
-            else:
-                # locktime represent timestamp
-                current_time = time.time()
-                if output['condition']['data']['condition']['type'] == 1:
-                    # locktime should be checked against the current time
-                    if current_time > locktime:
-                        result['unlocked'].append(output['condition']['data']['condition']['data'].get('unlockhash'))
-                    else:
-                        logger.warn("Found transaction output for address {} but it cannot be unlocked yet".format(address))
-                        result['locked'].append(output['condition']['data']['condition']['data'].get('unlockhash'))
-                elif output['condition']['data']['condition']['type'] == 4:
-                    # locktime should be checked against the current time
-                    if current_time > locktime:
-                        result['unlocked'].extend(output['condition']['data']['condition']['data'].get('unlockhashes'))
-                    else:
-                        logger.warn("Found transaction output for address {} but it cannot be unlocked yet".format(address))
-                        result['locked'].extend(output['condition']['data']['condition']['data'].get('unlockhashes'))
-
-        elif output['condition'].get('type') == 4:
-            result['unlocked'].extend(output['condition']['data']['unlockhashes'])
-
-    return result
-
-
-def collect_miner_fees(address, blocks, height):
-    """
-    Scan the bocks for miner fees and Collects the miner fees But only that have matured already
-
-    @param address: address to collect miner fees for
-    @param blocks: Blocks from an address
-    @param height: The current chain height
-    """
-    result = {}
-    if blocks is None:
-        blocks = {}
-    for block_info in blocks:
-        if block_info.get('height', None) and block_info['height'] + MINER_PAYOUT_MATURITY_WINDOW >= height:
-            logger.info('Ignoring miner payout that has not matured yet')
-            continue
-        # mineroutputs can exist in the dictionary but with value None
-        mineroutputs = block_info.get('rawblock', {}).get('minerpayouts', [])
-        if mineroutputs:
-            for index, minerpayout in enumerate(mineroutputs):
-                if minerpayout.get('unlockhash') == address:
-                    logger.info('Found miner output with value {}'.format(minerpayout.get('value')))
-                    result[block_info['minerpayoutids'][index]] = {
-                        'value': minerpayout['value'],
-                        'condition': {
-                            'data': {
-                                'unlockhash': address
-                            }
-                        }
-                    }
-    return result
-
-
-def collect_transaction_outputs(current_height, address, transactions, unconfirmed_txs=None):
-    """
-    Collects transactions outputs
-
-    @param current_height: The current chain height
-    @param address: address to collect transactions outputs
-    @param transactions: Details about the transactions
-    @param unconfirmed_txs: List of unconfirmed transactions
-    """
-    result = {
-        'locked': {},
-        'unlocked': {}
-    }
-    if unconfirmed_txs is None:
-        unconfirmed_txs = []
-    for txn_info in transactions:
-        # coinoutputs can exist in the dictionary but has the value None
-        coinoutputs = txn_info.get('rawtransaction', {}).get('data', {}).get('coinoutputs', [])
-        if coinoutputs:
-            for index, utxo in enumerate(coinoutputs):
-                condition_ulh = get_unlockhash_from_output(output=utxo, address=address, current_height=current_height)
-
-                if address in condition_ulh['locked'] or address in condition_ulh['unlocked']:
-                    logger.debug('Found transaction output for address {}'.format(address))
-                    if txn_info['coinoutputids'][index] in unconfirmed_txs:
-                        logger.warn("Transaction output is part of an unconfirmed tansaction. Ignoring it...")
-                        continue
-                    if address in condition_ulh['locked']:
-                        result['locked'][txn_info['coinoutputids'][index]] = utxo
-                    else:
-                        result['unlocked'][txn_info['coinoutputids'][index]] = utxo
-    return result
-
-
-def remove_spent_inputs(unspent_coins_outputs, transactions):
+def remove_spent_inputs(unspent_coin_outputs, transactions):
     """
     Remvoes the already spent outputs
 
@@ -363,11 +264,11 @@ def remove_spent_inputs(unspent_coins_outputs, transactions):
     for txn_info in transactions:
         # cointinputs can exist in the dict but have the value None
         coininputs = txn_info.get('rawtransaction', {}).get('data', {}).get('coininputs', [])
-        if coininputs:
-            for coin_input in coininputs:
-                if coin_input.get('parentid') in unspent_coins_outputs:
-                    logger.debug('Found a spent address {}'.format(coin_input.get('parentid')))
-                    del unspent_coins_outputs[coin_input.get('parentid')]
+        for coin_input in coininputs:
+            parentid = coin_input.get('parentid')
+            if parentid in unspent_coin_outputs:
+                logger.debug('Found a spent address {}'.format(parentid))
+                del unspent_coin_outputs[parentid]
 
 
 def find_subset_sum(values, target):
@@ -389,6 +290,7 @@ def find_subset_sum(values, target):
                 id_subset.append(y)
                 S -= x
         return subset, id_subset
+
 
     def f(v, i, S, memo):
         if i >= len(v):

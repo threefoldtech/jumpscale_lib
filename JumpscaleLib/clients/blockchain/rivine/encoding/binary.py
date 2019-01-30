@@ -33,7 +33,12 @@ def encode(value, type_=None):
         result.extend(encode(nbytes))
         result.extend(value.to_bytes(nbytes, byteorder='big'))
     elif type_ == 'hex':
-        result.extend(bytearray.fromhex(value))
+        hstr = value
+        if type(hstr) in (bytes, bytearray):
+            hstr = hstr.lstrip(b'0x')
+        elif type(hstr) is str:
+            hstr = hstr.lstrip('0x')
+        result.extend(bytearray.fromhex(hstr))
     elif type_ is None:
         # try to figure out the type of the value
         value_type = type(value)
@@ -46,6 +51,8 @@ def encode(value, type_=None):
         elif value_type in (list, set, tuple, frozenset):
             for item in value:
                 result.extend(encode(item))
+        elif value_type is str:
+            result.extend(value.encode('utf-8'))
         else:
             if hasattr(value, 'binary'):
                 result.extend(value.binary)

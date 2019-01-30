@@ -4,9 +4,28 @@ Client factory for the Tfchain network, js entry point
 
 from Jumpscale import j
 
-from JumpscaleLib.clients.blockchain.tfchain.TfchainClient import TfchainClient
-from JumpscaleLib.clients.blockchain.tfchain.types.transaction import TransactionFactory
+import sys
+import requests
 
+from JumpscaleLib.clients.blockchain.rivine import utils
+from JumpscaleLib.clients.blockchain.rivine import RivineWallet
+from JumpscaleLib.clients.blockchain.tfchain.TfchainClient import TfchainClient
+from JumpscaleLib.clients.blockchain.tfchain.TfchainNetwork import TfchainNetwork
+from JumpscaleLib.clients.blockchain.tfchain.errors import NoExplorerNetworkAddresses
+from JumpscaleLib.clients.blockchain.rivine.errors import RESTAPIError
+from JumpscaleLib.clients.blockchain.tfchain.TfchainThreeBotClient import TfchainThreeBotClient
+from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory,\
+    TransactionV128, TransactionV129, TransactionV210, TransactionSummary, FlatMoneyTransaction
+from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import UnlockHashCondition,\
+    LockTimeCondition, MultiSignatureCondition, UnlockCondtionFactory
+from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
+from JumpscaleLib.clients.blockchain.tfchain.types import signatures as tftsig
+from JumpscaleLib.clients.blockchain.rivine.const import HASTINGS_TFT_VALUE
+from JumpscaleLib.clients.blockchain.tfchain import const as tfconst
+
+from JumpscaleLib.clients.blockchain.rivine.errors import WalletAlreadyExistsException
+
+# JSConfigBaseFactory = j.tools.configmanager.JSBaseClassConfigs
 JSConfigBaseFactory = j.tools.configmanager.base_class_configs
 
 
@@ -20,11 +39,105 @@ class TfchainClientFactory(JSConfigBaseFactory):
         self.__imports__ = "tfchain"
         JSConfigBaseFactory.__init__(self, TfchainClient)
 
+    @property
+    def network(self):
+        return TfchainNetwork
+
+    @property
+    def threebot(self):
+        return TfchainThreeBotClient
+
     def generate_seed(self):
         """
         Generates a new seed and returns it as a mnemonic
         """
         return j.data.encryption.mnemonic.generate(strength=256)
+
+    def get_transaction(self, identifier, network=TfchainNetwork.STANDARD, explorers=None):
+        """
+        Get a transaction registered on a TFchain network
+
+        @param identifier: unique transaction id in string hex-encoded format
+        @param network: optional network, STANDARD by default, TESTNET is another valid choice, for DEVNET use the network_addresses param instead
+        @param explorers: explorer network addresses from which to get the transaction (only required for DEVNET, optional for other networks)
+        """
+        # TODO: have a clean modular solution to get data from an explorer endpoint, instead of repeating it everywhere
+        # TODO: we probably want to move to seperate clients for seperate networks, such that the clients are aware of their networks and explorers
+        #       allowing you to do 'j.clients.tfchain.testnet.get_transaction', 'j.clients.tfchain.standard.get_transaction'
+        #       as well as 'j.clients.tfchain.devnet(['localhost:23110']).get_transaction
+        if not explorers:
+            explorers = network.official_explorers()
+            if not explorers:
+                raise NoExplorerNetworkAddresses(
+                    "network {} has no official explorer networks and none were specified by callee".format(network.name.lower()))
+
+        msg = 'Failed to retrieve transaction.'
+        result = None
+        response = None
+        for address in explorers:
+            url = '{}/explorer/hashes/{}'.format(address.strip('/'), identifier)
+            headers = {'user-agent': 'Rivine-Agent'}
+            try:
+                response = requests.get(url, headers=headers, timeout=10)
+            except requests.exceptions.ConnectionError:
+                continue
+            if response.status_code == 200:
+                result = response.json()
+                break
+
+        if result is None:
+            if response:
+                raise RESTAPIError('{} {}'.format(msg, response.text.strip('\n')))
+            else:
+                raise RESTAPIError('error while fetching transaction from {} for {}: {}'.format(
+                    explorers, identifier, msg))
+
+        tx = result.get('transaction', {})
+        if not tx:
+            raise RESTAPIError(
+                'error while fetching transaction from {} for {}: transaction not found'.format(explorers, identifier))
+        return TransactionSummary.from_explorer_transaction(tx)
+
+    def list_incoming_transactions_for(self, addresses, network=TfchainNetwork.STANDARD, explorers=None, min_height=0):
+        """
+        Get all transactions for the given addresses as registered on a TFchain network
+
+        @param addresses: addresses to look transactions for
+        @param network: optional network, STANDARD by default, TESTNET is another valid choice, for DEVNET use the network_addresses param instead
+        @param explorers: explorer network addresses from which to get the transaction (only required for DEVNET, optional for other networks)
+        """
+        # TODO: we probably want to move to seperate clients for seperate networks, such that the clients are aware of their networks and explorers
+        #       allowing you to do 'j.clients.tfchain.testnet.get_transaction', 'j.clients.tfchain.standard.get_transaction'
+        #       as well as 'j.clients.tfchain.devnet(['localhost:23110']).get_transaction
+        if not explorers:
+            explorers = network.official_explorers()
+            if not explorers:
+                raise NoExplorerNetworkAddresses(
+                    "network {} has no official explorer networks and none were specified by callee".format(network.name.lower()))
+        if not addresses:
+            raise ValueError("no addresses given to look transactions for")
+
+        # list all transactions
+        # create the list where all found transaction summaries will be stored in
+        transactions = []
+
+        # list the transactions of all transactions, one by one
+        for address in addresses:
+            try:
+                address_info = utils.check_address(explorers, address, min_height=min_height, log_errors=False)
+            except RESTAPIError:
+                pass
+            else:
+                address_transactions = address_info.get('transactions', {})
+                if not address_transactions:
+                    continue
+                for tx in address_transactions:
+                    transactions.extend([tx for tx in FlatMoneyTransaction.create_list(tx)
+                                         if tx.to_address in addresses])
+
+        # return all listed transactions, reverse-sorted by block height
+        transactions.sort(key=lambda tx: tx.block_height if tx.confirmed else sys.maxsize, reverse=True)
+        return transactions
 
     def create_transaction_from_json(self, txn_json):
         """
@@ -33,3 +146,111 @@ class TfchainClientFactory(JSConfigBaseFactory):
         @param txn_json: Json string representing a transaction
         """
         return TransactionFactory.from_json(txn_json)
+
+    def create_wallet(self, wallet_name, network=TfchainNetwork.STANDARD, seed='', explorers=None, password=''):
+        """
+        Creates a named wallet
+
+        @param network : defines which network to use, use j.clients.tfchain.network.TESTNET for testnet
+        @param seed : restores a wallet from a seed
+        """
+        if not explorers:
+            explorers = []
+        if self.exists(wallet_name):
+            raise WalletAlreadyExistsException(wallet_name)
+        data = {
+            'network': network.name.lower(),
+            'seed_': seed,
+            'explorers': explorers,
+            'password': password,
+        }
+        return self.get(wallet_name, data=data).wallet
+
+    def open_wallet(self, wallet_name):
+        """
+        Opens a named wallet.
+        Raises the j.exceptions.NotFound exception if the wallet is not found.
+        """
+        if not self.exists(wallet_name):
+            raise j.exceptions.NotFound('No wallet found with name {}'.format(wallet_name))
+        return self.get(wallet_name).wallet
+
+    def create_minterdefinition_transaction(self, condition=None, description=None, network=TfchainNetwork.STANDARD):
+        """
+        Create a new minter definition transaction
+
+        @param condition: Set the minter definition to this premade condition
+        @param description: Add this description as arbitrary data to the transaction
+        """
+        tx = TransactionV128()
+        tx.add_minerfee(network.minimum_minerfee())
+        if condition is not None:
+            tx.set_condition(condition)
+        if description is not None:
+            tx.add_data(description.encode('utf-8'))
+        return tx
+
+    def create_coincreation_transaction(self, amount=None, condition=None, description=None, network=TfchainNetwork.STANDARD):
+        """
+        Create a new coin creation transaction. If both an amount and condition are
+        given, they will be used to create a first output in the transaction
+
+        @param amount: The amount of coins to create for the condition, if given
+        @param condition: A premade condition, used to create a first output
+        @param description: A description which is added to the transaction as arbitrary data
+        """
+        tx = TransactionV129()
+        tx.add_minerfee(network.minimum_minerfee())
+        if amount is not None and condition is not None:
+            tx.add_output(amount, condition)
+        if description is not None:
+            tx.add_data(description.encode('utf-8'))
+        return tx
+
+    def create_singlesig_condition(self, address, locktime=None):
+        """
+        Create a new single signature condition
+        """
+        unlockhash = UnlockHash.from_string(address)
+        condition = UnlockHashCondition(unlockhash=unlockhash)
+        if locktime is not None:
+            condition = LockTimeCondition(condition=condition, locktime=locktime)
+        return condition
+
+    def create_multisig_condition(self, unlockhashes, min_nr_sig, locktime=None):
+        """
+        Create a new multisig condition
+        """
+        condition = MultiSignatureCondition(unlockhashes=unlockhashes, min_nr_sig=min_nr_sig)
+        if locktime is not None:
+            condition = LockTimeCondition(condition=condition, locktime=locktime)
+        return condition
+
+    def register_erc20_address(self, wallet, public_key=None):
+        # create the tx and fill the easiest properties already
+        tx = TransactionV210()
+
+        if not public_key:
+            key = wallet.generate_key()
+            public_key = key.public_key
+        pk = tftsig.SiaPublicKey(tftsig.SiaPublicKeySpecifier.ED25519, public_key)
+        tx.set_erc20_public_key(pubkey=pk)
+
+        # add coin inputs for miner fees (implicitly computed) and required bot fees
+        regfees = tfconst.ERC20_REGISTRATION_FEE_MULTIPLIER * HASTINGS_TFT_VALUE
+        input_results, used_addresses, minerfee, remainder = wallet._get_inputs(amount=regfees)
+        tx.set_transaction_fee(minerfee)
+        tx.set_registration_fee(regfees)
+        for input_result in input_results:
+            tx.add_coin_input(**input_result)
+        for txn_input in tx.coin_inputs:
+            if used_addresses[txn_input.parent_id] not in wallet._keys:
+                raise RivineWallet.NonExistingOutputError('Trying to spend unexisting output')
+        # optionally add the remainder as a refund coin output
+        if remainder > 0:
+            # TODO: are we sure refunding to first address is always desired?
+            tx.set_refund_coin_output(value=remainder, recipient=wallet.addresses[0])
+
+        # sign and commit the Tx, return the tx ID afterwards
+        wallet.sign_transaction(transaction=tx, commit=True)
+        return tx

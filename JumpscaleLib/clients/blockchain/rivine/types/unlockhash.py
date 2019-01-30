@@ -13,19 +13,17 @@ UNLOCKHASH_SIZE = 32
 UNLOCKHASH_CHECKSUM_SIZE = 6
 UNLOCKHASH_TYPE_ZISE = 1
 
-
 class UnlockHash:
     """
     An UnlockHash is a specially constructed hash of the UnlockConditions type.
-        "Locked" values can be unlocked by providing the UnlockConditions that hash
-        to a given UnlockHash. See SpendConditions.UnlockHash for details on how the
-        UnlockHash is constructed.
-        UnlockHash struct {
-                Type UnlockType
-                Hash crypto.Hash
-        }
+	"Locked" values can be unlocked by providing the UnlockConditions that hash
+	to a given UnlockHash. See SpendConditions.UnlockHash for details on how the
+	UnlockHash is constructed.
+	UnlockHash struct {
+		Type UnlockType
+		Hash crypto.Hash
+	}
     """
-
     def __init__(self, unlock_type, hash):
         """
         Initialize new unlockhash
@@ -36,6 +34,7 @@ class UnlockHash:
         self._unlock_type = unlock_type
         self._hash = hash
 
+
     def __str__(self):
         """
         String representation of UnlockHash object
@@ -43,11 +42,13 @@ class UnlockHash:
         uh_checksum = utils.hash([self._unlock_type, self._hash])
         return '{}{}{}'.format(self._unlock_type.hex(), self._hash.hex(), uh_checksum[:UNLOCKHASH_CHECKSUM_SIZE].hex())
 
+
     def __repr__(self):
         """
         Calls __str__
         """
         return str(self)
+
 
     @property
     def binary(self):
@@ -65,6 +66,5 @@ class UnlockHash:
         Returns an unlockhash object from a string
         """
         if len(ulh_str) == (UNLOCKHASH_SIZE * 2) + (UNLOCKHASH_TYPE_ZISE * 2) + (UNLOCKHASH_CHECKSUM_SIZE * 2):
-            ul_type, ulh, ulh_checksum = ulh_str[:UNLOCKHASH_TYPE_ZISE*2], ulh_str[UNLOCKHASH_TYPE_ZISE *
-                                                                                   2: UNLOCKHASH_TYPE_ZISE*2 + UNLOCKHASH_SIZE*2], ulh_str[UNLOCKHASH_TYPE_ZISE*2 + UNLOCKHASH_SIZE*2:]
+            ul_type, ulh, ulh_checksum = ulh_str[:UNLOCKHASH_TYPE_ZISE*2], ulh_str[UNLOCKHASH_TYPE_ZISE*2: UNLOCKHASH_TYPE_ZISE*2 + UNLOCKHASH_SIZE*2], ulh_str[UNLOCKHASH_TYPE_ZISE*2 + UNLOCKHASH_SIZE*2:]
             return cls(unlock_type=bytearray.fromhex(ul_type), hash=bytearray.fromhex(ulh))
