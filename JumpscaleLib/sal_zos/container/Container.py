@@ -337,6 +337,7 @@ class Container():
                 identity=self.identity,
                 env=self.env,
                 cgroups=cgroups,
+                config=self.config,
             )
         except:
             # clean up cgroups in case the container fails to start
