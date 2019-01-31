@@ -95,6 +95,8 @@ class Containers():
         :param privileged: bool, optional
         :param env: a dict with the environment variables needed to be set for the container, defaults to None
         :param env: dict, optional
+        :param config: a dict with paths to text content, defaults to None
+        :param config: Dict[FilePath, string], optional
         :param identity: zerotier identity to assign to the container, if not specified an identify will be created automatically
         :param identity: string, optional
         :param cpu: if not None, specified the number of CPU the container can use
