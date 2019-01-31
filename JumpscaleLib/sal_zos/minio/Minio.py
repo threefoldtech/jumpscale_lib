@@ -98,7 +98,7 @@ class Minio(Service):
         # we want only the storage pool on top of an SSD
         pools = filter(lambda p: p.type.value == 'SSD', self.node.storagepools.list())
         # sort all the SSD storage pool by ussage
-        pools = sorted(pools, key=lambda p: p.used)
+        pools = sorted(pools, key=lambda p: (p.used, len(p.list())))
         fs = None
         for sp in pools:
             try:
@@ -135,6 +135,12 @@ class Minio(Service):
             return
 
         logger.info('start minio %s' % self.name)
+
+        def test_started():
+            self._container = None
+            return self.container.is_running()
+        if not j.tools.timer.execute_until(test_started, 10, 1):
+            raise RuntimeError('failed to start container')
 
         self.create_config()
 
