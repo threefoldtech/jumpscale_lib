@@ -187,7 +187,7 @@ class Minio(Service):
         resp = self.node.client.web.download(self.logo_url, dest).get()
         if resp.state != 'SUCCESS':
             raise RuntimeError('impossible to download the minio logo: %s' % resp.stderr)
-        return dest
+        return '/minio_metadata/logo.svg'
 
     def _config_as_text(self):
         return templates.render(

@@ -113,6 +113,7 @@ def requires_auth(org_from_request=False, email=False):
                 session["_iyo_state"] = state
                 session['_iyo_organization'] = organization
                 session["_iyo_auth_complete_uri"] = request.full_path
+
                 params = {
                     "response_type": "code",
                     "client_id": config["organization"],
