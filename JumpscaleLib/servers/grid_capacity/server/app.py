@@ -7,9 +7,10 @@ import datetime
 from flask import Flask, jsonify
 from jumpscale import j
 
-from . import settings
+from . import settings, influxdb
 from .flask_itsyouonline import configure
 from .models import db
+
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -20,7 +21,7 @@ configure(app, settings.IYO_CLIENTID, settings.IYO_SECRET,
 j.clients.mongoengine.get('capacity', interactive=False)
 
 db.init_app(app)
-
+influxdb.init(settings)
 
 app.register_blueprint(api_api)
 app.register_blueprint(frontend_bp)
