@@ -271,6 +271,8 @@ class Node:
 
     def ensure_persistance(self, name='zos-cache'):
         """
+        THIS SHOULD NOT BE USED IN PRODUCTION, ONLY FOR DEVELOPMENT PURPOSES.
+
         look for a disk not used,
         create a partition and mount it to be used as cache for the g8ufs
         set the label `zos-cache` to the partition
