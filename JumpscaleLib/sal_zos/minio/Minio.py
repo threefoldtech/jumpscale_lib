@@ -151,11 +151,11 @@ class Minio(Service):
         if self.logo_url:
             logo_path = self.download_logo()
 
-        cmd = '/bin/minio gateway zerostor'
+        cmd = '/bin/minio gateway '
         if logo_path:
             cmd += ' --logo %s' % logo_path
 
-        cmd += ' --address 0.0.0.0:{port} --config-dir {dir}'.format(
+        cmd += ' zerostor --address 0.0.0.0:{port} --config-dir {dir}'.format(
             port=DEFAULT_PORT, dir=self._config_dir)
 
         # wait for minio to start
