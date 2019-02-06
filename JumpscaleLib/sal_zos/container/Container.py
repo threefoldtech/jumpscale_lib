@@ -477,7 +477,8 @@ class Container():
 
     @property
     def mgmt_addr(self):
-        return get_zt_ip(self.client.info.nic())
+        support_network = "172.29.0.0/16"
+        return get_zt_ip(self.client.info.nic(), False, support_network)
 
     def __str__(self):
         return "Container <{}>".format(self.name)

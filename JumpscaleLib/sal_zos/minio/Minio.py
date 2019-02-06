@@ -1,3 +1,4 @@
+import os
 import signal
 import time
 
@@ -32,7 +33,8 @@ class Minio(Service):
                  tlog_namespace=None,
                  tlog_address=None,
                  master_namespace=None,
-                 master_address=None):
+                 master_address=None,
+                 logo_url=None):
         """
         :param name: instance name
         :param node: sal of the node to deploy minio on
@@ -79,6 +81,7 @@ class Minio(Service):
 
         self._config_dir = '/bin'
         self._config_name = 'zerostor.yaml'
+        self.logo_url = logo_url
 
     @property
     def _container_data(self):
@@ -98,7 +101,7 @@ class Minio(Service):
         # we want only the storage pool on top of an SSD
         pools = filter(lambda p: p.type.value == 'SSD', self.node.storagepools.list())
         # sort all the SSD storage pool by ussage
-        pools = sorted(pools, key=lambda p: p.used)
+        pools = sorted(pools, key=lambda p: (p.used, len(p.list())))
         fs = None
         for sp in pools:
             try:
@@ -107,13 +110,13 @@ class Minio(Service):
                 try:
                     fs = sp.create(self._id)
                 except Exception as err:
-                    logger.warning('couldn create storage pool filesystem: %s\nTrying another disk' % str(err))
+                    logger.warning('could not create storage pool filesystem: %s\nTrying another disk' % str(err))
                     continue
             if fs:
                 break
 
         if fs is None:
-            raise RuntimeError("couldn't find a disk to use to mount in the container")
+            raise RuntimeError("could not find a disk to use to mount in the container")
 
         return {
             'name': self._container_name,
@@ -136,9 +139,23 @@ class Minio(Service):
 
         logger.info('start minio %s' % self.name)
 
+        def test_started():
+            self._container = None
+            return self.container.is_running()
+        if not j.tools.timer.execute_until(test_started, 10, 1):
+            raise RuntimeError('failed to start container')
+
         self.create_config()
 
-        cmd = '/bin/minio gateway zerostor --address 0.0.0.0:{port} --config-dir {dir}'.format(
+        logo_path = None
+        if self.logo_url:
+            logo_path = self.download_logo()
+
+        cmd = '/bin/minio gateway '
+        if logo_path:
+            cmd += ' --logo %s' % logo_path
+
+        cmd += ' zerostor --address 0.0.0.0:{port} --config-dir {dir}'.format(
             port=DEFAULT_PORT, dir=self._config_dir)
 
         # wait for minio to start
@@ -164,6 +181,13 @@ class Minio(Service):
         logger.info('Creating minio config for %s' % self.name)
         config = self._config_as_text()
         self.container.upload_content(j.sal.fs.joinPaths(self._config_dir, self._config_name), config)
+
+    def download_logo(self):
+        dest = os.path.join('/mnt/containers', str(self.container.id), 'minio_metadata', 'logo.svg')
+        resp = self.node.client.web.download(self.logo_url, dest).get()
+        if resp.state != 'SUCCESS':
+            raise RuntimeError('impossible to download the minio logo: %s' % resp.stderr)
+        return '/minio_metadata/logo.svg'
 
     def _config_as_text(self):
         return templates.render(

@@ -13,7 +13,7 @@ class MinioFactory(JSBASE):
     def get(name, node, login, password, zdbs, namespace, private_key, node_port,
             namespace_secret='', block_size=1048576,
             meta_private_key='', nr_datashards=1, nr_parityshards=0,
-            tlog_namespace=None, tlog_address=None, master_namespace=None, master_address=None):
+            tlog_namespace=None, tlog_address=None, master_namespace=None, master_address=None, logo_url=None):
         """
         Get sal for minio
         Returns:
@@ -35,4 +35,5 @@ class MinioFactory(JSBASE):
                      tlog_namespace=tlog_namespace,
                      tlog_address=tlog_address,
                      master_namespace=master_namespace,
-                     master_address=master_address)
+                     master_address=master_address,
+                     logo_url=logo_url)
