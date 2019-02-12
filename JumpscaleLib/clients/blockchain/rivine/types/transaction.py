@@ -2541,11 +2541,15 @@ class FlatMoneyTransaction:
         
         # collect the amounts per unlockhash
         to_addresses = {}
+        address_locked = {}
         coi = 0
         for co in cos:
             uh = couhs[coi]
             coi += 1
             to_addresses[uh] = to_addresses.get(uh, 0) + int(co.get('value', '0'))
+            address_locked[uh] = address_locked.get(uh, False)
+            if not address_locked[uh] and co['condition'].get('type',1) == 3:
+                address_locked[uh] = True
 
         # create a flat transaction per to_address mapping
         txs = []
@@ -2559,6 +2563,7 @@ class FlatMoneyTransaction:
             tx._amount = amount
             tx._data = data
             tx._data_type = data_type
+            tx._locked = address_locked[uh]
             txs.append(tx)
 
         # return a list of flat transactions
