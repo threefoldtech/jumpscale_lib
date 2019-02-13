@@ -164,6 +164,7 @@ def collect_transaction_outputs(current_height, address, transactions, unconfirm
             # Next part collects multisig outputs, lets ignore that if we don't
             # have a multisig address
             continue
+        unlockhashes = rawtxn.get('coinoutputunlockhashes')
         if unlockhashes:
             for idx, uh in enumerate(unlockhashes):
                 if uh == address:
@@ -194,6 +195,7 @@ def collect_transaction_outputs(current_height, address, transactions, unconfirm
             # Next part collects multisig outputs, lets ignore that if we don't
             # have a multisig address
             continue
+        unlockhashes = rawtxn.get('coinoutputunlockhashes')
         if unlockhashes:
             for idx, uh in enumerate(unlockhashes):
                 if uh == address:
