@@ -21,11 +21,12 @@ configure(app, settings.IYO_CLIENTID, settings.IYO_SECRET,
 j.clients.mongoengine.get('capacity', interactive=False)
 
 db.init_app(app)
+
+# initialize influxdb
 influxdb.init(settings)
 
 app.register_blueprint(api_api)
 app.register_blueprint(frontend_bp)
-
 
 @app.template_filter()
 def uptime(seconds):

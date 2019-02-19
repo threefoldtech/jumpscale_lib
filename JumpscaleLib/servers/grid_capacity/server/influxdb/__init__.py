@@ -1,19 +1,36 @@
 from jumpscale import j
-_client = None
 
+_client = None
+influxlog = j.logger.get("grid-influx")
 
 def init(settings):
-    if not settings.INFLUX_HOST or \
-            not settings.INFLUX_PORT or \
-            not settings.INFLUX_DB:
+    if not settings.INFLUX_HOST:
+        influxlog.warning("missing influxdb host configuration")
         return
+
+    if not settings.INFLUX_PORT:
+        influxlog.warning("missing influxdb port configuration")
+        return
+
+    if not settings.INFLUX_DB:
+        influxlog.warning("missing influxdb database configuration")
+        return
+
     global _client
     _client = j.clients.influxdb.get(settings.INFLUX_DB, {
         'host': settings.INFLUX_HOST,
         'port': settings.INFLUX_PORT,
         'username': "root",
         'password': "",
-        'database': settings.INFLUX_DB})
+        'database': settings.INFLUX_DB
+    })
+
+    for db in _client.get_list_database():
+        if db['name'] == settings.INFLUX_DB:
+            influxlog.notice("database <%s> already exists, using it" % settings.INFLUX_DB)
+            return True
+
+    influxlog.notice("creating database <%s>" % settings.INFLUX_DB)
     _client.create_database(settings.INFLUX_DB)
 
 
