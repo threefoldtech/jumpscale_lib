@@ -62,22 +62,24 @@ def capacity_setup():
 @click.option('--mongo-auth-pass', required=True, help="MongoDB authentication password")
 @click.option('--mongo-replicaset', default="", help="MongoDB replicatset name")
 def configure(host, port,
-          influx_host, influx_port, influx_db,
-          iyo_callback, iyo_clientid, iyo_secret,
-          mongo_host, mongo_port, mongo_db, mongo_auth_user, mongo_auth_pass, mongo_replicaset):
+              influx_host, influx_port, influx_db,
+              iyo_callback, iyo_clientid, iyo_secret,
+              mongo_host, mongo_port, mongo_db, mongo_auth_user, mongo_auth_pass, mongo_replicaset):
     
+    logger.info("configuring mongodb")
     data = {
         'authentication_source': mongo_auth_user,
         'host': mongo_host,
-        'password': mongo_auth_pass,
+        'password_': mongo_auth_pass,
         'port': mongo_port,
-        'replicatset': mongo_replicaset,
+        'replicaset': mongo_replicaset,
         'ssl': False,
         'username': mongo_auth_user
     }
     
     j.clients.mongoengine.get("capacity", data=data)
     
+    logger.info("configuring capacity-server")
     data = {
         'debug': False,
         'host': host,
