@@ -20,6 +20,7 @@ class CapacityServer(JSConfigBase):
     def __init__(self, instance, data={}, parent=None, interactive=False, template=None):
         JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,
                               template=TEMPLATE, interactive=interactive)
+
         settings.HOST = self.config.data['host']
         settings.PORT = self.config.data['port']
         settings.DEBUG = self.config.data['debug']
@@ -29,6 +30,7 @@ class CapacityServer(JSConfigBase):
         settings.INFLUX_HOST = self.config.data['influx_host']
         settings.INFLUX_PORT = self.config.data['influx_port']
         settings.INFLUX_DB = self.config.data['influx_db']
+
         from .server.app import app
         self.app = app
 

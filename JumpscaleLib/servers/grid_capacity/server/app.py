@@ -11,7 +11,6 @@ from . import settings, influxdb
 from .flask_itsyouonline import configure
 from .models import db
 
-
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 configure(app, settings.IYO_CLIENTID, settings.IYO_SECRET,

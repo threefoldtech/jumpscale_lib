@@ -5,16 +5,10 @@ influxlog = j.logger.get("grid-influx")
 
 def init(settings):
     if not settings.INFLUX_HOST:
-        influxlog.warning("missing influxdb host configuration")
-        return
-
-    if not settings.INFLUX_PORT:
-        influxlog.warning("missing influxdb port configuration")
-        return
+        return False
 
     if not settings.INFLUX_DB:
-        influxlog.warning("missing influxdb database configuration")
-        return
+        return False
 
     global _client
     _client = j.clients.influxdb.get(settings.INFLUX_DB, {
