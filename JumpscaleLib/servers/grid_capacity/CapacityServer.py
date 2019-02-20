@@ -1,5 +1,5 @@
 from jumpscale import j
-from .server import settings
+from .server import settings, influxdb
 
 TEMPLATE = """
 host = "localhost"
@@ -35,4 +35,7 @@ class CapacityServer(JSConfigBase):
         self.app = app
 
     def start(self):
+        if settings.INFLUX_HOST and settings.INFLUX_DB:
+            influxdb.init(settings.INFLUX_HOST, settings.INFLUX_PORT, settings.INFLUX_DB)
+
         self.app.run(host=settings.HOST, port=settings.PORT, debug=settings.DEBUG)
