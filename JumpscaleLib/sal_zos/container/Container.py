@@ -367,10 +367,8 @@ class Container():
             self.node.client.cgroup.remove('cpuset', self.name)
             raise
 
-        if self.is_running():
-            self.identity
-
         self._client = self.node.client.container.client(int(job.get(timeout)))
+        self.identity  # try to get zerotier identity if any
 
     def is_job_running(self, id):
         try:
