@@ -26,6 +26,16 @@ class Containers():
         return containers
 
     def get(self, name):
+        try:
+            container = self.node.client.container.get(name)
+            if not container:
+                raise LookupError("Could not find container with name {}".format(name))
+            container['container']['id'] = container.pop('id')
+            return Container.from_containerinfo(container, self.node)
+        except ResultError:
+            # get is not implemented, fall back to old method
+            pass
+
         containers = list(self.node.client.container.find(name).values())
         if not containers:
             raise LookupError("Could not find container with name {}".format(name))
