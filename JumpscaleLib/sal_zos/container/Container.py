@@ -190,6 +190,9 @@ class Container():
         self.logger.debug("get container info")
         try:
             data = self.node.client.container.get(self.name)
+            if not data:
+                # could be that the container with this name does not exist yet
+                return
             # keep old data layout
             data['container']['id'] = data.pop('id')
             return data
