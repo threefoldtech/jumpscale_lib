@@ -5,6 +5,7 @@ import signal
 import netaddr
 from jumpscale import j
 from ..utils import get_zt_ip
+from JumpscaleLib.clients.zero_os_protocol.Response import ResultError
 
 logging.basicConfig(level=logging.INFO)
 default_logger = logging.getLogger(__name__)
@@ -187,6 +188,16 @@ class Container():
     @property
     def info(self):
         self.logger.debug("get container info")
+        try:
+            data = self.node.client.container.get(self.name)
+            # keep old data layout
+            data['container']['id'] = data.pop('id')
+            return data
+        except ResultError:
+            pass
+
+        # fall back to old method
+        default_logger.debug('falling back to list iteration')
         for containerid, container in self.node.client.container.list().items():
             if self.name == container['container']['arguments']['name']:
                 containerid = int(containerid)
