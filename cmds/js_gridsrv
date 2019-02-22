@@ -1,0 +1,126 @@
+#! /usr/bin/env python3
+from jumpscale import j
+import click
+
+logger = j.logger.get("capacity", force=True)
+j.logger.loggers_level_set(level='DEBUG')
+
+@click.group()
+def cli():
+    pass
+
+def die(message):
+    logger.error(message)
+    j.application.stop()
+
+def mongoengine_setup():
+    try:
+        logger.debug("checking for mongodb settings")
+
+        # try to load 'capacity' mongoengine instance
+        data = j.clients.mongoengine.get("capacity", interactive=False, create=False)
+
+        required = ['host', 'username']
+        for checking in required:
+            if not data.config.data[checking]:
+                die("mongodb configuration not valid for parameter: %s" % checking)
+
+        return True
+
+    except RuntimeError:
+        return False
+
+def capacity_setup():
+    try:
+        logger.debug("checking for grid capacity server settings")
+        
+        # try to load the capacity server
+        data = j.servers.capacity.get("main", interactive=False, create=False)
+
+        required = ['host', 'iyo_callback', 'iyo_clientid', 'iyo_secret', 'influx_host', 'influx_db']
+        for checking in required:
+            if not data.config.data[checking]:
+                die("capacity server configuration not valid for parameter: %s" % checking)
+        
+        return True
+
+    except RuntimeError:
+        return False
+
+@click.command()
+@click.option('--host', default="0.0.0.0", help="HTTP Server listen address (eg: 0.0.0.0)")
+@click.option('--port', default=9900, help="HTTP Server listen port (eg: 9900)")
+@click.option('--influx-host', required=True, help="Influxdb database hostname")
+@click.option('--influx-port', default=8086, help="Influxdb port (eg: 8086)")
+@click.option('--influx-db', required=True, help="Influxdb database name (eg: capacity)")
+@click.option('--iyo-callback', required=True, help="Itsyou.online callback endpoint (eg: https://domain.tld/callback)")
+@click.option('--iyo-clientid', required=True, help="Itsyou.online API Client-ID")
+@click.option('--iyo-secret', required=True, help="Itsyou.online API Client-Secret")
+@click.option('--mongo-host', required=True, help="MongoDB hostname")
+@click.option('--mongo-port', default=27017, help="MongoDB port (eg: 27017)")
+@click.option('--mongo-db', required=True, help="MongoDB database (eg: capacity)")
+@click.option('--mongo-auth-user', required=True, help="MongoDB authentication user (eg: admin)")
+@click.option('--mongo-auth-pass', required=True, help="MongoDB authentication password")
+@click.option('--mongo-replicaset', default="", help="MongoDB replicatset name")
+def configure(host, port,
+              influx_host, influx_port, influx_db,
+              iyo_callback, iyo_clientid, iyo_secret,
+              mongo_host, mongo_port, mongo_db, mongo_auth_user, mongo_auth_pass, mongo_replicaset):
+    
+    logger.info("configuring mongodb")
+    data = {
+        'authentication_source': mongo_auth_user,
+        'host': mongo_host,
+        'password_': mongo_auth_pass,
+        'port': mongo_port,
+        'replicaset': mongo_replicaset,
+        'ssl': False,
+        'username': mongo_auth_user
+    }
+    
+    j.clients.mongoengine.get("capacity", data=data)
+    
+    logger.info("configuring capacity-server")
+    data = {
+        'debug': False,
+        'host': host,
+        'port': port,
+        'influx_db': influx_db,
+        'influx_host': influx_host,
+        'influx_port': influx_port,
+        'iyo_callback': iyo_callback,
+        'iyo_clientid': iyo_clientid,
+        'iyo_secret': iyo_secret
+    }
+    
+    j.servers.capacity.get("main", data=data)
+
+def checker():
+    if not mongoengine_setup():
+        logger.error("no mongodb engine configured yet, please configure first")
+        j.application.stop()
+
+    if not capacity_setup():
+        logger.error("no mongodb engine configured yet, please provide mongodb arguments")
+        j.application.stop()
+
+    logger.info("capacity services seems configured")
+    return True
+
+@click.command()
+def check():
+    return checker()
+
+@click.command()
+def start():
+    checker()
+
+    logger.info("starting the capacity server")
+    j.servers.capacity.start(instance='main')
+
+cli.add_command(configure)
+cli.add_command(check)
+cli.add_command(start)
+
+if __name__ == '__main__':
+    cli()
