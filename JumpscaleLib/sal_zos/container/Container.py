@@ -204,8 +204,9 @@ class Container():
                 # could be that the container with this name does not exist yet
                 return
             # keep old data layout
-            data['container']['id'] = data.pop('id')
-            return data
+            if 'id' in data:
+                data['container']['id'] = data.pop('id')
+                return data
         except ResultError:
             pass
 
