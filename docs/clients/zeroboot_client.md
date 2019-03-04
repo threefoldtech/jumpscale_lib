@@ -5,7 +5,7 @@
 
 ## Prerequisites
 
-The router needs first to be installed check the docs [here](https://github.com/Jumpscale/prefab/blob/development/docs/prefab.zero_boot.md) for more information.
+The router needs first to be installed check the docs [here](https://github.com/threefoldtech/jumpscale_prefab/blob/development/docs/prefab.zeroboot.md) for more information.
 
 zero_boot client requires instances of the following clients before it can be used:
 
