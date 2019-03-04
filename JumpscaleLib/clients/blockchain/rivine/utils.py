@@ -218,7 +218,58 @@ def get_current_minter_definition(rivine_explorer_addresses, explorer_password):
             break
     return mint_condition
 
+def get_3bot_record(rivine_explorer_addresses, identifier):
+    """
+    Retrieve a 3bot record from the chain. The identifier can be a name or an id
+    """
+    record = _get_3bot_record_by_id(rivine_explorer_addresses, identifier)
+    if record is None:
+        record = _get_3bot_record_by_name(rivine_explorer_addresses, identifier)
+    return record
 
+def _get_3bot_record_by_id(rivine_explorer_addresses, identifier):
+    """
+    Retrieve a 3bot record from the chain
+    """
+    msg = 'Failed to retrieve 3bot record'
+    response = None
+    record = None
+    for rivine_explorer_address in rivine_explorer_addresses:
+        url = '{}/explorer/3bot/{}'.format(rivine_explorer_address.strip('/'), identifier)
+        headers = {'user-agent':'Rivine-Agent'}
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+        except requests.exceptions.ConnectionError as ex:
+            logger.warn(msg)
+            continue
+        if response.status_code != 200:
+            return None
+        else:
+            record = response.json()['record']
+            break
+    return record
+
+def _get_3bot_record_by_name(rivine_explorer_addresses, identifier):
+    """
+    Retrieve a 3bot record from the chain
+    """
+    msg = 'Failed to retrieve 3bot record'
+    response = None
+    record = None
+    for rivine_explorer_address in rivine_explorer_addresses:
+        url = '{}/explorer/whois/3bot/{}'.format(rivine_explorer_address.strip('/'), identifier)
+        headers = {'user-agent':'Rivine-Agent'}
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+        except requests.exceptions.ConnectionError as ex:
+            logger.warn(msg)
+            continue
+        if response.status_code != 200:
+            return None
+        else:
+            record = response.json()['record']
+            break
+    return record
 
 def commit_transaction(rivine_explorer_addresses, rivine_explorer_api_password, transaction):
     """

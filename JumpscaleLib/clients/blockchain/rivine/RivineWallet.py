@@ -155,6 +155,15 @@ class RivineWallet:
         """
         return str(self.generate_key(persist=persist).unlockhash)
 
+    def get_3bot_key(self, identifier):
+        """
+        get the public key for a 3bot based on an identifier
+        """
+        record = utils.get_3bot_record(self._bc_networks, identifier)
+        if record is None:
+            return None
+        return record['publickey']
+
     def list_incoming_transactions(self, addresses=None, min_height=0):
         """
         List all incoming transactions related to a wallet,
