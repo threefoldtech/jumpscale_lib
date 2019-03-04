@@ -105,6 +105,14 @@ class RivineWallet:
             return KeyError("address is not found in wallet")
         return self._keys[address].public_key
 
+    def private_key(self, address):
+        """
+        Private key owned by this wallet and linked ot the passed address.
+        """
+        if address not in self._keys:
+            return KeyError("address is not found in wallet")
+        return self._keys[address].secret_key.to_bytes()
+
     @property
     def current_balance(self):
         """
