@@ -2,6 +2,7 @@ import json
 from enum import Enum
 
 import requests
+import decimal
 
 from jumpscale import j
 from JumpscaleLib.sal_zos.disks.Disks import StorageType
@@ -75,7 +76,7 @@ class Report():
         return the number of memory units in GiB
         """
         size = (self._total_mem / GiB)
-        return round(size, 2)
+        return float(decimal.Decimal(size).quantize(decimal.Decimal('0.01'), rounding=decimal.ROUND_UP))
 
     @property
     def HRU(self):
@@ -88,7 +89,7 @@ class Report():
             if disk.type in [StorageType.HDD, StorageType.ARCHIVE]:
                 unit += int(disk.size) / GiB
 
-        return round(unit, 2)
+        return float(decimal.Decimal(unit).quantize(decimal.Decimal('0.01'), rounding=decimal.ROUND_UP))
 
     @property
     def SRU(self):
@@ -101,7 +102,7 @@ class Report():
             if disk.type in [StorageType.SSD, StorageType.NVME]:
                 unit += int(disk.size) / GiB
 
-        return round(unit, 2)
+        return float(decimal.Decimal(unit).quantize(decimal.Decimal('0.01'), rounding=decimal.ROUND_UP))
 
     def total(self):
         return {
