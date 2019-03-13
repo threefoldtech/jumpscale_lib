@@ -3,6 +3,8 @@ import os
 import time
 
 from ..abstracts import Mountable
+from ..disks.Disks import Disk
+from ..disks.Partition import Partition
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -99,11 +101,13 @@ class StoragePool(Mountable):
 
     @property
     def type(self):
-        disk_name = self.device[len('/dev/'):]
-        disk = self.node.disks.get(disk_name[:-1])
-        if not disk:
-            raise RuntimeError("could not find disk used by the storage pool %s" % self.name)
-        return disk.type
+        medium = self.node.disks.get_device(self.device)
+        if isinstance(medium, Disk):
+            return medium.type
+        elif isinstance(medium, Partition):
+            return medium.disk.type
+
+        raise RuntimeError("unsupported device type")
 
     @property
     def devicename(self):
@@ -297,6 +301,22 @@ class FileSystem():
     @property
     def client(self):
         return self.pool.node.client
+
+    @property
+    def quota(self):
+        total = 0
+        for subvol in self.pool.raw_list():
+            if subvol['Path'] == self.subvolume:
+                total += subvol['Quota']
+        return total
+
+    @quota.setter
+    def quota(self, value):
+        if value < self.quota:
+            raise ValueError("cannot reduce the quota of a filesystem, only growth is allowed")
+        mountpoint = self.pool._get_mountpoint()
+        subvolpath = os.path.join(mountpoint, self.subvolume)
+        self.client.btrfs.subvol_quota(subvolpath, str(value))
 
     def delete(self, includesnapshots=True):
         """
