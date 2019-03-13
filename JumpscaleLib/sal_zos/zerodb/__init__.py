@@ -78,13 +78,20 @@ class Zerodbs(DynamicCollection):
 
         # list of all disk devices name used by the storage pool existing on the nodes
         storagepools = self.node.storagepools.list()
-        disks_used = [sp.device[:-1] for sp in storagepools]
+        devices_used = [sp.device for sp in storagepools]
         # list of all disk device name on the nodes
         disks = self.node.disks.list()
         all_disks = [d.devicename for d in filter(_zdb_friendly, disks)]
 
+        # search for disk with no storage pool on it yet
+        for sp_device in devices_used:
+            for disk_device in all_disks:
+                if sp_device.find(disk_device) != -1:
+                    all_disks.remove(disk_device)
+                    break
+
         # create a storage pool on all the disk which doesn't any storage pool yet
-        for device in set(all_disks) - set(disks_used):
+        for device in all_disks:
             name = j.data.idgenerator.generateGUID()
             logger.info("create storage pool %s on %s", name, device)
             sp = self.node.storagepools.create(
