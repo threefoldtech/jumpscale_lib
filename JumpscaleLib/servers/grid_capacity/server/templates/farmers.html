@@ -53,7 +53,8 @@
                 {% endif %}
                 <td>
                     {% if session['_iyo_organization'] == farmer.iyo_organization %}
-                    <a href="/edit_farm/{{farmer.id}}"><i class="far fa-edit" onclick="event.stopPropagation();"></i></a>
+                    <a href="/edit_farm/{{farmer.id}}" title="Edit Farmer"><i class="far fa-edit" onclick="event.stopPropagation();"></i></a>
+                    <a href="/farmer_id" title="Refresh token"><i class="fa fa-sync-alt" onclick="event.stopPropagation();"></i></a>
                     {% endif %}
                 </td>
             </tr>
