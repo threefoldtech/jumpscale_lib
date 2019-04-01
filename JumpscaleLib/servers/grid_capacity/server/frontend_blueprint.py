@@ -99,6 +99,13 @@ def logout():
     force_invalidate_session()
     return redirect("/")
 
+@frontend_bp.route('/farmer_id', methods=['GET'])
+def get_farmer_id():
+    if 'iyo_jwt' not in session:
+        return redirect('/')
+
+    jwt = session['iyo_jwt']
+    return render_template('farm_get_id.html', jwt=jwt)
 
 @frontend_bp.route('/edit_farm/<organization>', methods=['GET'])
 def edit_farmer(organization):
