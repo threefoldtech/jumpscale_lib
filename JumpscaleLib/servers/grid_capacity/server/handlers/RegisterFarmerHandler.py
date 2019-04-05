@@ -22,7 +22,8 @@ def RegisterFarmerHandler():
     address = request.args.get('walletAddress')
 
     if not request.args['name'] or not request.args['organization']:
-        return "Missing Name or Organization", 400
+        flash("Name or Organization missing", "danger")
+        return redirect('/register_farm')
 
     if address:
         wallet_addresses.append(address)
