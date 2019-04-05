@@ -101,7 +101,8 @@ class NodeRegistration:
         for cap in capacities:
             if cap.location:
                 countries.add(cap.location.country)
-        return list(countries)
+
+        return sorted(list(countries))
 
 
 class FarmerRegistration:
