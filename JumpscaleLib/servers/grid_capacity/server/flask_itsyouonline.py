@@ -25,21 +25,21 @@ MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAES5X8XrfKdx9gYayFITc89wad4usrk0n2
 def force_invalidate_session():
     if '_iyo_authenticated' in session:
         del session['_iyo_authenticated']
+
+    if '_iyo_organization' in session:
+        del session['_iyo_organization']
+
     if 'iyo_user_info' in session:
         del session['iyo_user_info']
+
     if 'iyo_jwt' in session:
         del session['iyo_jwt']
 
-
 def _invalidate_session():
     authenticated_ = session.get('_iyo_authenticated')
+
     if not authenticated_ or authenticated_ + 300 < time.time():
-        if '_iyo_authenticated' in session:
-            del session['_iyo_authenticated']
-        if 'iyo_user_info' in session:
-            del session['iyo_user_info']
-        if 'iyo_jwt' in session:
-            del session['iyo_jwt']
+        force_invalidate_session()
 
 
 def configure(app, organization, client_secret, callback_uri, callback_route, scope=None, get_jwt=False, offline_access=False, orgfromrequest=False):
