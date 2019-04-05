@@ -26,9 +26,6 @@ def force_invalidate_session():
     if '_iyo_authenticated' in session:
         del session['_iyo_authenticated']
 
-    if '_iyo_organization' in session:
-        del session['_iyo_organization']
-
     if 'iyo_user_info' in session:
         del session['iyo_user_info']
 
@@ -142,6 +139,7 @@ def _callback():
         return "Invalid state received. Cannot authenticate request!", 400
     if not code:
         return "Invalid code received. Cannot authenticate request!", 400
+
     # Get access token
     config = current_app.config["iyo_config"]
     organization = config["organization"]
@@ -156,6 +154,7 @@ def _callback():
     }
     base_url = "{}/oauth/access_token?".format(ITSYOUONLINEV1)
     url = base_url + urlencode(params)
+
     response = requests.post(url)
     response.raise_for_status()
     response = response.json()

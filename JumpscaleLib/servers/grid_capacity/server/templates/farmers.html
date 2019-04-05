@@ -52,7 +52,7 @@
                     <td></td>
                 {% endif %}
                 <td>
-                    {% if session['_iyo_organization'] == farmer.iyo_organization %}
+                    {% if '_iyo_authenticated' in session and session['_iyo_organization'] == farmer.iyo_organization %}
                     <a href="/edit_farm/{{farmer.id}}" class="btn btn-success" onclick="event.stopPropagation();">Edit</a>
                     <a href="/farmer_id" class="btn btn-primary" onclick="event.stopPropagation();">Farmer ID</a>
                     {% endif %}
