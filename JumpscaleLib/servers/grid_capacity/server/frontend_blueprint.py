@@ -53,12 +53,18 @@ def list_farmers():
 
 @frontend_bp.route('/farm_registered', methods=['GET'])
 def farmer_registered():
+    if 'iyo_jwt' not in session:
+        return redirect('/')
+
     jwt = session['iyo_jwt']
     return render_template('farm_registered.html', jwt=jwt)
 
 
 @frontend_bp.route('/farm_updated', methods=['GET'])
 def farmer_updated():
+    if 'iyo_jwt' not in session:
+        return redirect('/')
+
     jwt = session['iyo_jwt']
     return render_template('farm_updated.html', jwt=jwt)
 
@@ -93,6 +99,13 @@ def logout():
     force_invalidate_session()
     return redirect("/")
 
+@frontend_bp.route('/farmer_id', methods=['GET'])
+def get_farmer_id():
+    if 'iyo_jwt' not in session:
+        return redirect('/')
+
+    jwt = session['iyo_jwt']
+    return render_template('farm_get_id.html', jwt=jwt)
 
 @frontend_bp.route('/edit_farm/<organization>', methods=['GET'])
 def edit_farmer(organization):

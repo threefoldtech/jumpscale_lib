@@ -35,13 +35,14 @@ def RegisterCapacityHandler():
     except jsonschema.ValidationError as e:
         return jsonify(errors="bad request body: {}".format(e)), 400
 
-    # Update the node if already exists or create new one using the inputs
+    # Fetch farmer from database first
     farmer = Farmer.objects(iyo_organization=iyo_organization).first()
     if not farmer:
         return jsonify(errors='Unauthorized farmer'), 403
 
     inputs['updated'] = datetime.now()
 
+    # Update the node if already exists or create new one using the inputs
     try:
         capacity = NodeRegistration.get(inputs.get("node_id"))
         if farmer.location:
@@ -56,6 +57,7 @@ def RegisterCapacityHandler():
         capacity = Capacity(**inputs)
         if farmer.location:
             capacity.location = farmer.location
+
         capacity.save()
 
     try:
