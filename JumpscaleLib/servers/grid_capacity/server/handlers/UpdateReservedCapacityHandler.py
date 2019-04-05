@@ -8,7 +8,7 @@ from jsonschema import Draft4Validator
 
 from flask import jsonify, request
 
-from ..models import NodeRegistration, Resources
+from ..models import NodeRegistration, NodeRegistration, Resources
 from .jwt import FarmerInvalid, validate_farmer_id
 
 
@@ -27,7 +27,12 @@ def UpdateReservedCapacityHandler(node_id):
     except jsonschema.ValidationError as e:
         return jsonify(errors="bad request body"), 400
 
-    capacity = NodeRegistration.get(node_id)
+    try:
+        capacity = NodeRegistration.get(node_id)
+
+    except NodeNotFoundError:
+        return jsonify(errors='Updating not existing node'), 404
+
     if capacity.reserved_resources is None:
         capacity.reserved_resources = Resources()
 
