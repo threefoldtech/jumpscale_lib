@@ -33,25 +33,56 @@
     <main role="main">
 
       <div class="container">
-        <p class="float-right"><a href="https://threefoldfoundation.github.io/info_grid/#/">ThreeFold Grid documentation</a></p>
-        <h2>Search for capacity</h2>
+        <h2>Search for Capacity</h2>
         <form action="/" method="get">
-          <div class="form-group">
-              <label for="formCRU">Minimum <abbr title="CPU Resource Unit">CRU</abbr>: <span class="badge badge-pill badge-primary"><span id=formCRUValue></span> CPU</span></span></label>
-              <input type="range" class="form-control-range" id="formCRU" name="cru" value="{{form.cru}}" step=1>
+          <div class="form-row">
+            <div class="form-group col-md-2">
+                <label for="formCRU">Minimum <abbr title="CPU Resource Unit">CRU</abbr></label>
+            </div>
+            <div class="form-group col-md-9">
+                <input type="range" class="form-control-range" id="formCRU" name="cru" value="{{form.cru}}" step="1">
+            </div>
+            <div class="form-group col-md-1">
+                <span class="badge badge-pill badge-primary"><span id=formCRUValue></span> CPU</span></span>
+            </div>
           </div>
+
           <div class="form-group">
-            <label for="formMRU">Minimum <abbr title="Memory Resource Unit">MRU</abbr>: <span class="badge badge-pill badge-primary"><span id=formMRUValue></span> GiB</span></span></label>
-            <input type="range" class="form-control-range" id="formMRU" name="mru" value="{{form.mru}}" step=1 onchange="">
+            <div class="form-group col-md-2">
+                <label for="formMRU">Minimum <abbr title="Memory Resource Unit">MRU</abbr></label>
+            </div>
+            <div class="form-group col-md-9">
+                <input type="range" class="form-control-range" id="formMRU" name="mru" value="{{form.mru}}" step="1">
+            </div>
+            <div class="form-group col-md-1">
+                <span class="badge badge-pill badge-primary"><span id=formMRUValue></span> GiB</span></span>
+            </div>
           </div>
+
           <div class="form-group">
-              <label for="formHRU">Minimum <abbr title="HDD Resource Unit">HRU</abbr>: <span class="badge badge-pill badge-primary"><span id=formHRUValue></span> GiB</span></span></label>
-              <input type="range" class="form-control-range" id="formHRU" name="hru" value="{{form.hru}}" step=1 max=5000>
+            <div class="form-group col-md-2">
+                <label for="formHRU">Minimum <abbr title="HDD Resource Unit">HRU</abbr></label>
+            </div>
+            <div class="form-group col-md-9">
+                <input type="range" class="form-control-range" id="formHRU" name="hru" value="{{form.hru}}" step="1" max="5000">
+            </div>
+            <div class="form-group col-md-1">
+                <span class="badge badge-pill badge-primary"><span id=formHRUValue></span> GiB</span></span>
+            </div>
           </div>
+
           <div class="form-group">
-              <label for="formSRU">Minimum <abbr title="SSD Resource Unit">SRU</abbr>: <span class="badge badge-pill badge-primary"><span id=formSRUValue></span> GiB</span></span></label>
-              <input type="range" class="form-control-range" id="formSRU" name="sru" value="{{form.sru}}" step=1 max=1000>
+            <div class="form-group col-md-2">
+                <label for="formSRU">Minimum <abbr title="SSD Resource Unit">SRU</abbr></label>
+            </div>
+            <div class="form-group col-md-9">
+                <input type="range" class="form-control-range" id="formSRU" name="sru" value="{{form.sru}}" step="1" max="1000">
+            </div>
+            <div class="form-group col-md-1">
+                <span class="badge badge-pill badge-primary"><span id=formSRUValue></span> GiB</span></span>
+            </div>
           </div>
+
           <div class="row">
             <div class="form-group col-6">
                 <label for="formCountry">Filter by country:</label>
