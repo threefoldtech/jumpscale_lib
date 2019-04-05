@@ -1,7 +1,7 @@
 # THIS FILE IS SAFE TO EDIT. It will not be overwritten when rerunning go-raml.
 import os
 
-from flask import request, redirect, session
+from flask import request, redirect, session, flash
 from ..flask_itsyouonline import requires_auth
 
 import json as JSON
