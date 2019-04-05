@@ -8,7 +8,7 @@ from jsonschema import Draft4Validator
 
 from flask import jsonify, request
 
-from ..models import NodeRegistration, NodeRegistration, Resources
+from ..models import NodeRegistration, NodeRegistration, NodeNotFoundError, Resources
 from .jwt import FarmerInvalid, validate_farmer_id
 
 
