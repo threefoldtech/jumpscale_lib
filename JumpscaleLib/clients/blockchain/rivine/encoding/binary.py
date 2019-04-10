@@ -37,7 +37,7 @@ def encode(value, type_=None):
         if type(hstr) in (bytes, bytearray):
             hstr = hstr.lstrip(b'0x')
         elif type(hstr) is str:
-            hstr = hstr.lstrip('0x')
+            hstr = hstr.replace('0x', '')
         result.extend(bytearray.fromhex(hstr))
     elif type_ is None:
         # try to figure out the type of the value
