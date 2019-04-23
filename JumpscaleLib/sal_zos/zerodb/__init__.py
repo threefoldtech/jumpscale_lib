@@ -1,8 +1,8 @@
-from .zerodb import Zerodb
-from ..abstracts import DynamicCollection
-from ..disks.Disks import StorageType
-
 from jumpscale import j
+
+from ..abstracts import DynamicCollection
+from ..disks.Disks import StorageType, Disk, Partition
+from .zerodb import Zerodb
 
 logger = j.logger.get(__name__)
 
@@ -73,25 +73,19 @@ class Zerodbs(DynamicCollection):
         :return: list of filesystem path created
         :rtype: [str]
         """
-
         mounts = []
-
-        # list of all disk devices name used by the storage pool existing on the nodes
         storagepools = self.node.storagepools.list()
-        devices_used = [sp.device for sp in storagepools]
-        # list of all disk device name on the nodes
-        disks = self.node.disks.list()
-        all_disks = [d.devicename for d in filter(_zdb_friendly, disks)]
+        disks = list(filter(_zdb_friendly, self.node.disks.list()))
 
-        # search for disk with no storage pool on it yet
-        for sp_device in devices_used:
-            for disk_device in all_disks:
-                if sp_device.find(disk_device) != -1:
-                    all_disks.remove(disk_device)
-                    break
+        # filter out all the disks already used by a storage pools
+        for sp in storagepools:
+            disk = _get_disk_per_device(disks, sp.device)
+            if not disk:
+                continue
+            disks.remove(disk)
 
         # create a storage pool on all the disk which doesn't any storage pool yet
-        for device in all_disks:
+        for device in disks:
             name = j.data.idgenerator.generateGUID()
             logger.info("create storage pool %s on %s", name, device)
             sp = self.node.storagepools.create(
@@ -158,3 +152,13 @@ def _zdb_friendly(disk):
     if disk.model in ['QEMU HARDDISK   ', 'QEMU DVD-ROM    '] or disk.transport == 'usb':
         return False
     return True
+
+def _get_disk_per_device(disks, device):
+
+    for disk in disks:
+        if disk.devicename == device:
+            return disk
+        for partition in disk.partitions:
+            if partition.devicename == device:
+                return disk
+    return None
