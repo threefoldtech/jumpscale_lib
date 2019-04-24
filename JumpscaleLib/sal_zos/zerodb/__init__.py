@@ -85,11 +85,11 @@ class Zerodbs(DynamicCollection):
             disks.remove(disk)
 
         # create a storage pool on all the disk which doesn't any storage pool yet
-        for device in disks:
+        for disk in disks:
             name = j.data.idgenerator.generateGUID()
-            logger.info("create storage pool %s on %s", name, device)
+            logger.info("create storage pool %s on %s", name, disk.devicename)
             sp = self.node.storagepools.create(
-                name, device=device, metadata_profile='single', data_profile='single', overwrite=True)
+                name, device=disk.devicename, metadata_profile='single', data_profile='single', overwrite=True)
             storagepools.append(sp)
 
         # make sure we don't use storage pool reserved for something else
