@@ -125,6 +125,7 @@ class Client(BaseClient, JSConfigClientBase):
                     socket_timeout=socket_timeout,
                     socket_keepalive=True,
                     socket_keepalive_options=socket_keepalive_options,
+                    max_connections=5000,
                 )
 
         return self.__redis
