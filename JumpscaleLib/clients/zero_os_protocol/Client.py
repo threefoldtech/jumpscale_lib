@@ -41,21 +41,24 @@ JSConfigClientBase = j.tools.configmanager.base_class_config
 
 
 class Client(BaseClient, JSConfigClientBase):
-    _raw_chk = typchk.Checker({
-        'id': str,
-        'command': str,
-        'arguments': typchk.Any(),
-        'queue': typchk.Or(str, typchk.IsNone()),
-        'max_time': typchk.Or(int, typchk.IsNone()),
-        'stream': bool,
-        'tags': typchk.Or([str], typchk.IsNone()),
-        'recurring_period': typchk.Or(int, typchk.IsNone()),
-    })
+    _raw_chk = typchk.Checker(
+        {
+            "id": str,
+            "command": str,
+            "arguments": typchk.Any(),
+            "queue": typchk.Or(str, typchk.IsNone()),
+            "max_time": typchk.Or(int, typchk.IsNone()),
+            "stream": bool,
+            "tags": typchk.Or([str], typchk.IsNone()),
+            "recurring_period": typchk.Or(int, typchk.IsNone()),
+        }
+    )
 
     def __init__(self, instance="main", data={}, parent=None, template=None, ui=None, interactive=True):
-        JSConfigClientBase.__init__(self, instance=instance, data=data, parent=parent,
-                                    template=TEMPLATE, ui=ui, interactive=interactive)
-        timeout = self.config.data['timeout']
+        JSConfigClientBase.__init__(
+            self, instance=instance, data=data, parent=parent, template=TEMPLATE, ui=ui, interactive=interactive
+        )
+        timeout = self.config.data["timeout"]
         BaseClient.__init__(self, timeout=timeout)
 
         self.__redis = None
@@ -88,37 +91,41 @@ class Client(BaseClient, JSConfigClientBase):
 
     @property
     def _redis(self):
-        password = self.config.data['password_']
+        password = self.config.data["password_"]
         if password and not self._jwt_expire_timestamp:
             self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(password)
         if self._jwt_expire_timestamp and self._jwt_expire_timestamp - 300 < time.time():
             password = j.clients.itsyouonline.refresh_jwt_token(password, validity=3600)
-            self.config.data_set('password_', password)
+            self.config.data_set("password_", password)
             self.config.save()
             if self.__redis:
                 self.__redis = None
             self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(password)
 
         if self.__redis is None:
-            if self.config.data['unixsocket']:
-                self.__redis = redis.Redis(unix_socket_path=self.config.data['unixsocket'], db=self.config.data['db'])
+            if self.config.data["unixsocket"]:
+                self.__redis = redis.Redis(unix_socket_path=self.config.data["unixsocket"], db=self.config.data["db"])
             else:
-                timeout = self.config.data['timeout']
+                timeout = self.config.data["timeout"]
                 socket_timeout = (timeout + 5) if timeout else 15
                 socket_keepalive_options = dict()
-                if hasattr(socket, 'TCP_KEEPIDLE'):
+                if hasattr(socket, "TCP_KEEPIDLE"):
                     socket_keepalive_options[socket.TCP_KEEPIDLE] = 1
-                if hasattr(socket, 'TCP_KEEPINTVL'):
+                if hasattr(socket, "TCP_KEEPINTVL"):
                     socket_keepalive_options[socket.TCP_KEEPINTVL] = 1
-                if hasattr(socket, 'TCP_KEEPIDLE'):
+                if hasattr(socket, "TCP_KEEPIDLE"):
                     socket_keepalive_options[socket.TCP_KEEPIDLE] = 1
 
-                self.__redis = redis.Redis(host=self.config.data['host'],
-                                           port=self.config.data['port'],
-                                           password=self.config.data['password_'],
-                                           db=self.config.data['db'], ssl=self.config.data['ssl'],
-                                           socket_timeout=socket_timeout,
-                                           socket_keepalive=True, socket_keepalive_options=socket_keepalive_options)
+                self.__redis = redis.Redis(
+                    host=self.config.data["host"],
+                    port=self.config.data["port"],
+                    password=self.config.data["password_"],
+                    db=self.config.data["db"],
+                    ssl=self.config.data["ssl"],
+                    socket_timeout=socket_timeout,
+                    socket_keepalive=True,
+                    socket_keepalive_options=socket_keepalive_options,
+                )
 
         return self.__redis
 
@@ -232,7 +239,9 @@ class Client(BaseClient, JSConfigClientBase):
         """
         return self._cgroup
 
-    def raw(self, command, arguments, queue=None, max_time=None, stream=False, tags=None, id=None, recurring_period=None):
+    def raw(
+        self, command, arguments, queue=None, max_time=None, stream=False, tags=None, id=None, recurring_period=None
+    ):
         """
         Implements the low level command call, this needs to build the command structure
         and push it on the correct queue.
@@ -253,23 +262,24 @@ class Client(BaseClient, JSConfigClientBase):
             id = str(uuid.uuid4())
 
         payload = {
-            'id': id,
-            'command': command,
-            'arguments': arguments,
-            'queue': queue,
-            'max_time': max_time,
-            'stream': stream,
-            'tags': tags,
-            'recurring_period': recurring_period,
+            "id": id,
+            "command": command,
+            "arguments": arguments,
+            "queue": queue,
+            "max_time": max_time,
+            "stream": stream,
+            "tags": tags,
+            "recurring_period": recurring_period,
         }
 
         self._raw_chk.check(payload)
-        flag = 'result:{}:flag'.format(id)
-        self._redis.rpush('core:default', json.dumps(payload))
+        flag = "result:{}:flag".format(id)
+        self._redis.rpush("core:default", json.dumps(payload))
         if self._redis.brpoplpush(flag, flag, DefaultTimeout) is None:
-            TimeoutError('failed to queue job {}'.format(id))
-        self.logger.debug('%s >> g8core.%s(%s)', id, command, ', '.join(
-            ("%s=%s" % (k, v) for k, v in arguments.items())))
+            TimeoutError("failed to queue job {}".format(id))
+        self.logger.debug(
+            "%s >> g8core.%s(%s)", id, command, ", ".join(("%s=%s" % (k, v) for k, v in arguments.items()))
+        )
 
         return Response(self, id)
 
