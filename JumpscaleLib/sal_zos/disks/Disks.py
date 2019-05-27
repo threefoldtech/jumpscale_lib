@@ -27,7 +27,7 @@ class Disks():
     def list(self):
         """
         List of disks on the node
-        """
+    """
         disks = []
         for disk_info in self.client.disk.list():
             disks.append(Disk(
@@ -118,7 +118,7 @@ class Disk(Mountable):
                         self._type = StorageType.ARCHIVE
                     else:
                         self._type = StorageType.HDD
-                elif res['type'] == 'SSD':
+                elif res['type'] in ['SSD', 'SDD']:  # some version of 0-db still have this typo
                     if "nvme" in self._disk_info['name']:
                         self._type = StorageType.NVME
                     else:
