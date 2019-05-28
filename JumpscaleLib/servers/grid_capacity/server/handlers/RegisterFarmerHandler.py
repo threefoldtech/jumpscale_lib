@@ -1,7 +1,7 @@
 # THIS FILE IS SAFE TO EDIT. It will not be overwritten when rerunning go-raml.
 import os
 
-from flask import request, redirect, session
+from flask import request, redirect, session, flash
 from ..flask_itsyouonline import requires_auth
 
 import json as JSON
@@ -20,6 +20,10 @@ Farmer_schema_validator = Draft4Validator(Farmer_schema, resolver=Farmer_schema_
 def RegisterFarmerHandler():
     wallet_addresses = []
     address = request.args.get('walletAddress')
+
+    if not request.args['name'] or not request.args['organization']:
+        flash("Name or Organization missing", "danger")
+        return redirect('/register_farm')
 
     if address:
         wallet_addresses.append(address)

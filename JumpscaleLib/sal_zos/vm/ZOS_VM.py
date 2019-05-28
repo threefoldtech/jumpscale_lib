@@ -695,6 +695,8 @@ class IpxeVM(ZOS_VM):
 
 
 def share_cache_enabled(flist):
-    if flist == 'https://hub.grid.tf/tf-autobuilder/zero-os-development.flist':
-        return True
-    return False
+    valid = [
+        'https://hub.grid.tf/tf-autobuilder/zero-os-master.flist',
+        'https://hub.grid.tf/tf-autobuilder/zero-os-development.flist',
+    ]
+    return flist in valid

@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block body %}
+<main role="main">
+
+<div class="container">
+    <h2>Farmer Identifier</h2>
+
+    <div class="alert alert-success" role="alert">
+        Here is a Farmer ID you can use as parameter to your Zero-OS Node to register
+        your capacity.
+    </div>
+
+    <pre id="registered">farmer_id={{jwt}}</pre>
+</div>
+</main>
+{% endblock %}

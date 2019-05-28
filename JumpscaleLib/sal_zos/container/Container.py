@@ -44,7 +44,7 @@ class Containers():
         return Container.from_containerinfo(containers[0], self.node)
 
     def create(self, name, flist, hostname=None, mounts=None, nics=None, host_network=False, ports=None,
-               storage=None, init_processes=None, privileged=False, env=None, identity=None, cpu=None, memory=None):
+               storage=None, init_processes=None, privileged=False, env=None, identity=None, cpu=None, memory=None, config=None):
         """
         Create a new container
 
@@ -106,6 +106,8 @@ class Containers():
         :param privileged: bool, optional
         :param env: a dict with the environment variables needed to be set for the container, defaults to None
         :param env: dict, optional
+        :param config: a dict with paths to text content, defaults to None
+        :param config: Dict[FilePath, string], optional
         :param identity: zerotier identity to assign to the container, if not specified an identify will be created automatically
         :param identity: string, optional
         :param cpu: if not None, specified the number of CPU the container can use
@@ -128,7 +130,7 @@ class Containers():
             nics.append({'type': 'default', 'id': 'None', 'hwaddr': '', 'name': 'nat0'})
         container = Container(name=name, node=self.node, flist=flist, hostname=hostname, mounts=mounts, nics=nics,
                               host_network=host_network, ports=ports, storage=storage, init_processes=init_processes,
-                              privileged=privileged, env=env, identity=identity, cpu=cpu, memory=memory)
+                              privileged=privileged, env=env, identity=identity, cpu=cpu, memory=memory, config=config)
         container.start()
         return container
 
@@ -138,7 +140,7 @@ class Container():
 
     def __init__(self, name, node, flist, hostname=None, mounts=None, nics=None,
                  host_network=False, ports=None, storage=None, init_processes=None,
-                 privileged=False, identity=None, env=None, cpu=None, memory=None, logger=None):
+                 privileged=False, identity=None, env=None, cpu=None, memory=None, logger=None, config=None):
         """
         TODO: write doc string
         filesystems: dict {filesystemObj: target}
@@ -160,6 +162,7 @@ class Container():
         self.cpu = cpu
         self.memory = memory
         self._client = None
+        self.config = config or {}
         self.logger = logger or default_logger
 
         for nic in self.nics:
@@ -361,6 +364,7 @@ class Container():
                 identity=self.identity,
                 env=self.env,
                 cgroups=cgroups,
+                config=self.config,
             )
         except:
             # clean up cgroups in case the container fails to start

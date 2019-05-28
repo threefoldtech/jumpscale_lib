@@ -149,9 +149,7 @@ class Capacity:
         cmdname = "seektime -j %s" % device
         rc, out, err = self._node._local.execute(cmdname, die=False)
         if rc != 0:
-            # smartctl prints error on stdout
-            raise RuntimeError("Error getting disk data for %s (Make sure you run this on baremetal, not on a VM):\n%s\n\n%s" % (
-                disk["name"], out, err))
+            raise RuntimeError("Seektime error for %s (Are you on baremetal, not on a VM ?): %s (%s)" % (device, err))
 
         data = j.data.serializer.json.loads(out)
         if data['type'] == 'HDD':

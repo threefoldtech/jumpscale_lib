@@ -10,6 +10,7 @@ from jsonschema import Draft4Validator
 from flask import jsonify, request
 from jumpscale import j
 
+from .. import influxdb
 from ..models import Capacity, NodeRegistration, NodeNotFoundError, Farmer
 from .jwt import validate_farmer_id, FarmerInvalid
 
@@ -17,6 +18,9 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 Capacity_schema = JSON.load(open(dir_path + '/schema/Capacity_schema.json'))
 Capacity_schema_resolver = jsonschema.RefResolver('file://' + dir_path + '/schema/', Capacity_schema)
 Capacity_schema_validator = Draft4Validator(Capacity_schema, resolver=Capacity_schema_resolver)
+
+
+logger = j.logger.get(__name__)
 
 
 def RegisterCapacityHandler():
@@ -31,13 +35,14 @@ def RegisterCapacityHandler():
     except jsonschema.ValidationError as e:
         return jsonify(errors="bad request body: {}".format(e)), 400
 
-    # Update the node if already exists or create new one using the inputs
+    # Fetch farmer from database first
     farmer = Farmer.objects(iyo_organization=iyo_organization).first()
     if not farmer:
         return jsonify(errors='Unauthorized farmer'), 403
 
     inputs['updated'] = datetime.now()
 
+    # Update the node if already exists or create new one using the inputs
     try:
         capacity = NodeRegistration.get(inputs.get("node_id"))
         if farmer.location:
@@ -52,9 +57,36 @@ def RegisterCapacityHandler():
         capacity = Capacity(**inputs)
         if farmer.location:
             capacity.location = farmer.location
+
         capacity.save()
+
+    try:
+        write_to_influx(capacity)
+    except Exception as err:
+        logger.error('error writting to influxdb :%s', str(err))
 
     response = JSON.loads(capacity.to_json(use_db_field=False))
     response['updated'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
     return JSON.dumps(response), 201, {'Content-type': 'application/json'}
+
+
+def write_to_influx(capacity):
+    data = [{
+        "measurement": "node_capacity",
+        "tags": {
+            "node_id": capacity.node_id,
+            "farmer": capacity.farmer.iyo_organization,
+            "version": capacity.os_version,
+        },
+        "fields": {
+            "cru": capacity.total_resources.cru,
+            "mru": capacity.total_resources.mru,
+            "hru": capacity.total_resources.hru,
+            "sru": capacity.total_resources.sru,
+            "longitude": capacity.location.longitude,
+            "latitude": capacity.location.latitude,
+            "uptime": capacity.uptime,
+        }
+    }]
+    influxdb.write(data)

@@ -108,4 +108,7 @@ setup(
         'develop': develop,
         'development': develop,
     },
+    scripts=[
+        'cmds/js_gridsrv',
+    ],
 )
