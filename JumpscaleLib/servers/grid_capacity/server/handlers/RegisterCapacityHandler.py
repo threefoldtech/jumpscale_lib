@@ -5,14 +5,13 @@ import os
 from datetime import datetime
 
 import jsonschema
-from jsonschema import Draft4Validator
-
 from flask import jsonify, request
+from jsonschema import Draft4Validator
 from jumpscale import j
 
 from .. import influxdb
-from ..models import Capacity, NodeRegistration, NodeNotFoundError, Farmer
-from .jwt import validate_farmer_id, FarmerInvalid
+from ..models import Capacity, Farmer, NodeNotFoundError, NodeRegistration, Proof
+from .jwt import FarmerInvalid, validate_farmer_id
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 Capacity_schema = JSON.load(open(dir_path + '/schema/Capacity_schema.json'))
@@ -42,33 +41,67 @@ def RegisterCapacityHandler():
 
     inputs['updated'] = datetime.now()
 
+    # check if the node also sent some hardware detail
+    proof = None
+    if inputs.get('hardware') and inputs.get('disks'):
+        hardware = inputs.pop('hardware')
+        disks = inputs.pop('disks')
+        proof = Proof(hardware=hardware,
+                      hardware_hash=hash_dump(hardware),
+                      disks=disks,
+                      disks_hash=hash_dump(disks_dump_remove_date(disks))
+                      )
+
     # Update the node if already exists or create new one using the inputs
     try:
-        capacity = NodeRegistration.get(inputs.get("node_id"))
+        node = NodeRegistration.get(inputs.get("node_id"))
         if farmer.location:
-            capacity.location = farmer.location
+            node.location = farmer.location
         inputs['farmer'] = farmer
-        capacity.update(**inputs)
+        node.update(**inputs)
 
     except NodeNotFoundError:
         inputs['farmer'] = iyo_organization
         inputs['created'] = datetime.now()
 
-        capacity = Capacity(**inputs)
+        node = Capacity(**inputs)
         if farmer.location:
-            capacity.location = farmer.location
+            node.location = farmer.location
 
-        capacity.save()
+        node.save()
+
+    # check if we already have a version of these hardware detail in the db
+    if proof:
+        logger.info("hardware proof sent")
+        found = Capacity.objects(proofs__hardware_hash=proof.hardware_hash, proofs__disks_hash=proof.disks_hash)
+        # if not, we add it
+        if found.count() <= 0:
+            logger.info("hardware proof change detected, save new proof")
+            node.proofs.append(proof)
+            node.save()
 
     try:
-        write_to_influx(capacity)
+        write_to_influx(node)
     except Exception as err:
         logger.error('error writting to influxdb :%s', str(err))
 
-    response = JSON.loads(capacity.to_json(use_db_field=False))
+    response = JSON.loads(node.to_json(use_db_field=False))
     response['updated'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
     return JSON.dumps(response), 201, {'Content-type': 'application/json'}
+
+
+def hash_dump(dump):
+    return j.data.hash.md5_string(
+        j.data.serializer.json.dumps(dump))
+
+
+def disks_dump_remove_date(disks):
+    target = 'Local Time is'
+    for i, _ in enumerate(disks['devices']):
+        if target in disks['devices'][i]:
+            disks['devices'][i].pop(target)
+    return disks
 
 
 def write_to_influx(capacity):

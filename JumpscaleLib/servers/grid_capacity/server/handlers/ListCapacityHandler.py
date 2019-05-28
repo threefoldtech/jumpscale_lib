@@ -6,6 +6,7 @@ from io import StringIO
 
 
 def ListCapacityHandler():
+
     nodes = []
     country = request.values.get('country')
     mru = request.values.get('mru')
@@ -14,13 +15,18 @@ def ListCapacityHandler():
     sru = request.values.get('sru')
     farmer = request.values.get('farmer')
     nodes = NodeRegistration.search(country, mru, cru, hru, sru, farmer, fulldump=True)
+
     output = []
+    with_proofs = request.args.get('proofs')
+
     for node in nodes.all():
         if node.farmer.location and node.farmer.location.latitude and node.farmer.location.longitude:
             node.location = node.farmer.location
         d = node.to_mongo().to_dict()
         d['node_id'] = d.pop('_id')
         d['farmer_id'] = d.pop('farmer')
+        if not with_proofs and 'proofs' in d:
+            d.pop('proofs')
         output.append(d)
 
     return jsonify(output)
