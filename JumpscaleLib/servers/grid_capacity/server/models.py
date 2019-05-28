@@ -1,6 +1,7 @@
 import datetime
+
 from flask_mongoengine import MongoEngine, Pagination
-from mongoengine import (DateTimeField, Document, EmbeddedDocument,
+from mongoengine import (DateTimeField, DictField, Document, EmbeddedDocument,
                          EmbeddedDocumentField, FloatField, IntField,
                          ListField, PointField, ReferenceField, StringField)
 
@@ -178,6 +179,14 @@ class Resources(EmbeddedDocument):
     sru = FloatField(default=0.0)
 
 
+class Proof(EmbeddedDocument):
+    hardware = DictField(required=True)
+    hardware_hash = StringField(required=True)
+    disks = DictField(required=True)
+    disks_hash = StringField(required=True)
+    created = DateTimeField(default=datetime.datetime.utcnow)
+
+
 class Capacity(db.Document):
     """
     Represent the resource units of a zero-os node
@@ -192,6 +201,7 @@ class Capacity(db.Document):
     os_version = StringField()
     parameters = ListField(StringField(), default=list)
     uptime = IntField()
+    proofs = ListField(EmbeddedDocumentField(Proof))
     updated = DateTimeField(required=True)
     created = DateTimeField()
 

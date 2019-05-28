@@ -35,6 +35,12 @@
 		"total_resources": {
 			"$ref": "ResourceUnits_schema.json"
 		},
+		"hardware": {
+			"type": "object"
+		},
+		"disks": {
+			"type": "object"
+		},
 		"updated": {
 			"type": [
 				"string",

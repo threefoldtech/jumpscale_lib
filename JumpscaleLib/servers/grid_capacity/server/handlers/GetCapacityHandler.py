@@ -12,8 +12,11 @@ def GetCapacityHandler(node_id):
     except NodeNotFoundError:
         return jsonify(), 404
 
+    with_proofs = request.args.get('proofs')
     output = node.to_mongo().to_dict()
     output['node_id'] = output.pop('_id')
     output['farmer_id'] = output.pop('farmer')
+    if not with_proofs and 'proofs' in output:
+        output.pop('proofs')
 
     return jsonify(output), 200, {'Content-type': 'application/json'}
