@@ -97,7 +97,7 @@ class NodeRegistration:
         :return: sequence of country
         :rtype: sequence of string
         """
-        capacities = Capacity.objects.only('location__country').order_by('location__country')
+        capacities = Capacity.objects.only('location__country')
         countries = set()
         for cap in capacities:
             if cap.location:
