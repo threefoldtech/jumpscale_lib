@@ -11,6 +11,7 @@ from JumpscaleLib.clients.blockchain.rivine import utils
 from JumpscaleLib.clients.blockchain.rivine import RivineWallet
 from JumpscaleLib.clients.blockchain.tfchain.TfchainClient import TfchainClient
 from JumpscaleLib.clients.blockchain.tfchain.TfchainNetwork import TfchainNetwork
+from JumpscaleLib.clients.blockchain.tfchain.TfchainTime import TfchainTime
 from JumpscaleLib.clients.blockchain.tfchain.errors import NoExplorerNetworkAddresses
 from JumpscaleLib.clients.blockchain.rivine.errors import RESTAPIError
 from JumpscaleLib.clients.blockchain.tfchain.TfchainThreeBotClient import TfchainThreeBotClient
@@ -38,6 +39,10 @@ class TfchainClientFactory(JSConfigBaseFactory):
         self.__jslocation__ = "j.clients.tfchain"
         self.__imports__ = "tfchain"
         JSConfigBaseFactory.__init__(self, TfchainClient)
+
+    @property
+    def time(self):
+        return TfchainTime
 
     @property
     def network(self):
