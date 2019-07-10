@@ -40,9 +40,11 @@ class TfchainClientFactory(JSConfigBaseFactory):
         self.__imports__ = "tfchain"
         JSConfigBaseFactory.__init__(self, TfchainClient)
 
+        self._time = TfchainTime()
+
     @property
     def time(self):
-        return TfchainTime
+        return self._time
 
     @property
     def network(self):
