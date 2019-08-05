@@ -1,15 +1,24 @@
 import datetime
 
 from flask_mongoengine import MongoEngine, Pagination
-from mongoengine import (DateTimeField, DictField, Document, EmbeddedDocument,
-                         EmbeddedDocumentField, FloatField, IntField,
-                         ListField, PointField, ReferenceField, StringField)
+from mongoengine import (
+    DateTimeField,
+    DictField,
+    Document,
+    EmbeddedDocument,
+    EmbeddedDocumentField,
+    FloatField,
+    IntField,
+    ListField,
+    PointField,
+    ReferenceField,
+    StringField,
+)
 
 db = MongoEngine()
 
 
 class NodeRegistration:
-
     @staticmethod
     def list(country=None):
         """
@@ -23,7 +32,7 @@ class NodeRegistration:
         """
         filter = {}
         if country:
-            filter['location__country'] = country
+            filter["location__country"] = country
 
         for capacity in Capacity.objects(**filter):
             yield capacity
@@ -44,7 +53,7 @@ class NodeRegistration:
         return capacity[0]
 
     @staticmethod
-    def search(country=None, mru=None, cru=None, hru=None, sru=None, farmer=None, fulldump=False, ** kwargs):
+    def search(country=None, mru=None, cru=None, hru=None, sru=None, farmer=None, fulldump=False, **kwargs):
         """
         search based on country and minimum resource unit available
 
@@ -63,29 +72,29 @@ class NodeRegistration:
         """
         query = {}
         if country:
-            query['location__country'] = country
+            query["location__country"] = country
         if farmer:
-            query['farmer'] = farmer
+            query["farmer"] = farmer
         if mru:
-            query['total_resources__mru__gte'] = mru
+            query["total_resources__mru__gte"] = mru
         if cru:
-            query['total_resources__cru__gte'] = cru
+            query["total_resources__cru__gte"] = cru
         if hru:
-            query['total_resources__hru__gte'] = hru
+            query["total_resources__hru__gte"] = hru
         if sru:
-            query['total_resources__sru__gte'] = sru
+            query["total_resources__sru__gte"] = sru
 
         if not fulldump:
-            query['updated__gte'] = datetime.datetime.now() - datetime.timedelta(days=7)
+            query["updated__gte"] = datetime.datetime.now() - datetime.timedelta(days=7)
 
         nodes = Capacity.objects(**query)
-        if kwargs.get('order'):
-            nodes = nodes.order_by(kwargs.get('order'))
+        if kwargs.get("order"):
+            nodes = nodes.order_by(kwargs.get("order"))
 
-        page = kwargs.get('page')
-        per_page = kwargs.get('per_page', 50)
+        page = kwargs.get("page")
+        per_page = kwargs.get("per_page", 50)
         if page:
-            return Pagination(nodes, page, per_page)
+            return nodes.paginate(page=page, per_page=per_page)
 
         return nodes
 
@@ -97,7 +106,7 @@ class NodeRegistration:
         :return: sequence of country
         :rtype: sequence of string
         """
-        capacities = Capacity.objects.only('location__country')
+        capacities = Capacity.objects.only("location__country")
         countries = set()
         for cap in capacities:
             if cap.location:
@@ -107,7 +116,6 @@ class NodeRegistration:
 
 
 class FarmerRegistration:
-
     @staticmethod
     def create(name, iyo_account, wallet_addresses=None):
         return Farmer(name=name, iyo_account=iyo_account, wallet_addresses=wallet_addresses)
@@ -131,13 +139,13 @@ class FarmerRegistration:
     def list(name=None, organization=None, **kwargs):
         query = {}
         if name:
-            query['name'] = name
+            query["name"] = name
         if organization:
-            query['organization'] = organization
+            query["organization"] = organization
         farmers = Farmer.objects(**query)
 
-        if kwargs.get('order'):
-            farmers = farmers.order_by(kwargs.get('order'))
+        if kwargs.get("order"):
+            farmers = farmers.order_by(kwargs.get("order"))
 
         return farmers
 
@@ -153,9 +161,10 @@ class Location(EmbeddedDocument):
     """
     Location of a node
     """
-    continent = StringField(default='')
-    country = StringField(default='')
-    city = StringField(default='')
+
+    continent = StringField(default="")
+    country = StringField(default="")
+    city = StringField(default="")
     longitude = FloatField(default=0.0)
     latitude = FloatField(default=0.0)
 
@@ -165,11 +174,13 @@ class Farmer(db.Document):
     """
     Represent a threefold Farmer
     """
+
     iyo_organization = StringField(primary_key=True)
     name = StringField()
     wallet_addresses = ListField(StringField())
     location = EmbeddedDocumentField(Location)
     email = StringField(default="")
+    meta = {"indexes": ["name", "location"]}
 
 
 class Resources(EmbeddedDocument):
@@ -191,6 +202,7 @@ class Capacity(db.Document):
     """
     Represent the resource units of a zero-os node
     """
+
     node_id = StringField(primary_key=True)
     location = EmbeddedDocumentField(Location)
     farmer = ReferenceField(Farmer)
@@ -204,6 +216,7 @@ class Capacity(db.Document):
     proofs = ListField(EmbeddedDocumentField(Proof))
     updated = DateTimeField(required=True)
     created = DateTimeField()
+    meta = {"indexes": ["updated", "farmer"]}
 
 
 class FarmerNotFoundError(KeyError):
