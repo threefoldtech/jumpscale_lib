@@ -87,9 +87,7 @@ def node_status(time):
 
 @app.errorhandler(500)
 def internal_error(err):
-    _, _, exc_traceback = sys.exc_info()
-    eco = j.core.errorhandler.parsePythonExceptionObject(err, tb=exc_traceback)
-    return jsonify(code=500, message=eco.errormessage, stack_trace=eco.traceback), 500
+    return jsonify(code=500, message="unexpected error", stack_trace=""), 500
 
 
 if __name__ == "__main__":
